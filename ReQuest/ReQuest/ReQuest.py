@@ -60,6 +60,9 @@ async def on_message(message):
         emoji = '<:acceptquest:601559094293430282>'
         await msg.add_reaction(emoji)
 
+# After further thought, this feature should halt until the database is implemented
+# Messages will store as arrays in a database and edits will call the array,
+# modify the description index, and then pass to the message compiler to post
 @client.event
 async def on_reaction_add(reaction, user):
     if user == client.user:
