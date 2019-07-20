@@ -43,8 +43,8 @@ async def on_message(message):
 
     if cmd == 'post':
         c = client.get_channel(int(postChannel.strip('<').strip('>').strip('#')))
-        title, levels ,gm, slots, description, role = args[1], args[2], args[3], args[4], args[5], args[6]
-        msg = await c.send(f'{announceRole}\n**NEW QUEST:** {title}\n**Level Range:** {levels}\n**GM:** {gm}\n**Players:**\n**Description:** {description}')
+        title, levels ,gm, description, slots, role = args[1], args[2], args[3], args[4], args[5], args[6]
+        msg = await c.send(f'{announceRole}\n**NEW QUEST:** {title}\n**Level Range:** {levels}\n**GM:** {gm}\n**Description:** {description}\n**Players:**')
         emoji = '<:acceptquest:601559094293430282>'
         await msg.add_reaction(emoji)
 
@@ -55,10 +55,24 @@ async def on_message(message):
         announceRole = '<@&601538894080507915>'
         await message.channel.send('Successfully set announcement role to {0}!'.format(announceRole))
         c = client.get_channel(int(postChannel.strip('<').strip('>').strip('#')))
-        title, levels ,gm, slots, description, role = 'Test', '1-3', '<@151965217960493056>', '4', 'Hooray!', '<@&601538894080507915>'
-        msg = await c.send(f'{announceRole}\n**NEW QUEST:** {title}\n**Level Range:** {levels}\n**GM:** {gm}\n**Players:**\n**Description:** {description}')
+        title, levels ,gm, description, slots, role = 'Test', '1-3', '<@151965217960493056>', 'Hooray!', '4', '<@&601538894080507915>'
+        msg = await c.send(f'{announceRole}\n**NEW QUEST:** {title}\n**Level Range:** {levels}\n**GM:** {gm}\n**Description:** {description}\n**Players:**')
         emoji = '<:acceptquest:601559094293430282>'
         await msg.add_reaction(emoji)
+
+@client.event
+async def on_reaction_add(reaction, user):
+    if user == client.user:
+        return
+
+    original = reaction.message.content
+    await reaction.message.edit(content = original+f'\n- <@!{user.id}>')
+
+def deconstruct_post(message):
+    return message.split('\n')
+
+def reconstruct_post(content):
+    return ' '.join(content)
 
 f=open('token.txt','r')
 if f.mode == 'r':
