@@ -1,8 +1,13 @@
 import discord
 import textwrap
 import itertools
+import pymongo
+from pymongo import MongoClient
 
 client = discord.Client()
+
+connection = MongoClient('localhost', 27017)
+
 # TODO: load server settings from database
 
 # declare global vars
@@ -20,9 +25,13 @@ async def on_ready():
 async def on_message(message):
     global postChannel
     global announceRole
+    server = message.guild.id
 
     if message.author == client.user:
         return
+
+    if server not in connection['quests'].list_collection_names():
+        await message.channel.send('This server has not been initialized! Use the command `r!init` to begin using ReQuest.')
 
 	# Command prefix set to r!
 	# TODO: allow changing of command prefix
