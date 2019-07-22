@@ -1,5 +1,5 @@
+import bson
 import discord
-import textwrap
 import itertools
 import pymongo
 from pymongo import MongoClient
@@ -7,12 +7,7 @@ from pymongo import MongoClient
 client = discord.Client()
 
 connection = MongoClient('localhost', 27017)
-
-# TODO: load server settings from database
-
-# declare global vars
-postChannel = ''
-announceRole = ''
+db = connection['quests']
 
 # Print message on login
 @client.event
@@ -23,15 +18,15 @@ async def on_ready():
 # Add commands here
 @client.event
 async def on_message(message):
-    global postChannel
-    global announceRole
-    server = message.guild.id
+    global db    
 
+    # Get Discord's server ID, used to query the db collection
+    server = message.guild.id
+    collection = db[str(server)]
+
+    # Ignore messages sent by the bot
     if message.author == client.user:
         return
-
-    if server not in connection['quests'].list_collection_names():
-        await message.channel.send('This server has not been initialized! Use the command `r!init` to begin using ReQuest.')
 
 	# Command prefix set to r!
 	# TODO: allow changing of command prefix
@@ -42,33 +37,78 @@ async def on_message(message):
     if cmd == 'info':
         await message.channel.send('Invite me to your server! <https://discordapp.com/api/oauth2/authorize?client_id=601492201704521765&permissions=388160&scope=bot>')
 
+    if cmd == 'help':
+        await message.channel.send('This is where the developer would have a handy help file, if he didn\'t suck.')
+
     if cmd == 'channel':
-        postChannel = args[1]
-        await message.channel.send('Successfully set quest channel to {0}!'.format(postChannel))
+        postChannel = ''
+        errorMsg = 'Error communicating with the database. Channel not set. Contact the ReQuest developer for support.'
+        if len(args)>1:
+            postChannel = args[1]
+            if collection.find_one({'postChannel': {'$exists': 'true'}}):
+                if not collection.delete_one({'postChannel': {'$exists': 'true'}}):
+                    await message.channel.send(errorMsg)
+                    return
+            if not collection.insert_one({'postChannel': postChannel}):
+                await message.channel.send(errorMsg)
+                return
+            await message.channel.send('Successfully set quest channel to {0}!'.format(postChannel))
+        else:
+            query = collection.find_one({'postChannel': {'$exists': 'true'}})
+            if query:
+                for key, value in query.items():
+                    if key == 'postChannel':
+                        postChannel = value
+                await message.channel.send('Quest channel currently set to {0}.'.format(postChannel))
+            else:
+                await message.channel.send('No quest channel set. Use the command `r!channel <channel>`.')
 
     if cmd == 'announce':
-        announceRole = args[1]
-        await message.channel.send('Successfully set announcement role to {0}!'.format(announceRole))
+        announceRole = ''
+        errorMsg = 'Error communicating with the database. Announcement role not set. Contact the ReQuest developer for support.'
+        if len(args)>1:
+            announceRole = args[1]
+            if collection.find_one({'announceRole': {'$exists': 'true'}}):
+                if not collection.delete_one({'announceRole': {'$exists': 'true'}}):
+                    await message.channel.send(errorMsg)
+                    return
+            if not collection.insert_one({'announceRole': announceRole}):
+                await message.channel.send(errorMsg)
+                return
+            await message.channel.send('Successfully set announcement role to {0}!'.format(announceRole))
+        else:
+            query = collection.find_one({'announceRole': {'$exists': 'true'}})
+            if query:
+                for key, value in query.items():
+                    if key == 'announceRole':
+                        announceRole = value
+                await message.channel.send('Announcement role currently set to {0}.'.format(announceRole))
+            else:
+                await message.channel.send('No quest channel set. Use the command `r!announce <role>`.')
 
     if cmd == 'post':
-        c = client.get_channel(int(postChannel.strip('<').strip('>').strip('#')))
+        postChannel = ''
+        announceRole = ''
+        postQuery = collection.find_one({'postChannel': {'$exists': 'true'}})
+        if postQuery:
+            for key, value in postQuery.items():
+                if key == 'postChannel':
+                    postChannel = client.get_channel(int(value.strip('<').strip('>').strip('#')))
+        else:
+            await message.channel.send('No quest channel set. Use the command `r!channel <channel>`.')
+            return
+        roleQuery = collection.find_one({'announceRole': {'$exists': 'true'}})
+        if roleQuery:
+            for key, value in roleQuery.items():
+                if key == 'announceRole':
+                    announceRole = value
+
         title, levels ,gm, description, slots, role = args[1], args[2], args[3], args[4], args[5], args[6]
-        msg = await c.send(f'{announceRole}\n**NEW QUEST:** {title}\n**Level Range:** {levels}\n**GM:** {gm}\n**Description:** {description}\n**Players:**')
+        msg = await postChannel.send(f'{announceRole}\n**NEW QUEST:** {title}\n**Level Range:** {levels}\n**GM:** {gm}\n**Description:** {description}\n**Players:**')
         emoji = '<:acceptquest:601559094293430282>'
         await msg.add_reaction(emoji)
-
-    # I'm not proud of this testing method, but here it is
-    if cmd == 'test':
-        postChannel = '<#601521481217736709>'
-        await message.channel.send('Successfully set quest channel to {0}!'.format(postChannel))
-        announceRole = '<@&601538894080507915>'
-        await message.channel.send('Successfully set announcement role to {0}!'.format(announceRole))
-        c = client.get_channel(int(postChannel.strip('<').strip('>').strip('#')))
-        title, levels ,gm, description, slots, role = 'Test', '1-3', '<@151965217960493056>', 'Hooray!', '4', '<@&601538894080507915>'
-        msg = await c.send(f'{announceRole}\n**NEW QUEST:** {title}\n**Level Range:** {levels}\n**GM:** {gm}\n**Description:** {description}\n**Players:**')
-        emoji = '<:acceptquest:601559094293430282>'
-        await msg.add_reaction(emoji)
-
+        await message.channel.send('Quest posted!')
+        
 # After further thought, this feature should halt until the database is implemented
 # Messages will store as arrays in a database and edits will call the array,
 # modify the description index, and then pass to the message compiler to post
