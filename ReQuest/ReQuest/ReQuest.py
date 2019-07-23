@@ -9,13 +9,13 @@ client = discord.Client()
 connection = MongoClient('localhost', 27017)
 db = connection['quests']
 
-# Print message on login
+# Print message on login and set status
 @client.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(client))
     await client.change_presence(activity = discord.Game(name = 'By Post'))
 
-# Add commands here
+# Commands
 @client.event
 async def on_message(message):
     global db    
@@ -38,7 +38,9 @@ async def on_message(message):
         await message.channel.send('Invite me to your server! <https://discordapp.com/api/oauth2/authorize?client_id=601492201704521765&permissions=388160&scope=bot>')
 
     if cmd == 'help':
-        await message.channel.send('This is where the developer would have a handy help file, if he didn\'t suck.')
+        if len(args)>1:
+            command = args[1]
+            await message.channel.send(command_help(command))
 
     if cmd == 'channel':
         postChannel = ''
@@ -86,6 +88,7 @@ async def on_message(message):
             else:
                 await message.channel.send('No quest channel set. Use the command `r!announce <role>`.')
 
+    # TODO: Implement dynamic message construction for manipulation of joined members
     if cmd == 'post':
         postChannel = ''
         announceRole = ''
@@ -109,7 +112,6 @@ async def on_message(message):
         await msg.add_reaction(emoji)
         await message.channel.send('Quest posted!')
         
-# After further thought, this feature should halt until the database is implemented
 # Messages will store as arrays in a database and edits will call the array,
 # modify the description index, and then pass to the message compiler to post
 @client.event
@@ -125,6 +127,12 @@ def deconstruct_post(message):
 
 def reconstruct_post(content):
     return ' '.join(content)
+
+def command_help(command):
+    helpMsg = 'Help for this command is not yet implemented. Yell at the developer!'
+    if command == 'channel':
+        helpMsg = 'Sets the quest posting channel.\nSyntax: `r!channel <channel link>`\nExample: `r!channel #testing`\nUse this command with no arguments to view the currently configured channel.'
+    return(helpMsg)
 
 f=open('token.txt','r')
 if f.mode == 'r':
