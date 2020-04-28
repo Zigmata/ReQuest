@@ -11,7 +11,7 @@ from pymongo import MongoClient
 connection = MongoClient('localhost', 27017)
 db = connection['quests']
 
-#client = discord.Client()
+# client = discord.Client()
 
 # Print message on login and set status
 #@client.event
@@ -154,7 +154,7 @@ async def info(ctx):
 
 f=open('token.txt','r')
 if f.mode == 'r':
-	token=f.read()
+    token=f.read()
 f.close()
 
 bot.run(token, bot=True)
