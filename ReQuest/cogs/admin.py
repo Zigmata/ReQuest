@@ -14,5 +14,6 @@ class Admin(Cog):
             await ctx.send('{}: {}'.format(type(e).__name__, e))
         else:
             await ctx.send('Extension successfully reloaded: `{}`'.format(module))
+
 def setup(bot):
     bot.add_cog(Admin(bot))
