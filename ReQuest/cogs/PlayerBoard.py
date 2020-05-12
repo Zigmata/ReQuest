@@ -1,8 +1,17 @@
+import itertools
+import bson
+
+import pymongo
+from pymongo import MongoClient
+
 import discord
+from discord.ext.commands import Cog, command
 
-from discord.ext import commands
+listener = Cog.listener
+connection = MongoClient('localhost', 27017)
+db = connection['guilds']
 
-class PlayerBoard(commands.Cog):
+class PlayerBoard(Cog):
     def __init__(self, bot):
         self.bot = bot
 

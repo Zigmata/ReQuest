@@ -1,24 +1,20 @@
-import bson
-import itertools
-
 import discord
 from discord.ext import commands
 
-import pymongo
-from pymongo import MongoClient
-
 # -----COGS-----
 
-COGS = ['cogs.questBoard','cogs.help','cogs.inventory','cogs.playerBoard']
+COGS = ['cogs.questBoard','cogs.help','cogs.inventory','cogs.playerBoard', 'cogs.admin']
 
-connection = MongoClient('localhost', 27017)
-db = connection['quests']
-
+# Define bot class
 class ReQuest(commands.AutoShardedBot):
     def __init__(self, prefix, **options):
         super(ReQuest, self).__init__(prefix, **options)
 
-bot = ReQuest(prefix="r!", activity=discord.Game(name=f'by Post'))
+# Define bot and prefix
+# TODO: Implement prefix changes
+pre = 'r!'
+bot = ReQuest(prefix=pre, activity=discord.Game(name=f'by Post'))
+bot.remove_command('help')
 
 for cog in COGS:
     bot.load_extension(cog)
