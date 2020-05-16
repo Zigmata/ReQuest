@@ -16,12 +16,13 @@ connection = MongoClient('localhost', 27017)
 db = connection['guilds']
 
 class QuestBoard(Cog):
+    """Cog for driving quest posts and associated reaction signups/options"""
     def __init__(self, bot):
         self.bot = bot
 
-    # When a reaction is added, update the post content with their user mention
     @listener()
     async def on_reaction_add(self, reaction, user):
+        # When a reaction is added, update the post content with their user mention
         message = reaction.message
         original = message.content
         if user.bot:
@@ -29,9 +30,9 @@ class QuestBoard(Cog):
         else:
             await message.edit(content = original+f'\n- <@!{user.id}>')
 
-    # When a reaction is removed, update the post content without their user mention
     @listener()
     async def on_reaction_remove(self, reaction, user):
+        # When a reaction is removed, update the post content without their user mention
         message = reaction.message
         original = message.content
         id = str(user.id)

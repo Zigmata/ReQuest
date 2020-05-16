@@ -1,9 +1,14 @@
+import yaml
+from pathlib import Path
+
 import discord
 from discord.ext import commands
 
-# -----COGS-----
+# Set up config file and load
+CONFIG_FILE = Path('config.yaml')
 
-COGS = ['cogs.questBoard','cogs.help','cogs.inventory','cogs.playerBoard', 'cogs.admin']
+with open(CONFIG_FILE, 'r') as yaml_file:
+    config = yaml.safe_load(yaml_file)
 
 # Define bot class
 class ReQuest(commands.AutoShardedBot):
@@ -12,19 +17,22 @@ class ReQuest(commands.AutoShardedBot):
 
 # Define bot and prefix
 # TODO: Implement prefix changes
-pre = 'r!'
+pre = config['prefix']
 bot = ReQuest(prefix=pre, activity=discord.Game(name=f'by Post'))
 #bot.remove_command('help')
+bot.config = config
 
-# Load each cog
-for cog in COGS:
-    bot.load_extension(cog)
 
-# Read bot token from file
-f=open('token.txt','r')
-if f.mode == 'r':
-    token=f.read()
-f.close()
+def main():
+    """Tries to load every cog and start up the bot"""
+    for extension in bot.config['load_extensions']:
+        try:
+            bot.load_extension(extension)
+        except:
+            print(f'Failed to load extension: {extension}')
 
-# Launch bot with provided token
-bot.run(token, bot=True)
+    print("bot is up and running")
+    bot.run(config['token'], bot=True)
+
+if __name__ == '__main__':
+    main()
