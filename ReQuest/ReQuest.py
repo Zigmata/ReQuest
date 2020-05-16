@@ -14,14 +14,17 @@ class ReQuest(commands.AutoShardedBot):
 # TODO: Implement prefix changes
 pre = 'r!'
 bot = ReQuest(prefix=pre, activity=discord.Game(name=f'by Post'))
-bot.remove_command('help')
+#bot.remove_command('help')
 
+# Load each cog
 for cog in COGS:
     bot.load_extension(cog)
 
+# Read bot token from file
 f=open('token.txt','r')
 if f.mode == 'r':
     token=f.read()
 f.close()
 
+# Launch bot with provided token
 bot.run(token, bot=True)
