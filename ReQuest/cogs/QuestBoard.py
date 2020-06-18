@@ -1,6 +1,9 @@
 import itertools
 import bson
 import re
+import yaml
+from pathlib import Path
+from ReQuest import config
 
 import pymongo
 from pymongo import MongoClient
@@ -10,10 +13,11 @@ from discord.utils import get
 from discord.ext.commands import Cog, command
 
 listener = Cog.listener
+config = ReQuest.bot.config
 
 # TODO: Pull all these bullshit static db assignments out into a config file
-connection = MongoClient('localhost', 27017)
-db = connection['guilds']
+connection = MongoClient(config['dbServer'],config['port'])
+db = connection[config['guildCollection']]
 
 class QuestBoard(Cog):
     """Cog for driving quest posts and associated reaction signups/options"""
