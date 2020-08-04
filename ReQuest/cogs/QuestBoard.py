@@ -24,31 +24,34 @@ class QuestBoard(Cog):
         connection = MongoClient(config['dbServer'],config['port'])
         db = connection[config['guildCollection']]
 
-
     @listener()
-    async def on_reaction_add(self, reaction, user):
+    async def on_raw_reaction_add(self, payload):
         # When a reaction is added, update the post content with their user mention
-        # TODO: Refactor to use raw hook rather than requiring cached messages 
-        message = reaction.message
+        guild = self.bot.get_guild(payload.guild_id)
+        channel = guild.get_channel(payload.channel_id)
+        message = await channel.fetch_message(payload.message_id)
+        collection = db[str(payload.guild_id)]
+        channelName : str = None
+
         original = message.content
-        if user.bot:
+        if payload.member.bot:
             return
         else:
-            await message.edit(content = original+f'\n- <@!{user.id}>')
+            await message.edit(content = original+f'\n- <@!{payload.user_id}>')
 
     @listener()
-    async def on_reaction_remove(self, reaction, user):
+    async def on_raw_reaction_remove(self, payload):
         # When a reaction is removed, update the post content without their user mention
-        message = reaction.message
+        guild = self.bot.get_guild(payload.guild_id)
+        channel = guild.get_channel(payload.channel_id)
+        message = await channel.fetch_message(payload.message_id)
+
         original = message.content
-        id = str(user.id)
+        id = str(payload.user_id)
         edited = re.sub('- <@!'+id+'>', '', original)
         
         # TODO: index a regex of user mention, then remove that substring somehow
-        if user.bot:
-            return
-        else:
-            await message.edit(content = edited)
+        await message.edit(content = edited)
 
     # TODO: Incorporate GM options, max party size, custom post formatter
     @command(aliases = ['qpost','qp'])
