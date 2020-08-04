@@ -1,8 +1,7 @@
+from datetime import datetime
 import itertools
 import bson
 import re
-import yaml
-from pathlib import Path
 
 import pymongo
 from pymongo import MongoClient

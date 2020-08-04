@@ -1,20 +1,16 @@
+from datetime import datetime
 import itertools
 import bson
 import re
-import yaml
-from pathlib import Path
 
 import pymongo
 from pymongo import MongoClient
 
 import discord
+from discord.utils import get
 from discord.ext.commands import Cog, command
 
-connection = MongoClient('localhost', 27017)
-db = connection['guilds']
-
 class Admin(Cog):
-    global db
     def __init__(self, bot):
         global config
         global connection

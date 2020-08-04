@@ -1,6 +1,10 @@
 from datetime import datetime
 
+import pymongo
+from pymongo import MongoClient
+
 import discord
+from discord.utils import get
 from discord.ext.commands import Cog, command
 
 commandList = ['help', 'ping', 'post']
