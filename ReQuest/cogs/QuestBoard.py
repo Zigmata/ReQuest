@@ -27,6 +27,12 @@ class QuestBoard(Cog):
     @listener()
     async def on_raw_reaction_add(self, payload):
         # When a reaction is added, update the post content with their user mention
+
+        # TODO: Ensure reactions are only affected in the questChannel.
+
+        # TODO: Compile redundant code between this and reaction_remove into single function
+        # and use event_type from payload to differentiate operations
+
         guild = self.bot.get_guild(payload.guild_id)
         channel = guild.get_channel(payload.channel_id)
         message = await channel.fetch_message(payload.message_id)
