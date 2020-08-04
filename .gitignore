@@ -454,5 +454,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# ReQuest token file
+# ReQuest-specific
 token.txt
+config.yaml
