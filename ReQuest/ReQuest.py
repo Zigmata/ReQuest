@@ -32,7 +32,7 @@ def main():
             print(f'Failed to load extension: {extension}')
 
     print("bot is up and running")
-    bot.run(config['token'], bot=True)
+    bot.run(bot.config['token'], bot=True)
 
 if __name__ == '__main__':
     main()

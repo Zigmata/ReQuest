@@ -3,7 +3,6 @@ import bson
 import re
 import yaml
 from pathlib import Path
-from ReQuest import config
 
 import pymongo
 from pymongo import MongoClient
@@ -13,20 +12,24 @@ from discord.utils import get
 from discord.ext.commands import Cog, command
 
 listener = Cog.listener
-config = ReQuest.bot.config
-
-# TODO: Pull all these bullshit static db assignments out into a config file
-connection = MongoClient(config['dbServer'],config['port'])
-db = connection[config['guildCollection']]
 
 class QuestBoard(Cog):
+
     """Cog for driving quest posts and associated reaction signups/options"""
     def __init__(self, bot):
+        global config
+        global connection
+        global db
         self.bot = bot
+        config = bot.config
+        connection = MongoClient(config['dbServer'],config['port'])
+        db = connection[config['guildCollection']]
+
 
     @listener()
     async def on_reaction_add(self, reaction, user):
         # When a reaction is added, update the post content with their user mention
+        # TODO: Refactor to use raw hook rather than requiring cached messages 
         message = reaction.message
         original = message.content
         if user.bot:

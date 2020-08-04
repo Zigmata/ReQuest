@@ -16,7 +16,13 @@ db = connection['guilds']
 class Admin(Cog):
     global db
     def __init__(self, bot):
+        global config
+        global connection
+        global db
         self.bot = bot
+        config = bot.config
+        connection = MongoClient(config['dbServer'],config['port'])
+        db = connection[config['guildCollection']]
 
     # Reload a cog by name
     @command(hidden=True)
@@ -36,6 +42,24 @@ class Admin(Cog):
             await ctx.send('Give me something to echo!')
         else:
             await ctx.send(text)
+
+    # Loads a cog that hasn't yet been loaded
+    @command(hidden=True)
+    async def load(self, ctx, module : str):
+        try:
+            self.bot.load_extension('cogs.'+module)
+        except Exception as e:
+            await ctx.send('{}: {}'.format(type(e).__name__, e))
+        else:
+            await ctx.send('Extension successfully loaded: `{}`'.format(module))
+
+    # Shut down the bot
+    @command(hidden=True)
+    async def shutdown(self,ctx):
+        try:
+            await ctx.bot.logout()
+        except Exception as e:
+            await ctx.send('{}: {}'.format(type(e).__name__, e))
 
     # Configures the channel in which quests are to be posted
     @command(aliases = ['qchannel','qch'])

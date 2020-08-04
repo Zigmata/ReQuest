@@ -7,7 +7,13 @@ commandList = ['help', 'ping', 'post']
 
 class Help(Cog):
     def __init__(self, bot):
+        global config
+        global connection
+        global db
         self.bot = bot
+        config = bot.config
+        connection = MongoClient(config['dbServer'],config['port'])
+        db = connection[config['guildCollection']]
 
     # Simple ping test
     @command()

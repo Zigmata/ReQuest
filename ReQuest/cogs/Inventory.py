@@ -9,12 +9,16 @@ import discord
 from discord.ext.commands import Cog, command
 
 listener = Cog.listener
-connection = MongoClient('localhost', 27017)
-db = connection['members']
 
 class Inventory(Cog):
     def __init__(self, bot):
+        global config
+        global connection
+        global db
         self.bot = bot
+        config = bot.config
+        connection = MongoClient(config['dbServer'],config['port'])
+        db = connection[config['guildCollection']]
 
 def setup(bot):
     bot.add_cog(Inventory(bot))
