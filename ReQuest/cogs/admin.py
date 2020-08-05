@@ -21,7 +21,10 @@ class Admin(Cog):
         connection = MongoClient(config['dbServer'],config['port'])
         db = connection[config['guildCollection']]
 
+#-------------Private Commands-------------
+
     # Reload a cog by name
+    @commands.is_owner()
     @command(hidden=True)
     # TODO add utility for owner check/admin check
     async def reload(self, ctx, module : str):
@@ -33,6 +36,7 @@ class Admin(Cog):
             await ctx.send('Extension successfully reloaded: `{}`'.format(module))
 
     # Echoes the first argument provided
+    @commands.is_owner()
     @command(hidden=True)
     async def echo(self, ctx, text : str = None):
         if (text == None):
@@ -41,6 +45,7 @@ class Admin(Cog):
             await ctx.send(text)
 
     # Loads a cog that hasn't yet been loaded
+    @commands.is_owner()
     @command(hidden=True)
     async def load(self, ctx, module : str):
         try:
@@ -51,12 +56,15 @@ class Admin(Cog):
             await ctx.send('Extension successfully loaded: `{}`'.format(module))
 
     # Shut down the bot
+    @commands.is_owner()
     @command(hidden=True)
     async def shutdown(self,ctx):
         try:
             await ctx.bot.logout()
         except Exception as e:
             await ctx.send('{}: {}'.format(type(e).__name__, e))
+
+#-------------Public Commands-------------
 
     @commands.has_permissions(administrator=True)
     @command(aliases = ['qchannel','qch'])
