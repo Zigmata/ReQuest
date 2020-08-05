@@ -6,7 +6,7 @@ import discord
 from discord.utils import get
 from discord.ext.commands import Cog, command
 
-commandList = ['help', 'ping', 'post']
+#commandList = ['help', 'ping', 'post']
 
 class Help(Cog):
     def __init__(self, bot):
@@ -22,6 +22,10 @@ class Help(Cog):
     @command()
     async def ping(self, ctx):
         await ctx.send('**Pong!**\n{0}ms'.format(round(self.bot.latency * 1000), 1))
+
+    @command()
+    async def invite(self,ctx):
+        await ctx.send(f'Invite me to your server! https://discord.com/api/oauth2/authorize?client_id=601492201704521765&permissions=519232&scope=bot')
 
     #@command()
     #async def help(self, ctx):
