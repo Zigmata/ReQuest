@@ -12,8 +12,8 @@ from discord.ext.commands import Cog, command
 
 listener = Cog.listener
 
+# TODO: Exception reporting in channel
 class QuestBoard(Cog):
-
     """Cog for driving quest posts and associated reaction signups/options"""
     def __init__(self, bot):
         global config
@@ -24,44 +24,54 @@ class QuestBoard(Cog):
         connection = MongoClient(config['dbServer'],config['port'])
         db = connection[config['guildCollection']]
 
-    @listener()
-    async def on_raw_reaction_add(self, payload):
-        # When a reaction is added, update the post content with their user mention
-
-        # TODO: Ensure reactions are only affected in the questChannel.
-
-        # TODO: Compile redundant code between this and reaction_remove into single function
-        # and use event_type from payload to differentiate operations
-
+    async def reaction_operation(self, payload):
+        """Handles addition/removal of user mentions when reacting to quest posts"""
         guild = self.bot.get_guild(payload.guild_id)
         channel = guild.get_channel(payload.channel_id)
         message = await channel.fetch_message(payload.message_id)
         collection = db[str(payload.guild_id)]
         channelName : str = None
 
-        original = message.content
-        if payload.member.bot:
+        # Find the configured Quest Channel and get the name (string in <#channelID> format)
+        query = collection.find_one({'questChannel': {'$exists': 'true'}})
+        if not query:
+            # TODO: Error handling/logging
             return
         else:
-            await message.edit(content = original+f'\n- <@!{payload.user_id}>')
+            for key, value in query.items():
+                if key == 'questChannel':
+                    channelName = value
+
+        if int(channelName[2:len(channelName)-1]) == int(channel.id): # Ensure that only posts in the configured Quest Channel are modified.
+            if payload.event_type == 'REACTION_ADD': # Checks which kind of event is raised
+                if payload.member.bot:
+                        return # Exits the function if the reaction add is triggered by the bot
+                else:
+                    original = message.content # Grab the original message
+                    await message.edit(content = original+f'\n- <@!{payload.user_id}>') # Append the reacting user's mention to the message
+            else:
+                original = message.content
+                id = str(payload.user_id)
+                edited = re.sub('- <@!'+id+'>', '', original)
+                # TODO: index a regex of user mention, then remove that substring somehow
+                await message.edit(content = edited)
+        else:
+            return # TODO: Needs error reporting/logging
+
+    @listener()
+    async def on_raw_reaction_add(self, payload):
+        """Reaction_add event handling"""
+        await QuestBoard.reaction_operation(self, payload)
 
     @listener()
     async def on_raw_reaction_remove(self, payload):
-        # When a reaction is removed, update the post content without their user mention
-        guild = self.bot.get_guild(payload.guild_id)
-        channel = guild.get_channel(payload.channel_id)
-        message = await channel.fetch_message(payload.message_id)
-
-        original = message.content
-        id = str(payload.user_id)
-        edited = re.sub('- <@!'+id+'>', '', original)
-        
-        # TODO: index a regex of user mention, then remove that substring somehow
-        await message.edit(content = edited)
+        """Reaction_remove event handling"""
+        await QuestBoard.reaction_operation(self, payload)
 
     # TODO: Incorporate GM options, max party size, custom post formatter
     @command(aliases = ['qpost','qp'])
     async def questPost(self, ctx, title, levels, description):
+        """Posts a new quest"""
         # Get server ID, set up db collection to connect
         server = ctx.message.guild.id
         collection = db[str(server)]

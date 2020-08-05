@@ -19,7 +19,7 @@ class ReQuest(commands.AutoShardedBot):
 # TODO: Implement prefix changes
 pre = config['prefix']
 bot = ReQuest(prefix=pre, activity=discord.Game(name=f'by Post'))
-#bot.remove_command('help')
+#bot.remove_command('help') # Un-comment when custom help commands are implemented.
 bot.config = config
 
 

@@ -57,9 +57,10 @@ class Admin(Cog):
         except Exception as e:
             await ctx.send('{}: {}'.format(type(e).__name__, e))
 
-    # Configures the channel in which quests are to be posted
+    
     @command(aliases = ['qchannel','qch'])
     async def questChannel(self, ctx, channel : str = None):
+        """Configures the channel in which quests are to be posted"""
         # Get server ID to locate proper collection
         server = ctx.message.guild.id
         collection = db[str(server)]
