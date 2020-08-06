@@ -38,8 +38,8 @@ class Admin(Cog):
     # Echoes the first argument provided
     @commands.is_owner()
     @command(hidden=True)
-    async def echo(self, ctx, text : str = None):
-        if (text == None):
+    async def echo(self, ctx, *, text):
+        if not (text):
             await ctx.send('Give me something to echo!')
         else:
             await ctx.send(text)
@@ -60,6 +60,7 @@ class Admin(Cog):
     @command(hidden=True)
     async def shutdown(self,ctx):
         try:
+            await ctx.send('Shutting down!')
             await ctx.bot.logout()
         except Exception as e:
             await ctx.send('{}: {}'.format(type(e).__name__, e))
@@ -106,7 +107,7 @@ class Admin(Cog):
 
     # Configures the channel in which player messages are to be posted. Same logic as questChannel()
     @commands.has_permissions(administrator=True)
-    @command(aliases = ['pbchannel','pbch'])
+    @command(aliases = ['pbchannel','pbch'], hidden=True)
     async def playerBoardChannel(self, ctx, channel : str = None):
         server = ctx.message.guild.id
         collection = db[str(server)]
@@ -132,10 +133,12 @@ class Admin(Cog):
             if not query:
                 await ctx.send('Player board channel not set! Configure with `{}playerBoardChannel <channel mention>`'.format(self.bot.command_prefix))
             else:
+                channelName = None
                 for key, value in query.items():
                     if key == 'playerBoardChannel':
                         channelName = value
-                        await ctx.send('Player board channel currently set to {}'.format(channelName))
+
+                await ctx.send('Player board channel currently set to {}'.format(channelName))
 
     @commands.has_permissions(administrator=True)
     @command(aliases = ['arole','ar'])
@@ -164,10 +167,55 @@ class Admin(Cog):
             if not query:
                 await ctx.send('Announcement role not set! Configure with `{}announceRole <role mention>`'.format(self.bot.command_prefix))
             else:
+                announceRole = None
                 for key, value in query.items():
                     if key == 'announceRole':
                         announceRole = value
-                        await ctx.send('Announcement role currently set to {}'.format(announceRole))
+
+                await ctx.send('Announcement role currently set to {}'.format(announceRole))
+
+    @commands.has_permissions(administrator=True)
+    @command(aliases = ['gmrole','gmr'], hidden=True)
+    async def gmRole(self, ctx, *roles):
+        """Gets or sets the GM role(s), used for GM commands."""
+        server = ctx.message.guild.id
+        collection = db[str(server)]
+        gmRoles = []
+        newRoles = []
+
+        if (roles):
+            await ctx.send(roles)
+            if collection.find_one({'gmRoles': {'$exists': 'true'}}):
+                query = collection.find_one({'gmRoles': {'$exists': 'true'}})
+                for key, value in query.items():
+                    if key == 'gmRoles':
+                        gmRoles = value
+                for role in roles:
+                    if role in gmRoles:
+                        continue # Raise error that role is already configured
+                    else:
+                        newRoles.append(role)
+                try:
+                    collection.update_one('gmRoles', {'$addToSet': { 'gmRoles':', '.join(newRoles)}}, True)
+                    await ctx.send('Successfully set {} as GM!'.format(', '.join(newRoles)))
+                except Exception as e:
+                    await ctx.send('{}: {}'.format(type(e).__name__, e))
+            else:
+                try:
+                    collection.insert_one('gmRoles', ', '.join(roles))
+                    await ctx.send('Successfully set {} as GM!'.format(', '.join(roles)))
+                except Exception as e:
+                    await ctx.send('{}: {}'.format(type(e).__name__, e))
+        else:
+            query = collection.find_one({'gmRoles': {'$exists': 'true'}})
+            if not query:
+                await ctx.send('GM role(s) not set! Configure with `{}gmRole <role mention>`. Roles can be chained (separate with a space).'.format(self.bot.command_prefix))
+            else:
+                for key, value in query.items():
+                    if key == 'gmRoles':
+                        gmRoles = value
+
+                await ctx.send('GM role(s) currently set to {}'.format(', '.join(gmRoles)))
 
 def setup(bot):
     bot.add_cog(Admin(bot))

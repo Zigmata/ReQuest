@@ -8,6 +8,7 @@ from pymongo import MongoClient
 
 import discord
 from discord.utils import get
+from discord.ext import commands
 from discord.ext.commands import Cog, command
 
 listener = Cog.listener
@@ -67,6 +68,7 @@ class QuestBoard(Cog):
         """Reaction_remove event handling"""
         await QuestBoard.reaction_operation(self, payload)
 
+    #@commands.has_any_role("role1","foo",11132312313213) # Restrict command use to defined role(s)
     @command(aliases = ['qpost','qp'])
     async def questPost(self, ctx, title: str, levels: str, description: str, maxPartySize: int):
         """Posts a new quest."""
