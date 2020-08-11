@@ -1,4 +1,4 @@
-from datetime import datetime
+from functools import singledispatch
 import itertools
 import bson
 import re
@@ -15,27 +15,42 @@ listener = Cog.listener
 
 # TODO: Exception reporting in channel
 class QuestBoard(Cog):
-    """Cog for driving quest posts and associated reaction signups/options"""
+    """Quest posts and associated reaction signups/options"""
     def __init__(self, bot):
         global config
-        global connection
-        global db
+        global db # remove after redesign
+        global gdb
         self.bot = bot
         config = bot.config
         connection = MongoClient(config['dbServer'],config['port'])
-        db = connection[config['guildCollection']]
+        db = connection[config['guildsCollection']] # remove after db redesign
+        gdb = connection[config['guildCollection']]
+
+    @singledispatch
+    def get_guild_collection(arg):
+        return
+
+    @get_guild_collection.register(int)
+    def _(arg) -> pymongo.collection.Collection:
+        collection = db[str(arg)]
+        return collection
+
+    @get_guild_collection.register(commands.Context)
+    def _(arg) -> pymongo.collection.Collection:
+        collection = db[str(arg.message.guild.id)]
+        return collection
 
     async def reaction_operation(self, payload):
         """Handles addition/removal of user mentions when reacting to quest posts"""
         channel = self.bot.get_channel(payload.channel_id)
         message = await channel.fetch_message(payload.message_id)
-        collection = db[str(payload.guild_id)]
+        collection = QuestBoard.get_guild_collection(payload.guild_id)
         channelName : str = None
 
         # Find the configured Quest Channel and get the name (string in <#channelID> format)
         query = collection.find_one({'questChannel': {'$exists': 'true'}})
         if not query:
-            # TODO: Error handling/logging
+# TODO: Error handling/logging
             return
         else:
             for key, value in query.items():
@@ -53,10 +68,11 @@ class QuestBoard(Cog):
                 original = message.content
                 id = str(payload.user_id)
                 edited = re.sub('- <@!'+id+'>', '', original)
-                # TODO: index a regex of user mention, then remove that substring somehow
+# TODO: index a regex of user mention, then remove that substring somehow
                 await message.edit(content = edited)
         else:
-            return # TODO: Needs error reporting/logging
+# TODO: Needs error reporting/logging
+            return
 
     @listener()
     async def on_raw_reaction_add(self, payload):
@@ -69,21 +85,74 @@ class QuestBoard(Cog):
         await QuestBoard.reaction_operation(self, payload)
 
     #@commands.has_any_role("role1","foo",11132312313213) # Restrict command use to defined role(s)
-    @command(aliases = ['qpost','qp'])
+#    @command(aliases = ['qpost','qp'])
+#    async def questPost(self, ctx, title: str, levels: str, description: str, maxPartySize: int):
+#        """Posts a new quest."""
+
+## TODO: Research exception catching on function argument TypeError
+## TODO: Refactor post into BSON entry for manipulation/future functionality
+
+#        collection = QuestBoard.get_guild_collection(ctx)
+#        channelName : str = None
+#        announceRole : str = None
+
+#        # Query the collection to see if a channel is set
+#        query = collection.find_one({'questChannel': {'$exists': 'true'}})
+
+#        # Inform user if quest channel is not set. Otherwise, get the channel string
+#        if not query:
+#            await ctx.send('Quest channel not set! Configure with `{}questChannel <channel mention>`'.format(self.bot.command_prefix))
+#            return
+#        else:
+#            for key, value in query.items():
+#                if key == 'questChannel':
+#                    channelName = value
+
+#        # Query the collection to see if a role is set
+#        query = collection.find_one({'announceRole': {'$exists': 'true'}})
+
+#        # Inform user if quest channel is not set. Otherwise, get the channel string
+## TODO: Make announcement role optional
+#        if not query:
+#            await ctx.send('Announcement role not set! Configure with `{}announceRole <role mention>`'.format(self.bot.command_prefix))
+#            return
+#        else:
+#            for key, value in query.items():
+#                if key == 'announceRole':
+#                    announceRole = value
+    
+#        # Slice the string so we just have the ID, and use that to get the channel object.
+#        channel = self.bot.get_channel(int(channelName[2:len(channelName)-1]))
+
+#        # Set post format and log the author, then post the new quest with an emoji reaction.
+#        gm = f'<@!{ctx.author.id}>'
+#        msg = await channel.send(f'{announceRole}\n**NEW QUEST:** {title}\n**Level Range:** {levels}\n**GM:** {gm}\n**Description:** {description}\n**Players (Max of {maxPartySize}):**')
+#        emoji = '<:acceptquest:601559094293430282>'
+#        await msg.add_reaction(emoji)
+            
+#        # Provide feedback to the channel from which the command was sent.
+#        await ctx.send('Quest posted!')
+
+    #@commands.has_any_role() # Restrict command use to defined role(s)
+    @command(aliases = ['qcomplete','qc'], hidden=True)
+    async def questComplete(self, ctx, id):
+        return
+
+    @command(aliases = ['qpost','qp'], hidden=True)
     async def questPost(self, ctx, title: str, levels: str, description: str, maxPartySize: int):
         """Posts a new quest."""
 
-        # TODO: Research exception catching on function argument TypeError
-        # TODO: Refactor post into BSON entry for manipulation/future functionality
+# TODO: Research exception catching on function argument TypeError
+# TODO: Refactor post into BSON entry for manipulation/future functionality
 
-        # Get server ID, set up db collection to connect
-        server = ctx.message.guild.id
-        collection = db[str(server)]
+        collection = gdb['questChannel']
+        guildId = ctx.message.guild.id
         channelName : str = None
         announceRole : str = None
+        questId = 1234
 
         # Query the collection to see if a channel is set
-        query = collection.find_one({'questChannel': {'$exists': 'true'}})
+        query = collection.find_one({'guildId': guildId})
 
         # Inform user if quest channel is not set. Otherwise, get the channel string
         if not query:
@@ -95,9 +164,11 @@ class QuestBoard(Cog):
                     channelName = value
 
         # Query the collection to see if a role is set
-        query = collection.find_one({'announceRole': {'$exists': 'true'}})
+        collection = gdb['announceRole']
+        query = collection.find_one({'guildId': guildId})
 
         # Inform user if quest channel is not set. Otherwise, get the channel string
+# TODO: Make announcement role optional
         if not query:
             await ctx.send('Announcement role not set! Configure with `{}announceRole <role mention>`'.format(self.bot.command_prefix))
             return
@@ -106,14 +177,22 @@ class QuestBoard(Cog):
                 if key == 'announceRole':
                     announceRole = value
     
+        collection = gdb['quests']
         # Slice the string so we just have the ID, and use that to get the channel object.
         channel = self.bot.get_channel(int(channelName[2:len(channelName)-1]))
 
         # Set post format and log the author, then post the new quest with an emoji reaction.
-        gm = f'<@!{ctx.author.id}>'
-        msg = await channel.send(f'{announceRole}\n**NEW QUEST:** {title}\n**Level Range:** {levels}\n**GM:** {gm}\n**Description:** {description}\n**Players (Max of {maxPartySize}):**')
+        gm = ctx.author.id
+        party : [int] = [None]
+        xp : int = None
+        msg = await channel.send(f'{announceRole}\n**NEW QUEST:** {title}\n**Level Range:** {levels}\n**GM:** <@!{gm}>\n**Description:** {description}\n**Players (Max of {maxPartySize}):**')
         emoji = '<:acceptquest:601559094293430282>'
         await msg.add_reaction(emoji)
+
+        try:
+            collection.insert_one({'guildId': guildId, 'questId': questId, 'title': title, 'desc': description, 'maxPartySize': maxPartySize, 'levels': levels, 'gm': gm, 'party': party, 'xp': xp})
+        except Exception as e:
+            await ctx.send('{}: {}'.format(type(e).__name__, e))
             
         # Provide feedback to the channel from which the command was sent.
         await ctx.send('Quest posted!')

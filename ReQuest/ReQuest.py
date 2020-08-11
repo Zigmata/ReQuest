@@ -18,7 +18,7 @@ class ReQuest(commands.AutoShardedBot):
 # Define bot and prefix
 # TODO: Implement prefix changes
 pre = config['prefix']
-bot = ReQuest(prefix=pre, activity=discord.Game(name=f'by Post'))
+bot = ReQuest(prefix=pre, activity=discord.Game(name=f'by Post | r!help'))
 #bot.remove_command('help') # Un-comment when custom help commands are implemented.
 bot.config = config
 
@@ -31,7 +31,7 @@ def main():
         except:
             print(f'Failed to load extension: {extension}')
 
-    print("bot is up and running")
+    print("ReQuest is online.")
     bot.run(bot.config['token'], bot=True)
 
 if __name__ == '__main__':

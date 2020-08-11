@@ -1,4 +1,3 @@
-from datetime import datetime
 import itertools
 import bson
 import re
@@ -12,21 +11,22 @@ from discord.ext import commands
 from discord.ext.commands import Cog, command
 
 class Admin(Cog):
+    """Administrative commands such as server configuration and bot options."""
     def __init__(self, bot):
         global config
-        global connection
-        global db
+        global db # remove after redesign
+        global gdb
         self.bot = bot
         config = bot.config
         connection = MongoClient(config['dbServer'],config['port'])
-        db = connection[config['guildCollection']]
+        db = connection[config['guildsCollection']] # remove after db redesign
+        gdb = connection[config['guildCollection']]
 
 #-------------Private Commands-------------
 
     # Reload a cog by name
     @commands.is_owner()
     @command(hidden=True)
-    # TODO add utility for owner check/admin check
     async def reload(self, ctx, module : str):
         try:
             self.bot.reload_extension('cogs.'+module)
@@ -67,7 +67,7 @@ class Admin(Cog):
 
 #-------------Public Commands-------------
 
-    @commands.has_permissions(administrator=True)
+    @commands.has_permissions(administrator=True, manage_guild=True)
     @command(aliases = ['qchannel','qch'])
     async def questChannel(self, ctx, channel : str = None):
         """Configures the channel in which quests are to be posted"""
@@ -105,8 +105,46 @@ class Admin(Cog):
                         channelName = value
                         await ctx.send('Quest channel currently set to {}'.format(channelName))
 
+    @commands.has_permissions(administrator=True, manage_guild=True)
+    @command(aliases = ['qchannel2','qch2'])
+    async def questChannel2(self, ctx, channel : str = None):
+        """Configures the channel in which quests are to be posted"""
+        # Get server ID to locate proper collection
+        guildId = ctx.message.guild.id
+        collection = gdb['questChannel']
+        channelName : str = None
+
+        # When provided with a channel name, deletes the old entry and adds the new one.
+        if (channel):
+            if collection.find_one({'guildId': guildId}):
+                # If a match is found, attempt to delete it before proceeding.
+                try:
+                    collection.delete_one({'guildId': guildId})
+                except Exception as e:
+                    await ctx.send('{}: {}'.format(type(e).__name__, e))
+                    return
+
+            # Regardless of whether or not a match is found, insert the new record.
+            try:
+                collection.insert_one({'guildId': guildId, 'questChannel': channel})
+            except Exception as e:
+                await ctx.send('{}: {}'.format(type(e).__name__, e))
+            else:
+                await ctx.send('Successfully set quest channel to {0}!'.format(channel))
+
+        # If no channel is provided, inform the user of the current setting
+        if (channel == None):
+            query = collection.find_one({'guildId': guildId})
+            if not query:
+                await ctx.send('Quest channel not set! Configure with `{}questChannel <channel link>`'.format(self.bot.command_prefix))
+            else:
+                for key, value in query.items():
+                    if key == 'questChannel':
+                        channelName = value
+                        await ctx.send('Quest channel currently set to {}'.format(channelName))
+
     # Configures the channel in which player messages are to be posted. Same logic as questChannel()
-    @commands.has_permissions(administrator=True)
+    @commands.has_permissions(administrator=True, manage_guild=True)
     @command(aliases = ['pbchannel','pbch'], hidden=True)
     async def playerBoardChannel(self, ctx, channel : str = None):
         server = ctx.message.guild.id
@@ -140,7 +178,7 @@ class Admin(Cog):
 
                 await ctx.send('Player board channel currently set to {}'.format(channelName))
 
-    @commands.has_permissions(administrator=True)
+    @commands.has_permissions(administrator=True, manage_guild=True)
     @command(aliases = ['arole','ar'])
     async def announceRole(self, ctx, role: str = None):
         """Gets or sets the role used for post announcements."""
@@ -174,7 +212,41 @@ class Admin(Cog):
 
                 await ctx.send('Announcement role currently set to {}'.format(announceRole))
 
-    @commands.has_permissions(administrator=True)
+    @commands.has_permissions(administrator=True, manage_guild=True)
+    @command(aliases = ['arole2','ar2'])
+    async def announceRole2(self, ctx, role: str = None):
+        """Gets or sets the role used for post announcements."""
+        guildId = ctx.message.guild.id
+        collection = gdb['announceRole']
+
+        if (role):
+            if collection.find_one({'guildId': guildId}):
+                try:
+                    collection.delete_one({'guildId': guildId})
+                except Exception as e:
+                    await ctx.send('{}: {}'.format(type(e).__name__, e))
+                    return
+
+            try:
+                collection.insert_one({'guildId': guildId, 'announceRole': role})
+            except Exception as e:
+                await ctx.send('{}: {}'.format(type(e).__name__, e))
+            else:
+                await ctx.send('Successfully set announcement role to {}!'.format(role))
+
+        if (role == None):
+            query = collection.find_one({'guildId': guildId})
+            if not query:
+                await ctx.send('Announcement role not set! Configure with `{}announceRole <role mention>`'.format(self.bot.command_prefix))
+            else:
+                announceRole = None
+                for key, value in query.items():
+                    if key == 'announceRole':
+                        announceRole = value
+
+                await ctx.send('Announcement role currently set to {}'.format(announceRole))
+
+    @commands.has_permissions(administrator=True, manage_guild=True)
     @command(aliases = ['gmrole','gmr'], hidden=True)
     async def gmRole(self, ctx, *roles):
         """Gets or sets the GM role(s), used for GM commands."""
