@@ -46,21 +46,21 @@ class QuestBoard(Cog):
 
         collection = gdb['quests']
         if int(channelName[2:len(channelName)-1]) == int(channel.id): # Ensure that only posts in the configured Quest Channel are modified.
+            messageId = payload.message_id
+            userId = payload.user_id
             if payload.event_type == 'REACTION_ADD': # Checks which kind of event is raised
                 if payload.member.bot:
                         return # Exits the function if the reaction add is triggered by the bot
                 else:
-                    userId = payload.user_id
-                    messageId = payload.message_id
                     original = message.content # Grab the original message
                     await message.edit(content = original+f'\n- <@!{userId}>') # Append the reacting user's mention to the message
                     collection.update_one({'messageId': messageId}, {'$push': {'party': userId}})
             else:
                 original = message.content
-                id = str(payload.user_id)
-                edited = re.sub('- <@!'+id+'>', '', original)
+                edited = re.sub('\n- <@!'+str(userId)+'>', '', original)
 # TODO: index a regex of user mention, then remove that substring somehow
                 await message.edit(content = edited)
+                collection.update_one({'messageId': messageId}, {'$pull': {'party': userId}})
         else:
 # TODO: Needs error reporting/logging
             return
