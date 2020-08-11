@@ -67,44 +67,6 @@ class Admin(Cog):
 
 #-------------Public Commands-------------
 
-    #@commands.has_permissions(administrator=True, manage_guild=True)
-    #@command(aliases = ['qchannel','qch'])
-    #async def questChannel(self, ctx, channel : str = None):
-    #    """Configures the channel in which quests are to be posted"""
-    #    # Get server ID to locate proper collection
-    #    server = ctx.message.guild.id
-    #    collection = db[str(server)]
-    #    channelName : str = None
-
-    #    # When provided with a channel name, deletes the old entry and adds the new one.
-    #    if (channel):
-    #        if collection.find_one({'questChannel': {'$exists': 'true'}}):
-    #            # If a match is found, attempt to delete it before proceeding.
-    #            try:
-    #                collection.delete_one({'questChannel': {'$exists': 'true'}})
-    #            except Exception as e:
-    #                await ctx.send('{}: {}'.format(type(e).__name__, e))
-    #                return
-
-    #        # Regardless of whether or not a match is found, insert the new record.
-    #        try:
-    #            collection.insert_one({'questChannel': channel})
-    #        except Exception as e:
-    #            await ctx.send('{}: {}'.format(type(e).__name__, e))
-    #        else:
-    #            await ctx.send('Successfully set quest channel to {0}!'.format(channel))
-
-    #    # If no channel is provided, inform the user of the current setting
-    #    if (channel == None):
-    #        query = collection.find_one({'questChannel': {'$exists': 'true'}})
-    #        if not query:
-    #            await ctx.send('Quest channel not set! Configure with `{}questChannel <channel link>`'.format(self.bot.command_prefix))
-    #        else:
-    #            for key, value in query.items():
-    #                if key == 'questChannel':
-    #                    channelName = value
-    #                    await ctx.send('Quest channel currently set to {}'.format(channelName))
-
     @commands.has_permissions(administrator=True, manage_guild=True)
     @command(aliases = ['qchannel','qch'])
     async def questChannel(self, ctx, channel : str = None):
@@ -145,8 +107,9 @@ class Admin(Cog):
 
     # Configures the channel in which player messages are to be posted. Same logic as questChannel()
     @commands.has_permissions(administrator=True, manage_guild=True)
-    @command(aliases = ['pbchannel','pbch'], hidden=True)
+    @command(aliases = ['pbchannel','pbch'])
     async def playerBoardChannel(self, ctx, channel : str = None):
+        """Get or sets the channel used for the Player Board."""
         server = ctx.message.guild.id
         collection = db[str(server)]
         channelName : str = None
@@ -177,40 +140,6 @@ class Admin(Cog):
                         channelName = value
 
                 await ctx.send('Player board channel currently set to {}'.format(channelName))
-
-    #@commands.has_permissions(administrator=True, manage_guild=True)
-    #@command(aliases = ['arole','ar'])
-    #async def announceRole(self, ctx, role: str = None):
-    #    """Gets or sets the role used for post announcements."""
-    #    server = ctx.message.guild.id
-    #    collection = db[str(server)]
-
-    #    if (role):
-    #        if collection.find_one({'announceRole': {'$exists': 'true'}}):
-    #            try:
-    #                collection.delete_one({'announceRole': {'exists': 'true'}})
-    #            except Exception as e:
-    #                await ctx.send('{}: {}'.format(type(e).__name__, e))
-    #                return
-
-    #        try:
-    #            collection.insert_one({'announceRole': role})
-    #        except Exception as e:
-    #            await ctx.send('{}: {}'.format(type(e).__name__, e))
-    #        else:
-    #            await ctx.send('Successfully set announcement role to {}!'.format(role))
-
-    #    if (role == None):
-    #        query = collection.find_one({'announceRole': {'$exists': 'true'}})
-    #        if not query:
-    #            await ctx.send('Announcement role not set! Configure with `{}announceRole <role mention>`'.format(self.bot.command_prefix))
-    #        else:
-    #            announceRole = None
-    #            for key, value in query.items():
-    #                if key == 'announceRole':
-    #                    announceRole = value
-
-    #            await ctx.send('Announcement role currently set to {}'.format(announceRole))
 
     @commands.has_permissions(administrator=True, manage_guild=True)
     @command(aliases = ['arole','ar'])
@@ -247,7 +176,7 @@ class Admin(Cog):
                 await ctx.send('Announcement role currently set to {}'.format(announceRole))
 
     @commands.has_permissions(administrator=True, manage_guild=True)
-    @command(aliases = ['gmrole','gmr'], hidden=True)
+    @command(aliases = ['gmrole','gmr'])
     async def gmRole(self, ctx, *roles):
         """Gets or sets the GM role(s), used for GM commands."""
         server = ctx.message.guild.id
