@@ -26,29 +26,16 @@ class QuestBoard(Cog):
         db = connection[config['guildsCollection']] # remove after db redesign
         gdb = connection[config['guildCollection']]
 
-    @singledispatch
-    def get_guild_collection(arg):
-        return
-
-    @get_guild_collection.register(int)
-    def _(arg) -> pymongo.collection.Collection:
-        collection = db[str(arg)]
-        return collection
-
-    @get_guild_collection.register(commands.Context)
-    def _(arg) -> pymongo.collection.Collection:
-        collection = db[str(arg.message.guild.id)]
-        return collection
-
     async def reaction_operation(self, payload):
         """Handles addition/removal of user mentions when reacting to quest posts"""
+        guildId = payload.guild_id
         channel = self.bot.get_channel(payload.channel_id)
         message = await channel.fetch_message(payload.message_id)
-        collection = QuestBoard.get_guild_collection(payload.guild_id)
         channelName : str = None
 
         # Find the configured Quest Channel and get the name (string in <#channelID> format)
-        query = collection.find_one({'questChannel': {'$exists': 'true'}})
+        collection = gdb['questChannel']
+        query = collection.find_one({'guildId': guildId})
         if not query:
 # TODO: Error handling/logging
             return
@@ -57,13 +44,17 @@ class QuestBoard(Cog):
                 if key == 'questChannel':
                     channelName = value
 
+        collection = gdb['quests']
         if int(channelName[2:len(channelName)-1]) == int(channel.id): # Ensure that only posts in the configured Quest Channel are modified.
             if payload.event_type == 'REACTION_ADD': # Checks which kind of event is raised
                 if payload.member.bot:
                         return # Exits the function if the reaction add is triggered by the bot
                 else:
+                    userId = payload.user_id
+                    messageId = payload.message_id
                     original = message.content # Grab the original message
-                    await message.edit(content = original+f'\n- <@!{payload.user_id}>') # Append the reacting user's mention to the message
+                    await message.edit(content = original+f'\n- <@!{userId}>') # Append the reacting user's mention to the message
+                    collection.update_one({'messageId': messageId}, {'$push': {'party': userId}})
             else:
                 original = message.content
                 id = str(payload.user_id)
@@ -188,9 +179,10 @@ class QuestBoard(Cog):
         msg = await channel.send(f'{announceRole}\n**NEW QUEST:** {title}\n**Level Range:** {levels}\n**GM:** <@!{gm}>\n**Description:** {description}\n**Players (Max of {maxPartySize}):**')
         emoji = '<:acceptquest:601559094293430282>'
         await msg.add_reaction(emoji)
+        messageId = msg.id
 
         try:
-            collection.insert_one({'guildId': guildId, 'questId': questId, 'title': title, 'desc': description, 'maxPartySize': maxPartySize, 'levels': levels, 'gm': gm, 'party': party, 'xp': xp})
+            collection.insert_one({'guildId': guildId, 'questId': questId, 'messageId': messageId, 'title': title, 'desc': description, 'maxPartySize': maxPartySize, 'levels': levels, 'gm': gm, 'party': party, 'xp': xp})
         except Exception as e:
             await ctx.send('{}: {}'.format(type(e).__name__, e))
             
