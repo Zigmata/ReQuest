@@ -122,7 +122,7 @@ class QuestBoard(Cog):
         gm = ctx.author.id
         party : [int] = [None]
         xp : int = None
-        post = (f'{announceRole}\n**NEW QUEST:** {title}\n**Quest ID:**{questId}\n' +
+        post = (f'{announceRole}\n**NEW QUEST:** {title}\n**Quest ID:** {questId}\n' +
                 f'**GM:** <@!{gm}>\n**Level Range:** {levels}\n**Description:** {description}\n' +
                 f'**Players (Max of {maxPartySize}):**')
         msg = await channel.send(post)
