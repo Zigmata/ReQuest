@@ -12,11 +12,11 @@ class Help(Cog):
     """Help and informational commands."""
     def __init__(self, bot):
         global config
-        global db
+        global gdb
         self.bot = bot
         config = bot.config
         connection = MongoClient(config['dbServer'],config['port'])
-        db = connection[config['guildCollection']]
+        gdb = connection[config['guildCollection']]
 
     # Simple ping test
     @command()

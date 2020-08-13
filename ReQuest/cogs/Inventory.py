@@ -15,11 +15,11 @@ listener = Cog.listener
 class Inventory(Cog):
     def __init__(self, bot):
         global config
-        global db
+        global gdb
         self.bot = bot
         config = bot.config
         connection = MongoClient(config['dbServer'],config['port'])
-        db = connection[config['guildCollection']]
+        gdb = connection[config['guildCollection']]
 
 def setup(bot):
     bot.add_cog(Inventory(bot))
