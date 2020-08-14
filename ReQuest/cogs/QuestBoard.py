@@ -192,6 +192,29 @@ class QuestBoard(Cog):
 # ---- Configuration Commands ----
 
     @commands.has_permissions(administrator=True, manage_guild=True)
+    @command(aliases = ['qembed'])
+    async def questEmbed(self, ctx)
+        """This command toggles the rich embed format of quest posts on/off."""
+        guildId = ctx.message.guild.id
+        collection = gdb['questEmbed']
+        
+        # Look for an existing document for the guild and fetch it if it exists.
+        if collection.count_documents({'guildId': guildId}, limit = 1) != 0:
+            query = collection.find_one({'guildId': guildId})
+            
+            # Invert the bool of the fetched document and update it.
+            if query['questEmbed'] == True:
+                collection.update_one({'guildId': guildId}, {'$set': {'questEmbed': False}})
+                await ctx.send('Rich embed posting is disabled.')
+            else:
+                collection.update_one({'guildId': guildId}, {'$set': {'questEmbed': True}})
+                await ctx.send('Rich embed posting is enabled.')
+        else:
+            # If there is no document, make one and enable embeds.
+            collection.insert_one({'guildId': guildId, 'questEmbed': True})
+            await ctx.send('Rich embed posting is enabled.')
+
+    @commands.has_permissions(administrator=True, manage_guild=True)
     @command(aliases = ['waitlist'])
     async def questWaitlist(self, ctx, waitlistValue = None):
         """This command gets or sets the waitlist cap. Accepts a range of 0 to 5."""
