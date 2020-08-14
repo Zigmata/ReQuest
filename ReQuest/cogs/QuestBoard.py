@@ -32,7 +32,8 @@ class QuestBoard(Cog):
         """Handles addition/removal of user mentions when reacting to quest posts"""
         guildId = payload.guild_id
         channel = self.bot.get_channel(payload.channel_id)
-        message = await channel.fetch_message(payload.message_id)
+        messageId = payload.message_id
+        message = await channel.fetch_message(messageId)
         channelName : str = None
 
         # Find the configured Quest Channel and get the name (string in <#channelID> format)
@@ -48,21 +49,75 @@ class QuestBoard(Cog):
 
         collection = gdb['quests']
         if int(channelName[2:len(channelName)-1]) == int(channel.id): # Ensure that only posts in the configured Quest Channel are modified.
-            messageId = payload.message_id
             userId = payload.user_id
-            if payload.event_type == 'REACTION_ADD': # Checks which kind of event is raised
-                if payload.member.bot:
-                        return # Exits the function if the reaction add is triggered by the bot
+            if not message.embeds:
+                if payload.event_type == 'REACTION_ADD': # Checks which kind of event is raised
+                    if payload.member.bot:
+                            return # Exits the function if the reaction add is triggered by the bot
+                    else:
+                        original = message.content # Grab the original message
+                        await message.edit(content = original+f'\n- <@!{userId}>') # Append the reacting user's mention to the message
+                        collection.update_one({'messageId': messageId}, {'$push': {'party': userId}})
                 else:
-                    original = message.content # Grab the original message
-                    await message.edit(content = original+f'\n- <@!{userId}>') # Append the reacting user's mention to the message
-                    collection.update_one({'messageId': messageId}, {'$push': {'party': userId}})
+                    original = message.content
+                    edited = re.sub('\n- <@!'+str(userId)+'>', '', original)
+    # TODO: index a regex of user mention, then remove that substring somehow
+                    await message.edit(content = edited)
+                    collection.update_one({'messageId': messageId}, {'$pull': {'party': userId}})
             else:
-                original = message.content
-                edited = re.sub('\n- <@!'+str(userId)+'>', '', original)
-# TODO: index a regex of user mention, then remove that substring somehow
-                await message.edit(content = edited)
-                collection.update_one({'messageId': messageId}, {'$pull': {'party': userId}})
+                query = collection.find_one({'messageId': messageId})
+                if not query:
+                    return
+                else:
+                    if payload.event_type == 'REACTION_ADD':
+                        if payload.member.bot:
+                            return
+                        else:
+                            if query['party'][0] == None:
+                                collection.update_one({'messageId': messageId}, {'$set': {'party.0': userId}})
+                            else:
+                                collection.update_one({'messageId': messageId}, {'$push': {'party': userId}})
+
+                            query = collection.find_one({'messageId': messageId})
+
+                            questId, title, description, levels, gm, party = \
+                                query['questId'], query['title'], query['desc'], query['levels'], query['gm'], query['party']
+
+                            mappedParty = list(map(str, party))
+
+                            formattedParty = '- <@!'+'>\n- <@!'.join(mappedParty)+'>'
+
+                            postEmbed = discord.Embed(title='NEW QUEST: '+title, type='rich', \
+                                description=f'**GM:** <@!{gm}>\n**Level Range:** {levels}\n**Description:**\n{description}')
+                            postEmbed.add_field(name='Party', value=formattedParty)
+                            postEmbed.add_field(name='Waitlist', value=None)
+                            postEmbed.set_footer(text='Quest ID: '+questId)
+
+                            await message.edit(embed=postEmbed)
+                    else:
+                            collection.update_one({'messageId': messageId}, {'$pull': {'party': userId}})
+
+                            if not collection.find_one({'messageId': messageId})['party']:
+                                collection.update_one({'messageId': messageId}, {'$set': {'party.0': None}})
+
+                            query = collection.find_one({'messageId': messageId})
+
+                            questId, title, description, levels, gm, party = \
+                                query['questId'], query['title'], query['desc'], query['levels'], query['gm'], query['party']
+
+                            formattedParty : str = None
+
+                            if party[0]:
+                                mappedParty = list(map(str, party))
+                                formattedParty = '- <@!'+'>\n- <@!'.join(mappedParty)+'>'
+
+                            postEmbed = discord.Embed(title='NEW QUEST: '+title, type='rich', \
+                                description=f'**GM:** <@!{gm}>\n**Level Range:** {levels}\n**Description:**\n{description}')
+                            postEmbed.add_field(name='Party', value=formattedParty)
+                            postEmbed.add_field(name='Waitlist', value=None)
+                            postEmbed.set_footer(text='Quest ID: '+questId)
+
+                            await message.edit(embed=postEmbed)
         else:
 # TODO: Needs error reporting/logging
             return
@@ -119,16 +174,15 @@ class QuestBoard(Cog):
                 else:
                     return
 
+    @listener()
+    async def on_raw_reaction_add(self, payload):
+        """Reaction_add event handling"""
+        await QuestBoard.reaction_operation(self, payload)
 
     #@listener()
     #async def on_raw_reaction_add(self, payload):
     #    """Reaction_add event handling"""
-    #    await QuestBoard.reaction_operation(self, payload)
-
-    @listener()
-    async def on_raw_reaction_add(self, payload):
-        """Reaction_add event handling"""
-        await QuestBoard.embed_reaction(self, payload)
+    #    await QuestBoard.embed_reaction(self, payload)
 
     @listener()
     async def on_raw_reaction_remove(self, payload):
@@ -136,6 +190,39 @@ class QuestBoard(Cog):
         await QuestBoard.reaction_operation(self, payload)
 
 # ---- Configuration Commands ----
+
+    @commands.has_permissions(administrator=True, manage_guild=True)
+    @command(aliases = ['waitlist'])
+    async def questWaitlist(self, ctx, waitlistValue = None):
+        """This command gets or sets the waitlist cap. Accepts a range of 0 to 5."""
+        guildId = ctx.message.guild.id
+        collection = gdb['questWaitlist']
+
+        if (waitlistValue == None):
+            if collection.count_documents({'guildId': guildId}, limit = 1) != 0:
+                query = collection.find_one({'guildId': guildId})
+                value = query['waitlistValue']
+                if int(value) == 0:
+                    await ctx.send('Quest waitlist is currently disabled.')
+                else:
+                    await ctx.send('Quest waitlist currently set to {}.'.format(str(value)))
+        else:
+            try:
+                value = int(waitlistValue)
+                if value < 0 or value > 5:
+                    raise ValueError('waitlistValue must be an integer between 0 and 5!')
+                else:
+                    if collection.count_documents({'guildId': guildId}, limit = 1) != 0:
+                        collection.update_one({'guildId': guildId}, {'$set': {'waitlistValue': waitlistValue}})
+                    else:
+                        collection.insert_one({'guildId': guildId, 'waitlistValue': waitlistValue})
+
+                    if value == 0:
+                        await ctx.send('Quest waitlist disabled.')
+                    else:
+                        await ctx.send(f'Quest waitlist set to {value} players.')
+            except Exception as e:
+                await ctx.send('{}: {}'.format(type(e).__name__, e))
 
     @commands.has_permissions(administrator=True, manage_guild=True)
     @command(aliases = ['qchannel','qch'])

@@ -71,18 +71,16 @@ class Admin(Cog):
     @command(aliases = ['gmrole','gmr'])
     async def gmRole(self, ctx, *roles):
         """Gets or sets the GM role(s), used for GM commands."""
-        server = ctx.message.guild.id
-        collection = db[str(server)]
+        guildId = ctx.message.guild.id
+        collection = gdb['gmRoles']
         gmRoles = []
         newRoles = []
 
         if (roles):
             await ctx.send(roles)
-            if collection.find_one({'gmRoles': {'$exists': 'true'}}):
-                query = collection.find_one({'gmRoles': {'$exists': 'true'}})
-                for key, value in query.items():
-                    if key == 'gmRoles':
-                        gmRoles = value
+            if collection.count_documents({'guildId': guildId}, limit = 1) != 0:
+                query = collection.find_one({'guildId': guildId})
+                gmRoles = query['gmRoles']
                 for role in roles:
                     if role in gmRoles:
                         continue # Raise error that role is already configured
