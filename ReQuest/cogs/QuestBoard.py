@@ -61,7 +61,6 @@ class QuestBoard(Cog):
                 else:
                     original = message.content
                     edited = re.sub('\n- <@!'+str(userId)+'>', '', original)
-    # TODO: index a regex of user mention, then remove that substring somehow
                     await message.edit(content = edited)
                     collection.update_one({'messageId': messageId}, {'$pull': {'party': userId}})
             else:
@@ -89,6 +88,7 @@ class QuestBoard(Cog):
 
                             postEmbed = discord.Embed(title='NEW QUEST: '+title, type='rich', \
                                 description=f'**GM:** <@!{gm}>\n**Level Range:** {levels}\n**Description:**\n{description}')
+                            postEmbed.set_thumbnail(url=self.bot.user.avatar_url)
                             postEmbed.add_field(name='Party', value=formattedParty)
                             postEmbed.add_field(name='Waitlist', value=None)
                             postEmbed.set_footer(text='Quest ID: '+questId)
@@ -113,6 +113,7 @@ class QuestBoard(Cog):
 
                             postEmbed = discord.Embed(title='NEW QUEST: '+title, type='rich', \
                                 description=f'**GM:** <@!{gm}>\n**Level Range:** {levels}\n**Description:**\n{description}')
+                            postEmbed.set_thumbnail(url=self.bot.user.avatar_url)
                             postEmbed.add_field(name='Party', value=formattedParty)
                             postEmbed.add_field(name='Waitlist', value=None)
                             postEmbed.set_footer(text='Quest ID: '+questId)
@@ -122,67 +123,10 @@ class QuestBoard(Cog):
 # TODO: Needs error reporting/logging
             return
 
-    async def embed_reaction(self, payload):
-        """Handles addition/removal of user mentions when reacting to quest embeds"""
-        guildId = payload.guild_id
-        channel = self.bot.get_channel(payload.channel_id)
-        messageId = payload.message_id
-        message = await channel.fetch_message(messageId)
-        channelName : str = None
-
-        collection = gdb['questChannel']
-        query = collection.find_one({'guildId': guildId})
-        if not query:
-# TODO: Error Handling
-            return
-        else:
-            for key, value in query.items():
-                if key == 'questChannel':
-                    channelName = value
-
-        collection = gdb['quests']
-        if int(channelName[2:len(channelName)-1]) == int(channel.id):
-            userId = payload.user_id
-            query = collection.find_one({'messageId': messageId})
-            if not query:
-                return
-            else:
-                questId, title, description, levels, gm, party = \
-                            query['questId'], query['title'], query['desc'], query['levels'], query['gm'], query['party']
-                if payload.event_type == 'REACTION_ADD':
-                    if payload.member.bot:
-                        return
-                    else:
-                        if party[0] == None:
-                            party[0] = userId
-                        else:
-                            party.append(userId)
-
-                        mappedParty = list(map(str, party))
-
-                        formattedParty = '- <@!'+'>\n- <@!'.join(mappedParty)+'>'
-
-                        postEmbed = discord.Embed(title='NEW QUEST: '+title, type='rich', \
-                            description=f'**GM:** <@!{gm}>\n**Level Range:** {levels}\n**Description:**\n{description}')
-                        postEmbed.add_field(name='Party', value=formattedParty)
-                        postEmbed.add_field(name='Waitlist', value=None)
-                        postEmbed.set_footer(text='Quest ID: '+questId)
-
-                        collection.update_one({'messageId': messageId}, {'$push': {'party': userId}})
-
-                    await message.edit(embed=postEmbed)
-                else:
-                    return
-
     @listener()
     async def on_raw_reaction_add(self, payload):
         """Reaction_add event handling"""
         await QuestBoard.reaction_operation(self, payload)
-
-    #@listener()
-    #async def on_raw_reaction_add(self, payload):
-    #    """Reaction_add event handling"""
-    #    await QuestBoard.embed_reaction(self, payload)
 
     @listener()
     async def on_raw_reaction_remove(self, payload):
@@ -193,25 +137,24 @@ class QuestBoard(Cog):
 
     @commands.has_permissions(administrator=True, manage_guild=True)
     @command(aliases = ['qembed'])
-    async def questEmbed(self, ctx)
+    async def questEmbed(self, ctx):
         """This command toggles the rich embed format of quest posts on/off."""
         guildId = ctx.message.guild.id
         collection = gdb['questEmbed']
         
         # Look for an existing document for the guild and fetch it if it exists.
-        if collection.count_documents({'guildId': guildId}, limit = 1) != 0:
-            query = collection.find_one({'guildId': guildId})
-            
+        query = collection.find_one({'guildId': guildId})
+        if query:
             # Invert the bool of the fetched document and update it.
-            if query['questEmbed'] == True:
-                collection.update_one({'guildId': guildId}, {'$set': {'questEmbed': False}})
+            if query['embed'] == True:
+                collection.update_one({'guildId': guildId}, {'$set': {'embed': False}})
                 await ctx.send('Rich embed posting is disabled.')
             else:
-                collection.update_one({'guildId': guildId}, {'$set': {'questEmbed': True}})
+                collection.update_one({'guildId': guildId}, {'$set': {'embed': True}})
                 await ctx.send('Rich embed posting is enabled.')
         else:
             # If there is no document, make one and enable embeds.
-            collection.insert_one({'guildId': guildId, 'questEmbed': True})
+            collection.insert_one({'guildId': guildId, 'embed': True})
             await ctx.send('Rich embed posting is enabled.')
 
     @commands.has_permissions(administrator=True, manage_guild=True)
@@ -326,18 +269,15 @@ class QuestBoard(Cog):
         """Posts a new quest."""
 
 # TODO: Research exception catching on function argument TypeError
-# TODO: Refactor post into BSON entry for manipulation/future functionality
 
-        collection = gdb['questChannel']
         guildId = ctx.message.guild.id
-        channelName : str = None
-        announceRole : str = None
         questId = str(shortuuid.uuid()[:8])
 
         # Query the collection to see if a channel is set
-        query = collection.find_one({'guildId': guildId})
+        query = gdb['questChannel'].find_one({'guildId': guildId})
 
         # Inform user if quest channel is not set. Otherwise, get the channel string
+        channelName : str = None
         if not query:
             await ctx.send('Quest channel not set! Configure with `{}questChannel <channel mention>`'.format(self.bot.command_prefix))
             return
@@ -347,10 +287,10 @@ class QuestBoard(Cog):
                     channelName = value
 
         # Query the collection to see if a role is set
-        collection = gdb['announceRole']
-        query = collection.find_one({'guildId': guildId})
+        query = gdb['announceRole'].find_one({'guildId': guildId})
 
-        # Inform user if quest channel is not set. Otherwise, get the channel string
+        # Inform user if announcement role is not set. Otherwise, get the channel string
+        announceRole : str = None
 # TODO: Make announcement role optional
         if not query:
             await ctx.send('Announcement role not set! Configure with `{}announceRole <role mention>`'.format(self.bot.command_prefix))
@@ -365,39 +305,45 @@ class QuestBoard(Cog):
         channel = self.bot.get_channel(int(channelName[2:len(channelName)-1]))
 
         # Set post format and log the author, then post the new quest with an emoji reaction.
+        embedQuery = gdb['questEmbed'].find_one({'guildId': guildId})
+        messageId = 0
         gm = ctx.author.id
         party : [int] = [None]
         xp : int = None
-        #post = (f'{announceRole}\n**NEW QUEST:** {title}\n**Quest ID:** {questId}\n' +
-        #        f'**GM:** <@!{gm}>\n**Level Range:** {levels}\n**Description:** {description}\n' +
-        #        f'**Players (Max of {maxPartySize}):**')
-        #msg = await channel.send(post)
-        #emoji = '<:acceptquest:601559094293430282>'
-        #await msg.add_reaction(emoji)
-        #messageId = msg.id
+
+        # -- Default Style --
+        if not embedQuery or embedQuery['embed'] == False:
+
+            post = (f'{announceRole}\n**NEW QUEST:** {title}\n**Quest ID:** {questId}\n' +
+                    f'**GM:** <@!{gm}>\n**Level Range:** {levels}\n**Description:** {description}\n' +
+                    f'**Players (Max of {maxPartySize}):**')
+            msg = await channel.send(post)
+            emoji = '<:acceptquest:601559094293430282>'
+            await msg.add_reaction(emoji)
+            messageId = msg.id
+            await ctx.send('Quest posted!')
 
         # --- Embed Style ---
+        elif embedQuery['embed'] == True:
+            postEmbed = discord.Embed(title='NEW QUEST: '+title, type='rich', description=f'**GM:** <@!{gm}>\n**Level Range:** {levels}\n**Description:**\n{description}')
+            postEmbed.set_thumbnail(url=self.bot.user.avatar_url)
+            postEmbed.add_field(name='Party', value=None)
+            postEmbed.add_field(name='Waitlist', value=None)
+            postEmbed.set_footer(text='Quest ID: '+questId)
 
-        postEmbed = discord.Embed(title='NEW QUEST: '+title, type='rich', description=f'**GM:** <@!{gm}>\n**Level Range:** {levels}\n**Description:**\n{description}')
-        postEmbed.add_field(name='Party', value=None)
-        postEmbed.add_field(name='Waitlist', value=None)
-        postEmbed.set_footer(text='Quest ID: '+questId)
-
-        await channel.send(f'{announceRole}')
-        msg = await channel.send(embed=postEmbed)
-        emoji = '<:acceptquest:601559094293430282>'
-        await msg.add_reaction(emoji)
-        messageId = msg.id
-
-        #--------------------
+            await channel.send(f'{announceRole}')
+            msg = await channel.send(embed=postEmbed)
+            emoji = '<:acceptquest:601559094293430282>'
+            await msg.add_reaction(emoji)
+            messageId = msg.id
+            await ctx.send('Quest posted!')
+            
 
         try:
             collection.insert_one({'guildId': guildId, 'questId': questId, 'messageId': messageId, 'title': title, 'desc': description, 'maxPartySize': maxPartySize, 'levels': levels, 'gm': gm, 'party': party, 'xp': xp})
         except Exception as e:
             await ctx.send('{}: {}'.format(type(e).__name__, e))
-            
         # Provide feedback to the channel from which the command was sent.
-        await ctx.send('Quest posted!')
 
     #@commands.has_any_role() # Restrict command use to defined role(s)
     @command(aliases = ['qcomplete','qc'], hidden=True)
