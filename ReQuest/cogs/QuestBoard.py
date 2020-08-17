@@ -34,205 +34,190 @@ class QuestBoard(Cog):
         channel = self.bot.get_channel(payload.channel_id)
         messageId = payload.message_id
         message = await channel.fetch_message(messageId)
-        channelName : str = None
 
         # Find the configured Quest Channel and get the name (string in <#channelID> format)
+        channelName : str = None
         query = gdb['questChannel'].find_one({'guildId': guildId})
         if not query:
             return # TODO: Error handling/logging
-        else:
-            for key, value in query.items():
-                if key == 'questChannel':
-                    channelName = value
+        channelName = query['questChannel']
 
-        if int(channelName[2:len(channelName)-1]) == int(channel.id): # Ensure that only posts in the configured Quest Channel are modified.
-            userId = payload.user_id # TODO: Can probably move closer to assignments
+        # Ensure that only posts in the configured Quest Channel are modified.
+        if int(channelName[2:len(channelName)-1]) != int(channel.id):
+            return
+
+        userId = payload.user_id # TODO: Can probably move closer to assignments
             
-            # Get the server setting for quest waitlists
-            maxWaitlistSize = 0
+        # Get the server setting for quest waitlists
+        maxWaitlistSize = 0
+        query = gdb['questWaitlist'].find_one({'guildId': guildId})
+        if query:
+            maxWaitlistSize = query['waitlistValue']
 
-            query = gdb['questWaitlist'].find_one({'guildId': guildId})
-            if query:
-                maxWaitlistSize = query['waitlistValue']
+        collection = gdb['quests']
+        query = collection.find_one({'messageId': messageId}) # Get the quest that matches the message ID
+        if not query:
+            return # TODO: Missing quest error handling
 
-            collection = gdb['quests']
-            query = collection.find_one({'messageId': messageId}) # Get the quest that matches the message ID
-            if  not query:
-                return
+        currentParty = query['party']
+        currentWaitlist = query['waitlist']
+        currentPartySize = len(currentParty)
+        maxPartySize = query['maxPartySize']
+        currentWaitlistSize = len(currentWaitlist)
 
-            party = query['party']
-            waitlist = query['waitlist']
-            currentPartySize = len(party)
-            maxPartySize = query['maxPartySize']
-            currentWaitlistSize = len(waitlist)
-
-            if not message.embeds:
-                #if payload.event_type == 'REACTION_ADD': # Checks which kind of event is raised
-                #    if payload.member.bot:
-                #            return # Exits the function if the reaction add is triggered by the bot
-                #    else:
-                #        original = message.content # Grab the original message
-                #        if currentPartySize < maxPartySize:
-                #            await message.edit(content = original+f'\n- <@!{userId}>') # Append the reacting user's mention to the message
-                #        elif currentPartySize == maxPartySize and waitlistSize == 0:
-                #            return # Implement user DM for full party
-                #        elif currentPartySize == maxPartySize and waitlistSize > 0:
-                #            if currentWaitlistSize < waitlistSize:
-                #                return # Implement waitlist addition and message formatting
-                #            else:
-                #                return # Implement user DM for full party/waitlist
-                        
-                #        collection.update_one({'messageId': messageId}, {'$push': {'party': userId}})
-                #else:
-                #    original = message.content
-                #    edited = re.sub('\n- <@!'+str(userId)+'>', '', original)
-                #    await message.edit(content = edited)
-                #    collection.update_one({'messageId': messageId}, {'$pull': {'party': userId}})
+        # If a reaction is added, add the reacting user to the party/waitlist if there is room
+        if payload.event_type == 'REACTION_ADD': # TODO: Error checking for quests created before server waitlist changes
+            if payload.member.bot: # Ignore the event if a bot added the reaction
                 return
             else:
-                # If a reaction is added, add the reacting user to the party/waitlist if there is room
-                if payload.event_type == 'REACTION_ADD': # TODO: Error checking for quests created before server waitlist changes
-                    if payload.member.bot: # Ignore the event if a bot added the reaction
-                        return
+                # If the waitlist is enabled, this section formats the embed to include the waitlist
+                if maxWaitlistSize > 0:
+                    # --- Database operations ---
+
+                    # If there is room in the party, add the user.
+                    if len(currentParty) < maxPartySize:
+                        collection.update_one({'messageId': messageId}, {'$push': {'party': userId}})
+                    # If the party is full but the waitlist is not, add the user to waitlist.
+                    elif len(currentParty) >= maxPartySize and len(currentWaitlist) < maxWaitlistSize:
+                        collection.update_one({'messageId': messageId}, {'$push': {'waitlist': userId}})
+                    # Otherwise, DM the user that the party/waitlist is full
                     else:
-                        # If the waitlist is enabled, this section formats the embed to include the waitlist
-                        if maxWaitlistSize > 0:
-                            # --- Database operations ---
+                        return # TODO: Implement user DM that there is no more room
 
-                            # db is updated first
-                            # If the party is empty, replace the first item in the list with the user.
-                            if not party:
-                                collection.update_one({'messageId': messageId}, {'$set': {'party.0': userId}})
-                            else:
-                                # If there is room in the party, add the user.
-                                if len(party) < maxPartySize:
-                                    collection.update_one({'messageId': messageId}, {'$push': {'party': userId}})
-                                # If the party is full but the waitlist is not, add the user to waitlist.
-                                elif len(party) >= maxPartySize and len(waitlist) < maxWaitlistSize:
-                                    if not waitlist:
-                                        collection.update_one({'messageId': messageId}, {'$set': {'waitlist.0': userId}})
-                                    else:
-                                        collection.update_one({'messageId': messageId}, {'$push': {'waitlist': userId}})
-                                else:
-                                    return # TODO: Implement user DM that there is no more room
+                    # --- Post edit generation ---
 
-                            # --- Post edit generation ---
+                    # The document is queried again to build the updated post
+                    query = collection.find_one({'messageId': messageId})
 
-                            # The document is queried again to build the updated post
-                            query = collection.find_one({'messageId': messageId})
+                    questId, title, description, levels, gm, party, waitlist = (query['questId'], query['title'],
+                            query['desc'], query['levels'], query['gm'], query['party'], query['waitlist'])
 
-                            questId, title, description, levels, gm, party, waitlist = (query['questId'], query['title'],
-                                 query['desc'], query['levels'], query['gm'], query['party'], query['waitlist'])
+                    # Map int list to string for formatting, then format the list of users as user mentions
+                    mappedParty = list(map(str, party))
+                    formattedParty = '- <@!'+'>\n- <@!'.join(mappedParty)+'>'
 
-                            # Map int lists to string for formatting
-                            mappedParty = list(map(str, party))
-                            mappedWaitlist = list(map(str, waitlist))
+                    formattedWaitlist : str = None
+                    # Only format the waitlist if there is one.
+                    if waitlist:
+                        mappedWaitlist = list(map(str, waitlist))
+                        formattedWaitlist = '- <@!'+'>\n- <@!'.join(mappedWaitlist)+'>'
 
-                            # Format the list of users as user mentions
-                            formattedParty = '- <@!'+'>\n- <@!'.join(mappedParty)+'>'
-                            formattedWaitlist = '- <@!'+'>\n- <@!'.join(mappedWaitlist)+'>'
 
-                            # Construct the embed object and edit the post with the new embed
-                            postEmbed = discord.Embed(title='NEW QUEST: '+title, type='rich', \
-                                description=f'**GM:** <@!{gm}>\n**Level Range:** {levels}\n**Description:**\n{description}')
-                            postEmbed.set_thumbnail(url=self.bot.user.avatar_url)
-                            postEmbed.add_field(name='Party', value=formattedParty)
-                            postEmbed.add_field(name='Waitlist', value=formattedWaitlist)
-                            postEmbed.set_footer(text='Quest ID: '+questId)
+                    # Construct the embed object and edit the post with the new embed
+                    postEmbed = discord.Embed(title='NEW QUEST: '+title, type='rich',
+                        description=f'**GM:** <@!{gm}>\n**Level Range:** {levels}\n**Description:**\n{description}')
+                    postEmbed.set_thumbnail(url=self.bot.user.avatar_url)
+                    postEmbed.add_field(name='Party', value=formattedParty)
+                    postEmbed.add_field(name='Waitlist', value=formattedWaitlist)
+                    postEmbed.set_footer(text='Quest ID: '+questId)
 
-                            await message.edit(embed=postEmbed)
+                    await message.edit(embed=postEmbed)
 
-                        # If there is no waitlist, this section formats the embed without it
-                        else:
-                            # --- Database operations ---
-
-                            # db is updated first
-                            # If the party is empty, replace the first item in the list with the user.
-                            if party[0] == None:
-                                collection.update_one({'messageId': messageId}, {'$set': {'party.0': userId}})
-                            else:
-                                # If there is room in the party, add the user.
-                                if len(party) < maxPartySize:
-                                    collection.update_one({'messageId': messageId}, {'$push': {'party': userId}})
-                                else:
-                                    return # TODO: Implement user DM that there is no more room
-
-                            # --- Post edit generation ---
-
-                            # The document is queried again to build the updated post
-                            query = collection.find_one({'messageId': messageId})
-
-                            questId, title, description, levels, gm, party = \
-                                query['questId'], query['title'], query['desc'], query['levels'], query['gm'], query['party']
-
-                            # Map int lists to string for formatting
-                            mappedParty = list(map(str, party))
-
-                            # Format the list of users as user mentions
-                            formattedParty = '- <@!'+'>\n- <@!'.join(mappedParty)+'>'
-
-                            # Construct the embed object and edit the post with the new embed
-                            postEmbed = discord.Embed(title='NEW QUEST: '+title, type='rich', \
-                                description=f'**GM:** <@!{gm}>\n**Level Range:** {levels}\n**Description:**\n{description}')
-                            postEmbed.set_thumbnail(url=self.bot.user.avatar_url)
-                            postEmbed.add_field(name='Party', value=formattedParty)
-                            postEmbed.set_footer(text='Quest ID: '+questId)
-
-                            await message.edit(embed=postEmbed)
-                # This path is chosen if a reaction is removed.
+                # If there is no waitlist, this section formats the embed without it
                 else:
-                    # If the waitlist is enabled, this section formats the embed to include the waitlist
-                    if maxWaitlistSize > 0:
-                        collection.update_one({'messageId': messageId}, {'$pull': {'party': userId}})
+                    # --- Database operations ---
 
-                        query = collection.find_one({'messageId': messageId})
-
-                        questId, title, description, levels, gm, party = \
-                            query['questId'], query['title'], query['desc'], query['levels'], query['gm'], query['party']
-
-                        formattedParty : str = None
-                        if party:
-                            mappedParty = list(map(str, party))
-                            formattedParty = '- <@!'+'>\n- <@!'.join(mappedParty)+'>'
-                        else:
-                            formattedParty = None
-
-                        postEmbed = discord.Embed(title='NEW QUEST: '+title, type='rich', \
-                            description=f'**GM:** <@!{gm}>\n**Level Range:** {levels}\n**Description:**\n{description}')
-                        postEmbed.set_thumbnail(url=self.bot.user.avatar_url)
-                        postEmbed.add_field(name='Party', value=formattedParty)
-                        postEmbed.add_field(name='Waitlist', value=None)
-                        postEmbed.set_footer(text='Quest ID: '+questId)
-
-                        await message.edit(embed=postEmbed)
+                    # If there is room in the party, add the user.
+                    if len(currentParty) < maxPartySize:
+                        collection.update_one({'messageId': messageId}, {'$push': {'party': userId}})
                     else:
-                        # If there is no waitlist, this section formats the embed without it
-                        collection.update_one({'messageId': messageId}, {'$pull': {'party': userId}})
+                        return # TODO: Implement user DM that there is no more room
 
-                        if not collection.find_one({'messageId': messageId})['party']:
-                            collection.update_one({'messageId': messageId}, {'$set': {'party.0': None}})
+                    # --- Post edit generation ---
 
-                        query = collection.find_one({'messageId': messageId})
+                    # The document is queried again to build the updated post
+                    query = collection.find_one({'messageId': messageId})
 
-                        questId, title, description, levels, gm, party = \
-                            query['questId'], query['title'], query['desc'], query['levels'], query['gm'], query['party']
+                    questId, title, description, levels, gm, party = (query['questId'], query['title'],
+                        query['desc'], query['levels'], query['gm'], query['party'])
 
-                        formattedParty : str = None
+                    # Map int lists to string for formatting
+                    mappedParty = list(map(str, party))
 
-                        if party[0]:
-                            mappedParty = list(map(str, party))
-                            formattedParty = '- <@!'+'>\n- <@!'.join(mappedParty)+'>'
+                    # Format the list of users as user mentions
+                    formattedParty = '- <@!'+'>\n- <@!'.join(mappedParty)+'>'
 
-                        postEmbed = discord.Embed(title='NEW QUEST: '+title, type='rich', \
-                            description=f'**GM:** <@!{gm}>\n**Level Range:** {levels}\n**Description:**\n{description}')
-                        postEmbed.set_thumbnail(url=self.bot.user.avatar_url)
-                        postEmbed.add_field(name='Party', value=formattedParty)
-                        postEmbed.add_field(name='Waitlist', value=None)
-                        postEmbed.set_footer(text='Quest ID: '+questId)
+                    # Construct the embed object and edit the post with the new embed
+                    postEmbed = discord.Embed(title='NEW QUEST: '+title, type='rich',
+                        description=f'**GM:** <@!{gm}>\n**Level Range:** {levels}\n**Description:**\n{description}')
+                    postEmbed.set_thumbnail(url=self.bot.user.avatar_url)
+                    postEmbed.add_field(name='Party', value=formattedParty)
+                    postEmbed.set_footer(text='Quest ID: '+questId)
 
-                        await message.edit(embed=postEmbed)
+                    await message.edit(embed=postEmbed)
+        # This path is chosen if a reaction is removed.
         else:
-            return # TODO: Needs error reporting/logging
+            # If the waitlist is enabled, this section formats the embed to include the waitlist
+            if maxWaitlistSize > 0:
+                # --- Database operations ---
+
+                # Find which list the user is in, and remove them from the database
+                if userId in currentParty:
+                    collection.update_one({'messageId': messageId}, {'$pull': {'party': userId}})
+                    # If there is a waitlist, move the first entry into the party automatically
+                    if currentWaitlist:
+                        player = currentWaitlist[0]
+                        collection.update_one({'messageId': messageId}, {'$push': {'party': player}})
+                        collection.update_one({'messageId': messageId}, {'$pull': {'waitlist': player}})
+                elif userId in currentWaitlist:
+                    collection.update_one({'messageId': messageId}, {'$pull': {'waitlist': userId}})
+                else:
+                    return # TODO: Error handling
+
+                # --- Post edit generation ---
+
+                # Refresh the query with the new document
+                query = collection.find_one({'messageId': messageId})
+
+                questId, title, description, levels, gm, party, waitlist = (query['questId'], query['title'],
+                    query['desc'], query['levels'], query['gm'], query['party'], query['waitlist'])
+
+                # Format the party and waitlists.
+                formattedParty : str = None
+                if party:
+                    mappedParty = list(map(str, party))
+                    formattedParty = '- <@!'+'>\n- <@!'.join(mappedParty)+'>'
+                formattedWaitlist : str = None
+                if waitlist:
+                    mappedWaitlist = list(map(str, waitlist))
+                    formattedWaitlist = '- <@!'+'>\n- <@!'.join(mappedWaitlist)+'>'
+
+                # Build the embed object and update the post with the new embed
+                postEmbed = discord.Embed(title='NEW QUEST: '+title, type='rich',
+                    description=f'**GM:** <@!{gm}>\n**Level Range:** {levels}\n**Description:**\n{description}')
+                postEmbed.set_thumbnail(url=self.bot.user.avatar_url)
+                postEmbed.add_field(name='Party', value=formattedParty)
+                postEmbed.add_field(name='Waitlist', value=formattedWaitlist)
+                postEmbed.set_footer(text='Quest ID: '+questId)
+
+                await message.edit(embed=postEmbed)
+            # If there is no waitlist, this section formats the embed without it
+            else:
+                # --- Database operations ---
+
+                # Remove the user from the quest in the database
+                collection.update_one({'messageId': messageId}, {'$pull': {'party': userId}})
+
+                # --- Post edit generation ---
+                query = collection.find_one({'messageId': messageId})
+
+                questId, title, description, levels, gm, party = \
+                    query['questId'], query['title'], query['desc'], query['levels'], query['gm'], query['party']
+
+                # Format the party list
+                formattedParty : str = None
+                if party:
+                    mappedParty = list(map(str, party))
+                    formattedParty = '- <@!'+'>\n- <@!'.join(mappedParty)+'>'
+
+                # Build the embed object and update the post with the new embed
+                postEmbed = discord.Embed(title='NEW QUEST: '+title, type='rich',
+                    description=f'**GM:** <@!{gm}>\n**Level Range:** {levels}\n**Description:**\n{description}')
+                postEmbed.set_thumbnail(url=self.bot.user.avatar_url)
+                postEmbed.add_field(name='Party', value=formattedParty)
+                postEmbed.set_footer(text='Quest ID: '+questId)
+
+                await message.edit(embed=postEmbed)
 
     @listener()
     async def on_raw_reaction_add(self, payload):
