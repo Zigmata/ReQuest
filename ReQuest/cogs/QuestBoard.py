@@ -126,12 +126,18 @@ class QuestBoard(Cog):
     @listener()
     async def on_raw_reaction_add(self, payload):
         """Reaction_add event handling"""
-        await QuestBoard.reaction_operation(self, payload)
+        if str(payload.emoji) == '<:acceptquest:601559094293430282>':
+            await QuestBoard.reaction_operation(self, payload)
+        else:
+            return
 
     @listener()
     async def on_raw_reaction_remove(self, payload):
         """Reaction_remove event handling"""
-        await QuestBoard.reaction_operation(self, payload)
+        if str(payload.emoji) == '<:acceptquest:601559094293430282>':
+            await QuestBoard.reaction_operation(self, payload)
+        else:
+            return
 
 # ---- Configuration Commands ----
 
