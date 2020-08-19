@@ -1,6 +1,6 @@
 import discord
 
-async def command_remove(message):
+async def delete_command(message):
     try:
         await message.delete()
     except discord.HTTPException:

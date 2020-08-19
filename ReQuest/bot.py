@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 
 # Set up config file and load
-CONFIG_FILE = Path('config.yaml')
+CONFIG_FILE = Path('ReQuest\config.yaml')
 
 with open(CONFIG_FILE, 'r') as yaml_file:
     config = yaml.safe_load(yaml_file)

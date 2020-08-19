@@ -29,7 +29,7 @@ class Admin(Cog):
     @command(hidden=True)
     async def reload(self, ctx, module : str):
         try:
-            self.bot.reload_extension('cogs.'+module)
+            self.bot.reload_extension('ReQuest.cogs.'+module)
         except Exception as e:
             await ctx.send('{}: {}'.format(type(e).__name__, e))
         else:
@@ -49,7 +49,7 @@ class Admin(Cog):
     @command(hidden=True)
     async def load(self, ctx, module : str):
         try:
-            self.bot.load_extension('cogs.'+module)
+            self.bot.load_extension('ReQuest.cogs.'+module)
         except Exception as e:
             await ctx.send('{}: {}'.format(type(e).__name__, e))
         else:
