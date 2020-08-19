@@ -286,6 +286,8 @@ class QuestBoard(Cog):
             except Exception as e:
                 await ctx.send('{}: {}'.format(type(e).__name__, e))
 
+        await delete_command(ctx.message)
+
     @commands.has_permissions(administrator=True, manage_guild=True)
     @command(aliases = ['qchannel','qch'])
     async def questChannel(self, ctx, channel : str = None):
@@ -324,6 +326,8 @@ class QuestBoard(Cog):
                         channelName = value
                         await ctx.send('Quest channel currently set to {}'.format(channelName))
 
+        await delete_command(ctx.message)
+
     @commands.has_permissions(administrator=True, manage_guild=True)
     @command(aliases = ['arole','ar'])
     async def announceRole(self, ctx, role: str = None):
@@ -357,6 +361,8 @@ class QuestBoard(Cog):
                         announceRole = value
 
                 await ctx.send('Announcement role currently set to {}'.format(announceRole))
+
+        await delete_command(ctx.message)
 
 # ---- GM Commands ----
 
@@ -435,10 +441,13 @@ class QuestBoard(Cog):
         except Exception as e:
             await ctx.send('{}: {}'.format(type(e).__name__, e))
 
+        await delete_command(ctx.message)
+
     #@commands.has_any_role() # Restrict command use to defined role(s)
     @command(aliases = ['qcomplete','qc'], hidden=True)
     async def questComplete(self, ctx, id):
-        return
+
+        await delete_command(ctx.message)
 
 def setup(bot):
     bot.add_cog(QuestBoard(bot))

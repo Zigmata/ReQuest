@@ -10,6 +10,8 @@ from discord.utils import get
 from discord.ext import commands
 from discord.ext.commands import Cog, command
 
+from ..utilities.supportFunctions import delete_command
+
 listener = Cog.listener
 
 class Inventory(Cog):

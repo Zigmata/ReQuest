@@ -10,6 +10,8 @@ from discord.utils import get
 from discord.ext import commands
 from discord.ext.commands import Cog, command
 
+from ..utilities.supportFunctions import delete_command
+
 listener = Cog.listener
 
 class PlayerBoard(Cog):
@@ -57,6 +59,8 @@ class PlayerBoard(Cog):
                         channelName = value
 
                 await ctx.send('Player board channel currently set to {}'.format(channelName))
+
+        await delete_command(ctx.message)
 
 def setup(bot):
     bot.add_cog(PlayerBoard(bot))

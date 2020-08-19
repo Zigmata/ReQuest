@@ -10,6 +10,8 @@ from discord.utils import get
 from discord.ext import commands
 from discord.ext.commands import Cog, command
 
+from ..utilities.supportFunctions import delete_command
+
 class Admin(Cog):
     """Administrative commands such as server configuration and bot options."""
     def __init__(self, bot):
@@ -35,6 +37,8 @@ class Admin(Cog):
         else:
             await ctx.send('Extension successfully reloaded: `{}`'.format(module))
 
+        await delete_command(ctx.message)
+
     # Echoes the first argument provided
     @commands.is_owner()
     @command(hidden=True)
@@ -43,6 +47,8 @@ class Admin(Cog):
             await ctx.send('Give me something to echo!')
         else:
             await ctx.send(text)
+
+        await delete_command(ctx.message)
 
     # Loads a cog that hasn't yet been loaded
     @commands.is_owner()
@@ -55,6 +61,8 @@ class Admin(Cog):
         else:
             await ctx.send('Extension successfully loaded: `{}`'.format(module))
 
+        await delete_command(ctx.message)
+
     # Shut down the bot
     @commands.is_owner()
     @command(hidden=True)
@@ -64,6 +72,8 @@ class Admin(Cog):
             await ctx.bot.logout()
         except Exception as e:
             await ctx.send('{}: {}'.format(type(e).__name__, e))
+
+        await delete_command(ctx.message)
 
 #-------------Public Commands-------------
 
@@ -107,6 +117,8 @@ class Admin(Cog):
                         gmRoles = value
 
                 await ctx.send('GM role(s) currently set to {}'.format(', '.join(gmRoles)))
+
+        await delete_command(ctx.message)
 
 def setup(bot):
     bot.add_cog(Admin(bot))
