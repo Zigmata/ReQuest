@@ -20,12 +20,10 @@ class QuestBoard(Cog):
     """Quest posts and associated reaction signups/options"""
     def __init__(self, bot):
         global config
-        global db # remove after redesign
         global gdb
         self.bot = bot
         config = bot.config
         connection = MongoClient(config['dbServer'],config['port'])
-        db = connection[config['guildsCollection']] # remove after db redesign
         gdb = connection[config['guildCollection']]
 
 # ---- Listeners and support functions ----
@@ -250,7 +248,7 @@ class QuestBoard(Cog):
 # ---- Configuration Commands ----
 
     @commands.has_permissions(administrator=True, manage_guild=True)
-    @command(aliases = ['waitlist', 'qwait'])
+    @command(aliases = ['qwaitlist', 'qwait'])
     async def questWaitlist(self, ctx, waitlistValue = None):
         """This command gets or sets the waitlist cap. Accepts a range of 0 to 5."""
         guildId = ctx.message.guild.id
@@ -366,6 +364,7 @@ class QuestBoard(Cog):
 
 # ---- GM Commands ----
 
+    #@commands.has_any_role() # TODO: Restrict command use to defined role(s)
     @command(aliases = ['qpost','qp'])
     async def questPost(self, ctx, title: str, levels: str, description: str, maxPartySize: int):
         """Posts a new quest."""
@@ -443,10 +442,22 @@ class QuestBoard(Cog):
 
         await delete_command(ctx.message)
 
-    #@commands.has_any_role() # Restrict command use to defined role(s)
-    @command(aliases = ['qcomplete','qc'], hidden=True)
-    async def questComplete(self, ctx, id):
+    #@commands.has_any_role() # TODO: Restrict command use to defined role(s)
+    @command(aliases = ['ready', 'qr'])
+    async def questReady(self, ctx, id):
+        # TODO: Implement ready system, player notification, quest locking
+        await delete_command(ctx.message)
 
+    #@commands.has_any_role() # TODO: Restrict command use to defined role(s)
+    @command(aliases = ['unready', 'qur'])
+    async def questUnReady(self, ctx, id):
+        # TODO: Implement player removal, waitlist backfill and notification, and quest unlocking
+        await delete_command(ctx.message)
+
+    #@commands.has_any_role() # TODO: Restrict command use to defined role(s)
+    @command(aliases = ['complete','qc'])
+    async def questComplete(self, ctx, id):
+        # TODO: Implement quest removal/archival, optional summary, player and GM reward distribution
         await delete_command(ctx.message)
 
 def setup(bot):

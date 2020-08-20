@@ -8,7 +8,7 @@ from pymongo import MongoClient
 import discord
 from discord.utils import get
 from discord.ext import commands
-from discord.ext.commands import Cog, command
+from discord.ext.commands import Cog, command, group
 
 from ..utilities.supportFunctions import delete_command
 
@@ -16,12 +16,10 @@ class Admin(Cog):
     """Administrative commands such as server configuration and bot options."""
     def __init__(self, bot):
         global config
-        global db # remove after redesign
         global gdb
         self.bot = bot
         config = bot.config
         connection = MongoClient(config['dbServer'],config['port'])
-        #db = connection[config['guildsCollection']] # remove after db redesign
         gdb = connection[config['guildCollection']]
 
 #-------------Private Commands-------------
@@ -69,54 +67,122 @@ class Admin(Cog):
     async def shutdown(self,ctx):
         try:
             await ctx.send('Shutting down!')
+            await delete_command(ctx.message)
             await ctx.bot.logout()
         except Exception as e:
             await ctx.send('{}: {}'.format(type(e).__name__, e))
 
-        await delete_command(ctx.message)
-
 #-------------Public Commands-------------
 
     @commands.has_permissions(administrator=True, manage_guild=True)
-    @command(aliases = ['gmrole','gmr'])
-    async def gmRole(self, ctx, *roles):
-        """Gets or sets the GM role(s), used for GM commands."""
-        guildId = ctx.message.guild.id
-        collection = gdb['gmRoles']
-        gmRoles = []
-        newRoles = []
-
-        if (roles):
-            await ctx.send(roles)
-            if collection.count_documents({'guildId': guildId}, limit = 1) != 0:
-                query = collection.find_one({'guildId': guildId})
-                gmRoles = query['gmRoles']
-                for role in roles:
-                    if role in gmRoles:
-                        continue # Raise error that role is already configured
-                    else:
-                        newRoles.append(role)
-                try:
-                    collection.update_one('gmRoles', {'$addToSet': { 'gmRoles':', '.join(newRoles)}}, True)
-                    await ctx.send('Successfully set {} as GM!'.format(', '.join(newRoles)))
-                except Exception as e:
-                    await ctx.send('{}: {}'.format(type(e).__name__, e))
-            else:
-                try:
-                    collection.insert_one('gmRoles', ', '.join(roles))
-                    await ctx.send('Successfully set {} as GM!'.format(', '.join(roles)))
-                except Exception as e:
-                    await ctx.send('{}: {}'.format(type(e).__name__, e))
-        else:
-            query = collection.find_one({'gmRoles': {'$exists': 'true'}})
+    @group(aliases = ['gmrole', 'gmr'])
+    async def gmRole(self, ctx):
+        """
+        Gets or sets the GM role(s), used for GM commands.
+        """
+        if ctx.invoked_subcommand is None:
+            guildId = ctx.message.guild.id
+            collection = gdb['gmRoles']
+            
+            query = collection.find_one({'guildId': guildId})
             if not query:
                 await ctx.send('GM role(s) not set! Configure with `{}gmRole <role mention>`. Roles can be chained (separate with a space).'.format(self.bot.command_prefix))
             else:
-                for key, value in query.items():
-                    if key == 'gmRoles':
-                        gmRoles = value
+                currentRoles = query['gmRoles']
+                mappedRoles = list(map(str, currentRoles))
 
-                await ctx.send('GM role(s) currently set to {}'.format(', '.join(gmRoles)))
+                await ctx.send('GM Role(s): {}'.format('<@&'+'>, <@&'.join(mappedRoles)+'>'))
+
+        await delete_command(ctx.message)
+
+    @gmRole.command(aliases = ['a'])
+    async def add(self, ctx, *, roles):
+        """
+        Multiple roles can be chained by separating them with a space.
+        """
+        
+        guildId = ctx.message.guild.id
+        collection = gdb['gmRoles']
+
+        if roles:
+            newRoles = roles.split()
+            formattedRoles = [re.sub(r'[<>@&]', '', role) for role in newRoles]
+            parsedRoles = list(map(int, formattedRoles))
+            query = collection.find_one({'guildId': guildId})
+            if query:
+                gmRoles = query['gmRoles']
+                for role in parsedRoles:
+                    if role in gmRoles:
+                        continue # TODO: Raise error that role is already configured
+                    else:
+                        try:
+                            collection.update_one({'guildId': guildId}, {'$push': {'gmRoles': role}})
+                        except Exception as e:
+                            await ctx.send('{}: {}'.format(type(e).__name__, e))
+                            return # TODO: Logging
+
+                updatedQuery = collection.find_one({'guildId': guildId})['gmRoles']
+                mappedQuery = list(map(str, updatedQuery))
+                await ctx.send('GM role(s) set to {}'.format('<@&'+'>, <@&'.join(mappedQuery)+'>'))
+            else:
+                try:
+                    collection.insert_one({'guildId': guildId, 'gmRoles': parsedRoles})
+                    await ctx.send('Role(s) {} added as GMs'.format('<@&'+'>, <@&'.join(formattedRoles)+'>'))
+                except Exception as e:
+                    await ctx.send('{}: {}'.format(type(e).__name__, e))
+        else:
+            await ctx.send('Role not provided!')
+
+        await delete_command(ctx.message)
+
+    @gmRole.command(aliases = ['r'])
+    async def remove(self, ctx, *, roles):
+        """
+        Multiple roles can be chained by separating them with a space, or type 'all' to remove all roles.
+        """
+
+        guildId = ctx.message.guild.id
+        collection = gdb['gmRoles']
+
+        if roles:
+            if roles == 'all':
+                query = collection.find_one({'guildId': guildId})
+                if query:
+                    try:
+                        collection.update({'guildId':guildId}, {'$set': {'guildId': []}})
+                    except Exception as e:
+                        await ctx.send('{}: {}'.format(type(e).__name__, e))
+                        return # TODO: Logging
+
+                await ctx.send('GM roles cleared!')
+            else:
+                delRoles = roles.split()
+                formattedRoles = [re.sub(r'[<>@&]', '', role) for role in delRoles]
+                parsedRoles = list(map(int, formattedRoles))
+                query = collection.find_one({'guildId': guildId})
+                if query:
+                    gmRoles = query['gmRoles']
+                    remRoles = []
+                    for role in parsedRoles:
+                        if role in gmRoles:
+                            try:
+                                collection.update_one({'guildId': guildId}, {'$pull': {'gmRoles': role}})
+                            except Exception as e:
+                                await ctx.send('{}: {}'.format(type(e).__name__, e))
+                                return # TODO: Logging
+                        else:
+                            continue
+
+                    updatedQuery = collection.find_one({'guildId': guildId})['gmRoles']
+                    if updatedQuery:
+                        mappedQuery = list(map(str, updatedQuery))
+                        await ctx.send('GM role(s) set to {}'.format('<@&'+'>, <@&'.join(mappedQuery)+'>'))
+                    else:
+                        await ctx.send('GM role(s) cleared!')
+                else:
+                    await ctx.send('No GM roles are configured!')
+        else:
+            await ctx.send('Role not provided!')
 
         await delete_command(ctx.message)
 
