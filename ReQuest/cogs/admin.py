@@ -8,19 +8,18 @@ from pymongo import MongoClient
 import discord
 from discord.utils import get
 from discord.ext import commands
-from discord.ext.commands import Cog, command, group
+from discord.ext.commands import Cog, command
 
 from ..utilities.supportFunctions import delete_command
 
 class Admin(Cog):
     """Administrative commands such as server configuration and bot options."""
     def __init__(self, bot):
-        global config
-        global gdb
         self.bot = bot
-        config = bot.config
-        connection = MongoClient(config['dbServer'],config['port'])
-        gdb = connection[config['guildCollection']]
+        global gdb
+        global mdb
+        gdb = bot.gdb
+        mdb = bot.mdb
 
 #-------------Private Commands-------------
 
@@ -74,28 +73,27 @@ class Admin(Cog):
 
 #-------------Public Commands-------------
 
-    @commands.has_permissions(administrator=True, manage_guild=True)
-    @group(aliases = ['gmrole', 'gmr'])
+    @commands.has_permissions(administrator = True, manage_guild = True)
+    @commands.group(aliases = ['gmrole', 'gmr'], pass_context = True, invoke_without_command = True)
     async def gmRole(self, ctx):
         """
         Gets or sets the GM role(s), used for GM commands.
         """
-        if ctx.invoked_subcommand is None:
-            guildId = ctx.message.guild.id
-            collection = gdb['gmRoles']
+        guildId = ctx.message.guild.id
+        collection = gdb['gmRoles']
             
-            query = collection.find_one({'guildId': guildId})
-            if not query:
-                await ctx.send('GM role(s) not set! Configure with `{}gmRole <role mention>`. Roles can be chained (separate with a space).'.format(self.bot.command_prefix))
-            else:
-                currentRoles = query['gmRoles']
-                mappedRoles = list(map(str, currentRoles))
+        query = collection.find_one({'guildId': guildId})
+        if not query:
+            await ctx.send('GM role(s) not set! Configure with `{}gmRole <role mention>`. Roles can be chained (separate with a space).'.format(self.bot.command_prefix))
+        else:
+            currentRoles = query['gmRoles']
+            mappedRoles = list(map(str, currentRoles))
 
-                await ctx.send('GM Role(s): {}'.format('<@&'+'>, <@&'.join(mappedRoles)+'>'))
+            await ctx.send('GM Role(s): {}'.format('<@&'+'>, <@&'.join(mappedRoles)+'>'))
 
         await delete_command(ctx.message)
 
-    @gmRole.command(aliases = ['a'])
+    @gmRole.command(aliases = ['a'], pass_context = True)
     async def add(self, ctx, *, roles):
         """
         Multiple roles can be chained by separating them with a space.
@@ -135,7 +133,7 @@ class Admin(Cog):
 
         await delete_command(ctx.message)
 
-    @gmRole.command(aliases = ['r'])
+    @gmRole.command(aliases = ['r'], pass_context = True)
     async def remove(self, ctx, *, roles):
         """
         Multiple roles can be chained by separating them with a space, or type 'all' to remove all roles.
@@ -183,6 +181,121 @@ class Admin(Cog):
                     await ctx.send('No GM roles are configured!')
         else:
             await ctx.send('Role not provided!')
+
+        await delete_command(ctx.message)
+
+    @commands.has_permissions(administrator=True, manage_guild=True)
+    @command(aliases = ['qwaitlist', 'qwait'])
+    async def questWaitlist(self, ctx, waitlistValue = None):
+        """This command gets or sets the waitlist cap. Accepts a range of 0 to 5."""
+        guildId = ctx.message.guild.id
+        collection = gdb['questWaitlist']
+
+        # Print the current setting if no argument is given. Otherwise, store the new value.
+        if (waitlistValue == None):
+            query = collection.find_one({'guildId': guildId})
+            if query:
+                value = query['waitlistValue']
+                if value == 0:
+                    await ctx.send('Quest wait list is currently disabled.')
+                else:
+                    await ctx.send('Quest wait list currently set to {} players.'.format(str(value)))
+            else:
+                await ctx.send('Quest wait list is currently disabled.')
+        else:
+            try:
+                value = int(waitlistValue) # Convert to int for input validation and db storage
+                if value < 0 or value > 5:
+                    raise ValueError('Value must be an integer between 0 and 5!')
+                else:
+                    # If a document is found, update it. Otherwise create a new one.
+                    if collection.count_documents({'guildId': guildId}, limit = 1) != 0:
+                        collection.update_one({'guildId': guildId}, {'$set': {'waitlistValue': value}})
+                    else:
+                        collection.insert_one({'guildId': guildId, 'waitlistValue': value})
+
+                    if value == 0:
+                        await ctx.send('Quest wait list disabled.')
+                    else:
+                        await ctx.send(f'Quest wait list set to {value} players.')
+            except Exception as e:
+                await ctx.send('{}: {}'.format(type(e).__name__, e))
+
+        await delete_command(ctx.message)
+
+    @commands.has_permissions(administrator=True, manage_guild=True)
+    @command(aliases = ['qchannel','qch'])
+    async def questChannel(self, ctx, channel : str = None):
+        """Configures the channel in which quests are to be posted"""
+        # Get server ID to locate proper collection
+        guildId = ctx.message.guild.id
+        collection = gdb['questChannel']
+        channelName : str = None
+
+        # When provided with a channel name, deletes the old entry and adds the new one.
+        if (channel):
+            if collection.find_one({'guildId': guildId}):
+                # If a match is found, attempt to delete it before proceeding.
+                try:
+                    collection.delete_one({'guildId': guildId})
+                except Exception as e:
+                    await ctx.send('{}: {}'.format(type(e).__name__, e))
+                    return
+
+            # Regardless of whether or not a match is found, insert the new record.
+            try:
+                collection.insert_one({'guildId': guildId, 'questChannel': channel})
+            except Exception as e:
+                await ctx.send('{}: {}'.format(type(e).__name__, e))
+            else:
+                await ctx.send('Successfully set quest channel to {0}!'.format(channel))
+
+        # If no channel is provided, inform the user of the current setting
+        if (channel == None):
+            query = collection.find_one({'guildId': guildId})
+            if not query:
+                await ctx.send('Quest channel not set! Configure with `{}questChannel <channel link>`'.format(self.bot.command_prefix))
+            else:
+                for key, value in query.items():
+                    if key == 'questChannel':
+                        channelName = value
+                        await ctx.send('Quest channel currently set to {}'.format(channelName))
+
+        await delete_command(ctx.message)
+
+    @commands.has_permissions(administrator=True, manage_guild=True)
+    @command(aliases = ['arole','ar'])
+    async def announceRole(self, ctx, role: str = None):
+        """Gets or sets the role used for post announcements."""
+        guildId = ctx.message.guild.id
+        collection = gdb['announceRole']
+
+        if (role):
+            if collection.find_one({'guildId': guildId}):
+                try:
+                    collection.delete_one({'guildId': guildId})
+                except Exception as e:
+                    await ctx.send('{}: {}'.format(type(e).__name__, e))
+                    return
+
+            try:
+                collection.insert_one({'guildId': guildId, 'announceRole': role})
+            except Exception as e:
+                await ctx.send('{}: {}'.format(type(e).__name__, e))
+            else:
+                await ctx.send('Successfully set announcement role to {}!'.format(role))
+
+        if (role == None):
+            query = collection.find_one({'guildId': guildId})
+            if not query:
+                await ctx.send('Announcement role not set! Configure with `{}announceRole <role mention>`'.format(self.bot.command_prefix))
+            else:
+                announceRole = None
+                for key, value in query.items():
+                    if key == 'announceRole':
+                        announceRole = value
+
+                await ctx.send('Announcement role currently set to {}'.format(announceRole))
 
         await delete_command(ctx.message)
 

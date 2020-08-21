@@ -16,12 +16,11 @@ listener = Cog.listener
 
 class PlayerBoard(Cog):
     def __init__(self, bot):
-        global config
-        global gdb
         self.bot = bot
-        config = bot.config
-        connection = MongoClient(config['dbServer'],config['port'])
-        gdb = connection[config['guildCollection']]
+        global gdb
+        global mdb
+        gdb = bot.gdb
+        mdb = bot.mdb
 
     # Configures the channel in which player messages are to be posted. Same logic as questChannel()
     @commands.has_permissions(administrator=True, manage_guild=True)

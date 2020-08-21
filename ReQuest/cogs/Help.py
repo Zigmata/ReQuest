@@ -13,12 +13,11 @@ from ..utilities.supportFunctions import delete_command
 class Help(Cog):
     """Help and informational commands."""
     def __init__(self, bot):
-        global config
-        global gdb
         self.bot = bot
-        config = bot.config
-        connection = MongoClient(config['dbServer'],config['port'])
-        gdb = connection[config['guildCollection']]
+        global gdb
+        global mdb
+        gdb = bot.gdb
+        mdb = bot.mdb
 
     # Simple ping test
     @command()
