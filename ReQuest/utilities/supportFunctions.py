@@ -10,7 +10,7 @@ async def delete_command(message):
         pass
 
 def has_gm_role():
-    def predicate(ctx):
+    async def predicate(ctx):
         gdb=ctx.bot.gdb
         collection = gdb['gmRoles']
         guildId = ctx.guild.id
@@ -21,6 +21,8 @@ def has_gm_role():
             for role in ctx.author.roles:
                 if role.id in gmRoles:
                     return True
+
+        await delete_command(ctx.message)
         raise commands.CheckFailure("You do not have permissions to run this command!")
 
     return commands.check(predicate)

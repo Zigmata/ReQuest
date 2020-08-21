@@ -72,7 +72,7 @@ class Admin(Cog):
 
 #-------------Config Commands--------------
 
-    @commands.has_guild_permissions(administrator = True, manage_guild = True)
+    @commands.has_guild_permissions(manage_guild = True)
     @commands.group(aliases = ['conf'], pass_context = True)
     async def config(self, ctx):
         if ctx.invoked_subcommand is None:
@@ -193,7 +193,7 @@ class Admin(Cog):
                 query = collection.find_one({'guildId': guildId})
                 if query:
                     try:
-                        collection.update({'guildId':guildId}, {'$set': {'guildId': []}})
+                        collection.update({'guildId': guildId}, {'$set': {'gmRoles': []}})
                     except Exception as e:
                         await ctx.send('{}: {}'.format(type(e).__name__, e))
                         return # TODO: Logging
@@ -238,7 +238,7 @@ class Admin(Cog):
             return # TODO: Error message feedback
 
     # Configures the channel in which player messages are to be posted. Same logic as questChannel()
-    @channel.command(aliases = ['pboard', 'pb'], pass_context = True)
+    @channel.command(name = 'playerboard', aliases = ['pboard', 'pb'], pass_context = True)
     async def playerBoard(self, ctx, channel : str = None):
         """Get or sets the channel used for the Player Board."""
         guildId = ctx.message.guild.id
@@ -275,7 +275,7 @@ class Admin(Cog):
 
         await delete_command(ctx.message)
 
-    @channel.command(aliases = ['qboard', 'qb'], pass_context = True)
+    @channel.command(name = 'questboard', aliases = ['qboard', 'qb'], pass_context = True)
     async def questBoard(self, ctx, channel : str = None):
         """Configures the channel in which quests are to be posted"""
         # Get server ID to locate proper collection
@@ -314,7 +314,7 @@ class Admin(Cog):
 
         await delete_command(ctx.message)
 
-    @channel.command(aliases = ['qarch', 'qa'], pass_context = True)
+    @channel.command(name = 'questarchive', aliases = ['qarch', 'qa'], pass_context = True)
     async def questArchive(self, ctx, channel : str = None):
         return # TODO: Implement quest archive
 
