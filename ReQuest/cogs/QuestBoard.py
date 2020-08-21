@@ -11,8 +11,8 @@ from discord.utils import get
 from discord.ext import commands
 from discord.ext.commands import Cog, command
 
-from ..utilities.supportFunctions import delete_command
-#from ..utilities.supportFunctions import delete_command, has_gm_role
+#from ..utilities.supportFunctions import delete_command
+from ..utilities.supportFunctions import delete_command, has_gm_role
 
 listener = Cog.listener
 
@@ -247,9 +247,16 @@ class QuestBoard(Cog):
 
 # ---- GM Commands ----
 
-    #@commands.check(has_gm_role) # TODO: Somehow dynamically map GM roles to decorator checks
-    @command(aliases = ['qpost','qp'])
-    async def questPost(self, ctx, title: str, levels: str, description: str, maxPartySize: int):
+    # --- Quests ---
+
+    @commands.group(pass_context = True)
+    @has_gm_role()
+    async def quest(self, ctx):
+        if ctx.invoked_subcommand is None:
+            return # TODO: Error message feedback
+
+    @quest.command(pass_context = True)
+    async def post(self, ctx, title: str, levels: str, description: str, maxPartySize: int):
         """Posts a new quest."""
 
         # TODO: Research exception catching on function argument TypeError
@@ -325,21 +332,18 @@ class QuestBoard(Cog):
 
         await delete_command(ctx.message)
 
-    #@commands.has_any_role() # TODO: Restrict command use to defined role(s)
-    @command(aliases = ['ready', 'qr'])
-    async def questReady(self, ctx, id):
+    @quest.command(pass_context = True)
+    async def ready(self, ctx, id):
         # TODO: Implement ready system, player notification, quest locking
         await delete_command(ctx.message)
 
-    #@commands.has_any_role() # TODO: Restrict command use to defined role(s)
-    @command(aliases = ['unready', 'qur'])
-    async def questUnReady(self, ctx, id):
+    @quest.command(aliases = ['ur'], pass_context = True)
+    async def unready(self, ctx, id):
         # TODO: Implement player removal, waitlist backfill and notification, and quest unlocking
         await delete_command(ctx.message)
 
-    #@commands.has_any_role() # TODO: Restrict command use to defined role(s)
-    @command(aliases = ['complete','qc'])
-    async def questComplete(self, ctx, id):
+    @quest.command(pass_context = True)
+    async def complete(self, ctx, id):
         # TODO: Implement quest removal/archival, optional summary, player and GM reward distribution
         await delete_command(ctx.message)
 

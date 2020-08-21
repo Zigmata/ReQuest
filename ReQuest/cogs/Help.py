@@ -27,7 +27,7 @@ class Help(Cog):
 
         await delete_command(ctx.message)
 
-    @commands.is_owner()
+    @commands.is_owner() # TODO: Remove owner lock for public release
     @command(hidden=True) # TODO: Adjust descriptors after public release
     async def invite(self,ctx):
         """Prints an invite to add ReQuest to your server."""
