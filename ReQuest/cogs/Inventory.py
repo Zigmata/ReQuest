@@ -6,11 +6,10 @@ import pymongo
 from pymongo import MongoClient
 
 import discord
-from discord.utils import get
 from discord.ext import commands
 from discord.ext.commands import Cog, command
 
-from ..utilities.supportFunctions import delete_command
+from ..utilities.supportFunctions import delete_command, has_gm_role
 
 listener = Cog.listener
 

@@ -7,11 +7,9 @@ import pymongo
 from pymongo import MongoClient
 
 import discord
-from discord.utils import get
 from discord.ext import commands
 from discord.ext.commands import Cog, command
 
-#from ..utilities.supportFunctions import delete_command
 from ..utilities.supportFunctions import delete_command, has_gm_role
 
 listener = Cog.listener
@@ -334,7 +332,11 @@ class QuestBoard(Cog):
 
     @quest.command(pass_context = True)
     async def ready(self, ctx, id):
-        # TODO: Implement ready system, player notification, quest locking
+        """Locks the quest roster and alerts party members that the quest is ready."""
+        guild_id = ctx.message.guild.id
+        collection = gdb['quests']
+
+        
         await delete_command(ctx.message)
 
     @quest.command(aliases = ['ur'], pass_context = True)
