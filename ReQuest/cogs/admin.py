@@ -256,7 +256,7 @@ class Admin(Cog):
 
         if channel:
             try:
-                channel_id = strip_id(channel)
+                channel_id = self.strip_id(channel)
                 if collection.count_documents({'guildId': guild_id}, limit = 1) != 0:
                     collection.update_one({'guildId': guild_id}, {'$set': {'playerBoardChannel': channel_id}})
                 else:
@@ -266,11 +266,11 @@ class Admin(Cog):
                 await ctx.send('{}: {}'.format(type(e).__name__, e))
                 return
         else:
-            query = collection.find_one({'guildId': guild_id})['playerBoardChannel']
+            query = collection.find_one({'guildId': guild_id})
             if not query:
                 await ctx.send('Player board channel not set! Configure with `{}config channel playerboard <channel mention>`'.format(self.bot.command_prefix))
             else:
-                await ctx.send('Player board channel currently set to <#{}>'.format(query))
+                await ctx.send('Player board channel currently set to <#{}>'.format(query['playerBoardChannel']))
 
         await delete_command(ctx.message)
 
@@ -283,7 +283,7 @@ class Admin(Cog):
         # When provided with a channel name, deletes the old entry and adds the new one.
         if channel:
             try:
-                channel_id = strip_id(channel) # Strip channel ID and cast to int
+                channel_id = self.strip_id(channel) # Strip channel ID and cast to int
                 if collection.count_documents({'guildId': guild_id}, limit = 1) != 0:
                     # If a match is found, attempt to update it before proceeding.
                     collection.update_one({'guildId': guild_id}, {'$set': {'questChannel': channel_id}})
@@ -295,11 +295,11 @@ class Admin(Cog):
                 await ctx.send('{}: {}'.format(type(e).__name__, e))
                 return
         else: # If no channel is provided, inform the user of the current setting
-            query = collection.find_one({'guildId': guild_id})['questChannel']
+            query = collection.find_one({'guildId': guild_id})
             if not query:
                 await ctx.send('Quest board channel not set! Configure with `{}config channel questboard <channel link>`'.format(self.bot.command_prefix))
             else:
-                await ctx.send('Quest board channel currently set to <#{}>'.format(query))
+                await ctx.send('Quest board channel currently set to <#{}>'.format(query['questChannel']))
 
         await delete_command(ctx.message)
 
@@ -311,7 +311,7 @@ class Admin(Cog):
 
         if channel:
             try:
-                channel_id = strip_id(channel)
+                channel_id = self.strip_id(channel)
                 if collection.count_documents({'guildId': guild_id}, limit = 1) != 0:
                     collection.update_one({'guildId': guild_id}, {'$set': {'archiveChannel': channel_id}})
                 else:
@@ -321,11 +321,11 @@ class Admin(Cog):
                 await ctx.send('{}: {}'.format(type(e).__name__, e))
                 return
         else:
-            query = collection.find_one({'guildId': guild_id})['archiveChannel']
+            query = collection.find_one({'guildId': guild_id})
             if not query:
                 await ctx.send('Quest archive channel not set! Configure with `{}config channel questarchive <channel link>`'.format(self.bot.command_prefix))
             else:
-                await ctx.send('Quest archive channel currently set to <#{}>'.format(query))
+                await ctx.send('Quest archive channel currently set to <#{}>'.format(query['archiveChannel']))
 
         await delete_command(ctx.message)
 
