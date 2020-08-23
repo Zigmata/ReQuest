@@ -102,10 +102,10 @@ class Admin(Cog):
         """Gets or sets the role used for post announcements."""
         guild_id = ctx.message.guild.id
         collection = gdb['announceRole']
-        role_id = strip_id(role) # Get numeric role ID
 
         # If a role is provided, write it to the db
         if role:
+            role_id = self.strip_id(role) # Get numeric role ID
             if collection.find_one({'guildId': guild_id}):
                 try:
                     collection.update_one({'guildId': guild_id}, {'$set': {'announceRole': role_id}})
@@ -122,12 +122,12 @@ class Admin(Cog):
             await ctx.send('Successfully set announcement role to {}!'.format(role))
         # Otherwise, query the db for the current setting
         else:
-            query = collection.find_one({'guildId': guild_id})['announceRole']
+            query = collection.find_one({'guildId': guild_id})
             if not query:
                 await ctx.send('Announcement role not set! '
                     'Configure with `{}config role announce <role mention>`'.format(self.bot.command_prefix))
             else:
-                await ctx.send('Announcement role currently set to <@&{}>'.format(str(query)))
+                await ctx.send('Announcement role currently set to <@&{}>'.format(str(query['announceRole'])))
         await delete_command(ctx.message)
 
     @role.group(pass_context = True, invoke_without_command = True)
@@ -139,7 +139,7 @@ class Admin(Cog):
         collection = gdb['gmRoles']
             
         query = collection.find_one({'guildId': guild_id})
-        if not query:
+        if not query or not query['gmRoles']:
             await ctx.send('GM role(s) not set! Configure with '
                 '`{}gmRole <role mention>`. Roles can be chained (separate with a space).'.format(self.bot.command_prefix))
         else:
@@ -336,7 +336,7 @@ class Admin(Cog):
         if ctx.invoked_subcommand is None:
             return # TODO: Error message feedback
 
-    @quest.command(aliases = ['wait'], pass_context = True)
+    @quest.command(name = 'waitlist', aliases = ['wait'], pass_context = True)
     async def wait_list(self, ctx, waitlistValue = None):
         """This command gets or sets the waitlist cap. Accepts a range of 0 to 5."""
         guild_id = ctx.message.guild.id
@@ -344,13 +344,13 @@ class Admin(Cog):
 
         # Print the current setting if no argument is given. Otherwise, store the new value.
         if not waitlistValue:
-            query = collection.find_one({'guildId': guild_id})['waitlistValue']
+            query = collection.find_one({'guildId': guild_id})
             if not query:
                 await ctx.send('Quest wait list is currently disabled.')
-            elif query and query == 0:
+            elif query and query['waitlistValue'] == 0:
                 await ctx.send('Quest wait list is currently disabled.')
             else:
-                await ctx.send('Quest wait list currently set to {} players.'.format(str(value)))
+                await ctx.send('Quest wait list currently set to {} players.'.format(str(query['waitlistValue'])))
         else:
             try:
                 value = int(waitlistValue) # Convert to int for input validation and db storage
