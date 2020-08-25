@@ -9,8 +9,9 @@ from pymongo import MongoClient
 import discord
 from discord.ext import commands
 from discord.ext.commands import Cog, command
+from discord.utils import get
 
-from ..utilities.supportFunctions import delete_command, has_gm_role
+from ..utilities.supportFunctions import delete_command, has_gm_role, parse_list, strip_id
 
 listener = Cog.listener
 
@@ -26,7 +27,7 @@ class QuestBoard(Cog):
 
 # ---- Listeners and support functions ----
 
-    def update_embed(self, quest):
+    def update_embed(self, quest) -> discord.Embed:
 
         (guild_id, quest_id, message_id, title, description, max_party_size, levels, gm, party,
             wait_list, xp, max_wait_list_size, lock_state) = (quest['guildId'], quest['questId'],
@@ -66,6 +67,7 @@ class QuestBoard(Cog):
 
     async def reaction_operation(self, payload):
         """Handles addition/removal of user mentions when reacting to quest posts"""
+        # TODO: Remove GM role (if configured) from player on removal (if present)
         guild_id = payload.guild_id
         user_id = payload.user_id
         user = self.bot.get_user(user_id)
@@ -87,22 +89,22 @@ class QuestBoard(Cog):
 
             
         collection = gdb['quests']
-        query = collection.find_one({'messageId': message_id}) # Get the quest that matches the message ID
-        if not query:
+        quest = collection.find_one({'messageId': message_id}) # Get the quest that matches the message ID
+        if not quest:
             emoji = payload.emoji
             await message.remove_reaction(emoji, user)
             return # TODO: Missing quest error handling
 
-        current_party = query['party']
-        current_wait_list = query['waitList']
+        current_party = quest['party']
+        current_wait_list = quest['waitList']
         current_party_size = len(current_party)
-        max_wait_list_size = query['maxWaitListSize']
-        max_party_size = query['maxPartySize']
+        max_wait_list_size = quest['maxWaitListSize']
+        max_party_size = quest['maxPartySize']
         current_wait_list_size = len(current_wait_list)
 
         # If a reaction is added, add the reacting user to the party/waitlist if there is room
         if payload.event_type == 'REACTION_ADD':
-            if query['lockState'] == True:
+            if quest['lockState'] == True:
                 emoji = payload.emoji
                 await message.remove_reaction(emoji, user)
                 return # TODO: Report locked status
@@ -162,8 +164,21 @@ class QuestBoard(Cog):
                     # If there is a waitlist, move the first entry into the party automatically
                     if current_wait_list:
                         player = current_wait_list[0]
+                        guild = self.bot.get_guild(guild_id)
+                        member = guild.get_member(player)
+
                         collection.update_one({'messageId': message_id}, {'$push': {'party': player}})
                         collection.update_one({'messageId': message_id}, {'$pull': {'waitList': player}})
+
+                        # Notify the member they have been moved into the main party
+                        member.send('You have been added to the party for the quest, **{}**, due to a player dropping!'.format(quest['title']))
+
+                        # If the player was added from waitlist and the quest is already locked, give them the GM role (if exists)
+                        party_role = gdb['partyRole'].find_one({'guildId': guild_id, 'gm': quest['gm']})
+                        if quest['lockState'] and party_role:
+                            role = guild.get_role(party_role['role'])
+                            member.add_roles(role)
+
                 elif user_id in current_wait_list:
                     collection.update_one({'messageId': message_id}, {'$pull': {'waitList': user_id}})
                 else:
@@ -278,7 +293,7 @@ class QuestBoard(Cog):
         emoji = '<:acceptquest:601559094293430282>'
         await msg.add_reaction(emoji)
         message_id = msg.id
-        await ctx.send('Quest posted!')
+        await ctx.send(f'Quest **{quest_id}** posted!')
 
         try:
             collection.insert_one({'guildId': guild_id, 'questId': quest_id, 'messageId': message_id,
@@ -291,40 +306,196 @@ class QuestBoard(Cog):
         await delete_command(ctx.message)
 
     @quest.command(pass_context = True)
-    async def ready(self, ctx, id):
+    async def ready(self, ctx, quest_id):
         """Locks the quest roster and alerts party members that the quest is ready."""
         guild_id = ctx.message.guild.id
-        collection = gdb['quests']
-
-        query = collection.find_one({'questId': id})
-        if not query:
+        user_id = ctx.message.author.id
+        
+        # Fetch the quest
+        qcollection = gdb['quests']
+        quest = qcollection.find_one({'questId': quest_id})
+        if not quest:
             # TODO: Error reporting/logging on no quest match
+            await delete_command(ctx.message)
             return
 
-        collection.update_one({'questId': id}, {'$set': {'lockState': True}})
+        # Confirm the user calling the command is the GM that created the quest
+        if not quest['gm'] == user_id:
+            await ctx.send('GMs can only manage their own quests!')
+            await delete_command(ctx.message)
+            return
 
-        quest = collection.find_one({'questId': id})
+        # Check to see if the GM has a party role configured
+        role_id : int = None
+        rcollection = gdb['partyRole']
+        query = rcollection.find_one({'guildId': guild_id, 'gm': user_id})
+        if query and query['role']:
+            role_id = query['role']
 
+        # Lock the quest
+        qcollection.update_one({'questId': quest_id}, {'$set': {'lockState': True}})
+
+        # Fetch the updated quest
+        updated_quest = qcollection.find_one({'questId': quest_id})
+        party = updated_quest['party']
+        title = updated_quest['title']
+        
+        # Notify each party member that the quest is ready
+        guild = self.bot.get_guild(guild_id)
+        for player in party:
+            member = guild.get_member(player)
+            # If the GM has a party role configured, assign it to each party member
+            if role_id:
+                role = guild.get_role(role_id)
+                await member.add_roles(role)
+            await member.send(f'Game Master <@{user_id}> has marked your quest, **"{title}"**, ready to start!')
+
+        # Fetch the quest channel to retrieve the message object
         channel_id = gdb['questChannel'].find_one({'guildId': guild_id})
         if not channel_id:
             return # TODO: Error handling/logging
-        message_id = quest['messageId']
+
+        # Retrieve the message object
+        message_id = updated_quest['messageId']
         channel = self.bot.get_channel(channel_id['questChannel'])
         message = await channel.fetch_message(message_id)
-        post_embed = self.update_embed(quest)
 
+        # Create the updated embed, and edit the message
+        post_embed = self.update_embed(updated_quest)
         await message.edit(embed = post_embed)
         
         await delete_command(ctx.message)
 
     @quest.command(aliases = ['ur'], pass_context = True)
-    async def unready(self, ctx, id, *players):
-        # TODO: Implement player removal, waitlist backfill and notification, and quest unlocking
+    async def unready(self, ctx, quest_id, *, players = None):
+        # TODO: Implement player removal notification
+        """
+        Unlocks a quest if members are not ready. Able to remove members and roles.
+        """
+        guild_id = ctx.message.guild.id
+        user_id = ctx.message.author.id
+        qcollection = gdb['quests']
+
+        # Fetch the quest
+        quest = qcollection.find_one({'questId': quest_id})
+        if not quest:
+            # TODO: Error reporting/logging on no quest match
+            await delete_command(ctx.message)
+            return
+
+        # Confirm the user calling the command is the GM that created the quest
+        if not quest['gm'] == user_id:
+            await ctx.send('GMs can only manage their own quests!')
+            await delete_command(ctx.message)
+            return
+
+        # Check to see if the GM has a party role configured
+        role_id : int = None
+        rcollection = gdb['partyRole']
+        query = rcollection.find_one({'guildId': guild_id, 'gm': user_id})
+        if query and query['role']:
+            role_id = query['role']
+
+        # Unlock the quest
+        qcollection.update_one({'questId': quest_id}, {'$set': {'lockState': False}})
+
+        # Fetch the quest channel to retrieve the message object        
+        channel_id = gdb['questChannel'].find_one({'guildId': guild_id})
+        if not channel_id:
+            return # TODO: Error handling/logging
+
+        # Retrieve the message object
+        message_id = quest['messageId']
+        channel = self.bot.get_channel(channel_id['questChannel'])
+        message = await channel.fetch_message(message_id)
+
+        # This path executes if user mentions are provided
+        if players:
+            # Split user mentions into an array and parse out the user IDs
+            removed_players = players.split()
+            player_ids = parse_list(removed_players)
+
+            for player in player_ids:
+                # Remove the player from the party
+                qcollection.update_one({'questId': quest_id}, {'$pull': {'party': player}})
+                guild = self.bot.get_guild(guild_id)
+                member = guild.get_member(player)
+
+                # Remove the player's reactions from the post.
+                [await reaction.remove(member) for reaction in message.reactions]
+                
+                replacement = None
+                replacement_member = None
+                # If there is a wait list, move the first player into the party and remove them from the wait list
+                if quest['waitList']:
+                    replacement = quest['waitList'][0]
+                    replacement_member = guild.get_member(replacement)
+                    qcollection.update_one({'questId': quest_id}, {'$push': {'party': replacement}})
+                    qcollection.update_one({'questId': quest_id}, {'$pull': {'waitList': replacement}})
+
+                    # Notify player they are now in the party
+                    await member.send('You have been added to the party for the quest, **{}**, due to a player dropping!'.format(quest['title']))
+
+                # If a GM role is configured, remove it from the removed player
+                if role_id:
+                    role = guild.get_role(role_id)
+                    await member.remove_roles(role)
+                    # If a player replaces from the wait list, grant the role to them
+                    if replacement:
+                        await replacement_member.add_roles(role)
+
+        # Fetch the updated quest
+        updated_quest = qcollection.find_one({'questId': quest_id})
+
+        # Create the updated embed, and edit the message
+        post_embed = self.update_embed(updated_quest)
+        await message.edit(embed = post_embed)
+        
         await delete_command(ctx.message)
 
     @quest.command(pass_context = True)
-    async def complete(self, ctx, id):
+    async def complete(self, ctx, quest_id):
         # TODO: Implement quest removal/archival, optional summary, player and GM reward distribution
+        await delete_command(ctx.message)
+
+    @quest.command(pass_context = True)
+    async def role(self, ctx, party_role : str = None):
+        # TODO: Input sanitization
+        """
+        Configures a role to be issued to a GM's party.
+
+        <no argument>: Displays the current setting.
+        <role mention>: Sets the role for questing parties.
+        <delete|remove>: Clears the role.
+        """
+        guild_id = ctx.message.guild.id
+        user_id = ctx.message.author.id
+
+        collection = gdb['partyRole']
+        query = collection.find_one({'guildId': guild_id, 'gm': user_id})
+
+        if not party_role:
+            if not query or not query['role']:
+                await ctx.send('No GM role set! Configure with `{}quest role <role mention>`'.format(self.bot.command_prefix))
+            else:
+                await ctx.send('Current GM role is <@&{}>'.format(query['role']))
+        elif party_role == 'delete' or party_role == 'remove':
+            collection.update_one({'guildId': guild_id, 'gm': user_id}, {'$set': {'role': None}})
+            await ctx.send('GM role deleted!')
+        else:
+            role_id = strip_id(party_role)
+            if not query:
+                collection.insert_one({'guildId': guild_id, 'gm': user_id, 'role': role_id})
+            else:
+                collection.update_one({'guildId': guild_id, 'gm': user_id}, {'$set': {'role': role_id}})
+
+            await ctx.send(f'Your GM role for this server has been set to {party_role}!')
+
+        await delete_command(ctx.message)
+
+    @quest.command(pass_context = True)
+    async def edit(self, ctx, quest_id):
+        #TODO Implement quest title/levels/partysize/description updating
         await delete_command(ctx.message)
 
 def setup(bot):

@@ -9,7 +9,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Cog, command
 
-from ..utilities.supportFunctions import delete_command
+from ..utilities.supportFunctions import delete_command, strip_id
 
 class Admin(Cog):
     """Administrative commands such as server configuration and bot options."""
@@ -22,15 +22,7 @@ class Admin(Cog):
 
 #-------------Support Functions------------
 
-    def strip_id(self, mention) -> int:
-        stripped_mention = re.sub(r'[<>#!@&]', '', mention)
-        parsed_id = int(stripped_mention)
-        return parsed_id
 
-    def parse_list(self, mentions : [int]) -> [int]:
-        stripped_list = [re.sub(r'[<>#!@&]', '', item) for item in mentions]
-        mapped_list = list(map(int, stripped_list))
-        return mapped_list
 
 #-------------Private Commands-------------
 
@@ -105,7 +97,7 @@ class Admin(Cog):
 
         # If a role is provided, write it to the db
         if role:
-            role_id = self.strip_id(role) # Get numeric role ID
+            role_id = strip_id(role) # Get numeric role ID
             if collection.find_one({'guildId': guild_id}):
                 try:
                     collection.update_one({'guildId': guild_id}, {'$set': {'announceRole': role_id}})
@@ -256,7 +248,7 @@ class Admin(Cog):
 
         if channel:
             try:
-                channel_id = self.strip_id(channel)
+                channel_id = strip_id(channel)
                 if collection.count_documents({'guildId': guild_id}, limit = 1) != 0:
                     collection.update_one({'guildId': guild_id}, {'$set': {'playerBoardChannel': channel_id}})
                 else:
@@ -283,7 +275,7 @@ class Admin(Cog):
         # When provided with a channel name, deletes the old entry and adds the new one.
         if channel:
             try:
-                channel_id = self.strip_id(channel) # Strip channel ID and cast to int
+                channel_id = strip_id(channel) # Strip channel ID and cast to int
                 if collection.count_documents({'guildId': guild_id}, limit = 1) != 0:
                     # If a match is found, attempt to update it before proceeding.
                     collection.update_one({'guildId': guild_id}, {'$set': {'questChannel': channel_id}})
@@ -311,7 +303,7 @@ class Admin(Cog):
 
         if channel:
             try:
-                channel_id = self.strip_id(channel)
+                channel_id = strip_id(channel)
                 if collection.count_documents({'guildId': guild_id}, limit = 1) != 0:
                     collection.update_one({'guildId': guild_id}, {'$set': {'archiveChannel': channel_id}})
                 else:
