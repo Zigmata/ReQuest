@@ -226,6 +226,8 @@ class QuestBoard(Cog):
 
     # --- Quests ---
 
+    # TODO: Limit these to the creating GM only
+
     @commands.group(pass_context = True)
     @has_gm_role()
     async def quest(self, ctx):
@@ -288,7 +290,8 @@ class QuestBoard(Cog):
             post_embed.add_field(name=f'__Wait List (0/{max_wait_list_size})__', value=None)
         post_embed.set_footer(text='Quest ID: '+quest_id)
 
-        await channel.send(f'<@&{announce_role}> **NEW QUEST!**')
+        ping_msg = await channel.send(f'<@&{announce_role}> **NEW QUEST!**')
+        await ping_msg.delete()
         msg = await channel.send(embed=post_embed)
         emoji = '<:acceptquest:601559094293430282>'
         await msg.add_reaction(emoji)
@@ -454,8 +457,69 @@ class QuestBoard(Cog):
         await delete_command(ctx.message)
 
     @quest.command(pass_context = True)
-    async def complete(self, ctx, quest_id):
+    async def complete(self, ctx, quest_id, *, summary : str = None):
+        """
+        Closes a quest and issues rewards.
+
+        Optional arguments:
+        [summary]: A summary of the quest, when applicable.
+        """
         # TODO: Implement quest removal/archival, optional summary, player and GM reward distribution
+        guild_id = ctx.message.guild.id
+        guild = self.bot.get_guild(guild_id)
+
+        # Check if there is a configured quest archive channel
+        archive_channel = None
+        archive_query = gdb['archiveChannel'].find_one({'guildId': guild_id})
+        if archive_query:
+            archive_channel = archive_query['archiveChannel']
+
+        # Fetch the quest
+        quest = gdb['quests'].find_one({'questId': quest_id})
+
+        # Check if a GM role was configured
+        gm_role = None
+        gm = quest['gm']
+        role_query = gdb['partyRole'].find_one({'guildId': guild_id, 'gm': gm})
+        if role_query:
+            gm_role = role_query['role']
+
+        # Get party members and message them with results
+        party = quest['party']
+        title = quest['title']
+        for player in party:
+            member = guild.get_member(player)
+            # Remove the party role, if applicable
+            if gm_role:
+                role = guild.get_role(gm_role)
+                await member.remove_roles(role)
+            # TODO: Implement loot and XP after those functions are added
+            await member.send(f'**Quest Complete: {title}**')
+
+        # Archive the quest, if applicable
+        if archive_channel:
+            # Fetch the channel object
+            channel = guild.get_channel(archive_channel)
+
+            # Build the embed
+            post_embed = self.update_embed(quest)
+            # If quest summary is configured, add it
+            summary_enabled = gdb['questSummary'].find_one({'guildId': guild_id})
+            if summary_enabled and summary_enabled['questSummary']:
+                post_embed.add_field(name = 'Summary', value = summary, inline = False)
+                
+            await channel.send(embed = post_embed)
+
+        # Delete the quest from the database
+        result = gdb['quests'].delete_one({'questId': quest_id})
+
+        # Delete the quest from the quest channel
+        channel_id = gdb['questChannel'].find_one({'guildId': guild_id})['questChannel']
+        quest_channel = guild.get_channel(channel_id)
+        message_id = quest['messageId']
+        message = await quest_channel.fetch_message(message_id)
+        await message.delete()
+
         await delete_command(ctx.message)
 
     @quest.command(pass_context = True)
@@ -493,9 +557,50 @@ class QuestBoard(Cog):
 
         await delete_command(ctx.message)
 
-    @quest.command(pass_context = True)
+    @quest.group(pass_context = True)
     async def edit(self, ctx, quest_id):
         #TODO Implement quest title/levels/partysize/description updating
+        if ctx.invoked_subcommand is None:
+            return # TODO: Error message feedback
+
+    @edit.command(pass_context = True)
+    async def title(self, ctx, quest_id, *, new_title):
+        guild_id = ctx.message.guild.id
+        # Get the quest board channel
+        quest_channel = gdb['questChannel'].find_one({'guildId': guild_id})['questChannel']
+
+        # Find the quest to edit
+        collection = gdb['quests']
+        quest = collection.find_one({'questId': quest_id})
+        if not quest:
+            # TODO: Error handling
+            await delete_command(ctx.message)
+            return
+
+        # Push the edit to db, then grab an updated quest
+        collection.update_one({'questId': quest_id}, {'$set': {'title': title}})
+        updated_quest = collection.find_one({'questId': quest_id})
+
+        # Fetch the updated quest and build the embed, then edit the original post
+        message = await quest_channel.fetch_message(updated_quest['messageId'])
+        post_embed = self.update_embed(updated_quest)
+        await message.edit(embed = post_embed)
+
+        await delete_command(ctx.message)
+
+    @edit.command(pass_context = True)
+    async def description(self, ctx, quest_id, *, new_description):
+        # TODO: Implement description editing
+        await delete_command(ctx.message)
+
+    @edit.command(name = 'partysize', aliases = ['party'], pass_context = True)
+    async def party_size(self, ctx, quest_id, *, new_party_size):
+        # TODO: Implement editing
+        await delete_command(ctx.message)
+
+    @edit.command(pass_context = True)
+    async def levels(self, ctx, quest_id, *, new_levels):
+        # TODO: Implement editing
         await delete_command(ctx.message)
 
 def setup(bot):

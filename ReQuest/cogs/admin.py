@@ -365,5 +365,36 @@ class Admin(Cog):
 
         await delete_command(ctx.message)
 
+    @quest.command(name = 'questsummary', aliases = ['summary', 'qsum'], pass_context = True)
+    async def quest_summary(self, ctx):
+        """
+        Toggles quest summary on/off.
+
+        When enabled, GMs can input a brief summary of the quest during completion.
+        """
+        guild_id = ctx.message.guild.id
+
+        # Check to see if the quest archive is configured.
+        quest_archive = gdb['archiveChannel'].find_one({'guildId': guild_id})
+        if not quest_archive:
+            await ctx.send('Quest archive channel not configured! Use `{}config channel questarchive <channel mention>` to set up!')
+            await delete_command(ctx.message)
+            return
+
+        # Query the current setting and toggle
+        collection = gdb['questSummary']
+        summary_enabled = collection.find_one({'guildId': guild_id})
+        if not summary_enabled:
+            collection.insert_one({'guildId': guild_id, 'questSummary': True})
+            await ctx.send('Quest summary enabled.')
+        elif not summary_enabled['questSummary']:
+            collection.update_one({'guildId': guild_id}, {'$set': {'questSummary': True}})
+            await ctx.send('Quest summary enabled.')
+        else:
+            collection.update_one({'guildId': guild_id}, {'$set': {'questSummary': False}})
+            await ctx.send('Quest summary disabled.')
+
+        await delete_command(ctx.message)
+
 def setup(bot):
     bot.add_cog(Admin(bot))
