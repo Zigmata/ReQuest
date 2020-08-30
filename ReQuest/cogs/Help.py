@@ -27,11 +27,10 @@ class Help(Cog):
 
         await delete_command(ctx.message)
 
-    @commands.is_owner() # TODO: Remove owner lock for public release
-    @command(hidden=True) # TODO: Adjust descriptors after public release
+    @command(hidden=True)
     async def invite(self,ctx):
         """Prints an invite to add ReQuest to your server."""
-        await ctx.send(f'Invite me to your server! https://discord.com/api/oauth2/authorize?client_id=601492201704521765&permissions=519232&scope=bot')
+        await ctx.send(f'Invite me to your server! https://discord.com/api/oauth2/authorize?client_id=601492201704521765&permissions=268954688&scope=bot')
 
         await delete_command(ctx.message)
 

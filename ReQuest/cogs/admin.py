@@ -1,6 +1,7 @@
 import itertools
 import bson
 import re
+import time
 
 import pymongo
 from pymongo import MongoClient
@@ -17,12 +18,26 @@ class Admin(Cog):
         self.bot = bot
         global gdb
         global mdb
+        global cdb
+        global white_list
         gdb = bot.gdb
         mdb = bot.mdb
+        cdb = bot.cdb
+        white_list = self.bot.white_list
 
-#-------------Support Functions------------
+#-----------------Listeners----------------
 
+    @commands.Cog.listener()
+    async def on_guild_join(self, server):
+        # TODO: Message guild owner about whitelisting
+        if not white_list:
+            return
 
+        if server.id in white_list:
+            return
+        else:
+            return await server.leave()
+        return
 
 #-------------Private Commands-------------
 
@@ -35,7 +50,9 @@ class Admin(Cog):
         except Exception as e:
             await ctx.send('{}: {}'.format(type(e).__name__, e))
         else:
-            await ctx.send('Extension successfully reloaded: `{}`'.format(module))
+            msg = await ctx.send('Extension successfully reloaded: `{}`'.format(module))
+            time.sleep(3)
+            await msg.delete()
 
         await delete_command(ctx.message)
 
@@ -59,20 +76,67 @@ class Admin(Cog):
         except Exception as e:
             await ctx.send('{}: {}'.format(type(e).__name__, e))
         else:
-            await ctx.send('Extension successfully loaded: `{}`'.format(module))
+            msg = await ctx.send('Extension successfully loaded: `{}`'.format(module))
+            time.sleep(3)
+            await msg.delete()
 
         await delete_command(ctx.message)
 
     # Shut down the bot
     @commands.is_owner()
     @command(hidden=True)
-    async def shutdown(self,ctx):
+    async def shutdown(self, ctx):
         try:
             await ctx.send('Shutting down!')
             await delete_command(ctx.message)
             await ctx.bot.logout()
         except Exception as e:
             await ctx.send('{}: {}'.format(type(e).__name__, e))
+
+    @commands.is_owner()
+    @commands.group(name = 'whitelist', hidden = True, pass_context = True)
+    async def white_list(self, ctx):
+        if ctx.invoked_subcommand is None:
+            delete_command(ctx.message)
+            return # TODO: Error message feedback
+
+    @white_list.command(name = 'add', pass_context = True)
+    async def wadd(self, ctx, guild):
+        collection = cdb['botWhiteList']
+        guild_id = int(guild)
+        self.bot.white_list.append(guild_id)
+
+        if collection.count_documents({'servers': {'$exists': True}}, limit = 1) != 0:
+            collection.update_one({'servers': {'$exists': True}}, {'$push': {'servers': guild_id}})
+        else:
+            collection.insert_one({'servers': [guild_id]})
+
+        msg = await ctx.send('Guild `{}` added to whitelist!'.format(guild_id))
+
+        await delete_command(ctx.message)
+
+        time.sleep(3)
+
+        await msg.delete()
+
+    @white_list.command(name = 'remove', pass_context = True)
+    async def wremove(self, ctx, guild):
+        collection = cdb['botWhiteList']
+        guild_id = int(guild)
+        self.bot.white_list.remove(guild_id)
+
+        if collection.count_documents({'servers': {'$exists': True}}, limit = 1) != 0:
+            collection.update_one({'servers': {'$exists': True}}, {'$pull': {'servers': guild_id}})
+        else:
+            return
+
+        msg = await ctx.send('Guild `{}` removed from whitelist!'.format(guild_id))
+
+        await delete_command(ctx.message)
+
+        time.sleep(3)
+
+        await msg.delete()
 
 #-------------Config Commands--------------
 

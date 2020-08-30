@@ -1,4 +1,6 @@
 import re
+import functools
+
 import discord
 from discord.ext import commands
 
@@ -17,7 +19,7 @@ async def delete_command(message):
 # server-defined GM role
 def has_gm_role():
     async def predicate(ctx):
-        gdb=ctx.bot.gdb
+        gdb = ctx.bot.gdb
         collection = gdb['gmRoles']
         guildId = ctx.guild.id
 
