@@ -311,7 +311,7 @@ class Admin(Cog):
             return # TODO: Error message feedback
 
     # Configures the channel in which player messages are to be posted. Same logic as questChannel()
-    @channel.command(name = 'playerboard', aliases = ['pboard', 'pb'], pass_context = True)
+    @channel.command(name = 'playerboard', aliases = ['player', 'pboard', 'pb'], pass_context = True)
     async def player_board(self, ctx, channel : str = None):
         """Get or sets the channel used for the Player Board."""
         guild_id = ctx.message.guild.id
@@ -338,7 +338,7 @@ class Admin(Cog):
 
         await delete_command(ctx.message)
 
-    @channel.command(name = 'questboard', aliases = ['qboard', 'qb'], pass_context = True)
+    @channel.command(name = 'questboard', aliases = ['quest', 'qboard', 'qb'], pass_context = True)
     async def quest_board(self, ctx, channel : str = None):
         """Configures the channel in which quests are to be posted"""
         guild_id = ctx.message.guild.id
@@ -354,7 +354,7 @@ class Admin(Cog):
                 else:
                     # Otherwise, insert the new record.
                     collection.insert_one({'guildId': guild_id, 'questChannel': channel_id})
-                await ctx.send('Successfully set quest channel to {}!'.format(channel))
+                await ctx.send('Successfully set quest board channel to {}!'.format(channel))
             except Exception as e:
                 await ctx.send('{}: {}'.format(type(e).__name__, e))
                 return
@@ -367,7 +367,7 @@ class Admin(Cog):
 
         await delete_command(ctx.message)
 
-    @channel.command(name = 'questarchive', aliases = ['qarch', 'qa'], pass_context = True)
+    @channel.command(name = 'questarchive', aliases = ['archive', 'qarch', 'qa'], pass_context = True)
     async def quest_archive(self, ctx, channel : str = None):
         """Configures the channel in which quests are to be archived."""
         guild_id = ctx.message.guild.id
@@ -380,7 +380,7 @@ class Admin(Cog):
                     collection.update_one({'guildId': guild_id}, {'$set': {'archiveChannel': channel_id}})
                 else:
                     collection.insert_one({'guildId': guild_id, 'archiveChannel': channel_id})
-                await ctx.send('Successfully set quest channel to {}!'.format(channel))
+                await ctx.send('Successfully set quest archive channel to {}!'.format(channel))
             except Exception as e:
                 await ctx.send('{}: {}'.format(type(e).__name__, e))
                 return
