@@ -27,10 +27,17 @@ class Help(Cog):
 
         await delete_command(ctx.message)
 
-    @command(hidden=True)
+    @command()
     async def invite(self,ctx):
         """Prints an invite to add ReQuest to your server."""
-        await ctx.send(f'Invite me to your server! https://discord.com/api/oauth2/authorize?client_id=601492201704521765&permissions=268954688&scope=bot')
+        await ctx.send(f'Invite me to your server! <https://discord.com/api/oauth2/authorize?client_id=601492201704521765&permissions=268954688&scope=bot>')
+
+        await delete_command(ctx.message)
+
+    @command()
+    async def info(self, ctx):
+        """Prints useful bot information."""
+        await ctx.send(f'**ReQuest v0.1.9-a.1**\n\nBugs? Feature Requests? Join the development server at https://discord.gg/Zq37gj4')
 
         await delete_command(ctx.message)
 

@@ -375,7 +375,10 @@ class QuestBoard(Cog):
     async def unready(self, ctx, quest_id, *, players = None):
         # TODO: Implement player removal notification
         """
-        Unlocks a quest if members are not ready. Able to remove members and roles.
+        Unlocks a quest if members are not ready.
+
+        Optional Arguments:
+        [players]: Can be chained. Removes player(s) from party.
         """
         guild_id = ctx.message.guild.id
         user_id = ctx.message.author.id
@@ -464,7 +467,7 @@ class QuestBoard(Cog):
         Closes a quest and issues rewards.
 
         Optional arguments:
-        [summary]: A summary of the quest, when applicable.
+        [summary]: A summary of the quest. Requires admin enable of quest summaries (see help config quest summary).
         """
         # TODO: Implement quest removal/archival, optional summary, player and GM reward distribution
         guild_id = ctx.message.guild.id
@@ -532,12 +535,14 @@ class QuestBoard(Cog):
 
     @quest.group(pass_context = True)
     async def edit(self, ctx):
+        """Commands for editing of quest posts."""
         #TODO Implement quest title/levels/partysize/description updating
         if ctx.invoked_subcommand is None:
             return # TODO: Error message feedback
 
     @edit.command(pass_context = True)
     async def title(self, ctx, quest_id, *, new_title):
+        """Edits the title of the provided quest ID."""
         guild_id = ctx.message.guild.id
         guild = self.bot.get_guild(guild_id)
         user_id = ctx.author.id
@@ -574,6 +579,7 @@ class QuestBoard(Cog):
 
     @edit.command(aliases = ['desc'], pass_context = True)
     async def description(self, ctx, quest_id, *, new_description):
+        """Edits the description of the provided quest ID."""
         guild_id = ctx.message.guild.id
         guild = self.bot.get_guild(guild_id)
         user_id = ctx.author.id
@@ -610,6 +616,7 @@ class QuestBoard(Cog):
 
     @edit.command(name = 'partysize', aliases = ['party'], pass_context = True)
     async def party_size(self, ctx, quest_id, *, new_party_size : int):
+        """Edits the max party size of the provided quest ID."""
         guild_id = ctx.message.guild.id
         guild = self.bot.get_guild(guild_id)
         user_id = ctx.author.id
@@ -646,6 +653,7 @@ class QuestBoard(Cog):
 
     @edit.command(pass_context = True)
     async def levels(self, ctx, quest_id, *, new_levels):
+        """Edits the advertised level range of the provided quest ID."""
         guild_id = ctx.message.guild.id
         guild = self.bot.get_guild(guild_id)
         user_id = ctx.author.id

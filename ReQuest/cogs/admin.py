@@ -143,6 +143,7 @@ class Admin(Cog):
     @commands.has_guild_permissions(manage_guild = True)
     @commands.group(aliases = ['conf'], pass_context = True)
     async def config(self, ctx):
+        """Commands for server configuration of bot options and features."""
         if ctx.invoked_subcommand is None:
             return # TODO: Error message feedback
 
@@ -209,7 +210,10 @@ class Admin(Cog):
     @gm.command(aliases = ['a'], pass_context = True)
     async def add(self, ctx, *, roles):
         """
-        Multiple roles can be chained by separating them with a space.
+        Adds a role to the GM list.
+
+        Arguments:
+        <role mention>: Can be chained. Adds the role(s) from the GM list.
         """
         
         guild_id = ctx.message.guild.id
@@ -249,7 +253,11 @@ class Admin(Cog):
     @gm.command(aliases = ['r'], pass_context = True)
     async def remove(self, ctx, *, roles):
         """
-        Multiple roles can be chained by separating them with a space, or type 'all' to remove all roles.
+        Removes existing GM roles.
+
+        Arguments:
+        <role mention>: Can be chained. Removes the role(s) from the GM list.
+        <all>: Removes all roles from the GM list.
         """
 
         guild_id = ctx.message.guild.id
@@ -429,8 +437,8 @@ class Admin(Cog):
 
         await delete_command(ctx.message)
 
-    @quest.command(name = 'questsummary', aliases = ['summary', 'qsum'], pass_context = True)
-    async def quest_summary(self, ctx):
+    @quest.command(name = 'summary', aliases = ['sum'], pass_context = True)
+    async def summary(self, ctx):
         """
         Toggles quest summary on/off.
 
