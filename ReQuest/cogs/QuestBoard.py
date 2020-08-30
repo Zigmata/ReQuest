@@ -268,10 +268,7 @@ class QuestBoard(Cog):
         # Inform user if announcement role is not set. Otherwise, get the channel string
         # TODO: Make announcement role optional
         announce_role : int = None
-        if not query:
-            await ctx.send('Announcement role not set! Configure with `{}config role announce <role mention>`'.format(self.bot.command_prefix))
-            return
-        else:
+        if query:
             announce_role = query['announceRole']
     
         collection = gdb['quests']
@@ -292,8 +289,9 @@ class QuestBoard(Cog):
             post_embed.add_field(name=f'__Wait List (0/{max_wait_list_size})__', value=None)
         post_embed.set_footer(text='Quest ID: '+quest_id)
 
-        ping_msg = await channel.send(f'<@&{announce_role}> **NEW QUEST!**')
-        await ping_msg.delete()
+        if announce_role:
+            ping_msg = await channel.send(f'<@&{announce_role}> **NEW QUEST!**')
+            await ping_msg.delete()
         msg = await channel.send(embed=post_embed)
         emoji = '<:acceptquest:601559094293430282>'
         await msg.add_reaction(emoji)
