@@ -233,11 +233,14 @@ class QuestBoard(Cog):
     @commands.group(pass_context = True)
     @has_gm_role()
     async def quest(self, ctx):
+        """
+        Commands for quest management.
+        """
         if ctx.invoked_subcommand is None:
             return # TODO: Error message feedback
 
     @quest.command(pass_context = True)
-    async def post(self, ctx, title: str, levels: str, max_party_size: int, *, description: str):
+    async def post(self, ctx, title, levels, max_party_size: int, *, description):
         """Posts a new quest."""
 
         # TODO: Research exception catching on function argument TypeError
@@ -296,7 +299,7 @@ class QuestBoard(Cog):
         emoji = '<:acceptquest:601559094293430282>'
         await msg.add_reaction(emoji)
         message_id = msg.id
-        await ctx.send(f'Quest **{quest_id}** posted!')
+        await ctx.send(f'Quest `{quest_id}`: **{title}** posted!')
 
         try:
             collection.insert_one({'guildId': guild_id, 'questId': quest_id, 'messageId': message_id,
@@ -312,7 +315,7 @@ class QuestBoard(Cog):
     async def ready(self, ctx, quest_id):
         """Locks the quest roster and alerts party members that the quest is ready."""
         guild_id = ctx.message.guild.id
-        user_id = ctx.message.author.id
+        user_id = ctx.author.id
         
         # Fetch the quest
         qcollection = gdb['quests']
@@ -379,7 +382,7 @@ class QuestBoard(Cog):
         [players]: Can be chained. Removes player(s) from party.
         """
         guild_id = ctx.message.guild.id
-        user_id = ctx.message.author.id
+        user_id = ctx.author.id
         qcollection = gdb['quests']
 
         # Fetch the quest
@@ -460,7 +463,7 @@ class QuestBoard(Cog):
         await delete_command(ctx.message)
 
     @quest.command(pass_context = True)
-    async def complete(self, ctx, quest_id, *, summary : str = None):
+    async def complete(self, ctx, quest_id, *, summary = None):
         """
         Closes a quest and issues rewards.
 
@@ -469,6 +472,7 @@ class QuestBoard(Cog):
         """
         # TODO: Implement quest removal/archival, optional summary, player and GM reward distribution
         guild_id = ctx.message.guild.id
+        user_id = ctx.author.id
         guild = self.bot.get_guild(guild_id)
 
         # Fetch the quest
@@ -503,7 +507,7 @@ class QuestBoard(Cog):
                 role = guild.get_role(gm_role)
                 await member.remove_roles(role)
             # TODO: Implement loot and XP after those functions are added
-            await member.send(f'**Quest Complete: {title}**')
+            await member.send(f'Quest Complete: **{title}**')
 
         # Archive the quest, if applicable
         if archive_channel:
@@ -528,6 +532,60 @@ class QuestBoard(Cog):
         message_id = quest['messageId']
         message = await quest_channel.fetch_message(message_id)
         await message.delete()
+
+        await delete_command(ctx.message)
+
+    @quest.command(aliases = ['cancel'], pass_context = True)
+    async def delete(self, ctx, quest_id):
+        """
+        Deletes a quest.
+
+        Arguments:
+        [quest_id]: ID of the quest to be deleted.
+        """
+        guild_id = ctx.message.guild.id
+        user_id = ctx.author.id
+        guild = self.bot.get_guild(guild_id)
+
+        # Fetch the quest
+        quest = gdb['quests'].find_one({'questId': quest_id})
+
+        # Confirm the user calling the command is the GM that created the quest
+        if not quest['gm'] == user_id:
+            await ctx.send('GMs can only manage their own quests!')
+            await delete_command(ctx.message)
+            return
+
+        # Check if a GM role was configured
+        gm_role = None
+        gm = quest['gm']
+        role_query = gdb['partyRole'].find_one({'guildId': guild_id, 'gm': gm})
+        if role_query:
+            gm_role = role_query['role']
+
+        # Get party members and message them with results
+        party = quest['party']
+        title = quest['title']
+        for player in party:
+            member = guild.get_member(player)
+            # Remove the party role, if applicable
+            if gm_role:
+                role = guild.get_role(gm_role)
+                await member.remove_roles(role)
+            # TODO: Implement loot and XP after those functions are added
+            await member.send(f'Quest **{title}** was cancelled by the GM.')
+
+        # Delete the quest from the database
+        result = gdb['quests'].delete_one({'questId': quest_id})
+
+        # Delete the quest from the quest channel
+        channel_id = gdb['questChannel'].find_one({'guildId': guild_id})['questChannel']
+        quest_channel = guild.get_channel(channel_id)
+        message_id = quest['messageId']
+        message = await quest_channel.fetch_message(message_id)
+        await message.delete()
+
+        await ctx.send(f'Quest `{quest_id}`: **{title}** deleted!')
 
         await delete_command(ctx.message)
 
@@ -700,7 +758,7 @@ class QuestBoard(Cog):
         """
         guild_id = ctx.message.guild.id
         guild = self.bot.get_guild(guild_id)
-        user_id = ctx.message.author.id
+        user_id = ctx.author.id
 
         collection = gdb['partyRole']
         query = collection.find_one({'guildId': guild_id, 'gm': user_id})
