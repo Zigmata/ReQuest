@@ -9,7 +9,7 @@ from pymongo import MongoClient
 import discord
 from discord.ext import commands
 from discord.ext.commands import Cog, command
-from discord.utils import get
+from discord.utils import get, find
 
 from ..utilities.supportFunctions import delete_command, has_gm_role, parse_list, strip_id
 
@@ -689,16 +689,17 @@ class QuestBoard(Cog):
     # --- GM Options ---
 
     @quest.command(pass_context = True)
-    async def role(self, ctx, party_role : str = None):
+    async def role(self, ctx, party_role = None):
         # TODO: Input sanitization
         """
         Configures a role to be issued to a GM's party.
 
         <no argument>: Displays the current setting.
-        <role mention>: Sets the role for questing parties.
+        <role name>: Sets the role for questing parties.
         <delete|remove>: Clears the role.
         """
         guild_id = ctx.message.guild.id
+        guild = self.bot.get_guild(guild_id)
         user_id = ctx.message.author.id
 
         collection = gdb['partyRole']
@@ -708,18 +709,27 @@ class QuestBoard(Cog):
             if not query or not query['role']:
                 await ctx.send('No GM role set! Configure with `{}quest role <role mention>`'.format(self.bot.command_prefix))
             else:
-                await ctx.send('Current GM role is <@&{}>'.format(query['role']))
+                # Get the current role and display
+                role_id = query['role']
+                role_name = guild.get_role(role_id).name
+                await ctx.send(f'Current GM role is `{role_name}`')
         elif party_role == 'delete' or party_role == 'remove':
-            collection.update_one({'guildId': guild_id, 'gm': user_id}, {'$set': {'role': None}})
+            collection.delete_one({'guildId': guild_id, 'gm': user_id})
             await ctx.send('GM role deleted!')
         else:
-            role_id = strip_id(party_role)
+            search = find(lambda r: r.name.lower() == party_role.lower(), guild.roles)
+            if not search:
+                await ctx.send('Role not found! Check your spelling and/or quotes!')
+                await ddelete_command(ctx.message)
+                return
+
+            role_id = search.id
             if not query:
                 collection.insert_one({'guildId': guild_id, 'gm': user_id, 'role': role_id})
             else:
                 collection.update_one({'guildId': guild_id, 'gm': user_id}, {'$set': {'role': role_id}})
 
-            await ctx.send(f'Your GM role for this server has been set to {party_role}!')
+            await ctx.send(f'Your GM role for this server has been set to `{search.name}`!')
 
         await delete_command(ctx.message)
 
