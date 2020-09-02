@@ -53,7 +53,6 @@ class Admin(Cog):
         time.sleep(3)
         await msg.delete()
 
-
     # Echoes the first argument provided
     @commands.is_owner()
     @command(hidden=True)
@@ -69,14 +68,11 @@ class Admin(Cog):
     @commands.is_owner()
     @command(hidden=True)
     async def load(self, ctx, module : str):
-        try:
-            self.bot.load_extension('ReQuest.cogs.'+module)
-        except Exception as e:
-            await ctx.send('{}: {}'.format(type(e).__name__, e))
-        else:
-            msg = await ctx.send('Extension successfully loaded: `{}`'.format(module))
-            time.sleep(3)
-            await msg.delete()
+        self.bot.load_extension('ReQuest.cogs.'+module)
+
+        msg = await ctx.send('Extension successfully loaded: `{}`'.format(module))
+        time.sleep(3)
+        await msg.delete()
 
         await delete_command(ctx.message)
 
@@ -95,7 +91,7 @@ class Admin(Cog):
     @commands.group(name = 'whitelist', hidden = True, pass_context = True)
     async def white_list(self, ctx):
         if ctx.invoked_subcommand is None:
-            delete_command(ctx.message)
+            await delete_command(ctx.message)
             return # TODO: Error message feedback
 
     @white_list.command(name = 'add', pass_context = True)
@@ -104,10 +100,7 @@ class Admin(Cog):
         guild_id = int(guild)
         self.bot.white_list.append(guild_id)
 
-        if collection.count_documents({'servers': {'$exists': True}}, limit = 1) != 0:
-            collection.update_one({'servers': {'$exists': True}}, {'$push': {'servers': guild_id}})
-        else:
-            collection.insert_one({'servers': [guild_id]})
+        collection.update_one({'servers': {'$exists': True}}, {'$push': {'servers': guild_id}}, upsert = True)
 
         msg = await ctx.send('Guild `{}` added to whitelist!'.format(guild_id))
 
@@ -173,11 +166,8 @@ class Admin(Cog):
                     collection.delete_one({'guildId': guild_id})
 
                 await ctx.send('Announcement role cleared!')
-            elif not query:
-                collection.insert_one({'guildId': guild_id, 'announceRole': role_id})
-                await ctx.send('Successfully set announcement role to `{}`!'.format(search.name))
             else:
-                collection.update_one({'guildId': guild_id}, {'$set': {'announceRole': role_id}})
+                collection.update_one({'guildId': guild_id}, {'$set': {'announceRole': role_id}}, upsert = True)
                 await ctx.send('Successfully set announcement role to `{}`!'.format(search.name))
 
         # Otherwise, query the db for the current setting
@@ -251,12 +241,7 @@ class Admin(Cog):
                         continue # TODO: Raise error that role is already configured
                     else:
                         # If there is no match, add the id to the database
-                        try:
-                            collection.update_one({'guildId': guild_id}, {'$push': {'gmRoles': new_id}})
-                        except Exception as e:
-                            await ctx.send(role)
-                            await ctx.send('{}: {}'.format(type(e).__name__, e))
-                            return # TODO: Logging
+                        collection.update_one({'guildId': guild_id}, {'$push': {'gmRoles': new_id}})
 
                 # Get the updated document
                 update_query = collection.find_one({'guildId': guild_id})['gmRoles']
@@ -352,24 +337,21 @@ class Admin(Cog):
 
     # Configures the channel in which player messages are to be posted. Same logic as questChannel()
     @channel.command(name = 'playerboard', aliases = ['player', 'pboard', 'pb'], pass_context = True)
-    async def player_board(self, ctx, channel : str = None):
+    async def player_board_channel(self, ctx, channel : str = None):
         """Get or sets the channel used for the Player Board."""
         guild_id = ctx.message.guild.id
         collection = gdb['playerBoardChannel']
         channelName : str = None
 
-        if channel:
-            try:
-                channel_id = strip_id(channel)
-                if collection.count_documents({'guildId': guild_id}, limit = 1) != 0:
-                    collection.update_one({'guildId': guild_id}, {'$set': {'playerBoardChannel': channel_id}})
-                else:
-                    collection.insert_one({'guildId': guild_id, 'playerBoardChannel': channel_id})
-                await ctx.send('Successfully set player board channel to {}!'.format(channel))
-            except Exception as e:
-                await ctx.send('{}: {}'.format(type(e).__name__, e))
-                return
-        else:
+        if channel and channel == 'disable':
+            if collection.count_documents({'guildId': guild_id}, limit = 1) != 0: # Delete the record if one exists
+                collection.delete_one({'guildId': guild_id})
+            await ctx.send('Player board channel disabled!')
+        elif channel: # Strip the channel ID and update the db
+            channel_id = strip_id(channel)
+            collection.update_one({'guildId': guild_id}, {'$set': {'playerBoardChannel': channel_id}}, upsert = True)
+            await ctx.send('Successfully set player board channel to {}!'.format(channel))
+        else: # If the channel is not provided, output the current setting.
             query = collection.find_one({'guildId': guild_id})
             if not query:
                 await ctx.send('Player board channel not set! Configure with `{}config channel playerboard <channel mention>`'.format(self.bot.command_prefix))
@@ -386,18 +368,9 @@ class Admin(Cog):
 
         # When provided with a channel name, deletes the old entry and adds the new one.
         if channel:
-            try:
-                channel_id = strip_id(channel) # Strip channel ID and cast to int
-                if collection.count_documents({'guildId': guild_id}, limit = 1) != 0:
-                    # If a match is found, attempt to update it before proceeding.
-                    collection.update_one({'guildId': guild_id}, {'$set': {'questChannel': channel_id}})
-                else:
-                    # Otherwise, insert the new record.
-                    collection.insert_one({'guildId': guild_id, 'questChannel': channel_id})
-                await ctx.send('Successfully set quest board channel to {}!'.format(channel))
-            except Exception as e:
-                await ctx.send('{}: {}'.format(type(e).__name__, e))
-                return
+            channel_id = strip_id(channel) # Strip channel ID and cast to int
+            collection.update_one({'guildId': guild_id}, {'$set': {'questChannel': channel_id}}, upsert = True)
+            await ctx.send('Successfully set quest board channel to {}!'.format(channel))
         else: # If no channel is provided, inform the user of the current setting
             query = collection.find_one({'guildId': guild_id})
             if not query:
@@ -414,16 +387,9 @@ class Admin(Cog):
         collection = gdb['archiveChannel']
 
         if channel:
-            try:
-                channel_id = strip_id(channel)
-                if collection.count_documents({'guildId': guild_id}, limit = 1) != 0:
-                    collection.update_one({'guildId': guild_id}, {'$set': {'archiveChannel': channel_id}})
-                else:
-                    collection.insert_one({'guildId': guild_id, 'archiveChannel': channel_id})
-                await ctx.send('Successfully set quest archive channel to {}!'.format(channel))
-            except Exception as e:
-                await ctx.send('{}: {}'.format(type(e).__name__, e))
-                return
+            channel_id = strip_id(channel)
+            collection.update_one({'guildId': guild_id}, {'$set': {'archiveChannel': channel_id}}, upsert = True)
+            await ctx.send('Successfully set quest archive channel to {}!'.format(channel))
         else:
             query = collection.find_one({'guildId': guild_id})
             if not query:
@@ -437,6 +403,9 @@ class Admin(Cog):
 
     @config.group(pass_context = True)
     async def quest(self, ctx):
+        """
+        Commands for configuring quest post behavior.
+        """
         if ctx.invoked_subcommand is None:
             return # TODO: Error message feedback
 
@@ -449,9 +418,7 @@ class Admin(Cog):
         # Print the current setting if no argument is given. Otherwise, store the new value.
         if not waitlistValue:
             query = collection.find_one({'guildId': guild_id})
-            if not query:
-                await ctx.send('Quest wait list is currently disabled.')
-            elif query and query['waitlistValue'] == 0:
+            if not query or query['waitListValue'] == 0:
                 await ctx.send('Quest wait list is currently disabled.')
             else:
                 await ctx.send('Quest wait list currently set to {} players.'.format(str(query['waitlistValue'])))
@@ -461,11 +428,7 @@ class Admin(Cog):
                 if value < 0 or value > 5:
                     raise ValueError('Value must be an integer between 0 and 5!')
                 else:
-                    # If a document is found, update it. Otherwise create a new one.
-                    if collection.count_documents({'guildId': guild_id}, limit = 1) != 0:
-                        collection.update_one({'guildId': guild_id}, {'$set': {'waitlistValue': value}})
-                    else:
-                        collection.insert_one({'guildId': guild_id, 'waitlistValue': value})
+                    collection.update_one({'guildId': guild_id}, {'$set': {'waitlistValue': value}}, upsert = True)
 
                     if value == 0:
                         await ctx.send('Quest wait list disabled.')
@@ -496,11 +459,8 @@ class Admin(Cog):
         # Query the current setting and toggle
         collection = gdb['questSummary']
         summary_enabled = collection.find_one({'guildId': guild_id})
-        if not summary_enabled:
-            collection.insert_one({'guildId': guild_id, 'questSummary': True})
-            await ctx.send('Quest summary enabled.')
-        elif not summary_enabled['questSummary']:
-            collection.update_one({'guildId': guild_id}, {'$set': {'questSummary': True}})
+        if not summary_enabled or not summary_enabled['questSummary']:
+            collection.update_one({'guildId': guild_id}, {'$set': {'questSummary': True}}, upsert = True)
             await ctx.send('Quest summary enabled.')
         else:
             collection.update_one({'guildId': guild_id}, {'$set': {'questSummary': False}})
