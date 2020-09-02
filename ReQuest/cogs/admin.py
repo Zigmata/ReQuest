@@ -343,11 +343,15 @@ class Admin(Cog):
         collection = gdb['playerBoardChannel']
         channelName : str = None
 
-        if channel:
+        if channel and channel == 'disable':
+            if collection.count_documents({'guildId': guild_id}, limit = 1) != 0: # Delete the record if one exists
+                collection.delete_one({'guildId': guild_id})
+            await ctx.send('Player board channel disabled!')
+        elif channel: # Strip the channel ID and update the db
             channel_id = strip_id(channel)
             collection.update_one({'guildId': guild_id}, {'$set': {'playerBoardChannel': channel_id}}, upsert = True)
             await ctx.send('Successfully set player board channel to {}!'.format(channel))
-        else:
+        else: # If the channel is not provided, output the current setting.
             query = collection.find_one({'guildId': guild_id})
             if not query:
                 await ctx.send('Player board channel not set! Configure with `{}config channel playerboard <channel mention>`'.format(self.bot.command_prefix))
@@ -461,40 +465,6 @@ class Admin(Cog):
         else:
             collection.update_one({'guildId': guild_id}, {'$set': {'questSummary': False}})
             await ctx.send('Quest summary disabled.')
-
-        await delete_command(ctx.message)
-
-    # --- Player Board ---
-
-    @config.group(name = 'playerboard', aliases = ['pb'], pass_context = True)
-    async def player_board_config(self, ctx):
-        """
-        Commands for configuring player board post behavior.
-        """
-        if ctx.invoked_subcommand is None:
-            await delete_command(ctx.message)
-            return # TODO: Error message feedback
-
-    @player_board_config.command(aliases = ['exp'], pass_context = True)
-    async def expiration(self, ctx, days : int = None):
-        """
-        Sets the time a post can remain before being purged.
-
-        Arguments:
-        [days]: The number of days a post will remain.
-        """
-        guild_id = ctx.message.guild.id
-        collection = gdb['pbExpiration']
-
-        if not days:
-            query = collection.find_one({'guildId': guild_id})
-            if query:
-                await ctx.send('Player board posts are set to expire after {} days.'.format(query['pbExpiration']))
-            else:
-                await ctx.send('No post expiration set!')
-        else:
-            collection.update_one({'guildId': guild_id}, {'$set': {'pbExpiration': days}}, upsert = True)
-            await ctx.send(f'Player board posts will expire after {days} days!')
 
         await delete_command(ctx.message)
 
