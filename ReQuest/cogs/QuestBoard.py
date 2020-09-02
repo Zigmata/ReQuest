@@ -29,7 +29,7 @@ class QuestBoard(Cog):
 
 # ---- Listeners and support functions ----
 
-    def update_embed(self, quest, is_archival = False) -> discord.Embed:
+    def update_quest_embed(self, quest, is_archival = False) -> discord.Embed:
 
         (guild_id, quest_id, message_id, title, description, max_party_size, levels, gm, party,
             wait_list, xp, max_wait_list_size, lock_state) = (quest['guildId'], quest['questId'],
@@ -133,7 +133,7 @@ class QuestBoard(Cog):
                     # The document is queried again to build the updated post
                     quest = collection.find_one({'messageId': message_id})
 
-                    post_embed = self.update_embed(quest)
+                    post_embed = self.update_quest_embed(quest)
 
                     await message.edit(embed=post_embed)
 
@@ -152,7 +152,7 @@ class QuestBoard(Cog):
 
                     # The document is queried again to build the updated post
                     quest = collection.find_one({'messageId': message_id})
-                    post_embed = self.update_embed(quest)
+                    post_embed = self.update_quest_embed(quest)
                     await message.edit(embed=post_embed)
         # This path is chosen if a reaction is removed.
         else:
@@ -196,7 +196,7 @@ class QuestBoard(Cog):
 
                 # Refresh the query with the new document and edit the post
                 quest = collection.find_one({'messageId': message_id})
-                post_embed = self.update_embed(quest)
+                post_embed = self.update_quest_embed(quest)
                 await message.edit(embed=post_embed)
             # If there is no waitlist, this section formats the embed without it
             else:
@@ -204,7 +204,7 @@ class QuestBoard(Cog):
                 collection.update_one({'messageId': message_id}, {'$pull': {'party': user_id}})
 
                 quest = collection.find_one({'messageId': message_id})
-                post_embed = self.update_embed(quest)
+                post_embed = self.update_quest_embed(quest)
                 await message.edit(embed=post_embed)
 
     @listener()
@@ -367,7 +367,7 @@ class QuestBoard(Cog):
         message = await channel.fetch_message(message_id)
 
         # Create the updated embed, and edit the message
-        post_embed = self.update_embed(updated_quest)
+        post_embed = self.update_quest_embed(updated_quest)
         await message.edit(embed = post_embed)
         
         await delete_command(ctx.message)
@@ -457,7 +457,7 @@ class QuestBoard(Cog):
         updated_quest = qcollection.find_one({'questId': quest_id})
 
         # Create the updated embed, and edit the message
-        post_embed = self.update_embed(updated_quest)
+        post_embed = self.update_quest_embed(updated_quest)
         await message.edit(embed = post_embed)
         
         await delete_command(ctx.message)
@@ -515,7 +515,7 @@ class QuestBoard(Cog):
             channel = guild.get_channel(archive_channel)
 
             # Build the embed
-            post_embed = self.update_embed(quest, True)
+            post_embed = self.update_quest_embed(quest, True)
             # If quest summary is configured, add it
             summary_enabled = gdb['questSummary'].find_one({'guildId': guild_id})
             if summary_enabled and summary_enabled['questSummary']:
@@ -626,7 +626,7 @@ class QuestBoard(Cog):
 
         # Fetch the updated quest and build the embed, then edit the original post
         message = await quest_channel.fetch_message(updated_quest['messageId'])
-        post_embed = self.update_embed(updated_quest)
+        post_embed = self.update_quest_embed(updated_quest)
         await message.edit(embed = post_embed)
 
         await ctx.send('Quest Updated!')
@@ -663,7 +663,7 @@ class QuestBoard(Cog):
 
         # Fetch the updated quest and build the embed, then edit the original post
         message = await quest_channel.fetch_message(updated_quest['messageId'])
-        post_embed = self.update_embed(updated_quest)
+        post_embed = self.update_quest_embed(updated_quest)
         await message.edit(embed = post_embed)
 
         await ctx.send('Quest Updated!')
@@ -700,7 +700,7 @@ class QuestBoard(Cog):
 
         # Fetch the updated quest and build the embed, then edit the original post
         message = await quest_channel.fetch_message(updated_quest['messageId'])
-        post_embed = self.update_embed(updated_quest)
+        post_embed = self.update_quest_embed(updated_quest)
         await message.edit(embed = post_embed)
 
         await ctx.send('Quest Updated!')
@@ -737,7 +737,7 @@ class QuestBoard(Cog):
 
         # Fetch the updated quest and build the embed, then edit the original post
         message = await quest_channel.fetch_message(updated_quest['messageId'])
-        post_embed = self.update_embed(updated_quest)
+        post_embed = self.update_quest_embed(updated_quest)
         await message.edit(embed = post_embed)
 
         await ctx.send('Quest Updated!')
@@ -778,7 +778,7 @@ class QuestBoard(Cog):
             search = find(lambda r: r.name.lower() == party_role.lower(), guild.roles)
             if not search:
                 await ctx.send('Role not found! Check your spelling and/or quotes!')
-                await ddelete_command(ctx.message)
+                await delete_command(ctx.message)
                 return
 
             role_id = search.id
