@@ -83,6 +83,51 @@ class PlayerBoard(Cog):
 
         await delete_command(ctx.message)
 
+    @player_board.command(name = 'delete', pass_context = True)
+    async def pbdelete(self, ctx, post_id):
+        """
+        Deletes a post.
+
+        Arguments:
+        [post_id]: The ID of the post to delete.
+        """
+        guild_id = ctx.message.guild.id
+        guild = self.bot.get_guild(guild_id)
+        player = ctx.author.id
+
+        # Get the player board channel
+        channel = None
+        pquery = gdb['playerBoardChannel'].find_one({'guildId': guild_id})
+        if not pquery:
+            await ctx.send('Player board channel disabled!')
+            await delete_command(ctx.message)
+            return
+        else:
+            channel_id = pquery['playerBoardChannel']
+            channel = guild.get_channel(channel_id)
+
+        # Find the post to delete
+        post = gdb['playerBoard'].find_one({'postId': post_id})
+        if not post:
+            await ctx.send('Post not found!')
+            await delete_command(ctx.message)
+            return
+
+        # Ensure only the author can delete
+        if not post['player'] == player:
+            await ctx.send('Posts can only be deleted by the author!')
+            await delete_command(ctx.message)
+            return
+
+        # Delete the post from the database and player board channel
+        gdb['playerBoard'].delete_one({'postId': post_id})
+        msg = await channel.fetch_message(post['messageId'])
+        await msg.delete()
+
+        await ctx.send(f'Post `{post_id}`: **{title}** deleted!')
+
+        await delete_command(ctx.message)
+
     @player_board.group(name = 'edit', pass_context = True)
     async def pbedit(self, ctx):
         """
@@ -138,7 +183,7 @@ class PlayerBoard(Cog):
 
         # Build the embed and post
         post_embed = self.edit_post(updated_post)
-        msg = await fetch_message(post['messageId'])
+        msg = await channel.fetch_message(post['messageId'])
         await msg.edit(embed = post_embed)
 
         await ctx.send('Post updated!')
@@ -190,7 +235,7 @@ class PlayerBoard(Cog):
 
         # Build the embed and post
         post_embed = self.edit_post(updated_post)
-        msg = await fetch_message(post['messageId'])
+        msg = await channel.fetch_message(post['messageId'])
         await msg.edit(embed = post_embed)
 
         await ctx.send('Post updated!')
@@ -209,6 +254,13 @@ class PlayerBoard(Cog):
         [#]: The number of days before a post is purged.
         [all]: Purges all posts.
         """
+
+        # TODO: Refactor with channel.delete_messages()
+        # or possible channel.purge()
+
+        # TODO: Experiment with channel.history() to get all messages
+        # and pass to pymongo unordered bulk write
+
         # Get the guild object
         guild_id = ctx.message.guild.id
         guild = self.bot.get_guild(guild_id)
