@@ -38,8 +38,9 @@ def main():
     for extension in bot.config['load_extensions']:
         try:
             bot.load_extension(extension)
-        except:
+        except Exception as e:
             print(f'Failed to load extension: {extension}')
+            print('{}: {}'.format(type(e).__name__, e))
 
     print("ReQuest is online.")
     bot.run(bot.config['token'], bot=True)

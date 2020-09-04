@@ -22,22 +22,28 @@ class Help(Cog):
     # Simple ping test
     @command()
     async def ping(self, ctx):
-        """Get a quick reply from the bot to see if it is online."""
+        """
+        Get a quick reply from the bot to see if it is online.
+        """
         await ctx.send('**Pong!**\n{0}ms'.format(round(self.bot.latency * 1000), 1))
 
         await delete_command(ctx.message)
 
     @command()
     async def invite(self,ctx):
-        """Prints an invite to add ReQuest to your server."""
+        """
+        Prints an invite to add ReQuest to your server.
+        """
         await ctx.send(f'Invite me to your server! <https://discord.com/api/oauth2/authorize?client_id=601492201704521765&permissions=268954688&scope=bot>')
 
         await delete_command(ctx.message)
 
     @command()
     async def info(self, ctx):
-        """Prints useful bot information."""
-        await ctx.send(f'**ReQuest v0.1.9-a.1**\n\nBugs? Feature Requests? Join the development server at https://discord.gg/Zq37gj4')
+        """
+        Prints useful bot information.
+        """
+        await ctx.send(f'**ReQuest v0.2.0-a.1**\n\nBugs? Feature Requests? Join the development server at https://discord.gg/Zq37gj4')
 
         await delete_command(ctx.message)
 

@@ -32,7 +32,8 @@ class PlayerBoard(Cog):
         player, post_id, title, content = (post['player'], post['postId'], post['title'], post['content'])
 
         # Construct the embed object and edit the post with the new embed
-        post_embed = discord.Embed(title=title, type='rich', description=f'**Player:** <@!{player}>\n\n{content}')
+        post_embed = discord.Embed(title=title, type='rich', description=content)
+        post_embed.add_field(name = 'Author', value = f'<@!{player}>')
         post_embed.set_footer(text='Post ID: '+post_id)
 
         return post_embed
@@ -42,7 +43,7 @@ class PlayerBoard(Cog):
     @commands.group(name = 'playerboard', aliases = ['pb', 'pboard'], pass_context = True)
     async def player_board(self, ctx):
         """
-        Commands for management of player board postings.
+        Commands for player board posts and edits.
         """
         if ctx.invoked_subcommand is None:
             await delete_command(ctx.message)
@@ -52,6 +53,10 @@ class PlayerBoard(Cog):
     async def pbpost(self, ctx, title, *, content):
         """
         Posts a new message to the player board.
+
+        Arguments:
+        [title]: The title of the post.
+        [content]: The body of the post.
         """
         guild_id = ctx.message.guild.id
         guild = self.bot.get_guild(guild_id)
@@ -70,8 +75,9 @@ class PlayerBoard(Cog):
         # Build the post embed
         player = ctx.author.id
         post_id = str(shortuuid.uuid()[:8])
-        post_embed = discord.Embed(title=title, type='rich', description=f'**Player:** <@!{player}>\n\n{content}')
-        post_embed.set_footer(text='Post ID: '+post_id)
+        post_embed = discord.Embed(title=title, type='rich', description=content)
+        post_embed.add_field(name = 'Author', value = f'<@!{player}>')
+        post_embed.set_footer(text=f'Post ID: {post_id}')
 
         msg = await channel.send(embed=post_embed)
         message_id = msg.id
@@ -90,7 +96,7 @@ class PlayerBoard(Cog):
         Deletes a post.
 
         Arguments:
-        [post_id]: The ID of the post to delete.
+        [post_id]: The ID of the post.
         """
         guild_id = ctx.message.guild.id
         guild = self.bot.get_guild(guild_id)
@@ -120,7 +126,7 @@ class PlayerBoard(Cog):
             await delete_command(ctx.message)
             return
 
-        title = pbquery['title']
+        title = post['title']
         # Delete the post from the database and player board channel
         gdb['playerBoard'].delete_one({'postId': post_id})
         msg = await channel.fetch_message(post['messageId'])
@@ -199,7 +205,7 @@ class PlayerBoard(Cog):
 
         Arguments:
         [post_id]: The post ID to edit.
-        [new_content]: The new title of the post.
+        [new_content]: The new content of the post.
         """
         guild_id = ctx.message.guild.id
         guild = self.bot.get_guild(guild_id)
@@ -253,8 +259,8 @@ class PlayerBoard(Cog):
         Purges player board posts.
 
         Arguments:
-        [#]: The number of days before a post is purged.
-        [all]: Purges all posts.
+        [days]: The number of days before a post is purged.
+        --<all>: Purges all posts.
         """
 
         # TODO: Refactor with channel.delete_messages()

@@ -142,12 +142,18 @@ class Admin(Cog):
 
     @config.group(pass_context = True)
     async def role(self, ctx):
+        """Commands for configuring roles for various features."""
         if ctx.invoked_subcommand is None:
             return # TODO: Error message feedback
     
     @role.command()
     async def announce(self, ctx, role: str = None):
-        """Gets or sets the role used for post announcements."""
+        """
+        Gets or sets the role used for quest announcements.
+
+        Arguments:
+        [role name]: The name of the role to be mentioned when new quests are posted.
+        """
         guild_id = ctx.message.guild.id
         guild = self.bot.get_guild(guild_id)
         collection = gdb['announceRole']
@@ -185,7 +191,9 @@ class Admin(Cog):
     @role.group(pass_context = True, invoke_without_command = True)
     async def gm(self, ctx):
         """
-        Gets or sets the GM role(s), used for GM commands.
+        Sets the GM role(s), used for GM commands.
+
+        When this base command is executed, it displays the current setting.
         """
         guild_id = ctx.message.guild.id
         guild = self.bot.get_guild(guild_id)
@@ -211,7 +219,7 @@ class Admin(Cog):
         Adds a role to the GM list.
 
         Arguments:
-        <role name>: Adds the role to the GM list. Roles with spaces must be encapsulated in quotes.
+        [role name]: Adds the role to the GM list. Roles with spaces must be encapsulated in quotes.
         """
         
         guild_id = ctx.message.guild.id
@@ -269,8 +277,8 @@ class Admin(Cog):
         Removes existing GM roles.
 
         Arguments:
-        <role name>: Removes the role from the GM list. Roles with spaces must be encapsulated in quotes.
-        <all>: Removes all roles from the GM list.
+        [role name]: Removes the role from the GM list. Roles with spaces must be encapsulated in quotes.
+        --<all>: Removes all roles from the GM list.
         """
 
         guild_id = ctx.message.guild.id
@@ -332,13 +340,22 @@ class Admin(Cog):
 
     @config.group(aliases = ['chan', 'ch'], pass_context = True)
     async def channel(self, ctx):
+        """
+        Commands for configuration of feature channels.
+        """
         if ctx.invoked_subcommand is None:
             return # TODO: Error message feedback
 
     # Configures the channel in which player messages are to be posted. Same logic as questChannel()
     @channel.command(name = 'playerboard', aliases = ['player', 'pboard', 'pb'], pass_context = True)
     async def player_board_channel(self, ctx, channel : str = None):
-        """Get or sets the channel used for the Player Board."""
+        """
+        Get or sets the channel used for the Player Board.
+
+        Arguments:
+        [no argument]: Displays the current setting.
+        [channel link]: Sets the player board channel.
+        """
         guild_id = ctx.message.guild.id
         collection = gdb['playerBoardChannel']
         channelName : str = None
@@ -362,7 +379,13 @@ class Admin(Cog):
 
     @channel.command(name = 'questboard', aliases = ['quest', 'qboard', 'qb'], pass_context = True)
     async def quest_board(self, ctx, channel : str = None):
-        """Configures the channel in which quests are to be posted"""
+        """
+        Configures the channel in which quests are to be posted.
+
+        Arguments:
+        [no argument]: Displays the current setting.
+        [channel link]: Sets the quest board channel.
+        """
         guild_id = ctx.message.guild.id
         collection = gdb['questChannel']
 
@@ -382,7 +405,13 @@ class Admin(Cog):
 
     @channel.command(name = 'questarchive', aliases = ['archive', 'qarch', 'qa'], pass_context = True)
     async def quest_archive(self, ctx, channel : str = None):
-        """Configures the channel in which quests are to be archived."""
+        """
+        Configures the channel in which quests are to be archived.
+
+        Arguments:
+        [no argument]: Displays the current setting.
+        [channel link]: Sets the quest archive channel.
+        """
         guild_id = ctx.message.guild.id
         collection = gdb['archiveChannel']
 
@@ -410,13 +439,19 @@ class Admin(Cog):
             return # TODO: Error message feedback
 
     @quest.command(name = 'waitlist', aliases = ['wait'], pass_context = True)
-    async def wait_list(self, ctx, waitlistValue = None):
-        """This command gets or sets the waitlist cap. Accepts a range of 0 to 5."""
+    async def wait_list(self, ctx, wait_list_value = None):
+        """
+        This command gets or sets the server-wide wait list. Accepts a range of 0 to 5.
+
+        Arguments:
+        [no argument]: Displays the current setting.
+        [wait_list_value]: The size of the quest wait list.
+        """
         guild_id = ctx.message.guild.id
         collection = gdb['questWaitlist']
 
         # Print the current setting if no argument is given. Otherwise, store the new value.
-        if not waitlistValue:
+        if not wait_list_value:
             query = collection.find_one({'guildId': guild_id})
             if not query or query['waitListValue'] == 0:
                 await ctx.send('Quest wait list is currently disabled.')
@@ -424,7 +459,7 @@ class Admin(Cog):
                 await ctx.send('Quest wait list currently set to {} players.'.format(str(query['waitlistValue'])))
         else:
             try:
-                value = int(waitlistValue) # Convert to int for input validation and db storage
+                value = int(wait_list_value) # Convert to int for input validation and db storage
                 if value < 0 or value > 5:
                     raise ValueError('Value must be an integer between 0 and 5!')
                 else:

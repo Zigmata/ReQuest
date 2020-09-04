@@ -60,7 +60,7 @@ class QuestBoard(Cog):
 
         # Construct the embed object and edit the post with the new embed
         post_embed = discord.Embed(title=title, type='rich',
-            description=f'**GM:** <@!{gm}>\n**Level Range:** {levels}\n**Description:**\n{description}')
+            description=f'**GM:** <@!{gm}>\n**Level Range:** {levels}\n\n{description}')
         post_embed.add_field(name=f'__Party ({current_party_size}/{max_party_size})__', value=formatted_party)
         # Add a waitlist field if one is present, unless the quest is being archived.
         if max_wait_list_size > 0 and is_archival == False:
@@ -241,7 +241,15 @@ class QuestBoard(Cog):
 
     @quest.command(pass_context = True)
     async def post(self, ctx, title, levels, max_party_size: int, *, description):
-        """Posts a new quest."""
+        """
+        Posts a new quest.
+
+        Arguments:
+        [title]: The title of the quest.
+        [levels]: Can be anything to detail who you want joining. E.G. "1-4" or "All players."
+        [max_party_size]: The maximum amount of players that may join the quest.
+        [description]: Details of the quest and any other info you'd like to include.
+        """
 
         # TODO: Research exception catching on function argument TypeError
 
@@ -286,7 +294,7 @@ class QuestBoard(Cog):
         xp : int = None
         lock_state = False
 
-        post_embed = discord.Embed(title=title, type='rich', description=f'**GM:** <@!{gm}>\n**Level Range:** {levels}\n**Description:**\n{description}')
+        post_embed = discord.Embed(title=title, type='rich', description=f'**GM:** <@!{gm}>\n**Level Range:** {levels}\n\n{description}')
         post_embed.add_field(name=f'__Party (0/{max_party_size})__', value=None)
         if max_wait_list_size > 0:
             post_embed.add_field(name=f'__Wait List (0/{max_wait_list_size})__', value=None)
@@ -313,7 +321,12 @@ class QuestBoard(Cog):
 
     @quest.command(pass_context = True)
     async def ready(self, ctx, quest_id):
-        """Locks the quest roster and alerts party members that the quest is ready."""
+        """
+        Locks the quest roster and alerts party members that the quest is ready.
+
+        Arguments:
+        [quest_id]: The ID of the quest.
+        """
         guild_id = ctx.message.guild.id
         user_id = ctx.author.id
         
@@ -378,8 +391,9 @@ class QuestBoard(Cog):
         """
         Unlocks a quest if members are not ready.
 
-        Optional Arguments:
-        [players]: Can be chained. Removes player(s) from party.
+        Arguments:
+        [quest_id]: The ID of the quest.
+        [players](Optional): Can be chained. Removes player(s) from party.
         """
         guild_id = ctx.message.guild.id
         user_id = ctx.author.id
@@ -467,8 +481,9 @@ class QuestBoard(Cog):
         """
         Closes a quest and issues rewards.
 
-        Optional arguments:
-        [summary]: A summary of the quest. Requires admin enable of quest summaries (see help config quest summary).
+        Arguments:
+        [quest_id]: The ID of the quest.
+        [summary](Optional): A summary of the quest. Requires admin enable of quest summaries (see help config quest summary).
         """
         # TODO: Implement quest removal/archival, optional summary, player and GM reward distribution
         guild_id = ctx.message.guild.id
@@ -541,7 +556,7 @@ class QuestBoard(Cog):
         Deletes a quest.
 
         Arguments:
-        [quest_id]: ID of the quest to be deleted.
+        [quest_id]: The ID of the quest.
         """
         guild_id = ctx.message.guild.id
         user_id = ctx.author.id
@@ -598,7 +613,13 @@ class QuestBoard(Cog):
 
     @edit.command(pass_context = True)
     async def title(self, ctx, quest_id, *, new_title):
-        """Edits the title of the provided quest ID."""
+        """
+        Edits the quest's title.
+
+        Arguments:
+        [quest_id]: The ID of the quest.
+        [new_title]: The updated title.
+        """
         guild_id = ctx.message.guild.id
         guild = self.bot.get_guild(guild_id)
         user_id = ctx.author.id
@@ -635,7 +656,13 @@ class QuestBoard(Cog):
 
     @edit.command(aliases = ['desc'], pass_context = True)
     async def description(self, ctx, quest_id, *, new_description):
-        """Edits the description of the provided quest ID."""
+        """
+        Edits the description of the provided quest ID.
+
+        Arguments:
+        [quest_id]: The ID of the quest.
+        [new_description]: The updated description.
+        """
         guild_id = ctx.message.guild.id
         guild = self.bot.get_guild(guild_id)
         user_id = ctx.author.id
@@ -672,7 +699,13 @@ class QuestBoard(Cog):
 
     @edit.command(name = 'partysize', aliases = ['party'], pass_context = True)
     async def party_size(self, ctx, quest_id, *, new_party_size : int):
-        """Edits the max party size of the provided quest ID."""
+        """
+        Edits the max party size of the provided quest ID.
+
+        Arguments:
+        [quest_id]: The ID of the quest.
+        [new_party_size]: The updated party size.
+        """
         guild_id = ctx.message.guild.id
         guild = self.bot.get_guild(guild_id)
         user_id = ctx.author.id
@@ -709,7 +742,13 @@ class QuestBoard(Cog):
 
     @edit.command(pass_context = True)
     async def levels(self, ctx, quest_id, *, new_levels):
-        """Edits the advertised level range of the provided quest ID."""
+        """
+        Edits the advertised level range of the provided quest ID.
+
+        Arguments:
+        [quest_id]: The ID of the quest.
+        [new_levels]: The updated level range.
+        """
         guild_id = ctx.message.guild.id
         guild = self.bot.get_guild(guild_id)
         user_id = ctx.author.id
@@ -752,9 +791,11 @@ class QuestBoard(Cog):
         """
         Configures a role to be issued to a GM's party.
 
-        <no argument>: Displays the current setting.
-        <role name>: Sets the role for questing parties.
-        <delete|remove>: Clears the role.
+        Arguments:
+        [party_role]: The role to set as the calling GM's party role.
+        --(no argument): Displays the current setting.
+        --(role name): Sets the role for questing parties.
+        --(delete|remove): Clears the role.
         """
         guild_id = ctx.message.guild.id
         guild = self.bot.get_guild(guild_id)
