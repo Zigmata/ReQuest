@@ -1,11 +1,12 @@
 import itertools
-from datetime import datetime
+from datetime import datetime, timedelta
 import shortuuid
 import bson
 import re
 
 import pymongo
 from pymongo import MongoClient
+from pymongo import DeleteOne
 
 import discord
 from discord.ext import commands
@@ -119,6 +120,7 @@ class PlayerBoard(Cog):
             await delete_command(ctx.message)
             return
 
+        title = pbquery['title']
         # Delete the post from the database and player board channel
         gdb['playerBoard'].delete_one({'postId': post_id})
         msg = await channel.fetch_message(post['messageId'])
@@ -281,8 +283,9 @@ class PlayerBoard(Cog):
         # Find each post in the db older than the specified time
         message_ids = []
         if days == 'all':
-            for post in gdb['playerBoard'].find():
-                message_ids.append(post['messageId'])
+            await channel.purge()
+            result = gdb['playerBoard'].delete_many({'guildId': guild_id})
+                
         else:
             duration = None
             try:
