@@ -1,3 +1,4 @@
+import asyncio
 import itertools
 from datetime import datetime, timedelta
 import shortuuid
@@ -289,9 +290,8 @@ class PlayerBoard(Cog):
         # Find each post in the db older than the specified time
         message_ids = []
         if days == 'all':
-            await channel.purge()
+            await pb_channel.purge()
             result = gdb['playerBoard'].delete_many({'guildId': guild_id})
-                
         else:
             duration = None
             try:
@@ -313,6 +313,8 @@ class PlayerBoard(Cog):
                 gdb['playerBoard'].delete_one({'messageId': id})
 
             await ctx.send('{} expired posts deleted!'.format(len(message_ids)))
+        elif days == 'all':
+            await ctx.send('All player board posts deleted!')
         else:
             await ctx.send('No posts fall outside the provided number of days.')
 
