@@ -565,31 +565,40 @@ class QuestBoard(Cog):
 
         # Fetch the quest
         quest = gdb['quests'].find_one({'questId': quest_id})
+        if not quest:
+            await ctx.send('Quest ID not found!')
+            await delete_command(ctx.message)
+            return
 
-        # Confirm the user calling the command is the GM that created the quest
-        if not quest['gm'] == user_id:
+        # Confirm the user calling the command is the GM that created the quest, or
+        # has administrative rights.
+        member = guild.get_member(user_id)
+        if not quest['gm'] == user_id or not member.guild_permissions.manage_guild:
             await ctx.send('GMs can only manage their own quests!')
             await delete_command(ctx.message)
             return
 
-        # Check if a GM role was configured
-        gm_role = None
-        gm = quest['gm']
-        role_query = gdb['partyRole'].find_one({'guildId': guild_id, 'gm': gm})
-        if role_query:
-            gm_role = role_query['role']
-
-        # Get party members and message them with results
+        # If a party exists
         party = quest['party']
         title = quest['title']
-        for player in party:
-            member = guild.get_member(player)
-            # Remove the party role, if applicable
-            if gm_role:
-                role = guild.get_role(gm_role)
-                await member.remove_roles(role)
-            # TODO: Implement loot and XP after those functions are added
-            await member.send(f'Quest **{title}** was cancelled by the GM.')
+        if party:        
+            # Check if a GM role was configured
+            gm_role = None
+            gm = quest['gm']
+            role_query = gdb['partyRole'].find_one({'guildId': guild_id, 'gm': gm})
+            if role_query:
+                gm_role = role_query['role']
+
+            # Get party members and message them with results
+
+            for player in party:
+                member = guild.get_member(player)
+                # Remove the party role, if applicable
+                if gm_role:
+                    role = guild.get_role(gm_role)
+                    await member.remove_roles(role)
+                # TODO: Implement loot and XP after those functions are added
+                await member.send(f'Quest **{title}** was cancelled by the GM.')
 
         # Delete the quest from the database
         result = gdb['quests'].delete_one({'questId': quest_id})
@@ -824,10 +833,7 @@ class QuestBoard(Cog):
                 return
 
             role_id = search.id
-            if not query:
-                collection.insert_one({'guildId': guild_id, 'gm': user_id, 'role': role_id})
-            else:
-                collection.update_one({'guildId': guild_id, 'gm': user_id}, {'$set': {'role': role_id}})
+            collection.update_one({'guildId': guild_id, 'gm': user_id}, {'$set': {'role': role_id}}, upsert = True)
 
             await ctx.send(f'Your GM role for this server has been set to `{search.name}`!')
 
