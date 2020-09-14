@@ -23,10 +23,8 @@ class QuestBoard(Cog):
         self.bot = bot
         global gdb
         global mdb
-        global cdb
         gdb = bot.gdb
         mdb = bot.mdb
-        cdb = bot.cdb
 
 # ---- Listeners and support functions ----
 
@@ -231,7 +229,7 @@ class QuestBoard(Cog):
     # TODO: Figure out what is conflicting with normal decorator function to
     # handle GM checks in a support function instead.
 
-    @commands.group(pass_context = True)
+    @commands.group(case_insensitive = True, pass_context = True)
     @has_gm_role()
     async def quest(self, ctx):
         """
@@ -614,7 +612,7 @@ class QuestBoard(Cog):
 
         await delete_command(ctx.message)
 
-    @quest.group(pass_context = True)
+    @quest.group(case_insensitive = True, pass_context = True)
     async def edit(self, ctx):
         """Commands for editing of quest posts."""
         #TODO Implement quest title/levels/partysize/description updating

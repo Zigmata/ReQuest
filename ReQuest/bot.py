@@ -24,13 +24,13 @@ class ReQuest(commands.AutoShardedBot):
 # Define bot and prefix
 # TODO: Implement prefix changes
 pre = config['prefix']
-bot = ReQuest(prefix=pre, activity=discord.Game(name=f'by Post | r!help'))
+bot = ReQuest(prefix=pre, case_insensitive = True, activity=discord.Game(name=f'by Post | $help'))
 #bot.remove_command('help') # TODO: Un-comment when custom help commands are implemented.
 bot.config = config
 bot.gdb = connection[config['guildDb']]
 bot.mdb = connection[config['memberDb']]
 bot.cdb = connection[config['configDb']]
-bot.white_list = [int]
+bot.white_list = []
 if config['whiteList']:
     bot.white_list = bot.cdb['botWhiteList'].find_one({'servers': {'$exists': True}})['servers']
 

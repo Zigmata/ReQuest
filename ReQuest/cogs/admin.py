@@ -20,11 +20,9 @@ class Admin(Cog):
         self.bot = bot
         global gdb
         global mdb
-        global cdb
         global white_list
         gdb = bot.gdb
         mdb = bot.mdb
-        cdb = bot.cdb
         white_list = self.bot.white_list
 
 #-----------------Listeners----------------
@@ -89,7 +87,7 @@ class Admin(Cog):
             await ctx.send('{}: {}'.format(type(e).__name__, e))
 
     @commands.is_owner()
-    @commands.group(name = 'whitelist', hidden = True, pass_context = True)
+    @commands.group(name = 'whitelist', hidden = True, case_insensitive = True, pass_context = True)
     async def white_list(self, ctx):
         if ctx.invoked_subcommand is None:
             await delete_command(ctx.message)
@@ -133,15 +131,19 @@ class Admin(Cog):
 #-------------Config Commands--------------
 
     @commands.has_guild_permissions(manage_guild = True)
-    @commands.group(aliases = ['conf'], pass_context = True)
+    @commands.group(aliases = ['conf'], case_insensitive = True, pass_context = True)
     async def config(self, ctx):
         """Commands for server configuration of bot options and features."""
         if ctx.invoked_subcommand is None:
             return # TODO: Error message feedback
 
+    @config.command()
+    async def prefix(self, ctx, custom_prefix = None):
+        guild_id = ctx.message.guild.id
+
     # --- Role ---
 
-    @config.group(pass_context = True)
+    @config.group(case_insensitive = True, pass_context = True)
     async def role(self, ctx):
         """Commands for configuring roles for various features."""
         if ctx.invoked_subcommand is None:
@@ -189,7 +191,7 @@ class Admin(Cog):
 
         await delete_command(ctx.message)
 
-    @role.group(pass_context = True, invoke_without_command = True)
+    @role.group(case_insensitive = True, pass_context = True, invoke_without_command = True)
     async def gm(self, ctx):
         """
         Sets the GM role(s), used for GM commands.
@@ -339,7 +341,7 @@ class Admin(Cog):
 
     # --- Channel ---
 
-    @config.group(aliases = ['chan', 'ch'], pass_context = True)
+    @config.group(case_insensitive = True, aliases = ['chan', 'ch'], pass_context = True)
     async def channel(self, ctx):
         """
         Commands for configuration of feature channels.
@@ -431,7 +433,7 @@ class Admin(Cog):
 
     # --- Quest ---
 
-    @config.group(pass_context = True)
+    @config.group(case_insensitive = True, pass_context = True)
     async def quest(self, ctx):
         """
         Commands for configuring quest post behavior.

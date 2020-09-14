@@ -41,7 +41,7 @@ class PlayerBoard(Cog):
 
     # ----- Player Board Commands -----
 
-    @commands.group(name = 'playerboard', aliases = ['pb', 'pboard'], pass_context = True)
+    @commands.group(name = 'playerboard', aliases = ['pb', 'pboard'], case_insensitive = True, pass_context = True)
     async def player_board(self, ctx):
         """
         Commands for player board posts and edits.
@@ -137,7 +137,7 @@ class PlayerBoard(Cog):
 
         await delete_command(ctx.message)
 
-    @player_board.group(name = 'edit', pass_context = True)
+    @player_board.group(name = 'edit', case_insensitive = True, pass_context = True)
     async def pbedit(self, ctx):
         """
         Commands for editing player board posts.

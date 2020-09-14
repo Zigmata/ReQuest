@@ -31,6 +31,7 @@ class Player(Cog):
 
         Arguments:
         [character_name]: The name of the character.
+        [character_note]: A note to uniquely identify the character.
         """
         member_id = ctx.author.id
         guild_id = ctx.message.guild.id
@@ -39,18 +40,13 @@ class Player(Cog):
         date = datetime.utcnow()
         
         # Adds the provided character info to the db
-        #collection.update_one({'memberId': member_id}, {'$set': {'activeChar': character_id},
-        #    '$push': {'characters': {character_id: {'name': character_name,
-        #    'note': character_note, 'registeredDate': date, 'attributes': {'level': None,
-        #    'experience': None, 'inventory': None, 'currency': None}}}}}, upsert = True)
-
         collection.update_one({'memberId': member_id}, {'$set': {'activeChar': character_id,
             f'characters.{character_id}': {'name': character_name,
             'note': character_note, 'registeredDate': date, 'attributes': {'level': None,
             'experience': None, 'inventory': {}, 'currency': None}}}}, upsert = True)
 
-        await ctx.send(f'{character_name} registered with ID `{character_id}`!')
-        await ctx.send('Do you wish to set up initial attributes?\n(**Y**)es or (**N**)o')
+        # Prompt user to initialize fields such as inventory, xp, etc.
+        await ctx.send(f'{character_name} registered with ID `{character_id}`!\nDo you wish to set up initial attributes?\n(**Y**)es or (**N**)o')
         reply = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
         if reply.content.lower() == 'n':
             await delete_command(reply)
