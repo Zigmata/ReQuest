@@ -439,6 +439,7 @@ class Admin(Cog):
         Commands for configuring quest post behavior.
         """
         if ctx.invoked_subcommand is None:
+            await delete_command(ctx.message)
             return # TODO: Error message feedback
 
     @quest.command(name = 'waitlist', aliases = ['wait'], pass_context = True)
@@ -503,6 +504,43 @@ class Admin(Cog):
         else:
             collection.update_one({'guildId': guild_id}, {'$set': {'questSummary': False}})
             await ctx.send('Quest summary disabled.')
+
+        await delete_command(ctx.message)
+
+    # --- Characters ---
+
+    @config.group(name = 'characters', aliases = ['chars'], case_insensitive = True)
+    async def config_characters(self, ctx):
+        """
+        This group of commands configures the character attributes on the server.
+        """
+        if ctx.invoked_subcommand is None:
+            await delete_command(ctx.message)
+            return # TODO: Error message feedback
+
+    @config_characters.command(aliases = ['xp', 'exp'])
+    async def experience(self, ctx, enabled : str = None):
+        """
+        This command manages the use of experience points (or similar value-based character progression).
+
+        Arguments:
+        [no argument]: Displays the current configuration.
+        [True|False]: Configures the server to enable/disable experience points.
+        """
+        guild_id = ctx.message.guild.id
+        query = gdb['charXp'].find_one({'guildId': guild_id})
+
+        if enabled == None:
+            if query and query['xp']:
+                await ctx.send('Character Experience Points are enabled.')
+            else:
+                await ctx.send('Character Experience Points are disabled.')
+        elif enabled.lower() == 'true':
+            gdb['charXp'].update_one({'guildId': guild_id}, {'$set': {'xp': True}}, upsert = True)
+            await ctx.send('Character Experience Points enabled!')
+        elif enabled.lower() == 'false':
+            gdb['charXp'].update_one({'guildId': guild_id}, {'$set': {'xp': False}}, upsert = True)
+            await ctx.send('Character Experience Points disabled!')
 
         await delete_command(ctx.message)
 

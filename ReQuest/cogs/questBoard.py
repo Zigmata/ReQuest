@@ -70,7 +70,7 @@ class QuestBoard(Cog):
 
     async def reaction_operation(self, payload):
         """Handles addition/removal of user mentions when reacting to quest posts"""
-        # TODO: Remove GM role (if configured) from player on removal (if present)
+        # TODO: Level restrictions if enabled
         guild_id = payload.guild_id
         user_id = payload.user_id
         user = self.bot.get_user(user_id)
@@ -110,7 +110,8 @@ class QuestBoard(Cog):
             if quest['lockState'] == True:
                 emoji = payload.emoji
                 await message.remove_reaction(emoji, user)
-                return # TODO: Report locked status
+                await user.send('Quest **{}** is locked and not accepting players.'.format(quest['title']))
+                return
             else:
                 # If the waitlist is enabled, this section formats the embed to include the waitlist
                 if max_wait_list_size > 0:
@@ -251,6 +252,7 @@ class QuestBoard(Cog):
         """
 
         # TODO: Research exception catching on function argument TypeError
+        # TODO: Level min/max for enabled servers
 
         guild_id = ctx.message.guild.id
         quest_id = str(shortuuid.uuid()[:8])
