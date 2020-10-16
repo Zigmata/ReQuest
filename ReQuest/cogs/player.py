@@ -129,23 +129,39 @@ class Player(Cog):
         character_id = str(shortuuid.uuid())
         collection = mdb['characters']
         date = datetime.utcnow()
-        
-        # Adds the provided character info to the db
-        collection.update_one({'memberId': member_id}, {'$set': {'activeChar': character_id,
-            f'characters.{character_id}': {'name': character_name,
-            'note': character_note, 'registeredDate': date, 'attributes': {'level': None,
-            'experience': None, 'inventory': {}, 'currency': None}}}}, upsert = True)
+        char_xp = None
+        inventory = {}
+
 
         # Prompt user to initialize fields such as inventory, xp, etc.
         await ctx.send(f'{character_name} registered with ID `{character_id}`!\nDo you wish to set up initial attributes?\n(**Y**)es or (**N**)o')
         reply = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
         if any(x in reply.content.lower() for x in ['no', 'n']):
             await delete_command(reply)
-            await delete_command(ctx.message)
-            return
         elif any(x in reply.content.lower() for x in ['y', 'yes']):
             await delete_command(reply)
             await ctx.send('Prompts for player info based on server config.')
+
+            # Check to see if server is configured to use experience points
+            char_settings = gdb['characterSettings'].find_one({'guildId': guild_id})
+            if char_settings['xp']:
+                await ctx.send('Enter {}\'s experience points:'.format(character_name))
+                xp_reply = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author) # TODO: Check for int
+                char_xp = int(xp_reply.content)
+
+            # Prompt for initial inventory
+            await ctx.send('Import inventory as JSON (**c** to cancel)')
+            inventory_reply = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
+            if not 'c' in inventory_reply.content.lower():
+                inventory = inventory_reply.content
+
+        # Adds the provided character info to the db
+        collection.update_one({'memberId': member_id}, {'$set': {'activeChar': character_id,
+            f'characters.{character_id}': {'name': character_name,
+            'note': character_note, 'registeredDate': date, 'attributes': {'level': None,
+            'experience': char_xp, 'inventory': inventory, 'currency': None}}}}, upsert = True)
+
+        await ctx.send('Character registration saved!')
 
         await delete_command(ctx.message)
 

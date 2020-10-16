@@ -30,6 +30,7 @@ class Admin(Cog):
     @commands.Cog.listener()
     async def on_guild_join(self, server):
         # TODO: Message guild owner about whitelisting
+        # TODO: Expand function to check guild db on valid join and initialize if new
         if not white_list:
             return
 
@@ -527,8 +528,9 @@ class Admin(Cog):
         [no argument]: Displays the current configuration.
         [True|False]: Configures the server to enable/disable experience points.
         """
+        # TODO: Default to true
         guild_id = ctx.message.guild.id
-        query = gdb['charXp'].find_one({'guildId': guild_id})
+        query = gdb['characterSettings'].find_one({'guildId': guild_id})
 
         if enabled == None:
             if query and query['xp']:
@@ -536,10 +538,10 @@ class Admin(Cog):
             else:
                 await ctx.send('Character Experience Points are disabled.')
         elif enabled.lower() == 'true':
-            gdb['charXp'].update_one({'guildId': guild_id}, {'$set': {'xp': True}}, upsert = True)
+            gdb['characterSettings'].update_one({'guildId': guild_id}, {'$set': {'xp': True}}, upsert = True)
             await ctx.send('Character Experience Points enabled!')
         elif enabled.lower() == 'false':
-            gdb['charXp'].update_one({'guildId': guild_id}, {'$set': {'xp': False}}, upsert = True)
+            gdb['characterSettings'].update_one({'guildId': guild_id}, {'$set': {'xp': False}}, upsert = True)
             await ctx.send('Character Experience Points disabled!')
 
         await delete_command(ctx.message)
