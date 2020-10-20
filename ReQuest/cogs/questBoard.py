@@ -573,7 +573,7 @@ class QuestBoard(Cog):
         # Confirm the user calling the command is the GM that created the quest, or
         # has administrative rights.
         member = guild.get_member(user_id)
-        if not quest['gm'] == user_id or not member.guild_permissions.manage_guild:
+        if not quest['gm'] == user_id or not ctx.author.guild_permissions.manage_guild:
             await ctx.send('GMs can only manage their own quests!')
             await delete_command(ctx.message)
             return
