@@ -20,9 +20,11 @@ class Admin(Cog):
         self.bot = bot
         global gdb
         global mdb
+        global cdb
         global white_list
         gdb = bot.gdb
         mdb = bot.mdb
+        cdb = bot.cdb
         white_list = self.bot.white_list
 
 #-----------------Listeners----------------
@@ -138,9 +140,9 @@ class Admin(Cog):
         if ctx.invoked_subcommand is None:
             return # TODO: Error message feedback
 
-    @config.command()
-    async def prefix(self, ctx, custom_prefix = None):
-        guild_id = ctx.message.guild.id
+    #@config.command()
+    #async def prefix(self, ctx, custom_prefix = None):
+    #    guild_id = ctx.message.guild.id
 
     # --- Role ---
 

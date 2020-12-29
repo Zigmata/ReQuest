@@ -289,9 +289,9 @@ class PlayerBoard(Cog):
 
         # Find each post in the db older than the specified time
         message_ids = []
-        if days == 'all':
-            await pb_channel.purge()
-            result = gdb['playerBoard'].delete_many({'guildId': guild_id})
+        if days == 'all': # gets every post if this arg is provided
+            for post in gdb['playerBoard'].find({'guildId': guild_id}):
+                message_ids.append(int(post['messageId']))
         else:
             duration = None
             try:
@@ -300,12 +300,12 @@ class PlayerBoard(Cog):
                 await ctx.send('Argument must be either a number or `all`!')
 
             now = datetime.utcnow()
-            for post in gdb['playerBoard'].find():
+            for post in gdb['playerBoard'].find({'guildId': guild_id}):
                 delta = now - post['timestamp']
                 if delta.days > duration:
-                    message_ids.append(post['messageId'])
+                    message_ids.append(int(post['messageId']))
 
-        # If any expired posts are found, delete them
+        # If any qualifying message ids are found, delete the posts and the db records
         if message_ids:
             for id in message_ids:
                 msg = await pb_channel.fetch_message(id)
