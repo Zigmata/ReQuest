@@ -186,5 +186,32 @@ class Player(Cog):
 
         await delete_command(ctx.message)
 
+    @commands.group(name = 'xp', invoke_without_subcommand = True, case_insensitive = True)
+    async def cxp(self, ctx):
+        if ctx.invoked_subcommand is None:
+            member_id = ctx.author.id
+            guild_id = ctx.message.guild.id
+            collection = mdb['characters']
+
+            # Load the author's characters
+            query = collection.find_one({'memberId': member_id})
+            if not query: # If none exist, output the error
+                await ctx.send('You have no registered characters!')
+                await delete_command(ctx.message)
+                return
+
+            # Otherwise, proceed to query the active character and retrieve its xp
+            active_id = query['activeChar']
+            active_character = query['characters'][active_id]
+            name = active_character['name']
+            xp = active_character['attributes']['experience']
+            if xp:
+                post_embed = discord.Embed(title=name+'\'s Experience', type='rich', description=xp)
+                await ctx.send(embed=post_embed)
+            else:
+                await ctx.send(name+' is rather inexperienced! Did you forget to add some?')
+
+            await delete_command(ctx.message)
+
 def setup(bot):
     bot.add_cog(Player(bot))
