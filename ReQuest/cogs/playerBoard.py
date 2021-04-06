@@ -1,22 +1,17 @@
-import asyncio
-import itertools
-from datetime import datetime, timedelta
-import shortuuid
-import bson
-import re
-
-import pymongo
-from pymongo import MongoClient
-from pymongo import DeleteOne
+from datetime import datetime
 
 import discord
+import shortuuid
 from discord.ext import commands
-from discord.utils import get, find
-from discord.ext.commands import Cog, command
+from discord.ext.commands import Cog
 
 from ..utilities.supportFunctions import delete_command
 
 listener = Cog.listener
+
+global gdb
+global mdb
+
 
 class PlayerBoard(Cog):
     def __init__(self, bot):
@@ -28,20 +23,21 @@ class PlayerBoard(Cog):
 
     # --- Support Functions ---
 
-    def edit_post(self, post) -> discord.Embed:
+    @staticmethod
+    def edit_post(post) -> discord.Embed:
 
         player, post_id, title, content = (post['player'], post['postId'], post['title'], post['content'])
 
         # Construct the embed object and edit the post with the new embed
         post_embed = discord.Embed(title=title, type='rich', description=content)
-        post_embed.add_field(name = 'Author', value = f'<@!{player}>')
-        post_embed.set_footer(text='Post ID: '+post_id)
+        post_embed.add_field(name='Author', value=f'<@!{player}>')
+        post_embed.set_footer(text='Post ID: ' + post_id)
 
         return post_embed
 
     # ----- Player Board Commands -----
 
-    @commands.group(name = 'playerboard', aliases = ['pb', 'pboard'], case_insensitive = True, pass_context = True)
+    @commands.group(name='playerboard', aliases=['pb', 'pboard'], case_insensitive=True, pass_context=True)
     async def player_board(self, ctx):
         """
         Commands for player board posts and edits.
@@ -50,7 +46,7 @@ class PlayerBoard(Cog):
             await delete_command(ctx.message)
             return
 
-    @player_board.command(name = 'post', pass_context = True)
+    @player_board.command(name='post', pass_context=True)
     async def pbpost(self, ctx, title, *, content):
         """
         Posts a new message to the player board.
@@ -64,7 +60,6 @@ class PlayerBoard(Cog):
 
         # Get the player board channel
         pquery = gdb['playerBoardChannel'].find_one({'guildId': guild_id})
-        channel = None
         if not pquery:
             await ctx.send('Player Board Channel is disabled!')
             await delete_command(ctx.message)
@@ -77,7 +72,7 @@ class PlayerBoard(Cog):
         player = ctx.author.id
         post_id = str(shortuuid.uuid()[:8])
         post_embed = discord.Embed(title=title, type='rich', description=content)
-        post_embed.add_field(name = 'Author', value = f'<@!{player}>')
+        post_embed.add_field(name='Author', value=f'<@!{player}>')
         post_embed.set_footer(text=f'Post ID: {post_id}')
 
         msg = await channel.send(embed=post_embed)
@@ -87,11 +82,12 @@ class PlayerBoard(Cog):
 
         # Store the message in the database
         gdb['playerBoard'].insert_one({'guildId': guild_id, 'player': player, 'postId': post_id,
-            'messageId': message_id, 'timestamp': timestamp, 'title': title, 'content': content})
+                                       'messageId': message_id, 'timestamp': timestamp, 'title': title,
+                                       'content': content})
 
         await delete_command(ctx.message)
 
-    @player_board.command(name = 'delete', pass_context = True)
+    @player_board.command(name='delete', pass_context=True)
     async def pbdelete(self, ctx, post_id):
         """
         Deletes a post.
@@ -104,7 +100,6 @@ class PlayerBoard(Cog):
         player = ctx.author.id
 
         # Get the player board channel
-        channel = None
         pquery = gdb['playerBoardChannel'].find_one({'guildId': guild_id})
         if not pquery:
             await ctx.send('Player board channel disabled!')
@@ -137,7 +132,7 @@ class PlayerBoard(Cog):
 
         await delete_command(ctx.message)
 
-    @player_board.group(name = 'edit', case_insensitive = True, pass_context = True)
+    @player_board.group(name='edit', case_insensitive=True, pass_context=True)
     async def pbedit(self, ctx):
         """
         Commands for editing player board posts.
@@ -147,7 +142,7 @@ class PlayerBoard(Cog):
             await delete_command(ctx.message)
             return
 
-    @pbedit.command(name = 'title', pass_context = True)
+    @pbedit.command(name='title', pass_context=True)
     async def pbtitle(self, ctx, post_id, *, new_title):
         """
         Edits the title of a post.
@@ -161,7 +156,6 @@ class PlayerBoard(Cog):
         player = ctx.author.id
 
         # Get the player board channel
-        channel = None
         pquery = gdb['playerBoardChannel'].find_one({'guildId': guild_id})
         if not pquery:
             await ctx.send('Player board channel disabled!')
@@ -185,7 +179,7 @@ class PlayerBoard(Cog):
             return
 
         # Update the database
-        gdb['playerBoard'].update_one({'postId': post_id}, {'$set': {'title': new_title}}, upsert = True)
+        gdb['playerBoard'].update_one({'postId': post_id}, {'$set': {'title': new_title}}, upsert=True)
 
         # Grab the updated document
         updated_post = gdb['playerBoard'].find_one({'postId': post_id})
@@ -193,13 +187,13 @@ class PlayerBoard(Cog):
         # Build the embed and post
         post_embed = self.edit_post(updated_post)
         msg = await channel.fetch_message(post['messageId'])
-        await msg.edit(embed = post_embed)
+        await msg.edit(embed=post_embed)
 
         await ctx.send('Post updated!')
 
         await delete_command(ctx.message)
 
-    @pbedit.command(name = 'content', pass_context = True)
+    @pbedit.command(name='content', pass_context=True)
     async def pbcontent(self, ctx, post_id, *, new_content):
         """
         Edits the content of a post.
@@ -213,7 +207,6 @@ class PlayerBoard(Cog):
         player = ctx.author.id
 
         # Get the player board channel
-        channel = None
         pquery = gdb['playerBoardChannel'].find_one({'guildId': guild_id})
         if not pquery:
             await ctx.send('Player board channel disabled!')
@@ -237,7 +230,7 @@ class PlayerBoard(Cog):
             return
 
         # Update the database
-        gdb['playerBoard'].update_one({'postId': post_id}, {'$set': {'content': new_content}}, upsert = True)
+        gdb['playerBoard'].update_one({'postId': post_id}, {'$set': {'content': new_content}}, upsert=True)
 
         # Grab the updated document
         updated_post = gdb['playerBoard'].find_one({'postId': post_id})
@@ -245,7 +238,7 @@ class PlayerBoard(Cog):
         # Build the embed and post
         post_embed = self.edit_post(updated_post)
         msg = await channel.fetch_message(post['messageId'])
-        await msg.edit(embed = post_embed)
+        await msg.edit(embed=post_embed)
 
         await ctx.send('Post updated!')
 
@@ -253,7 +246,7 @@ class PlayerBoard(Cog):
 
     # ----- Admin Commands -----
 
-    @commands.has_guild_permissions(manage_guild = True)
+    @commands.has_guild_permissions(manage_guild=True)
     @player_board.command()
     async def purge(self, ctx, days):
         """
@@ -289,14 +282,14 @@ class PlayerBoard(Cog):
 
         # Find each post in the db older than the specified time
         message_ids = []
-        if days == 'all': # gets every post if this arg is provided
+        if days == 'all':  # gets every post if this arg is provided
             for post in gdb['playerBoard'].find({'guildId': guild_id}):
                 message_ids.append(int(post['messageId']))
         else:
             duration = None
             try:
                 duration = int(days)
-            except:
+            except TypeError:
                 await ctx.send('Argument must be either a number or `all`!')
 
             now = datetime.utcnow()
@@ -307,10 +300,10 @@ class PlayerBoard(Cog):
 
         # If any qualifying message ids are found, delete the posts and the db records
         if message_ids:
-            for id in message_ids:
-                msg = await pb_channel.fetch_message(id)
+            for message_id in message_ids:
+                msg = await pb_channel.fetch_message(message_id)
                 await msg.delete()
-                gdb['playerBoard'].delete_one({'messageId': id})
+                gdb['playerBoard'].delete_one({'messageId': message_id})
 
             await ctx.send('{} expired posts deleted!'.format(len(message_ids)))
         elif days == 'all':

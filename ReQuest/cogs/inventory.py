@@ -1,18 +1,10 @@
-import asyncio
-import itertools
-import bson
-import re
-
-import pymongo
-from pymongo import MongoClient
-
-import discord
-from discord.ext import commands
-from discord.ext.commands import Cog, command
-
-from ..utilities.supportFunctions import delete_command, has_gm_role
+from discord.ext.commands import Cog
 
 listener = Cog.listener
+
+global gdb
+global mdb
+
 
 class Inventory(Cog):
     def __init__(self, bot):
@@ -21,6 +13,7 @@ class Inventory(Cog):
         global mdb
         gdb = bot.gdb
         mdb = bot.mdb
+
 
 def setup(bot):
     bot.add_cog(Inventory(bot))
