@@ -24,9 +24,10 @@ class ReQuest(commands.AutoShardedBot):
         allowed_mentions = discord.AllowedMentions(roles=False, everyone=False, users=True)
         intents = discord.Intents.default()
         intents.members = True  # Subscribe to the privileged members intent.
-        super().__init__(command_prefix=get_prefix, fetch_offline_members=False,
-                         allowed_mentions=allowed_mentions, intents=intents, case_insensitive=True,
-                         activity=discord.Game(name=f'by Post'))
+        intents.presences = True  # Subscribe to the privileged presences intent.
+        super(ReQuest, self).__init__(command_prefix=get_prefix, fetch_offline_members=False,
+                                      allowed_mentions=allowed_mentions, intents=intents, case_insensitive=True,
+                                      activity=discord.Game(name=f'by Post'))
 
         self.gdb = gdb
         self.mdb = mdb
@@ -45,8 +46,10 @@ class ReQuest(commands.AutoShardedBot):
             await self.process_commands(message)
 
 
+bot = ReQuest()
+
+
 def main():
-    bot = ReQuest()
     """Tries to load every cog and start up the bot"""
     for extension in bot.config['load_extensions']:
         try:
@@ -56,7 +59,7 @@ def main():
             print('{}: {}'.format(type(e).__name__, e))
 
     print("ReQuest is online.")
-    bot.run(bot.config['token'], bot=True)
+    bot.run(bot.config['token'], bot=True, reconnect=True)
 
 
 if __name__ == '__main__':
