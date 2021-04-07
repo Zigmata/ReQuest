@@ -539,8 +539,8 @@ class Admin(Cog):
             await delete_command(ctx.message)
             return  # TODO: Error message feedback
 
-    @config_characters.command(aliases=['xp', 'exp'])
-    async def experience(self, ctx, enabled: str = None):
+    @config_characters.command(name='experience', aliases=['xp', 'exp'])
+    async def config_experience(self, ctx, enabled: str = None):
         """
         This command manages the use of experience points (or similar value-based character progression).
 
@@ -548,10 +548,10 @@ class Admin(Cog):
         [no argument]: Displays the current configuration.
         [True|False]: Configures the server to enable/disable experience points.
         """
-        # TODO: Default to true
         guild_id = ctx.message.guild.id
         query = gdb['characterSettings'].find_one({'guildId': guild_id})
 
+        # Display setting if no arg is passed
         if enabled is None:
             if query and query['xp']:
                 await ctx.send('Character Experience Points are enabled.')

@@ -6,7 +6,7 @@ import shortuuid
 from discord.ext import commands
 from discord.ext.commands import Cog, command
 
-from ..utilities.supportFunctions import delete_command
+from ..utilities.supportFunctions import delete_command, has_gm_role, strip_id
 
 listener = Cog.listener
 
@@ -135,75 +135,19 @@ class Player(Cog):
         inventory = {}
 
         # Prompt user to initialize fields such as inventory, xp, etc.
-        await ctx.send(
-            f'{character_name} registered with ID `{character_id}`!\nDo you wish to set up initial attributes?\n('
-            f'**Y**)es or (**N**)o')
-        reply = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
-        if any(x in reply.content.lower() for x in ['no', 'n']):
-            # Adds the provided character info to the db
-            collection.update_one({'memberId': member_id}, {'$set': {'activeChar': character_id,
-                                                                     f'characters.{character_id}': {
-                                                                         'name': character_name,
-                                                                         'note': character_note, 'registeredDate': date,
-                                                                         'attributes': {'level': None,
-                                                                                        'experience': char_xp,
-                                                                                        'inventory': inventory,
-                                                                                        'currency': None}}}},
-                                  upsert=True)
-
-            await delete_command(reply)
-        elif any(x in reply.content.lower() for x in ['y', 'yes']):
-            await delete_command(reply)
-            await ctx.send('Prompts for player info based on server config.')
-
-            # Check to see if server is configured to use experience points
-            char_settings = gdb['characterSettings'].find_one({'guildId': guild_id})
-            if char_settings['xp']:
-                await ctx.send('Enter {}\'s experience points:'.format(character_name))
-                # TODO: Check for int
-                xp_reply = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
-                char_xp = int(xp_reply.content)
-
-            collection.update_one({'memberId': member_id}, {'$set': {'activeChar': character_id,
-                                                                     f'characters.{character_id}': {
-                                                                         'name': character_name,
-                                                                         'note': character_note, 'registeredDate': date,
-                                                                         'attributes': {'level': None,
-                                                                                        'experience': char_xp,
-                                                                                        'inventory': inventory,
-                                                                                        'currency': None}}}},
-                                  upsert=True)
-
-            reply = True
-            while reply:
-                await ctx.send('Add an item and quantity to initial inventory (**c** to cancel)\nFor example: Torch 3')
-                inventory_reply = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
-                if not inventory_reply.content.lower() == 'c':
-                    item = inventory_reply.content.split()
-                    name = item[0]
-                    quantity = int(item[1])
-
-                    query = collection.find_one({'memberId': member_id})
-                    current_inventory = query['characters'][character_id]['attributes']['inventory']
-                    if name in current_inventory:
-                        current_quantity = current_inventory[name]
-                        new_quantity = current_quantity + quantity
-                        collection.update_one({'memberId': member_id}, {
-                            '$set': {f'characters.{character_id}.attributes.inventory.{name}': new_quantity}},
-                                              upsert=True)
-                    else:
-                        collection.update_one({'memberId': member_id}, {
-                            '$set': {f'characters.{character_id}.attributes.inventory.{name}': quantity}}, upsert=True)
-                else:
-                    reply = False
-
-            # # Prompt for initial inventory
-            # await ctx.send('Import inventory as JSON (**c** to cancel)')
-            # inventory_reply = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
-            # if not 'c' in inventory_reply.content.lower():
-            #    inventory = inventory_reply.content
-
-        await ctx.send('Character registration saved!')
+        await ctx.send(f'{character_name} registered with ID `{character_id}`!')
+        # Adds the provided character info to the db
+        collection.update_one({'memberId': member_id},
+                              {'$set': {'activeChar': character_id, f'characters.{character_id}': {
+                                    'name': character_name,
+                                    'note': character_note,
+                                    'registeredDate': date,
+                                    'attributes': {
+                                        'level': None,
+                                        'experience': char_xp,
+                                        'inventory': inventory,
+                                        'currency': None}}}},
+                              upsert=True)
 
         await delete_command(ctx.message)
 
@@ -269,11 +213,30 @@ class Player(Cog):
                                       {'$pull': {'characters': matches[int(reply.content) - 1]}})
                 # TODO: Set active character to first in list
 
-    @character.command(hidden=True)
-    async def give(self, ctx, item_name, quantity: int):
-        # TODO: Testing only / refactor for GM use later
-        member_id = ctx.author.id
+    @commands.group(case_insensitive=True)
+    @has_gm_role()
+    async def give(self, ctx):
+        """
+        GM commands to directly award items/experience/currency to players.
+        """
+        if ctx.invoked_subcommand is None:
+            await delete_command(ctx.message)
+            return  # TODO: Error message feedback
+
+    @give.command(name='item', aliases=['i'])
+    async def give_item(self, ctx, user_mention, item_name, quantity: int = 1):
+        """
+        Gives a specified quantity of an item to a player. Items are given to that player's currently active character.
+
+        Arguments:
+        <user_mention>: User mention of the receiving player.
+        <item_name>: The name of the item. Case-sensitive!
+        [quantity]: Quantity to give. Defaults to 1 if this argument is not present.
+        """
+        gm_member_id = ctx.author.id
+        member_id = strip_id(user_mention)
         collection = mdb['characters']
+        transaction_id = str(shortuuid.uuid()[:12])
 
         query = collection.find_one({'memberId': member_id})
         active_character = query['activeChar']
@@ -288,15 +251,18 @@ class Player(Cog):
             collection.update_one({'memberId': member_id}, {
                 '$set': {f'characters.{active_character}.attributes.inventory.{item_name}': quantity}}, upsert=True)
 
-        response = await ctx.send(f'{quantity} of {item_name} added to inventory!')
+        inventory_embed = discord.Embed(title='Item Awarded!', type='rich', description=f'**Recipient**: {user_mention}'
+                                                                                        f' as {query["characters"][active_character]["name"]}\n**Item:** {item_name}\n'
+                                                                                        f'**Quantity**: {quantity}')
+        inventory_embed.add_field(name='Game Master', value=f'<@!{gm_member_id}>')
+        inventory_embed.set_footer(text=f'Transaction ID: {transaction_id}')
 
-        await asyncio.sleep(1)
+        await ctx.send(embed=inventory_embed)
 
         await delete_command(ctx.message)
-        await response.delete()
 
-    @command()
-    async def xp(self, ctx, value: int = None):
+    @give.command(name='experience', aliases=['xp', 'exp'])
+    async def give_experience(self, ctx, value: int = None):
         # TODO: error handling for non integer values given
         member_id = ctx.author.id
         collection = mdb['characters']
