@@ -4,7 +4,8 @@ from discord.ext import commands
 from discord.ext.commands import Cog
 from discord.utils import find
 
-from ..utilities.supportFunctions import delete_command, has_gm_role, parse_list
+from ..utilities.supportFunctions import delete_command, parse_list
+from ..utilities.checks import has_gm_role
 
 listener = Cog.listener
 global gdb

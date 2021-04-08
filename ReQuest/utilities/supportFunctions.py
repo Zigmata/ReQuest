@@ -4,7 +4,6 @@ import yaml
 from pymongo import MongoClient
 
 import discord
-from discord.ext import commands
 
 # Set up config file and load
 CONFIG_FILE = Path('config.yaml')
@@ -26,46 +25,6 @@ async def delete_command(message):
         await message.delete()
     except discord.HTTPException:
         pass
-
-
-# Verifies the user that invokes a command has a
-# server-defined GM role
-def has_gm_role():
-    async def predicate(ctx):
-        collection = gdb['gmRoles']
-        guild_id = ctx.guild.id
-
-        query = collection.find_one({'guildId': guild_id})
-        if query:
-            gm_roles = query['gmRoles']
-            for role in ctx.author.roles:
-                if role.id in gm_roles:
-                    return True
-
-        await delete_command(ctx.message)
-        raise commands.CheckFailure("You do not have permissions to run this command!")
-
-    return commands.check(predicate)
-
-
-def has_gm_or_mod():
-    async def predicate(ctx):
-        if ctx.author.guild_permissions.manage_guild:
-            return True
-        else:
-            collection = gdb['gmRoles']
-            guild_id = ctx.guild.id
-            query = collection.find_one({'guildId': guild_id})
-            if query:
-                gm_roles = query['gmRoles']
-                for role in ctx.author.roles:
-                    if role.id in gm_roles:
-                        return True
-
-        await delete_command(ctx.message)
-        raise commands.CheckFailure("You do not have permissions to run this command!")
-
-    return commands.check(predicate)
 
 
 def get_prefix(self, message):

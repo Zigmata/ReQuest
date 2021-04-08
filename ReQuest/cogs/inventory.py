@@ -4,7 +4,8 @@ import shortuuid
 from discord.ext import commands
 from discord.ext.commands import Cog
 
-from ..utilities.supportFunctions import delete_command, has_gm_role, strip_id
+from ..utilities.supportFunctions import delete_command, strip_id
+from ..utilities.checks import has_gm_or_mod, has_active_character
 
 listener = Cog.listener
 
@@ -20,25 +21,26 @@ class Inventory(Cog):
         gdb = bot.gdb
         mdb = bot.mdb
 
-    @commands.group(case_insensitive=True)
-    @has_gm_role()
-    async def gm(self, ctx):
+    @commands.group(aliases=['i'], case_insensitive=True)
+    async def item(self, ctx):
         """
-        GM commands to directly award items/experience/currency to players.
+        Commands for transfer, purchase, and sale of items.
         """
         if ctx.invoked_subcommand is None:
             await delete_command(ctx.message)
             return  # TODO: Error message feedback
 
-    @gm.command(name='item', aliases=['i'])
-    async def gm_item(self, ctx, item_name, quantity: int = 1, *user_mentions):
+    @item.command(name='mod')
+    @has_gm_or_mod()
+    async def item_mod(self, ctx, item_name, quantity: int, *user_mentions):
         """
-        Awards a specified quantity of an item to a player's currently active character.
+        Modifies a player's currently active character's inventory. GM Command.
+        Requires an assigned GM role or Server Moderator privileges.
 
         Arguments:
-        <user_mention>: User mention of the receiving player.
         <item_name>: The name of the item. Case-sensitive!
-        [quantity]: Quantity to give. Defaults to 1 if this argument is not present.
+        <quantity>: Quantity to give or take.
+        <user_mentions>: User mention(s) of the receiving player(s). Can be chained.
         """
         gm_member_id = ctx.author.id
         guild_id = ctx.message.guild.id
@@ -46,6 +48,11 @@ class Inventory(Cog):
         for user in user_mentions:
             members.append(strip_id(user))
         collection = mdb['characters']
+        if quantity == 0:
+            await ctx.send('Stop being a tease and enter an actual quantity!')
+            await delete_command(ctx.message)
+            return
+
         transaction_id = str(shortuuid.uuid()[:12])
 
         recipient_strings = []
@@ -68,11 +75,17 @@ class Inventory(Cog):
 
         inventory_embed = discord.Embed(type='rich')
         if len(user_mentions) > 1:
-            inventory_embed.title = 'Items Awarded!'
-            inventory_embed.description = f'Item: **{item_name}**\nQuantity: **{quantity}** each'
+            if quantity > 0:
+                inventory_embed.title = 'Items Awarded!'
+            elif quantity < 0:
+                inventory_embed.title = 'Items Removed!'
+            inventory_embed.description = f'Item: **{item_name}**\nQuantity: **{abs(quantity)}** each'
             inventory_embed.add_field(name="Recipients", value='\n'.join(recipient_strings))
         else:
-            inventory_embed.title = 'Item Awarded!'
+            if quantity > 0:
+                inventory_embed.title = 'Item Awarded!'
+            elif quantity < 0:
+                inventory_embed.title = 'Item Removed!'
             inventory_embed.description = f'Item: **{item_name}**\nQuantity: **{quantity}**'
             inventory_embed.add_field(name="Recipient", value='\n'.join(recipient_strings))
         inventory_embed.add_field(name='Game Master', value=f'<@!{gm_member_id}>', inline=False)
@@ -82,55 +95,89 @@ class Inventory(Cog):
 
         await delete_command(ctx.message)
 
-    @gm.command(name='experience', aliases=['xp', 'exp'])
-    async def gm_experience(self, ctx, user_mention, value: int = None):
+    @item.command(name='give')
+    @has_active_character()
+    async def item_give(self, ctx, item_name, quantity: int, user_mention):
         """
-        Gives experience points to a player's currently active character.
+        Gives an item from your active character's inventory to another player's active character.
 
         Arguments:
-        <user_mention>: User mention of the receiving player.
-        <value>: The amount of experience given.
+        <item_name>: The name of the item. Case sensitive!
+        <quantity>: The amount of the item to give.
+        <user_mention>: The recipient of the item.
         """
-        # TODO: error handling for non integer values given
-        gm_member_id = ctx.author.id
-        member_id = strip_id(user_mention)
+        donor_id = ctx.author.id
+        recipient_id = strip_id(user_mention)
         guild_id = ctx.message.guild.id
         collection = mdb['characters']
-        transaction_id = str(shortuuid.uuid()[:12])
 
-        # Load the player's characters
-        query = collection.find_one({'memberId': member_id})
-        if not query:  # If none exist, output the error
-            await ctx.send(f'Player has no registered characters!')
+        recipient_query = collection.find_one({'memberId': recipient_id})
+        if not recipient_query:
+            await ctx.send('That player does not have any registered characters!')
+            await delete_command(ctx.message)
+            return
+        if str(guild_id) not in recipient_query['activeChars']:
+            await ctx.send('That player does not have an active character on this server!')
             await delete_command(ctx.message)
             return
 
-        # Otherwise, proceed to query the active character and retrieve its xp
-        active_character = query['activeChars'][str(guild_id)]
-        char = query['characters'][active_character]
-        name = char['name']
-        xp = char['attributes']['experience']
-
-        if xp:
-            xp += value
+        transaction_id = str(shortuuid.uuid()[:12])
+        donor_query = collection.find_one({'memberId': donor_id})
+        donor_active = donor_query['activeChars'][str(guild_id)]
+        source_inventory = donor_query['characters'][donor_active]['attributes']['inventory']
+        if item_name in source_inventory:
+            current_quantity = source_inventory[item_name]
+            if current_quantity >= quantity:
+                new_quantity = current_quantity - quantity
+                collection.update_one({'memberId': donor_id},
+                                      {'$set': {f'characters.{donor_active}.attributes.'
+                                                f'inventory.{item_name}': new_quantity}}, upsert=True)
+                recipient_active = recipient_query['activeChars'][str(guild_id)]
+                collection.update_one({'memberId': recipient_id},
+                                      {'$set': {f'characters.{recipient_active}.attributes.'
+                                                f'inventory.{item_name}': quantity}}, upsert=True)
+            else:
+                await ctx.send('You are attempting to give more than you have. Check your inventory!')
+                await delete_command(ctx.message)
+                return
         else:
-            xp = value
+            await ctx.send(f'{item_name} was not found in your inventory. This command is case-sensitive; '
+                           f'check your spelling.')
+            await delete_command(ctx.message)
+            return
 
-        # Update the db
-        collection.update_one({'memberId': member_id},
-                              {'$set': {f'characters.{active_character}.attributes.experience': xp}}, upsert=True)
+        trade_embed = discord.Embed(title='Trade Completed!', type='rich',
+                                    description=f'<@!{donor_id}> as {donor_query["characters"][donor_active]["name"]} '
+                                                f'gives {quantity} {item_name} to <@!{recipient_id}> as '
+                                                f'{recipient_query["characters"][recipient_active]["name"]}')
+        trade_embed.set_footer(text=f'{datetime.utcnow().strftime("%Y-%m-%d")} Transaction ID: {transaction_id}')
 
-        # Dynamic feedback based on the operation performed
-        function = 'gains'
-        if value < 0:
-            function = 'loses'
-        absolute = abs(value)
-        xp_embed = discord.Embed(title=f'{name} {function} {absolute} experience points!', type='rich',
-                                 description=f'Total Experience: **{xp}**')
-        xp_embed.add_field(name='Game Master', value=f'<@!{gm_member_id}>')
-        xp_embed.set_footer(text=f'{datetime.utcnow().strftime("%Y-%m-%d")} Transaction ID: {transaction_id}')
-        await ctx.send(embed=xp_embed)
+        await ctx.send(embed=trade_embed)
 
+        await delete_command(ctx.message)
+
+    @item.command(name='buy')
+    async def item_buy(self, ctx, item_name, quantity: int):
+        """
+        Buys an item from the auto-market.
+
+        Arguments:
+        <item_name>: The name of the item to purchase.
+        <quantity>: The quantity of the item being purchased.
+        """
+        await ctx.send('Future feature. Stay tuned!')
+        await delete_command(ctx.message)
+
+    @item.command(name='sell')
+    async def item_sell(self, ctx, item_name, quantity: int):
+        """
+        Sells an item on the auto-market.
+
+        Arguments:
+        <item_name>: The name of the item to sell.
+        <quantity>: The quantity of the item being sold.
+        """
+        await ctx.send('Future feature. Stay tuned!')
         await delete_command(ctx.message)
 
 

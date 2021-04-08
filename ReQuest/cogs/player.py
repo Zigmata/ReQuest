@@ -5,7 +5,8 @@ import shortuuid
 from discord.ext import commands
 from discord.ext.commands import Cog
 
-from ..utilities.supportFunctions import delete_command
+from ..utilities.supportFunctions import delete_command, strip_id
+from ..utilities.checks import has_gm_or_mod
 
 listener = Cog.listener
 
@@ -246,6 +247,104 @@ class Player(Cog):
             await ctx.send(embed=post_embed)
         else:
             await ctx.send(f'{name} is rather inexperienced! Did you forget to add some?')
+
+    @commands.group(name='experience', aliases=['xp', 'exp'], invoke_without_command=True, case_insensitive=True)
+    async def experience(self, ctx):
+        """
+        Commands for modifying experience points. Displays the current value if no subcommand is used.
+        """
+        # TODO: error handling for non integer values given
+        member_id = ctx.author.id
+        guild_id = ctx.message.guild.id
+        collection = mdb['characters']
+
+        # Load the player's characters
+        query = collection.find_one({'memberId': member_id})
+        if not query:  # If none exist, output the error
+            await ctx.send('Player has no registered characters!')
+            await delete_command(ctx.message)
+            return
+        elif not str(guild_id) in query['activeChars']:
+            await ctx.send('Player has no active characters on this server!')
+            await delete_command(ctx.message)
+            return
+
+        # Otherwise, proceed to query the active character and retrieve its xp
+        active_character = query['activeChars'][str(guild_id)]
+        char = query['characters'][active_character]
+        name = char['name']
+        xp = char['attributes']['experience']
+
+        xp_embed = discord.Embed(title=f'{name}', type='rich', description=f'Total Experience: **{xp}**')
+        await ctx.send(embed=xp_embed)
+
+        await delete_command(ctx.message)
+
+    @experience.command(name='mod')
+    @has_gm_or_mod()
+    async def mod_experience(self, ctx, value: int, *user_mentions):
+        """
+        GM Command: Modifies the experience points of a player's currently active character.
+        Requires an assigned GM role or Server Moderator privileges.
+
+        Arguments:
+        <value>: The amount of experience given.
+        <user_mentions>: User mention(s) of the receiving player(s). Can be chained.
+        """
+        gm_member_id = ctx.author.id
+        if value == 0:
+            await ctx.send('Stop being a tease and enter an actual quantity!')
+            await delete_command(ctx.message)
+            return
+
+        guild_id = ctx.message.guild.id
+        collection = mdb['characters']
+        transaction_id = str(shortuuid.uuid()[:12])
+
+        recipient_strings = []
+        for member in user_mentions:
+            member_id = (strip_id(member))
+            user = await self.bot.fetch_user(member_id)
+            query = collection.find_one({'memberId': member_id})
+            if not query:  # If none exist, output the error
+                await ctx.send(f'{user.name} has no registered characters!')
+                await delete_command(ctx.message)
+                continue
+            elif not str(guild_id) in query['activeChars']:
+                await ctx.send(f'{user.name} has no active characters on this server!')
+                await delete_command(ctx.message)
+                continue
+
+            # Otherwise, proceed to query the active character and retrieve its xp
+            active_character = query['activeChars'][str(guild_id)]
+            char = query['characters'][active_character]
+            name = char['name']
+            xp = char['attributes']['experience']
+
+            if xp:
+                xp += value
+            else:
+                xp = value
+
+            recipient_strings.append(f'<@!{member_id}> as {name}\nTotal XP: **{xp}**')
+
+            # Update the db
+            collection.update_one({'memberId': member_id},
+                                  {'$set': {f'characters.{active_character}.attributes.experience': xp}}, upsert=True)
+
+        # Dynamic feedback based on the operation performed
+        function = 'gained'
+        if value < 0:
+            function = 'lost'
+        absolute = abs(value)
+        xp_embed = discord.Embed(title=f'{absolute} experience points {function}!', type='rich',
+                                 description='\n\n'.join(recipient_strings))
+        xp_embed.add_field(name='Game Master', value=f'<@!{gm_member_id}>')
+        xp_embed.set_footer(text=f'{datetime.utcnow().strftime("%Y-%m-%d")} Transaction ID: {transaction_id}')
+
+        await ctx.send(embed=xp_embed)
+
+        await delete_command(ctx.message)
 
 
 def setup(bot):
