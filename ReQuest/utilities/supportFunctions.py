@@ -48,11 +48,30 @@ def has_gm_role():
     return commands.check(predicate)
 
 
+def has_gm_or_mod():
+    async def predicate(ctx):
+        if ctx.author.guild_permissions.manage_guild:
+            return True
+        else:
+            collection = gdb['gmRoles']
+            guild_id = ctx.guild.id
+            query = collection.find_one({'guildId': guild_id})
+            if query:
+                gm_roles = query['gmRoles']
+                for role in ctx.author.roles:
+                    if role.id in gm_roles:
+                        return True
+
+        await delete_command(ctx.message)
+        raise commands.CheckFailure("You do not have permissions to run this command!")
+
+    return commands.check(predicate)
+
+
 def get_prefix(self, message):
-    # load prefixes
     prefix = cdb['prefixes'].find_one({'guildId': message.guild.id})
     if not prefix:
-        return '{0}'.format(config['prefix'])
+        return f'{config["prefix"]}'
     else:
         return str(prefix['prefix'])
 

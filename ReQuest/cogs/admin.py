@@ -204,8 +204,8 @@ class Admin(Cog):
 
         await delete_command(ctx.message)
 
-    @role.group(case_insensitive=True, pass_context=True, invoke_without_command=True)
-    async def gm(self, ctx):
+    @role.group(name='gm', case_insensitive=True, pass_context=True, invoke_without_command=True)
+    async def role_gm(self, ctx):
         """
         Sets the GM role(s), used for GM commands.
 
@@ -229,7 +229,7 @@ class Admin(Cog):
 
         await delete_command(ctx.message)
 
-    @gm.command(aliases=['a'], pass_context=True)
+    @role_gm.command(aliases=['a'], pass_context=True)
     async def add(self, ctx, *roles):
         """
         Adds a role to the GM list.
@@ -287,7 +287,7 @@ class Admin(Cog):
 
         await delete_command(ctx.message)
 
-    @gm.command(aliases=['r'], pass_context=True)
+    @role_gm.command(aliases=['r'], pass_context=True)
     async def remove(self, ctx, *roles):
         """
         Removes existing GM roles.
