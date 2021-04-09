@@ -3,7 +3,7 @@ import yaml
 from pymongo import MongoClient
 
 from discord.ext import commands
-from supportFunctions import delete_command
+from .supportFunctions import delete_command
 
 # Set up config file and load
 CONFIG_FILE = Path('config.yaml')
