@@ -60,7 +60,7 @@ def has_active_character():
         member_id = ctx.author.id
         guild_id = ctx.message.guild.id
         collection = mdb['characters']
-        query = collection.find_one({'memberId': member_id})
+        query = collection.find_one({'_id': member_id})
 
         if query:
             if str(guild_id) in query['activeChars']:

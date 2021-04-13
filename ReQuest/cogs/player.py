@@ -25,7 +25,7 @@ class Player(Cog):
             member_id = ctx.author.id
             guild_id = ctx.message.guild.id
             collection = mdb['characters']
-            query = collection.find_one({'memberId': member_id})
+            query = collection.find_one({'_id': member_id})
 
             if character_name:
                 ids = []
@@ -50,7 +50,7 @@ class Player(Cog):
                     return
                 elif len(matches) == 1:
                     char = query['characters'][matches[0]]
-                    collection.update_one({'memberId': member_id}, {'$set': {f'activeChars.{guild_id}': matches[0]}})
+                    collection.update_one({'_id': member_id}, {'$set': {f'activeChars.{guild_id}': matches[0]}})
                     await ctx.send(f'Active character changed to {char["name"]} ({char["note"]})')
                 elif len(matches) > 1:
                     content = ''
@@ -73,7 +73,7 @@ class Player(Cog):
                         await delete_command(reply)
                         selection = query['characters'][matches[int(reply.content) - 1]]
                         await ctx.send(f'Active character changed to {selection["name"]} ({selection["note"]})')
-                        collection.update_one({'memberId': member_id},
+                        collection.update_one({'_id': member_id},
                                               {'$set': {f'activeChars.{guild_id}': matches[int(reply.content) - 1]}})
             else:
                 if not query:
@@ -96,7 +96,7 @@ class Player(Cog):
         member_id = ctx.author.id
         guild_id = ctx.guild.id
         collection = mdb['characters']
-        query = collection.find_one({'memberId': member_id})
+        query = collection.find_one({'_id': member_id})
         if not query:
             await ctx.send('You have no registered characters!')
             await delete_command(ctx.message)
@@ -126,30 +126,28 @@ class Player(Cog):
         Registers a new player character.
         Arguments:
         [character_name]: The name of the character.
-        [character_note]: A note to uniquely identify the character.
+        [character_note]: A note for you to uniquely identify the character, in case you like reusing names.
         """
         guild_id = ctx.message.guild.id
         member_id = ctx.author.id
         character_id = str(shortuuid.uuid())
         collection = mdb['characters']
         date = datetime.utcnow()
-        char_xp = None
-        inventory = {}
 
-        # Prompt user to initialize fields such as inventory, xp, etc.
-        await ctx.send(f'{character_name} registered with ID `{character_id}`!')
-        # Adds the provided character info to the db
-        collection.update_one({'memberId': member_id},
+        collection.update_one({'_id': member_id},
                               {'$set': {f'activeChars.{guild_id}': character_id, f'characters.{character_id}': {
                                   'name': character_name,
                                   'note': character_note,
                                   'registeredDate': date,
                                   'attributes': {
                                       'level': None,
-                                      'experience': char_xp,
-                                      'inventory': inventory,
-                                      'currency': None}}}},
-                              upsert=True)
+                                      'experience': None,
+                                      'inventory': {},
+                                      'currency': {}
+                                  }
+                              }}}, upsert=True)
+
+        await ctx.send(f'`{character_name}` registered and set to active for this server!')
 
         await delete_command(ctx.message)
 
@@ -162,7 +160,7 @@ class Player(Cog):
         """
         member_id = ctx.author.id
         collection = mdb['characters']
-        query = collection.find_one({'memberId': member_id})
+        query = collection.find_one({'_id': member_id})
 
         ids = []
         if not query:
@@ -186,8 +184,7 @@ class Player(Cog):
             return
         elif len(matches) == 1:
             char = query['characters'][matches[0]]
-            collection.update_one({'memberId': member_id}, {'$pull': {'characters': char}})
-            # TODO: Set active character to first in list
+            collection.update_one({'_id': member_id}, {'$pull': {'characters': char}})
         elif len(matches) > 1:
             content = ''
             for i in range(len(matches)):
@@ -207,37 +204,9 @@ class Player(Cog):
             else:
                 await delete_command(match_msg)
                 await delete_command(reply)
-                collection.update_one({'memberId': member_id},
+                collection.update_one({'_id': member_id},
                                       {'$pull': {'characters': matches[int(reply.content) - 1]}})
-                # TODO: Set active character to first in list
-
-    @character.command(name='experience', aliases=['xp', 'exp'])
-    async def character_xp(self, ctx):
-        """
-        Displays the currently active character's experience points.
-        """
-        member_id = ctx.author.id
-        collection = mdb['characters']
-
-        # Load the author's characters
-        query = collection.find_one({'memberId': member_id})
-        if not query:  # If none exist, output the error
-            await ctx.send('You have no registered characters!')
-            await delete_command(ctx.message)
-            return
-
-        # Otherwise, proceed to query the active character and retrieve its xp
-        active_character = query['activeChar']
-        char = query['characters'][active_character]
-        name = char['name']
-        xp = char['attributes']['experience']
-
-        if xp:
-            post_embed = discord.Embed(title=f'{name}\'s Experience', type='rich',
-                                       description=f'Total Experience: {xp}')
-            await ctx.send(embed=post_embed)
-        else:
-            await ctx.send(f'{name} is rather inexperienced! Did you forget to add some?')
+                # TODO: add confirmation prompts and feedback
 
     @commands.group(name='experience', aliases=['xp', 'exp'], invoke_without_command=True, case_insensitive=True)
     async def experience(self, ctx):
@@ -250,7 +219,7 @@ class Player(Cog):
         collection = mdb['characters']
 
         # Load the player's characters
-        query = collection.find_one({'memberId': member_id})
+        query = collection.find_one({'_id': member_id})
         if not query:  # If none exist, output the error
             await ctx.send('Player has no registered characters!')
             await delete_command(ctx.message)
@@ -295,7 +264,7 @@ class Player(Cog):
         for member in user_mentions:
             member_id = (strip_id(member))
             user = await self.bot.fetch_user(member_id)
-            query = collection.find_one({'memberId': member_id})
+            query = collection.find_one({'_id': member_id})
             if not query:  # If none exist, output the error
                 await ctx.send(f'{user.name} has no registered characters!')
                 await delete_command(ctx.message)
@@ -318,7 +287,7 @@ class Player(Cog):
             recipient_strings.append(f'<@!{member_id}> as {name}\nTotal XP: **{xp}**')
 
             # Update the db
-            collection.update_one({'memberId': member_id},
+            collection.update_one({'_id': member_id},
                                   {'$set': {f'characters.{active_character}.attributes.experience': xp}}, upsert=True)
 
         # Dynamic feedback based on the operation performed

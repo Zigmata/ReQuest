@@ -54,22 +54,22 @@ class Inventory(Cog):
         transaction_id = str(shortuuid.uuid()[:12])
         recipient_strings = []
         for member_id in members:
-            query = collection.find_one({'memberId': member_id})
+            query = collection.find_one({'_id': member_id})
             active_character = query['activeChars'][str(guild_id)]
             inventory = query['characters'][active_character]['attributes']['inventory']
             if item_name in inventory:
                 current_quantity = inventory[item_name]
                 new_quantity = current_quantity + quantity
                 if new_quantity == 0:
-                    collection.update_one({'memberId': member_id},
+                    collection.update_one({'_id': member_id},
                                           {'$unset': {f'characters.{active_character}.attributes.'
                                                       f'inventory.{item_name}': ''}}, upsert=True)
                 else:
-                    collection.update_one({'memberId': member_id},
+                    collection.update_one({'_id': member_id},
                                       {'$set': {f'characters.{active_character}.attributes.'
                                                 f'inventory.{item_name}': new_quantity}}, upsert=True)
             else:
-                collection.update_one({'memberId': member_id}, {
+                collection.update_one({'_id': member_id}, {
                     '$set': {f'characters.{active_character}.attributes.inventory.{item_name}': quantity}}, upsert=True)
             recipient_strings.append(f'<@!{member_id}> as {query["characters"][active_character]["name"]}')
         inventory_embed = discord.Embed(type='rich')
@@ -85,7 +85,7 @@ class Inventory(Cog):
                 inventory_embed.title = 'Item Awarded!'
             elif quantity < 0:
                 inventory_embed.title = 'Item Removed!'
-            inventory_embed.description = f'Item: **{item_name}**\nQuantity: **{quantity}**'
+            inventory_embed.description = f'Item: **{item_name}**\nQuantity: **{abs(quantity)}**'
             inventory_embed.add_field(name="Recipient", value='\n'.join(recipient_strings))
         inventory_embed.add_field(name='Game Master', value=f'<@!{gm_member_id}>', inline=False)
         inventory_embed.set_footer(text=f'{datetime.utcnow().strftime("%Y-%m-%d")} Transaction ID: {transaction_id}')
@@ -108,7 +108,7 @@ class Inventory(Cog):
         guild_id = ctx.message.guild.id
         collection = mdb['characters']
 
-        recipient_query = collection.find_one({'memberId': recipient_id})
+        recipient_query = collection.find_one({'_id': recipient_id})
         if not recipient_query:
             await ctx.send('That player does not have any registered characters!')
             await delete_command(ctx.message)
@@ -119,7 +119,7 @@ class Inventory(Cog):
             return
 
         transaction_id = str(shortuuid.uuid()[:12])
-        donor_query = collection.find_one({'memberId': donor_id})
+        donor_query = collection.find_one({'_id': donor_id})
         donor_active = donor_query['activeChars'][str(guild_id)]
         source_inventory = donor_query['characters'][donor_active]['attributes']['inventory']
         if item_name in source_inventory:  # First make sure the player has the item
@@ -127,11 +127,11 @@ class Inventory(Cog):
             if source_current_quantity >= quantity:  # Then make sure the player has enough to give
                 new_quantity = source_current_quantity - quantity
                 if new_quantity == 0:  # If the transaction would result in a 0 quantity, pull the item.
-                    collection.update_one({'memberId': donor_id},
+                    collection.update_one({'_id': donor_id},
                                           {'$unset': {f'characters.{donor_active}.attributes.'
                                                       f'inventory.{item_name}': ''}}, upsert=True)
                 else:  # Otherwise, just update the donor's quantity
-                    collection.update_one({'memberId': donor_id},
+                    collection.update_one({'_id': donor_id},
                                           {'$set': {f'characters.{donor_active}.attributes.'
                                                     f'inventory.{item_name}': new_quantity}}, upsert=True)
                 recipient_active = recipient_query['activeChars'][str(guild_id)]
@@ -141,7 +141,7 @@ class Inventory(Cog):
                     new_quantity = recipient_current_quantity + quantity  # Add to the quantity if they do
                 else:  # If not, simply set the quantity given.
                     new_quantity = quantity
-                collection.update_one({'memberId': recipient_id},
+                collection.update_one({'_id': recipient_id},
                                       {'$set': {f'characters.{recipient_active}.attributes.'
                                                 f'inventory.{item_name}': new_quantity}}, upsert=True)
             else:
