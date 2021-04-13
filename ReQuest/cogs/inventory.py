@@ -125,17 +125,31 @@ class Inventory(Cog):
         donor_query = collection.find_one({'memberId': donor_id})
         donor_active = donor_query['activeChars'][str(guild_id)]
         source_inventory = donor_query['characters'][donor_active]['attributes']['inventory']
-        if item_name in source_inventory:
-            current_quantity = source_inventory[item_name]
-            if current_quantity >= quantity:
-                new_quantity = current_quantity - quantity
-                collection.update_one({'memberId': donor_id},
-                                      {'$set': {f'characters.{donor_active}.attributes.'
-                                                f'inventory.{item_name}': new_quantity}}, upsert=True)
+        if item_name in source_inventory:  # First make sure the player has the item
+            source_current_quantity = int(source_inventory[item_name])
+            if source_current_quantity >= quantity:  # Then make sure the player has enough to give
+                new_quantity = source_current_quantity - quantity
+                # if new_quantity == 0:  # If the transaction would result in a 0 quantity, pull the item.
+                #     collection.update_one({'memberId': donor_id},
+                #                           {'$pull': {'characters': {f'{donor_active}':
+                #                                                     {'attributes': {'inventory': item_name}}}}})
+                if new_quantity == 0:  # If the transaction would result in a 0 quantity, pull the item.
+                    collection.update_one({'memberId': donor_id},
+                                          {'$pull': {'characters': {f'{donor_active}': {'attributes': {'inventory': {item_name: {'$exists': 'true'}}}}}}})
+                else:  # Otherwise, just update the donor's quantity
+                    collection.update_one({'memberId': donor_id},
+                                          {'$set': {f'characters.{donor_active}.attributes.'
+                                                    f'inventory.{item_name}': new_quantity}}, upsert=True)
                 recipient_active = recipient_query['activeChars'][str(guild_id)]
+                recipient_inventory = recipient_query['characters'][recipient_active]['attributes']['inventory']
+                if item_name in recipient_inventory:  # Check to see if the recipient has the item already
+                    recipient_current_quantity = recipient_inventory[item_name]
+                    new_quantity = recipient_current_quantity + quantity  # Add to the quantity if they do
+                else:  # If not, simply set the quantity given.
+                    new_quantity = quantity
                 collection.update_one({'memberId': recipient_id},
                                       {'$set': {f'characters.{recipient_active}.attributes.'
-                                                f'inventory.{item_name}': quantity}}, upsert=True)
+                                                f'inventory.{item_name}': new_quantity}}, upsert=True)
             else:
                 await ctx.send('You are attempting to give more than you have. Check your inventory!')
                 await delete_command(ctx.message)
@@ -147,9 +161,10 @@ class Inventory(Cog):
             return
 
         trade_embed = discord.Embed(title='Trade Completed!', type='rich',
-                                    description=f'<@!{donor_id}> as {donor_query["characters"][donor_active]["name"]} '
-                                                f'gives {quantity} {item_name} to <@!{recipient_id}> as '
-                                                f'{recipient_query["characters"][recipient_active]["name"]}')
+                                    description=f'<@!{donor_id}> as '
+                                                f'**{donor_query["characters"][donor_active]["name"]}**\n\n'
+                                                f'gives **{quantity} {item_name}** to\n\n<@!{recipient_id}> as '
+                                                f'**{recipient_query["characters"][recipient_active]["name"]}**')
         trade_embed.set_footer(text=f'{datetime.utcnow().strftime("%Y-%m-%d")} Transaction ID: {transaction_id}')
 
         await ctx.send(embed=trade_embed)
