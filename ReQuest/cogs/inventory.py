@@ -66,8 +66,8 @@ class Inventory(Cog):
                                                       f'inventory.{item_name}': ''}}, upsert=True)
                 else:
                     collection.update_one({'_id': member_id},
-                                      {'$set': {f'characters.{active_character}.attributes.'
-                                                f'inventory.{item_name}': new_quantity}}, upsert=True)
+                                          {'$set': {f'characters.{active_character}.attributes.'
+                                                    f'inventory.{item_name}': new_quantity}}, upsert=True)
             else:
                 collection.update_one({'_id': member_id}, {
                     '$set': {f'characters.{active_character}.attributes.inventory.{item_name}': quantity}}, upsert=True)
@@ -188,6 +188,37 @@ class Inventory(Cog):
         """
         await ctx.send('Future feature. Stay tuned!')
         await delete_command(ctx.message)
+
+    @commands.group(aliases=['c'], case_insensitive=True, invoke_without_subcommand=True)
+    async def currency(self, ctx):
+        """
+        Commands for management of currency.
+        """
+        return
+
+    @currency.command(name='mod')
+    @has_gm_or_mod()
+    async def currency_mod(self, ctx, currency_name, quantity: int, *user_mentions):
+        """
+
+        """
+        return
+
+    @currency.command(name='give')
+    @has_active_character()
+    async def currency_give(self, ctx, user_mention, currency_name, quantity: int = 1):
+        """
+
+        """
+        return
+
+    @currency.command()
+    @has_active_character()
+    async def spend(self, ctx, currency_name, quantity: int):
+        """
+
+        """
+        return
 
 
 def setup(bot):
