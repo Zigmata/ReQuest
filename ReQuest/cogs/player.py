@@ -48,21 +48,23 @@ class Player(Cog):
                     await ctx.send('No characters found with that name!')
                     await delete_command(ctx.message)
                     return
-                elif len(matches) == 1:
+
+                if len(matches) == 1:
                     char = query['characters'][matches[0]]
                     collection.update_one({'_id': member_id}, {'$set': {f'activeChars.{guild_id}': matches[0]}})
                     await ctx.send(f'Active character changed to {char["name"]} ({char["note"]})')
                 elif len(matches) > 1:
+                    character_list = sorted(matches)
                     content = ''
-                    for i in range(len(matches)):
-                        content += '{}: {} ({})\n'.format(i + 1, query['characters'][matches[i]]['name'],
-                                                          query['characters'][matches[i]]['note'])
+                    for i in range(len(character_list)):
+                        content += '{}: {} ({})\n'.format(i + 1, query['characters'][character_list[i]]['name'],
+                                                          query['characters'][character_list[i]]['note'])
 
                     match_embed = discord.Embed(title="Your query returned more than one result!", type='rich',
                                                 description=content)
                     match_msg = await ctx.send(embed=match_embed)
                     reply = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
-                    if int(reply.content) > len(matches):
+                    if int(reply.content) > len(character_list):
                         await delete_command(ctx.message)
                         await delete_command(match_msg)
                         await delete_command(reply)
@@ -71,10 +73,11 @@ class Player(Cog):
                     else:
                         await delete_command(match_msg)
                         await delete_command(reply)
-                        selection = query['characters'][matches[int(reply.content) - 1]]
+                        selection = query['characters'][character_list[int(reply.content) - 1]]
                         await ctx.send(f'Active character changed to {selection["name"]} ({selection["note"]})')
                         collection.update_one({'_id': member_id},
-                                              {'$set': {f'activeChars.{guild_id}': matches[int(reply.content) - 1]}})
+                                              {'$set': {
+                                                  f'activeChars.{guild_id}': character_list[int(reply.content) - 1]}})
             else:
                 if not query:
                     await ctx.send('You have no registered characters!')
