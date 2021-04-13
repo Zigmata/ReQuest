@@ -36,7 +36,6 @@ class Inventory(Cog):
         """
         Modifies a player's currently active character's inventory. GM Command.
         Requires an assigned GM role or Server Moderator privileges.
-
         Arguments:
         <item_name>: The name of the item. Case-sensitive!
         <quantity>: Quantity to give or take.
@@ -52,27 +51,27 @@ class Inventory(Cog):
             await ctx.send('Stop being a tease and enter an actual quantity!')
             await delete_command(ctx.message)
             return
-
         transaction_id = str(shortuuid.uuid()[:12])
-
         recipient_strings = []
         for member_id in members:
             query = collection.find_one({'memberId': member_id})
             active_character = query['activeChars'][str(guild_id)]
-
             inventory = query['characters'][active_character]['attributes']['inventory']
             if item_name in inventory:
                 current_quantity = inventory[item_name]
                 new_quantity = current_quantity + quantity
-                collection.update_one({'memberId': member_id},
+                if new_quantity == 0:
+                    collection.update_one({'memberId': member_id},
+                                          {'$unset': {f'characters.{active_character}.attributes.'
+                                                      f'inventory.{item_name}': ''}}, upsert=True)
+                else:
+                    collection.update_one({'memberId': member_id},
                                       {'$set': {f'characters.{active_character}.attributes.'
                                                 f'inventory.{item_name}': new_quantity}}, upsert=True)
             else:
                 collection.update_one({'memberId': member_id}, {
                     '$set': {f'characters.{active_character}.attributes.inventory.{item_name}': quantity}}, upsert=True)
-
             recipient_strings.append(f'<@!{member_id}> as {query["characters"][active_character]["name"]}')
-
         inventory_embed = discord.Embed(type='rich')
         if len(user_mentions) > 1:
             if quantity > 0:
@@ -90,21 +89,19 @@ class Inventory(Cog):
             inventory_embed.add_field(name="Recipient", value='\n'.join(recipient_strings))
         inventory_embed.add_field(name='Game Master', value=f'<@!{gm_member_id}>', inline=False)
         inventory_embed.set_footer(text=f'{datetime.utcnow().strftime("%Y-%m-%d")} Transaction ID: {transaction_id}')
-
         await ctx.send(embed=inventory_embed)
-
         await delete_command(ctx.message)
 
     @item.command(name='give')
     @has_active_character()
-    async def item_give(self, ctx, item_name, quantity: int, user_mention):
+    async def item_give(self, ctx, user_mention, item_name, quantity: int = 1):
         """
         Gives an item from your active character's inventory to another player's active character.
 
         Arguments:
-        <item_name>: The name of the item. Case sensitive!
-        <quantity>: The amount of the item to give.
         <user_mention>: The recipient of the item.
+        <item_name>: The name of the item. Case sensitive!
+        [quantity]: The amount of the item to give. Defaults to 1 if not specified.
         """
         donor_id = ctx.author.id
         recipient_id = strip_id(user_mention)
@@ -129,13 +126,10 @@ class Inventory(Cog):
             source_current_quantity = int(source_inventory[item_name])
             if source_current_quantity >= quantity:  # Then make sure the player has enough to give
                 new_quantity = source_current_quantity - quantity
-                # if new_quantity == 0:  # If the transaction would result in a 0 quantity, pull the item.
-                #     collection.update_one({'memberId': donor_id},
-                #                           {'$pull': {'characters': {f'{donor_active}':
-                #                                                     {'attributes': {'inventory': item_name}}}}})
                 if new_quantity == 0:  # If the transaction would result in a 0 quantity, pull the item.
                     collection.update_one({'memberId': donor_id},
-                                          {'$pull': {'characters': {f'{donor_active}': {'attributes': {'inventory': {item_name: {'$exists': 'true'}}}}}}})
+                                          {'$unset': {f'characters.{donor_active}.attributes.'
+                                                      f'inventory.{item_name}': ''}}, upsert=True)
                 else:  # Otherwise, just update the donor's quantity
                     collection.update_one({'memberId': donor_id},
                                           {'$set': {f'characters.{donor_active}.attributes.'
