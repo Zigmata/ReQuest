@@ -21,6 +21,9 @@ class Player(Cog):
 
     @commands.group(aliases=['char'], invoke_without_command=True, case_insensitive=True)
     async def character(self, ctx, character_name: str = None):
+        """
+        Commands for registration and management of player characters.
+        """
         if ctx.invoked_subcommand is None:
             member_id = ctx.author.id
             guild_id = ctx.message.guild.id
@@ -100,7 +103,7 @@ class Player(Cog):
         guild_id = ctx.guild.id
         collection = mdb['characters']
         query = collection.find_one({'_id': member_id})
-        if not query:
+        if not query or not query['characters']:
             await ctx.send('You have no registered characters!')
             await delete_command(ctx.message)
             return
@@ -162,13 +165,14 @@ class Player(Cog):
         [character_name]: The name of the character.
         """
         member_id = ctx.author.id
+        guild_id = ctx.message.guild.id
         collection = mdb['characters']
         query = collection.find_one({'_id': member_id})
+        await delete_command(ctx.message)
 
         ids = []
         if not query:
             await ctx.send('You have no registered characters!')
-            await delete_command(ctx.message)
             return
         else:
             for character_id in query['characters']:
@@ -183,11 +187,24 @@ class Player(Cog):
 
         if not matches:
             await ctx.send('No characters found with that name!')
-            await delete_command(ctx.message)
             return
         elif len(matches) == 1:
-            char = query['characters'][matches[0]]
-            collection.update_one({'_id': member_id}, {'$pull': {'characters': char}})
+            name = query['characters'][matches[0]]['name']
+            note = query['characters'][matches[0]]['note']
+
+            await ctx.send(f'Deleting `{name} ({note})`! This action is irreversible!\nConfirm: **Y**es/**N**o?')
+            confirm = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
+            if confirm.content.lower() == 'y' or confirm.content.lower() == 'yes':
+                collection.update_one({'_id': member_id}, {'$unset': {f'characters.{matches[0]}': ''}}, upsert=True)
+                for guild in query['activeChars']:
+                    if query[f'activeChars'][guild] == matches[0]:
+                        collection.update_one({'_id': member_id},
+                                              {'$unset': {f'activeChars.{guild_id}': ''}}, upsert=True)
+                await ctx.send(f'`{name}` deleted!')
+            else:
+                await ctx.send(f'Deletion aborted!')
+
+            await delete_command(confirm)
         elif len(matches) > 1:
             content = ''
             for i in range(len(matches)):
@@ -207,16 +224,29 @@ class Player(Cog):
             else:
                 await delete_command(match_msg)
                 await delete_command(reply)
-                collection.update_one({'_id': member_id},
-                                      {'$pull': {'characters': matches[int(reply.content) - 1]}})
-                # TODO: add confirmation prompts and feedback
+                name = query['characters'][matches[0]]['name']
+                note = query['characters'][matches[0]]['note']
+
+                await ctx.send(f'Deleting `{name} ({note})`! This action is irreversible!\nConfirm: **Y**es/**N**o?')
+                confirm = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
+                if confirm.content.lower() == 'y' or confirm.content.lower() == 'yes':
+                    collection.update_one({'_id': member_id},
+                                          {'$unset': {f'characters.{matches[int(reply.content) - 1]}': ''}}, upsert=True)
+                    for guild in query['activeChars']:
+                        if query[f'activeChars'][guild] == matches[int(reply.content) - 1]:
+                            collection.update_one({'_id': member_id}, {'$unset': {f'activeChars.{guild_id}': ''}},
+                                                  upsert=True)
+                    await ctx.send(f'`{name}` deleted!')
+                else:
+                    await ctx.send(f'Deletion aborted!')
+
+                await delete_command(confirm)
 
     @commands.group(name='experience', aliases=['xp', 'exp'], invoke_without_command=True, case_insensitive=True)
     async def experience(self, ctx):
         """
         Commands for modifying experience points. Displays the current value if no subcommand is used.
         """
-        # TODO: error handling for non integer values given
         member_id = ctx.author.id
         guild_id = ctx.message.guild.id
         collection = mdb['characters']
