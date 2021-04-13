@@ -40,7 +40,7 @@ class ReQuest(commands.AutoShardedBot):
     async def on_message(self, message):
         if message.author.bot:
             return
-        elif message.content == f'<@!{self.user.id}>':
+        elif len(message.mentions) > 0 and self.user in message.mentions:
             await message.channel.send(f'My prefix for this server is `{get_prefix(self, message)}`')
         else:
             await self.process_commands(message)

@@ -22,7 +22,7 @@ class Inventory(Cog):
         mdb = bot.mdb
 
     @commands.group(aliases=['i'], case_insensitive=True)
-    async def item(self, ctx):
+    async def inventory(self, ctx):
         """
         Commands for transfer, purchase, and sale of items.
         """
@@ -30,12 +30,13 @@ class Inventory(Cog):
             await delete_command(ctx.message)
             return  # TODO: Error message feedback
 
-    @item.command(name='mod')
+    @inventory.command(name='mod')
     @has_gm_or_mod()
-    async def item_mod(self, ctx, item_name, quantity: int, *user_mentions):
+    async def inventory_mod(self, ctx, item_name, quantity: int, *user_mentions):
         """
         Modifies a player's currently active character's inventory. GM Command.
         Requires an assigned GM role or Server Moderator privileges.
+
         Arguments:
         <item_name>: The name of the item. Case-sensitive!
         <quantity>: Quantity to give or take.
@@ -92,9 +93,9 @@ class Inventory(Cog):
         await ctx.send(embed=inventory_embed)
         await delete_command(ctx.message)
 
-    @item.command(name='give')
+    @inventory.command(name='give')
     @has_active_character()
-    async def item_give(self, ctx, user_mention, item_name, quantity: int = 1):
+    async def inventory_give(self, ctx, user_mention, item_name, quantity: int = 1):
         """
         Gives an item from your active character's inventory to another player's active character.
 
@@ -165,8 +166,8 @@ class Inventory(Cog):
 
         await delete_command(ctx.message)
 
-    @item.command(name='buy')
-    async def item_buy(self, ctx, item_name, quantity: int):
+    @inventory.command(name='buy', hidden=True)
+    async def inventory_buy(self, ctx, item_name, quantity: int):
         """
         Buys an item from the auto-market.
 
@@ -177,8 +178,8 @@ class Inventory(Cog):
         await ctx.send('Future feature. Stay tuned!')
         await delete_command(ctx.message)
 
-    @item.command(name='sell')
-    async def item_sell(self, ctx, item_name, quantity: int):
+    @inventory.command(name='sell', hidden=True)
+    async def inventory_sell(self, ctx, item_name, quantity: int):
         """
         Sells an item on the auto-market.
 
