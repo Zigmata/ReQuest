@@ -21,7 +21,7 @@ class Inventory(Cog):
         gdb = bot.gdb
         mdb = bot.mdb
 
-    @commands.group(aliases=['i'], case_insensitive=True)
+    @commands.group(aliases=['i', 'inv'], case_insensitive=True)
     async def inventory(self, ctx):
         """
         Commands for transfer, purchase, and sale of items.
@@ -42,17 +42,20 @@ class Inventory(Cog):
         <quantity>: Quantity to give or take.
         <user_mentions>: User mention(s) of the receiving player(s). Can be chained.
         """
-        gm_member_id = ctx.author.id
-        guild_id = ctx.message.guild.id
-        members = []
-        for user in user_mentions:
-            members.append(strip_id(user))
-        collection = mdb['characters']
         if quantity == 0:
             await ctx.send('Stop being a tease and enter an actual quantity!')
             await delete_command(ctx.message)
             return
+
+        gm_member_id = ctx.author.id
+        guild_id = ctx.message.guild.id
+        collection = mdb['characters']
         transaction_id = str(shortuuid.uuid()[:12])
+
+        members = []
+        for user in user_mentions:
+            members.append(strip_id(user))
+
         recipient_strings = []
         for member_id in members:
             query = collection.find_one({'_id': member_id})
@@ -73,6 +76,7 @@ class Inventory(Cog):
                 collection.update_one({'_id': member_id}, {
                     '$set': {f'characters.{active_character}.attributes.inventory.{item_name}': quantity}}, upsert=True)
             recipient_strings.append(f'<@!{member_id}> as {query["characters"][active_character]["name"]}')
+
         inventory_embed = discord.Embed(type='rich')
         if len(user_mentions) > 1:
             if quantity > 0:
@@ -158,7 +162,7 @@ class Inventory(Cog):
         trade_embed = discord.Embed(title='Trade Completed!', type='rich',
                                     description=f'<@!{donor_id}> as '
                                                 f'**{donor_query["characters"][donor_active]["name"]}**\n\n'
-                                                f'gives **{quantity} {item_name}** to\n\n<@!{recipient_id}> as '
+                                                f'gives **{quantity}x {item_name}** to\n\n<@!{recipient_id}> as '
                                                 f'**{recipient_query["characters"][recipient_active]["name"]}**')
         trade_embed.set_footer(text=f'{datetime.utcnow().strftime("%Y-%m-%d")} Transaction ID: {transaction_id}')
 

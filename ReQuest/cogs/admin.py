@@ -1,5 +1,7 @@
 import asyncio
+import json
 
+import discord
 from discord.ext import commands
 from discord.ext.commands import Cog, command
 from discord.utils import find
@@ -220,12 +222,15 @@ class Admin(Cog):
             await ctx.send(f'GM role(s) not set! Configure with `{get_prefix(self, ctx.message)}config role gm add '
                            '<role name>`. Roles can be chained (separate with a space).')
         else:
-            current_roles = query['gmRoles']
-            role_names = []
-            for role_id in current_roles:
-                role_names.append(guild.get_role(role_id).name)
+            current_role_ids = query['gmRoles']
+            current_roles = map(str, current_role_ids)
+            # role_names = []
+            # for role_id in current_roles:
+            #     role_names.append(guild.get_role(role_id).name)
 
-            await ctx.send('GM Role(s): {}'.format('`' + '`, `'.join(role_names) + '`'))
+            post_embed = discord.Embed(title='Config - Role - GM', type='rich')
+            post_embed.add_field(name='GM Role(s)', value='<@&' + '>\n<@&'.join(current_roles) + '>')
+            await ctx.send(embed=post_embed)
 
         await delete_command(ctx.message)
 
@@ -563,6 +568,111 @@ class Admin(Cog):
         elif enabled.lower() == 'false':
             gdb['characterSettings'].update_one({'guildId': guild_id}, {'$set': {'xp': False}}, upsert=True)
             await ctx.send('Character Experience Points disabled!')
+
+        await delete_command(ctx.message)
+
+    # --- Currency ---
+
+    @config.group(name='currency', aliases=['c'], case_insensitive=True, invoke_without_subcommand=True)
+    async def config_currency(self, ctx):
+        """
+        Commands for configuring currency used in the server.
+
+        If invoked without a subcommand, lists the currencies configured on the server.
+        """
+        if ctx.invoked_subcommand is None:
+            guild_id = ctx.message.guild.id
+            collection = gdb['currency']
+            query = collection.find_one({'_id': guild_id})
+
+            post_embed = discord.Embed(title='Config - Currencies', type='rich')
+            for currency in query['currencies']:
+                cname = currency['name']
+                double = False
+                denoms = None
+                if 'double' in currency:
+                    double = currency['double']
+                if 'denoms' in currency:
+                    values = []
+                    for denom in currency['denoms']:
+                        dname = denom['name']
+                        value = denom['value']
+                        values.append(f'{dname}: {value} {cname}')
+                    denoms = '\n'.join(values)
+                post_embed.add_field(name=cname, value=f'Double: ```\n{double}``` Denominations: ```\n{denoms}```', inline=True)
+
+            await ctx.send(embed=post_embed)
+            await delete_command(ctx.message)
+
+    @config_currency.command(name='add', aliases=['a'])
+    async def currency_add(self, ctx, *, definition):
+        """
+        Accepts a JSON definition and adds a new currency type to the server.
+
+        Arguments:
+        <definition>: JSON-formatted string definition. See additional information below.
+
+        Definition format:
+        -----------------------------------
+        {
+        "name": string,
+        "double": bool,
+        "denoms": [
+            {"name": string, "value": double}
+            ]
+        }
+
+        Keys and their functions
+        -----------------------------------
+        "name": Name of the currency. Case-insensitive. Acts as the base denomination with a value of 1. Example: gold
+        "double": Specifies whether or not currency is displayed as whole integers (10) or as a double (10.00)
+        "denoms": An array of objects for additional denominations. Example: {"name": "silver", "value": 0.1}
+
+        "name" is the only required key to add a new currency.
+        Denomination names may be referenced in-place of the currency name for transactions.
+
+        Examples for common RPG currencies:
+        Gold: {"name":"gold", "denoms":[{"name":"platinum", "value":10}, {"name":"electrum", "value":0.5}, {"name":"silver","value":0.1},{"name":"copper","value":0.01}]}
+        Credits: {"name":"credits", "double":true}
+        Downtime: {"name":"downtime"}
+        """
+        # TODO: Redundant-name prevention
+        guild_id = ctx.message.guild.id
+        collection = gdb['currency']
+        try:
+            loaded = json.loads(definition)
+            collection.update_one({'_id': guild_id}, {'$push': {'currencies': loaded}}, upsert=True)
+            await ctx.send(f'`{loaded["name"]}` added to server currencies!')
+        except json.JSONDecodeError:
+            await ctx.send('Invalid JSON format, check syntax and try again!')
+
+        await delete_command(ctx.message)
+
+    @config_currency.command(name='remove', aliases=['r', 'delete', 'd'])
+    async def currency_remove(self, ctx, name):
+        """
+        Removes a named currency from the server.
+
+        Arguments:
+        <name>: The name of the currency to remove.
+        """
+        # TODO: Multiple-match logic
+        guild_id = ctx.message.guild.id
+        collection = gdb['currency']
+        query = collection.find_one({'_id': guild_id})
+
+        for i in range(len(query['currencies'])):
+            currency = query['currencies'][i]
+            cname = currency['name']
+            if name.lower() in cname.lower():
+                await ctx.send(f'Removing `{cname}` from server transactions. Confirm: **Y**es/**N**o?')
+                confirm = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
+                await delete_command(confirm)
+                if confirm.content.lower() == 'y' or confirm.content.lower() == 'yes':
+                    collection.update_one({'_id': guild_id}, {'$pull': {'currencies': {'name': cname}}}, upsert=True)
+                    await ctx.send(f'`{cname}` removed!')
+                else:
+                    await ctx.send('Operation aborted!')
 
         await delete_command(ctx.message)
 
