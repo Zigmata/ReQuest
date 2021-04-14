@@ -176,6 +176,12 @@ class Wallet(Cog):
             if currency_name.lower() in currency_type['name'].lower():
                 cname = currency_type['name']
                 valid = True
+            if 'denoms' in currency_type:
+                denominations = currency_type['denoms']
+                for i in range(len(denominations)):
+                    if currency_name.lower() in denominations[i]['name'].lower():
+                        cname = denominations[i]['name']
+                        valid = True
 
         if not valid:
             await ctx.send('No currency with that name is used on this server!')
@@ -245,8 +251,73 @@ class Wallet(Cog):
     async def currency_spend(self, ctx, currency_name, quantity: int):
         """
         Spends (consumes) a given quantity of your active character's currency.
+
+        Currently requires individual spending of currencies. Related denominations will be automatically consumed
+        in a future update.
+
+        Arguments:
+        <currency_name>: Name of the currency to spend.
+        <quantity>: The amount to spend.
         """
-        return
+        member_id = ctx.author.id
+        guild_id = ctx.message.guild.id
+        guild_collection = gdb['currency']
+        character_collection = mdb['characters']
+
+        # Make sure the referenced currency is a valid name used in the server
+        guild_currencies = guild_collection.find_one({'_id': guild_id})
+        # TODO: Multiple-match logic
+        valid = False
+        cname = ''
+        for currency_type in guild_currencies['currencies']:
+            if currency_name.lower() in currency_type['name'].lower():
+                cname = currency_type['name']
+                valid = True
+            if 'denoms' in currency_type:
+                denominations = currency_type['denoms']
+                for i in range(len(denominations)):
+                    if currency_name.lower() in denominations[i]['name'].lower():
+                        cname = denominations[i]['name']
+                        valid = True
+
+        if not valid:
+            await ctx.send('No currency with that name is used on this server!')
+            await delete_command(ctx.message)
+            return
+
+        query = character_collection.find_one({'_id': member_id})
+        active_character = query['activeChars'][f'{guild_id}']
+        character = query['characters'][active_character]
+        name = character['name']
+        currency = character['attributes']['currency']
+
+        if cname in currency:
+            current_quantity = currency[cname]
+            if current_quantity >= quantity:
+                transaction_id = str(shortuuid.uuid()[:12])
+                new_quantity = current_quantity - quantity
+                if new_quantity == 0:
+                    character_collection.update_one({'_id': member_id},
+                                                    {'$unset': {f'characters.{active_character}.attributes.'
+                                                                f'currency.{cname}': ''}}, upsert=True)
+                else:
+                    character_collection.update_one({'_id': member_id},
+                                                    {'$set': {f'characters.{active_character}.attributes.'
+                                                              f'currency.{cname}': new_quantity}}, upsert=True)
+
+                post_embed = discord.Embed(title=f'{name} spends some currency!', type='rich',
+                                           description=f'Item: **{cname}**\n'
+                                                       f'Quantity: **{quantity}**\n'
+                                                       f'Balance: **{new_quantity}**')
+                post_embed.set_footer(text=f'{datetime.utcnow().strftime("%Y-%m-%d")} Transaction ID: {transaction_id}')
+
+                await ctx.send(embed=post_embed)
+            else:
+                await ctx.send(f'You do not have enough {cname} in your wallet!')
+        else:
+            await ctx.send(f'`{currency_name}` was not found in your wallet. Check your spelling!')
+
+        await delete_command(ctx.message)
 
 
 def setup(bot):
