@@ -21,14 +21,32 @@ class Inventory(Cog):
         gdb = bot.gdb
         mdb = bot.mdb
 
-    @commands.group(aliases=['i', 'inv'], case_insensitive=True)
+    @commands.group(aliases=['i', 'inv'], case_insensitive=True, invoke_without_subcommand=True)
     async def inventory(self, ctx):
         """
         Commands for transfer, purchase, and sale of items.
         """
         if ctx.invoked_subcommand is None:
+            if not has_active_character():
+                return
+            member_id = ctx.author.id
+            guild_id = ctx.message.guild.id
+            collection = mdb['characters']
+            query = collection.find_one({'_id': member_id})
+            active_character = query['activeChars'][str(guild_id)]
+            name = query['characters'][active_character]['name']
+            inventory = query['characters'][active_character]['attributes']['inventory']
+            items = []
+            for item in inventory:
+                pair = (str(item), f'**{inventory[item]}**')
+                value = ': '.join(pair)
+                items.append(value)
+
+            post_embed = discord.Embed(title=f'{name}\'s Possessions', type='rich', description='\n'.join(items))
+
+            await ctx.send(embed=post_embed)
+
             await delete_command(ctx.message)
-            return  # TODO: Error message feedback
 
     @inventory.command(name='mod')
     @has_gm_or_mod()
