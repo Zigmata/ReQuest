@@ -42,7 +42,7 @@ class Help(Cog):
         Prints useful bot information.
         """
         await ctx.send(
-            f'**ReQuest v0.2.1-a.1**\n\nBugs? Feature Requests? Join the development server at '
+            f'**ReQuest v0.4.0-a.1**\n\nBugs? Feature Requests? Join the development server at '
             f'https://discord.gg/Zq37gj4')
 
         await delete_command(ctx.message)
