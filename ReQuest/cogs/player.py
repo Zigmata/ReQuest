@@ -279,6 +279,7 @@ class Player(Cog):
         """
         GM Command: Modifies the experience points of a player's currently active character.
         Requires an assigned GM role or Server Moderator privileges.
+
         Arguments:
         <value>: The amount of experience given.
         <user_mentions>: User mention(s) of the receiving player(s). Can be chained.

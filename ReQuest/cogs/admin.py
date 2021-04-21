@@ -214,7 +214,6 @@ class Admin(Cog):
         When this base command is executed, it displays the current setting.
         """
         guild_id = ctx.message.guild.id
-        guild = self.bot.get_guild(guild_id)
         collection = gdb['gmRoles']
 
         query = collection.find_one({'guildId': guild_id})
@@ -224,9 +223,6 @@ class Admin(Cog):
         else:
             current_role_ids = query['gmRoles']
             current_roles = map(str, current_role_ids)
-            # role_names = []
-            # for role_id in current_roles:
-            #     role_names.append(guild.get_role(role_id).name)
 
             post_embed = discord.Embed(title='Config - Role - GM', type='rich')
             post_embed.add_field(name='GM Role(s)', value='<@&' + '>\n<@&'.join(current_roles) + '>')
@@ -599,7 +595,8 @@ class Admin(Cog):
                         value = denom['value']
                         values.append(f'{dname}: {value} {cname}')
                     denoms = '\n'.join(values)
-                post_embed.add_field(name=cname, value=f'Double: ```\n{double}``` Denominations: ```\n{denoms}```', inline=True)
+                post_embed.add_field(name=cname,
+                                     value=f'Double: ```\n{double}``` Denominations: ```\n{denoms}```', inline=True)
 
             await ctx.send(embed=post_embed)
             await delete_command(ctx.message)
@@ -631,10 +628,9 @@ class Admin(Cog):
         "name" is the only required key to add a new currency.
         Denomination names may be referenced in-place of the currency name for transactions.
 
-        Examples for common RPG currencies:
-        Gold: {"name":"gold", "denoms":[{"name":"platinum", "value":10}, {"name":"electrum", "value":0.5}, {"name":"silver","value":0.1},{"name":"copper","value":0.01}]}
-        Credits: {"name":"credits", "double":true}
-        Downtime: {"name":"downtime"}
+        Examples for common RPG currencies: Gold: {"name":"Gold", "denoms":[{"name":"Platinum", "value":10},
+        {"name":"Silver","value":0.1},{"name":"Copper","value":0.01}]} Credits: {
+        "name":"Credits", "double":true} Downtime: {"name":"Downtime"}
         """
         # TODO: Redundant-name prevention
         guild_id = ctx.message.guild.id

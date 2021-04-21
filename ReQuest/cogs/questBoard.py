@@ -4,7 +4,7 @@ from discord.ext import commands
 from discord.ext.commands import Cog
 from discord.utils import find
 
-from ..utilities.supportFunctions import delete_command, parse_list
+from ..utilities.supportFunctions import delete_command, parse_list, strip_id
 from ..utilities.checks import has_gm_role
 
 listener = Cog.listener
@@ -281,7 +281,7 @@ class QuestBoard(Cog):
 
         # Inform user if announcement role is not set. Otherwise, get the channel string
         # TODO: Make announcement role optional
-        announce_role: int = 0
+        announce_role: int = None
         if query:
             announce_role = query['announceRole']
 
@@ -293,7 +293,6 @@ class QuestBoard(Cog):
         gm = ctx.author.id
         party: [int] = []
         wait_list: [int] = []
-        xp: int = 0
         lock_state = False
 
         post_embed = discord.Embed(title=title, type='rich',
@@ -315,10 +314,8 @@ class QuestBoard(Cog):
         try:
             collection.insert_one({'guildId': guild_id, 'questId': quest_id, 'messageId': message_id,
                                    'title': title, 'desc': description, 'maxPartySize': max_party_size,
-                                   'levels': levels,
-                                   'gm': gm, 'party': party, 'waitList': wait_list, 'xp': xp,
-                                   'maxWaitListSize': max_wait_list_size,
-                                   'lockState': lock_state})
+                                   'levels': levels, 'gm': gm, 'party': party, 'waitList': wait_list, 'xp': 0,
+                                   'maxWaitListSize': max_wait_list_size, 'lockState': lock_state, 'rewards': {}})
         except Exception as e:
             await ctx.send('{}: {}'.format(type(e).__name__, e))
 
@@ -521,6 +518,8 @@ class QuestBoard(Cog):
         # Get party members and message them with results
         party = quest['party']
         title = quest['title']
+        xp = quest['xp']
+        rewards = quest['rewards']
         for player in party:
             member = guild.get_member(player)
             # Remove the party role, if applicable
@@ -596,7 +595,7 @@ class QuestBoard(Cog):
             # Get party members and message them with results
 
             for player in party:
-                member = guild.get_member(player)
+                member = await guild.fetch_member(player)
                 # Remove the party role, if applicable
                 if gm_role:
                     role = guild.get_role(gm_role)
@@ -794,6 +793,122 @@ class QuestBoard(Cog):
         await message.edit(embed=post_embed)
 
         await ctx.send('Quest Updated!')
+
+        await delete_command(ctx.message)
+
+    @edit.command(name='experience', aliases=['xp', 'exp'])
+    async def quest_experience(self, ctx, quest_id, experience: int):
+        """
+        Assigns an experience reward to a quest.
+
+        Experience is awarded equally to each member of a quest party once the quest is completed.
+
+        Arguments:
+        <quest_id>: The id of the quest to assign the reward.
+        <experience>: The total experience reward for the quest. This value is given to each player.
+        """
+        if experience < 1:
+            await ctx.send('Experience must be a non-zero integer!')
+            await delete_command(ctx.message)
+            return
+
+        collection = gdb['quests']
+
+        quest_query = collection.find_one({'questId': quest_id})
+        if ctx.author.id != quest_query['gm'] or not ctx.author.guild_permissions.manage_guild:
+            await ctx.send('Quests can only be manipulated by their GM or staff!')
+            await delete_command(ctx.message)
+            return
+
+        title = quest_query['title']
+        collection.update_one({'questId': quest_id}, {'$set': {'xp': experience}}, upsert=True)
+
+        await ctx.send(f'Experience reward for quest `{quest_id}: {title}` set to {experience} per character!')
+
+        await delete_command(ctx.message)
+
+    @edit.command(name='rewards', aliases=['loot'])
+    async def quest_rewards(self, ctx, quest_id, item_name, quantity: int, *recipients):
+        """
+        Assigns item rewards to a quest for one, some, or all characters in the party.
+
+        Arguments:
+        <quest_id>: The ID of the quest.
+        <item_name>: The name of the item to award.
+        <quantity>: The quantity of the item to award each recipient.
+        <recipients>: User mentions of recipients. Can be chained.
+        --[all]: Instead of user mentions, the provided number of items can be given to each party member instead.
+        """
+
+        if quantity < 1:
+            await ctx.send('Quantity must be a non-zero integer!')
+            await delete_command(ctx.message)
+            return
+
+        collection = gdb['quests']
+
+        quest_query = collection.find_one({'questId': quest_id})
+        if not quest_query:
+            await ctx.send('Quest ID not found!')
+            await delete_command(ctx.message)
+            return
+
+        if ctx.author.id != quest_query['gm'] or not ctx.author.guild_permissions.manage_guild:
+            await ctx.send('Quests can only be manipulated by their GM or staff!')
+            await delete_command(ctx.message)
+            return
+
+        title = quest_query['title']
+        current_rewards = quest_query['rewards']
+        if recipients[0].lower() == 'all':
+            if 'all' in current_rewards and item_name in current_rewards['all']:
+                current_quantity = current_rewards['all'][item_name]
+                new_quantity = current_quantity + quantity
+                collection.update_one({'questId': quest_id},
+                                      {'$set': {f'rewards.all.{item_name}': new_quantity}}, upsert=True)
+            else:
+                collection.update_one({'questId': quest_id},
+                                      {'$set': {f'rewards.all.{item_name}': quantity}}, upsert=True)
+
+            update_embed = discord.Embed(title='Rewards updated!', type='rich',
+                                         description=f'Quest ID: **{quest_id}**\n'
+                                                     f'Title: **{title}**\n'
+                                                     f'Reward: **{quantity}x {item_name} each**')
+            update_embed.add_field(name="Recipients", value='All party members')
+
+        else:
+            party = quest_query['party']
+            valid_players = []
+            for player in recipients:
+                user_id = strip_id(player)
+                user_name = self.bot.get_user(user_id).name
+                if user_id not in party:
+                    await ctx.send(f'`{user_name}` was not found in the roster. Skipped.')
+                    continue
+
+                valid_players.append(player)
+
+                if str(user_id) in current_rewards and item_name in current_rewards[f'{user_id}']:
+                    current_quantity = current_rewards[f'{user_id}'][item_name]
+                    new_quantity = current_quantity + quantity
+                    collection.update_one({'questId': quest_id},
+                                          {'$set': {f'rewards.{user_id}.{item_name}': new_quantity}},
+                                          upsert=True)
+                else:
+                    collection.update_one({'questId': quest_id},
+                                          {'$set': {f'rewards.{user_id}.{item_name}': quantity}}, upsert=True)
+            if len(valid_players) == 0:
+                await ctx.send('No valid players were provided!')
+                await delete_command(ctx.message)
+                return
+
+            update_embed = discord.Embed(title='Rewards updated!', type='rich',
+                                         description=f'Quest ID: **{quest_id}**\n'
+                                                     f'Title: **{title}**\n'
+                                                     f'Reward: **{quantity}x {item_name} each**')
+            update_embed.add_field(name="Recipients", value='\n'.join(valid_players))
+
+        await ctx.send(embed=update_embed)
 
         await delete_command(ctx.message)
 
