@@ -1,4 +1,3 @@
-from math import ceil
 import discord
 import shortuuid
 from discord.ext import commands
@@ -26,6 +25,17 @@ class QuestBoard(Cog):
 
     # ---- Listeners and support functions ----
 
+    async def cancel_reaction(self, payload, reason):
+        emoji = payload.emoji
+        user_id = payload.user_id
+        user = self.bot.get_user(user_id)
+        channel = self.bot.get_channel(payload.channel_id)
+        message_id = payload.message_id
+        message = await channel.fetch_message(message_id)
+
+        await message.remove_reaction(emoji, user)
+        await user.send(reason)
+
     # noinspection PyTypeChecker
     @staticmethod
     def update_quest_embed(quest, is_archival=False) -> discord.Embed:
@@ -45,7 +55,7 @@ class QuestBoard(Cog):
 
         formatted_party = []
         # Map int list to string for formatting, then format the list of users as user mentions
-        if party:
+        if len(party) > 0:
             for member in party:
                 for key in member:
                     character_query = mdb['characters'].find_one({'_id': int(key)})
@@ -54,11 +64,16 @@ class QuestBoard(Cog):
                     # mapped_party = list(map(str, party))
                     # formatted_party = '- <@!' + '>\n- <@!'.join(mapped_party) + '>'
 
-        formatted_wait_list: str = None
+        formatted_wait_list = []
         # Only format the waitlist if there is one.
-        if wait_list:
-            mapped_wait_list = list(map(str, wait_list))
-            formatted_wait_list = '- <@!' + '>\n- <@!'.join(mapped_wait_list) + '>'
+        if len(wait_list) > 0:
+            for member in wait_list:
+                for key in member:
+                    character_query = mdb['characters'].find_one({'_id': int(key)})
+                    character_name = character_query['characters'][member[key]]['name']
+                    formatted_wait_list.append(f'- <@!{key}> as {character_name}')
+            # mapped_wait_list = list(map(str, wait_list))
+            # formatted_wait_list = '- <@!' + '>\n- <@!'.join(mapped_wait_list) + '>'
 
         # Shows the quest is locked if applicable, unless it is being archived.
         if lock_state is True and is_archival is False:
@@ -75,8 +90,13 @@ class QuestBoard(Cog):
                                  value='\n'.join(formatted_party))
         # Add a waitlist field if one is present, unless the quest is being archived.
         if max_wait_list_size > 0 and is_archival is False:
-            post_embed.add_field(name=f'__Wait List ({current_wait_list_size}/{max_wait_list_size})__',
-                                 value=formatted_wait_list)
+            if len(formatted_wait_list) == 0:
+                post_embed.add_field(name=f'__Wait List ({current_wait_list_size}/{max_wait_list_size})__',
+                                     value='None')
+            else:
+                post_embed.add_field(name=f'__Wait List ({current_wait_list_size}/{max_wait_list_size})__',
+                                     value='\n'.join(formatted_wait_list))
+
         post_embed.set_footer(text='Quest ID: ' + quest_id)
 
         return post_embed
@@ -106,9 +126,8 @@ class QuestBoard(Cog):
         collection = gdb['quests']
         quest = collection.find_one({'messageId': message_id})  # Get the quest that matches the message ID
         if not quest:
-            emoji = payload.emoji
-            await message.remove_reaction(emoji, user)
-            return  # TODO: Missing quest error handling
+            await self.cancel_reaction(payload, f'Error: Quest not found in database.')
+            return
 
         current_party = quest['party']
         current_wait_list = quest['waitList']
@@ -121,16 +140,13 @@ class QuestBoard(Cog):
         # If a reaction is added, add the reacting user to the party/waitlist if there is room
         if payload.event_type == 'REACTION_ADD':
             if quest['lockState']:
-                emoji = payload.emoji
-                await message.remove_reaction(emoji, user)
-                await user.send(f'Quest **{quest["title"]}** is locked and not accepting players.')
+                await self.cancel_reaction(payload, f'Error joining quest **{quest["title"]}**: '
+                                                    f'The quest is locked and not accepting players.')
                 return
             else:
                 if str(guild_id) not in player_characters['activeChars']:
-                    emoji = payload.emoji
-                    await message.remove_reaction(emoji, user)
-                    await user.send(f'Error joining quest **{quest["title"]}**,'
-                                    f' you have no active characters on that server!')
+                    await self.cancel_reaction(payload, f'Error joining quest **{quest["title"]}**: '
+                                                        f'You have no active characters on that server!')
                     return
 
                 # If the waitlist is enabled, this section formats the embed to include the waitlist
@@ -143,11 +159,14 @@ class QuestBoard(Cog):
                                               {'$push': {'party': {f'{user_id}': active_character_id}}})
                     # If the party is full but the waitlist is not, add the user to waitlist.
                     elif len(current_party) >= max_party_size and len(current_wait_list) < max_wait_list_size:
-                        collection.update_one({'messageId': message_id}, {'$push': {'waitList': user_id}})
+                        collection.update_one({'messageId': message_id},
+                                              {'$push': {'waitList': {f'{user_id}': active_character_id}}})
+
                     # Otherwise, DM the user that the party/waitlist is full
                     else:
-                        await self.cancel_reaction(user)
-                        return  # TODO: Implement user DM that there is no more room
+                        await self.cancel_reaction(payload, f'Error joining quest **{quest["title"]}**: '
+                                                            f'The quest roster is full!')
+                        return
 
                     # --- Post edit generation ---
 
@@ -164,10 +183,12 @@ class QuestBoard(Cog):
 
                     # If there is room in the party, add the user.
                     if len(current_party) < max_party_size:
-                        collection.update_one({'messageId': message_id}, {'$push': {'party': user_id}})
+                        collection.update_one({'messageId': message_id},
+                                              {'$push': {'party': {f'{user_id}': active_character_id}}})
                     else:
-                        await self.cancel_reaction(user)
-                        return  # TODO: Implement user DM that there is no more room
+                        await self.cancel_reaction(payload, f'Error joining quest **{quest["title"]}**: '
+                                                            f'The quest roster is full!')
+                        return
 
                     # --- Post edit generation ---
 
@@ -175,6 +196,7 @@ class QuestBoard(Cog):
                     quest = collection.find_one({'messageId': message_id})
                     post_embed = self.update_quest_embed(quest)
                     await message.edit(embed=post_embed)
+
         # This path is chosen if a reaction is removed.
         else:
             # If the waitlist is enabled, this section formats the embed to include the waitlist
@@ -199,25 +221,26 @@ class QuestBoard(Cog):
                                               {'$pull': {'party': {f'{user_id}': active_character_id}}})
                         # If there is a waitlist, move the first entry into the party automatically
                         if len(current_wait_list) > 0:
-                            new_player = current_wait_list[0]
-                            new_member = guild.get_member(new_player)
+                            for new_player in current_wait_list:
+                                for key in new_player:
+                                    new_member = guild.get_member(int(key))
 
-                            collection.update_one({'messageId': message_id}, {'$push': {'party': new_player}})
-                            collection.update_one({'messageId': message_id}, {'$pull': {'waitList': new_player}})
+                                    collection.update_one({'messageId': message_id}, {'$push': {'party': new_player}})
+                                    collection.update_one({'messageId': message_id},
+                                                          {'$pull': {'waitList': new_player}})
 
-                            # Notify the member they have been moved into the main party
-                            await new_member.send(
-                                'You have been added to the party for the quest, **{}**, due to a player dropping!'.format(
-                                    quest['title']))
+                                    # Notify the member they have been moved into the main party
+                                    await new_member.send(f'You have been added to the party for **{quest["title"]}**, '
+                                                          f'due to a player dropping!')
 
-                            # If a role is set, assign it to the player
-                            if role:
-                                await new_member.add_roles(role)
+                                    # If a role is set, assign it to the player
+                                    if role:
+                                        await new_member.add_roles(role)
 
-                    elif user_id in current_wait_list:
-                        collection.update_one({'messageId': message_id}, {'$pull': {'waitList': user_id}})
-                    else:
-                        return  # TODO: Error handling
+                for entry in current_wait_list:
+                    if str(user_id) in entry:
+                        collection.update_one({'messageId': message_id},
+                                              {'$pull': {'waitList': {f'{user_id}': active_character_id}}})
 
                 # Refresh the query with the new document and edit the post
                 quest = collection.find_one({'messageId': message_id})
@@ -226,7 +249,8 @@ class QuestBoard(Cog):
             # If there is no waitlist, this section formats the embed without it
             else:
                 # Remove the user from the quest in the database
-                collection.update_one({'messageId': message_id}, {'$pull': {'party': user_id}})
+                collection.update_one({'messageId': message_id},
+                                      {'$pull': {'party': {f'{user_id}': active_character_id}}})
 
                 quest = collection.find_one({'messageId': message_id})
                 post_embed = self.update_quest_embed(quest)
@@ -410,6 +434,8 @@ class QuestBoard(Cog):
         post_embed = self.update_quest_embed(updated_quest)
         await message.edit(embed=post_embed)
 
+        await ctx.send('Quest roster locked and party notified!')
+
         await delete_command(ctx.message)
 
     @quest.command(aliases=['ur'], pass_context=True)
@@ -501,6 +527,8 @@ class QuestBoard(Cog):
         post_embed = self.update_quest_embed(updated_quest)
         await message.edit(embed=post_embed)
 
+        await ctx.send('Quest roster has been unlocked.')
+
         await delete_command(ctx.message)
 
     @quest.command(pass_context=True)
@@ -542,66 +570,67 @@ class QuestBoard(Cog):
         # Get party members and message them with results
         party = quest['party']
         title = quest['title']
-        total_xp = quest['xp']
-        xp_value = total_xp / ceil(len(party))
+        xp_value = quest['xp']
         rewards = quest['rewards']
         reward_summary = []
         mcollection = mdb['characters']
-        for player in party:
-            member = guild.get_member(player)
-            # Remove the party role, if applicable
-            if gm_role:
-                role = guild.get_role(gm_role)
-                await member.remove_roles(role)
+        for entry in party:
+            for player_id in entry:
+                player = int(player_id)
+                member = guild.get_member(player)
+                # Remove the party role, if applicable
+                if gm_role:
+                    role = guild.get_role(gm_role)
+                    await member.remove_roles(role)
 
-            character_query = mcollection.find_one({'_id': player})
-            active_character_id = character_query['activeChars'][str(guild_id)]
-            character = character_query['characters'][active_character_id]
-            name = character['name']
-            reward_strings = []
+                character_query = mcollection.find_one({'_id': player})
+                active_character_id = character_query['activeChars'][str(guild_id)]
+                character = character_query['characters'][active_character_id]
+                name = character['name']
+                reward_strings = []
 
-            if str(player) in rewards:
-                if archive_channel:
-                    reward_summary.append(f'<@!{player}> as {name}:')
-                inventory = character['attributes']['inventory']
-                for item_name in rewards[f'{player}']:
-                    quantity = rewards[f'{player}'][item_name]
-                    if item_name in inventory:
-                        current_quantity = inventory[item_name]
-                        new_quantity = current_quantity + quantity
-                        mcollection.update_one({'_id': player},
-                                               {'$set': {f'characters.{active_character_id}.attributes.'
-                                                         f'inventory.{item_name}': new_quantity}}, upsert=True)
-                    else:
-                        mcollection.update_one({'_id': player},
-                                               {'$set': {f'characters.{active_character_id}.attributes.'
-                                                         f'inventory.{item_name}': quantity}}, upsert=True)
-
-                    reward_strings.append(f'{quantity}x {item_name}')
+                if str(player) in rewards:
                     if archive_channel:
-                        reward_summary.append(f'{quantity}x {item_name}')
+                        reward_summary.append(f'\n**<@!{player}> as {name}:**')
+                    inventory = character['attributes']['inventory']
+                    for item_name in rewards[f'{player}']:
+                        quantity = rewards[f'{player}'][item_name]
+                        if item_name in inventory:
+                            current_quantity = inventory[item_name]
+                            new_quantity = current_quantity + quantity
+                            mcollection.update_one({'_id': player},
+                                                   {'$set': {f'characters.{active_character_id}.attributes.'
+                                                             f'inventory.{item_name}': new_quantity}}, upsert=True)
+                        else:
+                            mcollection.update_one({'_id': player},
+                                                   {'$set': {f'characters.{active_character_id}.attributes.'
+                                                             f'inventory.{item_name}': quantity}}, upsert=True)
 
-            if xp_value:
-                current_xp = character['attributes']['experience']
+                        reward_strings.append(f'{quantity}x {item_name}')
+                        if archive_channel:
+                            reward_summary.append(f'{quantity}x {item_name}')
 
-                if current_xp:
-                    current_xp += xp_value
-                else:
-                    current_xp = xp_value
+                if xp_value:
+                    current_xp = character['attributes']['experience']
 
-                # Update the db
-                mcollection.update_one({'_id': player},
-                                       {'$set':
-                                        {f'characters.{active_character_id}.attributes.experience': current_xp}},
-                                       upsert=True)
+                    if current_xp:
+                        current_xp += xp_value
+                    else:
+                        current_xp = xp_value
 
-                reward_strings.append(f'{xp_value} experience points')
+                    # Update the db
+                    mcollection.update_one({'_id': player},
+                                           {'$set':
+                                            {f'characters.{active_character_id}.attributes.experience': current_xp}},
+                                           upsert=True)
 
-            dm_embed = discord.Embed(title=f'Quest Complete: {title}',
-                                     type='rich')
-            dm_embed.add_field(name='Rewards', value='\n'.join(reward_strings))
+                    reward_strings.append(f'{xp_value} experience points')
 
-            await member.send(embed=dm_embed)
+                dm_embed = discord.Embed(title=f'Quest Complete: {title}',
+                                         type='rich')
+                dm_embed.add_field(name='Rewards', value='\n'.join(reward_strings))
+
+                await member.send(embed=dm_embed)
 
         # Archive the quest, if applicable
         if archive_channel:
@@ -619,7 +648,7 @@ class QuestBoard(Cog):
                 post_embed.add_field(name='Experience Points', value=f'{xp_value} each', inline=False)
 
             if rewards:
-                post_embed.add_field(name='Rewards', value='\n- '.join(reward_summary), inline=False)
+                post_embed.add_field(name='Rewards', value='\n'.join(reward_summary), inline=False)
 
             await channel.send(embed=post_embed)
 
@@ -964,7 +993,12 @@ class QuestBoard(Cog):
             for player in recipients:
                 user_id = strip_id(player)
                 user_name = self.bot.get_user(user_id).name
-                if user_id not in party:
+                present = False
+                for entry in party:
+                    if str(user_id) in entry:
+                        present = True
+
+                if not present:
                     await ctx.send(f'`{user_name}` was not found in the roster. Skipped.')
                     continue
 
@@ -1040,9 +1074,6 @@ class QuestBoard(Cog):
             await ctx.send(f'Your GM role for this server has been set to `{search.name}`!')
 
         await delete_command(ctx.message)
-
-    async def cancel_reaction(self, user):
-        pass
 
 
 def setup(bot):
