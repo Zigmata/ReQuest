@@ -36,7 +36,6 @@ class QuestBoard(Cog):
         await message.remove_reaction(emoji, user)
         await user.send(reason)
 
-    # noinspection PyTypeChecker
     @staticmethod
     def update_quest_embed(quest, is_archival=False) -> discord.Embed:
 
@@ -218,7 +217,7 @@ class QuestBoard(Cog):
                 for entry in current_party:
                     if str(user_id) in entry:
                         collection.update_one({'messageId': message_id},
-                                              {'$pull': {'party': {f'{user_id}': active_character_id}}})
+                                              {'$pull': {'party': {f'{user_id}': {'$exists': True}}}})
                         # If there is a waitlist, move the first entry into the party automatically
                         if len(current_wait_list) > 0:
                             for new_player in current_wait_list:
@@ -240,7 +239,7 @@ class QuestBoard(Cog):
                 for entry in current_wait_list:
                     if str(user_id) in entry:
                         collection.update_one({'messageId': message_id},
-                                              {'$pull': {'waitList': {f'{user_id}': active_character_id}}})
+                                              {'$pull': {'waitList': {f'{user_id}': {'$exists': True}}}})
 
                 # Refresh the query with the new document and edit the post
                 quest = collection.find_one({'messageId': message_id})
@@ -250,7 +249,7 @@ class QuestBoard(Cog):
             else:
                 # Remove the user from the quest in the database
                 collection.update_one({'messageId': message_id},
-                                      {'$pull': {'party': {f'{user_id}': active_character_id}}})
+                                      {'$pull': {'party': {f'{user_id}': {'$exists': True}}}})
 
                 quest = collection.find_one({'messageId': message_id})
                 post_embed = self.update_quest_embed(quest)
@@ -516,9 +515,8 @@ class QuestBoard(Cog):
                     qcollection.update_one({'questId': quest_id}, {'$pull': {'waitList': replacement}})
 
                     # Notify player they are now in the party
-                    await replacement_member.send(
-                        'You have been added to the party for the quest, **{}**, due to a player dropping!'.format(
-                            quest['title']))
+                    await replacement_member.send(f'You have been added to the party for the quest, '
+                                                  f'**{quest["title"]}**, due to a player dropping!')
 
         # Fetch the updated quest
         updated_quest = qcollection.find_one({'questId': quest_id})
@@ -584,14 +582,13 @@ class QuestBoard(Cog):
                     await member.remove_roles(role)
 
                 character_query = mcollection.find_one({'_id': player})
-                active_character_id = character_query['activeChars'][str(guild_id)]
-                character = character_query['characters'][active_character_id]
-                name = character['name']
+                character_id = entry[player_id]
+                character = character_query['characters'][character_id]
                 reward_strings = []
 
                 if str(player) in rewards:
                     if archive_channel:
-                        reward_summary.append(f'\n**<@!{player}> as {name}:**')
+                        reward_summary.append(f'\n<@!{player}>')
                     inventory = character['attributes']['inventory']
                     for item_name in rewards[f'{player}']:
                         quantity = rewards[f'{player}'][item_name]
@@ -599,11 +596,11 @@ class QuestBoard(Cog):
                             current_quantity = inventory[item_name]
                             new_quantity = current_quantity + quantity
                             mcollection.update_one({'_id': player},
-                                                   {'$set': {f'characters.{active_character_id}.attributes.'
+                                                   {'$set': {f'characters.{character_id}.attributes.'
                                                              f'inventory.{item_name}': new_quantity}}, upsert=True)
                         else:
                             mcollection.update_one({'_id': player},
-                                                   {'$set': {f'characters.{active_character_id}.attributes.'
+                                                   {'$set': {f'characters.{character_id}.attributes.'
                                                              f'inventory.{item_name}': quantity}}, upsert=True)
 
                         reward_strings.append(f'{quantity}x {item_name}')
@@ -621,7 +618,7 @@ class QuestBoard(Cog):
                     # Update the db
                     mcollection.update_one({'_id': player},
                                            {'$set':
-                                            {f'characters.{active_character_id}.attributes.experience': current_xp}},
+                                            {f'characters.{character_id}.attributes.experience': current_xp}},
                                            upsert=True)
 
                     reward_strings.append(f'{xp_value} experience points')
@@ -644,11 +641,11 @@ class QuestBoard(Cog):
             if summary_enabled and summary_enabled['questSummary']:
                 post_embed.add_field(name='Summary', value=summary, inline=False)
 
-            if xp_value:
-                post_embed.add_field(name='Experience Points', value=f'{xp_value} each', inline=False)
-
             if rewards:
-                post_embed.add_field(name='Rewards', value='\n'.join(reward_summary), inline=False)
+                post_embed.add_field(name='Rewards', value='\n'.join(reward_summary), inline=True)
+
+            if xp_value:
+                post_embed.add_field(name='Experience Points', value=f'{xp_value} each', inline=True)
 
             await channel.send(embed=post_embed)
 
@@ -910,13 +907,13 @@ class QuestBoard(Cog):
     @edit.command(name='experience', aliases=['xp', 'exp'])
     async def quest_experience(self, ctx, quest_id, experience: int):
         """
-        Assigns an experience reward to a quest.
+        Assigns a global experience reward to a quest.
 
         Experience is awarded equally to each member of a quest party once the quest is completed.
 
         Arguments:
         <quest_id>: The id of the quest to assign the reward.
-        <experience>: The total experience reward for the quest. This value is given to each player.
+        <experience>: The global experience reward for the quest. This value is given to each player.
         """
         if experience < 1:
             await ctx.send('Experience must be a non-zero integer!')
@@ -939,13 +936,13 @@ class QuestBoard(Cog):
         await delete_command(ctx.message)
 
     @edit.command(name='rewards', aliases=['loot'])
-    async def quest_rewards(self, ctx, quest_id, item_name, quantity: int, *recipients):
+    async def quest_rewards(self, ctx, quest_id, reward_name, quantity: int, *recipients):
         """
         Assigns item rewards to a quest for one, some, or all characters in the party.
 
         Arguments:
         <quest_id>: The ID of the quest.
-        <item_name>: The name of the item to award.
+        <reward_name>: The name of the item to award.
         <quantity>: The quantity of the item to award each recipient.
         <recipients>: User mentions of recipients. Can be chained.
         --[all]: Instead of user mentions, the provided number of items can be given to each party member instead.
@@ -972,19 +969,19 @@ class QuestBoard(Cog):
         title = quest_query['title']
         current_rewards = quest_query['rewards']
         if recipients[0].lower() == 'all':
-            if 'all' in current_rewards and item_name in current_rewards['all']:
-                current_quantity = current_rewards['all'][item_name]
+            if 'all' in current_rewards and reward_name in current_rewards['all']:
+                current_quantity = current_rewards['all'][reward_name]
                 new_quantity = current_quantity + quantity
                 collection.update_one({'questId': quest_id},
-                                      {'$set': {f'rewards.all.{item_name}': new_quantity}}, upsert=True)
+                                      {'$set': {f'rewards.all.{reward_name}': new_quantity}}, upsert=True)
             else:
                 collection.update_one({'questId': quest_id},
-                                      {'$set': {f'rewards.all.{item_name}': quantity}}, upsert=True)
+                                      {'$set': {f'rewards.all.{reward_name}': quantity}}, upsert=True)
 
             update_embed = discord.Embed(title='Rewards updated!', type='rich',
                                          description=f'Quest ID: **{quest_id}**\n'
                                                      f'Title: **{title}**\n'
-                                                     f'Reward: **{quantity}x {item_name} each**')
+                                                     f'Reward: **{quantity}x {reward_name} each**')
             update_embed.add_field(name="Recipients", value='All party members')
 
         else:
@@ -1004,15 +1001,15 @@ class QuestBoard(Cog):
 
                 valid_players.append(player)
 
-                if str(user_id) in current_rewards and item_name in current_rewards[f'{user_id}']:
-                    current_quantity = current_rewards[f'{user_id}'][item_name]
+                if str(user_id) in current_rewards and reward_name in current_rewards[f'{user_id}']:
+                    current_quantity = current_rewards[f'{user_id}'][reward_name]
                     new_quantity = current_quantity + quantity
                     collection.update_one({'questId': quest_id},
-                                          {'$set': {f'rewards.{user_id}.{item_name}': new_quantity}},
+                                          {'$set': {f'rewards.{user_id}.{reward_name}': new_quantity}},
                                           upsert=True)
                 else:
                     collection.update_one({'questId': quest_id},
-                                          {'$set': {f'rewards.{user_id}.{item_name}': quantity}}, upsert=True)
+                                          {'$set': {f'rewards.{user_id}.{reward_name}': quantity}}, upsert=True)
             if len(valid_players) == 0:
                 await ctx.send('No valid players were provided!')
                 await delete_command(ctx.message)
@@ -1021,7 +1018,7 @@ class QuestBoard(Cog):
             update_embed = discord.Embed(title='Rewards updated!', type='rich',
                                          description=f'Quest ID: **{quest_id}**\n'
                                                      f'Title: **{title}**\n'
-                                                     f'Reward: **{quantity}x {item_name} each**')
+                                                     f'Reward: **{quantity}x {reward_name} each**')
             update_embed.add_field(name="Recipients", value='\n'.join(valid_players))
 
         await ctx.send(embed=update_embed)
