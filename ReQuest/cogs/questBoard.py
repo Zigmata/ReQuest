@@ -317,8 +317,8 @@ class QuestBoard(Cog):
 
         # Inform user if quest channel is not set. Otherwise, get the channel string
         if not query:
-            await ctx.send('Quest channel not set! Configure with `{}config channel quest <channel mention>`'.format(
-                self.bot.command_prefix))
+            await ctx.send(f'Quest channel not set! Configure with '
+                           f'`{self.bot.command_prefix}config channel quest <channel mention>`')
             return
         else:
             quest_channel = query['questChannel']
@@ -326,17 +326,16 @@ class QuestBoard(Cog):
         # Query the collection to see if a role is set
         query = gdb['announceRole'].find_one({'guildId': guild_id})
 
-        # Inform user if announcement role is not set. Otherwise, get the channel string
-        # TODO: Make announcement role optional
+        # Grab the announcement role, if configured.
         announce_role: int = None
         if query:
             announce_role = query['announceRole']
 
         collection = gdb['quests']
-        # Slice the string so we just have the ID, and use that to get the channel object.
+        # Get the channel object.
         channel = self.bot.get_channel(quest_channel)
 
-        # Set post format and log the author, then post the new quest with an emoji reaction.
+        # Log the author, then post the new quest with an emoji reaction.
         gm = ctx.author.id
         party: [int] = []
         wait_list: [int] = []
@@ -349,9 +348,11 @@ class QuestBoard(Cog):
             post_embed.add_field(name=f'__Wait List (0/{max_wait_list_size})__', value=None)
         post_embed.set_footer(text='Quest ID: ' + quest_id)
 
+        # If an annoucement role is set, ping it and then delete the message.
         if announce_role:
             ping_msg = await channel.send(f'<@&{announce_role}> **NEW QUEST!**')
             await ping_msg.delete()
+
         msg = await channel.send(embed=post_embed)
         emoji = '<:acceptquest:601559094293430282>'
         await msg.add_reaction(emoji)

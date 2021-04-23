@@ -30,7 +30,15 @@ class Wallet(Cog):
             member_id = ctx.author.id
             guild_id = ctx.message.guild.id
             collection = mdb['characters']
+            guild_collection = gdb['currency']
             query = collection.find_one({'_id': member_id})
+            currency_query = guild_collection.find_one({'_id': guild_id})
+            currency_names = []
+            for currency in currency_query['currencies']:
+                currency_names.append(currency['name'].lower())
+                if 'denoms' in currency:
+                    for denom in currency['denoms']:
+                        currency_names.append(denom['name'].lower())
 
             if not query:
                 await ctx.send('You do not have any registered characters!')
@@ -44,15 +52,17 @@ class Wallet(Cog):
             active_id = query['activeChars'][f'{guild_id}']
             character = query['characters'][active_id]
             name = character['name']
-            currency = character['attributes']['currency']
+            inventory = character['attributes']['inventory']
 
             post_embed = discord.Embed(title=f'{name}\'s Currency', type='rich')
 
-            if currency is None:
+            if inventory is None:
                 post_embed.description = f'{name} doesn\'t believe in holding currency.'
             else:
-                for currency_type in sorted(currency):
-                    post_embed.add_field(name=f'{currency_type}', value=f'{currency[f"{currency_type}"]}', inline=False)
+                for currency_type in sorted(inventory):
+                    if currency_type.lower() in currency_names:
+                        post_embed.add_field(name=f'{currency_type}',
+                                             value=f'{inventory[f"{currency_type}"]}', inline=False)
 
             post_embed.set_footer(text='Yeah, this output sucks. I\'ll have related denominations nested more'
                                        ' cleanly in a future patch.')
@@ -80,7 +90,7 @@ class Wallet(Cog):
         gm_member_id = ctx.author.id
         guild_id = ctx.message.guild.id
         character_collection = mdb['characters']
-        guild_collection = gdb['inventory']
+        guild_collection = gdb['currency']
         transaction_id = str(shortuuid.uuid()[:12])
 
         # Make sure the referenced inventory is a valid name used in the server

@@ -37,7 +37,20 @@ class Inventory(Cog):
             name = query['characters'][active_character]['name']
             inventory = query['characters'][active_character]['attributes']['inventory']
             items = []
+
+            # Get currency to split them out from the rest of the inventory
+            currency_collection = gdb['currency']
+            currency_query = currency_collection.find_one({'_id': guild_id})
+            currency_names = []
+            for currency_type in currency_query['currencies']:
+                currency_names.append(currency_type['name'].lower())
+                if 'denoms' in currency_type:
+                    for denom in currency_type['denoms']:
+                        currency_names.append(denom['name'].lower())
+
             for item in inventory:
+                if str(item).lower() in currency_names:
+                    continue
                 pair = (str(item), f'**{inventory[item]}**')
                 value = ': '.join(pair)
                 items.append(value)
