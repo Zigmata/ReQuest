@@ -23,6 +23,10 @@ class Player(Cog):
     async def character(self, ctx, character_name: str = None):
         """
         Commands for registration and management of player characters.
+
+        Arguments:
+        <none>: Displays current active character for this server.
+        <character_name>: Name of the character to set as active for this server.
         """
         if ctx.invoked_subcommand is None:
             member_id = ctx.author.id
