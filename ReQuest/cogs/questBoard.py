@@ -413,12 +413,13 @@ class QuestBoard(Cog):
         # Notify each party member that the quest is ready
         guild = self.bot.get_guild(guild_id)
         for player in party:
-            member = guild.get_member(player)
-            # If the GM has a party role configured, assign it to each party member
-            if role_id:
-                role = guild.get_role(role_id)
-                await member.add_roles(role)
-            await member.send(f'Game Master <@{user_id}> has marked your quest, **"{title}"**, ready to start!')
+            for key in player:
+                member = guild.get_member(int(key))
+                # If the GM has a party role configured, assign it to each party member
+                if role_id:
+                    role = guild.get_role(role_id)
+                    await member.add_roles(role)
+                await member.send(f'Game Master <@{user_id}> has marked your quest, **"{title}"**, ready to start!')
 
         # Fetch the quest channel to retrieve the message object
         channel_id = gdb['questChannel'].find_one({'guildId': guild_id})
@@ -440,7 +441,6 @@ class QuestBoard(Cog):
 
     @quest.command(aliases=['ur'], pass_context=True)
     async def unready(self, ctx, quest_id, *, players=None):
-        # TODO: Implement player removal notification
         """
         Unlocks a quest if members are not ready.
 
@@ -475,8 +475,9 @@ class QuestBoard(Cog):
             role_id = query['role']
             role = guild.get_role(role_id)
             for player in party:
-                member = guild.get_member(player)
-                await member.remove_roles(role)
+                for key in player:
+                    member = guild.get_member(int(key))
+                    await member.remove_roles(role)
 
         # Unlock the quest
         qcollection.update_one({'questId': quest_id}, {'$set': {'lockState': False}})
@@ -626,7 +627,8 @@ class QuestBoard(Cog):
 
                 dm_embed = discord.Embed(title=f'Quest Complete: {title}',
                                          type='rich')
-                dm_embed.add_field(name='Rewards', value='\n'.join(reward_strings))
+                if reward_strings:
+                    dm_embed.add_field(name='Rewards', value='\n'.join(reward_strings))
 
                 await member.send(embed=dm_embed)
 
@@ -704,13 +706,14 @@ class QuestBoard(Cog):
             # Get party members and message them with results
 
             for player in party:
-                member = await guild.fetch_member(player)
-                # Remove the party role, if applicable
-                if gm_role:
-                    role = guild.get_role(gm_role)
-                    await member.remove_roles(role)
-                # TODO: Implement loot and XP after those functions are added
-                await member.send(f'Quest **{title}** was cancelled by the GM.')
+                for key in player:
+                    member = await guild.fetch_member(int(key))
+                    # Remove the party role, if applicable
+                    if gm_role:
+                        role = guild.get_role(gm_role)
+                        await member.remove_roles(role)
+                    # TODO: Implement loot and XP after those functions are added
+                    await member.send(f'Quest **{title}** was cancelled by the GM.')
 
         # Delete the quest from the database
         gdb['quests'].delete_one({'questId': quest_id})
@@ -946,7 +949,6 @@ class QuestBoard(Cog):
         <reward_name>: The name of the item to award.
         <quantity>: The quantity of the item to award each recipient.
         <recipients>: User mentions of recipients. Can be chained.
-        --[all]: Instead of user mentions, the provided number of items can be given to each party member instead.
         """
 
         if quantity < 1:
@@ -969,58 +971,42 @@ class QuestBoard(Cog):
 
         title = quest_query['title']
         current_rewards = quest_query['rewards']
-        if recipients[0].lower() == 'all':
-            if 'all' in current_rewards and reward_name in current_rewards['all']:
-                current_quantity = current_rewards['all'][reward_name]
+
+        party = quest_query['party']
+        valid_players = []
+        for player in recipients:
+            user_id = strip_id(player)
+            user_name = self.bot.get_user(user_id).name
+            present = False
+            for entry in party:
+                if str(user_id) in entry:
+                    present = True
+
+            if not present:
+                await ctx.send(f'`{user_name}` was not found in the roster. Skipped.')
+                continue
+
+            valid_players.append(player)
+
+            if str(user_id) in current_rewards and reward_name in current_rewards[f'{user_id}']:
+                current_quantity = current_rewards[f'{user_id}'][reward_name]
                 new_quantity = current_quantity + quantity
                 collection.update_one({'questId': quest_id},
-                                      {'$set': {f'rewards.all.{reward_name}': new_quantity}}, upsert=True)
+                                      {'$set': {f'rewards.{user_id}.{reward_name}': new_quantity}},
+                                      upsert=True)
             else:
                 collection.update_one({'questId': quest_id},
-                                      {'$set': {f'rewards.all.{reward_name}': quantity}}, upsert=True)
+                                      {'$set': {f'rewards.{user_id}.{reward_name}': quantity}}, upsert=True)
+        if len(valid_players) == 0:
+            await ctx.send('No valid players were provided!')
+            await delete_command(ctx.message)
+            return
 
-            update_embed = discord.Embed(title='Rewards updated!', type='rich',
-                                         description=f'Quest ID: **{quest_id}**\n'
-                                                     f'Title: **{title}**\n'
-                                                     f'Reward: **{quantity}x {reward_name} each**')
-            update_embed.add_field(name="Recipients", value='All party members')
-
-        else:
-            party = quest_query['party']
-            valid_players = []
-            for player in recipients:
-                user_id = strip_id(player)
-                user_name = self.bot.get_user(user_id).name
-                present = False
-                for entry in party:
-                    if str(user_id) in entry:
-                        present = True
-
-                if not present:
-                    await ctx.send(f'`{user_name}` was not found in the roster. Skipped.')
-                    continue
-
-                valid_players.append(player)
-
-                if str(user_id) in current_rewards and reward_name in current_rewards[f'{user_id}']:
-                    current_quantity = current_rewards[f'{user_id}'][reward_name]
-                    new_quantity = current_quantity + quantity
-                    collection.update_one({'questId': quest_id},
-                                          {'$set': {f'rewards.{user_id}.{reward_name}': new_quantity}},
-                                          upsert=True)
-                else:
-                    collection.update_one({'questId': quest_id},
-                                          {'$set': {f'rewards.{user_id}.{reward_name}': quantity}}, upsert=True)
-            if len(valid_players) == 0:
-                await ctx.send('No valid players were provided!')
-                await delete_command(ctx.message)
-                return
-
-            update_embed = discord.Embed(title='Rewards updated!', type='rich',
-                                         description=f'Quest ID: **{quest_id}**\n'
-                                                     f'Title: **{title}**\n'
-                                                     f'Reward: **{quantity}x {reward_name} each**')
-            update_embed.add_field(name="Recipients", value='\n'.join(valid_players))
+        update_embed = discord.Embed(title='Rewards updated!', type='rich',
+                                     description=f'Quest ID: **{quest_id}**\n'
+                                                 f'Title: **{title}**\n'
+                                                 f'Reward: **{quantity}x {reward_name} each**')
+        update_embed.add_field(name="Recipients", value='\n'.join(valid_players))
 
         await ctx.send(embed=update_embed)
 
