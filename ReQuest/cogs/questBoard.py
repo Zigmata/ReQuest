@@ -687,7 +687,7 @@ class QuestBoard(Cog):
 
         # Confirm the user calling the command is the GM that created the quest, or
         # has administrative rights.
-        if not quest['gm'] == user_id or not ctx.author.guild_permissions.manage_guild:
+        if not quest['gm'] == user_id and not ctx.author.guild_permissions.manage_guild:
             await ctx.send('GMs can only manage their own quests!')
             await delete_command(ctx.message)
             return
@@ -927,7 +927,7 @@ class QuestBoard(Cog):
         collection = gdb['quests']
 
         quest_query = collection.find_one({'questId': quest_id})
-        if ctx.author.id != quest_query['gm'] or not ctx.author.guild_permissions.manage_guild:
+        if ctx.author.id != quest_query['gm'] and not ctx.author.guild_permissions.manage_guild:
             await ctx.send('Quests can only be manipulated by their GM or staff!')
             await delete_command(ctx.message)
             return
@@ -964,7 +964,7 @@ class QuestBoard(Cog):
             await delete_command(ctx.message)
             return
 
-        if ctx.author.id != quest_query['gm'] or not ctx.author.guild_permissions.manage_guild:
+        if ctx.author.id != quest_query['gm'] and not ctx.author.guild_permissions.manage_guild:
             await ctx.send('Quests can only be manipulated by their GM or staff!')
             await delete_command(ctx.message)
             return
