@@ -4,7 +4,7 @@
 token: '<your token goes here>'
 
 # Default bot command prefix
-prefix: '$'
+prefix: '<prefix>'
 
 # Database connection string and collection references
 dbServer: '<server address>'
