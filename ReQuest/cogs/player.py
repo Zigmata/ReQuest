@@ -103,6 +103,9 @@ class Player(Cog):
 
     @character.command(name='list')
     async def character_list(self, ctx):
+        """
+        Lists the player's registered characters.
+        """
         member_id = ctx.author.id
         guild_id = ctx.guild.id
         collection = mdb['characters']
@@ -134,9 +137,10 @@ class Player(Cog):
     async def character_register(self, ctx, character_name, character_note):
         """
         Registers a new player character.
+
         Arguments:
-        [character_name]: The name of the character.
-        [character_note]: A note for you to uniquely identify the character, in case you like reusing names.
+        <character_name>: The name of the character.
+        <character_note>: A note for you to uniquely identify the character.
         """
         guild_id = ctx.message.guild.id
         member_id = ctx.author.id
@@ -165,8 +169,9 @@ class Player(Cog):
     async def character_delete(self, ctx, character_name):
         """
         Deletes a player character.
+
         Arguments:
-        [character_name]: The name of the character.
+        <character_name>: The name of the character.
         """
         member_id = ctx.author.id
         guild_id = ctx.message.guild.id
