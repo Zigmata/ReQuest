@@ -628,9 +628,10 @@ class Admin(Cog):
         "name" is the only required key to add a new currency.
         Denomination names may be referenced in-place of the currency name for transactions.
 
-        Examples for common RPG currencies: Gold: {"name":"Gold", "denoms":[{"name":"Platinum", "value":10},
-        {"name":"Silver","value":0.1},{"name":"Copper","value":0.01}]} Credits: {
-        "name":"Credits", "double":true} Downtime: {"name":"Downtime"}
+        Examples for common RPG currencies:
+        Gold: {"name":"Gold", "denoms":[{"name":"Platinum", "value":10}, {"name":"Silver","value":0.1},{"name":"Copper","value":0.01}]}
+        Credits: {"name":"Credits", "double":true}
+        Downtime: {"name":"Downtime"}
         """
         # TODO: Redundant-name prevention
         guild_id = ctx.message.guild.id

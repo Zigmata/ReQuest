@@ -34,11 +34,17 @@ class Wallet(Cog):
             query = collection.find_one({'_id': member_id})
             currency_query = guild_collection.find_one({'_id': guild_id})
             currency_names = []
-            for currency in currency_query['currencies']:
-                currency_names.append(currency['name'].lower())
-                if 'denoms' in currency:
-                    for denom in currency['denoms']:
-                        currency_names.append(denom['name'].lower())
+            
+            if currency_query:
+                for currency in currency_query['currencies']:
+                    currency_names.append(currency['name'].lower())
+                    if 'denoms' in currency:
+                        for denom in currency['denoms']:
+                            currency_names.append(denom['name'].lower())
+            else:
+                await ctx.send('You have no spendable currency for this server!')
+                await delete_command(ctx.message)
+                return
 
             if not query:
                 await ctx.send('You do not have any registered characters!')

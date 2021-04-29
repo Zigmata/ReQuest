@@ -42,11 +42,12 @@ class Inventory(Cog):
             currency_collection = gdb['currency']
             currency_query = currency_collection.find_one({'_id': guild_id})
             currency_names = []
-            for currency_type in currency_query['currencies']:
-                currency_names.append(currency_type['name'].lower())
-                if 'denoms' in currency_type:
-                    for denom in currency_type['denoms']:
-                        currency_names.append(denom['name'].lower())
+            if currency_query:
+                for currency_type in currency_query['currencies']:
+                    currency_names.append(currency_type['name'].lower())
+                    if 'denoms' in currency_type:
+                        for denom in currency_type['denoms']:
+                            currency_names.append(denom['name'].lower())
 
             for item in inventory:
                 if str(item).lower() in currency_names:
