@@ -51,7 +51,7 @@ class Admin(Cog):
         self.bot.reload_extension('ReQuest.cogs.' + module)
         await delete_command(ctx.message)
 
-        msg = await ctx.send('Extension successfully reloaded: `{}`'.format(module))
+        msg = await ctx.send(f'Extension successfully reloaded: `{module}`')
         await asyncio.sleep(3)
         await msg.delete()
 
@@ -72,7 +72,7 @@ class Admin(Cog):
     async def load(self, ctx, module: str):
         self.bot.load_extension('ReQuest.cogs.' + module)
 
-        msg = await ctx.send('Extension successfully loaded: `{}`'.format(module))
+        msg = await ctx.send(f'Extension successfully loaded: `{module}`')
         await asyncio.sleep(3)
         await msg.delete()
 
@@ -87,7 +87,7 @@ class Admin(Cog):
             await delete_command(ctx.message)
             await ctx.bot.logout()
         except Exception as e:
-            await ctx.send('{}: {}'.format(type(e).__name__, e))
+            await ctx.send(f'{type(e).__name__}: {e}')
 
     @commands.is_owner()
     @commands.group(name='whitelist', hidden=True, case_insensitive=True, pass_context=True)
@@ -102,9 +102,9 @@ class Admin(Cog):
         guild_id = int(guild)
         self.bot.white_list.append(guild_id)
 
-        collection.update_one({'servers': {'$exists': True}}, {'$push': {'servers': guild_id}}, upsert=True)
+        await collection.update_one({'servers': {'$exists': True}}, {'$push': {'servers': guild_id}}, upsert=True)
 
-        msg = await ctx.send('Guild `{}` added to whitelist!'.format(guild_id))
+        msg = await ctx.send(f'Guild `{guild_id}` added to whitelist!')
 
         await delete_command(ctx.message)
 
@@ -118,12 +118,12 @@ class Admin(Cog):
         guild_id = int(guild)
         self.bot.white_list.remove(guild_id)
 
-        if collection.count_documents({'servers': {'$exists': True}}, limit=1) != 0:
-            collection.update_one({'servers': {'$exists': True}}, {'$pull': {'servers': guild_id}})
+        if await collection.count_documents({'servers': {'$exists': True}}, limit=1) != 0:
+            await collection.update_one({'servers': {'$exists': True}}, {'$pull': {'servers': guild_id}})
         else:
             return
 
-        msg = await ctx.send('Guild `{}` removed from whitelist!'.format(guild_id))
+        msg = await ctx.send(f'Guild `{guild_id}` removed from whitelist!')
 
         await delete_command(ctx.message)
 
@@ -151,7 +151,7 @@ class Admin(Cog):
         guild_id = ctx.message.guild.id
         collection = cdb['prefixes']
 
-        collection.update_one({'guildId': guild_id}, {'$set': {'prefix': prefix}}, upsert=True)
+        await collection.update_one({'guildId': guild_id}, {'$set': {'prefix': prefix}}, upsert=True)
         await ctx.send(f'Command prefix changed to `{prefix}`')
 
         await delete_command(ctx.message)
@@ -179,7 +179,7 @@ class Admin(Cog):
         # If a role is provided, write it to the db
         # TODO: This looks and flows like shit. Fix it.
         if role:
-            query = collection.find_one({'guildId': guild_id})
+            query = await collection.find_one({'guildId': guild_id})
             search = find(lambda r: r.name.lower() == role.lower(), guild.roles)
             role_id = None
             if search:
@@ -187,16 +187,16 @@ class Admin(Cog):
 
             if role.lower() == 'delete' or role.lower() == 'remove':
                 if query:
-                    collection.delete_one({'guildId': guild_id})
+                    await collection.delete_one({'guildId': guild_id})
 
                 await ctx.send('Announcement role cleared!')
             else:
-                collection.update_one({'guildId': guild_id}, {'$set': {'announceRole': role_id}}, upsert=True)
+                await collection.update_one({'guildId': guild_id}, {'$set': {'announceRole': role_id}}, upsert=True)
                 await ctx.send(f'Successfully set announcement role to `{search.name}`!')
 
         # Otherwise, query the db for the current setting
         else:
-            query = collection.find_one({'guildId': guild_id})
+            query = await collection.find_one({'guildId': guild_id})
             if not query:
                 await ctx.send(f'Announcement role not set! Configure with `{get_prefix(self, ctx.message)}config '
                                f'role announce <role name>`')
@@ -216,7 +216,7 @@ class Admin(Cog):
         guild_id = ctx.message.guild.id
         collection = gdb['gmRoles']
 
-        query = collection.find_one({'guildId': guild_id})
+        query = await collection.find_one({'guildId': guild_id})
         if not query or not query['gmRoles']:
             await ctx.send(f'GM role(s) not set! Configure with `{get_prefix(self, ctx.message)}config role gm add '
                            '<role name>`. Roles can be chained (separate with a space).')
@@ -244,7 +244,7 @@ class Admin(Cog):
 
         if roles:
             guild = self.bot.get_guild(guild_id)
-            query = collection.find_one({'guildId': guild_id})
+            query = await collection.find_one({'guildId': guild_id})
             new_roles = []
 
             # Compare each provided role name to the list of guild roles
@@ -266,10 +266,10 @@ class Admin(Cog):
                         continue  # TODO: Raise error that role is already configured
                     else:
                         # If there is no match, add the id to the database
-                        collection.update_one({'guildId': guild_id}, {'$push': {'gmRoles': new_id}})
+                        await collection.update_one({'guildId': guild_id}, {'$push': {'gmRoles': new_id}})
 
                 # Get the updated document
-                update_query = collection.find_one({'guildId': guild_id})['gmRoles']
+                update_query = await collection.find_one({'guildId': guild_id})['gmRoles']
 
                 # Get the name of the role matching each ID in the database, and output them.
                 role_names = []
@@ -278,7 +278,7 @@ class Admin(Cog):
                 await ctx.send('GM role(s) set to {}'.format('`' + '`, `'.join(role_names) + '`'))
             else:
                 # If there is no document, create one with the list of role IDs
-                collection.insert_one({'guildId': guild_id, 'gmRoles': new_roles})
+                await collection.insert_one({'guildId': guild_id, 'gmRoles': new_roles})
                 role_names = []
                 for role_id in new_roles:
                     role_names.append(guild.get_role(role_id).name)
@@ -304,14 +304,14 @@ class Admin(Cog):
 
         if roles:
             if roles[0] == 'all':  # If 'all' is provided, delete the whole document
-                query = collection.find_one({'guildId': guild_id})
+                query = await collection.find_one({'guildId': guild_id})
                 if query:
-                    collection.delete_one({'guildId': guild_id})
+                    await collection.delete_one({'guildId': guild_id})
 
                 await ctx.send('GM roles cleared!')
             else:
                 # Get the current list of roles (if any)
-                query = collection.find_one({'guildId': guild_id})
+                query = await collection.find_one({'guildId': guild_id})
 
                 # If there are none, inform the caller.
                 if not query or not query['gmRoles']:
@@ -335,10 +335,10 @@ class Admin(Cog):
                     # Build the set where provided roles exist in the db
                     deleted_roles = set(role_ids).intersection(current_roles)
                     for role in deleted_roles:
-                        collection.update_one({'guildId': guild_id}, {'$pull': {'gmRoles': role}})
+                        await collection.update_one({'guildId': guild_id}, {'$pull': {'gmRoles': role}})
 
                     # Fetch the updated document
-                    update_query = collection.find_one({'guildId': guild_id})['gmRoles']
+                    update_query = await collection.find_one({'guildId': guild_id})['gmRoles']
                     if update_query:
                         updated_roles = []
                         for role_id in update_query:
@@ -377,15 +377,16 @@ class Admin(Cog):
         collection = gdb['playerBoardChannel']
 
         if channel and channel == 'disable':
-            if collection.count_documents({'guildId': guild_id}, limit=1) != 0:  # Delete the record if one exists
-                collection.delete_one({'guildId': guild_id})
+            if await collection.count_documents({'guildId': guild_id}, limit=1) != 0:  # Delete the record if one exists
+                await collection.delete_one({'guildId': guild_id})
             await ctx.send('Player board channel disabled!')
         elif channel:  # Strip the channel ID and update the db
             channel_id = strip_id(channel)
-            collection.update_one({'guildId': guild_id}, {'$set': {'playerBoardChannel': channel_id}}, upsert=True)
+            await collection.update_one({'guildId': guild_id},
+                                        {'$set': {'playerBoardChannel': channel_id}}, upsert=True)
             await ctx.send('Successfully set player board channel to {}!'.format(channel))
         else:  # If the channel is not provided, output the current setting.
-            query = collection.find_one({'guildId': guild_id})
+            query = await collection.find_one({'guildId': guild_id})
             if not query:
                 await ctx.send(f'Player board channel not set! Configure with `{get_prefix(self, ctx.message)}config '
                                f'channel playerboard <channel mention>`')
@@ -409,10 +410,10 @@ class Admin(Cog):
         # When provided with a channel name, deletes the old entry and adds the new one.
         if channel:
             channel_id = strip_id(channel)  # Strip channel ID and cast to int
-            collection.update_one({'guildId': guild_id}, {'$set': {'questChannel': channel_id}}, upsert=True)
+            await collection.update_one({'guildId': guild_id}, {'$set': {'questChannel': channel_id}}, upsert=True)
             await ctx.send(f'Successfully set quest board channel to {channel}!')
         else:  # If no channel is provided, inform the user of the current setting
-            query = collection.find_one({'guildId': guild_id})
+            query = await collection.find_one({'guildId': guild_id})
             if not query:
                 await ctx.send(f'Quest board channel not set! Configure with `{get_prefix(self, ctx.message)}config '
                                f'channel questboard <channel link>`')
@@ -436,14 +437,14 @@ class Admin(Cog):
 
         if channel:
             if channel.lower() == 'clear':
-                collection.delete_one({'guildId': guild_id})
+                await collection.delete_one({'guildId': guild_id})
                 await ctx.send('Quest archive setting cleared!')
             else:
                 channel_id = strip_id(channel)
-                collection.update_one({'guildId': guild_id}, {'$set': {'archiveChannel': channel_id}}, upsert=True)
+                await collection.update_one({'guildId': guild_id}, {'$set': {'archiveChannel': channel_id}}, upsert=True)
                 await ctx.send(f'Successfully set quest archive channel to {channel}!')
         else:
-            query = collection.find_one({'guildId': guild_id})
+            query = await collection.find_one({'guildId': guild_id})
             if not query:
                 await ctx.send(f'Quest archive channel not set! Configure with `{get_prefix(self, ctx.message)}config '
                                f'channel questarchive <channel link>`')
@@ -477,7 +478,7 @@ class Admin(Cog):
 
         # Print the current setting if no argument is given. Otherwise, store the new value.
         if not wait_list_value:
-            query = collection.find_one({'guildId': guild_id})
+            query = await collection.find_one({'guildId': guild_id})
             if not query or query['waitListValue'] == 0:
                 await ctx.send('Quest wait list is currently disabled.')
             else:
@@ -488,7 +489,7 @@ class Admin(Cog):
                 if value < 0 or value > 5:
                     raise ValueError('Value must be an integer between 0 and 5!')
                 else:
-                    collection.update_one({'guildId': guild_id}, {'$set': {'waitlistValue': value}}, upsert=True)
+                    await collection.update_one({'guildId': guild_id}, {'$set': {'waitlistValue': value}}, upsert=True)
 
                     if value == 0:
                         await ctx.send('Quest wait list disabled.')
@@ -510,7 +511,7 @@ class Admin(Cog):
         guild_id = ctx.message.guild.id
 
         # Check to see if the quest archive is configured.
-        quest_archive = gdb['archiveChannel'].find_one({'guildId': guild_id})
+        quest_archive = await gdb['archiveChannel'].find_one({'guildId': guild_id})
         if not quest_archive:
             await ctx.send(f'Quest archive channel not configured! Use `{get_prefix(self, ctx.message)}config channel '
                            f'questarchive <channel mention>` to set up!')
@@ -519,12 +520,12 @@ class Admin(Cog):
 
         # Query the current setting and toggle
         collection = gdb['questSummary']
-        summary_enabled = collection.find_one({'guildId': guild_id})
+        summary_enabled = await collection.find_one({'guildId': guild_id})
         if not summary_enabled or not summary_enabled['questSummary']:
-            collection.update_one({'guildId': guild_id}, {'$set': {'questSummary': True}}, upsert=True)
+            await collection.update_one({'guildId': guild_id}, {'$set': {'questSummary': True}}, upsert=True)
             await ctx.send('Quest summary enabled.')
         else:
-            collection.update_one({'guildId': guild_id}, {'$set': {'questSummary': False}})
+            await collection.update_one({'guildId': guild_id}, {'$set': {'questSummary': False}})
             await ctx.send('Quest summary disabled.')
 
         await delete_command(ctx.message)
@@ -550,7 +551,7 @@ class Admin(Cog):
         [True|False]: Configures the server to enable/disable experience points.
         """
         guild_id = ctx.message.guild.id
-        query = gdb['characterSettings'].find_one({'guildId': guild_id})
+        query = await gdb['characterSettings'].find_one({'guildId': guild_id})
 
         # Display setting if no arg is passed
         if enabled is None:
@@ -559,10 +560,10 @@ class Admin(Cog):
             else:
                 await ctx.send('Character Experience Points are disabled.')
         elif enabled.lower() == 'true':
-            gdb['characterSettings'].update_one({'guildId': guild_id}, {'$set': {'xp': True}}, upsert=True)
+            await gdb['characterSettings'].update_one({'guildId': guild_id}, {'$set': {'xp': True}}, upsert=True)
             await ctx.send('Character Experience Points enabled!')
         elif enabled.lower() == 'false':
-            gdb['characterSettings'].update_one({'guildId': guild_id}, {'$set': {'xp': False}}, upsert=True)
+            await gdb['characterSettings'].update_one({'guildId': guild_id}, {'$set': {'xp': False}}, upsert=True)
             await ctx.send('Character Experience Points disabled!')
 
         await delete_command(ctx.message)
@@ -579,7 +580,7 @@ class Admin(Cog):
         if ctx.invoked_subcommand is None:
             guild_id = ctx.message.guild.id
             collection = gdb['currency']
-            query = collection.find_one({'_id': guild_id})
+            query = await collection.find_one({'_id': guild_id})
 
             post_embed = discord.Embed(title='Config - Currencies', type='rich')
             for currency in query['currencies']:
@@ -638,7 +639,7 @@ class Admin(Cog):
         collection = gdb['currency']
         try:
             loaded = json.loads(definition)
-            collection.update_one({'_id': guild_id}, {'$push': {'currencies': loaded}}, upsert=True)
+            await collection.update_one({'_id': guild_id}, {'$push': {'currencies': loaded}}, upsert=True)
             await ctx.send(f'`{loaded["name"]}` added to server currencies!')
         except json.JSONDecodeError:
             await ctx.send('Invalid JSON format, check syntax and try again!')
@@ -656,7 +657,7 @@ class Admin(Cog):
         # TODO: Multiple-match logic
         guild_id = ctx.message.guild.id
         collection = gdb['currency']
-        query = collection.find_one({'_id': guild_id})
+        query = await collection.find_one({'_id': guild_id})
 
         for i in range(len(query['currencies'])):
             currency = query['currencies'][i]
@@ -666,7 +667,8 @@ class Admin(Cog):
                 confirm = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
                 await delete_command(confirm)
                 if confirm.content.lower() == 'y' or confirm.content.lower() == 'yes':
-                    collection.update_one({'_id': guild_id}, {'$pull': {'currencies': {'name': cname}}}, upsert=True)
+                    await collection.update_one({'_id': guild_id},
+                                                {'$pull': {'currencies': {'name': cname}}}, upsert=True)
                     await ctx.send(f'`{cname}` removed!')
                 else:
                     await ctx.send('Operation aborted!')

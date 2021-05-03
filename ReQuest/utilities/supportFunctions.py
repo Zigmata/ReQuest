@@ -1,8 +1,7 @@
 from pathlib import Path
 import re
 import yaml
-from pymongo import MongoClient
-
+from motor.motor_asyncio import AsyncIOMotorClient
 import discord
 
 # Set up config file and load
@@ -11,10 +10,10 @@ CONFIG_FILE = Path('config.yaml')
 with open(CONFIG_FILE, 'r') as yaml_file:
     config = yaml.safe_load(yaml_file)
 
-connection = MongoClient(config['dbServer'], config['port'])
-cdb = connection[config['configDb']]
-mdb = connection[config['memberDb']]
-gdb = connection[config['guildDb']]
+mongo_client = AsyncIOMotorClient(config['dbServer'], config['port'])
+cdb = mongo_client[config['configDb']]
+mdb = mongo_client[config['memberDb']]
+gdb = mongo_client[config['guildDb']]
 
 
 # TODO: Implement input sanitization helper functions
@@ -27,8 +26,8 @@ async def delete_command(message):
         pass
 
 
-def get_prefix(self, message):
-    prefix = cdb['prefixes'].find_one({'guildId': message.guild.id})
+async def get_prefix(self, message):
+    prefix = await cdb['prefixes'].find_one({'guildId': message.guild.id})
     if not prefix:
         return f'{config["prefix"]}'
     else:
