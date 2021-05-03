@@ -32,7 +32,7 @@ class Inventory(Cog):
             member_id = ctx.author.id
             guild_id = ctx.message.guild.id
             collection = mdb['characters']
-            query = collection.find_one({'_id': member_id})
+            query = await collection.find_one({'_id': member_id})
             active_character = query['activeChars'][str(guild_id)]
             name = query['characters'][active_character]['name']
             inventory = query['characters'][active_character]['attributes']['inventory']
@@ -40,7 +40,7 @@ class Inventory(Cog):
 
             # Get currency to split them out from the rest of the inventory
             currency_collection = gdb['currency']
-            currency_query = currency_collection.find_one({'_id': guild_id})
+            currency_query = await currency_collection.find_one({'_id': guild_id})
             currency_names = []
             if currency_query:
                 for currency_type in currency_query['currencies']:
@@ -90,22 +90,21 @@ class Inventory(Cog):
 
         recipient_strings = []
         for member_id in members:
-            query = collection.find_one({'_id': member_id})
+            query = await collection.find_one({'_id': member_id})
             active_character = query['activeChars'][str(guild_id)]
             inventory = query['characters'][active_character]['attributes']['inventory']
             if item_name in inventory:
                 current_quantity = inventory[item_name]
                 new_quantity = current_quantity + quantity
                 if new_quantity == 0:
-                    collection.update_one({'_id': member_id},
-                                          {'$unset': {f'characters.{active_character}.attributes.'
-                                                      f'inventory.{item_name}': ''}}, upsert=True)
+                    await collection.update_one({'_id': member_id}, {
+                        '$unset': {f'characters.{active_character}.attributes.inventory.{item_name}': ''}}, upsert=True)
                 else:
-                    collection.update_one({'_id': member_id},
-                                          {'$set': {f'characters.{active_character}.attributes.'
-                                                    f'inventory.{item_name}': new_quantity}}, upsert=True)
+                    await collection.update_one({'_id': member_id}, {
+                        '$set': {f'characters.{active_character}.attributes.inventory.{item_name}': new_quantity}},
+                                                upsert=True)
             else:
-                collection.update_one({'_id': member_id}, {
+                await collection.update_one({'_id': member_id}, {
                     '$set': {f'characters.{active_character}.attributes.inventory.{item_name}': quantity}}, upsert=True)
             recipient_strings.append(f'<@!{member_id}> as {query["characters"][active_character]["name"]}')
 
@@ -145,7 +144,7 @@ class Inventory(Cog):
         guild_id = ctx.message.guild.id
         collection = mdb['characters']
 
-        recipient_query = collection.find_one({'_id': recipient_id})
+        recipient_query = await collection.find_one({'_id': recipient_id})
         if not recipient_query:
             await ctx.send('That player does not have any registered characters!')
             await delete_command(ctx.message)
@@ -156,7 +155,7 @@ class Inventory(Cog):
             return
 
         transaction_id = str(shortuuid.uuid()[:12])
-        donor_query = collection.find_one({'_id': donor_id})
+        donor_query = await collection.find_one({'_id': donor_id})
         donor_active = donor_query['activeChars'][str(guild_id)]
         source_inventory = donor_query['characters'][donor_active]['attributes']['inventory']
         if item_name in source_inventory:  # First make sure the player has the item
@@ -164,13 +163,12 @@ class Inventory(Cog):
             if source_current_quantity >= quantity:  # Then make sure the player has enough to give
                 new_quantity = source_current_quantity - quantity
                 if new_quantity == 0:  # If the transaction would result in a 0 quantity, pull the item.
-                    collection.update_one({'_id': donor_id},
-                                          {'$unset': {f'characters.{donor_active}.attributes.'
-                                                      f'inventory.{item_name}': ''}}, upsert=True)
+                    await collection.update_one({'_id': donor_id}, {
+                        '$unset': {f'characters.{donor_active}.attributes.inventory.{item_name}': ''}}, upsert=True)
                 else:  # Otherwise, just update the donor's quantity
-                    collection.update_one({'_id': donor_id},
-                                          {'$set': {f'characters.{donor_active}.attributes.'
-                                                    f'inventory.{item_name}': new_quantity}}, upsert=True)
+                    await collection.update_one({'_id': donor_id}, {
+                        '$set': {f'characters.{donor_active}.attributes.inventory.{item_name}': new_quantity}},
+                                                upsert=True)
                 recipient_active = recipient_query['activeChars'][str(guild_id)]
                 recipient_inventory = recipient_query['characters'][recipient_active]['attributes']['inventory']
                 if item_name in recipient_inventory:  # Check to see if the recipient has the item already
@@ -178,9 +176,9 @@ class Inventory(Cog):
                     new_quantity = recipient_current_quantity + quantity  # Add to the quantity if they do
                 else:  # If not, simply set the quantity given.
                     new_quantity = quantity
-                collection.update_one({'_id': recipient_id},
-                                      {'$set': {f'characters.{recipient_active}.attributes.'
-                                                f'inventory.{item_name}': new_quantity}}, upsert=True)
+                await collection.update_one({'_id': recipient_id}, {
+                    '$set': {f'characters.{recipient_active}.attributes.inventory.{item_name}': new_quantity}},
+                                            upsert=True)
             else:
                 await ctx.send('You are attempting to give more than you have. Check your inventory!')
                 await delete_command(ctx.message)
