@@ -2,8 +2,8 @@ from pathlib import Path
 
 import discord
 import yaml
+from motor.motor_asyncio import AsyncIOMotorClient
 from discord.ext import commands
-from pymongo import MongoClient
 from utilities.supportFunctions import get_prefix
 
 # Set up config file and load
@@ -12,10 +12,10 @@ CONFIG_FILE = Path('config.yaml')
 with open(CONFIG_FILE, 'r') as yaml_file:
     config = yaml.safe_load(yaml_file)
 
-connection = MongoClient(config['dbServer'], config['port'])
-cdb = connection[config['configDb']]
-mdb = connection[config['memberDb']]
-gdb = connection[config['guildDb']]
+mongo_client = AsyncIOMotorClient(config['dbServer'], config['port'])
+cdb = mongo_client[config['configDb']]
+mdb = mongo_client[config['memberDb']]
+gdb = mongo_client[config['guildDb']]
 
 
 # Define bot class
@@ -35,7 +35,11 @@ class ReQuest(commands.AutoShardedBot):
         self.config = config
         self.white_list = []
         if config['whiteList']:
-            self.white_list = cdb['botWhiteList'].find_one({'servers': {'$exists': True}})['servers']
+            self.white_list = self.get_white_list()
+
+    @staticmethod
+    async def get_white_list():
+        return await cdb['botWhiteList'].find_one({'servers': {'$exists': True}})['servers']
 
     async def on_message(self, message):
         if message.author.bot:

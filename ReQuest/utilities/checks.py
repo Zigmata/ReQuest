@@ -1,7 +1,6 @@
 from pathlib import Path
 import yaml
-from pymongo import MongoClient
-
+from motor.motor_asyncio import AsyncIOMotorClient
 from discord.ext import commands
 from .supportFunctions import delete_command
 
@@ -11,10 +10,10 @@ CONFIG_FILE = Path('config.yaml')
 with open(CONFIG_FILE, 'r') as yaml_file:
     config = yaml.safe_load(yaml_file)
 
-connection = MongoClient(config['dbServer'], config['port'])
-cdb = connection[config['configDb']]
-mdb = connection[config['memberDb']]
-gdb = connection[config['guildDb']]
+mongo_client = AsyncIOMotorClient(config['dbServer'], config['port'])
+cdb = mongo_client[config['configDb']]
+mdb = mongo_client[config['memberDb']]
+gdb = mongo_client[config['guildDb']]
 
 
 def has_gm_role():
@@ -22,7 +21,7 @@ def has_gm_role():
         collection = gdb['gmRoles']
         guild_id = ctx.guild.id
 
-        query = collection.find_one({'guildId': guild_id})
+        query = await collection.find_one({'guildId': guild_id})
         if query:
             gm_roles = query['gmRoles']
             for role in ctx.author.roles:
@@ -42,7 +41,7 @@ def has_gm_or_mod():
         else:
             collection = gdb['gmRoles']
             guild_id = ctx.guild.id
-            query = collection.find_one({'guildId': guild_id})
+            query = await collection.find_one({'guildId': guild_id})
             if query:
                 gm_roles = query['gmRoles']
                 for role in ctx.author.roles:
@@ -60,7 +59,7 @@ def has_active_character():
         member_id = ctx.author.id
         guild_id = ctx.message.guild.id
         collection = mdb['characters']
-        query = collection.find_one({'_id': member_id})
+        query = await collection.find_one({'_id': member_id})
 
         if query:
             if str(guild_id) in query['activeChars']:

@@ -31,8 +31,8 @@ class Wallet(Cog):
             guild_id = ctx.message.guild.id
             collection = mdb['characters']
             guild_collection = gdb['currency']
-            query = collection.find_one({'_id': member_id})
-            currency_query = guild_collection.find_one({'_id': guild_id})
+            query = await collection.find_one({'_id': member_id})
+            currency_query = await guild_collection.find_one({'_id': guild_id})
             currency_names = []
             
             if currency_query:
@@ -100,7 +100,7 @@ class Wallet(Cog):
         transaction_id = str(shortuuid.uuid()[:12])
 
         # Make sure the referenced inventory is a valid name used in the server
-        guild_currencies = guild_collection.find_one({'_id': guild_id})
+        guild_currencies = await guild_collection.find_one({'_id': guild_id})
         # TODO: Multiple-match logic
         valid = False
         cname = ''
@@ -126,24 +126,23 @@ class Wallet(Cog):
 
         recipient_strings = []
         for member_id in members:
-            query = character_collection.find_one({'_id': member_id})
+            query = await character_collection.find_one({'_id': member_id})
             active_character = query['activeChars'][str(guild_id)]
             inventory = query['characters'][active_character]['attributes']['inventory']
             if cname in inventory:
                 current_quantity = inventory[cname]
                 new_quantity = current_quantity + quantity
                 if new_quantity == 0:
-                    character_collection.update_one({'_id': member_id},
-                                                    {'$unset': {f'characters.{active_character}.attributes.'
-                                                                f'inventory.{cname}': ''}}, upsert=True)
+                    await character_collection.update_one({'_id': member_id}, {
+                        '$unset': {f'characters.{active_character}.attributes.inventory.{cname}': ''}}, upsert=True)
                 else:
-                    character_collection.update_one({'_id': member_id},
-                                                    {'$set': {f'characters.{active_character}.attributes.'
-                                                              f'inventory.{cname}': new_quantity}}, upsert=True)
+                    await character_collection.update_one({'_id': member_id}, {
+                        '$set': {f'characters.{active_character}.attributes.inventory.{cname}': new_quantity}},
+                                                          upsert=True)
             else:
-                character_collection.update_one({'_id': member_id}, {
-                    '$set': {f'characters.{active_character}.attributes.inventory.{cname}': quantity}},
-                                                upsert=True)
+                await character_collection.update_one({'_id': member_id}, {
+                    '$set': {f'characters.{active_character}.attributes.inventory.{cname}': quantity}}, upsert=True)
+
             recipient_strings.append(f'<@!{member_id}> as {query["characters"][active_character]["name"]}')
 
         currency_embed = discord.Embed(type='rich')
@@ -184,7 +183,7 @@ class Wallet(Cog):
         character_collection = mdb['characters']
 
         # Make sure the referenced currency is a valid name used in the server
-        guild_currencies = guild_collection.find_one({'_id': guild_id})
+        guild_currencies = await guild_collection.find_one({'_id': guild_id})
         # TODO: Multiple-match logic
         valid = False
         cname = ''
@@ -204,7 +203,7 @@ class Wallet(Cog):
             await delete_command(ctx.message)
             return
 
-        recipient_query = character_collection.find_one({'_id': recipient_id})
+        recipient_query = await character_collection.find_one({'_id': recipient_id})
         if not recipient_query:
             await ctx.send('That player does not have any registered characters!')
             await delete_command(ctx.message)
@@ -216,7 +215,7 @@ class Wallet(Cog):
             return
 
         transaction_id = str(shortuuid.uuid()[:12])
-        donor_query = character_collection.find_one({'_id': donor_id})
+        donor_query = await character_collection.find_one({'_id': donor_id})
         donor_active = donor_query['activeChars'][str(guild_id)]
         inventory = donor_query['characters'][donor_active]['attributes']['inventory']
         if cname in inventory:  # First make sure the player has the currency
@@ -224,13 +223,11 @@ class Wallet(Cog):
             if source_current_quantity >= quantity:  # Then make sure the player has enough to give
                 new_quantity = source_current_quantity - quantity
                 if new_quantity == 0:  # If the transaction would result in a 0 quantity, pull the currency.
-                    character_collection.update_one({'_id': donor_id},
-                                                    {'$unset': {f'characters.{donor_active}.attributes.'
-                                                                f'inventory.{cname}': ''}}, upsert=True)
+                    await character_collection.update_one({'_id': donor_id}, {
+                        '$unset': {f'characters.{donor_active}.attributes.inventory.{cname}': ''}}, upsert=True)
                 else:  # Otherwise, just update the donor's quantity
-                    character_collection.update_one({'_id': donor_id},
-                                                    {'$set': {f'characters.{donor_active}.attributes.'
-                                                              f'inventory.{cname}': new_quantity}}, upsert=True)
+                    await character_collection.update_one({'_id': donor_id}, {
+                        '$set': {f'characters.{donor_active}.attributes.inventory.{cname}': new_quantity}}, upsert=True)
 
                 recipient_active = recipient_query['activeChars'][str(guild_id)]
                 recipient_inventory = recipient_query['characters'][recipient_active]['attributes']['inventory']
@@ -239,9 +236,9 @@ class Wallet(Cog):
                     new_quantity = recipient_current_quantity + quantity  # Add to the quantity if they do
                 else:  # If not, simply set the quantity given.
                     new_quantity = quantity
-                character_collection.update_one({'_id': recipient_id},
-                                                {'$set': {f'characters.{recipient_active}.attributes.'
-                                                          f'inventory.{cname}': new_quantity}}, upsert=True)
+
+                await character_collection.update_one({'_id': recipient_id}, {
+                    '$set': {f'characters.{recipient_active}.attributes.inventory.{cname}': new_quantity}}, upsert=True)
             else:
                 await ctx.send('You are attempting to give more than you have. Check your wallet!')
                 await delete_command(ctx.message)
@@ -281,7 +278,7 @@ class Wallet(Cog):
         character_collection = mdb['characters']
 
         # Make sure the referenced currency is a valid name used in the server
-        guild_currencies = guild_collection.find_one({'_id': guild_id})
+        guild_currencies = await guild_collection.find_one({'_id': guild_id})
         # TODO: Multiple-match logic
         valid = False
         cname = ''
@@ -301,7 +298,7 @@ class Wallet(Cog):
             await delete_command(ctx.message)
             return
 
-        query = character_collection.find_one({'_id': member_id})
+        query = await character_collection.find_one({'_id': member_id})
         active_character = query['activeChars'][f'{guild_id}']
         character = query['characters'][active_character]
         name = character['name']
@@ -313,13 +310,12 @@ class Wallet(Cog):
                 transaction_id = str(shortuuid.uuid()[:12])
                 new_quantity = current_quantity - quantity
                 if new_quantity == 0:
-                    character_collection.update_one({'_id': member_id},
-                                                    {'$unset': {f'characters.{active_character}.attributes.'
-                                                                f'inventory.{cname}': ''}}, upsert=True)
+                    await character_collection.update_one({'_id': member_id}, {
+                        '$unset': {f'characters.{active_character}.attributes.inventory.{cname}': ''}}, upsert=True)
                 else:
-                    character_collection.update_one({'_id': member_id},
-                                                    {'$set': {f'characters.{active_character}.attributes.'
-                                                              f'inventory.{cname}': new_quantity}}, upsert=True)
+                    await character_collection.update_one({'_id': member_id}, {
+                        '$set': {f'characters.{active_character}.attributes.inventory.{cname}': new_quantity}},
+                                                          upsert=True)
 
                 post_embed = discord.Embed(title=f'{name} spends some currency!', type='rich',
                                            description=f'Item: **{cname}**\n'
