@@ -198,8 +198,8 @@ class Admin(Cog):
         else:
             query = await collection.find_one({'guildId': guild_id})
             if not query:
-                await ctx.send(f'Announcement role not set! Configure with `{get_prefix(self, ctx.message)}config '
-                               f'role announce <role name>`')
+                await ctx.send(f'Announcement role not set! Configure with `{await get_prefix(self, ctx.message)}config'
+                               f' role announce <role name>`')
             else:
                 role_name = guild.get_role(query['announceRole']).name
                 await ctx.send(f'Announcement role currently set to `{role_name}`')
@@ -218,7 +218,7 @@ class Admin(Cog):
 
         query = await collection.find_one({'guildId': guild_id})
         if not query or not query['gmRoles']:
-            await ctx.send(f'GM role(s) not set! Configure with `{get_prefix(self, ctx.message)}config role gm add '
+            await ctx.send(f'GM role(s) not set! Configure with `{await get_prefix(self, ctx.message)}config role gm add '
                            '<role name>`. Roles can be chained (separate with a space).')
         else:
             current_role_ids = query['gmRoles']
@@ -388,7 +388,7 @@ class Admin(Cog):
         else:  # If the channel is not provided, output the current setting.
             query = await collection.find_one({'guildId': guild_id})
             if not query:
-                await ctx.send(f'Player board channel not set! Configure with `{get_prefix(self, ctx.message)}config '
+                await ctx.send(f'Player board channel not set! Configure with `{await get_prefix(self, ctx.message)}config '
                                f'channel playerboard <channel mention>`')
             else:
                 await ctx.send('Player board channel currently set to <#{}>'.format(query['playerBoardChannel']))
@@ -415,7 +415,7 @@ class Admin(Cog):
         else:  # If no channel is provided, inform the user of the current setting
             query = await collection.find_one({'guildId': guild_id})
             if not query:
-                await ctx.send(f'Quest board channel not set! Configure with `{get_prefix(self, ctx.message)}config '
+                await ctx.send(f'Quest board channel not set! Configure with `{await get_prefix(self, ctx.message)}config '
                                f'channel questboard <channel link>`')
             else:
                 await ctx.send(f'Quest board channel currently set to <#{query["questChannel"]}>')
@@ -446,7 +446,7 @@ class Admin(Cog):
         else:
             query = await collection.find_one({'guildId': guild_id})
             if not query:
-                await ctx.send(f'Quest archive channel not set! Configure with `{get_prefix(self, ctx.message)}config '
+                await ctx.send(f'Quest archive channel not set! Configure with `{await get_prefix(self, ctx.message)}config '
                                f'channel questarchive <channel link>`')
             else:
                 await ctx.send(f'Quest archive channel currently set to <#{query["archiveChannel"]}>')
@@ -513,7 +513,7 @@ class Admin(Cog):
         # Check to see if the quest archive is configured.
         quest_archive = await gdb['archiveChannel'].find_one({'guildId': guild_id})
         if not quest_archive:
-            await ctx.send(f'Quest archive channel not configured! Use `{get_prefix(self, ctx.message)}config channel '
+            await ctx.send(f'Quest archive channel not configured! Use `{await get_prefix(self, ctx.message)}config channel '
                            f'questarchive <channel mention>` to set up!')
             await delete_command(ctx.message)
             return

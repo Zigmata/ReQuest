@@ -45,7 +45,7 @@ class ReQuest(commands.AutoShardedBot):
         if message.author.bot:
             return
         elif len(message.mentions) > 0 and self.user in message.mentions:
-            await message.channel.send(f'My prefix for this server is `{get_prefix(self, message)}`')
+            await message.channel.send(f'My prefix for this server is `{await get_prefix(self, message)}`')
         else:
             await self.process_commands(message)
 
