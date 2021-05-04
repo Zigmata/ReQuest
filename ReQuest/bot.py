@@ -35,7 +35,7 @@ class ReQuest(commands.AutoShardedBot):
         self.config = config
         self.white_list = []
         if config['whiteList']:
-            self.white_list = await self.get_white_list()
+            self.white_list = self.get_white_list()
 
     @staticmethod
     async def get_white_list():
