@@ -20,7 +20,7 @@ class Player(Cog):
         mdb = bot.mdb
 
     @commands.group(aliases=['char'], invoke_without_command=True, case_insensitive=True)
-    async def character(self, ctx, character_name: str = None):
+    async def character(self, ctx, *, character_name: str = None):
         """
         Commands for registration and management of player characters.
 

@@ -409,6 +409,7 @@ class QuestBoard(Cog):
 
         # Notify each party member that the quest is ready
         guild = self.bot.get_guild(guild_id)
+        # TODO: Make this asynchronous
         for player in party:
             for key in player:
                 member = guild.get_member(int(key))
@@ -1018,6 +1019,10 @@ class QuestBoard(Cog):
         # TODO: Input sanitization
         """
         Configures a role to be issued to a GM's party.
+
+        WARNING: ReQuest must be placed at the lowest point in your server's role hierarchy to do its job. Avoid placing ReQuest's role higher than any roles you don't want players to have access to.
+
+        Placing ReQuest's role above privileged roles could enable GMs to circumvent your server's heirarchy and grant unintended privileges to users with this command!
 
         Arguments:
         [party_role]: The role to set as the calling GM's party role.
