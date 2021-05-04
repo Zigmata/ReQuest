@@ -21,7 +21,7 @@ gdb = mongo_client[config['guildDb']]
 # Define bot class
 class ReQuest(commands.AutoShardedBot):
     def __init__(self):
-        allowed_mentions = discord.AllowedMentions(roles=True, everyone=True, users=True)
+        allowed_mentions = discord.AllowedMentions(roles=True, everyone=False, users=True)
         intents = discord.Intents.default()
         intents.members = True  # Subscribe to the privileged members intent.
         intents.presences = True  # Subscribe to the privileged presences intent.

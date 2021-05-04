@@ -2,9 +2,8 @@ import discord
 import shortuuid
 from discord.ext import commands
 from discord.ext.commands import Cog
-from discord.utils import find
 
-from ..utilities.supportFunctions import delete_command, parse_list, strip_id
+from ..utilities.supportFunctions import delete_command, parse_list, strip_id, get_prefix
 from ..utilities.checks import has_gm_role
 
 listener = Cog.listener
@@ -1015,14 +1014,15 @@ class QuestBoard(Cog):
     # --- GM Options ---
 
     @quest.command(pass_context=True)
-    async def role(self, ctx, party_role=None):
-        # TODO: Input sanitization
+    async def role(self, ctx, role_name: str = None):
         """
         Configures a role to be issued to a GM's party.
 
-        WARNING: ReQuest must be placed at the lowest point in your server's role hierarchy to do its job. Avoid placing ReQuest's role higher than any roles you don't want players to have access to.
+        WARNING: ReQuest must be placed at the lowest point in your server's role hierarchy to do its job.
 
-        Placing ReQuest's role above privileged roles could enable GMs to circumvent your server's heirarchy and grant unintended privileges to users with this command!
+        Avoid placing ReQuest's role higher than any roles you don't want players to have access to.
+
+        Placing ReQuest's role above privileged roles could enable GMs to circumvent your server's heirarchy!
 
         Arguments:
         [party_role]: The role to set as the calling GM's party role.
@@ -1037,29 +1037,72 @@ class QuestBoard(Cog):
         collection = gdb['partyRole']
         query = await collection.find_one({'guildId': guild_id, 'gm': user_id})
 
-        if not party_role:
-            if not query or not query['role']:
-                await ctx.send(
-                    'No GM role set! Configure with `{}quest role <role mention>`'.format(self.bot.command_prefix))
+        if role_name:
+            if role_name.lower() == 'delete' or role_name.lower() == 'remove':
+                if query:
+                    await collection.delete_one({'guildId': guild_id, 'gm': user_id})
+                await ctx.send('Party role cleared!')
             else:
-                # Get the current role and display
-                role_id = query['role']
-                role_name = guild.get_role(role_id).name
-                await ctx.send(f'Current GM role is `{role_name}`')
-        elif party_role == 'delete' or party_role == 'remove':
-            await collection.delete_one({'guildId': guild_id, 'gm': user_id})
-            await ctx.send('GM role deleted!')
+                # Search the list of guild roles for all name matches
+                search = filter(lambda r: role_name.lower() in r.name.lower(), guild.roles)
+                matches = []
+                new_role = {}
+                if search:
+                    for match in search:
+                        if match.id == guild_id:
+                            continue  # Prevent the @everyone role from being added to the list
+                        bot_member = guild.get_member(self.bot.user.id)
+                        bot_roles = bot_member.roles
+                        if match.position >= bot_roles[len(bot_roles) - 1].position:
+                            continue  # Prevent roles at or above the bot's position from being assigned.
+                        matches.append({'name': match.name, 'id': int(match.id)})
+
+                if not matches:
+                    error_embed = discord.Embed(title=f'No valid roles matching `{role_name}` were found!', type='rich',
+                                                description='Check your spelling and use of quotes. ReQuest cannot '
+                                                            'assign roles above itself in your server hierarchy.')
+                    await ctx.send(embed=error_embed)
+                    return
+
+                if len(matches) == 1:
+                    new_role = matches[0]
+                elif len(matches) > 1:
+                    content = ''
+                    for i in range(len(matches)):
+                        content += f'{i + 1}: {matches[i]["name"]}\n'
+
+                    match_embed = discord.Embed(title=f'Your query returned more than one result!', type='rich',
+                                                description=content)
+                    match_msg = await ctx.send(embed=match_embed)
+                    reply = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
+                    selection = int(reply.content)
+                    if selection > len(matches):
+                        await delete_command(match_msg)
+                        await delete_command(reply)
+                        await ctx.send(f'Selection is outside the list of options. Operation aborted.')
+                        return
+                    else:
+                        await delete_command(match_msg)
+                        await delete_command(reply)
+                        new_role = matches[selection - 1]
+
+                # Add the new role's ID to the database
+                await collection.update_one({'guildId': guild_id, 'gm': user_id}, {'$set': {'role': new_role['id']}},
+                                            upsert=True)
+                # Report the changes made
+                role_embed = discord.Embed(title='Party Role Set!', type='rich', description=f'<@&{new_role["id"]}>')
+                await ctx.send(embed=role_embed)
+
+        # If no argument is provided, query the db for the current setting
         else:
-            search = find(lambda r: r.name.lower() == party_role.lower(), guild.roles)
-            if not search:
-                await ctx.send('Role not found! Check your spelling and/or quotes!')
-                await delete_command(ctx.message)
-                return
-
-            role_id = search.id
-            await collection.update_one({'guildId': guild_id, 'gm': user_id}, {'$set': {'role': role_id}}, upsert=True)
-
-            await ctx.send(f'Your GM role for this server has been set to `{search.name}`!')
+            if not query:
+                await ctx.send(f'Party role not set! Configure with `{await get_prefix(self, ctx.message)}quest'
+                               f' role <role name>`')
+            else:
+                current_role = query['role']
+                post_embed = discord.Embed(title='Quest - Role (This Server)', type='rich',
+                                           description=f'<@&{current_role}>')
+                await ctx.send(embed=post_embed)
 
         await delete_command(ctx.message)
 
