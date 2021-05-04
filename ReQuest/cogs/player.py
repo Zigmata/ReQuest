@@ -226,8 +226,8 @@ class Player(Cog):
         elif len(matches) > 1:
             content = ''
             for i in range(len(matches)):
-                content += '{}: {} ({})\n'.format(i + 1, query['characters'][matches[i]]['name'],
-                                                  query['characters'][matches[i]]['note'])
+                content += f'{i + 1}: {query["characters"][matches[i]]["name"]} ' \
+                           f'({query["characters"][matches[i]]["note"]})\n'
 
             match_embed = discord.Embed(title="Your query returned more than one result!", type='rich',
                                         description=content)

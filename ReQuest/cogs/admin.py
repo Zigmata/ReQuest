@@ -217,9 +217,9 @@ class Admin(Cog):
         collection = gdb['gmRoles']
 
         query = await collection.find_one({'guildId': guild_id})
-        if not query or not query['gmRoles']:
-            await ctx.send(f'GM role(s) not set! Configure with `{await get_prefix(self, ctx.message)}config role gm add '
-                           '<role name>`. Roles can be chained (separate with a space).')
+        if not query or 'gmRoles' not in query or not query['gmRoles']:
+            await ctx.send(f'GM role(s) not set! Configure with `{await get_prefix(self, ctx.message)}config role gm '
+                           f'add <role name>`. Roles can be chained (separate with a space).')
         else:
             current_role_ids = query['gmRoles']
             current_roles = map(str, current_role_ids)
@@ -231,58 +231,128 @@ class Admin(Cog):
         await delete_command(ctx.message)
 
     @role_gm.command(aliases=['a'], pass_context=True)
-    async def add(self, ctx, *roles):
+    async def add(self, ctx, *role_names):
         """
-        Adds a role to the GM list.
+        Configures roles for access to GM commands.
 
         Arguments:
-        [role name]: Adds the role to the GM list. Roles with spaces must be encapsulated in quotes.
+        [role_names]: Adds the role as a GM. Can be chained. Roles with spaces must be encapsulated in quotes.
         """
-
         guild_id = ctx.message.guild.id
         collection = gdb['gmRoles']
 
-        if roles:
+        if role_names:
             guild = self.bot.get_guild(guild_id)
             query = await collection.find_one({'guildId': guild_id})
+            gm_roles = []
+            if query and 'gmRoles' in query:
+                gm_roles = query['gmRoles']
             new_roles = []
 
             # Compare each provided role name to the list of guild roles
-            for role in roles:
-                search = find(lambda r: r.name.lower() == role.lower(), guild.roles)
+            for role in role_names:
+                search = filter(lambda r: role.lower() in r.name.lower(), guild.roles)
+                matches = []
                 if search:
-                    new_roles.append(search.id)
+                    for match in search:
+                        matches.append({'name': match.name, 'id': int(match.id)})
+
+                if not matches:
+                    await ctx.send(f'Role `{role}` not found! Check your spelling and use of quotes!')
+                    continue
+
+                if len(matches) == 1:
+                    if gm_roles and matches[0]['id'] in gm_roles:
+                        continue  # TODO: Raise error that role is already configured
+                    else:
+                        new_roles.append(matches[0])
+                elif len(matches) > 1:
+                    content = ''
+                    for i in range(len(matches)):
+                        content += f'{i + 1}: {matches[i]["name"]}\n'
+
+                    match_embed = discord.Embed(title=f'Your query \"{role}\" returned more than one result!',
+                                                type='rich', description=content)
+                    match_msg = await ctx.send(embed=match_embed)
+                    reply = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
+                    selection = int(reply.content)
+                    if selection > len(matches):
+                        await delete_command(match_msg)
+                        await delete_command(reply)
+                        await ctx.send(f'Selection is outside the list of options. GM add for {role} aborted.')
+                        continue
+                    else:
+                        await delete_command(match_msg)
+                        await delete_command(reply)
+                        # If a document exists, check to see if the id of the provided role is already set
+                        if gm_roles and matches[selection - 1]['id'] in gm_roles:
+                            continue  # TODO: Raise error that role is already configured
+                        else:
+                            # If there is no match, add the role to the update list
+                            new_roles.append(matches[selection - 1])
+                            # await collection.update_one({'guildId': guild_id},
+                            #                             {'$push': {'gmRoles': matches[selection - 1]['id']}})
+
+                            # # Get the updated document TODO: Deprecated, swap $conf role gm output to embed format
+                            # update_query = await collection.find_one({'guildId': guild_id})['gmRoles']
+                            #
+                            # # Get the name of the role matching each ID in the database, and output them.
+                            # role_names = []
+                            # for role_id in update_query:
+                            #     role_names.append(guild.get_role(role_id).name)
+                            # await ctx.send('GM role(s) set to {}'.format('`' + '`, `'.join(role_names) + '`'))
+                        # else:
+                        #     # If there is no document, create one with the list of role IDs
+                        #     await collection.insert_one({'guildId': guild_id, 'gmRoles': new_roles})
+                        #     role_names = []
+                        #     for role_id in new_roles:
+                        #         role_names.append(guild.get_role(role_id).name)
+                        #     await ctx.send('Role(s) {} added as GMs'.format('`' + '`, `'.join(role_names) + '`'))
+
+            # for role in role_names:
+            #     search = find(lambda r: role.lower() in r.name.lower(), guild.roles)
+            #     if search:
+            #         new_roles.append(search.id)
 
             if not new_roles:
                 await ctx.send('Role not found! Check your spelling and use of quotes!')
                 await delete_command(ctx.message)
                 return
-
-            if query:
-                # If a document exists, check to see if the id of the provided role is already set
-                gm_roles = query['gmRoles']
-                for new_id in new_roles:
-                    if new_id in gm_roles:
-                        continue  # TODO: Raise error that role is already configured
-                    else:
-                        # If there is no match, add the id to the database
-                        await collection.update_one({'guildId': guild_id}, {'$push': {'gmRoles': new_id}})
-
-                # Get the updated document
-                update_query = await collection.find_one({'guildId': guild_id})['gmRoles']
-
-                # Get the name of the role matching each ID in the database, and output them.
-                role_names = []
-                for role_id in update_query:
-                    role_names.append(guild.get_role(role_id).name)
-                await ctx.send('GM role(s) set to {}'.format('`' + '`, `'.join(role_names) + '`'))
             else:
-                # If there is no document, create one with the list of role IDs
-                await collection.insert_one({'guildId': guild_id, 'gmRoles': new_roles})
-                role_names = []
-                for role_id in new_roles:
-                    role_names.append(guild.get_role(role_id).name)
-                await ctx.send('Role(s) {} added as GMs'.format('`' + '`, `'.join(role_names) + '`'))
+                added_names = []
+                for addition in new_roles:
+                    await collection.update_one({'guildId': guild_id}, {'$push': {'gmRoles': addition['id']}},
+                                                upsert=True)
+                    added_names.append(f'<@&{addition["id"]}>')
+
+                roles_embed = discord.Embed(title='GM Roles Added!', type='rich', description='\n'.join(added_names))
+                await ctx.send(embed=roles_embed)
+
+            # if query:
+            #     # If a document exists, check to see if the id of the provided role is already set
+            #     gm_roles = query['gmRoles']
+            #     for new_id in new_roles:
+            #         if new_id in gm_roles:
+            #             continue  # TODO: Raise error that role is already configured
+            #         else:
+            #             # If there is no match, add the id to the database
+            #             await collection.update_one({'guildId': guild_id}, {'$push': {'gmRoles': new_id}})
+            #
+            #     # Get the updated document
+            #     update_query = await collection.find_one({'guildId': guild_id})['gmRoles']
+            #
+            #     # Get the name of the role matching each ID in the database, and output them.
+            #     role_names = []
+            #     for role_id in update_query:
+            #         role_names.append(guild.get_role(role_id).name)
+            #     await ctx.send('GM role(s) set to {}'.format('`' + '`, `'.join(role_names) + '`'))
+            # else:
+            #     # If there is no document, create one with the list of role IDs
+            #     await collection.insert_one({'guildId': guild_id, 'gmRoles': new_roles})
+            #     role_names = []
+            #     for role_id in new_roles:
+            #         role_names.append(guild.get_role(role_id).name)
+            #     await ctx.send('Role(s) {} added as GMs'.format('`' + '`, `'.join(role_names) + '`'))
         else:
             await ctx.send('Role not provided!')
 
@@ -388,8 +458,8 @@ class Admin(Cog):
         else:  # If the channel is not provided, output the current setting.
             query = await collection.find_one({'guildId': guild_id})
             if not query:
-                await ctx.send(f'Player board channel not set! Configure with `{await get_prefix(self, ctx.message)}config '
-                               f'channel playerboard <channel mention>`')
+                await ctx.send(f'Player board channel not set! Configure with `{await get_prefix(self, ctx.message)}'
+                               f'config channel playerboard <channel mention>`')
             else:
                 await ctx.send('Player board channel currently set to <#{}>'.format(query['playerBoardChannel']))
 
@@ -415,8 +485,8 @@ class Admin(Cog):
         else:  # If no channel is provided, inform the user of the current setting
             query = await collection.find_one({'guildId': guild_id})
             if not query:
-                await ctx.send(f'Quest board channel not set! Configure with `{await get_prefix(self, ctx.message)}config '
-                               f'channel questboard <channel link>`')
+                await ctx.send(f'Quest board channel not set! Configure with `{await get_prefix(self, ctx.message)}'
+                               f'config channel questboard <channel link>`')
             else:
                 await ctx.send(f'Quest board channel currently set to <#{query["questChannel"]}>')
 
@@ -441,13 +511,14 @@ class Admin(Cog):
                 await ctx.send('Quest archive setting cleared!')
             else:
                 channel_id = strip_id(channel)
-                await collection.update_one({'guildId': guild_id}, {'$set': {'archiveChannel': channel_id}}, upsert=True)
+                await collection.update_one({'guildId': guild_id}, {'$set': {'archiveChannel': channel_id}},
+                                            upsert=True)
                 await ctx.send(f'Successfully set quest archive channel to {channel}!')
         else:
             query = await collection.find_one({'guildId': guild_id})
             if not query:
-                await ctx.send(f'Quest archive channel not set! Configure with `{await get_prefix(self, ctx.message)}config '
-                               f'channel questarchive <channel link>`')
+                await ctx.send(f'Quest archive channel not set! Configure with `{await get_prefix(self, ctx.message)}'
+                               f'config channel questarchive <channel link>`')
             else:
                 await ctx.send(f'Quest archive channel currently set to <#{query["archiveChannel"]}>')
 
@@ -513,8 +584,8 @@ class Admin(Cog):
         # Check to see if the quest archive is configured.
         quest_archive = await gdb['archiveChannel'].find_one({'guildId': guild_id})
         if not quest_archive:
-            await ctx.send(f'Quest archive channel not configured! Use `{await get_prefix(self, ctx.message)}config channel '
-                           f'questarchive <channel mention>` to set up!')
+            await ctx.send(f'Quest archive channel not configured! Use `{await get_prefix(self, ctx.message)}config '
+                           f'channel questarchive <channel mention>` to set up!')
             await delete_command(ctx.message)
             return
 
@@ -630,7 +701,7 @@ class Admin(Cog):
         Denomination names may be referenced in-place of the currency name for transactions.
 
         Examples for common RPG currencies:
-        Gold: {"name":"Gold", "denoms":[{"name":"Platinum", "value":10}, {"name":"Silver","value":0.1},{"name":"Copper","value":0.01}]}
+        Gold: {"name":"Gold", "double":true, "denoms":[{"name":"Platinum", "value":10}, {"name":"Silver","value":0.1},{"name":"Copper","value":0.01}]}
         Credits: {"name":"Credits", "double":true}
         Downtime: {"name":"Downtime"}
         """
