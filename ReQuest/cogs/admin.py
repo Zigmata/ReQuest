@@ -455,7 +455,7 @@ class Admin(Cog):
 
     # --- Quest ---
 
-    @config.group(case_insensitive=True, pass_context=True)
+    @config.group(aliases=['q'], case_insensitive=True, pass_context=True)
     async def quest(self, ctx):
         """
         Commands for configuring quest post behavior.
@@ -479,10 +479,10 @@ class Admin(Cog):
         # Print the current setting if no argument is given. Otherwise, store the new value.
         if not wait_list_value:
             query = await collection.find_one({'guildId': guild_id})
-            if not query or query['waitListValue'] == 0:
+            if not query or query['waitlistValue'] == 0:
                 await ctx.send('Quest wait list is currently disabled.')
             else:
-                await ctx.send(f'Quest wait list currently set to {str(query["waitListValue"])} players.')
+                await ctx.send(f'Quest wait list currently set to {str(query["waitlistValue"])} players.')
         else:
             try:
                 value = int(wait_list_value)  # Convert to int for input validation and db storage
