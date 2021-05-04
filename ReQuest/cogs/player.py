@@ -148,6 +148,12 @@ class Player(Cog):
         collection = mdb['characters']
         date = datetime.utcnow()
 
+        illegal_names = ['delete', 'remove', 'del', 'rem', 'list', 'register', 'reg']
+        if character_name.lower() in illegal_names:
+            await ctx.send('You cannot use character names that match subcommands!')
+            await delete_command(ctx.message)
+            return
+
         await collection.update_one({
             '_id': member_id}, {
                 '$set': {
@@ -206,7 +212,8 @@ class Player(Cog):
             await ctx.send(f'Deleting `{name} ({note})`! This action is irreversible!\nConfirm: **Y**es/**N**o?')
             confirm = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
             if confirm.content.lower() == 'y' or confirm.content.lower() == 'yes':
-                await collection.update_one({'_id': member_id}, {'$unset': {f'characters.{matches[0]}': ''}}, upsert=True)
+                await collection.update_one({'_id': member_id}, {
+                    '$unset': {f'characters.{matches[0]}': ''}}, upsert=True)
                 for guild in query['activeChars']:
                     if query[f'activeChars'][guild] == matches[0]:
                         await collection.update_one({'_id': member_id},
