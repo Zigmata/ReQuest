@@ -4,7 +4,6 @@ import json
 import discord
 from discord.ext import commands
 from discord.ext.commands import Cog, command
-from discord.utils import find
 
 from ..utilities.supportFunctions import delete_command, strip_id, get_prefix
 
@@ -175,33 +174,68 @@ class Admin(Cog):
         guild_id = ctx.message.guild.id
         guild = self.bot.get_guild(guild_id)
         collection = gdb['announceRole']
+        query = await collection.find_one({'guildId': guild_id})
 
-        # If a role is provided, write it to the db
         if role_name:
-            query = await collection.find_one({'guildId': guild_id})
-            search = find(lambda r: r.name.lower() == role_name.lower(), guild.roles)
-            role_id = None
-            if search:
-                role_id = search.id
-
             if role_name.lower() == 'delete' or role_name.lower() == 'remove':
                 if query:
                     await collection.delete_one({'guildId': guild_id})
-
                 await ctx.send('Announcement role cleared!')
             else:
-                await collection.update_one({'guildId': guild_id}, {'$set': {'announceRole': role_id}}, upsert=True)
-                await ctx.send(f'Successfully set announcement role to `{search.name}`!')
+                # Search the list of guild roles for all name matches
+                search = filter(lambda r: role_name.lower() in r.name.lower(), guild.roles)
+                matches = []
+                new_role = {}
+                if search:
+                    for match in search:
+                        if match.id == guild_id:
+                            continue  # Prevent the @everyone role from being added to the list
+                        matches.append({'name': match.name, 'id': int(match.id)})
 
-        # Otherwise, query the db for the current setting
+                if not matches:
+                    await ctx.send(f'Role `{role_name}` not found! Check your spelling and use of quotes!')
+                    return
+
+                if len(matches) == 1:
+                    new_role = matches[0]
+                elif len(matches) > 1:
+                    content = ''
+                    for i in range(len(matches)):
+                        content += f'{i + 1}: {matches[i]["name"]}\n'
+
+                    match_embed = discord.Embed(title=f'Your query returned more than one result!', type='rich',
+                                                description=content)
+                    match_msg = await ctx.send(embed=match_embed)
+                    reply = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
+                    selection = int(reply.content)
+                    if selection > len(matches):
+                        await delete_command(match_msg)
+                        await delete_command(reply)
+                        await ctx.send(f'Selection is outside the list of options. Operation aborted.')
+                        return
+                    else:
+                        await delete_command(match_msg)
+                        await delete_command(reply)
+                        new_role = matches[selection - 1]
+
+                # Add the new role's ID to the database
+                await collection.update_one({'guildId': guild_id}, {'$set': {'announceRole': new_role['id']}},
+                                            upsert=True)
+
+                # Report the changes made
+                role_embed = discord.Embed(title='Announcement Role Set!', type='rich',
+                                           description=f'<@&{new_role["id"]}>')
+                await ctx.send(embed=role_embed)
+        # If no argument is provided, query the db for the current setting
         else:
-            query = await collection.find_one({'guildId': guild_id})
             if not query:
                 await ctx.send(f'Announcement role not set! Configure with `{await get_prefix(self, ctx.message)}config'
                                f' role announce <role name>`')
             else:
-                role_name = guild.get_role(query['announceRole']).name
-                await ctx.send(f'Announcement role currently set to `{role_name}`')
+                current_role = query['announceRole']
+                post_embed = discord.Embed(title='Config - Role - Announcement', type='rich',
+                                           description=f'<@&{current_role}>')
+                await ctx.send(embed=post_embed)
 
         await delete_command(ctx.message)
 
@@ -691,7 +725,7 @@ class Admin(Cog):
         Denomination names may be referenced in-place of the currency name for transactions.
 
         Examples for common RPG currencies:
-        Gold: {"name":"Gold", "double":true, "denoms":[{"name":"Platinum", "value":10}, {"name":"Silver","value":0.1},{"name":"Copper","value":0.01}]}
+        Gold: {"name":"Gold", "double":true, "denoms":[{"name":"Platinum", "value":10}, {"name":"Silver","value":0.1}, {"name":"Copper","value":0.01}]}
         Credits: {"name":"Credits", "double":true}
         Downtime: {"name":"Downtime"}
         """
