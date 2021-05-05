@@ -125,7 +125,7 @@ class PlayerBoard(Cog):
         title = post['title']
         # Delete the post from the database and player board channel
         await gdb['playerBoard'].delete_one({'postId': post_id})
-        msg = await channel.fetch_message(post['messageId'])
+        msg = channel.get_partial_message(post['messageId'])
         await msg.delete()
 
         await ctx.send(f'Post `{post_id}`: **{title}** deleted!')
@@ -186,7 +186,7 @@ class PlayerBoard(Cog):
 
         # Build the embed and post
         post_embed = self.edit_post(updated_post)
-        msg = await channel.fetch_message(post['messageId'])
+        msg = channel.get_partial_message(post['messageId'])
         await msg.edit(embed=post_embed)
 
         await ctx.send('Post updated!')
@@ -237,7 +237,7 @@ class PlayerBoard(Cog):
 
         # Build the embed and post
         post_embed = self.edit_post(updated_post)
-        msg = await channel.fetch_message(post['messageId'])
+        msg = channel.get_partial_message(post['messageId'])
         await msg.edit(embed=post_embed)
 
         await ctx.send('Post updated!')
@@ -291,7 +291,9 @@ class PlayerBoard(Cog):
                 await ctx.send('Argument must be either a number or `all`!')
 
             now = datetime.utcnow()
-            for post in await gdb['playerBoard'].find({'guildId': guild_id}):
+            cursor = gdb['playerBoard'].find({'guildId': guild_id})
+            posts = await cursor.to_list(500)
+            for post in posts:
                 delta = now - post['timestamp']
                 if delta.days > duration:
                     message_ids.append(int(post['messageId']))
@@ -299,7 +301,7 @@ class PlayerBoard(Cog):
         # If any qualifying message ids are found, delete the posts and the db records
         if message_ids:
             for message_id in message_ids:
-                msg = await pb_channel.fetch_message(message_id)
+                msg = pb_channel.get_partial_message(message_id)
                 await msg.delete()
                 await gdb['playerBoard'].delete_one({'messageId': message_id})
 

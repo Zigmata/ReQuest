@@ -30,7 +30,7 @@ class QuestBoard(Cog):
         user = self.bot.get_user(user_id)
         channel = self.bot.get_channel(payload.channel_id)
         message_id = payload.message_id
-        message = await channel.fetch_message(message_id)
+        message = channel.get_partial_message(message_id)
 
         await message.remove_reaction(emoji, user)
         await user.send(reason)
@@ -115,7 +115,7 @@ class QuestBoard(Cog):
 
         channel = self.bot.get_channel(payload.channel_id)
         message_id = payload.message_id
-        message = await channel.fetch_message(message_id)
+        message = channel.get_partial_message(message_id)
 
         collection = gdb['quests']
         quest = await collection.find_one({'messageId': message_id})  # Get the quest that matches the message ID
@@ -129,6 +129,11 @@ class QuestBoard(Cog):
         max_party_size = quest['maxPartySize']
         mcollection = mdb['characters']
         player_characters = await mcollection.find_one({'_id': user_id})
+        if 'activeChars' not in player_characters or str(guild_id) not in player_characters['activeChars']:
+            await self.cancel_reaction(payload, f'Error joining quest **{quest["title"]}**: You do not have an active '
+                                                f'character on that server. Use the `character` commands to activate '
+                                                f'or register!')
+            return
         active_character_id = player_characters['activeChars'][f'{guild_id}']
 
         # If a reaction is added, add the reacting user to the party/waitlist if there is room
@@ -426,7 +431,7 @@ class QuestBoard(Cog):
         # Retrieve the message object
         message_id = updated_quest['messageId']
         channel = self.bot.get_channel(channel_id['questChannel'])
-        message = await channel.fetch_message(message_id)
+        message = channel.get_partial_message(message_id)
 
         # Create the updated embed, and edit the message
         post_embed = await self.update_quest_embed(updated_quest)
@@ -487,7 +492,7 @@ class QuestBoard(Cog):
         # Retrieve the message object
         message_id = quest['messageId']
         channel = self.bot.get_channel(channel_id['questChannel'])
-        message = await channel.fetch_message(message_id)
+        message = channel.get_partial_message(message_id)
 
         # This path executes if user mentions are provided
         if players:
@@ -655,7 +660,7 @@ class QuestBoard(Cog):
         channel_id = channel_query['questChannel']
         quest_channel = guild.get_channel(channel_id)
         message_id = quest['messageId']
-        message = await quest_channel.fetch_message(message_id)
+        message = quest_channel.get_partial_message(message_id)
         await message.delete()
 
         await ctx.send(f'Quest `{quest_id}`: **{title}** completed!')
@@ -718,7 +723,7 @@ class QuestBoard(Cog):
         channel_id = channel_query['questChannel']
         quest_channel = guild.get_channel(channel_id)
         message_id = quest['messageId']
-        message = await quest_channel.fetch_message(message_id)
+        message = quest_channel.get_partial_message(message_id)
         await message.delete()
 
         await ctx.send(f'Quest `{quest_id}`: **{title}** deleted!')
@@ -768,7 +773,7 @@ class QuestBoard(Cog):
         updated_quest = await collection.find_one({'questId': quest_id})
 
         # Fetch the updated quest and build the embed, then edit the original post
-        message = await quest_channel.fetch_message(updated_quest['messageId'])
+        message = quest_channel.get_partial_message(updated_quest['messageId'])
         post_embed = await self.update_quest_embed(updated_quest)
         await message.edit(embed=post_embed)
 
@@ -812,7 +817,7 @@ class QuestBoard(Cog):
         updated_quest = await collection.find_one({'questId': quest_id})
 
         # Fetch the updated quest and build the embed, then edit the original post
-        message = await quest_channel.fetch_message(updated_quest['messageId'])
+        message = quest_channel.get_partial_message(updated_quest['messageId'])
         post_embed = await self.update_quest_embed(updated_quest)
         await message.edit(embed=post_embed)
 
@@ -856,7 +861,7 @@ class QuestBoard(Cog):
         updated_quest = await collection.find_one({'questId': quest_id})
 
         # Fetch the updated quest and build the embed, then edit the original post
-        message = await quest_channel.fetch_message(updated_quest['messageId'])
+        message = quest_channel.get_partial_message(updated_quest['messageId'])
         post_embed = await self.update_quest_embed(updated_quest)
         await message.edit(embed=post_embed)
 
@@ -900,7 +905,7 @@ class QuestBoard(Cog):
         updated_quest = await collection.find_one({'questId': quest_id})
 
         # Fetch the updated quest and build the embed, then edit the original post
-        message = await quest_channel.fetch_message(updated_quest['messageId'])
+        message = quest_channel.get_partial_message(updated_quest['messageId'])
         post_embed = await self.update_quest_embed(updated_quest)
         await message.edit(embed=post_embed)
 
