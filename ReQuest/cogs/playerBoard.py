@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 
 import discord
@@ -291,7 +292,9 @@ class PlayerBoard(Cog):
                 await ctx.send('Argument must be either a number or `all`!')
 
             now = datetime.utcnow()
-            for post in await gdb['playerBoard'].find({'guildId': guild_id}):
+            cursor = gdb['playerBoard'].find({'guildId': guild_id})
+            posts = await cursor.to_list(500)
+            for post in posts:
                 delta = now - post['timestamp']
                 if delta.days > duration:
                     message_ids.append(int(post['messageId']))
