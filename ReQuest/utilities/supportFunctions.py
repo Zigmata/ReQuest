@@ -19,19 +19,19 @@ gdb = mongo_client[config['guildDb']]
 # TODO: Implement input sanitization helper functions
 
 # Deletes command invocations
-async def delete_command(message):
+async def attempt_delete(message):
     try:
         await message.delete()
     except discord.HTTPException:
         pass
 
 
-async def get_prefix(self, message):
+async def get_prefix(bot, message):
     prefix = await cdb['prefixes'].find_one({'guildId': message.guild.id})
     if not prefix:
         return f'{config["prefix"]}'
     else:
-        return str(prefix['prefix'])
+        return f'{prefix["prefix"]}'
 
 
 def strip_id(mention) -> int:

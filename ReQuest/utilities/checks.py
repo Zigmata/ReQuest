@@ -2,7 +2,8 @@ from pathlib import Path
 import yaml
 from motor.motor_asyncio import AsyncIOMotorClient
 from discord.ext import commands
-from .supportFunctions import delete_command
+
+from enums import EditTarget
 
 # Set up config file and load
 CONFIG_FILE = Path('config.yaml')
@@ -28,7 +29,6 @@ def has_gm_role():
                 if role.id in gm_roles:
                     return True
 
-        await delete_command(ctx.message)
         raise commands.CheckFailure("You do not have permissions to run this command!")
 
     return commands.check(predicate)
@@ -48,7 +48,6 @@ def has_gm_or_mod():
                     if role.id in gm_roles:
                         return True
 
-        await delete_command(ctx.message)
         raise commands.CheckFailure("You do not have permissions to run this command!")
 
     return commands.check(predicate)
@@ -65,10 +64,28 @@ def has_active_character():
             if str(guild_id) in query['activeChars']:
                 return True
             else:
-                await delete_command(ctx.message)
                 raise commands.CheckFailure("You do not have an active character on this server!")
         else:
-            await delete_command(ctx.message)
             raise commands.CheckFailure("You do not have any registered characters!")
 
     return commands.check(predicate)
+
+
+async def is_author_or_mod(ctx, edit_target: EditTarget, target_id: str):
+    if ctx.author.guild_permissions.manage_guild:
+        return True
+    else:
+        caller_id = ctx.author.id
+
+        if edit_target is EditTarget.QUEST:
+            collection = gdb['quests']
+            quest = await collection.find_one({'questId': target_id})
+            if quest['gm'] == caller_id:
+                return True
+        elif edit_target is EditTarget.POST:
+            collection = gdb['playerBoard']
+            post = await collection.find_one({'postId': target_id})
+            if post['player'] == caller_id:
+                return True
+
+    return False

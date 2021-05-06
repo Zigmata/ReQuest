@@ -5,7 +5,9 @@ import shortuuid
 from discord.ext import commands
 from discord.ext.commands import Cog
 
-from ..utilities.supportFunctions import delete_command
+from utilities.enums import EditTarget
+from ..utilities.supportFunctions import attempt_delete
+from ..utilities.checks import is_author_or_mod
 
 listener = Cog.listener
 
@@ -43,7 +45,6 @@ class PlayerBoard(Cog):
         Commands for player board posts and edits.
         """
         if ctx.invoked_subcommand is None:
-            await delete_command(ctx.message)
             return
 
     @player_board.command(name='post', pass_context=True)
@@ -62,7 +63,6 @@ class PlayerBoard(Cog):
         pquery = await gdb['playerBoardChannel'].find_one({'guildId': guild_id})
         if not pquery:
             await ctx.send('Player Board Channel is disabled!')
-            await delete_command(ctx.message)
             return
         else:
             channel_id = pquery['playerBoardChannel']
@@ -85,8 +85,6 @@ class PlayerBoard(Cog):
                                              'messageId': message_id, 'timestamp': timestamp, 'title': title,
                                              'content': content})
 
-        await delete_command(ctx.message)
-
     @player_board.command(name='delete', pass_context=True)
     async def pbdelete(self, ctx, post_id):
         """
@@ -103,7 +101,6 @@ class PlayerBoard(Cog):
         pquery = await gdb['playerBoardChannel'].find_one({'guildId': guild_id})
         if not pquery:
             await ctx.send('Player board channel disabled!')
-            await delete_command(ctx.message)
             return
         else:
             channel_id = pquery['playerBoardChannel']
@@ -113,13 +110,11 @@ class PlayerBoard(Cog):
         post = await gdb['playerBoard'].find_one({'postId': post_id})
         if not post:
             await ctx.send('Post not found!')
-            await delete_command(ctx.message)
             return
 
         # Ensure only the author can delete
-        if not post['player'] == player:
+        if not await is_author_or_mod(ctx, EditTarget.POST, post_id):
             await ctx.send('Posts can only be deleted by the author!')
-            await delete_command(ctx.message)
             return
 
         title = post['title']
@@ -130,8 +125,6 @@ class PlayerBoard(Cog):
 
         await ctx.send(f'Post `{post_id}`: **{title}** deleted!')
 
-        await delete_command(ctx.message)
-
     @player_board.group(name='edit', case_insensitive=True, pass_context=True)
     async def pbedit(self, ctx):
         """
@@ -139,7 +132,6 @@ class PlayerBoard(Cog):
         """
         if ctx.invoked_subcommand is None:
             # TODO: Error reporting and logging
-            await delete_command(ctx.message)
             return
 
     @pbedit.command(name='title', pass_context=True)
@@ -159,7 +151,6 @@ class PlayerBoard(Cog):
         pquery = await gdb['playerBoardChannel'].find_one({'guildId': guild_id})
         if not pquery:
             await ctx.send('Player board channel disabled!')
-            await delete_command(ctx.message)
             return
         else:
             channel_id = pquery['playerBoardChannel']
@@ -169,13 +160,11 @@ class PlayerBoard(Cog):
         post = await gdb['playerBoard'].find_one({'postId': post_id})
         if not post:
             await ctx.send('Post not found!')
-            await delete_command(ctx.message)
             return
 
         # Ensure only the author can edit
         if not post['player'] == player:
             await ctx.send('Posts can only be edited by the author!')
-            await delete_command(ctx.message)
             return
 
         # Update the database
@@ -190,8 +179,6 @@ class PlayerBoard(Cog):
         await msg.edit(embed=post_embed)
 
         await ctx.send('Post updated!')
-
-        await delete_command(ctx.message)
 
     @pbedit.command(name='content', pass_context=True)
     async def pbcontent(self, ctx, post_id, *, new_content):
@@ -210,7 +197,6 @@ class PlayerBoard(Cog):
         pquery = await gdb['playerBoardChannel'].find_one({'guildId': guild_id})
         if not pquery:
             await ctx.send('Player board channel disabled!')
-            await delete_command(ctx.message)
             return
         else:
             channel_id = pquery['playerBoardChannel']
@@ -220,13 +206,11 @@ class PlayerBoard(Cog):
         post = await gdb['playerBoard'].find_one({'postId': post_id})
         if not post:
             await ctx.send('Post not found!')
-            await delete_command(ctx.message)
             return
 
         # Ensure only the author can edit
         if not post['player'] == player:
             await ctx.send('Posts can only be edited by the author!')
-            await delete_command(ctx.message)
             return
 
         # Update the database
@@ -241,8 +225,6 @@ class PlayerBoard(Cog):
         await msg.edit(embed=post_embed)
 
         await ctx.send('Post updated!')
-
-        await delete_command(ctx.message)
 
     # ----- Admin Commands -----
 
@@ -269,12 +251,9 @@ class PlayerBoard(Cog):
         pquery = await gdb['playerBoardChannel'].find_one({'guildId': guild_id})
         if not pquery:
             await ctx.send('Player board channel not configured!')
-            await delete_command(ctx.message)
             return
         pb_channel_id = pquery['playerBoardChannel']
         pb_channel = guild.get_channel(pb_channel_id)
-
-        await delete_command(ctx.message)
 
         standby_message = await ctx.send('Searching for posts to purge . . .')
 
@@ -302,7 +281,7 @@ class PlayerBoard(Cog):
         if message_ids:
             for message_id in message_ids:
                 msg = pb_channel.get_partial_message(message_id)
-                await msg.delete()
+                await attempt_delete(msg)
                 await gdb['playerBoard'].delete_one({'messageId': message_id})
 
             await ctx.send('{} expired posts deleted!'.format(len(message_ids)))

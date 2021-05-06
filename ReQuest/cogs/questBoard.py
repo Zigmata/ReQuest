@@ -3,7 +3,7 @@ import shortuuid
 from discord.ext import commands
 from discord.ext.commands import Cog
 
-from ..utilities.supportFunctions import delete_command, parse_list, strip_id, get_prefix
+from ..utilities.supportFunctions import attempt_delete, parse_list, strip_id, get_prefix
 from ..utilities.checks import has_gm_role
 
 listener = Cog.listener
@@ -368,8 +368,6 @@ class QuestBoard(Cog):
         except Exception as e:
             await ctx.send('{}: {}'.format(type(e).__name__, e))
 
-        await delete_command(ctx.message)
-
     @quest.command(pass_context=True)
     async def ready(self, ctx, quest_id):
         """
@@ -386,13 +384,11 @@ class QuestBoard(Cog):
         quest = await qcollection.find_one({'questId': quest_id})
         if not quest:
             # TODO: Error reporting/logging on no quest match
-            await delete_command(ctx.message)
             return
 
         # Confirm the user calling the command is the GM that created the quest
         if not quest['gm'] == user_id:
             await ctx.send('GMs can only manage their own quests!')
-            await delete_command(ctx.message)
             return
 
         # Check to see if the GM has a party role configured
@@ -439,8 +435,6 @@ class QuestBoard(Cog):
 
         await ctx.send('Quest roster locked and party notified!')
 
-        await delete_command(ctx.message)
-
     @quest.command(aliases=['ur'], pass_context=True)
     async def unready(self, ctx, quest_id, *, players=None):
         """
@@ -458,13 +452,11 @@ class QuestBoard(Cog):
         quest = await qcollection.find_one({'questId': quest_id})
         if not quest:
             # TODO: Error reporting/logging on no quest match
-            await delete_command(ctx.message)
             return
 
         # Confirm the user calling the command is the GM that created the quest
         if not quest['gm'] == user_id:
             await ctx.send('GMs can only manage their own quests!')
-            await delete_command(ctx.message)
             return
 
         # Check to see if the GM has a party role configured
@@ -531,8 +523,6 @@ class QuestBoard(Cog):
 
         await ctx.send('Quest roster has been unlocked.')
 
-        await delete_command(ctx.message)
-
     @quest.command(pass_context=True)
     async def complete(self, ctx, quest_id, *, summary=None):
         """
@@ -553,7 +543,6 @@ class QuestBoard(Cog):
         # Confirm the user calling the command is the GM that created the quest
         if not quest['gm'] == user_id:
             await ctx.send('GMs can only manage their own quests!')
-            await delete_command(ctx.message)
             return
 
         # Check if there is a configured quest archive channel
@@ -661,11 +650,9 @@ class QuestBoard(Cog):
         quest_channel = guild.get_channel(channel_id)
         message_id = quest['messageId']
         message = quest_channel.get_partial_message(message_id)
-        await message.delete()
+        await attempt_delete(message)
 
         await ctx.send(f'Quest `{quest_id}`: **{title}** completed!')
-
-        await delete_command(ctx.message)
 
     @quest.command(aliases=['cancel'], pass_context=True)
     async def delete(self, ctx, quest_id):
@@ -683,13 +670,11 @@ class QuestBoard(Cog):
         quest = await gdb['quests'].find_one({'questId': quest_id})
         if not quest:
             await ctx.send('Quest ID not found!')
-            await delete_command(ctx.message)
             return
 
         # Confirm the user calling the command is the GM that created the quest, or has administrative rights.
         if not quest['gm'] == user_id and not ctx.author.guild_permissions.manage_guild:
             await ctx.send('GMs can only manage their own quests!')
-            await delete_command(ctx.message)
             return
 
         # If a party exists
@@ -724,11 +709,9 @@ class QuestBoard(Cog):
         quest_channel = guild.get_channel(channel_id)
         message_id = quest['messageId']
         message = quest_channel.get_partial_message(message_id)
-        await message.delete()
+        await attempt_delete(message)
 
         await ctx.send(f'Quest `{quest_id}`: **{title}** deleted!')
-
-        await delete_command(ctx.message)
 
     @quest.group(case_insensitive=True, pass_context=True)
     async def edit(self, ctx):
@@ -759,13 +742,11 @@ class QuestBoard(Cog):
         quest = await collection.find_one({'questId': quest_id})
         if not quest:
             # TODO: Error handling
-            await delete_command(ctx.message)
             return
 
         # Confirm the user calling the command is the GM that created the quest
         if not quest['gm'] == user_id:
             await ctx.send('GMs can only manage their own quests!')
-            await delete_command(ctx.message)
             return
 
         # Push the edit to db, then grab an updated quest
@@ -778,8 +759,6 @@ class QuestBoard(Cog):
         await message.edit(embed=post_embed)
 
         await ctx.send('Quest Updated!')
-
-        await delete_command(ctx.message)
 
     @edit.command(aliases=['desc'], pass_context=True)
     async def description(self, ctx, quest_id, *, new_description):
@@ -803,13 +782,11 @@ class QuestBoard(Cog):
         quest = await collection.find_one({'questId': quest_id})
         if not quest:
             # TODO: Error handling
-            await delete_command(ctx.message)
             return
 
         # Confirm the user calling the command is the GM that created the quest
         if not quest['gm'] == user_id:
             await ctx.send('GMs can only manage their own quests!')
-            await delete_command(ctx.message)
             return
 
         # Push the edit to db, then grab an updated quest
@@ -822,8 +799,6 @@ class QuestBoard(Cog):
         await message.edit(embed=post_embed)
 
         await ctx.send('Quest Updated!')
-
-        await delete_command(ctx.message)
 
     @edit.command(name='partysize', aliases=['party'], pass_context=True)
     async def party_size(self, ctx, quest_id, *, new_party_size: int):
@@ -847,13 +822,11 @@ class QuestBoard(Cog):
         quest = await collection.find_one({'questId': quest_id})
         if not quest:
             # TODO: Error handling
-            await delete_command(ctx.message)
             return
 
         # Confirm the user calling the command is the GM that created the quest
         if not quest['gm'] == user_id:
             await ctx.send('GMs can only manage their own quests!')
-            await delete_command(ctx.message)
             return
 
         # Push the edit to db, then grab an updated quest
@@ -866,8 +839,6 @@ class QuestBoard(Cog):
         await message.edit(embed=post_embed)
 
         await ctx.send('Quest Updated!')
-
-        await delete_command(ctx.message)
 
     @edit.command(pass_context=True)
     async def levels(self, ctx, quest_id, *, new_levels):
@@ -891,13 +862,11 @@ class QuestBoard(Cog):
         quest = await collection.find_one({'questId': quest_id})
         if not quest:
             # TODO: Error handling
-            await delete_command(ctx.message)
             return
 
         # Confirm the user calling the command is the GM that created the quest
         if not quest['gm'] == user_id:
             await ctx.send('GMs can only manage their own quests!')
-            await delete_command(ctx.message)
             return
 
         # Push the edit to db, then grab an updated quest
@@ -910,8 +879,6 @@ class QuestBoard(Cog):
         await message.edit(embed=post_embed)
 
         await ctx.send('Quest Updated!')
-
-        await delete_command(ctx.message)
 
     @edit.command(name='experience', aliases=['xp', 'exp'])
     async def quest_experience(self, ctx, quest_id, experience: int):
@@ -926,7 +893,6 @@ class QuestBoard(Cog):
         """
         if experience < 1:
             await ctx.send('Experience must be a non-zero integer!')
-            await delete_command(ctx.message)
             return
 
         collection = gdb['quests']
@@ -934,15 +900,12 @@ class QuestBoard(Cog):
         quest_query = await collection.find_one({'questId': quest_id})
         if ctx.author.id != quest_query['gm'] and not ctx.author.guild_permissions.manage_guild:
             await ctx.send('Quests can only be manipulated by their GM or staff!')
-            await delete_command(ctx.message)
             return
 
         title = quest_query['title']
         await collection.update_one({'questId': quest_id}, {'$set': {'xp': experience}}, upsert=True)
 
         await ctx.send(f'Experience reward for quest `{quest_id}`: **{title}** set to {experience} per character!')
-
-        await delete_command(ctx.message)
 
     @edit.command(name='rewards', aliases=['loot'])
     async def quest_rewards(self, ctx, quest_id, reward_name, quantity: int, *recipients):
@@ -958,7 +921,6 @@ class QuestBoard(Cog):
 
         if quantity < 1:
             await ctx.send('Quantity must be a non-zero integer!')
-            await delete_command(ctx.message)
             return
 
         collection = gdb['quests']
@@ -966,12 +928,10 @@ class QuestBoard(Cog):
         quest_query = await collection.find_one({'questId': quest_id})
         if not quest_query:
             await ctx.send('Quest ID not found!')
-            await delete_command(ctx.message)
             return
 
         if ctx.author.id != quest_query['gm'] and not ctx.author.guild_permissions.manage_guild:
             await ctx.send('Quests can only be manipulated by their GM or staff!')
-            await delete_command(ctx.message)
             return
 
         title = quest_query['title']
@@ -1003,7 +963,6 @@ class QuestBoard(Cog):
                                             {'$set': {f'rewards.{user_id}.{reward_name}': quantity}}, upsert=True)
         if len(valid_players) == 0:
             await ctx.send('No valid players were provided!')
-            await delete_command(ctx.message)
             return
 
         update_embed = discord.Embed(title='Rewards updated!', type='rich',
@@ -1013,8 +972,6 @@ class QuestBoard(Cog):
         update_embed.add_field(name="Recipients", value='\n'.join(valid_players))
 
         await ctx.send(embed=update_embed)
-
-        await delete_command(ctx.message)
 
     # --- GM Options ---
 
@@ -1082,13 +1039,13 @@ class QuestBoard(Cog):
                     reply = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
                     selection = int(reply.content)
                     if selection > len(matches):
-                        await delete_command(match_msg)
-                        await delete_command(reply)
+                        await match_msg.delete()
+                        await attempt_delete(reply)
                         await ctx.send(f'Selection is outside the list of options. Operation aborted.')
                         return
                     else:
-                        await delete_command(match_msg)
-                        await delete_command(reply)
+                        await match_msg.delete()
+                        await attempt_delete(reply)
                         new_role = matches[selection - 1]
 
                 # Add the new role's ID to the database
@@ -1108,8 +1065,6 @@ class QuestBoard(Cog):
                 post_embed = discord.Embed(title='Quest - Role (This Server)', type='rich',
                                            description=f'<@&{current_role}>')
                 await ctx.send(embed=post_embed)
-
-        await delete_command(ctx.message)
 
 
 def setup(bot):

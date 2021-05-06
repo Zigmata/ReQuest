@@ -3,7 +3,7 @@ import discord
 import shortuuid
 from discord.ext import commands
 from discord.ext.commands import Cog
-from ..utilities.supportFunctions import delete_command, strip_id
+from ..utilities.supportFunctions import attempt_delete, strip_id
 from ..utilities.checks import has_gm_or_mod
 
 listener = Cog.listener
@@ -38,7 +38,6 @@ class Player(Cog):
                 ids = []
                 if not query:
                     await ctx.send('You have no registered characters!')
-                    await delete_command(ctx.message)
                     return
                 else:
                     for character_id in query['characters']:
@@ -53,7 +52,6 @@ class Player(Cog):
 
                 if not matches:
                     await ctx.send('No characters found with that name!')
-                    await delete_command(ctx.message)
                     return
 
                 if len(matches) == 1:
@@ -72,14 +70,13 @@ class Player(Cog):
                     match_msg = await ctx.send(embed=match_embed)
                     reply = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
                     if int(reply.content) > len(character_list):
-                        await delete_command(ctx.message)
-                        await delete_command(match_msg)
-                        await delete_command(reply)
+                        await match_msg.delete()
+                        await attempt_delete(reply)
                         await ctx.send('Selection is outside the list of options.')
                         return
                     else:
-                        await delete_command(match_msg)
-                        await delete_command(reply)
+                        await match_msg.delete()
+                        await attempt_delete(reply)
                         selection = query['characters'][character_list[int(reply.content) - 1]]
                         await ctx.send(f'Active character changed to {selection["name"]} ({selection["note"]})')
                         await collection.update_one({
@@ -88,18 +85,14 @@ class Player(Cog):
             else:
                 if not query:
                     await ctx.send('You have no registered characters!')
-                    await delete_command(ctx.message)
                     return
                 elif not str(guild_id) in query['activeChars']:
                     await ctx.send('You have no active characters on this server!')
-                    await delete_command(ctx.message)
                     return
                 else:
                     active_character = query['activeChars'][str(guild_id)]
                     await ctx.send(f'Active character: {query["characters"][active_character]["name"]} '
                                    f'({query["characters"][active_character]["note"]})')
-
-        await delete_command(ctx.message)
 
     @character.command(name='list')
     async def character_list(self, ctx):
@@ -112,7 +105,6 @@ class Player(Cog):
         query = await collection.find_one({'_id': member_id})
         if not query or not query['characters']:
             await ctx.send('You have no registered characters!')
-            await delete_command(ctx.message)
             return
 
         ids = []
@@ -130,8 +122,6 @@ class Player(Cog):
             post_embed.add_field(name=char['name'], value=char['note'], inline=False)
 
         await ctx.send(embed=post_embed)
-
-        await delete_command(ctx.message)
 
     @character.command(name='register', aliases=['reg'])
     async def character_register(self, ctx, character_name, character_note):
@@ -151,7 +141,6 @@ class Player(Cog):
         illegal_names = ['delete', 'remove', 'del', 'rem', 'list', 'register', 'reg']
         if character_name.lower() in illegal_names:
             await ctx.send('You cannot use character names that match subcommands!')
-            await delete_command(ctx.message)
             return
 
         await collection.update_one({
@@ -171,8 +160,6 @@ class Player(Cog):
 
         await ctx.send(f'`{character_name}` registered and set to active for this server!')
 
-        await delete_command(ctx.message)
-
     @character.command(name='delete', aliases=['remove', 'del', 'rem'])
     async def character_delete(self, ctx, character_name):
         """
@@ -185,7 +172,6 @@ class Player(Cog):
         guild_id = ctx.message.guild.id
         collection = mdb['characters']
         query = await collection.find_one({'_id': member_id})
-        await delete_command(ctx.message)
 
         ids = []
         if not query:
@@ -222,7 +208,7 @@ class Player(Cog):
             else:
                 await ctx.send(f'Deletion aborted!')
 
-            await delete_command(confirm)
+            await attempt_delete(confirm)
         elif len(matches) > 1:
             content = ''
             for i in range(len(matches)):
@@ -234,14 +220,13 @@ class Player(Cog):
             match_msg = await ctx.send(embed=match_embed)
             reply = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
             if int(reply.content) > len(matches):
-                await delete_command(ctx.message)
-                await delete_command(match_msg)
-                await delete_command(reply)
+                await match_msg.delete()
+                await attempt_delete(reply)
                 await ctx.send('Selection is outside the list of options.')
                 return
             else:
-                await delete_command(match_msg)
-                await delete_command(reply)
+                await match_msg.delete()
+                await attempt_delete(reply)
                 name = query['characters'][matches[0]]['name']
                 note = query['characters'][matches[0]]['note']
 
@@ -258,7 +243,7 @@ class Player(Cog):
                 else:
                     await ctx.send(f'Deletion aborted!')
 
-                await delete_command(confirm)
+                await attempt_delete(confirm)
 
     @commands.group(name='experience', aliases=['xp', 'exp'], invoke_without_command=True, case_insensitive=True)
     async def experience(self, ctx):
@@ -273,11 +258,9 @@ class Player(Cog):
         query = await collection.find_one({'_id': member_id})
         if not query:  # If none exist, output the error
             await ctx.send('Player has no registered characters!')
-            await delete_command(ctx.message)
             return
         elif not str(guild_id) in query['activeChars']:
             await ctx.send('Player has no active characters on this server!')
-            await delete_command(ctx.message)
             return
 
         # Otherwise, proceed to query the active character and retrieve its xp
@@ -288,8 +271,6 @@ class Player(Cog):
 
         xp_embed = discord.Embed(title=f'{name}', type='rich', description=f'Total Experience: **{xp}**')
         await ctx.send(embed=xp_embed)
-
-        await delete_command(ctx.message)
 
     @experience.command(name='mod')
     @has_gm_or_mod()
@@ -305,7 +286,6 @@ class Player(Cog):
         gm_member_id = ctx.author.id
         if value == 0:
             await ctx.send('Stop being a tease and enter an actual quantity!')
-            await delete_command(ctx.message)
             return
 
         guild_id = ctx.message.guild.id
@@ -319,11 +299,9 @@ class Player(Cog):
             query = await collection.find_one({'_id': member_id})
             if not query:  # If none exist, output the error
                 await ctx.send(f'{user.name} has no registered characters!')
-                await delete_command(ctx.message)
                 continue
             elif not str(guild_id) in query['activeChars']:
                 await ctx.send(f'{user.name} has no active characters on this server!')
-                await delete_command(ctx.message)
                 continue
 
             # Otherwise, proceed to query the active character and retrieve its xp
@@ -352,7 +330,6 @@ class Player(Cog):
         xp_embed.add_field(name='Game Master', value=f'<@!{gm_member_id}>')
         xp_embed.set_footer(text=f'{datetime.utcnow().strftime("%Y-%m-%d")} Transaction ID: {transaction_id}')
         await ctx.send(embed=xp_embed)
-        await delete_command(ctx.message)
 
 
 def setup(bot):

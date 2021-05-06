@@ -1,11 +1,12 @@
 from datetime import datetime
+
 import discord
 import shortuuid
 from discord.ext import commands
 from discord.ext.commands import Cog
 
-from ..utilities.supportFunctions import delete_command, strip_id
 from ..utilities.checks import has_gm_or_mod, has_active_character
+from ..utilities.supportFunctions import strip_id
 
 listener = Cog.listener
 
@@ -43,16 +44,13 @@ class Wallet(Cog):
                             currency_names.append(denom['name'].lower())
             else:
                 await ctx.send('You have no spendable currency for this server!')
-                await delete_command(ctx.message)
                 return
 
             if not query:
                 await ctx.send('You do not have any registered characters!')
-                await delete_command(ctx.message)
                 return
             elif str(guild_id) not in query['activeChars']:
                 await ctx.send('You do not have an active character for this server!')
-                await delete_command(ctx.message)
                 return
 
             active_id = query['activeChars'][f'{guild_id}']
@@ -74,8 +72,6 @@ class Wallet(Cog):
                                        ' cleanly in a future patch.')
             await ctx.send(embed=post_embed)
 
-        await delete_command(ctx.message)
-
     @currency.command(name='mod')
     @has_gm_or_mod()
     async def currency_mod(self, ctx, currency_name, quantity: int, *user_mentions):
@@ -90,7 +86,6 @@ class Wallet(Cog):
         """
         if quantity == 0:
             await ctx.send('Stop being a tease and enter an actual quantity!')
-            await delete_command(ctx.message)
             return
 
         gm_member_id = ctx.author.id
@@ -117,7 +112,6 @@ class Wallet(Cog):
 
         if not valid:
             await ctx.send('No inventory with that name is used on this server!')
-            await delete_command(ctx.message)
             return
 
         members = []
@@ -163,7 +157,6 @@ class Wallet(Cog):
         currency_embed.add_field(name='Game Master', value=f'<@!{gm_member_id}>', inline=False)
         currency_embed.set_footer(text=f'{datetime.utcnow().strftime("%Y-%m-%d")} Transaction ID: {transaction_id}')
         await ctx.send(embed=currency_embed)
-        await delete_command(ctx.message)
 
     @currency.command(name='give')
     @has_active_character()
@@ -200,18 +193,15 @@ class Wallet(Cog):
 
         if not valid:
             await ctx.send('No currency with that name is used on this server!')
-            await delete_command(ctx.message)
             return
 
         recipient_query = await character_collection.find_one({'_id': recipient_id})
         if not recipient_query:
             await ctx.send('That player does not have any registered characters!')
-            await delete_command(ctx.message)
             return
 
         if str(guild_id) not in recipient_query['activeChars']:
             await ctx.send('That player does not have an active character on this server!')
-            await delete_command(ctx.message)
             return
 
         transaction_id = str(shortuuid.uuid()[:12])
@@ -241,11 +231,9 @@ class Wallet(Cog):
                     '$set': {f'characters.{recipient_active}.attributes.inventory.{cname}': new_quantity}}, upsert=True)
             else:
                 await ctx.send('You are attempting to give more than you have. Check your wallet!')
-                await delete_command(ctx.message)
                 return
         else:
             await ctx.send(f'`{currency_name}` was not found in your wallet. Check your spelling!')
-            await delete_command(ctx.message)
             return
 
         trade_embed = discord.Embed(title='Trade Completed!', type='rich',
@@ -256,8 +244,6 @@ class Wallet(Cog):
         trade_embed.set_footer(text=f'{datetime.utcnow().strftime("%Y-%m-%d")} Transaction ID: {transaction_id}')
 
         await ctx.send(embed=trade_embed)
-
-        await delete_command(ctx.message)
 
     @currency.command(name='spend')
     @has_active_character()
@@ -295,7 +281,6 @@ class Wallet(Cog):
 
         if not valid:
             await ctx.send('No currency with that name is used on this server!')
-            await delete_command(ctx.message)
             return
 
         query = await character_collection.find_one({'_id': member_id})
@@ -328,8 +313,6 @@ class Wallet(Cog):
                 await ctx.send(f'You do not have enough {cname} in your wallet!')
         else:
             await ctx.send(f'`{currency_name}` was not found in your wallet. Check your spelling!')
-
-        await delete_command(ctx.message)
 
 
 def setup(bot):

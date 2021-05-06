@@ -4,7 +4,8 @@ import discord
 import yaml
 from motor.motor_asyncio import AsyncIOMotorClient
 from discord.ext import commands
-from utilities.supportFunctions import get_prefix
+from discord.ext.commands import errors
+from utilities.supportFunctions import get_prefix, attempt_delete
 
 # Set up config file and load
 CONFIG_FILE = Path('config.yaml')
@@ -40,6 +41,24 @@ class ReQuest(commands.AutoShardedBot):
     @staticmethod
     async def get_white_list():
         return await cdb['botWhiteList'].find_one({'servers': {'$exists': True}})['servers']
+
+    # Overridden from base to delete command invocation messages
+    async def invoke(self, ctx):
+        if ctx.command is not None:
+            self.dispatch('command', ctx)
+            try:
+                if await self.can_run(ctx, call_once=True):
+                    await attempt_delete(ctx.message)
+                    await ctx.command.invoke(ctx)
+                else:
+                    raise errors.CheckFailure('The global check once functions failed.')
+            except errors.CommandError as exc:
+                await ctx.command.dispatch_error(ctx, exc)
+            else:
+                self.dispatch('command_completion', ctx)
+        elif ctx.invoked_with:
+            exc = errors.CommandNotFound('Command "{}" is not found'.format(ctx.invoked_with))
+            self.dispatch('command_error', ctx, exc)
 
     async def on_message(self, message):
         if message.author.bot:
