@@ -8,7 +8,7 @@ from discord.ext.commands import errors
 from utilities.supportFunctions import get_prefix, attempt_delete
 
 # Set up config file and load
-CONFIG_FILE = Path('config.yaml')
+CONFIG_FILE = Path('ReQuest/config.yaml')
 
 with open(CONFIG_FILE, 'r') as yaml_file:
     config = yaml.safe_load(yaml_file)

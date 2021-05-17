@@ -5,7 +5,7 @@ import shortuuid
 from discord.ext import commands
 from discord.ext.commands import Cog
 
-from utilities.enums import EditTarget
+from ..utilities.enums import EditTarget
 from ..utilities.supportFunctions import attempt_delete
 from ..utilities.checks import is_author_or_mod
 
@@ -95,7 +95,6 @@ class PlayerBoard(Cog):
         """
         guild_id = ctx.message.guild.id
         guild = self.bot.get_guild(guild_id)
-        player = ctx.author.id
 
         # Get the player board channel
         pquery = await gdb['playerBoardChannel'].find_one({'guildId': guild_id})
@@ -163,7 +162,7 @@ class PlayerBoard(Cog):
             return
 
         # Ensure only the author can edit
-        if not post['player'] == player:
+        if not await is_author_or_mod(ctx, EditTarget.POST, post_id):
             await ctx.send('Posts can only be edited by the author!')
             return
 
@@ -209,7 +208,7 @@ class PlayerBoard(Cog):
             return
 
         # Ensure only the author can edit
-        if not post['player'] == player:
+        if not await is_author_or_mod(ctx, EditTarget.POST, post_id):
             await ctx.send('Posts can only be edited by the author!')
             return
 
