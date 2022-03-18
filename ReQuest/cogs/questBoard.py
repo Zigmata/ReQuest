@@ -319,7 +319,7 @@ class QuestBoard(Cog):
         # Inform user if quest channel is not set. Otherwise, get the channel string
         if not query:
             await ctx.send(f'Quest channel not set! Configure with '
-                           f'`{self.bot.command_prefix}config channel quest <channel mention>`')
+                           f'`{await get_prefix(self, ctx.message)}config channel quest <channel mention>`')
             return
         else:
             quest_channel = query['questChannel']

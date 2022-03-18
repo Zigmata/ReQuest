@@ -33,10 +33,7 @@ class Admin(Cog):
     async def on_guild_join(self, server):
         # TODO: Message guild owner about whitelisting
         # TODO: Expand function to check guild db on valid join and initialize if new
-        if not white_list:
-            return
-
-        if server.id in white_list:
+        if not white_list or server.id in white_list:
             return
         else:
             return await server.leave()
