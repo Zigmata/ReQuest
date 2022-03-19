@@ -1,9 +1,11 @@
+import asyncio
 from pathlib import Path
 
+import aiohttp
 import discord
 import yaml
 from motor.motor_asyncio import AsyncIOMotorClient
-from discord.ext import commands
+from discord.ext import commands, tasks
 from utilities.supportFunctions import get_prefix
 
 # Set up config file and load
@@ -21,6 +23,7 @@ gdb = mongo_client[config['guildDb']]
 # Define bot class
 class ReQuest(commands.AutoShardedBot):
     def __init__(self):
+        self.session = None
         allowed_mentions = discord.AllowedMentions(roles=True, everyone=False, users=True)
         intents = discord.Intents.default()
         intents.members = True  # Subscribe to the privileged members intent.
@@ -34,8 +37,33 @@ class ReQuest(commands.AutoShardedBot):
         self.cdb = cdb
         self.config = config
         self.white_list = []
+        self.initial_extensions = config['load_extensions']
         if config['whiteList']:
             self.white_list = self.get_white_list()
+
+    async def setup_hook(self):
+        # self.background_task.start()
+        self.session = aiohttp.ClientSession()
+        # if config['whiteList']:
+        #     self.white_list = await self.get_white_list()
+        for ext in self.initial_extensions:
+            try:
+                await self.load_extension(ext)
+            except Exception as e:
+                print(f'Failed to load extension: {ext}')
+                print(f'{type(e).__name__}: {e}')
+
+    async def close(self):
+        await super().close()
+        await self.session.close()
+
+    # @tasks.loop(minutes=10)
+    # async def background_task(self):
+    #     print('Running background task...')
+
+    @staticmethod
+    async def on_ready():
+        print('Ready!')
 
     @staticmethod
     async def get_white_list():
@@ -53,18 +81,21 @@ class ReQuest(commands.AutoShardedBot):
 bot = ReQuest()
 
 
-def main():
-    """Tries to load every cog and start up the bot"""
-    for extension in bot.config['load_extensions']:
-        try:
-            bot.load_extension(extension)
-        except Exception as e:
-            print(f'Failed to load extension: {extension}')
-            print('{}: {}'.format(type(e).__name__, e))
+async def main():
+    # """Tries to load every cog and start up the bot"""
+    # for extension in bot.config['load_extensions']:
+    #     try:
+    #         await bot.load_extension(extension)
+    #     except Exception as e:
+    #         print(f'Failed to load extension: {extension}')
+    #         print('{}: {}'.format(type(e).__name__, e))
+    async with aiohttp.ClientSession() as session:
+        async with bot:
+            bot.session = session
+            # bot.loop.create_task(bot.background_task())
+            await bot.start(bot.config['token'], reconnect=True)
+            print("ReQuest is online.")
 
-    print("ReQuest is online.")
-    bot.run(bot.config['token'], bot=True, reconnect=True)
 
-
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+asyncio.run(main())

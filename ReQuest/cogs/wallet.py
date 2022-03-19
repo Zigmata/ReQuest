@@ -332,5 +332,5 @@ class Wallet(Cog):
         await delete_command(ctx.message)
 
 
-def setup(bot):
-    bot.add_cog(Wallet(bot))
+async def setup(bot):
+    await bot.add_cog(Wallet(bot))

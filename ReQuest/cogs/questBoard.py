@@ -1112,5 +1112,5 @@ class QuestBoard(Cog):
         await delete_command(ctx.message)
 
 
-def setup(bot):
-    bot.add_cog(QuestBoard(bot))
+async def setup(bot):
+    await bot.add_cog(QuestBoard(bot))

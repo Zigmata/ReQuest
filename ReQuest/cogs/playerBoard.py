@@ -314,5 +314,5 @@ class PlayerBoard(Cog):
         await standby_message.delete()
 
 
-def setup(bot):
-    bot.add_cog(PlayerBoard(bot))
+async def setup(bot):
+    await bot.add_cog(PlayerBoard(bot))

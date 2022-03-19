@@ -355,5 +355,5 @@ class Player(Cog):
         await delete_command(ctx.message)
 
 
-def setup(bot):
-    bot.add_cog(Player(bot))
+async def setup(bot):
+    await bot.add_cog(Player(bot))
