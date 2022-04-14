@@ -2,19 +2,12 @@ from discord.ext.commands import Cog, command
 
 from ..utilities.supportFunctions import delete_command
 
-global gdb
-global mdb
-
 
 class Help(Cog):
     """Help and informational commands."""
 
     def __init__(self, bot):
         self.bot = bot
-        global gdb
-        global mdb
-        gdb = bot.gdb
-        mdb = bot.mdb
 
     # Simple ping test
     @command()
@@ -29,7 +22,7 @@ class Help(Cog):
     @command()
     async def invite(self, ctx):
         """
-        Prints an invite to add ReQuest to your server.
+        Prints an invitation to add ReQuest to your server.
         """
         await ctx.send(f'Invite me to your server! <https://discord.com/api/oauth2/authorize?client_id'
                        f'=601492201704521765&permissions=268954688&scope=bot>')

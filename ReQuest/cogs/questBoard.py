@@ -255,7 +255,7 @@ class QuestBoard(Cog):
     async def on_raw_reaction_add(self, payload):
         """Reaction_add event handling"""
         if str(payload.emoji) == '<:acceptquest:601559094293430282>':
-            await QuestBoard.reaction_operation(self, payload)
+            await self.reaction_operation(payload)
         else:
             return
 
@@ -263,7 +263,7 @@ class QuestBoard(Cog):
     async def on_raw_reaction_remove(self, payload):
         """Reaction_remove event handling"""
         if str(payload.emoji) == '<:acceptquest:601559094293430282>':
-            await QuestBoard.reaction_operation(self, payload)
+            await self.reaction_operation(payload)
         else:
             return
 
@@ -501,7 +501,7 @@ class QuestBoard(Cog):
                 member = guild.get_member(player)
 
                 # Remove the player's reactions from the post.
-                [await reaction.remove(member) for reaction in message.reactions]
+                [await reaction.gm_remove(member) for reaction in message.reactions]
 
                 # Notify the player they have been removed.
                 await member.send(f'You have been removed from the party for the quest, **{quest["title"]}**.')

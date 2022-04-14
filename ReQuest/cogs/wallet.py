@@ -9,17 +9,12 @@ from ..utilities.checks import has_gm_or_mod, has_active_character
 
 listener = Cog.listener
 
-global gdb
-global mdb
-
 
 class Wallet(Cog):
     def __init__(self, bot):
         self.bot = bot
-        global gdb
-        global mdb
-        gdb = bot.gdb
-        mdb = bot.mdb
+        self.gdb = bot.gdb
+        self.mdb = bot.mdb
 
     @commands.group(aliases=['c'], case_insensitive=True, invoke_without_subcommand=True)
     async def currency(self, ctx):
@@ -29,8 +24,8 @@ class Wallet(Cog):
         if ctx.invoked_subcommand is None:
             member_id = ctx.author.id
             guild_id = ctx.message.guild.id
-            collection = mdb['characters']
-            guild_collection = gdb['currency']
+            collection = self.mdb['characters']
+            guild_collection = self.gdb['currency']
             query = await collection.find_one({'_id': member_id})
             currency_query = await guild_collection.find_one({'_id': guild_id})
             currency_names = []
@@ -95,8 +90,8 @@ class Wallet(Cog):
 
         gm_member_id = ctx.author.id
         guild_id = ctx.message.guild.id
-        character_collection = mdb['characters']
-        guild_collection = gdb['currency']
+        character_collection = self.mdb['characters']
+        guild_collection = self.gdb['currency']
         transaction_id = str(shortuuid.uuid()[:12])
 
         # Make sure the referenced inventory is a valid name used in the server
@@ -179,8 +174,8 @@ class Wallet(Cog):
         donor_id = ctx.author.id
         recipient_id = strip_id(user_mention)
         guild_id = ctx.message.guild.id
-        guild_collection = gdb['currency']
-        character_collection = mdb['characters']
+        guild_collection = self.gdb['currency']
+        character_collection = self.mdb['characters']
 
         # Make sure the referenced currency is a valid name used in the server
         guild_currencies = await guild_collection.find_one({'_id': guild_id})
@@ -222,7 +217,7 @@ class Wallet(Cog):
             source_current_quantity = int(inventory[cname])
             if source_current_quantity >= quantity:  # Then make sure the player has enough to give
                 new_quantity = source_current_quantity - quantity
-                if new_quantity == 0:  # If the transaction would result in a 0 quantity, pull the currency.
+                if new_quantity == 0:  # If the transaction results in a 0 quantity, pull the currency.
                     await character_collection.update_one({'_id': donor_id}, {
                         '$unset': {f'characters.{donor_active}.attributes.inventory.{cname}': ''}}, upsert=True)
                 else:  # Otherwise, just update the donor's quantity
@@ -265,7 +260,7 @@ class Wallet(Cog):
         """
         Spends (consumes) a given quantity of your active character's currency.
 
-        Currently requires individual spending of currencies. Related denominations will be automatically consumed
+        Currently, requires individual spending of currencies. Related denominations will be automatically consumed
         in a future update.
 
         Arguments:
@@ -274,8 +269,8 @@ class Wallet(Cog):
         """
         member_id = ctx.author.id
         guild_id = ctx.message.guild.id
-        guild_collection = gdb['currency']
-        character_collection = mdb['characters']
+        guild_collection = self.gdb['currency']
+        character_collection = self.mdb['characters']
 
         # Make sure the referenced currency is a valid name used in the server
         guild_currencies = await guild_collection.find_one({'_id': guild_id})

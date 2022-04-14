@@ -23,7 +23,7 @@ class ReQuest(commands.AutoShardedBot):
         intents.message_content = True
         allowed_mentions = discord.AllowedMentions(roles=True, everyone=False, users=True)
         super(ReQuest, self).__init__(activity=discord.Game(name=f'by Post'), allowed_mentions=allowed_mentions,
-                                      case_insensitive=True, command_prefix=get_prefix, fetch_offline_members=False,
+                                      case_insensitive=True, chunk_guild_at_startup=False, command_prefix=get_prefix,
                                       intents=intents)
 
         # Open the config file and load it to the bot
