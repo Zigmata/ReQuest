@@ -16,7 +16,6 @@ class ReQuest(commands.AutoShardedBot):
         self.mdb = None
         self.gdb = None
         self.session = None
-        self.loop = None
         intents = discord.Intents.default()
         intents.members = True
         intents.presences = True
@@ -36,7 +35,6 @@ class ReQuest(commands.AutoShardedBot):
     async def setup_hook(self):
         # Grab the event loop from asyncio, so we can pass it around
         loop = asyncio.get_running_loop()
-        self.loop = loop
 
         # Instantiate the motor client with the current event loop, and prep the databases
         self.motor_client = MotorClient(self.config['dbServer'], self.config['port'], io_loop=loop)
