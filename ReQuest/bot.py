@@ -2,72 +2,64 @@ import asyncio
 from pathlib import Path
 
 import aiohttp
-import discord
 import yaml
-from motor.motor_asyncio import AsyncIOMotorClient
-from discord.ext import commands, tasks
+import discord
+from discord.ext import commands
+from motor.motor_asyncio import AsyncIOMotorClient as MotorClient
 from utilities.supportFunctions import get_prefix
 
-# Set up config file and load
-CONFIG_FILE = Path('config.yaml')
 
-with open(CONFIG_FILE, 'r') as yaml_file:
-    config = yaml.safe_load(yaml_file)
-
-mongo_client = AsyncIOMotorClient(config['dbServer'], config['port'])
-cdb = mongo_client[config['configDb']]
-mdb = mongo_client[config['memberDb']]
-gdb = mongo_client[config['guildDb']]
-
-
-# Define bot class
 class ReQuest(commands.AutoShardedBot):
     def __init__(self):
+        self.motor_client = None
+        self.cdb = None
+        self.mdb = None
+        self.gdb = None
         self.session = None
-        allowed_mentions = discord.AllowedMentions(roles=True, everyone=False, users=True)
+        self.loop = None
         intents = discord.Intents.default()
-        intents.members = True  # Subscribe to the privileged members intent.
-        intents.presences = True  # Subscribe to the privileged presences intent.
-        super(ReQuest, self).__init__(command_prefix=get_prefix, fetch_offline_members=False,
-                                      allowed_mentions=allowed_mentions, intents=intents, case_insensitive=True,
-                                      activity=discord.Game(name=f'by Post'))
+        intents.members = True
+        intents.presences = True
+        intents.message_content = True
+        allowed_mentions = discord.AllowedMentions(roles=True, everyone=False, users=True)
+        super(ReQuest, self).__init__(activity=discord.Game(name=f'by Post'), allowed_mentions=allowed_mentions,
+                                      case_insensitive=True, command_prefix=get_prefix, fetch_offline_members=False,
+                                      intents=intents)
 
-        self.gdb = gdb
-        self.mdb = mdb
-        self.cdb = cdb
+        # Open the config file and load it to the bot
+        config_file = Path('config.yaml')
+        with open(config_file, 'r') as yaml_file:
+            config = yaml.safe_load(yaml_file)
         self.config = config
         self.white_list = []
-        self.initial_extensions = config['load_extensions']
-        if config['whiteList']:
-            self.white_list = self.get_white_list()
 
     async def setup_hook(self):
-        # self.background_task.start()
-        self.session = aiohttp.ClientSession()
-        # if config['whiteList']:
-        #     self.white_list = await self.get_white_list()
-        for ext in self.initial_extensions:
-            try:
-                await self.load_extension(ext)
-            except Exception as e:
-                print(f'Failed to load extension: {ext}')
-                print(f'{type(e).__name__}: {e}')
+        # Grab the event loop from asyncio, so we can pass it around
+        loop = asyncio.get_running_loop()
+        self.loop = loop
+
+        # Instantiate the motor client with the current event loop, and prep the databases
+        self.motor_client = MotorClient(self.config['dbServer'], self.config['port'], io_loop=loop)
+        self.mdb = self.motor_client[self.config['memberDb']]
+        self.cdb = self.motor_client[self.config['configDb']]
+        self.gdb = self.motor_client[self.config['guildDb']]
+
+        # Grab the list of extensions and load them asynchronously
+        initial_extensions = self.config['load_extensions']
+        for ext in initial_extensions:
+            asyncio.create_task(self.load_extension(ext))
+
+        # If the white list is enabled, load it async in the background
+        if self.config['whiteList']:
+            asyncio.create_task(self.load_white_list())
 
     async def close(self):
         await super().close()
         await self.session.close()
 
-    # @tasks.loop(minutes=10)
-    # async def background_task(self):
-    #     print('Running background task...')
-
-    @staticmethod
-    async def on_ready():
-        print('Ready!')
-
-    @staticmethod
-    async def get_white_list():
-        return await cdb['botWhiteList'].find_one({'servers': {'$exists': True}})['servers']
+    async def load_white_list(self):
+        white_list = await self.cdb['botWhiteList'].find_one({'servers': {'$exists': True}})
+        self.white_list = white_list['servers']
 
     async def on_message(self, message):
         if message.author.bot:
@@ -77,25 +69,18 @@ class ReQuest(commands.AutoShardedBot):
         else:
             await self.process_commands(message)
 
+    @staticmethod
+    async def on_ready():
+        print("ReQuest is online.")
+
 
 bot = ReQuest()
 
 
 async def main():
-    # """Tries to load every cog and start up the bot"""
-    # for extension in bot.config['load_extensions']:
-    #     try:
-    #         await bot.load_extension(extension)
-    #     except Exception as e:
-    #         print(f'Failed to load extension: {extension}')
-    #         print('{}: {}'.format(type(e).__name__, e))
     async with aiohttp.ClientSession() as session:
         async with bot:
             bot.session = session
-            # bot.loop.create_task(bot.background_task())
             await bot.start(bot.config['token'], reconnect=True)
-            print("ReQuest is online.")
 
-
-# if __name__ == '__main__':
 asyncio.run(main())
