@@ -314,7 +314,7 @@ class QuestBoard(Cog):
         # Inform user if quest channel is not set. Otherwise, get the channel string
         if not query:
             await ctx.send(f'Quest channel not set! Configure with '
-                           f'`{await get_prefix(self, ctx.message)}config channel quest <channel mention>`')
+                           f'`{await get_prefix(self.bot, ctx.message)}config channel quest <channel mention>`')
             return
         else:
             quest_channel = query['questChannel']
@@ -1096,7 +1096,7 @@ class QuestBoard(Cog):
         # If no argument is provided, query the db for the current setting
         else:
             if not query:
-                await ctx.send(f'Party role not set! Configure with `{await get_prefix(self, ctx.message)}quest'
+                await ctx.send(f'Party role not set! Configure with `{await get_prefix(self.bot, ctx.message)}quest'
                                f' role <role name>`')
             else:
                 current_role = query['role']
