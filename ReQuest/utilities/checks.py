@@ -1,24 +1,10 @@
-from pathlib import Path
-import yaml
-from motor.motor_asyncio import AsyncIOMotorClient
 from discord.ext import commands
 from .supportFunctions import delete_command
-
-# Set up config file and load
-CONFIG_FILE = Path('config.yaml')
-
-with open(CONFIG_FILE, 'r') as yaml_file:
-    config = yaml.safe_load(yaml_file)
-
-mongo_client = AsyncIOMotorClient(config['dbServer'], config['port'])
-cdb = mongo_client[config['configDb']]
-mdb = mongo_client[config['memberDb']]
-gdb = mongo_client[config['guildDb']]
 
 
 def has_gm_role():
     async def predicate(ctx):
-        collection = gdb['gmRoles']
+        collection = ctx.bot.gdb['gmRoles']
         guild_id = ctx.guild.id
 
         query = await collection.find_one({'guildId': guild_id})
@@ -39,7 +25,7 @@ def has_gm_or_mod():
         if ctx.author.guild_permissions.manage_guild:
             return True
         else:
-            collection = gdb['gmRoles']
+            collection = ctx.bot.gdb['gmRoles']
             guild_id = ctx.guild.id
             query = await collection.find_one({'guildId': guild_id})
             if query:
@@ -58,7 +44,7 @@ def has_active_character():
     async def predicate(ctx):
         member_id = ctx.author.id
         guild_id = ctx.message.guild.id
-        collection = mdb['characters']
+        collection = ctx.bot.mdb['characters']
         query = await collection.find_one({'_id': member_id})
 
         if query:
