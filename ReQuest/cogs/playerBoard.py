@@ -11,17 +11,12 @@ from ..utilities.checks import is_author_or_mod
 
 listener = Cog.listener
 
-global gdb
-global mdb
-
 
 class PlayerBoard(Cog):
     def __init__(self, bot):
         self.bot = bot
-        global gdb
-        global mdb
-        gdb = bot.gdb
-        mdb = bot.mdb
+        self.gdb = bot.gdb
+        self.mdb = bot.mdb
 
     # --- Support Functions ---
 
@@ -60,7 +55,7 @@ class PlayerBoard(Cog):
         guild = self.bot.get_guild(guild_id)
 
         # Get the player board channel
-        pquery = await gdb['playerBoardChannel'].find_one({'guildId': guild_id})
+        pquery = await self.gdb['playerBoardChannel'].find_one({'guildId': guild_id})
         if not pquery:
             await ctx.send('Player Board Channel is disabled!')
             return
@@ -81,9 +76,9 @@ class PlayerBoard(Cog):
         await ctx.send(f'Post `{post_id}`: **{title}** posted!')
 
         # Store the message in the database
-        await gdb['playerBoard'].insert_one({'guildId': guild_id, 'player': player, 'postId': post_id,
-                                             'messageId': message_id, 'timestamp': timestamp, 'title': title,
-                                             'content': content})
+        await self.gdb['playerBoard'].insert_one({'guildId': guild_id, 'player': player, 'postId': post_id,
+                                                  'messageId': message_id, 'timestamp': timestamp, 'title': title,
+                                                  'content': content})
 
     @player_board.command(name='delete', pass_context=True)
     async def pbdelete(self, ctx, post_id):
@@ -97,7 +92,7 @@ class PlayerBoard(Cog):
         guild = self.bot.get_guild(guild_id)
 
         # Get the player board channel
-        pquery = await gdb['playerBoardChannel'].find_one({'guildId': guild_id})
+        pquery = await self.gdb['playerBoardChannel'].find_one({'guildId': guild_id})
         if not pquery:
             await ctx.send('Player board channel disabled!')
             return
@@ -106,7 +101,7 @@ class PlayerBoard(Cog):
             channel = guild.get_channel(channel_id)
 
         # Find the post to delete
-        post = await gdb['playerBoard'].find_one({'postId': post_id})
+        post = await self.gdb['playerBoard'].find_one({'postId': post_id})
         if not post:
             await ctx.send('Post not found!')
             return
@@ -118,7 +113,7 @@ class PlayerBoard(Cog):
 
         title = post['title']
         # Delete the post from the database and player board channel
-        await gdb['playerBoard'].delete_one({'postId': post_id})
+        await self.gdb['playerBoard'].delete_one({'postId': post_id})
         msg = channel.get_partial_message(post['messageId'])
         await msg.delete()
 
@@ -144,10 +139,9 @@ class PlayerBoard(Cog):
         """
         guild_id = ctx.message.guild.id
         guild = self.bot.get_guild(guild_id)
-        player = ctx.author.id
 
         # Get the player board channel
-        pquery = await gdb['playerBoardChannel'].find_one({'guildId': guild_id})
+        pquery = await self.gdb['playerBoardChannel'].find_one({'guildId': guild_id})
         if not pquery:
             await ctx.send('Player board channel disabled!')
             return
@@ -156,7 +150,7 @@ class PlayerBoard(Cog):
             channel = guild.get_channel(channel_id)
 
         # Find the post to edit
-        post = await gdb['playerBoard'].find_one({'postId': post_id})
+        post = await self.gdb['playerBoard'].find_one({'postId': post_id})
         if not post:
             await ctx.send('Post not found!')
             return
@@ -167,10 +161,10 @@ class PlayerBoard(Cog):
             return
 
         # Update the database
-        await gdb['playerBoard'].update_one({'postId': post_id}, {'$set': {'title': new_title}}, upsert=True)
+        await self.gdb['playerBoard'].update_one({'postId': post_id}, {'$set': {'title': new_title}}, upsert=True)
 
         # Grab the updated document
-        updated_post = await gdb['playerBoard'].find_one({'postId': post_id})
+        updated_post = await self.gdb['playerBoard'].find_one({'postId': post_id})
 
         # Build the embed and post
         post_embed = self.edit_post(updated_post)
@@ -190,10 +184,9 @@ class PlayerBoard(Cog):
         """
         guild_id = ctx.message.guild.id
         guild = self.bot.get_guild(guild_id)
-        player = ctx.author.id
 
         # Get the player board channel
-        pquery = await gdb['playerBoardChannel'].find_one({'guildId': guild_id})
+        pquery = await self.gdb['playerBoardChannel'].find_one({'guildId': guild_id})
         if not pquery:
             await ctx.send('Player board channel disabled!')
             return
@@ -202,7 +195,7 @@ class PlayerBoard(Cog):
             channel = guild.get_channel(channel_id)
 
         # Find the post to edit
-        post = await gdb['playerBoard'].find_one({'postId': post_id})
+        post = await self.gdb['playerBoard'].find_one({'postId': post_id})
         if not post:
             await ctx.send('Post not found!')
             return
@@ -213,10 +206,10 @@ class PlayerBoard(Cog):
             return
 
         # Update the database
-        await gdb['playerBoard'].update_one({'postId': post_id}, {'$set': {'content': new_content}}, upsert=True)
+        await self.gdb['playerBoard'].update_one({'postId': post_id}, {'$set': {'content': new_content}}, upsert=True)
 
         # Grab the updated document
-        updated_post = await gdb['playerBoard'].find_one({'postId': post_id})
+        updated_post = await self.gdb['playerBoard'].find_one({'postId': post_id})
 
         # Build the embed and post
         post_embed = self.edit_post(updated_post)
@@ -247,7 +240,7 @@ class PlayerBoard(Cog):
         guild = self.bot.get_guild(guild_id)
 
         # Fetch the player board channel
-        pquery = await gdb['playerBoardChannel'].find_one({'guildId': guild_id})
+        pquery = await self.gdb['playerBoardChannel'].find_one({'guildId': guild_id})
         if not pquery:
             await ctx.send('Player board channel not configured!')
             return
@@ -259,7 +252,7 @@ class PlayerBoard(Cog):
         # Find each post in the db older than the specified time
         message_ids = []
         if days == 'all':  # gets every post if this arg is provided
-            for post in await gdb['playerBoard'].find({'guildId': guild_id}):
+            for post in await self.gdb['playerBoard'].find({'guildId': guild_id}):
                 message_ids.append(int(post['messageId']))
         else:
             duration = None
@@ -269,7 +262,7 @@ class PlayerBoard(Cog):
                 await ctx.send('Argument must be either a number or `all`!')
 
             now = datetime.utcnow()
-            cursor = gdb['playerBoard'].find({'guildId': guild_id})
+            cursor = self.gdb['playerBoard'].find({'guildId': guild_id})
             posts = await cursor.to_list(500)
             for post in posts:
                 delta = now - post['timestamp']
@@ -281,7 +274,7 @@ class PlayerBoard(Cog):
             for message_id in message_ids:
                 msg = pb_channel.get_partial_message(message_id)
                 await attempt_delete(msg)
-                await gdb['playerBoard'].delete_one({'messageId': message_id})
+                await self.gdb['playerBoard'].delete_one({'messageId': message_id})
 
             await ctx.send('{} expired posts deleted!'.format(len(message_ids)))
         elif days == 'all':
@@ -292,5 +285,5 @@ class PlayerBoard(Cog):
         await standby_message.delete()
 
 
-def setup(bot):
-    bot.add_cog(PlayerBoard(bot))
+async def setup(bot):
+    await bot.add_cog(PlayerBoard(bot))

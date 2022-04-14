@@ -7,17 +7,13 @@ from ..utilities.supportFunctions import attempt_delete, strip_id
 from ..utilities.checks import has_gm_or_mod
 
 listener = Cog.listener
-global gdb
-global mdb
 
 
 class Player(Cog):
     def __init__(self, bot):
         self.bot = bot
-        global gdb
-        global mdb
-        gdb = bot.gdb
-        mdb = bot.mdb
+        self.gdb = bot.gdb
+        self.mdb = bot.mdb
 
     @commands.group(aliases=['char'], invoke_without_command=True, case_insensitive=True)
     async def character(self, ctx, *, character_name: str = None):
@@ -31,7 +27,7 @@ class Player(Cog):
         if ctx.invoked_subcommand is None:
             member_id = ctx.author.id
             guild_id = ctx.message.guild.id
-            collection = mdb['characters']
+            collection = self.mdb['characters']
             query = await collection.find_one({'_id': member_id})
 
             if character_name:
@@ -101,7 +97,7 @@ class Player(Cog):
         """
         member_id = ctx.author.id
         guild_id = ctx.guild.id
-        collection = mdb['characters']
+        collection = self.mdb['characters']
         query = await collection.find_one({'_id': member_id})
         if not query or not query['characters']:
             await ctx.send('You have no registered characters!')
@@ -135,7 +131,7 @@ class Player(Cog):
         guild_id = ctx.message.guild.id
         member_id = ctx.author.id
         character_id = str(shortuuid.uuid())
-        collection = mdb['characters']
+        collection = self.mdb['characters']
         date = datetime.utcnow()
 
         illegal_names = ['delete', 'remove', 'del', 'rem', 'list', 'register', 'reg']
@@ -170,7 +166,7 @@ class Player(Cog):
         """
         member_id = ctx.author.id
         guild_id = ctx.message.guild.id
-        collection = mdb['characters']
+        collection = self.mdb['characters']
         query = await collection.find_one({'_id': member_id})
 
         ids = []
@@ -252,7 +248,7 @@ class Player(Cog):
         """
         member_id = ctx.author.id
         guild_id = ctx.message.guild.id
-        collection = mdb['characters']
+        collection = self.mdb['characters']
 
         # Load the player's characters
         query = await collection.find_one({'_id': member_id})
@@ -289,7 +285,7 @@ class Player(Cog):
             return
 
         guild_id = ctx.message.guild.id
-        collection = mdb['characters']
+        collection = self.mdb['characters']
         transaction_id = str(shortuuid.uuid()[:12])
 
         recipient_strings = []
@@ -332,5 +328,5 @@ class Player(Cog):
         await ctx.send(embed=xp_embed)
 
 
-def setup(bot):
-    bot.add_cog(Player(bot))
+async def setup(bot):
+    await bot.add_cog(Player(bot))

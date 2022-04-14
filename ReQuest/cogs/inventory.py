@@ -10,17 +10,12 @@ from ..utilities.supportFunctions import strip_id
 
 listener = Cog.listener
 
-global gdb
-global mdb
-
 
 class Inventory(Cog):
     def __init__(self, bot):
         self.bot = bot
-        global gdb
-        global mdb
-        gdb = bot.gdb
-        mdb = bot.mdb
+        self.gdb = bot.gdb
+        self.mdb = bot.mdb
 
     @commands.group(aliases=['i', 'inv'], case_insensitive=True, invoke_without_subcommand=True)
     async def inventory(self, ctx):
@@ -32,7 +27,7 @@ class Inventory(Cog):
                 return
             member_id = ctx.author.id
             guild_id = ctx.message.guild.id
-            collection = mdb['characters']
+            collection = self.mdb['characters']
             query = await collection.find_one({'_id': member_id})
             active_character = query['activeChars'][str(guild_id)]
             name = query['characters'][active_character]['name']
@@ -40,7 +35,7 @@ class Inventory(Cog):
             items = []
 
             # Get currency to split them out from the rest of the inventory
-            currency_collection = gdb['currency']
+            currency_collection = self.gdb['currency']
             currency_query = await currency_collection.find_one({'_id': guild_id})
             currency_names = []
             if currency_query:
@@ -79,7 +74,7 @@ class Inventory(Cog):
 
         gm_member_id = ctx.author.id
         guild_id = ctx.message.guild.id
-        collection = mdb['characters']
+        collection = self.mdb['characters']
         transaction_id = str(shortuuid.uuid()[:12])
 
         members = []
@@ -133,13 +128,13 @@ class Inventory(Cog):
 
         Arguments:
         <user_mention>: The recipient of the item.
-        <item_name>: The name of the item. Case sensitive!
+        <item_name>: The name of the item. Case-sensitive!
         [quantity]: The amount of the item to give. Defaults to 1 if not specified.
         """
         donor_id = ctx.author.id
         recipient_id = strip_id(user_mention)
         guild_id = ctx.message.guild.id
-        collection = mdb['characters']
+        collection = self.mdb['characters']
 
         recipient_query = await collection.find_one({'_id': recipient_id})
         if not recipient_query:
@@ -157,7 +152,7 @@ class Inventory(Cog):
             source_current_quantity = int(source_inventory[item_name])
             if source_current_quantity >= quantity:  # Then make sure the player has enough to give
                 new_quantity = source_current_quantity - quantity
-                if new_quantity == 0:  # If the transaction would result in a 0 quantity, pull the item.
+                if new_quantity == 0:  # If the transaction results in a 0 quantity, pull the item.
                     await collection.update_one({'_id': donor_id}, {
                         '$unset': {f'characters.{donor_active}.attributes.inventory.{item_name}': ''}}, upsert=True)
                 else:  # Otherwise, just update the donor's quantity
@@ -191,6 +186,26 @@ class Inventory(Cog):
 
         await ctx.send(embed=trade_embed)
 
+    @inventory.command(name='buy', hidden=True)
+    async def inventory_buy(self, ctx, item_name, quantity: int):
+        """
+        Buys an item from the auto-market.
+        Arguments:
+        <item_name>: The name of the item to purchase.
+        <quantity>: The quantity of the item being purchased.
+        """
+        await ctx.send('Future feature. Stay tuned!')
 
-def setup(bot):
-    bot.add_cog(Inventory(bot))
+    @inventory.command(name='sell', hidden=True)
+    async def inventory_sell(self, ctx, item_name, quantity: int):
+        """
+        Sells an item on the auto-market.
+        Arguments:
+        <item_name>: The name of the item to sell.
+        <quantity>: The quantity of the item being sold.
+        """
+        await ctx.send('Future feature. Stay tuned!')
+
+
+async def setup(bot):
+    await bot.add_cog(Inventory(bot))

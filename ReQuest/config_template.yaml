@@ -9,11 +9,11 @@ prefix: '<prefix>'
 # Database connection string and collection references
 dbServer: '<server address>'
 port: <port>
-guildDb: '<name of your guild database'
+guildDb: '<name of your guild database>'
 memberDb: '<name of your member database>'
 configDb: '<name of your config database>'
 
-# A list of all cogs we are loading when starting up the bot. Don't change this unless you write your own custom cogs
+# A list of all cogs we are loading when starting up the bot. Don't change this unless you write your own custom cogs or change the directory structure.
 load_extensions:
     - 'ReQuest.cogs.questBoard'
     - 'ReQuest.cogs.help'
@@ -24,4 +24,4 @@ load_extensions:
     - 'ReQuest.cogs.wallet'
 
 # Whitelist
-whiteList: False # Set true if utilizing a server whitelist.
+whiteList: False # Set true if utilizing a server white list.

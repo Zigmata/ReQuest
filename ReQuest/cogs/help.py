@@ -33,5 +33,5 @@ class Help(Cog):
             f'https://discord.gg/Zq37gj4')
 
 
-def setup(bot):
-    bot.add_cog(Help(bot))
+async def setup(bot):
+    await bot.add_cog(Help(bot))

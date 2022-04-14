@@ -7,8 +7,6 @@ from ..utilities.supportFunctions import attempt_delete, parse_list, strip_id, g
 from ..utilities.checks import has_gm_role
 
 listener = Cog.listener
-global gdb
-global mdb
 
 
 # TODO: Exception reporting in channel
@@ -17,10 +15,8 @@ class QuestBoard(Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        global gdb
-        global mdb
-        gdb = bot.gdb
-        mdb = bot.mdb
+        self.gdb = bot.gdb
+        self.mdb = bot.mdb
 
     # ---- Listeners and support functions ----
 
@@ -35,8 +31,7 @@ class QuestBoard(Cog):
         await message.remove_reaction(emoji, user)
         await user.send(reason)
 
-    @staticmethod
-    async def update_quest_embed(quest, is_archival=False) -> discord.Embed:
+    async def update_quest_embed(self, quest, is_archival=False) -> discord.Embed:
 
         (guild_id, quest_id, message_id, title, description, max_party_size, levels, gm, party,
          wait_list, xp, max_wait_list_size, lock_state) = (quest['guildId'], quest['questId'],
@@ -56,7 +51,7 @@ class QuestBoard(Cog):
         if len(party) > 0:
             for member in party:
                 for key in member:
-                    character_query = await mdb['characters'].find_one({'_id': int(key)})
+                    character_query = await self.mdb['characters'].find_one({'_id': int(key)})
                     character_name = character_query['characters'][member[key]]['name']
                     formatted_party.append(f'- <@!{key}> as {character_name}')
 
@@ -65,7 +60,7 @@ class QuestBoard(Cog):
         if len(wait_list) > 0:
             for member in wait_list:
                 for key in member:
-                    character_query = await mdb['characters'].find_one({'_id': int(key)})
+                    character_query = await self.mdb['characters'].find_one({'_id': int(key)})
                     character_name = character_query['characters'][member[key]]['name']
                     formatted_wait_list.append(f'- <@!{key}> as {character_name}')
 
@@ -105,7 +100,7 @@ class QuestBoard(Cog):
             return
 
         # Find the configured Quest Channel and get the name (string in <#channelID> format)
-        query = await gdb['questChannel'].find_one({'guildId': guild_id})
+        query = await self.gdb['questChannel'].find_one({'guildId': guild_id})
         if not query:
             return  # TODO: Error handling/logging
         quest_channel = query['questChannel']
@@ -117,7 +112,7 @@ class QuestBoard(Cog):
         message_id = payload.message_id
         message = channel.get_partial_message(message_id)
 
-        collection = gdb['quests']
+        collection = self.gdb['quests']
         quest = await collection.find_one({'messageId': message_id})  # Get the quest that matches the message ID
         if not quest:
             await self.cancel_reaction(payload, f'Error: Quest not found in database.')
@@ -127,7 +122,7 @@ class QuestBoard(Cog):
         current_wait_list = quest['waitList']
         max_wait_list_size = quest['maxWaitListSize']
         max_party_size = quest['maxPartySize']
-        mcollection = mdb['characters']
+        mcollection = self.mdb['characters']
         player_characters = await mcollection.find_one({'_id': user_id})
         if 'activeChars' not in player_characters or str(guild_id) not in player_characters['activeChars']:
             await self.cancel_reaction(payload, f'Error joining quest **{quest["title"]}**: You do not have an active '
@@ -201,7 +196,7 @@ class QuestBoard(Cog):
             # If the waitlist is enabled, this section formats the embed to include the waitlist
 
             guild = self.bot.get_guild(guild_id)
-            role_query = await gdb['partyRole'].find_one({'guildId': guild_id, 'gm': quest['gm']})
+            role_query = await self.gdb['partyRole'].find_one({'guildId': guild_id, 'gm': quest['gm']})
 
             # If the quest list is locked and a party role exists, fetch the role.
             role = None
@@ -309,12 +304,12 @@ class QuestBoard(Cog):
         max_wait_list_size = 0
 
         # Get the server's waitlist configuration
-        query = await gdb['questWaitlist'].find_one({'guildId': guild_id})
+        query = await self.gdb['questWaitlist'].find_one({'guildId': guild_id})
         if query:
             max_wait_list_size = query['waitlistValue']
 
         # Query the collection to see if a channel is set
-        query = await gdb['questChannel'].find_one({'guildId': guild_id})
+        query = await self.gdb['questChannel'].find_one({'guildId': guild_id})
 
         # Inform user if quest channel is not set. Otherwise, get the channel string
         if not query:
@@ -325,14 +320,14 @@ class QuestBoard(Cog):
             quest_channel = query['questChannel']
 
         # Query the collection to see if a role is set
-        query = await gdb['announceRole'].find_one({'guildId': guild_id})
+        query = await self.gdb['announceRole'].find_one({'guildId': guild_id})
 
         # Grab the announcement role, if configured.
         announce_role: int = None
         if query:
             announce_role = query['announceRole']
 
-        collection = gdb['quests']
+        collection = self.gdb['quests']
         # Get the channel object.
         channel = self.bot.get_channel(quest_channel)
 
@@ -380,7 +375,7 @@ class QuestBoard(Cog):
         user_id = ctx.author.id
 
         # Fetch the quest
-        qcollection = gdb['quests']
+        qcollection = self.gdb['quests']
         quest = await qcollection.find_one({'questId': quest_id})
         if not quest:
             # TODO: Error reporting/logging on no quest match
@@ -392,7 +387,7 @@ class QuestBoard(Cog):
             return
 
         # Check to see if the GM has a party role configured
-        rcollection = gdb['partyRole']
+        rcollection = self.gdb['partyRole']
         query = await rcollection.find_one({'guildId': guild_id, 'gm': user_id})
         if query and query['role']:
             role_id = query['role']
@@ -420,7 +415,7 @@ class QuestBoard(Cog):
                 await member.send(f'Game Master <@{user_id}> has marked your quest, **"{title}"**, ready to start!')
 
         # Fetch the quest channel to retrieve the message object
-        channel_id = await gdb['questChannel'].find_one({'guildId': guild_id})
+        channel_id = await self.gdb['questChannel'].find_one({'guildId': guild_id})
         if not channel_id:
             return  # TODO: Error handling/logging
 
@@ -446,7 +441,7 @@ class QuestBoard(Cog):
         """
         guild_id = ctx.message.guild.id
         user_id = ctx.author.id
-        qcollection = gdb['quests']
+        qcollection = self.gdb['quests']
 
         # Fetch the quest
         quest = await qcollection.find_one({'questId': quest_id})
@@ -462,7 +457,7 @@ class QuestBoard(Cog):
         # Check to see if the GM has a party role configured
         guild = self.bot.get_guild(guild_id)
         party = quest['party']
-        rcollection = gdb['partyRole']
+        rcollection = self.gdb['partyRole']
         query = await rcollection.find_one({'guildId': guild_id, 'gm': user_id})
         if query and query['role']:
             # Remove the role from the players
@@ -477,7 +472,7 @@ class QuestBoard(Cog):
         await qcollection.update_one({'questId': quest_id}, {'$set': {'lockState': False}})
 
         # Fetch the quest channel to retrieve the message object        
-        channel_id = await gdb['questChannel'].find_one({'guildId': guild_id})
+        channel_id = await self.gdb['questChannel'].find_one({'guildId': guild_id})
         if not channel_id:
             return  # TODO: Error handling/logging for missing questChannel document
 
@@ -498,7 +493,7 @@ class QuestBoard(Cog):
                 member = guild.get_member(player)
 
                 # Remove the player's reactions from the post.
-                [await reaction.remove(member) for reaction in message.reactions]
+                [await reaction.gm_remove(member) for reaction in message.reactions]
 
                 # Notify the player they have been removed.
                 await member.send(f'You have been removed from the party for the quest, **{quest["title"]}**.')
@@ -538,7 +533,7 @@ class QuestBoard(Cog):
         guild = self.bot.get_guild(guild_id)
 
         # Fetch the quest
-        quest = await gdb['quests'].find_one({'questId': quest_id})
+        quest = await self.gdb['quests'].find_one({'questId': quest_id})
 
         # Confirm the user calling the command is the GM that created the quest
         if not quest['gm'] == user_id:
@@ -547,14 +542,14 @@ class QuestBoard(Cog):
 
         # Check if there is a configured quest archive channel
         archive_channel = None
-        archive_query = await gdb['archiveChannel'].find_one({'guildId': guild_id})
+        archive_query = await self.gdb['archiveChannel'].find_one({'guildId': guild_id})
         if archive_query:
             archive_channel = archive_query['archiveChannel']
 
         # Check if a GM role was configured
         gm_role = None
         gm = quest['gm']
-        role_query = await gdb['partyRole'].find_one({'guildId': guild_id, 'gm': gm})
+        role_query = await self.gdb['partyRole'].find_one({'guildId': guild_id, 'gm': gm})
         if role_query:
             gm_role = role_query['role']
 
@@ -564,7 +559,7 @@ class QuestBoard(Cog):
         xp_value = quest['xp']
         rewards = quest['rewards']
         reward_summary = []
-        mcollection = mdb['characters']
+        mcollection = self.mdb['characters']
         for entry in party:
             for player_id in entry:
                 player = int(player_id)
@@ -629,7 +624,7 @@ class QuestBoard(Cog):
             # Build the embed
             post_embed = await self.update_quest_embed(quest, True)
             # If quest summary is configured, add it
-            summary_enabled = await gdb['questSummary'].find_one({'guildId': guild_id})
+            summary_enabled = await self.gdb['questSummary'].find_one({'guildId': guild_id})
             if summary_enabled and summary_enabled['questSummary']:
                 post_embed.add_field(name='Summary', value=summary, inline=False)
 
@@ -642,10 +637,10 @@ class QuestBoard(Cog):
             await channel.send(embed=post_embed)
 
         # Delete the quest from the database
-        await gdb['quests'].delete_one({'questId': quest_id})
+        await self.gdb['quests'].delete_one({'questId': quest_id})
 
         # Delete the quest from the quest channel
-        channel_query = await gdb['questChannel'].find_one({'guildId': guild_id})
+        channel_query = await self.gdb['questChannel'].find_one({'guildId': guild_id})
         channel_id = channel_query['questChannel']
         quest_channel = guild.get_channel(channel_id)
         message_id = quest['messageId']
@@ -667,7 +662,7 @@ class QuestBoard(Cog):
         guild = self.bot.get_guild(guild_id)
 
         # Fetch the quest
-        quest = await gdb['quests'].find_one({'questId': quest_id})
+        quest = await self.gdb['quests'].find_one({'questId': quest_id})
         if not quest:
             await ctx.send('Quest ID not found!')
             return
@@ -684,7 +679,7 @@ class QuestBoard(Cog):
             # Check if a GM role was configured
             gm_role = None
             gm = quest['gm']
-            role_query = await gdb['partyRole'].find_one({'guildId': guild_id, 'gm': gm})
+            role_query = await self.gdb['partyRole'].find_one({'guildId': guild_id, 'gm': gm})
             if role_query:
                 gm_role = role_query['role']
 
@@ -701,10 +696,10 @@ class QuestBoard(Cog):
                     await member.send(f'Quest **{title}** was cancelled by the GM.')
 
         # Delete the quest from the database
-        await gdb['quests'].delete_one({'questId': quest_id})
+        await self.gdb['quests'].delete_one({'questId': quest_id})
 
         # Delete the quest from the quest channel
-        channel_query = await gdb['questChannel'].find_one({'guildId': guild_id})
+        channel_query = await self.gdb['questChannel'].find_one({'guildId': guild_id})
         channel_id = channel_query['questChannel']
         quest_channel = guild.get_channel(channel_id)
         message_id = quest['messageId']
@@ -733,12 +728,12 @@ class QuestBoard(Cog):
         guild = self.bot.get_guild(guild_id)
         user_id = ctx.author.id
         # Get the quest board channel
-        query = await gdb['questChannel'].find_one({'guildId': guild_id})
+        query = await self.gdb['questChannel'].find_one({'guildId': guild_id})
         quest_channel_id = query['questChannel']
         quest_channel = guild.get_channel(quest_channel_id)
 
         # Find the quest to edit
-        collection = gdb['quests']
+        collection = self.gdb['quests']
         quest = await collection.find_one({'questId': quest_id})
         if not quest:
             # TODO: Error handling
@@ -773,12 +768,12 @@ class QuestBoard(Cog):
         guild = self.bot.get_guild(guild_id)
         user_id = ctx.author.id
         # Get the quest board channel
-        query = await gdb['questChannel'].find_one({'guildId': guild_id})
+        query = await self.gdb['questChannel'].find_one({'guildId': guild_id})
         quest_channel_id = query['questChannel']
         quest_channel = guild.get_channel(quest_channel_id)
 
         # Find the quest to edit
-        collection = gdb['quests']
+        collection = self.gdb['quests']
         quest = await collection.find_one({'questId': quest_id})
         if not quest:
             # TODO: Error handling
@@ -813,12 +808,12 @@ class QuestBoard(Cog):
         guild = self.bot.get_guild(guild_id)
         user_id = ctx.author.id
         # Get the quest board channel
-        query = await gdb['questChannel'].find_one({'guildId': guild_id})
+        query = await self.gdb['questChannel'].find_one({'guildId': guild_id})
         quest_channel_id = query['questChannel']
         quest_channel = guild.get_channel(quest_channel_id)
 
         # Find the quest to edit
-        collection = gdb['quests']
+        collection = self.gdb['quests']
         quest = await collection.find_one({'questId': quest_id})
         if not quest:
             # TODO: Error handling
@@ -853,12 +848,12 @@ class QuestBoard(Cog):
         guild = self.bot.get_guild(guild_id)
         user_id = ctx.author.id
         # Get the quest board channel
-        query = await gdb['questChannel'].find_one({'guildId': guild_id})
+        query = await self.gdb['questChannel'].find_one({'guildId': guild_id})
         quest_channel_id = query['questChannel']
         quest_channel = guild.get_channel(quest_channel_id)
 
         # Find the quest to edit
-        collection = gdb['quests']
+        collection = self.gdb['quests']
         quest = await collection.find_one({'questId': quest_id})
         if not quest:
             # TODO: Error handling
@@ -895,7 +890,7 @@ class QuestBoard(Cog):
             await ctx.send('Experience must be a non-zero integer!')
             return
 
-        collection = gdb['quests']
+        collection = self.gdb['quests']
 
         quest_query = await collection.find_one({'questId': quest_id})
         if ctx.author.id != quest_query['gm'] and not ctx.author.guild_permissions.manage_guild:
@@ -923,7 +918,7 @@ class QuestBoard(Cog):
             await ctx.send('Quantity must be a non-zero integer!')
             return
 
-        collection = gdb['quests']
+        collection = self.gdb['quests']
 
         quest_query = await collection.find_one({'questId': quest_id})
         if not quest_query:
@@ -996,7 +991,7 @@ class QuestBoard(Cog):
         guild = self.bot.get_guild(guild_id)
         user_id = ctx.author.id
 
-        collection = gdb['partyRole']
+        collection = self.gdb['partyRole']
         query = await collection.find_one({'guildId': guild_id, 'gm': user_id})
 
         if role_name:
@@ -1067,5 +1062,5 @@ class QuestBoard(Cog):
                 await ctx.send(embed=post_embed)
 
 
-def setup(bot):
-    bot.add_cog(QuestBoard(bot))
+async def setup(bot):
+    await bot.add_cog(QuestBoard(bot))

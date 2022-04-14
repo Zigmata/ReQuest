@@ -1,22 +1,8 @@
-from pathlib import Path
 import re
-import yaml
-from motor.motor_asyncio import AsyncIOMotorClient
 import discord
 
-# Set up config file and load
-CONFIG_FILE = Path('ReQuest/config.yaml')
-
-with open(CONFIG_FILE, 'r') as yaml_file:
-    config = yaml.safe_load(yaml_file)
-
-mongo_client = AsyncIOMotorClient(config['dbServer'], config['port'])
-cdb = mongo_client[config['configDb']]
-mdb = mongo_client[config['memberDb']]
-gdb = mongo_client[config['guildDb']]
-
-
 # TODO: Implement input sanitization helper functions
+
 
 # Deletes command invocations
 async def attempt_delete(message):
@@ -27,9 +13,9 @@ async def attempt_delete(message):
 
 
 async def get_prefix(bot, message):
-    prefix = await cdb['prefixes'].find_one({'guildId': message.guild.id})
+    prefix = await bot.cdb['prefixes'].find_one({'guildId': message.guild.id})
     if not prefix:
-        return f'{config["prefix"]}'
+        return f'{bot.config["prefix"]}'
     else:
         return f'{prefix["prefix"]}'
 

@@ -7,25 +7,14 @@ from discord.ext.commands import Cog, command
 
 from ..utilities.supportFunctions import attempt_delete, strip_id, get_prefix
 
-global gdb
-global mdb
-global cdb
-global white_list
-
 
 class Admin(Cog):
     """Administrative commands such as server configuration and bot options."""
 
     def __init__(self, bot):
         self.bot = bot
-        global gdb
-        global mdb
-        global cdb
-        global white_list
-        gdb = bot.gdb
-        mdb = bot.mdb
-        cdb = bot.cdb
-        white_list = bot.white_list
+        self.gdb = bot.gdb
+        self.cdb = bot.cdb
 
     # -----------------Listeners----------------
 
@@ -33,10 +22,7 @@ class Admin(Cog):
     async def on_guild_join(self, server):
         # TODO: Message guild owner about whitelisting
         # TODO: Expand function to check guild db on valid join and initialize if new
-        if not white_list:
-            return
-
-        if server.id in white_list:
+        if not self.white_list or server.id in self.white_list:
             return
         else:
             return await server.leave()
@@ -89,8 +75,8 @@ class Admin(Cog):
             return  # TODO: Error message feedback
 
     @white_list.command(name='add', pass_context=True)
-    async def wadd(self, ctx, guild):
-        collection = cdb['botWhiteList']
+    async def whitelist_add(self, ctx, guild):
+        collection = self.cdb['botWhiteList']
         guild_id = int(guild)
         self.bot.white_list.append(guild_id)
 
@@ -103,10 +89,10 @@ class Admin(Cog):
         await msg.delete()
 
     @white_list.command(name='remove', pass_context=True)
-    async def wremove(self, ctx, guild):
-        collection = cdb['botWhiteList']
+    async def whitelist_remove(self, ctx, guild):
+        collection = self.cdb['botWhiteList']
         guild_id = int(guild)
-        self.bot.white_list.remove(guild_id)
+        self.bot.white_list.gm_remove(guild_id)
 
         if await collection.count_documents({'servers': {'$exists': True}}, limit=1) != 0:
             await collection.update_one({'servers': {'$exists': True}}, {'$pull': {'servers': guild_id}})
@@ -137,7 +123,7 @@ class Admin(Cog):
         [prefix]: The new command prefix to use.
         """
         guild_id = ctx.message.guild.id
-        collection = cdb['prefixes']
+        collection = self.cdb['prefixes']
 
         await collection.update_one({'guildId': guild_id}, {'$set': {'prefix': prefix}}, upsert=True)
         await ctx.send(f'Command prefix changed to `{prefix}`')
@@ -160,7 +146,7 @@ class Admin(Cog):
         """
         guild_id = ctx.message.guild.id
         guild = self.bot.get_guild(guild_id)
-        collection = gdb['announceRole']
+        collection = self.gdb['announceRole']
         query = await collection.find_one({'guildId': guild_id})
 
         if role_name:
@@ -216,8 +202,8 @@ class Admin(Cog):
         # If no argument is provided, query the db for the current setting
         else:
             if not query:
-                await ctx.send(f'Announcement role not set! Configure with `{await get_prefix(self, ctx.message)}config'
-                               f' role announce <role name>`')
+                await ctx.send(f'Announcement role not set! Configure with '
+                               f'`{await get_prefix(self.bot, ctx.message)}config role announce <role name>`')
             else:
                 current_role = query['announceRole']
                 post_embed = discord.Embed(title='Config - Role - Announcement', type='rich',
@@ -232,12 +218,13 @@ class Admin(Cog):
         When this base command is executed, it displays the current setting.
         """
         guild_id = ctx.message.guild.id
-        collection = gdb['gmRoles']
+        collection = self.gdb['gmRoles']
 
         query = await collection.find_one({'guildId': guild_id})
         if not query or 'gmRoles' not in query or not query['gmRoles']:
-            await ctx.send(f'GM role(s) not set! Configure with `{await get_prefix(self, ctx.message)}config role gm '
-                           f'add <role name>`. Roles can be chained (separate with a space).')
+            await ctx.send(f'GM role(s) not set! Configure with '
+                           f'`{await get_prefix(self.bot, ctx.message)}config role gm add <role name>`.'
+                           f' Roles can be chained (separate with a space).')
         else:
             current_role_ids = query['gmRoles']
             current_roles = map(str, current_role_ids)
@@ -246,8 +233,8 @@ class Admin(Cog):
             post_embed.add_field(name='GM Role(s)', value='<@&' + '>\n<@&'.join(current_roles) + '>')
             await ctx.send(embed=post_embed)
 
-    @role_gm.command(aliases=['a'], pass_context=True)
-    async def add(self, ctx, *role_names):
+    @role_gm.command(name='add', aliases=['a'], pass_context=True)
+    async def gm_add(self, ctx, *role_names):
         """
         Configures roles for access to GM commands.
 
@@ -255,7 +242,7 @@ class Admin(Cog):
         [role_names]: Adds the role as a GM. Can be chained. Roles with spaces must be encapsulated in quotes.
         """
         guild_id = ctx.message.guild.id
-        collection = gdb['gmRoles']
+        collection = self.gdb['gmRoles']
 
         if role_names:
             guild = self.bot.get_guild(guild_id)
@@ -330,8 +317,8 @@ class Admin(Cog):
         else:
             await ctx.send('Role not provided!')
 
-    @role_gm.command(aliases=['r'], pass_context=True)
-    async def remove(self, ctx, *role_names):
+    @role_gm.command(name='remove', aliases=['r', 'del', 'rem'], pass_context=True)
+    async def gm_remove(self, ctx, *role_names):
         """
         Removes a role's access to GM commands.
 
@@ -340,7 +327,7 @@ class Admin(Cog):
         --<all>: Removes all roles from the GM list.
         """
         guild_id = ctx.message.guild.id
-        collection = gdb['gmRoles']
+        collection = self.gdb['gmRoles']
 
         if role_names:
             query = await collection.find_one({'guildId': guild_id})
@@ -443,7 +430,7 @@ class Admin(Cog):
         [channel link]: Sets the player board channel.
         """
         guild_id = ctx.message.guild.id
-        collection = gdb['playerBoardChannel']
+        collection = self.gdb['playerBoardChannel']
 
         if channel and channel == 'disable':
             if await collection.count_documents({'guildId': guild_id}, limit=1) != 0:  # Delete the record if one exists
@@ -457,8 +444,9 @@ class Admin(Cog):
         else:  # If the channel is not provided, output the current setting.
             query = await collection.find_one({'guildId': guild_id})
             if not query:
-                await ctx.send(f'Player board channel not set! Configure with `{await get_prefix(self, ctx.message)}'
-                               f'config channel playerboard <channel mention>`')
+                await ctx.send(f'Player board channel not set! Configure with '
+                               f'`{await get_prefix(self.bot, ctx.message)}config channel playerboard '
+                               f'<channel mention>`')
             else:
                 await ctx.send('Player board channel currently set to <#{}>'.format(query['playerBoardChannel']))
 
@@ -472,7 +460,7 @@ class Admin(Cog):
         [channel link]: Sets the quest board channel.
         """
         guild_id = ctx.message.guild.id
-        collection = gdb['questChannel']
+        collection = self.gdb['questChannel']
 
         # When provided with a channel name, deletes the old entry and adds the new one.
         if channel:
@@ -482,7 +470,7 @@ class Admin(Cog):
         else:  # If no channel is provided, inform the user of the current setting
             query = await collection.find_one({'guildId': guild_id})
             if not query:
-                await ctx.send(f'Quest board channel not set! Configure with `{await get_prefix(self, ctx.message)}'
+                await ctx.send(f'Quest board channel not set! Configure with `{await get_prefix(self.bot, ctx.message)}'
                                f'config channel questboard <channel link>`')
             else:
                 await ctx.send(f'Quest board channel currently set to <#{query["questChannel"]}>')
@@ -498,7 +486,7 @@ class Admin(Cog):
         --<clear>: Clears the current setting.
         """
         guild_id = ctx.message.guild.id
-        collection = gdb['archiveChannel']
+        collection = self.gdb['archiveChannel']
 
         if channel:
             if channel.lower() == 'clear':
@@ -512,8 +500,8 @@ class Admin(Cog):
         else:
             query = await collection.find_one({'guildId': guild_id})
             if not query:
-                await ctx.send(f'Quest archive channel not set! Configure with `{await get_prefix(self, ctx.message)}'
-                               f'config channel questarchive <channel link>`')
+                await ctx.send(f'Quest archive channel not set! Configure with '
+                               f'`{await get_prefix(self.bot, ctx.message)}config channel questarchive <channel link>`')
             else:
                 await ctx.send(f'Quest archive channel currently set to <#{query["archiveChannel"]}>')
 
@@ -537,7 +525,7 @@ class Admin(Cog):
         [wait_list_value]: The size of the quest wait list. Accepts a range of 0 to 5.
         """
         guild_id = ctx.message.guild.id
-        collection = gdb['questWaitlist']
+        collection = self.gdb['questWaitlist']
 
         # Print the current setting if no argument is given. Otherwise, store the new value.
         if not wait_list_value:
@@ -572,14 +560,15 @@ class Admin(Cog):
         guild_id = ctx.message.guild.id
 
         # Check to see if the quest archive is configured.
-        quest_archive = await gdb['archiveChannel'].find_one({'guildId': guild_id})
+        quest_archive = await self.gdb['archiveChannel'].find_one({'guildId': guild_id})
         if not quest_archive:
-            await ctx.send(f'Quest archive channel not configured! Use `{await get_prefix(self, ctx.message)}config '
-                           f'channel questarchive <channel mention>` to set up!')
+            await ctx.send(f'Quest archive channel not configured! Use '
+                           f'`{await get_prefix(self.bot, ctx.message)}config channel questarchive <channel mention>`'
+                           f' to set up!')
             return
 
         # Query the current setting and toggle
-        collection = gdb['questSummary']
+        collection = self.gdb['questSummary']
         summary_enabled = await collection.find_one({'guildId': guild_id})
         if not summary_enabled or not summary_enabled['questSummary']:
             await collection.update_one({'guildId': guild_id}, {'$set': {'questSummary': True}}, upsert=True)
@@ -608,7 +597,7 @@ class Admin(Cog):
         [True|False]: Configures the server to enable/disable experience points.
         """
         guild_id = ctx.message.guild.id
-        query = await gdb['characterSettings'].find_one({'guildId': guild_id})
+        query = await self.gdb['characterSettings'].find_one({'guildId': guild_id})
 
         # Display setting if no arg is passed
         if enabled is None:
@@ -617,10 +606,10 @@ class Admin(Cog):
             else:
                 await ctx.send('Character Experience Points are disabled.')
         elif enabled.lower() == 'true':
-            await gdb['characterSettings'].update_one({'guildId': guild_id}, {'$set': {'xp': True}}, upsert=True)
+            await self.gdb['characterSettings'].update_one({'guildId': guild_id}, {'$set': {'xp': True}}, upsert=True)
             await ctx.send('Character Experience Points enabled!')
         elif enabled.lower() == 'false':
-            await gdb['characterSettings'].update_one({'guildId': guild_id}, {'$set': {'xp': False}}, upsert=True)
+            await self.gdb['characterSettings'].update_one({'guildId': guild_id}, {'$set': {'xp': False}}, upsert=True)
             await ctx.send('Character Experience Points disabled!')
 
     @config_characters.group(name='progression', aliases=['prog'], case_insensitive=True,
@@ -641,7 +630,7 @@ class Admin(Cog):
         """
         if ctx.invoked_subcommand is None:
             guild_id = ctx.message.guild.id
-            collection = gdb['currency']
+            collection = self.gdb['currency']
             query = await collection.find_one({'_id': guild_id})
 
             post_embed = discord.Embed(title='Config - Currencies', type='rich')
@@ -684,7 +673,7 @@ class Admin(Cog):
         Keys and their functions
         -----------------------------------
         "name": Name of the currency. Case-insensitive. Acts as the base denomination with a value of 1. Example: gold
-        "double": Specifies whether or not currency is displayed as whole integers (10) or as a double (10.00)
+        "double": Specifies whether currency is displayed as whole integers (10) or as a double (10.00)
         "denoms": An array of objects for additional denominations. Example: {"name": "silver", "value": 0.1}
 
         "name" is the only required key to add a new currency.
@@ -697,7 +686,7 @@ class Admin(Cog):
         """
         # TODO: Redundant-name prevention
         guild_id = ctx.message.guild.id
-        collection = gdb['currency']
+        collection = self.gdb['currency']
         try:
             loaded = json.loads(definition)
             await collection.update_one({'_id': guild_id}, {'$push': {'currencies': loaded}}, upsert=True)
@@ -715,7 +704,7 @@ class Admin(Cog):
         """
         # TODO: Multiple-match logic
         guild_id = ctx.message.guild.id
-        collection = gdb['currency']
+        collection = self.gdb['currency']
         query = await collection.find_one({'_id': guild_id})
 
         for i in range(len(query['currencies'])):
@@ -733,5 +722,5 @@ class Admin(Cog):
                     await ctx.send('Operation aborted!')
 
 
-def setup(bot):
-    bot.add_cog(Admin(bot))
+async def setup(bot):
+    await bot.add_cog(Admin(bot))
