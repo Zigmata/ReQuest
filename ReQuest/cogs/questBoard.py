@@ -644,7 +644,7 @@ class QuestBoard(Cog):
         quest_channel = guild.get_channel(channel_id)
         message_id = quest['messageId']
         message = quest_channel.get_partial_message(message_id)
-        await message.delete()
+        await attempt_delete(message)
 
         await ctx.send(f'Quest `{quest_id}`: **{title}** completed!')
 
@@ -703,7 +703,7 @@ class QuestBoard(Cog):
         quest_channel = guild.get_channel(channel_id)
         message_id = quest['messageId']
         message = quest_channel.get_partial_message(message_id)
-        await message.delete()
+        await attempt_delete(message)
 
         await ctx.send(f'Quest `{quest_id}`: **{title}** deleted!')
 

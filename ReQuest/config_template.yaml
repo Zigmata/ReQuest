@@ -24,4 +24,4 @@ load_extensions:
     - 'ReQuest.cogs.wallet'
 
 # Whitelist
-whiteList: False # Set true if utilizing a server whitelist.
+whiteList: False # Set true if utilizing a server white list.

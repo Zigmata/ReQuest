@@ -1,4 +1,5 @@
 from datetime import datetime
+
 import discord
 import shortuuid
 from discord.ext import commands
@@ -6,7 +7,6 @@ from discord.ext.commands import Cog
 
 from ..utilities.checks import has_gm_or_mod, has_active_character
 from ..utilities.supportFunctions import strip_id
-
 
 listener = Cog.listener
 

@@ -17,7 +17,7 @@ async def get_prefix(bot, message):
     if not prefix:
         return f'{bot.config["prefix"]}'
     else:
-        return str(prefix['prefix'])
+        return f'{prefix["prefix"]}'
 
 
 def strip_id(mention) -> int:

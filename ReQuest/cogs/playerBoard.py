@@ -15,7 +15,6 @@ listener = Cog.listener
 class PlayerBoard(Cog):
     def __init__(self, bot):
         self.bot = bot
-        mdb = bot.mdb
         self.gdb = bot.gdb
 
     # --- Support Functions ---
@@ -273,7 +272,7 @@ class PlayerBoard(Cog):
         if message_ids:
             for message_id in message_ids:
                 msg = pb_channel.get_partial_message(message_id)
-                await msg.delete()
+                await attempt_delete(msg)
                 await self.gdb['playerBoard'].delete_one({'messageId': message_id})
 
             await ctx.send('{} expired posts deleted!'.format(len(message_ids)))

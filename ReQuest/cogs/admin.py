@@ -92,7 +92,7 @@ class Admin(Cog):
     async def whitelist_remove(self, ctx, guild):
         collection = self.cdb['botWhiteList']
         guild_id = int(guild)
-        self.bot.white_list.remove(guild_id)
+        self.bot.white_list.gm_remove(guild_id)
 
         if await collection.count_documents({'servers': {'$exists': True}}, limit=1) != 0:
             await collection.update_one({'servers': {'$exists': True}}, {'$pull': {'servers': guild_id}})

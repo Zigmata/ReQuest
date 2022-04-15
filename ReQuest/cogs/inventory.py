@@ -190,7 +190,6 @@ class Inventory(Cog):
     async def inventory_buy(self, ctx, item_name, quantity: int):
         """
         Buys an item from the auto-market.
-
         Arguments:
         <item_name>: The name of the item to purchase.
         <quantity>: The quantity of the item being purchased.
@@ -201,7 +200,6 @@ class Inventory(Cog):
     async def inventory_sell(self, ctx, item_name, quantity: int):
         """
         Sells an item on the auto-market.
-
         Arguments:
         <item_name>: The name of the item to sell.
         <quantity>: The quantity of the item being sold.
