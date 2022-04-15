@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Cog, command
 
-from ..utilities.supportFunctions import delete_command, strip_id, get_prefix
+from ..utilities.supportFunctions import attempt_delete, strip_id, get_prefix
 
 
 class Admin(Cog):
@@ -34,7 +34,6 @@ class Admin(Cog):
     @command(hidden=True)
     async def reload(self, ctx, module: str):
         self.bot.reload_extension('ReQuest.cogs.' + module)
-        await delete_command(ctx.message)
 
         msg = await ctx.send(f'Extension successfully reloaded: `{module}`')
         await asyncio.sleep(3)
@@ -49,8 +48,6 @@ class Admin(Cog):
         else:
             await ctx.send(text)
 
-        await delete_command(ctx.message)
-
     # Loads a cog that hasn't yet been loaded
     @commands.is_owner()
     @command(hidden=True)
@@ -61,15 +58,12 @@ class Admin(Cog):
         await asyncio.sleep(3)
         await msg.delete()
 
-        await delete_command(ctx.message)
-
     # Shut down the bot
     @commands.is_owner()
     @command(hidden=True)
     async def shutdown(self, ctx):
         try:
             await ctx.send('Shutting down!')
-            await delete_command(ctx.message)
             await ctx.bot.close()
         except Exception as e:
             await ctx.send(f'{type(e).__name__}: {e}')
@@ -78,7 +72,6 @@ class Admin(Cog):
     @commands.group(name='whitelist', hidden=True, case_insensitive=True, pass_context=True)
     async def white_list(self, ctx):
         if ctx.invoked_subcommand is None:
-            await delete_command(ctx.message)
             return  # TODO: Error message feedback
 
     @white_list.command(name='add', pass_context=True)
@@ -90,8 +83,6 @@ class Admin(Cog):
         await collection.update_one({'servers': {'$exists': True}}, {'$push': {'servers': guild_id}}, upsert=True)
 
         msg = await ctx.send(f'Guild `{guild_id}` added to whitelist!')
-
-        await delete_command(ctx.message)
 
         await asyncio.sleep(3)
 
@@ -109,8 +100,6 @@ class Admin(Cog):
             return
 
         msg = await ctx.send(f'Guild `{guild_id}` removed from whitelist!')
-
-        await delete_command(ctx.message)
 
         await asyncio.sleep(3)
 
@@ -138,8 +127,6 @@ class Admin(Cog):
 
         await collection.update_one({'guildId': guild_id}, {'$set': {'prefix': prefix}}, upsert=True)
         await ctx.send(f'Command prefix changed to `{prefix}`')
-
-        await delete_command(ctx.message)
 
     # --- Role ---
 
@@ -195,13 +182,13 @@ class Admin(Cog):
                     reply = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
                     selection = int(reply.content)
                     if selection > len(matches):
-                        await delete_command(match_msg)
-                        await delete_command(reply)
+                        await attempt_delete(match_msg)
+                        await attempt_delete(reply)
                         await ctx.send(f'Selection is outside the list of options. Operation aborted.')
                         return
                     else:
-                        await delete_command(match_msg)
-                        await delete_command(reply)
+                        await attempt_delete(match_msg)
+                        await attempt_delete(reply)
                         new_role = matches[selection - 1]
 
                 # Add the new role's ID to the database
@@ -222,8 +209,6 @@ class Admin(Cog):
                 post_embed = discord.Embed(title='Config - Role - Announcement', type='rich',
                                            description=f'<@&{current_role}>')
                 await ctx.send(embed=post_embed)
-
-        await delete_command(ctx.message)
 
     @role.group(name='gm', case_insensitive=True, pass_context=True, invoke_without_command=True)
     async def role_gm(self, ctx):
@@ -247,8 +232,6 @@ class Admin(Cog):
             post_embed = discord.Embed(title='Config - Role - GM', type='rich')
             post_embed.add_field(name='GM Role(s)', value='<@&' + '>\n<@&'.join(current_roles) + '>')
             await ctx.send(embed=post_embed)
-
-        await delete_command(ctx.message)
 
     @role_gm.command(name='add', aliases=['a'], pass_context=True)
     async def gm_add(self, ctx, *role_names):
@@ -300,13 +283,13 @@ class Admin(Cog):
                     reply = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
                     selection = int(reply.content)
                     if selection > len(matches):
-                        await delete_command(match_msg)
-                        await delete_command(reply)
+                        await attempt_delete(match_msg)
+                        await attempt_delete(reply)
                         await ctx.send(f'Selection is outside the list of options. Selection for "{role}" aborted.')
                         continue
                     else:
-                        await delete_command(match_msg)
-                        await delete_command(reply)
+                        await attempt_delete(match_msg)
+                        await attempt_delete(reply)
                         # If a document exists, check to see if the id of the provided role is already set
                         if gm_roles and matches[selection - 1]['id'] in gm_roles:
                             await ctx.send(f'`{matches[selection - 1]["name"]}` is already configured as a GM role. '
@@ -318,7 +301,6 @@ class Admin(Cog):
 
             if not new_roles:
                 await ctx.send('No valid roles were added to the GM list.')
-                await delete_command(ctx.message)
                 return
             else:
                 added_names = []
@@ -334,8 +316,6 @@ class Admin(Cog):
 
         else:
             await ctx.send('Role not provided!')
-
-        await delete_command(ctx.message)
 
     @role_gm.command(name='remove', aliases=['r', 'del', 'rem'], pass_context=True)
     async def gm_remove(self, ctx, *role_names):
@@ -353,7 +333,6 @@ class Admin(Cog):
             query = await collection.find_one({'guildId': guild_id})
             if not query or 'gmRoles' not in query or not query['gmRoles']:
                 await ctx.send('No GM roles have been set!')
-                await delete_command(ctx.message)
                 return
 
             removed_roles = []
@@ -361,7 +340,6 @@ class Admin(Cog):
             if len(role_names) == 1 and role_names[0].lower() == 'all':
                 await collection.delete_one({'guildId': guild_id})
                 await ctx.send('GM roles cleared!')
-                await delete_command(ctx.message)
                 return
             else:
                 guild = self.bot.get_guild(guild_id)
@@ -398,13 +376,13 @@ class Admin(Cog):
                         reply = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
                         selection = int(reply.content)
                         if selection > len(matches):
-                            await delete_command(match_msg)
-                            await delete_command(reply)
+                            await attempt_delete(match_msg)
+                            await attempt_delete(reply)
                             await ctx.send(f'Selection is outside the list of options. Selection for "{role}" aborted.')
                             continue
                         else:
-                            await delete_command(match_msg)
-                            await delete_command(reply)
+                            await attempt_delete(match_msg)
+                            await attempt_delete(reply)
                             # Check to see if the id of the provided role is stored or not
                             if matches[selection - 1]['id'] not in gm_roles:
                                 await ctx.send(f'`{matches[selection - 1]["name"]}` is not configured as a GM role. '
@@ -416,7 +394,6 @@ class Admin(Cog):
 
             if not removed_roles:
                 await ctx.send('No valid roles were removed from the GM list.')
-                await delete_command(ctx.message)
                 return
             else:
                 removed_names = []
@@ -432,8 +409,6 @@ class Admin(Cog):
         else:
             await ctx.send('Role not provided!')
 
-        await delete_command(ctx.message)
-
     # --- Channel ---
 
     @config.group(case_insensitive=True, aliases=['chan', 'ch'], pass_context=True)
@@ -445,7 +420,6 @@ class Admin(Cog):
             return  # TODO: Error message feedback
 
     # Configures the channel in which player messages are to be posted. Same logic as questChannel()
-    # noinspection SpellCheckingInspection
     @channel.command(name='playerboard', aliases=['player', 'pboard', 'pb'], pass_context=True)
     async def player_board_channel(self, ctx, channel: str = None):
         """
@@ -476,8 +450,6 @@ class Admin(Cog):
             else:
                 await ctx.send('Player board channel currently set to <#{}>'.format(query['playerBoardChannel']))
 
-        await delete_command(ctx.message)
-
     @channel.command(name='questboard', aliases=['quest', 'qboard', 'qb'], pass_context=True)
     async def quest_board(self, ctx, channel: str = None):
         """
@@ -502,8 +474,6 @@ class Admin(Cog):
                                f'config channel questboard <channel link>`')
             else:
                 await ctx.send(f'Quest board channel currently set to <#{query["questChannel"]}>')
-
-        await delete_command(ctx.message)
 
     @channel.command(name='questarchive', aliases=['archive', 'qarch', 'qa'], pass_context=True)
     async def quest_archive(self, ctx, channel: str = None):
@@ -535,8 +505,6 @@ class Admin(Cog):
             else:
                 await ctx.send(f'Quest archive channel currently set to <#{query["archiveChannel"]}>')
 
-        await delete_command(ctx.message)
-
     # --- Quest ---
 
     @config.group(aliases=['q'], case_insensitive=True, pass_context=True)
@@ -545,7 +513,6 @@ class Admin(Cog):
         Commands for configuring quest post behavior.
         """
         if ctx.invoked_subcommand is None:
-            await delete_command(ctx.message)
             return  # TODO: Error message feedback
 
     @quest.command(name='waitlist', aliases=['wait'], pass_context=True)
@@ -583,8 +550,6 @@ class Admin(Cog):
                 await ctx.send('{}: {}'.format(type(e).__name__, e))
                 return
 
-        await delete_command(ctx.message)
-
     @quest.command(name='summary', aliases=['sum'], pass_context=True)
     async def summary(self, ctx):
         """
@@ -600,7 +565,6 @@ class Admin(Cog):
             await ctx.send(f'Quest archive channel not configured! Use '
                            f'`{await get_prefix(self.bot, ctx.message)}config channel questarchive <channel mention>`'
                            f' to set up!')
-            await delete_command(ctx.message)
             return
 
         # Query the current setting and toggle
@@ -613,8 +577,6 @@ class Admin(Cog):
             await collection.update_one({'guildId': guild_id}, {'$set': {'questSummary': False}})
             await ctx.send('Quest summary disabled.')
 
-        await delete_command(ctx.message)
-
     # --- Characters ---
 
     @config.group(name='characters', aliases=['chars'], case_insensitive=True)
@@ -623,7 +585,6 @@ class Admin(Cog):
         This group of commands configures the character attributes on the server.
         """
         if ctx.invoked_subcommand is None:
-            await delete_command(ctx.message)
             return  # TODO: Error message feedback
 
     @config_characters.command(name='experience', aliases=['xp', 'exp'])
@@ -651,7 +612,12 @@ class Admin(Cog):
             await self.gdb['characterSettings'].update_one({'guildId': guild_id}, {'$set': {'xp': False}}, upsert=True)
             await ctx.send('Character Experience Points disabled!')
 
-        await delete_command(ctx.message)
+    @config_characters.group(name='progression', aliases=['prog'], case_insensitive=True,
+                             invoke_without_subcommand=True)
+    async def config_progression(self, ctx):
+        if ctx.invoked_subcommand is None:
+            # display custom progression options
+            return
 
     # --- Currency ---
 
@@ -685,7 +651,6 @@ class Admin(Cog):
                                      value=f'Double: ```\n{double}``` Denominations: ```\n{denoms}```', inline=True)
 
             await ctx.send(embed=post_embed)
-            await delete_command(ctx.message)
 
     @config_currency.command(name='add', aliases=['a'])
     async def currency_add(self, ctx, *, definition):
@@ -729,8 +694,6 @@ class Admin(Cog):
         except json.JSONDecodeError:
             await ctx.send('Invalid JSON format, check syntax and try again!')
 
-        await delete_command(ctx.message)
-
     @config_currency.command(name='remove', aliases=['r', 'delete', 'd'])
     async def currency_remove(self, ctx, name):
         """
@@ -750,15 +713,13 @@ class Admin(Cog):
             if name.lower() in cname.lower():
                 await ctx.send(f'Removing `{cname}` from server transactions. Confirm: **Y**es/**N**o?')
                 confirm = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
-                await delete_command(confirm)
+                await attempt_delete(confirm)
                 if confirm.content.lower() == 'y' or confirm.content.lower() == 'yes':
                     await collection.update_one({'_id': guild_id},
                                                 {'$pull': {'currencies': {'name': cname}}}, upsert=True)
                     await ctx.send(f'`{cname}` removed!')
                 else:
                     await ctx.send('Operation aborted!')
-
-        await delete_command(ctx.message)
 
 
 async def setup(bot):

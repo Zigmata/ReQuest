@@ -5,7 +5,7 @@ import discord
 
 
 # Deletes command invocations
-async def delete_command(message):
+async def attempt_delete(message):
     try:
         await message.delete()
     except discord.HTTPException:

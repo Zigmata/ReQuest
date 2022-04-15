@@ -1,11 +1,12 @@
 from datetime import datetime
+
 import discord
 import shortuuid
 from discord.ext import commands
 from discord.ext.commands import Cog
 
-from ..utilities.supportFunctions import delete_command, strip_id
 from ..utilities.checks import has_gm_or_mod, has_active_character
+from ..utilities.supportFunctions import strip_id
 
 listener = Cog.listener
 
@@ -55,8 +56,6 @@ class Inventory(Cog):
 
             await ctx.send(embed=post_embed)
 
-            await delete_command(ctx.message)
-
     @inventory.command(name='mod')
     @has_gm_or_mod()
     async def inventory_mod(self, ctx, item_name, quantity: int, *user_mentions):
@@ -71,7 +70,6 @@ class Inventory(Cog):
         """
         if quantity == 0:
             await ctx.send('Stop being a tease and enter an actual quantity!')
-            await delete_command(ctx.message)
             return
 
         gm_member_id = ctx.author.id
@@ -121,7 +119,6 @@ class Inventory(Cog):
         inventory_embed.add_field(name='Game Master', value=f'<@!{gm_member_id}>', inline=False)
         inventory_embed.set_footer(text=f'{datetime.utcnow().strftime("%Y-%m-%d")} Transaction ID: {transaction_id}')
         await ctx.send(embed=inventory_embed)
-        await delete_command(ctx.message)
 
     @inventory.command(name='give')
     @has_active_character()
@@ -142,11 +139,9 @@ class Inventory(Cog):
         recipient_query = await collection.find_one({'_id': recipient_id})
         if not recipient_query:
             await ctx.send('That player does not have any registered characters!')
-            await delete_command(ctx.message)
             return
         if str(guild_id) not in recipient_query['activeChars']:
             await ctx.send('That player does not have an active character on this server!')
-            await delete_command(ctx.message)
             return
 
         transaction_id = str(shortuuid.uuid()[:12])
@@ -176,12 +171,10 @@ class Inventory(Cog):
                                             upsert=True)
             else:
                 await ctx.send('You are attempting to give more than you have. Check your inventory!')
-                await delete_command(ctx.message)
                 return
         else:
             await ctx.send(f'{item_name} was not found in your inventory. This command is case-sensitive; '
                            f'check your spelling.')
-            await delete_command(ctx.message)
             return
 
         trade_embed = discord.Embed(title='Trade Completed!', type='rich',
@@ -193,8 +186,6 @@ class Inventory(Cog):
 
         await ctx.send(embed=trade_embed)
 
-        await delete_command(ctx.message)
-
     @inventory.command(name='buy', hidden=True)
     async def inventory_buy(self, ctx, item_name, quantity: int):
         """
@@ -205,7 +196,6 @@ class Inventory(Cog):
         <quantity>: The quantity of the item being purchased.
         """
         await ctx.send('Future feature. Stay tuned!')
-        await delete_command(ctx.message)
 
     @inventory.command(name='sell', hidden=True)
     async def inventory_sell(self, ctx, item_name, quantity: int):
@@ -217,7 +207,6 @@ class Inventory(Cog):
         <quantity>: The quantity of the item being sold.
         """
         await ctx.send('Future feature. Stay tuned!')
-        await delete_command(ctx.message)
 
 
 async def setup(bot):

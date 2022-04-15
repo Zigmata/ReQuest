@@ -5,8 +5,9 @@ import aiohttp
 import yaml
 import discord
 from discord.ext import commands
+from discord.ext.commands import errors
 from motor.motor_asyncio import AsyncIOMotorClient as MotorClient
-from utilities.supportFunctions import get_prefix
+from utilities.supportFunctions import get_prefix, attempt_delete
 
 
 class ReQuest(commands.AutoShardedBot):
@@ -44,6 +45,7 @@ class ReQuest(commands.AutoShardedBot):
 
         # Grab the list of extensions and load them asynchronously
         initial_extensions = self.config['load_extensions']
+        # TODO: Verify async loop isn't needed
         for ext in initial_extensions:
             asyncio.create_task(self.load_extension(ext))
 
@@ -58,6 +60,24 @@ class ReQuest(commands.AutoShardedBot):
     async def load_white_list(self):
         white_list = await self.cdb['botWhiteList'].find_one({'servers': {'$exists': True}})
         self.white_list = white_list['servers']
+
+    # Overridden from base to delete command invocation messages
+    async def invoke(self, ctx):
+        if ctx.command is not None:
+            self.dispatch('command', ctx)
+            try:
+                if await self.can_run(ctx, call_once=True):
+                    await attempt_delete(ctx.message)
+                    await ctx.command.invoke(ctx)
+                else:
+                    raise errors.CheckFailure('The global check once functions failed.')
+            except errors.CommandError as exc:
+                await ctx.command.dispatch_error(ctx, exc)
+            else:
+                self.dispatch('command_completion', ctx)
+        elif ctx.invoked_with:
+            exc = errors.CommandNotFound('Command "{}" is not found'.format(ctx.invoked_with))
+            self.dispatch('command_error', ctx, exc)
 
     async def on_message(self, message):
         if message.author.bot:
