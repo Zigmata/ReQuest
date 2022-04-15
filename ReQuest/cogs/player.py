@@ -12,7 +12,6 @@ listener = Cog.listener
 class Player(Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.gdb = bot.gdb
         self.mdb = bot.mdb
 
     @commands.group(aliases=['char'], invoke_without_command=True, case_insensitive=True)
@@ -66,12 +65,12 @@ class Player(Cog):
                     match_msg = await ctx.send(embed=match_embed)
                     reply = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
                     if int(reply.content) > len(character_list):
-                        await match_msg.delete()
+                        await attempt_delete(match_msg)
                         await attempt_delete(reply)
                         await ctx.send('Selection is outside the list of options.')
                         return
                     else:
-                        await match_msg.delete()
+                        await attempt_delete(match_msg)
                         await attempt_delete(reply)
                         selection = query['characters'][character_list[int(reply.content) - 1]]
                         await ctx.send(f'Active character changed to {selection["name"]} ({selection["note"]})')
@@ -216,12 +215,12 @@ class Player(Cog):
             match_msg = await ctx.send(embed=match_embed)
             reply = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
             if int(reply.content) > len(matches):
-                await match_msg.delete()
+                await attempt_delete(match_msg)
                 await attempt_delete(reply)
                 await ctx.send('Selection is outside the list of options.')
                 return
             else:
-                await match_msg.delete()
+                await attempt_delete(match_msg)
                 await attempt_delete(reply)
                 name = query['characters'][matches[0]]['name']
                 note = query['characters'][matches[0]]['note']

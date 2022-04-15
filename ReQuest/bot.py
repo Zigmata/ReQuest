@@ -20,7 +20,7 @@ class ReQuest(commands.AutoShardedBot):
         intents = discord.Intents.default()
         intents.members = True  # Subscribe to the privileged members intent.
         intents.presences = True  # Subscribe to the privileged presences intent.
-        intents.message_content = True
+        intents.message_content = True # Subscribe to the privileged message content intent.
         allowed_mentions = discord.AllowedMentions(roles=True, everyone=False, users=True)
         super(ReQuest, self).__init__(activity=discord.Game(name=f'by Post'), allowed_mentions=allowed_mentions,
                                       case_insensitive=True, chunk_guild_at_startup=False, command_prefix=get_prefix,
@@ -45,6 +45,7 @@ class ReQuest(commands.AutoShardedBot):
 
         # Grab the list of extensions and load them asynchronously
         initial_extensions = self.config['load_extensions']
+        # TODO: Verify async loop isn't needed
         for ext in initial_extensions:
             try:
                 asyncio.create_task(self.load_extension(ext))

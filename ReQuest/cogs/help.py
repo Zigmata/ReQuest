@@ -18,7 +18,7 @@ class Help(Cog):
     @command()
     async def invite(self, ctx):
         """
-        Prints an invite to add ReQuest to your server.
+        Prints an invitation to add ReQuest to your server.
         """
         await ctx.send(f'Invite me to your server! <https://discord.com/api/oauth2/authorize?client_id'
                        f'=601492201704521765&permissions=268954688&scope=bot>')

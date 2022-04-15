@@ -16,7 +16,6 @@ class PlayerBoard(Cog):
     def __init__(self, bot):
         self.bot = bot
         self.gdb = bot.gdb
-        self.mdb = bot.mdb
 
     # --- Support Functions ---
 

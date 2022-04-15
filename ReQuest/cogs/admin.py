@@ -64,7 +64,7 @@ class Admin(Cog):
     async def shutdown(self, ctx):
         try:
             await ctx.send('Shutting down!')
-            await ctx.bot.logout()
+            await ctx.bot.close()
         except Exception as e:
             await ctx.send(f'{type(e).__name__}: {e}')
 
@@ -182,12 +182,12 @@ class Admin(Cog):
                     reply = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
                     selection = int(reply.content)
                     if selection > len(matches):
-                        await match_msg.delete()
+                        await attempt_delete(match_msg)
                         await attempt_delete(reply)
                         await ctx.send(f'Selection is outside the list of options. Operation aborted.')
                         return
                     else:
-                        await match_msg.delete()
+                        await attempt_delete(match_msg)
                         await attempt_delete(reply)
                         new_role = matches[selection - 1]
 
@@ -283,12 +283,12 @@ class Admin(Cog):
                     reply = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
                     selection = int(reply.content)
                     if selection > len(matches):
-                        await match_msg.delete()
+                        await attempt_delete(match_msg)
                         await attempt_delete(reply)
                         await ctx.send(f'Selection is outside the list of options. Selection for "{role}" aborted.')
                         continue
                     else:
-                        await match_msg.delete()
+                        await attempt_delete(match_msg)
                         await attempt_delete(reply)
                         # If a document exists, check to see if the id of the provided role is already set
                         if gm_roles and matches[selection - 1]['id'] in gm_roles:
@@ -376,12 +376,12 @@ class Admin(Cog):
                         reply = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
                         selection = int(reply.content)
                         if selection > len(matches):
-                            await match_msg.delete()
+                            await attempt_delete(match_msg)
                             await attempt_delete(reply)
                             await ctx.send(f'Selection is outside the list of options. Selection for "{role}" aborted.')
                             continue
                         else:
-                            await match_msg.delete()
+                            await attempt_delete(match_msg)
                             await attempt_delete(reply)
                             # Check to see if the id of the provided role is stored or not
                             if matches[selection - 1]['id'] not in gm_roles:
@@ -445,8 +445,8 @@ class Admin(Cog):
             query = await collection.find_one({'guildId': guild_id})
             if not query:
                 await ctx.send(f'Player board channel not set! Configure with '
-                               f'`{await get_prefix(self.bot, ctx.message)}config channel playerboard '
-                               f'<channel mention>`')
+                               f'`{await get_prefix(self.bot, ctx.message)}config channel playerboard'
+                               f' <channel mention>`')
             else:
                 await ctx.send('Player board channel currently set to <#{}>'.format(query['playerBoardChannel']))
 
