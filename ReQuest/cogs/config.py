@@ -59,48 +59,25 @@ class Config(Cog, app_commands.Group, name='config'):
                     return
 
                 if len(matches) == 1:
-                    new_role = matches[0]
+                    new_role = matches[0]['id']
                 elif len(matches) > 1:
                     options = []
-                    for i in range(len(matches)):
-                        options.append(discord.SelectOption(label=matches[i]['name'], value=str(matches[i]['id'])))
+                    for match in matches:
+                        options.append(discord.SelectOption(label=match['name'], value=str(match['id'])))
                     select = SingleChoiceDropdown(placeholder='Choose One', options=options)
                     view = DropdownView(select)
                     await interaction.response.send_message('Multiple matches found!', view=view, ephemeral=True)
                     await view.wait()
-                    new_role = select.values[0]
-
-                # elif len(matches) > 1:
-                #     content = ''
-                #     for i in range(len(matches)):
-                #         content += f'{i + 1}: {matches[i]["name"]}\n'
-                #
-                #     match_embed = discord.Embed(title=f'Your query returned more than one result!', type='rich',
-                #                                 description=content)
-                #     match_msg = await interaction.response.send_message(embed=match_embed)
-                #     reply = await self.bot.wait_for('message',
-                #                                     check=lambda message:
-                #                                     message.author == interaction.message.author)
-                #     selection = int(reply.content)
-                #     if selection > len(matches):
-                #         await attempt_delete(match_msg)
-                #         await attempt_delete(reply)
-                #         await interaction.response.send_message(f'Selection is outside the list of options. '
-                #                                                 f'Operation aborted.')
-                #         return
-                #     else:
-                #         await attempt_delete(match_msg)
-                #         await attempt_delete(reply)
-                #         new_role = matches[selection - 1]
+                    new_role = int(select.values[0])
 
                 if len(matches) == 1:
                     # Add the new role's ID to the database
-                    await collection.update_one({'guildId': guild_id}, {'$set': {'announceRole': new_role['id']}},
+                    await collection.update_one({'guildId': guild_id}, {'$set': {'announceRole': new_role}},
                                                 upsert=True)
 
                     # Report the changes made
                     role_embed = discord.Embed(title='Announcement Role Set!', type='rich',
-                                               description=f'<@&{new_role["id"]}>')
+                                               description=f'<@&{new_role}>')
                     await interaction.response.send_message(content=None, embed=role_embed, ephemeral=True)
                 else:
                     # Add the new role's ID to the database
