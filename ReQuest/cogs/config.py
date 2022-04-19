@@ -1,5 +1,6 @@
 import asyncio
 import json
+from typing import Sequence, List
 
 import discord
 from discord.ext import commands
@@ -98,205 +99,187 @@ class Config(Cog, app_commands.Group, name='config'):
                                            description=f'<@&{current_role}>')
                 await interaction.response.send_message(content=None, embed=post_embed, ephemeral=True)
 
-    # @role.group(name='gm', case_insensitive=True, pass_context=True, invoke_without_command=True)
-    # async def role_gm(self, ctx):
-    #     """
-    #     Sets the GM role(s), used for GM commands.
-    #
-    #     When this base command is executed, it displays the current setting.
-    #     """
-    #     guild_id = ctx.message.guild.id
-    #     collection = self.gdb['gmRoles']
-    #
-    #     query = await collection.find_one({'guildId': guild_id})
-    #     if not query or 'gmRoles' not in query or not query['gmRoles']:
-    #         await ctx.send(f'GM role(s) not set! Configure with '
-    #                        f'`{await get_prefix(self.bot, ctx.message)}config role gm add <role name>`.'
-    #                        f' Roles can be chained (separate with a space).')
-    #     else:
-    #         current_role_ids = query['gmRoles']
-    #         current_roles = map(str, current_role_ids)
-    #
-    #         post_embed = discord.Embed(title='Config - Role - GM', type='rich')
-    #         post_embed.add_field(name='GM Role(s)', value='<@&' + '>\n<@&'.join(current_roles) + '>')
-    #         await ctx.send(embed=post_embed)
-    #
-    # @role_gm.command(name='add', aliases=['a'], pass_context=True)
-    # async def gm_add(self, ctx, *role_names):
-    #     """
-    #     Configures roles for access to GM commands.
-    #
-    #     Arguments:
-    #     [role_names]: Adds the role as a GM. Can be chained. Roles with spaces must be encapsulated in quotes.
-    #     """
-    #     guild_id = ctx.message.guild.id
-    #     collection = self.gdb['gmRoles']
-    #
-    #     if role_names:
-    #         guild = self.bot.get_guild(guild_id)
-    #         query = await collection.find_one({'guildId': guild_id})
-    #         gm_roles = []
-    #         if query and 'gmRoles' in query:
-    #             gm_roles = query['gmRoles']
-    #         new_roles = []
-    #
-    #         # Compare each provided role name to the list of guild roles
-    #         for role in role_names:
-    #             search = filter(lambda r: role.lower() in r.name.lower(), guild.roles)
-    #             matches = []
-    #             if search:
-    #                 for match in search:
-    #                     if match.id == guild_id:
-    #                         continue  # Prevent the @everyone role from being added to the list
-    #                     matches.append({'name': match.name, 'id': int(match.id)})
-    #
-    #             if not matches:
-    #                 await ctx.send(f'Role `{role}` not found! Check your spelling and use of quotes!')
-    #                 continue
-    #
-    #             if len(matches) == 1:
-    #                 if gm_roles and matches[0]['id'] in gm_roles:
-    #                     await ctx.send(f'`{matches[0]["name"]}` is already configured as a GM role. Skipping . . .')
-    #                     continue
-    #                 else:
-    #                     new_roles.append(matches[0])
-    #             elif len(matches) > 1:
-    #                 content = ''
-    #                 for i in range(len(matches)):
-    #                     content += f'{i + 1}: {matches[i]["name"]}\n'
-    #
-    #                 match_embed = discord.Embed(title=f'Your query \"{role}\" returned more than one result!',
-    #                                             type='rich', description=content)
-    #                 match_msg = await ctx.send(embed=match_embed)
-    #                 reply = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
-    #                 selection = int(reply.content)
-    #                 if selection > len(matches):
-    #                     await attempt_delete(match_msg)
-    #                     await attempt_delete(reply)
-    #                     await ctx.send(f'Selection is outside the list of options. Selection for "{role}" aborted.')
-    #                     continue
-    #                 else:
-    #                     await attempt_delete(match_msg)
-    #                     await attempt_delete(reply)
-    #                     # If a document exists, check to see if the id of the provided role is already set
-    #                     if gm_roles and matches[selection - 1]['id'] in gm_roles:
-    #                         await ctx.send(f'`{matches[selection - 1]["name"]}` is already configured as a GM role. '
-    #                                        f'Skipping . . .')
-    #                         continue
-    #                     else:
-    #                         # If there is no match, add the role to the update list
-    #                         new_roles.append(matches[selection - 1])
-    #
-    #         if not new_roles:
-    #             await ctx.send('No valid roles were added to the GM list.')
-    #             return
-    #         else:
-    #             added_names = []
-    #             # Add each role's ID to the database, and add a role mention to the names array for feedback
-    #             for addition in new_roles:
-    #                 await collection.update_one({'guildId': guild_id}, {'$push': {'gmRoles': addition['id']}},
-    #                                             upsert=True)
-    #                 added_names.append(f'<@&{addition["id"]}>')
-    #
-    #             # Report the changes made
-    #             roles_embed = discord.Embed(title='GM Roles Added!', type='rich', description='\n'.join(added_names))
-    #             await ctx.send(embed=roles_embed)
-    #
-    #     else:
-    #         await ctx.send('Role not provided!')
-    #
-    # @role_gm.command(name='remove', aliases=['r', 'del', 'rem'], pass_context=True)
-    # async def gm_remove(self, ctx, *role_names):
-    #     """
-    #     Removes a role's access to GM commands.
-    #
-    #     Arguments:
-    #     [role_names]: Removes the role as a GM. Can be chained. Roles with spaces must be encapsulated in quotes.
-    #     --<all>: Removes all roles from the GM list.
-    #     """
-    #     guild_id = ctx.message.guild.id
-    #     collection = self.gdb['gmRoles']
-    #
-    #     if role_names:
-    #         query = await collection.find_one({'guildId': guild_id})
-    #         if not query or 'gmRoles' not in query or not query['gmRoles']:
-    #             await ctx.send('No GM roles have been set!')
-    #             return
-    #
-    #         removed_roles = []
-    #         # If 'all' is provided, delete the whole document
-    #         if len(role_names) == 1 and role_names[0].lower() == 'all':
-    #             await collection.delete_one({'guildId': guild_id})
-    #             await ctx.send('GM roles cleared!')
-    #             return
-    #         else:
-    #             guild = self.bot.get_guild(guild_id)
-    #             gm_roles = query['gmRoles']
-    #
-    #             # Compare each provided role name to the list of guild roles
-    #             for role in role_names:
-    #                 search = filter(lambda r: role.lower() in r.name.lower(), guild.roles)
-    #                 matches = []
-    #                 if search:
-    #                     for match in search:
-    #                         if match.id == guild_id:
-    #                             continue  # Prevent the @everyone role from being added to the list
-    #                         matches.append({'name': match.name, 'id': int(match.id)})
-    #
-    #                 if not matches:
-    #                     await ctx.send(f'Role `{role}` not found! Check your spelling and use of quotes!')
-    #                     continue
-    #
-    #                 if len(matches) == 1:
-    #                     if matches[0]['id'] not in gm_roles:
-    #                         await ctx.send(f'`{matches[0]["name"]}` is not configured as a GM role. Skipping . . .')
-    #                         continue
-    #                     else:
-    #                         removed_roles.append(matches[0])
-    #                 elif len(matches) > 1:
-    #                     content = ''
-    #                     for i in range(len(matches)):
-    #                         content += f'{i + 1}: {matches[i]["name"]}\n'
-    #
-    #                     match_embed = discord.Embed(title=f'Your query \"{role}\" returned more than one result!',
-    #                                                 type='rich', description=content)
-    #                     match_msg = await ctx.send(embed=match_embed)
-    #                     reply = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
-    #                     selection = int(reply.content)
-    #                     if selection > len(matches):
-    #                         await attempt_delete(match_msg)
-    #                         await attempt_delete(reply)
-    #                         await ctx.send(f'Selection is outside the list of options. Selection for "{role}" aborted.')
-    #                         continue
-    #                     else:
-    #                         await attempt_delete(match_msg)
-    #                         await attempt_delete(reply)
-    #                         # Check to see if the id of the provided role is stored or not
-    #                         if matches[selection - 1]['id'] not in gm_roles:
-    #                             await ctx.send(f'`{matches[selection - 1]["name"]}` is not configured as a GM role. '
-    #                                            f'Skipping . . .')
-    #                             continue
-    #                         else:
-    #                             # If the id is found, add the role to the update list
-    #                             removed_roles.append(matches[selection - 1])
-    #
-    #         if not removed_roles:
-    #             await ctx.send('No valid roles were removed from the GM list.')
-    #             return
-    #         else:
-    #             removed_names = []
-    #             # Add each role's ID to the database, and add a role mention to the names array for feedback
-    #             for removal in removed_roles:
-    #                 await collection.update_one({'guildId': guild_id}, {'$pull': {'gmRoles': removal['id']}})
-    #                 removed_names.append(f'<@&{removal["id"]}>')
-    #
-    #             # Report the changes made
-    #             roles_embed = discord.Embed(title='GM Roles Removed!', type='rich',
-    #                                         description='\n'.join(removed_names))
-    #             await ctx.send(embed=roles_embed)
-    #     else:
-    #         await ctx.send('Role not provided!')
-    #
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @role_group.command(name='gm')
+    async def role_gm(self, interaction: discord.Interaction, operation: str = None, role_name: str = None):
+        """
+        Sets the GM role(s) used for GM commands.
+
+        :param interaction: The discord interaction calling this command
+        :type interaction: discord.Interaction
+        :param operation: Optional: The operation to perform (add, remove, or clear)
+        :type operation: str
+        :param role_name: Optional: Name of the role to add or delete.
+        :type role_name: str
+        """
+        guild_id = interaction.guild_id
+        guild = self.bot.get_guild(guild_id)
+        collection = self.gdb['gmRoles']
+        query = await collection.find_one({'guildId': guild_id})
+        valid_operations = ['add', 'remove', 'clear']
+
+        if not operation:  # When no operation is specified, the current setting is queried.
+            if not query or 'gmRoles' not in query or not query['gmRoles']:  # If nothing is returned from the db
+                await interaction.response.send_message(f'No GM roles have been set! Configure with /config role gm '
+                                                        f'add `<role name>`.', ephemeral=True)
+            else:  # Constructs an embed with the configured role mentions
+                current_role_ids = query['gmRoles']
+                current_roles = map(str, current_role_ids)
+
+                post_embed = discord.Embed(title='Config - Role - GM', type='rich')
+                post_embed.add_field(name='GM Role(s)', value='<@&' + '>\n<@&'.join(current_roles) + '>')
+                await interaction.response.send_message(embed=post_embed, ephemeral=True)
+        else:  # Performs the specified operation on a list of role names
+            if operation.lower() not in valid_operations:  # Return an error if the operation isn't valid
+                await interaction.response.send_message(f'The specified operation \"{operation}\" is not valid. '
+                                                        f'Please use add, remove, or clear.', ephemeral=True)
+            elif operation.lower() == 'clear':  # Clears all roles from this setting
+                await collection.delete_one({'guildId': guild_id})
+                await interaction.response.send_message('All GM roles have been cleared!', ephemeral=True)
+            else:
+                if not role_name:  # Return an error if no roles are provided to operate on
+                    await interaction.response.send_message(f'You have not provided a role to {operation.lower()}!',
+                                                            ephemeral=True)
+                else:
+                    if operation.lower() == 'add':
+                        # Make a list and load the current setting if one exists.
+                        gm_roles = []
+                        if query and 'gmRoles' in query:
+                            gm_roles = query['gmRoles']
+                        new_role = 0
+                        error_messsage = ''
+
+                        # Get the list of guild names and search for the role name string in any of them
+                        search = filter(lambda r: role_name.lower() in r.name.lower(), guild.roles)
+                        matches = []
+                        if search:
+                            for match in search:
+                                if match.id == guild_id:
+                                    continue  # Prevent the @everyone role from being added to the list
+                                matches.append({'name': match.name, 'id': int(match.id)})
+
+                        if not matches:
+                            error_messsage = f'{role_name} not found. Check your spelling and use of quotes!'
+
+                        # If there is only one match, add that role's ID to the list of changes.
+                        if len(matches) == 1:
+                            if gm_roles and matches[0]['id'] in gm_roles:  # Skip if the role is already configured.
+                                error_messsage = f'<@&{matches[0]["id"]}> is already configured as a GM role.'
+                            else:
+                                new_role = matches[0]['id']
+                        # If there is more than one match, prompt the user with a Select to choose one
+                        elif len(matches) > 1:
+                            options = []
+                            for match in matches:
+                                if gm_roles and match['id'] in gm_roles:
+                                    continue
+                                else:
+                                    options.append(discord.SelectOption(label=match['name'], value=str(match['id'])))
+
+                            if len(options) == 1:
+                                new_role = int(options[0].value)
+                            elif len(options) == 0:
+                                error_messsage = 'All roles matching the provided name are already configured as GM' \
+                                                 'roles!'
+                            else:
+                                select = SingleChoiceDropdown(placeholder='Choose One', options=options)
+                                view = DropdownView(select)
+                                if not interaction.response.is_done():  # Make sure this is the first response
+                                    await interaction.response.send_message(f'Multiple matches found for {role_name}!',
+                                                                            view=view, ephemeral=True)
+                                else:  # If the interaction has been responded to, update the original message instead
+                                    await interaction.edit_original_message(content=f'Multiple matches found for'
+                                                                                    f' {role_name}!', view=view)
+                                await view.wait()
+                                new_role = int(select.values[0])
+
+                        # If no new roles were added, inform the user
+                        if new_role == 0:
+                            error_embed = discord.Embed(title='No roles were added to the GM list.', type='rich')
+                            if error_messsage:
+                                error_embed.description = error_messsage
+                            if not interaction.response.is_done():
+                                await interaction.response.send_message(embed=error_embed, ephemeral=True)
+                            else:
+                                await interaction.edit_original_message(content=None, embed=error_embed, view=None)
+                        else:
+                            # Add each role's ID to the database, and add a role mention to the names array for feedback
+                            await collection.update_one({'guildId': guild_id}, {'$push': {'gmRoles': new_role}},
+                                                        upsert=True)
+                            # Report the changes made
+                            roles_embed = discord.Embed(title='GM Role Added!', type='rich',
+                                                        description=f'<@&{new_role}>')
+                            if not interaction.response.is_done():
+                                await interaction.response.send_message(embed=roles_embed, ephemeral=True)
+                            else:
+                                await interaction.edit_original_message(content=None, embed=roles_embed, view=None)
+                    if operation.lower() == 'remove':
+                        if not query or 'gmRoles' not in query or not query['gmRoles']:
+                            await interaction.response.send_message(f'GM role(s) not set! Configure with /config role '
+                                                                    f'gm add <role name>`. Roles can be chained '
+                                                                    f'(separate with a space).',
+                                                                    ephemeral=True)
+                        else:
+                            removed_role = 0
+                            guild = self.bot.get_guild(guild_id)
+                            gm_roles = query['gmRoles']
+                            error_messsage = ''
+
+                            # Compare each provided role name to the list of guild roles
+                            search = filter(lambda r: role_name.lower() in r.name.lower(), guild.roles)
+                            matches = []
+                            if search:
+                                for match in search:
+                                    if match.id == guild_id:
+                                        continue  # Prevent the @everyone role from being added to the list
+                                    if match.id in gm_roles:
+                                        matches.append({'name': match.name, 'id': int(match.id)})
+
+                            if not matches:
+                                error_messsage = f'{role_name} not found. Check your spelling and use of quotes!'
+
+                            if len(matches) == 1:
+                                if matches[0]['id'] not in gm_roles:
+                                    error_messsage = f'{matches[0]["name"]} not configured as a GM role. Skipped.'
+                                else:
+                                    removed_role = matches[0]['id']
+                            elif len(matches) > 1:
+                                options = []
+                                for match in matches:
+                                    options.append(
+                                        discord.SelectOption(label=match['name'], value=str(match['id'])))
+                                select = SingleChoiceDropdown(placeholder='Choose One', options=options)
+                                view = DropdownView(select)
+                                if not interaction.response.is_done():  # Make sure this is the first response
+                                    await interaction.response.send_message(f'Multiple matches found for {role_name}!',
+                                                                            view=view, ephemeral=True)
+                                else:  # If the interaction has been responded to, update the original message
+                                    await interaction.edit_original_message(
+                                        content=f'Multiple matches found for {role_name}!', view=view)
+                                await view.wait()
+                                removed_role = int(select.values[0])
+
+                            if not removed_role:
+                                error_embed = discord.Embed(title='No roles were removed from the GM list.',
+                                                            type='rich')
+                                if error_messsage:  # List any bad queries
+                                    error_embed.description = error_messsage
+                                if not interaction.response.is_done():
+                                    await interaction.response.send_message(embed=error_embed, ephemeral=True)
+                                else:
+                                    await interaction.edit_original_message(content=None, embed=error_embed, view=None)
+                            else:
+                                # Remove each role's ID from the database
+                                await collection.update_one({'guildId': guild_id}, {'$pull': {'gmRoles': removed_role}})
+
+                                # Report the changes made
+                                roles_embed = discord.Embed(title='GM Role Removed!', type='rich',
+                                                            description=f'<@&{removed_role}>')
+                                if not interaction.response.is_done():
+                                    await interaction.response.send_message(embed=roles_embed, ephemeral=True)
+                                else:
+                                    await interaction.edit_original_message(content=None, embed=roles_embed, view=None)
+
     # # --- Channel ---
     #
     # @config.group(case_insensitive=True, aliases=['chan', 'ch'], pass_context=True)
