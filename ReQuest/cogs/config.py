@@ -1,13 +1,11 @@
-import asyncio
-import json
-from typing import Sequence, List
+# import asyncio
+# import json
 
 import discord
-from discord.ext import commands
 from discord import app_commands
-from discord.ext.commands import Cog, command
+from discord.ext.commands import Cog
 
-from ..utilities.supportFunctions import attempt_delete, strip_id, get_prefix
+from ..utilities.supportFunctions import strip_id
 from ..utilities.ui import SingleChoiceDropdown, DropdownView
 
 
@@ -23,10 +21,11 @@ class Config(Cog, app_commands.Group, name='config'):
     # --- Roles ---
 
     role_group = app_commands.Group(name='role', description='Commands for configuring roles for extended functions.')
+    channel_group = app_commands.Group(name='channel', description='Commands for configuring channels.')
 
     @app_commands.checks.has_permissions(manage_guild=True)
     @role_group.command(name='announce')
-    async def announce(self, interaction: discord.Interaction, role_name: str = None) -> None:
+    async def role_announce(self, interaction: discord.Interaction, role_name: str = None) -> None:
         """
         Gets or sets the role used for quest announcements.
 
@@ -104,50 +103,48 @@ class Config(Cog, app_commands.Group, name='config'):
     async def role_gm(self, interaction: discord.Interaction, operation: str = None, role_name: str = None):
         """
         Sets the GM role(s) used for GM commands.
-
-        :param interaction: The discord interaction calling this command
-        :type interaction: discord.Interaction
-        :param operation: Optional: The operation to perform (add, remove, or clear)
-        :type operation: str
-        :param role_name: Optional: Name of the role to add or delete.
-        :type role_name: str
         """
         guild_id = interaction.guild_id
         guild = self.bot.get_guild(guild_id)
         collection = self.gdb['gmRoles']
         query = await collection.find_one({'guildId': guild_id})
         valid_operations = ['add', 'remove', 'clear']
+        current_gm_role_ids = []
+        error_message = None
+        error_title = None
+
+        # If there's an existing setting, load it
+        if query and 'gmRoles' in query and query['gmRoles']:
+            current_gm_role_ids = query['gmRoles']
 
         if not operation:  # When no operation is specified, the current setting is queried.
-            if not query or 'gmRoles' not in query or not query['gmRoles']:  # If nothing is returned from the db
-                await interaction.response.send_message(f'No GM roles have been set! Configure with /config role gm '
-                                                        f'add `<role name>`.', ephemeral=True)
+            if not current_gm_role_ids:  # If nothing is returned from the db
+                error_title = 'Missing Configuration!'
+                error_message = 'No GM roles have been set! Configure with /config role gm add `<role name>`.'
             else:  # Constructs an embed with the configured role mentions
-                current_role_ids = query['gmRoles']
-                current_roles = map(str, current_role_ids)
+                current_roles = map(str, current_gm_role_ids)
 
                 post_embed = discord.Embed(title='Config - Role - GM', type='rich')
                 post_embed.add_field(name='GM Role(s)', value='<@&' + '>\n<@&'.join(current_roles) + '>')
                 await interaction.response.send_message(embed=post_embed, ephemeral=True)
         else:  # Performs the specified operation on a list of role names
             if operation.lower() not in valid_operations:  # Return an error if the operation isn't valid
-                await interaction.response.send_message(f'The specified operation \"{operation}\" is not valid. '
-                                                        f'Please use add, remove, or clear.', ephemeral=True)
+                error_title = 'Invalid Operation'
+                error_message = f'\"{operation}\" is not a valid operation type. Please use add, remove, or clear.'
             elif operation.lower() == 'clear':  # Clears all roles from this setting
-                await collection.delete_one({'guildId': guild_id})
-                await interaction.response.send_message('All GM roles have been cleared!', ephemeral=True)
+                if not current_gm_role_ids:
+                    error_title = 'Missing Configuration!'
+                    error_message = f'No GM roles have been set. There is nothing to remove.'
+                else:
+                    await collection.delete_one({'guildId': guild_id})
+                    await interaction.response.send_message('All GM roles have been cleared!', ephemeral=True)
             else:
                 if not role_name:  # Return an error if no roles are provided to operate on
-                    await interaction.response.send_message(f'You have not provided a role to {operation.lower()}!',
-                                                            ephemeral=True)
+                    error_title = 'Incorrect syntax'
+                    error_message = f'You have not provided a role to {operation.lower()}!'
                 else:
                     if operation.lower() == 'add':
-                        # Make a list and load the current setting if one exists.
-                        gm_roles = []
-                        if query and 'gmRoles' in query:
-                            gm_roles = query['gmRoles']
                         new_role = 0
-                        error_messsage = ''
 
                         # Get the list of guild names and search for the role name string in any of them
                         search = filter(lambda r: role_name.lower() in r.name.lower(), guild.roles)
@@ -159,51 +156,47 @@ class Config(Cog, app_commands.Group, name='config'):
                                 matches.append({'name': match.name, 'id': int(match.id)})
 
                         if not matches:
-                            error_messsage = f'{role_name} not found. Check your spelling and use of quotes!'
-
+                            error_title = 'No roles were added to the GM list.'
+                            error_message = f'\"{role_name}\" not found. Check your spelling and use of quotes!'
                         # If there is only one match, add that role's ID to the list of changes.
-                        if len(matches) == 1:
-                            if gm_roles and matches[0]['id'] in gm_roles:  # Skip if the role is already configured.
-                                error_messsage = f'<@&{matches[0]["id"]}> is already configured as a GM role.'
+                        elif len(matches) == 1:
+                            # Skip if the role is already configured.
+                            if current_gm_role_ids and matches[0]['id'] in current_gm_role_ids:
+                                error_title = 'No roles were added to the GM list.'
+                                error_message = f'<@&{matches[0]["id"]}> is already configured as a GM role.'
                             else:
                                 new_role = matches[0]['id']
                         # If there is more than one match, prompt the user with a Select to choose one
-                        elif len(matches) > 1:
+                        else:
                             options = []
                             for match in matches:
-                                if gm_roles and match['id'] in gm_roles:
+                                if current_gm_role_ids and match['id'] in current_gm_role_ids:
                                     continue
                                 else:
                                     options.append(discord.SelectOption(label=match['name'], value=str(match['id'])))
 
-                            if len(options) == 1:
+                            if not options:
+                                error_title = 'No roles were added to the GM list.'
+                                error_message = f'All roles matching \"{role_name}\" are already configured as GM' \
+                                                'roles!'
+                            elif len(options) == 1:
                                 new_role = int(options[0].value)
-                            elif len(options) == 0:
-                                error_messsage = 'All roles matching the provided name are already configured as GM' \
-                                                 'roles!'
                             else:
                                 select = SingleChoiceDropdown(placeholder='Choose One', options=options)
                                 view = DropdownView(select)
                                 if not interaction.response.is_done():  # Make sure this is the first response
-                                    await interaction.response.send_message(f'Multiple matches found for {role_name}!',
-                                                                            view=view, ephemeral=True)
+                                    await interaction.response.send_message(f'Multiple matches found for '
+                                                                            f'\"{role_name}\"!', view=view,
+                                                                            ephemeral=True)
                                 else:  # If the interaction has been responded to, update the original message instead
                                     await interaction.edit_original_message(content=f'Multiple matches found for'
-                                                                                    f' {role_name}!', view=view)
+                                                                                    f' \"{role_name}\"!', view=view)
                                 await view.wait()
                                 new_role = int(select.values[0])
 
                         # If no new roles were added, inform the user
-                        if new_role == 0:
-                            error_embed = discord.Embed(title='No roles were added to the GM list.', type='rich')
-                            if error_messsage:
-                                error_embed.description = error_messsage
-                            if not interaction.response.is_done():
-                                await interaction.response.send_message(embed=error_embed, ephemeral=True)
-                            else:
-                                await interaction.edit_original_message(content=None, embed=error_embed, view=None)
-                        else:
-                            # Add each role's ID to the database, and add a role mention to the names array for feedback
+                        if new_role != 0:
+                            # Add the role's ID to the database
                             await collection.update_one({'guildId': guild_id}, {'$push': {'gmRoles': new_role}},
                                                         upsert=True)
                             # Report the changes made
@@ -214,17 +207,12 @@ class Config(Cog, app_commands.Group, name='config'):
                             else:
                                 await interaction.edit_original_message(content=None, embed=roles_embed, view=None)
                     if operation.lower() == 'remove':
-                        if not query or 'gmRoles' not in query or not query['gmRoles']:
-                            await interaction.response.send_message(f'GM role(s) not set! Configure with /config role '
-                                                                    f'gm add <role name>`. Roles can be chained '
-                                                                    f'(separate with a space).',
-                                                                    ephemeral=True)
-                        else:
-                            removed_role = 0
-                            guild = self.bot.get_guild(guild_id)
-                            gm_roles = query['gmRoles']
-                            error_messsage = ''
+                        removed_role = 0
 
+                        if not current_gm_role_ids:
+                            error_title = 'Missing Configuration!'
+                            error_message = f'No GM roles have been set. There is nothing to remove.'
+                        else:
                             # Compare each provided role name to the list of guild roles
                             search = filter(lambda r: role_name.lower() in r.name.lower(), guild.roles)
                             matches = []
@@ -232,22 +220,22 @@ class Config(Cog, app_commands.Group, name='config'):
                                 for match in search:
                                     if match.id == guild_id:
                                         continue  # Prevent the @everyone role from being added to the list
-                                    if match.id in gm_roles:
+                                    if match.id in current_gm_role_ids:
                                         matches.append({'name': match.name, 'id': int(match.id)})
 
                             if not matches:
-                                error_messsage = f'{role_name} not found. Check your spelling and use of quotes!'
-
-                            if len(matches) == 1:
-                                if matches[0]['id'] not in gm_roles:
-                                    error_messsage = f'{matches[0]["name"]} not configured as a GM role. Skipped.'
+                                error_title = 'No roles were removed from the GM list.'
+                                error_message = f'\"{role_name}\" not found. Check your spelling and use of quotes!'
+                            elif len(matches) == 1:
+                                if matches[0]['id'] not in current_gm_role_ids:
+                                    error_title = 'No roles were removed from the GM list.'
+                                    error_message = f'\"{matches[0]["name"]}\" is not configured as a GM role.'
                                 else:
                                     removed_role = matches[0]['id']
-                            elif len(matches) > 1:
+                            else:
                                 options = []
                                 for match in matches:
-                                    options.append(
-                                        discord.SelectOption(label=match['name'], value=str(match['id'])))
+                                    options.append(discord.SelectOption(label=match['name'], value=str(match['id'])))
                                 select = SingleChoiceDropdown(placeholder='Choose One', options=options)
                                 view = DropdownView(select)
                                 if not interaction.response.is_done():  # Make sure this is the first response
@@ -259,123 +247,143 @@ class Config(Cog, app_commands.Group, name='config'):
                                 await view.wait()
                                 removed_role = int(select.values[0])
 
-                            if not removed_role:
-                                error_embed = discord.Embed(title='No roles were removed from the GM list.',
-                                                            type='rich')
-                                if error_messsage:  # List any bad queries
-                                    error_embed.description = error_messsage
-                                if not interaction.response.is_done():
-                                    await interaction.response.send_message(embed=error_embed, ephemeral=True)
-                                else:
-                                    await interaction.edit_original_message(content=None, embed=error_embed, view=None)
+                        if removed_role != 0:
+                            # Remove the role's ID from the database
+                            await collection.update_one({'guildId': guild_id}, {'$pull': {'gmRoles': removed_role}})
+
+                            # Report the changes made
+                            roles_embed = discord.Embed(title='GM Role Removed!', type='rich',
+                                                        description=f'<@&{removed_role}>')
+                            if not interaction.response.is_done():
+                                await interaction.response.send_message(embed=roles_embed, ephemeral=True)
                             else:
-                                # Remove each role's ID from the database
-                                await collection.update_one({'guildId': guild_id}, {'$pull': {'gmRoles': removed_role}})
+                                await interaction.edit_original_message(content=None, embed=roles_embed, view=None)
 
-                                # Report the changes made
-                                roles_embed = discord.Embed(title='GM Role Removed!', type='rich',
-                                                            description=f'<@&{removed_role}>')
-                                if not interaction.response.is_done():
-                                    await interaction.response.send_message(embed=roles_embed, ephemeral=True)
-                                else:
-                                    await interaction.edit_original_message(content=None, embed=roles_embed, view=None)
+        if error_message:
+            error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
+            if not interaction.response.is_done():
+                await interaction.response.send_message(embed=error_embed, ephemeral=True)
+            else:
+                await interaction.edit_original_message(content=None, embed=error_embed, view=None)
 
-    # # --- Channel ---
-    #
-    # @config.group(case_insensitive=True, aliases=['chan', 'ch'], pass_context=True)
-    # async def channel(self, ctx):
-    #     """
-    #     Commands for configuration of feature channels.
-    #     """
-    #     if ctx.invoked_subcommand is None:
-    #         return  # TODO: Error message feedback
-    #
-    # # Configures the channel in which player messages are to be posted. Same logic as questChannel()
-    # @channel.command(name='playerboard', aliases=['player', 'pboard', 'pb'], pass_context=True)
-    # async def player_board_channel(self, ctx, channel: str = None):
-    #     """
-    #     Get or sets the channel used for the Player Board.
-    #
-    #     Arguments:
-    #     [no argument]: Displays the current setting.
-    #     [channel link]: Sets the player board channel.
-    #     """
-    #     guild_id = ctx.message.guild.id
-    #     collection = self.gdb['playerBoardChannel']
-    #
-    #     if channel and channel == 'disable':
-    #         if await collection.count_documents({'guildId': guild_id}, limit=1) != 0:  # Delete the record if one exists
-    #             await collection.delete_one({'guildId': guild_id})
-    #         await ctx.send('Player board channel disabled!')
-    #     elif channel:  # Strip the channel ID and update the db
-    #         channel_id = strip_id(channel)
-    #         await collection.update_one({'guildId': guild_id},
-    #                                     {'$set': {'playerBoardChannel': channel_id}}, upsert=True)
-    #         await ctx.send('Successfully set player board channel to {}!'.format(channel))
-    #     else:  # If the channel is not provided, output the current setting.
-    #         query = await collection.find_one({'guildId': guild_id})
-    #         if not query:
-    #             await ctx.send(f'Player board channel not set! Configure with '
-    #                            f'`{await get_prefix(self.bot, ctx.message)}config channel playerboard'
-    #                            f' <channel mention>`')
-    #         else:
-    #             await ctx.send('Player board channel currently set to <#{}>'.format(query['playerBoardChannel']))
-    #
-    # @channel.command(name='questboard', aliases=['quest', 'qboard', 'qb'], pass_context=True)
-    # async def quest_board(self, ctx, channel: str = None):
-    #     """
-    #     Configures the channel in which quests are to be posted.
-    #
-    #     Arguments:
-    #     [no argument]: Displays the current setting.
-    #     [channel link]: Sets the quest board channel.
-    #     """
-    #     guild_id = ctx.message.guild.id
-    #     collection = self.gdb['questChannel']
-    #
-    #     # When provided with a channel name, deletes the old entry and adds the new one.
-    #     if channel:
-    #         channel_id = strip_id(channel)  # Strip channel ID and cast to int
-    #         await collection.update_one({'guildId': guild_id}, {'$set': {'questChannel': channel_id}}, upsert=True)
-    #         await ctx.send(f'Successfully set quest board channel to {channel}!')
-    #     else:  # If no channel is provided, inform the user of the current setting
-    #         query = await collection.find_one({'guildId': guild_id})
-    #         if not query:
-    #             await ctx.send(f'Quest board channel not set! Configure with `{await get_prefix(self.bot, ctx.message)}'
-    #                            f'config channel questboard <channel link>`')
-    #         else:
-    #             await ctx.send(f'Quest board channel currently set to <#{query["questChannel"]}>')
-    #
-    # @channel.command(name='questarchive', aliases=['archive', 'qarch', 'qa'], pass_context=True)
-    # async def quest_archive(self, ctx, channel: str = None):
-    #     """
-    #     Configures the channel in which quests are to be archived.
-    #
-    #     Arguments:
-    #     [no argument]: Displays the current setting.
-    #     [channel link]: Sets the quest archive channel.
-    #     --<clear>: Clears the current setting.
-    #     """
-    #     guild_id = ctx.message.guild.id
-    #     collection = self.gdb['archiveChannel']
-    #
-    #     if channel:
-    #         if channel.lower() == 'clear':
-    #             await collection.delete_one({'guildId': guild_id})
-    #             await ctx.send('Quest archive setting cleared!')
-    #         else:
-    #             channel_id = strip_id(channel)
-    #             await collection.update_one({'guildId': guild_id}, {'$set': {'archiveChannel': channel_id}},
-    #                                         upsert=True)
-    #             await ctx.send(f'Successfully set quest archive channel to {channel}!')
-    #     else:
-    #         query = await collection.find_one({'guildId': guild_id})
-    #         if not query:
-    #             await ctx.send(f'Quest archive channel not set! Configure with '
-    #                            f'`{await get_prefix(self.bot, ctx.message)}config channel questarchive <channel link>`')
-    #         else:
-    #             await ctx.send(f'Quest archive channel currently set to <#{query["archiveChannel"]}>')
-    #
+    # --- Channel ---
+
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @channel_group.command(name='playerboard')
+    async def player_board_channel(self, interaction: discord.Interaction, channel: str = None):
+        """
+        Sets or disables (clears) the channel used for the Player Board. No argument displays the current setting.
+        """
+        guild_id = interaction.guild.id
+        collection = self.gdb['playerBoardChannel']
+        error_title = None
+        error_message = None
+        query = await collection.find_one({'guildId': guild_id})
+
+        if not channel:
+            if not query:
+                error_title = 'Player board channel not set!'
+                error_message = 'Configure with /config channel playerboard <channel mention>'
+            else:
+                await interaction.response.send_message(f'Player board channel currently set to '
+                                                        f'<#{query["playerBoardChannel"]}>', ephemeral=True)
+        elif channel.lower() == 'disable':
+            if query:  # Delete the record if one exists
+                await collection.delete_one({'guildId': guild_id})
+                await interaction.response.send_message('Player board channel disabled!', ephemeral=True)
+            else:
+                error_title = 'No operation was performed.'
+                error_message = 'The player board channel is already disabled.'
+        else:  # Strip the channel ID and update the db
+            channel_id = strip_id(channel)
+            await collection.update_one({'guildId': guild_id},
+                                        {'$set': {'playerBoardChannel': channel_id}}, upsert=True)
+            await interaction.response.send_message(f'Successfully set player board channel to {channel}!',
+                                                    ephemeral=True)
+
+        if error_message:
+            error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
+            await interaction.response.send_message(embed=error_embed, ephemeral=True)
+
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @channel_group.command(name='questboard')
+    async def quest_board(self, interaction: discord.Interaction, channel: str = None):
+        """
+        Configures the channel in which quests are to be posted.
+        """
+        guild_id = interaction.guild.id
+        guild = self.bot.get_guild(guild_id)
+        collection = self.gdb['questChannel']
+        error_title = None
+        error_message = None
+
+        if not channel:
+            query = await collection.find_one({'guildId': guild_id})
+            if not query:
+                error_title = 'Missing configuration!'
+                error_message = 'Quest board channel not set! Configure with /config channel questboard <channel link>'
+            else:
+                await interaction.response.send_message(f'Quest board channel currently set to '
+                                                        f'<#{query["questChannel"]}>', ephemeral=True)
+        else:
+            channel_id = strip_id(channel)  # Strip channel ID and cast to int
+            matches = filter(lambda guild_channel: channel_id == guild_channel.id, guild.channels)
+            if not matches:
+                error_title = 'Incorrect channel reference'
+                error_message = 'The channel referenced does not match any channels in this server.'
+            else:
+                await collection.update_one({'guildId': guild_id}, {'$set': {'questChannel': channel_id}}, upsert=True)
+                await interaction.response.send_message(f'Successfully set quest board channel to {channel}!',
+                                                        ephemeral=True)
+
+        if error_message:
+            error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
+            await interaction.response.send_message(embed=error_embed, ephemeral=True)
+
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @channel_group.command(name='questarchive')
+    async def quest_archive(self, interaction: discord.Interaction, channel: str = None):
+        """
+        Configures the channel in which quests are to be archived.
+        """
+        guild_id = interaction.guild.id
+        guild = self.bot.get_guild(guild_id)
+        collection = self.gdb['archiveChannel']
+        query = await collection.find_one({'guildId': guild_id})
+        error_title = None
+        error_message = None
+
+        if not channel:
+            if not query:
+                error_title = 'Missing configuration!'
+                error_message = 'Quest archive channel not set! Configure with /config channel questarchive' \
+                                ' <channel link>`'
+            else:
+                await interaction.response.send_message(f'Quest archive channel currently set to '
+                                                        f'<#{query["archiveChannel"]}>', ephemeral=True)
+        elif channel.lower() == 'disable':
+            if query:  # Delete the record if one exists
+                await collection.delete_one({'guildId': guild_id})
+                await interaction.response.send_message('Quest archive channel disabled!', ephemeral=True)
+            else:
+                error_title = 'No operation was performed.'
+                error_message = 'The quest archive channel is already disabled.'
+        else:
+            channel_id = strip_id(channel)  # Strip channel ID and cast to int
+            matches = filter(lambda guild_channel: channel_id == guild_channel.id, guild.channels)
+            if not matches:
+                error_title = 'Incorrect channel reference'
+                error_message = 'The channel referenced does not match any channels in this server.'
+            else:
+                await collection.update_one({'guildId': guild_id}, {'$set': {'archiveChannel': channel_id}},
+                                            upsert=True)
+                await interaction.response.send_message(f'Successfully set quest archive channel to {channel}!',
+                                                        ephemeral=True)
+
+        if error_message:
+            error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
+            await interaction.response.send_message(embed=error_embed, ephemeral=True)
+
     # # --- Quest ---
     #
     # @config.group(aliases=['q'], case_insensitive=True, pass_context=True)
