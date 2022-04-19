@@ -1,5 +1,5 @@
-# import asyncio
-# import json
+import json
+from bson.json_util import dumps
 
 import discord
 from discord import app_commands
@@ -22,6 +22,9 @@ class Config(Cog, app_commands.Group, name='config'):
 
     role_group = app_commands.Group(name='role', description='Commands for configuring roles for extended functions.')
     channel_group = app_commands.Group(name='channel', description='Commands for configuring channels.')
+    quest_group = app_commands.Group(name='quest', description='Commands for configuring server-wide quest settings.')
+    character_group = app_commands.Group(name='character', description='Commands for configuring character settings.')
+    currency_group = app_commands.Group(name='currency', description='Commands for configuring currency settings.')
 
     @app_commands.checks.has_permissions(manage_guild=True)
     @role_group.command(name='announce')
@@ -344,7 +347,7 @@ class Config(Cog, app_commands.Group, name='config'):
     @channel_group.command(name='questarchive')
     async def quest_archive(self, interaction: discord.Interaction, channel: str = None):
         """
-        Configures the channel in which quests are to be archived.
+        Configures the channel in which quests are to be archived. Type 'disable' to clear this setting.
         """
         guild_id = interaction.guild.id
         guild = self.bot.get_guild(guild_id)
@@ -384,221 +387,255 @@ class Config(Cog, app_commands.Group, name='config'):
             error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
             await interaction.response.send_message(embed=error_embed, ephemeral=True)
 
-    # # --- Quest ---
-    #
-    # @config.group(aliases=['q'], case_insensitive=True, pass_context=True)
-    # async def quest(self, ctx):
-    #     """
-    #     Commands for configuring quest post behavior.
-    #     """
-    #     if ctx.invoked_subcommand is None:
-    #         return  # TODO: Error message feedback
-    #
-    # @quest.command(name='waitlist', aliases=['wait'], pass_context=True)
-    # async def wait_list(self, ctx, wait_list_value=None):
-    #     """
-    #     This command gets or sets the server-wide wait list.
-    #
-    #     Arguments:
-    #     [no argument]: Displays the current setting.
-    #     [wait_list_value]: The size of the quest wait list. Accepts a range of 0 to 5.
-    #     """
-    #     guild_id = ctx.message.guild.id
-    #     collection = self.gdb['questWaitlist']
-    #
-    #     # Print the current setting if no argument is given. Otherwise, store the new value.
-    #     if not wait_list_value:
-    #         query = await collection.find_one({'guildId': guild_id})
-    #         if not query or query['waitlistValue'] == 0:
-    #             await ctx.send('Quest wait list is currently disabled.')
-    #         else:
-    #             await ctx.send(f'Quest wait list currently set to {str(query["waitlistValue"])} players.')
-    #     else:
-    #         try:
-    #             value = int(wait_list_value)  # Convert to int for input validation and db storage
-    #             if value < 0 or value > 5:
-    #                 raise ValueError('Value must be an integer between 0 and 5!')
-    #             else:
-    #                 await collection.update_one({'guildId': guild_id}, {'$set': {'waitlistValue': value}}, upsert=True)
-    #
-    #                 if value == 0:
-    #                     await ctx.send('Quest wait list disabled.')
-    #                 else:
-    #                     await ctx.send(f'Quest wait list set to {value} players.')
-    #         except Exception as e:
-    #             await ctx.send('{}: {}'.format(type(e).__name__, e))
-    #             return
-    #
-    # @quest.command(name='summary', aliases=['sum'], pass_context=True)
-    # async def summary(self, ctx):
-    #     """
-    #     Toggles quest summary on/off.
-    #
-    #     When enabled, GMs can input a brief summary of the quest during completion.
-    #     """
-    #     guild_id = ctx.message.guild.id
-    #
-    #     # Check to see if the quest archive is configured.
-    #     quest_archive = await self.gdb['archiveChannel'].find_one({'guildId': guild_id})
-    #     if not quest_archive:
-    #         await ctx.send(f'Quest archive channel not configured! Use '
-    #                        f'`{await get_prefix(self.bot, ctx.message)}config channel questarchive <channel mention>`'
-    #                        f' to set up!')
-    #         return
-    #
-    #     # Query the current setting and toggle
-    #     collection = self.gdb['questSummary']
-    #     summary_enabled = await collection.find_one({'guildId': guild_id})
-    #     if not summary_enabled or not summary_enabled['questSummary']:
-    #         await collection.update_one({'guildId': guild_id}, {'$set': {'questSummary': True}}, upsert=True)
-    #         await ctx.send('Quest summary enabled.')
-    #     else:
-    #         await collection.update_one({'guildId': guild_id}, {'$set': {'questSummary': False}})
-    #         await ctx.send('Quest summary disabled.')
-    #
-    # # --- Characters ---
-    #
-    # @config.group(name='characters', aliases=['chars'], case_insensitive=True)
-    # async def config_characters(self, ctx):
-    #     """
-    #     This group of commands configures the character attributes on the server.
-    #     """
-    #     if ctx.invoked_subcommand is None:
-    #         return  # TODO: Error message feedback
-    #
-    # @config_characters.command(name='experience', aliases=['xp', 'exp'])
-    # async def config_experience(self, ctx, enabled: str = None):
-    #     """
-    #     This command manages the use of experience points (or similar value-based character progression).
-    #
-    #     Arguments:
-    #     [no argument]: Displays the current configuration.
-    #     [True|False]: Configures the server to enable/disable experience points.
-    #     """
-    #     guild_id = ctx.message.guild.id
-    #     query = await self.gdb['characterSettings'].find_one({'guildId': guild_id})
-    #
-    #     # Display setting if no arg is passed
-    #     if enabled is None:
-    #         if query and query['xp']:
-    #             await ctx.send('Character Experience Points are enabled.')
-    #         else:
-    #             await ctx.send('Character Experience Points are disabled.')
-    #     elif enabled.lower() == 'true':
-    #         await self.gdb['characterSettings'].update_one({'guildId': guild_id}, {'$set': {'xp': True}}, upsert=True)
-    #         await ctx.send('Character Experience Points enabled!')
-    #     elif enabled.lower() == 'false':
-    #         await self.gdb['characterSettings'].update_one({'guildId': guild_id}, {'$set': {'xp': False}}, upsert=True)
-    #         await ctx.send('Character Experience Points disabled!')
-    #
-    # @config_characters.group(name='progression', aliases=['prog'], case_insensitive=True,
-    #                          invoke_without_subcommand=True)
-    # async def config_progression(self, ctx):
-    #     if ctx.invoked_subcommand is None:
-    #         # display custom progression options
-    #         return
-    #
-    # # --- Currency ---
-    #
-    # @config.group(name='currency', aliases=['c'], case_insensitive=True, invoke_without_subcommand=True)
-    # async def config_currency(self, ctx):
-    #     """
-    #     Commands for configuring currency used in the server.
-    #
-    #     If invoked without a subcommand, lists the currencies configured on the server.
-    #     """
-    #     if ctx.invoked_subcommand is None:
-    #         guild_id = ctx.message.guild.id
-    #         collection = self.gdb['currency']
-    #         query = await collection.find_one({'_id': guild_id})
-    #
-    #         post_embed = discord.Embed(title='Config - Currencies', type='rich')
-    #         for currency in query['currencies']:
-    #             cname = currency['name']
-    #             double = False
-    #             denoms = None
-    #             if 'double' in currency:
-    #                 double = currency['double']
-    #             if 'denoms' in currency:
-    #                 values = []
-    #                 for denom in currency['denoms']:
-    #                     dname = denom['name']
-    #                     value = denom['value']
-    #                     values.append(f'{dname}: {value} {cname}')
-    #                 denoms = '\n'.join(values)
-    #             post_embed.add_field(name=cname,
-    #                                  value=f'Double: ```\n{double}``` Denominations: ```\n{denoms}```', inline=True)
-    #
-    #         await ctx.send(embed=post_embed)
-    #
-    # @config_currency.command(name='add', aliases=['a'])
-    # async def currency_add(self, ctx, *, definition):
-    #     """
-    #     Accepts a JSON definition and adds a new currency type to the server.
-    #
-    #     Arguments:
-    #     <definition>: JSON-formatted string definition. See additional information below.
-    #
-    #     Definition format:
-    #     -----------------------------------
-    #     {
-    #     "name": string,
-    #     "double": bool,
-    #     "denoms": [
-    #         {"name": string, "value": double}
-    #         ]
-    #     }
-    #
-    #     Keys and their functions
-    #     -----------------------------------
-    #     "name": Name of the currency. Case-insensitive. Acts as the base denomination with a value of 1. Example: gold
-    #     "double": Specifies whether currency is displayed as whole integers (10) or as a double (10.00)
-    #     "denoms": An array of objects for additional denominations. Example: {"name": "silver", "value": 0.1}
-    #
-    #     "name" is the only required key to add a new currency.
-    #     Denomination names may be referenced in-place of the currency name for transactions.
-    #
-    #     Examples for common RPG currencies:
-    #     Gold: {"name":"Gold", "double":true, "denoms":[{"name":"Platinum", "value":10}, {"name":"Silver","value":0.1}, {"name":"Copper","value":0.01}]}
-    #     Credits: {"name":"Credits", "double":true}
-    #     Downtime: {"name":"Downtime"}
-    #     """
-    #     # TODO: Redundant-name prevention
-    #     guild_id = ctx.message.guild.id
-    #     collection = self.gdb['currency']
-    #     try:
-    #         loaded = json.loads(definition)
-    #         await collection.update_one({'_id': guild_id}, {'$push': {'currencies': loaded}}, upsert=True)
-    #         await ctx.send(f'`{loaded["name"]}` added to server currencies!')
-    #     except json.JSONDecodeError:
-    #         await ctx.send('Invalid JSON format, check syntax and try again!')
-    #
-    # @config_currency.command(name='remove', aliases=['r', 'delete', 'd'])
-    # async def currency_remove(self, ctx, name):
-    #     """
-    #     Removes a named currency from the server.
-    #
-    #     Arguments:
-    #     <name>: The name of the currency to remove.
-    #     """
-    #     # TODO: Multiple-match logic
-    #     guild_id = ctx.message.guild.id
-    #     collection = self.gdb['currency']
-    #     query = await collection.find_one({'_id': guild_id})
-    #
-    #     for i in range(len(query['currencies'])):
-    #         currency = query['currencies'][i]
-    #         cname = currency['name']
-    #         if name.lower() in cname.lower():
-    #             await ctx.send(f'Removing `{cname}` from server transactions. Confirm: **Y**es/**N**o?')
-    #             confirm = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author)
-    #             await attempt_delete(confirm)
-    #             if confirm.content.lower() == 'y' or confirm.content.lower() == 'yes':
-    #                 await collection.update_one({'_id': guild_id},
-    #                                             {'$pull': {'currencies': {'name': cname}}}, upsert=True)
-    #                 await ctx.send(f'`{cname}` removed!')
-    #             else:
-    #                 await ctx.send('Operation aborted!')
+    # --- Quest ---
+
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @quest_group.command(name='waitlist')
+    async def wait_list(self, interaction: discord.Interaction, wait_list_value: int = None):
+        """
+        This command gets or sets the server-wide wait list.
+
+        Arguments:
+        [no argument]: Displays the current setting.
+        [wait_list_value]: The size of the quest wait list. Accepts a range of 0 to 5.
+        """
+        guild_id = interaction.guild.id
+        collection = self.gdb['questWaitlist']
+        query = await collection.find_one({'guildId': guild_id})
+        error_title = None
+        error_message = None
+
+        # Print the current setting if no argument is given. Otherwise, store the new value.
+        if wait_list_value is None:
+            if not query or query['waitlistValue'] == 0:
+                error_title = 'Wait list disabled'
+                error_message = 'To configure a wait list, provide a value from 1 to 5'
+            else:
+                await interaction.response.send_message(f'Quest wait list currently set to '
+                                                        f'{str(query["waitlistValue"])} players.', ephemeral=True)
+        else:
+            if wait_list_value < 0 or wait_list_value > 5:
+                error_title = 'Input out of range'
+                error_message = 'wait_list_value must be an integer between 0 and 5!'
+            else:
+                await collection.update_one({'guildId': guild_id}, {'$set': {'waitlistValue': wait_list_value}},
+                                            upsert=True)
+
+                if wait_list_value == 0:
+                    await interaction.response.send_message('Quest wait list disabled.', ephemeral=True)
+                else:
+                    await interaction.response.send_message(f'Quest wait list set to {wait_list_value} players.',
+                                                            ephemeral=True)
+
+        if error_message:
+            error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
+            await interaction.response.send_message(embed=error_embed, ephemeral=True)
+
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @quest_group.command(name='summary')
+    async def summary(self, interaction: discord.Interaction):
+        """
+        Toggles quest summary on/off. When enabled, GMs can input a brief summary of the quest during completion.
+        """
+        guild_id = interaction.guild.id
+        error_title = None
+        error_message = None
+
+        # Check to see if the quest archive is configured.
+        quest_archive = await self.gdb['archiveChannel'].find_one({'guildId': guild_id})
+        if not quest_archive:
+            error_title = 'Missing Configuration'
+            error_message = f'Quest archive channel not configured! Use /config channel questarchive' \
+                            f' <channel mention> to set up!'
+        else:
+            # Query the current setting and toggle
+            collection = self.gdb['questSummary']
+            summary_enabled = await collection.find_one({'guildId': guild_id})
+            if not summary_enabled or not summary_enabled['questSummary']:
+                await collection.update_one({'guildId': guild_id}, {'$set': {'questSummary': True}}, upsert=True)
+                await interaction.response.send_message('Quest summary enabled.', ephemeral=True)
+            else:
+                await collection.update_one({'guildId': guild_id}, {'$set': {'questSummary': False}})
+                await interaction.response.send_message('Quest summary disabled.', ephemeral=True)
+
+        if error_message:
+            error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
+            await interaction.response.send_message(embed=error_embed, ephemeral=True)
+
+    # --- Characters ---
+
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @character_group.command(name='experience')
+    async def config_experience(self, interaction: discord.Interaction, enabled: str = None):
+        """
+        This command manages the use of experience points (or similar value-based character progression).
+
+        Arguments:
+        [no argument]: Displays the current configuration.
+        [True|False]: Configures the server to enable/disable experience points.
+        """
+        guild_id = interaction.guild.id
+        query = await self.gdb['characterSettings'].find_one({'guildId': guild_id})
+        valid_operations = ['true', 'false']
+        error_title = None
+        error_message = None
+
+        # Display setting if no arg is passed
+        if enabled is None:
+            if query and query['xp']:
+                await interaction.response.send_message('Character Experience Points are enabled.', ephemeral=True)
+            else:
+                await interaction.response.send_message('Character Experience Points are disabled.', ephemeral=True)
+        else:
+            if enabled.lower() not in valid_operations:
+                error_title = 'Invalid Operation'
+                error_message = 'The only valid inputs are true or false.'
+            else:
+                if enabled.lower() == 'true':
+                    await self.gdb['characterSettings'].update_one({'guildId': guild_id}, {'$set': {'xp': True}},
+                                                                   upsert=True)
+                    await interaction.response.send_message('Character Experience Points enabled!', ephemeral=True)
+                else:
+                    await self.gdb['characterSettings'].update_one({'guildId': guild_id}, {'$set': {'xp': False}},
+                                                                   upsert=True)
+                    await interaction.response.send_message('Character Experience Points disabled!', ephemeral=True)
+
+        if error_message:
+            error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
+            await interaction.response.send_message(embed=error_embed, ephemeral=True)
+
+    # --- Currency ---
+
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @currency_group.command(name='list')
+    async def currency_list(self, interaction: discord.Interaction):
+        """
+        Lists the currencies configured on the server.
+        """
+        guild_id = interaction.guild.id
+        collection = self.gdb['currency']
+        query = await collection.find_one({'_id': guild_id})
+
+        post_embed = discord.Embed(title='Config - Currencies', type='rich')
+        for currency in query['currencies']:
+            cname = currency['name']
+            double = False
+            denoms = None
+            if 'double' in currency:
+                double = currency['double']
+            if 'denoms' in currency:
+                values = []
+                for denom in currency['denoms']:
+                    dname = denom['name']
+                    value = denom['value']
+                    values.append(f'{dname}: {value} {cname}')
+                denoms = '\n'.join(values)
+            post_embed.add_field(name=cname,
+                                 value=f'Double: ```\n{double}``` Denominations: ```\n{denoms}```', inline=True)
+
+        await interaction.response.send_message(embed=post_embed, ephemeral=True)
+
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @currency_group.command(name='add')
+    async def currency_add(self, interaction: discord.Interaction, *, definition: str):
+        """
+        Accepts a JSON definition and adds a new currency type to the server.
+
+        Arguments:
+        <definition>: JSON-formatted string definition. See additional information below.
+
+        Definition format:
+        -----------------------------------
+        {
+        "name": string,
+        "double": bool,
+        "denoms": [
+            {"name": string, "value": double}
+            ]
+        }
+
+        Keys and their functions
+        -----------------------------------
+        "name": Name of the currency. Case-insensitive. Acts as the base denomination with a value of 1. Example: gold
+        "double": Specifies whether currency is displayed as whole integers (10) or as a double (10.00)
+        "denoms": An array of objects for additional denominations. Example: {"name": "silver", "value": 0.1}
+
+        "name" is the only required key to add a new currency.
+        Denomination names may be referenced in-place of the currency name for transactions.
+
+        Examples for common RPG currencies:
+        Gold: {"name":"Gold", "double":true, "denoms":[{"name":"Silver","value":0.1}, {"name":"Copper","value":0.01}]}
+        Credits: {"name":"Credits", "double":true}
+        Downtime: {"name":"Downtime"}
+        """
+        # TODO: Redundant-name prevention
+        # TODO: JSON validation
+        # TODO: Modal implementation
+        guild_id = interaction.guild.id
+        collection = self.gdb['currency']
+        try:
+            loaded = json.loads(definition)
+            await collection.update_one({'_id': guild_id}, {'$push': {'currencies': loaded}}, upsert=True)
+            await interaction.response.send_message(f'`{loaded["name"]}` added to server currencies!', ephemeral=True)
+        except json.JSONDecodeError:
+            await interaction.response.send_message('Invalid JSON format, check syntax and try again!', ephemeral=True)
+
+    @app_commands.checks.has_permissions(manage_guild=True)
+    @currency_group.command(name='remove')
+    async def currency_remove(self, interaction: discord.Interaction, name: str):
+        """
+        Removes a named currency from the server.
+
+        Arguments:
+        <name>: The name of the currency to remove.
+        """
+        guild_id = interaction.guild.id
+        collection = self.gdb['currency']
+        query = await collection.find_one({'_id': guild_id})
+        error_title = None
+        error_message = None
+
+        if not query:
+            error_title = 'Missing Configuration'
+            error_message = 'No currencies are configured on this server.'
+        else:
+            search = filter(lambda currency: name.lower() in currency['name'].lower(), query['currencies'])
+            matches = list(map(dumps, search))
+
+            if not matches:
+                error_title = 'No currencies were removed.'
+                error_message = f'\"{name}\" not found. Check your spelling and use of quotes!'
+            else:
+                # TODO: Confirmation modal
+                if len(matches) == 1:
+                    loaded = json.loads(matches[0])
+                    await collection.update_one({'_id': guild_id}, {'$pull': {'currencies': {'name': loaded['name']}}},
+                                                upsert=True)
+                    await interaction.response.send_message(f'{loaded["name"]} deleted!', ephemeral=True)
+                # If there is more than one match, prompt the user with a Select to choose one
+                else:
+                    options = []
+                    for match in matches:
+                        loaded = json.loads(match)
+                        options.append(discord.SelectOption(label=loaded['name']))
+
+                    select = SingleChoiceDropdown(placeholder='Choose One', options=options)
+                    view = DropdownView(select)
+                    if not interaction.response.is_done():  # Make sure this is the first response
+                        await interaction.response.send_message(f'Multiple matches found for \"{name}\"!', view=view,
+                                                                ephemeral=True)
+                    else:  # If the interaction has been responded to, update the original message instead
+                        await interaction.edit_original_message(content=f'Multiple matches found for \"{name}\"!',
+                                                                view=view)
+                    await view.wait()
+                    removed_name = select.values[0]
+                    await collection.update_one({'_id': guild_id},
+                                                {'$pull': {'currencies': {'name': removed_name}}}, upsert=True)
+                    await interaction.edit_original_message(content=f'{removed_name} removed!', embed=None, view=None)
+
+        if error_message:
+            error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
+            await interaction.response.send_message(embed=error_embed, ephemeral=True)
 
 
 async def setup(bot):
