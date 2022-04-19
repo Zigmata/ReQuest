@@ -18,13 +18,13 @@ class Config(Cog, app_commands.Group, name='config'):
         self.cdb = bot.cdb
         super().__init__()
 
-    # --- Roles ---
-
     role_group = app_commands.Group(name='role', description='Commands for configuring roles for extended functions.')
     channel_group = app_commands.Group(name='channel', description='Commands for configuring channels.')
     quest_group = app_commands.Group(name='quest', description='Commands for configuring server-wide quest settings.')
     character_group = app_commands.Group(name='character', description='Commands for configuring character settings.')
     currency_group = app_commands.Group(name='currency', description='Commands for configuring currency settings.')
+
+    # --- Roles ---
 
     @app_commands.checks.has_permissions(manage_guild=True)
     @role_group.command(name='announce')

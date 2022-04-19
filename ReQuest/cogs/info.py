@@ -27,7 +27,7 @@ class Info(Cog):
                               description='[Get ReQuest!](https://discord.com/api/oauth2/authorize?client_id=6014922017'
                                           '04521765&permissions=1497132133440&scope=applications.commands%20bot)',
                               type='rich')
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name='support')
     async def support(self, interaction: discord.Interaction) -> None:
@@ -36,7 +36,7 @@ class Info(Cog):
         """
         await interaction.response.send_message(
             f'**ReQuest v0.5.3-a.1**\n\nBugs? Feature Requests? Join the development server at '
-            f'https://discord.gg/Zq37gj4', ephemeral=True)
+            f'https://discord.gg/Zq37gj4')
 
 
 async def setup(bot):
