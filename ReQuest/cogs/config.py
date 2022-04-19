@@ -73,6 +73,7 @@ class Config(Cog, app_commands.Group, name='config'):
                     await view.wait()
                     new_role = int(select.values[0])
 
+                # TODO: Fix the flow of this. Why did I do this?
                 if len(matches) == 1:
                     # Add the new role's ID to the database
                     await collection.update_one({'guildId': guild_id}, {'$set': {'announceRole': new_role}},
