@@ -322,7 +322,7 @@ class QuestBoard(Cog):
         query = await self.gdb['announceRole'].find_one({'guildId': guild_id})
 
         # Grab the announcement role, if configured.
-        announce_role: int = None
+        announce_role: int = 0
         if query:
             announce_role = query['announceRole']
 
@@ -344,7 +344,7 @@ class QuestBoard(Cog):
         post_embed.set_footer(text='Quest ID: ' + quest_id)
 
         # If an announcement role is set, ping it and then delete the message.
-        if announce_role:
+        if announce_role != 0:
             ping_msg = await channel.send(f'<@&{announce_role}> **NEW QUEST!**')
             await ping_msg.delete()
 

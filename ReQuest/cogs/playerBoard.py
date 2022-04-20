@@ -62,7 +62,8 @@ class PlayerBoard(Cog, app_commands.Group, name='playerboard', description='Comm
             # Build the post embed
             player = interaction.user.id
             post_id = str(shortuuid.uuid()[:8])
-            post_embed = discord.Embed(title=title, type='rich', description=content).set_footer(text=f'Post ID: {post_id}')
+            post_embed = discord.Embed(title=title, type='rich',
+                                       description=content).set_footer(text=f'Post ID: {post_id}')
             post_embed.add_field(name='Author', value=f'<@!{player}>')
 
             msg = await channel.send(embed=post_embed)
@@ -115,6 +116,10 @@ class PlayerBoard(Cog, app_commands.Group, name='playerboard', description='Comm
                     await msg.delete()
 
                     await interaction.response.send_message(f'Post `{post_id}`: **{title}** deleted!', ephemeral=True)
+
+        if not error_message:
+            error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
+            await interaction.response.send_message(embed=error_embed, ephemeral=True)
 
     # TODO: Explore options of combining edit commands into a single modal
     @edit_group.command(name='title')

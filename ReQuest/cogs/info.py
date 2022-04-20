@@ -1,6 +1,6 @@
 import discord
 from discord import app_commands
-from discord.ext.commands import Cog, command
+from discord.ext.commands import Cog
 
 
 class Info(Cog):
