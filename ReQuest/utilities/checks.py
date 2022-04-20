@@ -1,3 +1,5 @@
+import discord
+import ReQuest.bot as requestbot
 from discord.ext import commands
 from .enums import EditTarget
 
@@ -56,19 +58,19 @@ def has_active_character():
     return commands.check(predicate)
 
 
-async def is_author_or_mod(ctx, edit_target: EditTarget, target_id: str):
-    if ctx.author.guild_permissions.manage_guild:
+async def is_author_or_mod(bot: requestbot, member: discord.Member, edit_target: EditTarget, target_id: str):
+    if member.guild_permissions.manage_guild:
         return True
     else:
-        caller_id = ctx.author.id
+        caller_id = member.id
 
         if edit_target is EditTarget.QUEST:
-            collection = ctx.bot.gdb['quests']
+            collection = bot.gdb['quests']
             quest = await collection.find_one({'questId': target_id})
             if quest['gm'] == caller_id:
                 return True
         elif edit_target is EditTarget.POST:
-            collection = ctx.bot.gdb['playerBoard']
+            collection = bot.gdb['playerBoard']
             post = await collection.find_one({'postId': target_id})
             if post['player'] == caller_id:
                 return True

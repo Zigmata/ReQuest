@@ -2,6 +2,7 @@ from datetime import datetime
 
 import discord
 import shortuuid
+from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Cog
 
@@ -12,15 +13,18 @@ from ..utilities.checks import is_author_or_mod
 listener = Cog.listener
 
 
-class PlayerBoard(Cog):
+class PlayerBoard(Cog, app_commands.Group, name='playerboard', description='Commands for use of the player board.'):
     def __init__(self, bot):
         self.bot = bot
         self.gdb = bot.gdb
+        super().__init__()
+
+    edit_group = app_commands.Group(name='edit', description='Commands for editing existing posts.')
 
     # --- Support Functions ---
 
     @staticmethod
-    def edit_post(post) -> discord.Embed:
+    async def edit_post(post) -> discord.Embed:
 
         player, post_id, title, content = (post['player'], post['postId'], post['title'], post['content'])
 
@@ -33,16 +37,8 @@ class PlayerBoard(Cog):
 
     # ----- Player Board Commands -----
 
-    @commands.group(name='playerboard', aliases=['pb', 'pboard'], case_insensitive=True, pass_context=True)
-    async def player_board(self, ctx):
-        """
-        Commands for player board posts and edits.
-        """
-        if ctx.invoked_subcommand is None:
-            return
-
-    @player_board.command(name='post', pass_context=True)
-    async def pbpost(self, ctx, title, *, content):
+    @app_commands.command(name='post')
+    async def player_board_post(self, interaction: discord.Interaction, title: str, content: str):
         """
         Posts a new message to the player board.
 
@@ -50,85 +46,79 @@ class PlayerBoard(Cog):
         [title]: The title of the post.
         [content]: The body of the post.
         """
-        guild_id = ctx.message.guild.id
+        guild_id = interaction.guild_id
         guild = self.bot.get_guild(guild_id)
 
         # Get the player board channel
         pquery = await self.gdb['playerBoardChannel'].find_one({'guildId': guild_id})
         if not pquery:
-            await ctx.send('Player Board Channel is disabled!')
-            return
+            error_embed = discord.Embed(title='Missing Configuration!', description='Player Board Channel is disabled!',
+                                        type='rich')
+            await interaction.response.send_message(embed=error_embed, ephemeral=True)
         else:
             channel_id = pquery['playerBoardChannel']
             channel = guild.get_channel(channel_id)
 
-        # Build the post embed
-        player = ctx.author.id
-        post_id = str(shortuuid.uuid()[:8])
-        post_embed = discord.Embed(title=title, type='rich', description=content)
-        post_embed.add_field(name='Author', value=f'<@!{player}>')
-        post_embed.set_footer(text=f'Post ID: {post_id}')
+            # Build the post embed
+            player = interaction.user.id
+            post_id = str(shortuuid.uuid()[:8])
+            post_embed = discord.Embed(title=title, type='rich', description=content).set_footer(text=f'Post ID: {post_id}')
+            post_embed.add_field(name='Author', value=f'<@!{player}>')
 
-        msg = await channel.send(embed=post_embed)
-        message_id = msg.id
-        timestamp = msg.created_at
-        await ctx.send(f'Post `{post_id}`: **{title}** posted!')
+            msg = await channel.send(embed=post_embed)
+            message_id = msg.id
+            timestamp = msg.created_at
+            await interaction.response.send_message(f'Post `{post_id}`: **{title}** posted!', ephemeral=True)
 
-        # Store the message in the database
-        await self.gdb['playerBoard'].insert_one({'guildId': guild_id, 'player': player, 'postId': post_id,
-                                                  'messageId': message_id, 'timestamp': timestamp, 'title': title,
-                                                  'content': content})
+            # Store the message in the database
+            await self.gdb['playerBoard'].insert_one({'guildId': guild_id, 'player': player, 'postId': post_id,
+                                                      'messageId': message_id, 'timestamp': timestamp, 'title': title,
+                                                      'content': content})
 
-    @player_board.command(name='delete', pass_context=True)
-    async def pbdelete(self, ctx, post_id):
+    @app_commands.command(name='delete')
+    async def player_board_delete(self, interaction: discord.Interaction, post_id: str):
         """
         Deletes a post.
 
         Arguments:
         [post_id]: The ID of the post.
         """
-        guild_id = ctx.message.guild.id
+        guild_id = interaction.guild_id
         guild = self.bot.get_guild(guild_id)
+        error_title = None
+        error_message = None
 
         # Get the player board channel
-        pquery = await self.gdb['playerBoardChannel'].find_one({'guildId': guild_id})
-        if not pquery:
-            await ctx.send('Player board channel disabled!')
-            return
+        post_query = await self.gdb['playerBoardChannel'].find_one({'guildId': guild_id})
+        if not post_query:
+            error_title = 'Missing Configuration!'
+            error_message = 'Player board channel disabled!'
         else:
-            channel_id = pquery['playerBoardChannel']
+            channel_id = post_query['playerBoardChannel']
             channel = guild.get_channel(channel_id)
 
-        # Find the post to delete
-        post = await self.gdb['playerBoard'].find_one({'postId': post_id})
-        if not post:
-            await ctx.send('Post not found!')
-            return
+            # Find the post to delete
+            post = await self.gdb['playerBoard'].find_one({'postId': post_id})
+            if not post:
+                error_title = 'Error!'
+                error_message = 'Post not found!'
+            # Ensure only the author can delete
+            else:
+                if not await is_author_or_mod(self.bot, interaction.user, EditTarget.POST, post_id):
+                    error_title = 'Operation Cancelled!'
+                    error_message = 'Posts can only be deleted by the author!'
+                else:
+                    title = post['title']
+                    # Delete the post from the database and player board channel
+                    await self.gdb['playerBoard'].delete_one({'postId': post_id})
+                    msg = channel.get_partial_message(post['messageId'])
+                    await msg.delete()
 
-        # Ensure only the author can delete
-        if not await is_author_or_mod(ctx, EditTarget.POST, post_id):
-            await ctx.send('Posts can only be deleted by the author!')
-            return
+                    await interaction.response.send_message(f'Post `{post_id}`: **{title}** deleted!', ephemeral=True)
 
-        title = post['title']
-        # Delete the post from the database and player board channel
-        await self.gdb['playerBoard'].delete_one({'postId': post_id})
-        msg = channel.get_partial_message(post['messageId'])
-        await msg.delete()
-
-        await ctx.send(f'Post `{post_id}`: **{title}** deleted!')
-
-    @player_board.group(name='edit', case_insensitive=True, pass_context=True)
-    async def pbedit(self, ctx):
-        """
-        Commands for editing player board posts.
-        """
-        if ctx.invoked_subcommand is None:
-            # TODO: Error reporting and logging
-            return
-
-    @pbedit.command(name='title', pass_context=True)
-    async def pbtitle(self, ctx, post_id, *, new_title):
+    # TODO: Explore options of combining edit commands into a single modal
+    @edit_group.command(name='title')
+    async def pbtitle(self, interaction: discord.Interaction, post_id: str, new_title: str):
         """
         Edits the title of a post.
 
@@ -136,44 +126,51 @@ class PlayerBoard(Cog):
         [post_id]: The post ID to edit.
         [new_title]: The new title of the post.
         """
-        guild_id = ctx.message.guild.id
+        guild_id = interaction.guild_id
         guild = self.bot.get_guild(guild_id)
+        error_title = None
+        error_message = None
 
         # Get the player board channel
         pquery = await self.gdb['playerBoardChannel'].find_one({'guildId': guild_id})
         if not pquery:
-            await ctx.send('Player board channel disabled!')
-            return
+            error_title = 'Missing Configuration!'
+            error_message = 'Player board channel disabled!'
         else:
             channel_id = pquery['playerBoardChannel']
             channel = guild.get_channel(channel_id)
 
-        # Find the post to edit
-        post = await self.gdb['playerBoard'].find_one({'postId': post_id})
-        if not post:
-            await ctx.send('Post not found!')
-            return
+            # Find the post to edit
+            post = await self.gdb['playerBoard'].find_one({'postId': post_id})
+            if not post:
+                error_title = 'Error!'
+                error_message = 'Post not found!'
+            else:
+                # Ensure only the author can edit
+                if not await is_author_or_mod(self.bot, interaction.user, EditTarget.POST, post_id):
+                    error_title = 'Post not edited'
+                    error_message = 'Posts can only be edited by the author!'
+                else:
+                    # Update the database
+                    await self.gdb['playerBoard'].update_one({'postId': post_id}, {'$set': {'title': new_title}},
+                                                             upsert=True)
 
-        # Ensure only the author can edit
-        if not await is_author_or_mod(ctx, EditTarget.POST, post_id):
-            await ctx.send('Posts can only be edited by the author!')
-            return
+                    # Grab the updated document
+                    updated_post = await self.gdb['playerBoard'].find_one({'postId': post_id})
 
-        # Update the database
-        await self.gdb['playerBoard'].update_one({'postId': post_id}, {'$set': {'title': new_title}}, upsert=True)
+                    # Build the embed and post
+                    post_embed = await self.edit_post(updated_post)
+                    msg = channel.get_partial_message(post['messageId'])
+                    await msg.edit(embed=post_embed)
 
-        # Grab the updated document
-        updated_post = await self.gdb['playerBoard'].find_one({'postId': post_id})
+                    await interaction.response.send_message('Post updated!', ephemeral=True)
 
-        # Build the embed and post
-        post_embed = self.edit_post(updated_post)
-        msg = channel.get_partial_message(post['messageId'])
-        await msg.edit(embed=post_embed)
+        if error_message:
+            error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
+            await interaction.response.send_message(embed=error_embed, ephemeral=True)
 
-        await ctx.send('Post updated!')
-
-    @pbedit.command(name='content', pass_context=True)
-    async def pbcontent(self, ctx, post_id, *, new_content):
+    @edit_group.command(name='content')
+    async def pbcontent(self, interaction: discord.Interaction, post_id: str, new_content: str):
         """
         Edits the content of a post.
 
@@ -181,47 +178,53 @@ class PlayerBoard(Cog):
         [post_id]: The post ID to edit.
         [new_content]: The new content of the post.
         """
-        guild_id = ctx.message.guild.id
+        guild_id = interaction.guild_id
         guild = self.bot.get_guild(guild_id)
+        error_title = None
+        error_message = None
 
         # Get the player board channel
         pquery = await self.gdb['playerBoardChannel'].find_one({'guildId': guild_id})
         if not pquery:
-            await ctx.send('Player board channel disabled!')
-            return
+            error_title = 'Missing Configuration!'
+            error_message = 'Player board channel disabled!'
         else:
             channel_id = pquery['playerBoardChannel']
             channel = guild.get_channel(channel_id)
 
-        # Find the post to edit
-        post = await self.gdb['playerBoard'].find_one({'postId': post_id})
-        if not post:
-            await ctx.send('Post not found!')
-            return
+            # Find the post to edit
+            post = await self.gdb['playerBoard'].find_one({'postId': post_id})
+            if not post:
+                error_title = 'Error!'
+                error_message = 'Post not found!'
+            else:
+                # Ensure only the author can edit
+                if not await is_author_or_mod(self.bot, interaction.user, EditTarget.POST, post_id):
+                    error_title = 'Post not update'
+                    error_message = 'Posts can only be edited by the author!'
+                else:
+                    # Update the database
+                    await self.gdb['playerBoard'].update_one({'postId': post_id}, {'$set': {'content': new_content}},
+                                                             upsert=True)
+                    # Grab the updated document
+                    updated_post = await self.gdb['playerBoard'].find_one({'postId': post_id})
 
-        # Ensure only the author can edit
-        if not await is_author_or_mod(ctx, EditTarget.POST, post_id):
-            await ctx.send('Posts can only be edited by the author!')
-            return
+                    # Build the embed and post
+                    post_embed = await self.edit_post(updated_post)
+                    msg = channel.get_partial_message(post['messageId'])
+                    await msg.edit(embed=post_embed)
 
-        # Update the database
-        await self.gdb['playerBoard'].update_one({'postId': post_id}, {'$set': {'content': new_content}}, upsert=True)
+                    await interaction.response.send_message('Post updated!', ephemeral=True)
 
-        # Grab the updated document
-        updated_post = await self.gdb['playerBoard'].find_one({'postId': post_id})
-
-        # Build the embed and post
-        post_embed = self.edit_post(updated_post)
-        msg = channel.get_partial_message(post['messageId'])
-        await msg.edit(embed=post_embed)
-
-        await ctx.send('Post updated!')
+        if error_message:
+            error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
+            await interaction.response.send_message(embed=error_embed, ephemeral=True)
 
     # ----- Admin Commands -----
 
     @commands.has_guild_permissions(manage_guild=True)
-    @player_board.command()
-    async def purge(self, ctx, days):
+    @app_commands.command(name='purge')
+    async def purge(self, interaction: discord.Interaction, days: str):
         """
         Purges player board posts.
 
@@ -235,53 +238,56 @@ class PlayerBoard(Cog):
         # TODO: Experiment with channel.history() to get all messages and pass to pymongo unordered bulk write
 
         # Get the guild object
-        guild_id = ctx.message.guild.id
+        guild_id = interaction.guild_id
         guild = self.bot.get_guild(guild_id)
 
         # Fetch the player board channel
         pquery = await self.gdb['playerBoardChannel'].find_one({'guildId': guild_id})
         if not pquery:
-            await ctx.send('Player board channel not configured!')
-            return
-        pb_channel_id = pquery['playerBoardChannel']
-        pb_channel = guild.get_channel(pb_channel_id)
-
-        standby_message = await ctx.send('Searching for posts to purge . . .')
-
-        # Find each post in the db older than the specified time
-        message_ids = []
-        if days == 'all':  # gets every post if this arg is provided
-            for post in await self.gdb['playerBoard'].find({'guildId': guild_id}):
-                message_ids.append(int(post['messageId']))
+            error_embed = discord.Embed(title='Missing Configuration!',
+                                        description='Player board channel not configured!', type='rich')
+            await interaction.response.send_message(embed=error_embed, ephemeral=True)
         else:
-            duration = None
-            try:
-                duration = int(days)
-            except TypeError:
-                await ctx.send('Argument must be either a number or `all`!')
+            pb_channel_id = pquery['playerBoardChannel']
+            pb_channel = guild.get_channel(pb_channel_id)
 
-            now = datetime.utcnow()
-            cursor = self.gdb['playerBoard'].find({'guildId': guild_id})
-            posts = await cursor.to_list(500)
-            for post in posts:
-                delta = now - post['timestamp']
-                if delta.days > duration:
+            await interaction.response.send_message('Searching for posts to purge . . .', ephemeral=True)
+            # Find each post in the db older than the specified time
+            message_ids = []
+            if days == 'all':  # gets every post if this arg is provided
+                for post in await self.gdb['playerBoard'].find({'guildId': guild_id}):
                     message_ids.append(int(post['messageId']))
+            else:
+                try:
+                    duration = int(days)
+                except TypeError:
+                    await interaction.edit_original_message(content='Argument must be either a number or `all`!',
+                                                            embed=None, view=None)
+                    return
 
-        # If any qualifying message ids are found, delete the posts and the db records
-        if message_ids:
-            for message_id in message_ids:
-                msg = pb_channel.get_partial_message(message_id)
-                await attempt_delete(msg)
-                await self.gdb['playerBoard'].delete_one({'messageId': message_id})
+                now = datetime.utcnow()
+                cursor = self.gdb['playerBoard'].find({'guildId': guild_id})
+                posts = await cursor.to_list(500)
+                for post in posts:
+                    delta = now - post['timestamp']
+                    if delta.days > duration:
+                        message_ids.append(int(post['messageId']))
 
-            await ctx.send('{} expired posts deleted!'.format(len(message_ids)))
-        elif days == 'all':
-            await ctx.send('All player board posts deleted!')
-        else:
-            await ctx.send('No posts fall outside the provided number of days.')
+            # If any qualifying message ids are found, delete the posts and the db records
+            if message_ids:
+                for message_id in message_ids:
+                    msg = pb_channel.get_partial_message(message_id)
+                    await attempt_delete(msg)
+                    await self.gdb['playerBoard'].delete_one({'messageId': message_id})
 
-        await standby_message.delete()
+                await interaction.edit_original_message(content=f'{len(message_ids)} expired posts deleted!',
+                                                        embed=None, view=None)
+            elif days == 'all':
+                await interaction.edit_original_message(content='All player board posts deleted!',
+                                                        embed=None, view=None)
+            else:
+                await interaction.edit_original_message(content='No posts fall outside the provided number of days.',
+                                                        embed=None, view=None)
 
 
 async def setup(bot):

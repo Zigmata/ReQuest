@@ -2,9 +2,8 @@ from datetime import datetime, timezone
 import discord
 import shortuuid
 from discord import app_commands
-from discord.ext import commands
 from discord.ext.commands import Cog
-from ..utilities.supportFunctions import attempt_delete, strip_id
+from ..utilities.supportFunctions import strip_id
 from ..utilities.checks import has_gm_or_mod
 from ..utilities.ui import SingleChoiceDropdown, DropdownView
 
