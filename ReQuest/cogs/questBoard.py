@@ -1,10 +1,8 @@
 import discord
 import shortuuid
 from discord import app_commands
-from discord.ext import commands
 from discord.ext.commands import Cog
-
-from ..utilities.supportFunctions import attempt_delete, parse_list, strip_id, get_prefix
+from ..utilities.supportFunctions import attempt_delete, parse_list, strip_id
 from ..utilities.checks import has_gm_role, has_gm_or_mod
 from ..utilities.ui import SingleChoiceDropdown, DropdownView
 
@@ -681,7 +679,7 @@ class QuestBoard(Cog, app_commands.Group, name='quest', description='Commands fo
             error_title = 'Error!'
             error_message = 'Quest ID not found!'
         # Confirm the user calling the command is the GM that created the quest, or has administrative rights.
-        elif not quest['gm'] == user_id and not interaction.user.guild_permissions.manage_guild:
+        elif not quest['gm'] == user_id and not member.guild_permissions.manage_guild:
             error_title = 'Quest Not Edited!'
             error_message = 'GMs can only manage their own quests!'
         else:
