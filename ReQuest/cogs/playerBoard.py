@@ -105,7 +105,7 @@ class PlayerBoard(Cog, app_commands.Group, name='playerboard', description='Comm
                 error_message = 'Post not found!'
             # Ensure only the author can delete
             else:
-                if not await is_author_or_mod(self.bot, interaction.user, EditTarget.POST, post_id):
+                if not await is_author_or_mod(self.gdb, interaction.user, EditTarget.POST, post_id):
                     error_title = 'Operation Cancelled!'
                     error_message = 'Posts can only be deleted by the author!'
                 else:
@@ -152,7 +152,7 @@ class PlayerBoard(Cog, app_commands.Group, name='playerboard', description='Comm
                 error_message = 'Post not found!'
             else:
                 # Ensure only the author can edit
-                if not await is_author_or_mod(self.bot, interaction.user, EditTarget.POST, post_id):
+                if not await is_author_or_mod(self.gdb, interaction.user, EditTarget.POST, post_id):
                     error_title = 'Post not edited'
                     error_message = 'Posts can only be edited by the author!'
                 else:
@@ -204,7 +204,7 @@ class PlayerBoard(Cog, app_commands.Group, name='playerboard', description='Comm
                 error_message = 'Post not found!'
             else:
                 # Ensure only the author can edit
-                if not await is_author_or_mod(self.bot, interaction.user, EditTarget.POST, post_id):
+                if not await is_author_or_mod(self.gdb, interaction.user, EditTarget.POST, post_id):
                     error_title = 'Post not update'
                     error_message = 'Posts can only be edited by the author!'
                 else:

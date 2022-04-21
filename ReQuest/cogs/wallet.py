@@ -195,10 +195,10 @@ class Wallet(Cog):
             error_message = 'No currency with that name is used on this server!'
         elif not recipient_query:
             error_title = 'Error!'
-            error_message = 'That player does not have any registered characters!'
+            error_message = f'{user_mention} does not have any registered characters!'
         elif str(guild_id) not in recipient_query['activeChars']:
             error_title = 'Error!'
-            error_message = 'That player does not have an active character on this server!'
+            error_message = f'{user_mention} does not have an active character on this server!'
         else:
             transaction_id = str(shortuuid.uuid()[:12])
             donor_query = await character_collection.find_one({'_id': donor_id})
