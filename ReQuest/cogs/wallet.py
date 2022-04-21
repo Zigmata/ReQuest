@@ -7,6 +7,7 @@ from discord.ext.commands import Cog
 
 from ..utilities.checks import has_gm_or_mod, has_active_character
 from ..utilities.supportFunctions import strip_id
+from ..utilities.ui import SingleChoiceDropdown, DropdownView
 
 listener = Cog.listener
 
@@ -95,26 +96,21 @@ class Wallet(Cog):
         error_message = None
 
         # Make sure the referenced currency is a valid name used in the server
-        guild_currencies = await guild_collection.find_one({'_id': guild_id})
-        # TODO: Multiple-match logic
+        currency_query = await guild_collection.find_one({'_id': guild_id})
         # TODO: Extract to validation function
-        valid = False
-        cname = ''
-        for currency_type in guild_currencies['currencies']:
-            if currency_name.lower() in currency_type['name'].lower():
-                cname = currency_type['name']
-                valid = True
-            if 'denoms' in currency_type:
-                denominations = currency_type['denoms']
+        matches = []
+        for currency in currency_query['currencies']:
+            if currency_name.lower() in currency['name'].lower():
+                matches.append(currency['name'])
+            if 'denoms' in currency:
+                denominations = currency['denoms']
                 for i in range(len(denominations)):
                     if currency_name.lower() in denominations[i]['name'].lower():
-                        cname = denominations[i]['name']
-                        valid = True
-
+                        matches.append(denominations[i]['name'])
         if quantity == 0:
             error_title = 'Invalid Quantity!'
             error_message = 'Stop being a tease and enter an actual quantity!'
-        elif not valid:
+        elif not matches:
             error_title = 'Incorrect Currency Name!'
             error_message = 'No currency with that name is used on this server!'
         else:
@@ -122,6 +118,24 @@ class Wallet(Cog):
             query = await character_collection.find_one({'_id': member_id})
             active_character = query['activeChars'][str(guild_id)]
             inventory = query['characters'][active_character]['attributes']['inventory']
+
+            if len(matches) == 1:
+                cname = matches[0]
+            else:
+                options = []
+                for match in matches:
+                    options.append(discord.SelectOption(label=match))
+                select = SingleChoiceDropdown(placeholder='Choose One', options=options)
+                view = DropdownView(select)
+                if not interaction.response.is_done():  # Make sure this is the first response
+                    await interaction.response.send_message(f'Multiple matches found for {currency_name}!',
+                                                            view=view, ephemeral=True)
+                else:  # If the interaction has been responded to, update the original message
+                    await interaction.edit_original_message(
+                        content=f'Multiple matches found for {currency_name}!', view=view)
+                await view.wait()
+                cname = select.values[0]
+
             if cname in inventory:
                 current_quantity = inventory[cname]
                 new_quantity = current_quantity + quantity
@@ -147,7 +161,10 @@ class Wallet(Cog):
             currency_embed.add_field(name="Recipient", value=recipient_string)
             currency_embed.add_field(name='Game Master', value=f'<@!{gm_user_id}>', inline=False)
             currency_embed.set_footer(text=f'{datetime.utcnow().strftime("%Y-%m-%d")} Transaction ID: {transaction_id}')
-            await interaction.response.send_message(embed=currency_embed)
+            if interaction.response.is_done():
+                await interaction.edit_original_message(content=None, embed=currency_embed, view=None)
+            else:
+                await interaction.response.send_message(embed=currency_embed)
 
         if error_message:
             error_embed = discord.Embed(title=error_title, description=error_message, type='rich')

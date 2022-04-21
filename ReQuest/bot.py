@@ -45,7 +45,6 @@ class ReQuest(commands.AutoShardedBot):
 
         # Grab the list of extensions and load them asynchronously
         initial_extensions = self.config['load_extensions']
-        # TODO: Verify async loop isn't needed
         for ext in initial_extensions:
             try:
                 asyncio.create_task(self.load_extension(ext))
