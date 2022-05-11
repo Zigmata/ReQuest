@@ -1,8 +1,6 @@
 import re
 import discord
 
-# TODO: Implement input sanitization helper functions
-
 
 # Deletes command invocations
 async def attempt_delete(message):
