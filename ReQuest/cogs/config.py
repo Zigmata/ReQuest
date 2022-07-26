@@ -3,13 +3,13 @@ from bson.json_util import dumps
 
 import discord
 from discord import app_commands
-from discord.ext.commands import Cog
+from discord.ext.commands import Cog, GroupCog
 
 from ..utilities.supportFunctions import strip_id
 from ..utilities.ui import SingleChoiceDropdown, DropdownView
 
 
-class Config(Cog, app_commands.Group, name='config'):
+class Config(GroupCog, name='config'):
     """Commands for server configuration of bot options and features."""
 
     def __init__(self, bot):

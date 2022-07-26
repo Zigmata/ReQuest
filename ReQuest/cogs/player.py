@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 import discord
 import shortuuid
 from discord import app_commands
-from discord.ext.commands import Cog
+from discord.ext.commands import Cog, GroupCog
 from ..utilities.supportFunctions import strip_id
 from ..utilities.checks import has_gm_or_mod
 from ..utilities.ui import SingleChoiceDropdown, DropdownView
@@ -10,7 +10,7 @@ from ..utilities.ui import SingleChoiceDropdown, DropdownView
 listener = Cog.listener
 
 
-class Player(Cog, app_commands.Group, name='player', description='Commands for manipulating player characters.'):
+class Player(GroupCog, name='player', description='Commands for manipulating player characters.'):
     def __init__(self, bot):
         self.bot = bot
         self.mdb = bot.mdb

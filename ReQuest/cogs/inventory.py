@@ -3,7 +3,7 @@ from datetime import datetime
 import discord
 import shortuuid
 from discord import app_commands
-from discord.ext.commands import Cog
+from discord.ext.commands import Cog, GroupCog
 
 from ..utilities.checks import has_gm_or_mod, has_active_character
 from ..utilities.supportFunctions import strip_id
@@ -11,7 +11,7 @@ from ..utilities.supportFunctions import strip_id
 listener = Cog.listener
 
 
-class Inventory(Cog, app_commands.Group, name='inventory',
+class Inventory(GroupCog, name='inventory',
                 description='Commands for viewing and using character inventories'):
     def __init__(self, bot):
         self.bot = bot

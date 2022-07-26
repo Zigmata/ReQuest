@@ -1,10 +1,10 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-from discord.ext.commands import Cog
+from discord.ext.commands import Cog, GroupCog
 
 
-class Admin(Cog, app_commands.Group, name='admin', description='Administrative commands for bot options.'):
+class Admin(GroupCog, name='admin', description='Administrative commands for bot options.'):
     """Administrative commands for bot options."""
 
     def __init__(self, bot):

@@ -1,7 +1,7 @@
 import discord
 import shortuuid
 from discord import app_commands
-from discord.ext.commands import Cog
+from discord.ext.commands import Cog, GroupCog
 from ..utilities.supportFunctions import attempt_delete, parse_list, strip_id
 from ..utilities.checks import has_gm_role, has_gm_or_mod
 from ..utilities.ui import SingleChoiceDropdown, DropdownView
@@ -10,7 +10,7 @@ listener = Cog.listener
 
 
 # TODO: Exception reporting in channel
-class QuestBoard(Cog, app_commands.Group, name='quest', description='Commands for posting and updating quests.'):
+class QuestBoard(GroupCog, name='quest', description='Commands for posting and updating quests.'):
     """Quest posts and associated reaction signups/options"""
 
     def __init__(self, bot):
@@ -54,7 +54,7 @@ class QuestBoard(Cog, app_commands.Group, name='quest', description='Commands fo
         if len(party) > 0:
             for member in party:
                 for key in member:
-                    character_query = await self.mdb['characters'].find_one({'_id': int(key)})
+                    character_query = await self.bot.mdb['characters'].find_one({'_id': int(key)})
                     character_name = character_query['characters'][member[key]]['name']
                     formatted_party.append(f'- <@!{key}> as {character_name}')
 
@@ -63,7 +63,7 @@ class QuestBoard(Cog, app_commands.Group, name='quest', description='Commands fo
         if len(wait_list) > 0:
             for member in wait_list:
                 for key in member:
-                    character_query = await self.mdb['characters'].find_one({'_id': int(key)})
+                    character_query = await self.bot.mdb['characters'].find_one({'_id': int(key)})
                     character_name = character_query['characters'][member[key]]['name']
                     formatted_wait_list.append(f'- <@!{key}> as {character_name}')
 
@@ -273,9 +273,6 @@ class QuestBoard(Cog, app_commands.Group, name='quest', description='Commands fo
     # ---- GM Commands ----
 
     # --- Quests ---
-
-    # TODO: Figure out what is conflicting with normal decorator function to
-    # TODO: handle GM checks in a support function instead.
 
     @has_gm_role()
     @app_commands.command(name='post')

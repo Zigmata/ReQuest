@@ -4,7 +4,7 @@ import discord
 import shortuuid
 from discord import app_commands
 from discord.ext import commands
-from discord.ext.commands import Cog
+from discord.ext.commands import Cog, GroupCog
 
 from ..utilities.enums import EditTarget
 from ..utilities.supportFunctions import attempt_delete
@@ -13,7 +13,7 @@ from ..utilities.checks import is_author_or_mod
 listener = Cog.listener
 
 
-class PlayerBoard(Cog, app_commands.Group, name='playerboard', description='Commands for use of the player board.'):
+class PlayerBoard(GroupCog, name='playerboard', description='Commands for use of the player board.'):
     def __init__(self, bot):
         self.bot = bot
         self.gdb = bot.gdb

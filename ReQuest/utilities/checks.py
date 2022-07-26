@@ -1,23 +1,25 @@
 import discord
+from discord import app_commands, Interaction
 from discord.ext import commands
 from .enums import EditTarget
 
 
 def has_gm_role():
-    async def predicate(ctx):
-        collection = ctx.bot.gdb['gmRoles']
-        guild_id = ctx.guild.id
+
+    async def predicate(interaction: Interaction):
+        collection = interaction.client.gdb['gmRoles']
+        guild_id = interaction.guild.id
 
         query = await collection.find_one({'guildId': guild_id})
         if query:
             gm_roles = query['gmRoles']
-            for role in ctx.author.roles:
+            for role in interaction.user.roles:
                 if role.id in gm_roles:
                     return True
 
-        raise commands.CheckFailure("You do not have permissions to run this command!")
+        raise commands.CheckFailure("You do not have permission to run this command!")
 
-    return commands.check(predicate)
+    return app_commands.check(predicate)
 
 
 def has_gm_or_mod():
