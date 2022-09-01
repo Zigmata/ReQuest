@@ -11,8 +11,7 @@ from ..utilities.supportFunctions import strip_id
 listener = Cog.listener
 
 
-class Inventory(GroupCog, name='inventory',
-                description='Commands for viewing and using character inventories'):
+class Inventory(GroupCog, name='inventory', description='Commands for viewing and using character inventories'):
     def __init__(self, bot):
         self.bot = bot
         self.gdb = bot.gdb

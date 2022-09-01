@@ -1088,7 +1088,7 @@ class QuestBoard(GroupCog, name='quest', description='Commands for posting and u
                                                 upsert=True)
                     # Report the changes made
                     role_embed = discord.Embed(title='Party Role Set!', type='rich', description=f'<@&{new_role}>')
-                    await interaction.edit_original_message(content=None, embed=role_embed, view=None)
+                    await interaction.edit_original_response(content=None, embed=role_embed, view=None)
 
         # If no argument is provided, query the db for the current setting
         else:

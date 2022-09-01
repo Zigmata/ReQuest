@@ -70,8 +70,8 @@ class Player(GroupCog, name='player', description='Commands for manipulating pla
                 await view.wait()
                 selection_id = select.values[0]
                 selection = query['characters'][selection_id]
-                await interaction.edit_original_message(content=f'Active character changed to {selection["name"]} '
-                                                        f'({selection["note"]})', embed=None, view=None)
+                await interaction.edit_original_response(content=f'Active character changed to {selection["name"]} '
+                                                         f'({selection["note"]})', embed=None, view=None)
                 await collection.update_one({'_id': member_id}, {'$set': {f'activeChars.{guild_id}': selection_id}})
         else:
             if not query:
@@ -216,8 +216,8 @@ class Player(GroupCog, name='player', description='Commands for manipulating pla
                     if query[f'activeChars'][guild] == selection_id:
                         await collection.update_one({'_id': member_id}, {'$unset': {f'activeChars.{guild_id}': ''}},
                                                     upsert=True)
-                await interaction.edit_original_message(content=f'`{query["characters"][selection_id]["name"]}` '
-                                                                f'deleted!', embed=None, view=None)
+                await interaction.edit_original_response(content=f'`{query["characters"][selection_id]["name"]}` '
+                                                                 f'deleted!', embed=None, view=None)
 
         if error_message:
             error_embed = discord.Embed(title=error_title, description=error_message, type='rich')

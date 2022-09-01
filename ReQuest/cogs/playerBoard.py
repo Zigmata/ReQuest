@@ -266,8 +266,8 @@ class PlayerBoard(GroupCog, name='playerboard', description='Commands for use of
                 try:
                     duration = int(days)
                 except TypeError:
-                    await interaction.edit_original_message(content='Argument must be either a number or `all`!',
-                                                            embed=None, view=None)
+                    await interaction.edit_original_response(content='Argument must be either a number or `all`!',
+                                                             embed=None, view=None)
                     return
 
                 now = datetime.utcnow()
@@ -285,14 +285,14 @@ class PlayerBoard(GroupCog, name='playerboard', description='Commands for use of
                     await attempt_delete(msg)
                     await self.gdb['playerBoard'].delete_one({'messageId': message_id})
 
-                await interaction.edit_original_message(content=f'{len(message_ids)} expired posts deleted!',
-                                                        embed=None, view=None)
+                await interaction.edit_original_response(content=f'{len(message_ids)} expired posts deleted!',
+                                                         embed=None, view=None)
             elif days == 'all':
-                await interaction.edit_original_message(content='All player board posts deleted!',
-                                                        embed=None, view=None)
+                await interaction.edit_original_response(content='All player board posts deleted!',
+                                                         embed=None, view=None)
             else:
-                await interaction.edit_original_message(content='No posts fall outside the provided number of days.',
-                                                        embed=None, view=None)
+                await interaction.edit_original_response(content='No posts fall outside the provided number of days.',
+                                                         embed=None, view=None)
 
 
 async def setup(bot):

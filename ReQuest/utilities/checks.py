@@ -4,8 +4,19 @@ from discord.ext import commands
 from .enums import EditTarget
 
 
-def has_gm_role():
+def is_owner():
+    # noinspection PyUnresolvedReferences
+    async def predicate(interaction: Interaction):
+        if await interaction.client.is_owner(interaction.user):
+            return True
 
+        raise commands.CheckFailure("Owner-only command was attempted!")
+
+    return app_commands.check(predicate)
+
+
+def has_gm_role():
+    # noinspection PyUnresolvedReferences
     async def predicate(interaction: Interaction):
         collection = interaction.client.gdb['gmRoles']
         guild_id = interaction.guild.id

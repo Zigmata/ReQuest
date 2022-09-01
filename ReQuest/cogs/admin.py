@@ -1,7 +1,8 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-from discord.ext.commands import Cog, GroupCog
+from discord.ext.commands import GroupCog
+from ..utilities.checks import is_owner
 
 
 class Admin(GroupCog, name='admin', description='Administrative commands for bot options.'):
@@ -30,40 +31,39 @@ class Admin(GroupCog, name='admin', description='Administrative commands for bot
     #
     # # -------------Private Commands-------------
     #
-    # # Reload a cog by name
-    # @commands.is_owner()  # TODO: Not working, validate command checks post-interactions
-    # @app_commands.command(name='reload')
-    # async def reload(self, interaction: discord.Interaction, module: str):
-    #     await self.bot.reload_extension('ReQuest.cogs.' + module)
-    #
-    #     await interaction.response.send_message(f'Extension successfully reloaded: `{module}`', ephemeral=True)
-    #
+    # Reload a cog by name
+    @is_owner()
+    @app_commands.command(name='reload')
+    async def reload(self, interaction: discord.Interaction, module: str):
+        await self.bot.reload_extension('ReQuest.cogs.' + module)
+
+        await interaction.response.send_message(f'Extension successfully reloaded: `{module}`', ephemeral=True)
+
     # Echoes the first argument provided
-    # @commands.is_owner()  # TODO: Not working, validate command checks post-interactions
+    @is_owner()
     @app_commands.command(name='echo')
     async def echo(self, interaction: discord.Interaction, text: str):
         await interaction.response.send_message(text, ephemeral=True)
 
-    #
-    # # Loads a cog that hasn't yet been loaded
-    # @commands.is_owner()  # TODO: Not working, validate command checks post-interactions
-    # @app_commands.command(name='load')
-    # async def load(self, interaction: discord.Interaction, module: str):
-    #     await self.bot.load_extension('ReQuest.cogs.' + module)
-    #
-    #     await interaction.response.send_message(f'Extension successfully loaded: `{module}`', ephemeral=True)
-    #
-    # # Shut down the bot
-    # @commands.is_owner()  # TODO: Not working, validate command checks post-interactions
-    # @app_commands.command(name='shutdown')
-    # async def shutdown(self, interaction: discord.Interaction):
-    #     try:
-    #         await interaction.response.send_message('Shutting down!', ephemeral=True)
-    #         await self.bot.close()
-    #     except Exception as e:
-    #         await interaction.response.send_message(f'{type(e).__name__}: {e}', ephemeral=True)
+    # Loads a cog that hasn't yet been loaded
+    @is_owner()
+    @app_commands.command(name='load')
+    async def load(self, interaction: discord.Interaction, module: str):
+        await self.bot.load_extension('ReQuest.cogs.' + module)
 
-    @commands.is_owner()  # TODO: Not working, validate command checks post-interactions
+        await interaction.response.send_message(f'Extension successfully loaded: `{module}`', ephemeral=True)
+
+    # Shut down the bot
+    @is_owner()
+    @app_commands.command(name='shutdown')
+    async def shutdown(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.send_message('Shutting down!', ephemeral=True)
+            await self.bot.close()
+        except Exception as e:
+            await interaction.response.send_message(f'{type(e).__name__}: {e}', ephemeral=True)
+
+    @is_owner()
     @whitelist_group.command(name='add')
     async def whitelist_add(self, interaction: discord.Interaction, guild: str):
         collection = self.cdb['botWhiteList']
@@ -74,7 +74,7 @@ class Admin(GroupCog, name='admin', description='Administrative commands for bot
 
         await interaction.response.send_message(f'Guild ID `{guild_id}` added to whitelist!', ephemeral=True)
 
-    @commands.is_owner()  # TODO: Not working, validate command checks post-interactions
+    @is_owner()
     @whitelist_group.command(name='remove')
     async def whitelist_remove(self, interaction: discord.Interaction, guild: str):
         collection = self.cdb['botWhiteList']

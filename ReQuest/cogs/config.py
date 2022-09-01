@@ -1,12 +1,12 @@
 import json
-from bson.json_util import dumps
 
 import discord
+from bson.json_util import dumps
 from discord import app_commands
-from discord.ext.commands import Cog, GroupCog
+from discord.ext.commands import GroupCog
 
 from ..utilities.supportFunctions import strip_id
-from ..utilities.ui import SingleChoiceDropdown, DropdownView
+from ..utilities.ui import SingleChoiceDropdown, DropdownView, ConfirmationButtonView, TextInputModal
 
 
 class Config(GroupCog, name='config'):
@@ -61,6 +61,8 @@ class Config(GroupCog, name='config'):
                                                             f'Check your spelling and use of quotes!')
                     return
 
+                # If there is more than one match, respond with a DropdownView of all possible matches so the user
+                # can select the correct one.
                 if len(matches) == 1:
                     new_role = matches[0]['id']
                 elif len(matches) > 1:
@@ -73,25 +75,20 @@ class Config(GroupCog, name='config'):
                     await view.wait()
                     new_role = int(select.values[0])
 
-                # TODO: Fix the flow of this. Why did I do this?
-                if len(matches) == 1:
-                    # Add the new role's ID to the database
-                    await collection.update_one({'guildId': guild_id}, {'$set': {'announceRole': new_role}},
-                                                upsert=True)
+                # Add the new role's ID to the database
+                await collection.update_one({'guildId': guild_id}, {'$set': {'announceRole': new_role}},
+                                            upsert=True)
 
-                    # Report the changes made
-                    role_embed = discord.Embed(title='Announcement Role Set!', type='rich',
-                                               description=f'<@&{new_role}>')
-                    await interaction.response.send_message(content=None, embed=role_embed, ephemeral=True)
+                # Report the changes made
+                role_embed = discord.Embed(title='Announcement Role Set!', type='rich',
+                                           description=f'<@&{new_role}>')
+                # If there was more than one match earlier, the interaction will have already been responded to once
+                # with the DropdownView. So, we have to check if the response is done to call the correct coroutine.
+                if interaction.response.is_done():
+                    await interaction.edit_original_response(content=None, embed=role_embed, view=None)
                 else:
-                    # Add the new role's ID to the database
-                    await collection.update_one({'guildId': guild_id}, {'$set': {'announceRole': new_role}},
-                                                upsert=True)
+                    await interaction.response.send_message(content=None, embed=role_embed, ephemeral=True)
 
-                    # Report the changes made
-                    role_embed = discord.Embed(title='Announcement Role Set!', type='rich',
-                                               description=f'<@&{new_role}>')
-                    await interaction.edit_original_message(content=None, embed=role_embed, view=None)
         # If no argument is provided, query the db for the current setting
         else:
             if not query:
@@ -193,8 +190,8 @@ class Config(GroupCog, name='config'):
                                                                             f'\"{role_name}\"!', view=view,
                                                                             ephemeral=True)
                                 else:  # If the interaction has been responded to, update the original message instead
-                                    await interaction.edit_original_message(content=f'Multiple matches found for'
-                                                                                    f' \"{role_name}\"!', view=view)
+                                    await interaction.edit_original_response(content=f'Multiple matches found for'
+                                                                                     f' \"{role_name}\"!', view=view)
                                 await view.wait()
                                 new_role = int(select.values[0])
 
@@ -209,7 +206,7 @@ class Config(GroupCog, name='config'):
                             if not interaction.response.is_done():
                                 await interaction.response.send_message(embed=roles_embed, ephemeral=True)
                             else:
-                                await interaction.edit_original_message(content=None, embed=roles_embed, view=None)
+                                await interaction.edit_original_response(content=None, embed=roles_embed, view=None)
                     if operation.lower() == 'remove':
                         removed_role = 0
 
@@ -246,7 +243,7 @@ class Config(GroupCog, name='config'):
                                     await interaction.response.send_message(f'Multiple matches found for {role_name}!',
                                                                             view=view, ephemeral=True)
                                 else:  # If the interaction has been responded to, update the original message
-                                    await interaction.edit_original_message(
+                                    await interaction.edit_original_response(
                                         content=f'Multiple matches found for {role_name}!', view=view)
                                 await view.wait()
                                 removed_role = int(select.values[0])
@@ -261,14 +258,14 @@ class Config(GroupCog, name='config'):
                             if not interaction.response.is_done():
                                 await interaction.response.send_message(embed=roles_embed, ephemeral=True)
                             else:
-                                await interaction.edit_original_message(content=None, embed=roles_embed, view=None)
+                                await interaction.edit_original_response(content=None, embed=roles_embed, view=None)
 
         if error_message:
             error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
             if not interaction.response.is_done():
                 await interaction.response.send_message(embed=error_embed, ephemeral=True)
             else:
-                await interaction.edit_original_message(content=None, embed=error_embed, view=None)
+                await interaction.edit_original_response(content=None, embed=error_embed, view=None)
 
     # --- Channel ---
 
@@ -538,7 +535,7 @@ class Config(GroupCog, name='config'):
 
     @app_commands.checks.has_permissions(manage_guild=True)
     @currency_group.command(name='add')
-    async def currency_add(self, interaction: discord.Interaction, *, definition: str):
+    async def currency_add(self, interaction: discord.Interaction):
         """
         Accepts a JSON definition and adds a new currency type to the server.
 
@@ -575,7 +572,13 @@ class Config(GroupCog, name='config'):
         guild_id = interaction.guild.id
         collection = self.gdb['currency']
         try:
-            loaded = json.loads(definition)
+            input_modal = TextInputModal(title='Add new currency')
+            await interaction.response.send_modal(input_modal)
+            # input_modal = discord.ui.Modal(title='Add new currency', custom_id='currency_definition_modal')
+            # input_view = input_modal.add_item(item=discord.ui.TextInput(label='Currency definition',
+            #                                                             style=discord.TextStyle.paragraph))
+            # await input_view.wait()
+            loaded = json.loads(input_modal.definition)
             await collection.update_one({'_id': guild_id}, {'$push': {'currencies': loaded}}, upsert=True)
             await interaction.response.send_message(f'`{loaded["name"]}` added to server currencies!', ephemeral=True)
         except json.JSONDecodeError:
@@ -607,12 +610,9 @@ class Config(GroupCog, name='config'):
                 error_title = 'No currencies were removed.'
                 error_message = f'\"{name}\" not found. Check your spelling and use of quotes!'
             else:
-                # TODO: Confirmation modal
                 if len(matches) == 1:
                     loaded = json.loads(matches[0])
-                    await collection.update_one({'_id': guild_id}, {'$pull': {'currencies': {'name': loaded['name']}}},
-                                                upsert=True)
-                    await interaction.response.send_message(f'{loaded["name"]} deleted!', ephemeral=True)
+                    removed_name = loaded['name']
                 # If there is more than one match, prompt the user with a Select to choose one
                 else:
                     options = []
@@ -624,15 +624,38 @@ class Config(GroupCog, name='config'):
                     view = DropdownView(select)
                     if not interaction.response.is_done():  # Make sure this is the first response
                         await interaction.response.send_message(f'Multiple matches found for \"{name}\"!', view=view,
-                                                                ephemeral=True)
+                                                                embed=None, ephemeral=True)
                     else:  # If the interaction has been responded to, update the original message instead
-                        await interaction.edit_original_message(content=f'Multiple matches found for \"{name}\"!',
-                                                                view=view)
+                        await interaction.edit_original_response(content=f'Multiple matches found for \"{name}\"!',
+                                                                 embed=None, view=view)
                     await view.wait()
                     removed_name = select.values[0]
-                    await collection.update_one({'_id': guild_id},
-                                                {'$pull': {'currencies': {'name': removed_name}}}, upsert=True)
-                    await interaction.edit_original_message(content=f'{removed_name} removed!', embed=None, view=None)
+
+                # Confirm the deletion
+                # TODO: Fix failed interaction message
+                confirmation_view = ConfirmationButtonView()
+                if interaction.response.is_done():
+                    await interaction.edit_original_response(content=f'Removing {removed_name} from currencies!'
+                                                                     f' Continue?', embed=None, view=confirmation_view)
+                else:
+                    await interaction.response.send_message(f'Removing {removed_name} from currencies! Continue?',
+                                                            view=confirmation_view, ephemeral=True)
+                await confirmation_view.wait()
+                confirmed = confirmation_view.value
+
+                if confirmed is None:
+                    result = 'Response timed out. No changes were made.'
+                elif confirmed:
+                    result = f'{removed_name} removed!'
+                    await collection.update_one({'_id': guild_id}, {'$pull': {'currencies': {'name': removed_name}}},
+                                                upsert=True)
+                else:
+                    result = f'Cancelled!'
+
+                if interaction.response.is_done():
+                    await interaction.edit_original_response(content=result, embed=None, view=None)
+                else:
+                    await interaction.response.send_message(result, ephemeral=True)
 
         if error_message:
             error_embed = discord.Embed(title=error_title, description=error_message, type='rich')

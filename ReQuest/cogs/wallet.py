@@ -131,7 +131,7 @@ class Wallet(Cog):
                     await interaction.response.send_message(f'Multiple matches found for {currency_name}!',
                                                             view=view, ephemeral=True)
                 else:  # If the interaction has been responded to, update the original message
-                    await interaction.edit_original_message(
+                    await interaction.edit_original_response(
                         content=f'Multiple matches found for {currency_name}!', view=view)
                 await view.wait()
                 cname = select.values[0]
@@ -162,7 +162,7 @@ class Wallet(Cog):
             currency_embed.add_field(name='Game Master', value=f'<@!{gm_user_id}>', inline=False)
             currency_embed.set_footer(text=f'{datetime.utcnow().strftime("%Y-%m-%d")} Transaction ID: {transaction_id}')
             if interaction.response.is_done():
-                await interaction.edit_original_message(content=None, embed=currency_embed, view=None)
+                await interaction.edit_original_response(content=None, embed=currency_embed, view=None)
             else:
                 await interaction.response.send_message(embed=currency_embed)
 
