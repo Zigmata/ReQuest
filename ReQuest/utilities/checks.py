@@ -4,15 +4,15 @@ from discord.ext import commands
 from .enums import EditTarget
 
 
-def is_owner():
-    # noinspection PyUnresolvedReferences
-    async def predicate(interaction: Interaction):
-        if await interaction.client.is_owner(interaction.user):
-            return True
-
-        raise commands.CheckFailure("Owner-only command was attempted!")
-
-    return app_commands.check(predicate)
+# def is_owner():
+#     # noinspection PyUnresolvedReferences
+#     async def predicate(interaction: Interaction):
+#         if await interaction.client.is_owner(interaction.user):
+#             return True
+#
+#         raise commands.CheckFailure("Owner-only command was attempted!")
+#
+#     return app_commands.check(predicate)
 
 
 def has_gm_role():

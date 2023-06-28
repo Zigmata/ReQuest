@@ -1,8 +1,10 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-from discord.ext.commands import GroupCog
-from ..utilities.checks import is_owner
+from discord.ext.commands import GroupCog, is_owner
+
+
+# from ..utilities.checks import is_owner
 
 
 class Admin(GroupCog, name='admin', description='Administrative commands for bot options.'):
