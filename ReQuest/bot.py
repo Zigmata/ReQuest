@@ -63,7 +63,10 @@ class ReQuest(commands.AutoShardedBot):
 
     async def load_white_list(self):
         white_list = await self.cdb['botWhiteList'].find_one({'servers': {'$exists': True}})
-        self.white_list = white_list['servers']
+        if not white_list:
+            await self.cdb.create_collection('botWhiteList')
+        else:
+            self.white_list = white_list['servers']
 
     # Overridden from base to delete command invocation messages
     async def invoke(self, ctx):
