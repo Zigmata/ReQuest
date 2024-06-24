@@ -48,14 +48,14 @@ class ReQuest(commands.AutoShardedBot):
         initial_extensions = self.config['load_extensions']
         for ext in initial_extensions:
             try:
-                asyncio.create_task(self.load_extension(ext))
+                await asyncio.create_task(self.load_extension(ext))
             except Exception as e:
                 print(f'Failed to load extension: {ext}')
                 print('{}: {}'.format(type(e).__name__, e))
 
         # If the white list is enabled, load it async in the background
         if self.config['whiteList']:
-            asyncio.create_task(self.load_white_list())
+            await asyncio.create_task(self.load_white_list())
 
     async def close(self):
         await super().close()
