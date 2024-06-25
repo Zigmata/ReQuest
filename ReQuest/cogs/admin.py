@@ -19,20 +19,20 @@ class Admin(GroupCog, name='admin', description='Administrative commands for bot
     whitelist_group = app_commands.Group(name='whitelist', description='Commands for adding and removing guilds from '
                                                                        'the testing white list.')
 
-    # # -----------------Listeners----------------
-    #
-    # @commands.Cog.listener()
-    # async def on_guild_join(self, guild):
-    #     if not self.bot.white_list or guild.id in self.bot.white_list:
-    #         return
-    #     else:
-    #         await guild.owner.send('Thank you for your interest in ReQuest! Your server is not in ReQuest\'s list of '
-    #                                'authorized testing servers. Please join the support server and contact the '
-    #                                'development team to request test access.')
-    #         return await guild.leave()
-    #
-    # # -------------Private Commands-------------
-    #
+    # -----------------Listeners----------------
+
+    @commands.Cog.listener()
+    async def on_guild_join(self, guild):
+        if not self.bot.config['whiteList'] or guild.id in self.bot.white_list:
+            return
+        else:
+            await guild.owner.send('Thank you for your interest in ReQuest! Your server is not in ReQuest\'s list of '
+                                   'authorized testing servers. Please join the support server and contact the '
+                                   'development team to request test access.')
+            return await guild.leave()
+
+    # -------------Private Commands-------------
+
     # Reload a cog by name
     @is_owner()
     @app_commands.command(name='reload')
