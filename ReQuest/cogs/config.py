@@ -1,665 +1,921 @@
-import json
+import logging
 
 import discord
-from bson.json_util import dumps
+import discord.ui
 from discord import app_commands
-from discord.ext.commands import GroupCog
+from discord.ext.commands import Cog
 
-from ..utilities.supportFunctions import strip_id
-from ..utilities.ui import SingleChoiceDropdown, DropdownView, ConfirmationButtonView, TextInputModal
+from ..utilities.supportFunctions import log_exception
+from ..utilities.ui import BackButton, ConfigMenuButton, MenuDoneButton, SingleChannelConfigSelect
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
-class Config(GroupCog, name='config'):
-    """Commands for server configuration of bot options and features."""
-
+class Config(Cog):
     def __init__(self, bot):
+        super().__init__()
         self.bot = bot
         self.gdb = bot.gdb
-        self.cdb = bot.cdb
-        super().__init__()
-
-    role_group = app_commands.Group(name='role', description='Commands for configuring roles for extended functions.')
-    channel_group = app_commands.Group(name='channel', description='Commands for configuring channels.')
-    quest_group = app_commands.Group(name='quest', description='Commands for configuring server-wide quest settings.')
-    character_group = app_commands.Group(name='character', description='Commands for configuring character settings.')
-    currency_group = app_commands.Group(name='currency', description='Commands for configuring currency settings.')
-
-    # --- Roles ---
 
     @app_commands.checks.has_permissions(manage_guild=True)
-    @role_group.command(name='announce')
-    async def role_announce(self, interaction: discord.Interaction, role_name: str = None) -> None:
+    @app_commands.default_permissions(manage_guild=True)
+    @app_commands.command(name='config')
+    @app_commands.guild_only()
+    async def config(self, interaction: discord.Interaction):
         """
-        Gets or sets the role used for quest announcements.
-
-        Arguments:
-        [role_name]: The name of the role to be mentioned when new quests are posted.
+        Server Configuration Wizard (Server Admins only)
         """
-        guild_id = interaction.guild_id
-        guild = self.bot.get_guild(guild_id)
-        collection = self.gdb['announceRole']
-        query = await collection.find_one({'guildId': guild_id})
-
-        if role_name:
-            if role_name.lower() == 'delete' or role_name.lower() == 'remove':
-                if query:
-                    await collection.delete_one({'guildId': guild_id})
-                await interaction.response.send_message('Announcement role cleared!')
-            else:
-                # Search the list of guild roles for all name matches
-                search = filter(lambda r: role_name.lower() in r.name.lower(), guild.roles)
-                matches = []
-                new_role = {}
-                if search:
-                    for match in search:
-                        if match.id == guild_id:
-                            continue  # Prevent the @everyone role from being added to the list
-                        matches.append({'name': match.name, 'id': int(match.id)})
-
-                if not matches:
-                    await interaction.response.send_message(f'Role `{role_name}` not found! '
-                                                            f'Check your spelling and use of quotes!')
-                    return
-
-                # If there is more than one match, respond with a DropdownView of all possible matches so the user
-                # can select the correct one.
-                if len(matches) == 1:
-                    new_role = matches[0]['id']
-                elif len(matches) > 1:
-                    options = []
-                    for match in matches:
-                        options.append(discord.SelectOption(label=match['name'], value=str(match['id'])))
-                    select = SingleChoiceDropdown(placeholder='Choose One', options=options)
-                    view = DropdownView(select)
-                    await interaction.response.send_message('Multiple matches found!', view=view, ephemeral=True)
-                    await view.wait()
-                    new_role = int(select.values[0])
-
-                # Add the new role's ID to the database
-                await collection.update_one({'guildId': guild_id}, {'$set': {'announceRole': new_role}},
-                                            upsert=True)
-
-                # Report the changes made
-                role_embed = discord.Embed(title='Announcement Role Set!', type='rich',
-                                           description=f'<@&{new_role}>')
-                # If there was more than one match earlier, the interaction will have already been responded to once
-                # with the DropdownView. So, we have to check if the response is done to call the correct coroutine.
-                if interaction.response.is_done():
-                    await interaction.edit_original_response(content=None, embed=role_embed, view=None)
-                else:
-                    await interaction.response.send_message(content=None, embed=role_embed, ephemeral=True)
-
-        # If no argument is provided, query the db for the current setting
-        else:
-            if not query:
-                await interaction.response.send_message(f'Announcement role not set!', ephemeral=True)
-            else:
-                current_role = query['announceRole']
-                post_embed = discord.Embed(title='Config - Role - Announcement', type='rich',
-                                           description=f'<@&{current_role}>')
-                await interaction.response.send_message(content=None, embed=post_embed, ephemeral=True)
-
-    @app_commands.checks.has_permissions(manage_guild=True)
-    @role_group.command(name='gm')
-    async def role_gm(self, interaction: discord.Interaction, operation: str = None, role_name: str = None):
-        """
-        Sets the GM role(s) used for GM commands.
-        """
-        guild_id = interaction.guild_id
-        guild = self.bot.get_guild(guild_id)
-        collection = self.gdb['gmRoles']
-        query = await collection.find_one({'guildId': guild_id})
-        valid_operations = ['add', 'remove', 'clear']
-        current_gm_role_ids = []
-        error_message = None
-        error_title = None
-
-        # If there's an existing setting, load it
-        if query and 'gmRoles' in query and query['gmRoles']:
-            current_gm_role_ids = query['gmRoles']
-
-        if not operation:  # When no operation is specified, the current setting is queried.
-            if not current_gm_role_ids:  # If nothing is returned from the db
-                error_title = 'Missing Configuration!'
-                error_message = 'No GM roles have been set! Configure with /config role gm add `<role name>`.'
-            else:  # Constructs an embed with the configured role mentions
-                current_roles = map(str, current_gm_role_ids)
-
-                post_embed = discord.Embed(title='Config - Role - GM', type='rich')
-                post_embed.add_field(name='GM Role(s)', value='<@&' + '>\n<@&'.join(current_roles) + '>')
-                await interaction.response.send_message(embed=post_embed, ephemeral=True)
-        else:  # Performs the specified operation on a list of role names
-            if operation.lower() not in valid_operations:  # Return an error if the operation isn't valid
-                error_title = 'Invalid Operation'
-                error_message = f'\"{operation}\" is not a valid operation type. Please use add, remove, or clear.'
-            elif operation.lower() == 'clear':  # Clears all roles from this setting
-                if not current_gm_role_ids:
-                    error_title = 'Missing Configuration!'
-                    error_message = f'No GM roles have been set. There is nothing to remove.'
-                else:
-                    await collection.delete_one({'guildId': guild_id})
-                    await interaction.response.send_message('All GM roles have been cleared!', ephemeral=True)
-            else:
-                if not role_name:  # Return an error if no roles are provided to operate on
-                    error_title = 'Incorrect syntax'
-                    error_message = f'You have not provided a role to {operation.lower()}!'
-                else:
-                    if operation.lower() == 'add':
-                        new_role = 0
-
-                        # Get the list of guild names and search for the role name string in any of them
-                        search = filter(lambda r: role_name.lower() in r.name.lower(), guild.roles)
-                        matches = []
-                        if search:
-                            for match in search:
-                                if match.id == guild_id:
-                                    continue  # Prevent the @everyone role from being added to the list
-                                matches.append({'name': match.name, 'id': int(match.id)})
-
-                        if not matches:
-                            error_title = 'No roles were added to the GM list.'
-                            error_message = f'\"{role_name}\" not found. Check your spelling and use of quotes!'
-                        # If there is only one match, add that role's ID to the list of changes.
-                        elif len(matches) == 1:
-                            # Skip if the role is already configured.
-                            if current_gm_role_ids and matches[0]['id'] in current_gm_role_ids:
-                                error_title = 'No roles were added to the GM list.'
-                                error_message = f'<@&{matches[0]["id"]}> is already configured as a GM role.'
-                            else:
-                                new_role = matches[0]['id']
-                        # If there is more than one match, prompt the user with a Select to choose one
-                        else:
-                            options = []
-                            for match in matches:
-                                if current_gm_role_ids and match['id'] in current_gm_role_ids:
-                                    continue
-                                else:
-                                    options.append(discord.SelectOption(label=match['name'], value=str(match['id'])))
-
-                            if not options:
-                                error_title = 'No roles were added to the GM list.'
-                                error_message = f'All roles matching \"{role_name}\" are already configured as GM' \
-                                                'roles!'
-                            elif len(options) == 1:
-                                new_role = int(options[0].value)
-                            else:
-                                select = SingleChoiceDropdown(placeholder='Choose One', options=options)
-                                view = DropdownView(select)
-                                if not interaction.response.is_done():  # Make sure this is the first response
-                                    await interaction.response.send_message(f'Multiple matches found for '
-                                                                            f'\"{role_name}\"!', view=view,
-                                                                            ephemeral=True)
-                                else:  # If the interaction has been responded to, update the original message instead
-                                    await interaction.edit_original_response(content=f'Multiple matches found for'
-                                                                                     f' \"{role_name}\"!', view=view)
-                                await view.wait()
-                                new_role = int(select.values[0])
-
-                        # If no new roles were added, inform the user
-                        if new_role != 0:
-                            # Add the role's ID to the database
-                            await collection.update_one({'guildId': guild_id}, {'$push': {'gmRoles': new_role}},
-                                                        upsert=True)
-                            # Report the changes made
-                            roles_embed = discord.Embed(title='GM Role Added!', type='rich',
-                                                        description=f'<@&{new_role}>')
-                            if not interaction.response.is_done():
-                                await interaction.response.send_message(embed=roles_embed, ephemeral=True)
-                            else:
-                                await interaction.edit_original_response(content=None, embed=roles_embed, view=None)
-                    if operation.lower() == 'remove':
-                        removed_role = 0
-
-                        if not current_gm_role_ids:
-                            error_title = 'Missing Configuration!'
-                            error_message = f'No GM roles have been set. There is nothing to remove.'
-                        else:
-                            # Compare each provided role name to the list of guild roles
-                            search = filter(lambda r: role_name.lower() in r.name.lower(), guild.roles)
-                            matches = []
-                            if search:
-                                for match in search:
-                                    if match.id == guild_id:
-                                        continue  # Prevent the @everyone role from being added to the list
-                                    if match.id in current_gm_role_ids:
-                                        matches.append({'name': match.name, 'id': int(match.id)})
-
-                            if not matches:
-                                error_title = 'No roles were removed from the GM list.'
-                                error_message = f'\"{role_name}\" not found. Check your spelling and use of quotes!'
-                            elif len(matches) == 1:
-                                if matches[0]['id'] not in current_gm_role_ids:
-                                    error_title = 'No roles were removed from the GM list.'
-                                    error_message = f'\"{matches[0]["name"]}\" is not configured as a GM role.'
-                                else:
-                                    removed_role = matches[0]['id']
-                            else:
-                                options = []
-                                for match in matches:
-                                    options.append(discord.SelectOption(label=match['name'], value=str(match['id'])))
-                                select = SingleChoiceDropdown(placeholder='Choose One', options=options)
-                                view = DropdownView(select)
-                                if not interaction.response.is_done():  # Make sure this is the first response
-                                    await interaction.response.send_message(f'Multiple matches found for {role_name}!',
-                                                                            view=view, ephemeral=True)
-                                else:  # If the interaction has been responded to, update the original message
-                                    await interaction.edit_original_response(
-                                        content=f'Multiple matches found for {role_name}!', view=view)
-                                await view.wait()
-                                removed_role = int(select.values[0])
-
-                        if removed_role != 0:
-                            # Remove the role's ID from the database
-                            await collection.update_one({'guildId': guild_id}, {'$pull': {'gmRoles': removed_role}})
-
-                            # Report the changes made
-                            roles_embed = discord.Embed(title='GM Role Removed!', type='rich',
-                                                        description=f'<@&{removed_role}>')
-                            if not interaction.response.is_done():
-                                await interaction.response.send_message(embed=roles_embed, ephemeral=True)
-                            else:
-                                await interaction.edit_original_response(content=None, embed=roles_embed, view=None)
-
-        if error_message:
-            error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
-            if not interaction.response.is_done():
-                await interaction.response.send_message(embed=error_embed, ephemeral=True)
-            else:
-                await interaction.edit_original_response(content=None, embed=error_embed, view=None)
-
-    # --- Channel ---
-
-    @app_commands.checks.has_permissions(manage_guild=True)
-    @channel_group.command(name='playerboard')
-    async def player_board_channel(self, interaction: discord.Interaction, channel: str = None):
-        """
-        Sets or disables (clears) the channel used for the Player Board. No argument displays the current setting.
-        """
-        guild_id = interaction.guild.id
-        collection = self.gdb['playerBoardChannel']
-        error_title = None
-        error_message = None
-        query = await collection.find_one({'guildId': guild_id})
-
-        if not channel:
-            if not query:
-                error_title = 'Player board channel not set!'
-                error_message = 'Configure with /config channel playerboard <channel mention>'
-            else:
-                await interaction.response.send_message(f'Player board channel currently set to '
-                                                        f'<#{query["playerBoardChannel"]}>', ephemeral=True)
-        elif channel.lower() == 'disable':
-            if query:  # Delete the record if one exists
-                await collection.delete_one({'guildId': guild_id})
-                await interaction.response.send_message('Player board channel disabled!', ephemeral=True)
-            else:
-                error_title = 'No operation was performed.'
-                error_message = 'The player board channel is already disabled.'
-        else:  # Strip the channel ID and update the db
-            channel_id = strip_id(channel)
-            await collection.update_one({'guildId': guild_id},
-                                        {'$set': {'playerBoardChannel': channel_id}}, upsert=True)
-            await interaction.response.send_message(f'Successfully set player board channel to {channel}!',
-                                                    ephemeral=True)
-
-        if error_message:
-            error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
-            await interaction.response.send_message(embed=error_embed, ephemeral=True)
-
-    @app_commands.checks.has_permissions(manage_guild=True)
-    @channel_group.command(name='questboard')
-    async def quest_board(self, interaction: discord.Interaction, channel: str = None):
-        """
-        Configures the channel in which quests are to be posted.
-        """
-        guild_id = interaction.guild.id
-        guild = self.bot.get_guild(guild_id)
-        collection = self.gdb['questChannel']
-        error_title = None
-        error_message = None
-
-        if not channel:
-            query = await collection.find_one({'guildId': guild_id})
-            if not query:
-                error_title = 'Missing configuration!'
-                error_message = 'Quest board channel not set! Configure with /config channel questboard <channel link>'
-            else:
-                await interaction.response.send_message(f'Quest board channel currently set to '
-                                                        f'<#{query["questChannel"]}>', ephemeral=True)
-        else:
-            channel_id = strip_id(channel)  # Strip channel ID and cast to int
-            matches = filter(lambda guild_channel: channel_id == guild_channel.id, guild.channels)
-            if not matches:
-                error_title = 'Incorrect channel reference'
-                error_message = 'The channel referenced does not match any channels in this server.'
-            else:
-                await collection.update_one({'guildId': guild_id}, {'$set': {'questChannel': channel_id}}, upsert=True)
-                await interaction.response.send_message(f'Successfully set quest board channel to {channel}!',
-                                                        ephemeral=True)
-
-        if error_message:
-            error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
-            await interaction.response.send_message(embed=error_embed, ephemeral=True)
-
-    @app_commands.checks.has_permissions(manage_guild=True)
-    @channel_group.command(name='questarchive')
-    async def quest_archive(self, interaction: discord.Interaction, channel: str = None):
-        """
-        Configures the channel in which quests are to be archived. Type 'disable' to clear this setting.
-        """
-        guild_id = interaction.guild.id
-        guild = self.bot.get_guild(guild_id)
-        collection = self.gdb['archiveChannel']
-        query = await collection.find_one({'guildId': guild_id})
-        error_title = None
-        error_message = None
-
-        if not channel:
-            if not query:
-                error_title = 'Missing configuration!'
-                error_message = 'Quest archive channel not set! Configure with /config channel questarchive' \
-                                ' <channel link>`'
-            else:
-                await interaction.response.send_message(f'Quest archive channel currently set to '
-                                                        f'<#{query["archiveChannel"]}>', ephemeral=True)
-        elif channel.lower() == 'disable':
-            if query:  # Delete the record if one exists
-                await collection.delete_one({'guildId': guild_id})
-                await interaction.response.send_message('Quest archive channel disabled!', ephemeral=True)
-            else:
-                error_title = 'No operation was performed.'
-                error_message = 'The quest archive channel is already disabled.'
-        else:
-            channel_id = strip_id(channel)  # Strip channel ID and cast to int
-            matches = filter(lambda guild_channel: channel_id == guild_channel.id, guild.channels)
-            if not matches:
-                error_title = 'Incorrect channel reference'
-                error_message = 'The channel referenced does not match any channels in this server.'
-            else:
-                await collection.update_one({'guildId': guild_id}, {'$set': {'archiveChannel': channel_id}},
-                                            upsert=True)
-                await interaction.response.send_message(f'Successfully set quest archive channel to {channel}!',
-                                                        ephemeral=True)
-
-        if error_message:
-            error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
-            await interaction.response.send_message(embed=error_embed, ephemeral=True)
-
-    # --- Quest ---
-
-    @app_commands.checks.has_permissions(manage_guild=True)
-    @quest_group.command(name='waitlist')
-    async def wait_list(self, interaction: discord.Interaction, wait_list_value: int = None):
-        """
-        This command gets or sets the server-wide wait list.
-
-        Arguments:
-        [no argument]: Displays the current setting.
-        [wait_list_value]: The size of the quest wait list. Accepts a range of 0 to 5.
-        """
-        guild_id = interaction.guild.id
-        collection = self.gdb['questWaitlist']
-        query = await collection.find_one({'guildId': guild_id})
-        error_title = None
-        error_message = None
-
-        # Print the current setting if no argument is given. Otherwise, store the new value.
-        if wait_list_value is None:
-            if not query or query['waitlistValue'] == 0:
-                error_title = 'Wait list disabled'
-                error_message = 'To configure a wait list, provide a value from 1 to 5'
-            else:
-                await interaction.response.send_message(f'Quest wait list currently set to '
-                                                        f'{str(query["waitlistValue"])} players.', ephemeral=True)
-        else:
-            if wait_list_value < 0 or wait_list_value > 5:
-                error_title = 'Input out of range'
-                error_message = 'wait_list_value must be an integer between 0 and 5!'
-            else:
-                await collection.update_one({'guildId': guild_id}, {'$set': {'waitlistValue': wait_list_value}},
-                                            upsert=True)
-
-                if wait_list_value == 0:
-                    await interaction.response.send_message('Quest wait list disabled.', ephemeral=True)
-                else:
-                    await interaction.response.send_message(f'Quest wait list set to {wait_list_value} players.',
-                                                            ephemeral=True)
-
-        if error_message:
-            error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
-            await interaction.response.send_message(embed=error_embed, ephemeral=True)
-
-    @app_commands.checks.has_permissions(manage_guild=True)
-    @quest_group.command(name='summary')
-    async def summary(self, interaction: discord.Interaction):
-        """
-        Toggles quest summary on/off. When enabled, GMs can input a brief summary of the quest during completion.
-        """
-        guild_id = interaction.guild.id
-        error_title = None
-        error_message = None
-
-        # Check to see if the quest archive is configured.
-        quest_archive = await self.gdb['archiveChannel'].find_one({'guildId': guild_id})
-        if not quest_archive:
-            error_title = 'Missing Configuration'
-            error_message = f'Quest archive channel not configured! Use /config channel questarchive' \
-                            f' <channel mention> to set up!'
-        else:
-            # Query the current setting and toggle
-            collection = self.gdb['questSummary']
-            summary_enabled = await collection.find_one({'guildId': guild_id})
-            if not summary_enabled or not summary_enabled['questSummary']:
-                await collection.update_one({'guildId': guild_id}, {'$set': {'questSummary': True}}, upsert=True)
-                await interaction.response.send_message('Quest summary enabled.', ephemeral=True)
-            else:
-                await collection.update_one({'guildId': guild_id}, {'$set': {'questSummary': False}})
-                await interaction.response.send_message('Quest summary disabled.', ephemeral=True)
-
-        if error_message:
-            error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
-            await interaction.response.send_message(embed=error_embed, ephemeral=True)
-
-    # --- Characters ---
-
-    @app_commands.checks.has_permissions(manage_guild=True)
-    @character_group.command(name='experience')
-    async def config_experience(self, interaction: discord.Interaction, enabled: str = None):
-        """
-        This command manages the use of experience points (or similar value-based character progression).
-
-        Arguments:
-        [no argument]: Displays the current configuration.
-        [True|False]: Configures the server to enable/disable experience points.
-        """
-        guild_id = interaction.guild.id
-        query = await self.gdb['characterSettings'].find_one({'guildId': guild_id})
-        valid_operations = ['true', 'false']
-        error_title = None
-        error_message = None
-
-        # Display setting if no arg is passed
-        if enabled is None:
-            if query and query['xp']:
-                await interaction.response.send_message('Character Experience Points are enabled.', ephemeral=True)
-            else:
-                await interaction.response.send_message('Character Experience Points are disabled.', ephemeral=True)
-        else:
-            if enabled.lower() not in valid_operations:
-                error_title = 'Invalid Operation'
-                error_message = 'The only valid inputs are true or false.'
-            else:
-                if enabled.lower() == 'true':
-                    await self.gdb['characterSettings'].update_one({'guildId': guild_id}, {'$set': {'xp': True}},
-                                                                   upsert=True)
-                    await interaction.response.send_message('Character Experience Points enabled!', ephemeral=True)
-                else:
-                    await self.gdb['characterSettings'].update_one({'guildId': guild_id}, {'$set': {'xp': False}},
-                                                                   upsert=True)
-                    await interaction.response.send_message('Character Experience Points disabled!', ephemeral=True)
-
-        if error_message:
-            error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
-            await interaction.response.send_message(embed=error_embed, ephemeral=True)
-
-    # --- Currency ---
-
-    @app_commands.checks.has_permissions(manage_guild=True)
-    @currency_group.command(name='list')
-    async def currency_list(self, interaction: discord.Interaction):
-        """
-        Lists the currencies configured on the server.
-        """
-        guild_id = interaction.guild.id
-        collection = self.gdb['currency']
-        query = await collection.find_one({'_id': guild_id})
-
-        post_embed = discord.Embed(title='Config - Currencies', type='rich')
-        for currency in query['currencies']:
-            cname = currency['name']
-            double = False
-            denoms = None
-            if 'double' in currency:
-                double = currency['double']
-            if 'denoms' in currency:
-                values = []
-                for denom in currency['denoms']:
-                    dname = denom['name']
-                    value = denom['value']
-                    values.append(f'{dname}: {value} {cname}')
-                denoms = '\n'.join(values)
-            post_embed.add_field(name=cname,
-                                 value=f'Double: ```\n{double}``` Denominations: ```\n{denoms}```', inline=True)
-
-        await interaction.response.send_message(embed=post_embed, ephemeral=True)
-
-    @app_commands.checks.has_permissions(manage_guild=True)
-    @currency_group.command(name='add')
-    async def currency_add(self, interaction: discord.Interaction):
-        """
-        Accepts a JSON definition and adds a new currency type to the server.
-
-        Arguments:
-        <definition>: JSON-formatted string definition. See additional information below.
-
-        Definition format:
-        -----------------------------------
-        {
-        "name": string,
-        "double": bool,
-        "denoms": [
-            {"name": string, "value": double}
-            ]
-        }
-
-        Keys and their functions
-        -----------------------------------
-        "name": Name of the currency. Case-insensitive. Acts as the base denomination with a value of 1. Example: gold
-        "double": Specifies whether currency is displayed as whole integers (10) or as a double (10.00)
-        "denoms": An array of objects for additional denominations. Example: {"name": "silver", "value": 0.1}
-
-        "name" is the only required key to add a new currency.
-        Denomination names may be referenced in-place of the currency name for transactions.
-
-        Examples for common RPG currencies:
-        Gold: {"name":"Gold", "double":true, "denoms":[{"name":"Silver","value":0.1}, {"name":"Copper","value":0.01}]}
-        Credits: {"name":"Credits", "double":true}
-        Downtime: {"name":"Downtime"}
-        """
-        # TODO: Redundant-name prevention
-        # TODO: JSON validation
-        # TODO: Modal implementation
-        guild_id = interaction.guild.id
-        collection = self.gdb['currency']
         try:
-            input_modal = TextInputModal(title='Add new currency')
-            await interaction.response.send_modal(input_modal)
-            # input_modal = discord.ui.Modal(title='Add new currency', custom_id='currency_definition_modal')
-            # input_view = input_modal.add_item(item=discord.ui.TextInput(label='Currency definition',
-            #                                                             style=discord.TextStyle.paragraph))
-            # await input_view.wait()
-            loaded = json.loads(input_modal.definition)
-            await collection.update_one({'_id': guild_id}, {'$push': {'currencies': loaded}}, upsert=True)
-            await interaction.response.send_message(f'`{loaded["name"]}` added to server currencies!', ephemeral=True)
-        except json.JSONDecodeError:
-            await interaction.response.send_message('Invalid JSON format, check syntax and try again!', ephemeral=True)
+            guild_id = interaction.guild.id
+            view = ConfigBaseView(guild_id, self.gdb)
+            await interaction.response.send_message(embed=view.embed, view=view, ephemeral=True)
+        except Exception as e:
+            await log_exception(e, interaction)
 
-    @app_commands.checks.has_permissions(manage_guild=True)
-    @currency_group.command(name='remove')
-    async def currency_remove(self, interaction: discord.Interaction, name: str):
-        """
-        Removes a named currency from the server.
 
-        Arguments:
-        <name>: The name of the currency to remove.
-        """
-        guild_id = interaction.guild.id
-        collection = self.gdb['currency']
-        query = await collection.find_one({'_id': guild_id})
-        error_title = None
-        error_message = None
+class ConfigBaseView(discord.ui.View):
+    def __init__(self, guild_id, gdb):
+        super().__init__(timeout=None)
+        self.guild_id = guild_id
+        self.gdb = gdb
+        self.embed = discord.Embed(
+            title='Server Configuration - Main Menu',
+            description=('__**Roles**__\n'
+                         'Configuration options for pingable or privileged roles.\n\n'
+                         '__**Channels**__\n'
+                         'Set designated channels for ReQuest posts.\n\n'
+                         '__**Quests**__\n'
+                         'Global quest settings, such as wait lists.\n\n'
+                         '__**Players**__\n'
+                         'Global player settings, such as experience point tracking.\n\n'
+                         '__**Currency**__\n'
+                         'Server-wide currency settings.'),
+            type='rich'
+        )
+        self.add_item(ConfigMenuButton(ConfigRolesView, 'Roles', guild_id, gdb))
+        self.add_item(ConfigMenuButton(ConfigChannelsView, 'Channels', guild_id, gdb))
+        self.add_item(ConfigMenuButton(ConfigQuestsView, 'Quests', guild_id, gdb))
+        self.add_item(ConfigMenuButton(ConfigPlayersView, 'Players', guild_id, gdb))
+        self.add_item(ConfigMenuButton(ConfigCurrencyView, 'Currency', guild_id, gdb))
+        self.add_item(MenuDoneButton(self))
 
-        if not query:
-            error_title = 'Missing Configuration'
-            error_message = 'No currencies are configured on this server.'
-        else:
-            search = filter(lambda currency: name.lower() in currency['name'].lower(), query['currencies'])
-            matches = list(map(dumps, search))
 
-            if not matches:
-                error_title = 'No currencies were removed.'
-                error_message = f'\"{name}\" not found. Check your spelling and use of quotes!'
+class ConfigRolesView(discord.ui.View):
+    def __init__(self, guild_id, gdb):
+        super().__init__(timeout=None)
+        self.embed = discord.Embed(
+            title='Server Configuration - Roles',
+            description=(
+                '__**Announcement Role**__\n'
+                'This role is mentioned when a quest is posted.\n\n'
+                '__**GM Role**__\n'
+                'A role designated as GM will gain access to extended Game Master commands and functionality.\n\n'
+                '-----'
+            ),
+            type='rich'
+        )
+        self.guild_id = guild_id
+        self.gdb = gdb
+        self.add_item(BackButton(ConfigBaseView, guild_id, gdb))
+
+    async def query_role(self, role_type):
+        try:
+            collection = self.gdb[role_type]
+
+            query = await collection.find_one({'_id': self.guild_id})
+            if not query:
+                return None
             else:
-                if len(matches) == 1:
-                    loaded = json.loads(matches[0])
-                    removed_name = loaded['name']
-                # If there is more than one match, prompt the user with a Select to choose one
-                else:
-                    options = []
-                    for match in matches:
-                        loaded = json.loads(match)
-                        options.append(discord.SelectOption(label=loaded['name']))
+                return query[role_type]
+        except Exception as e:
+            await log_exception(e)
 
-                    select = SingleChoiceDropdown(placeholder='Choose One', options=options)
-                    view = DropdownView(select)
-                    if not interaction.response.is_done():  # Make sure this is the first response
-                        await interaction.response.send_message(f'Multiple matches found for \"{name}\"!', view=view,
-                                                                embed=None, ephemeral=True)
-                    else:  # If the interaction has been responded to, update the original message instead
-                        await interaction.edit_original_response(content=f'Multiple matches found for \"{name}\"!',
-                                                                 embed=None, view=view)
-                    await view.wait()
-                    removed_name = select.values[0]
+    async def setup_embed(self):
+        try:
+            announcement_role = await self.query_role('announceRole')
+            gm_roles = await self.query_role('gmRoles')
 
-                # Confirm the deletion
-                # TODO: Fix failed interaction message
-                confirmation_view = ConfirmationButtonView()
-                if interaction.response.is_done():
-                    await interaction.edit_original_response(content=f'Removing {removed_name} from currencies!'
-                                                                     f' Continue?', embed=None, view=confirmation_view)
-                else:
-                    await interaction.response.send_message(f'Removing {removed_name} from currencies! Continue?',
-                                                            view=confirmation_view, ephemeral=True)
-                await confirmation_view.wait()
-                confirmed = confirmation_view.value
+            if not announcement_role:
+                announcement_role_string = 'Not Configured'
+                self.config_quest_announce_role_remove_button.disabled = True
+            else:
+                announcement_role_string = f'{announcement_role}'
+                self.config_quest_announce_role_remove_button.disabled = False
+            if not gm_roles:
+                gm_roles_string = 'Not Configured'
+                self.config_gm_role_remove_button.disabled = True
+            else:
+                role_mentions = []
+                for role in gm_roles:
+                    role_mentions.append(role['mention'])
 
-                if confirmed is None:
-                    result = 'Response timed out. No changes were made.'
-                elif confirmed:
-                    result = f'{removed_name} removed!'
-                    await collection.update_one({'_id': guild_id}, {'$pull': {'currencies': {'name': removed_name}}},
+                gm_roles_string = f'- {'\n- '.join(role_mentions)}'
+                self.config_gm_role_remove_button.disabled = False
+
+            self.embed.clear_fields()
+            self.embed.add_field(name='Announcement Role', value=announcement_role_string)
+            self.embed.add_field(name='GM Roles', value=gm_roles_string)
+        except Exception as e:
+            await log_exception(e)
+
+    @discord.ui.select(cls=discord.ui.RoleSelect, placeholder='Search for your Quest Announcement Role',
+                       custom_id='config_quest_announce_role_select')
+    async def config_quest_announce_role_select(self, interaction: discord.Interaction, select: discord.ui.RoleSelect):
+        try:
+            collection = self.gdb['announceRole']
+            await collection.update_one({'_id': self.guild_id}, {'$set': {'announceRole': select.values[0].mention}},
+                                        upsert=True)
+            await self.setup_embed()
+            await interaction.response.edit_message(embed=self.embed, view=self)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    @discord.ui.select(cls=discord.ui.RoleSelect, placeholder='Search for your GM Role(s)',
+                       custom_id='config_gm_role_select', max_values=25)
+    async def config_gm_role_select(self, interaction: discord.Interaction, select: discord.ui.RoleSelect):
+        try:
+            collection = self.gdb['gmRoles']
+            query = await collection.find_one({'_id': self.guild_id})
+            if not query:
+                for value in select.values:
+                    await collection.update_one({'_id': self.guild_id},
+                                                {'$push': {'gmRoles': {'mention': value.mention, 'name': value.name}}},
                                                 upsert=True)
-                else:
-                    result = f'Cancelled!'
+            else:
+                for value in select.values:
+                    matches = 0
+                    for role in query['gmRoles']:
+                        if value.mention in role['mention']:
+                            matches += 1
 
-                if interaction.response.is_done():
-                    await interaction.edit_original_response(content=result, embed=None, view=None)
-                else:
-                    await interaction.response.send_message(result, ephemeral=True)
+                    if matches == 0:
+                        await collection.update_one({'_id': self.guild_id},
+                                                    {'$push': {
+                                                        'gmRoles': {'mention': value.mention, 'name': value.name}}},
+                                                    upsert=True)
 
-        if error_message:
-            error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
-            await interaction.response.send_message(embed=error_embed, ephemeral=True)
+            await self.setup_embed()
+            await interaction.response.edit_message(embed=self.embed, view=self)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    @discord.ui.button(label='Remove Quest Announcement Role', style=discord.ButtonStyle.red,
+                       custom_id='config_quest_announce_role_remove_button')
+    async def config_quest_announce_role_remove_button(self, interaction: discord.Interaction,
+                                                       button: discord.ui.Button):
+        try:
+            collection = self.gdb['announceRole']
+            query = await collection.find_one({'_id': self.guild_id})
+            if query:
+                await collection.delete_one({'_id': self.guild_id})
+
+            await self.setup_embed()
+            return await interaction.response.edit_message(embed=self.embed, view=self)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    @discord.ui.button(label='Remove GM Roles', style=discord.ButtonStyle.red, custom_id='config_gm_role_remove_button')
+    async def config_gm_role_remove_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            collection = self.gdb['gmRoles']
+            query = await collection.find_one({'_id': self.guild_id})
+            options = []
+            for result in query['gmRoles']:
+                name = result['name']
+                options.append(discord.SelectOption(label=name, value=name))
+
+            logger.info(f'Options: {options}')
+            new_view = ConfigGMRoleRemoveView(self.guild_id, self.gdb, options)
+            await new_view.setup_embed()
+            await interaction.response.edit_message(embed=new_view.embed, view=new_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class GMRoleSelect(discord.ui.Select):
+    def __init__(self, guild_id, gdb, options):
+        super().__init__(
+            placeholder='Select Role(s)',
+            max_values=len(options),
+            options=options
+        )
+        self.guild_id = guild_id
+        self.gdb = gdb
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            collection = self.gdb['gmRoles']
+            for value in self.values:
+                await collection.update_one({'_id': self.guild_id}, {'$pull': {'gmRoles': {'name': value}}})
+
+            new_view = ConfigRolesView(self.guild_id, self.gdb)
+            await new_view.setup_embed()
+            await interaction.response.edit_message(embed=new_view.embed, view=new_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ConfigGMRoleRemoveView(discord.ui.View):
+    def __init__(self, guild_id, gdb, options):
+        super().__init__(timeout=None)
+        self.embed = discord.Embed(
+            title='Server Configuration - Remove GM Role(s)',
+            description='Select roles from the dropdown below to remove from GM status.\n\n'
+                        '-----',
+            type='rich'
+        )
+        self.guild_id = guild_id
+        self.gdb = gdb
+        self.add_item(GMRoleSelect(guild_id, gdb, options))
+        self.add_item(BackButton(ConfigRolesView, guild_id, gdb))
+
+    async def setup_embed(self):
+        try:
+            collection = self.gdb['gmRoles']
+            query = await collection.find_one({'_id': self.guild_id})
+            gm_roles = query['gmRoles']
+            role_mentions = []
+            for role in gm_roles:
+                role_mentions.append(role['mention'])
+
+            self.embed.clear_fields()
+            self.embed.add_field(name='Current GM Roles', value=f'- {'\n- '.join(role_mentions)}')
+        except Exception as e:
+            await log_exception(e)
+
+
+class ConfigChannelsView(discord.ui.View):
+    def __init__(self, guild_id, gdb):
+        super().__init__(timeout=None)
+        self.embed = discord.Embed(
+            title='Server Configuration - Channels',
+            description=(
+                '__**Quest Board**__\n'
+                'The channel where new/active quests will be posted.\n\n'
+                '__**Player Board**__\n'
+                'An optional announcement/message board for use by players.\n\n'
+                '__**Quest Archive**__\n'
+                'An optional channel where completed quests will move to, with summary information.\n\n'
+                '-----'
+            ),
+            type='rich'
+        )
+        self.guild_id = guild_id
+        self.gdb = gdb
+        self.add_item(SingleChannelConfigSelect(self,
+                                                config_type='questChannel',
+                                                config_name='Quest Board',
+                                                guild_id=guild_id,
+                                                gdb=gdb))
+        self.add_item(SingleChannelConfigSelect(self,
+                                                config_type='playerBoardChannel',
+                                                config_name='Player Board',
+                                                guild_id=guild_id,
+                                                gdb=gdb))
+        self.add_item(SingleChannelConfigSelect(self,
+                                                config_type='archiveChannel',
+                                                config_name='Quest Archive',
+                                                guild_id=guild_id,
+                                                gdb=gdb))
+        self.add_item(BackButton(ConfigBaseView, guild_id, gdb))
+
+    async def query_channel(self, channel_type):
+        try:
+            collection = self.gdb[channel_type]
+
+            query = await collection.find_one({'_id': self.guild_id})
+            logger.info(f'{channel_type} query: {query}')
+            if not query:
+                return 'Not Configured'
+            else:
+                return query[channel_type]
+        except Exception as e:
+            await log_exception(e)
+
+    async def setup_embed(self):
+        try:
+            player_board = await self.query_channel('playerBoardChannel')
+            quest_board = await self.query_channel('questChannel')
+            quest_archive = await self.query_channel('archiveChannel')
+
+            self.embed.clear_fields()
+            self.embed.add_field(name='Quest Board', value=quest_board, inline=False)
+            self.embed.add_field(name='Player Board', value=player_board, inline=False)
+            self.embed.add_field(name='Quest Archive', value=quest_archive, inline=False)
+        except Exception as e:
+            await log_exception(e)
+
+
+class ConfigQuestsView(discord.ui.View):
+    def __init__(self, guild_id, gdb):
+        super().__init__(timeout=None)
+        self.embed = discord.Embed(
+            title='Server Configuration - Quests',
+            description=(
+                '__**Quest Summary**__\n'
+                'This option enables GMs to provide a short summary block when closing out quests.\n\n'
+                '__**Quest Wait List**__\n'
+                'This option enables the specified number of players to queue for a quest, in case a player drops.\n\n'
+                '-----'
+            ),
+            type='rich'
+        )
+        self.guild_id = guild_id
+        self.gdb = gdb
+        self.add_item(BackButton(ConfigBaseView, guild_id, gdb))
+
+    async def query_quest_config(self, config_type):
+        try:
+            collection = self.gdb[config_type]
+
+            query = await collection.find_one({'_id': self.guild_id})
+            logger.info(f'{config_type} query: {query}')
+            if not query:
+                return 'Not Configured'
+            else:
+                return query[config_type]
+        except Exception as e:
+            await log_exception(e)
+
+    async def setup_embed(self):
+        try:
+            quest_summary = await self.query_quest_config('questSummary')
+            wait_list = await self.query_quest_config('questWaitList')
+
+            self.embed.clear_fields()
+            self.embed.add_field(name='Quest Summary Enabled', value=quest_summary, inline=False)
+            self.embed.add_field(name='Quest Wait List', value=wait_list, inline=False)
+        except Exception as e:
+            await log_exception(e)
+
+    @discord.ui.button(label='Toggle Quest Summary', style=discord.ButtonStyle.primary,
+                       custom_id='config_quest_summary_toggle_button')
+    async def config_quest_summary_toggle_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            collection = self.gdb['questSummary']
+            query = await collection.find_one({'_id': self.guild_id})
+            if not query:
+                await collection.insert_one({'_id': self.guild_id, 'questSummary': True})
+            else:
+                if query['questSummary']:
+                    await collection.update_one({'_id': self.guild_id}, {'$set': {'questSummary': False}})
+                else:
+                    await collection.update_one({'_id': self.guild_id}, {'$set': {'questSummary': True}})
+
+            await self.setup_embed()
+            await interaction.response.edit_message(embed=self.embed)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    @discord.ui.select(cls=discord.ui.Select,
+                       row=0,
+                       options=[
+                           discord.SelectOption(label='0 (Disabled)', value='0'),
+                           discord.SelectOption(label='1', value='1'),
+                           discord.SelectOption(label='2', value='2'),
+                           discord.SelectOption(label='3', value='3'),
+                           discord.SelectOption(label='4', value='4'),
+                           discord.SelectOption(label='5', value='5')
+                       ],
+                       placeholder='Select Wait List size',
+                       custom_id='config_wait_list_select')
+    async def config_wait_list_select(self, interaction: discord.Interaction, select: discord.ui.Select):
+        try:
+            collection = self.gdb['questWaitList']
+            await collection.update_one({'_id': self.guild_id}, {'$set': {'questWaitList': int(select.values[0])}},
+                                        upsert=True)
+            await self.setup_embed()
+            await interaction.response.edit_message(embed=self.embed)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ConfigPlayersView(discord.ui.View):
+    def __init__(self, guild_id, gdb):
+        super().__init__(timeout=None)
+        self.embed = discord.Embed(
+            title='Server Configuration - Players',
+            description=(
+                '__**Experience**__\n'
+                'Enables/Disables the use of experience points (or similar value-based character progression).\n\n'
+                '-----'
+            ),
+            type='rich'
+        )
+        self.guild_id = guild_id
+        self.gdb = gdb
+        self.add_item(BackButton(ConfigBaseView, guild_id, gdb))
+
+    async def query_player_config(self, config_type):
+        try:
+            collection = self.gdb[config_type]
+
+            query = await collection.find_one({'_id': self.guild_id})
+            logger.info(f'{config_type} query: {query}')
+            if not query:
+                return 'Not Configured'
+            else:
+                return query[config_type]
+        except Exception as e:
+            await log_exception(e)
+
+    async def setup_embed(self):
+        try:
+            player_experience = await self.query_player_config('playerExperience')
+
+            self.embed.clear_fields()
+            self.embed.add_field(name='Player Experience Enabled', value=player_experience, inline=False)
+        except Exception as e:
+            await log_exception(e)
+
+    @discord.ui.button(label='Toggle Player Experience', style=discord.ButtonStyle.primary,
+                       custom_id='config_player_experience_toggle_button')
+    async def config_player_experience_toggle_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            collection = self.gdb['playerExperience']
+            query = await collection.find_one({'_id': self.guild_id})
+            if query and query['playerExperience']:
+                await collection.update_one({'_id': self.guild_id}, {'$set': {'playerExperience': False}},
+                                            upsert=True)
+            else:
+                await collection.update_one({'_id': self.guild_id}, {'$set': {'playerExperience': True}},
+                                            upsert=True)
+
+            await self.setup_embed()
+            await interaction.response.edit_message(embed=self.embed)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class AddCurrencyTextModal(discord.ui.Modal):
+    def __init__(self, guild_id, gdb, calling_view):
+        super().__init__(
+            title='Add New Currency',
+            timeout=180
+        )
+        self.calling_view = calling_view
+        self.guild_id = guild_id
+        self.gdb = gdb
+        self.text_input = discord.ui.TextInput(label='Currency Name', style=discord.TextStyle.short, required=True,
+                                               custom_id='new_currency_name_text_input')
+        self.add_item(self.text_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            collection = self.gdb['currency']
+            query = await collection.find_one({'_id': self.guild_id})
+            if query:
+                matches = 0
+                for currency in query['currencies']:
+                    if currency['name'].lower() == self.text_input.value.lower():
+                        matches += 1
+                    if currency['denominations'] and len(currency['denominations']) > 0:
+                        for denomination in currency['denominations']:
+                            if denomination['name'].lower() == self.text_input.value.lower():
+                                matches += 1
+
+                if matches > 0:
+                    await interaction.response.defer(ephemeral=True, thinking=True)
+                    await interaction.followup.send(f'A currency or denomination named {self.text_input.value} '
+                                                    f'already exists!')
+                else:
+                    await collection.update_one({'_id': self.guild_id},
+                                                {'$push': {'currencies': {'name': self.text_input.value,
+                                                                          'isDouble': False, 'denominations': []}}},
+                                                upsert=True)
+                    await self.calling_view.setup_embed()
+                    await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+            else:
+                await collection.update_one({'_id': self.guild_id},
+                                            {'$push': {'currencies': {'name': self.text_input.value,
+                                                                      'isDouble': False, 'denominations': []}}},
+                                            upsert=True)
+                await self.calling_view.setup_embed()
+                await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class AddCurrencyDenominationTextInput(discord.ui.TextInput):
+    def __init__(self, input_type, placeholder):
+        super().__init__(
+            label=input_type,
+            style=discord.TextStyle.short,
+            placeholder=placeholder,
+            custom_id=f'denomination_{input_type.lower()}_text_input',
+            required=True
+        )
+
+
+class AddCurrencyDenominationTextModal(discord.ui.Modal):
+    def __init__(self, guild_id, gdb, calling_view, base_currency_name):
+        super().__init__(
+            title=f'Add {base_currency_name} Denomination',
+            timeout=300
+        )
+        self.guild_id = guild_id
+        self.gdb = gdb
+        self.calling_view = calling_view
+        self.base_currency_name = base_currency_name
+        self.denomination_name_text_input = AddCurrencyDenominationTextInput(input_type='Name',
+                                                                             placeholder='e.g., Silver')
+        self.denomination_value_text_input = AddCurrencyDenominationTextInput(input_type='Value',
+                                                                              placeholder='e.g., 0.1')
+        self.add_item(self.denomination_name_text_input)
+        self.add_item(self.denomination_value_text_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            new_name = self.denomination_name_text_input.value
+            collection = self.gdb['currency']
+            query = await collection.find_one({'_id': self.guild_id})
+            for currency in query['currencies']:
+                if new_name.lower() == currency['name'].lower():
+                    raise Exception(f'New denomination name cannot match an existing currency on this server! Found '
+                                    f'existing currency named \"{currency['name']}\".')
+                for denomination in currency['denominations']:
+                    if new_name.lower() == denomination['name'].lower():
+                        raise Exception(f'New denomination name cannot match an existing denomination on this server! '
+                                        f'Found existing denomination named \"{denomination['name']}\" under the '
+                                        f'currency named \"{currency['name']}\".')
+            base_currency = next((item for item in query['currencies'] if item['name'] == self.base_currency_name),
+                                 None)
+            for denomination in base_currency['denominations']:
+                if float(self.denomination_value_text_input.value) == denomination['value']:
+                    using_name = denomination['name']
+                    raise Exception(f'Denominations under a single currency must have unique values! '
+                                    f'{using_name} already has this value assigned.')
+
+            await collection.update_one({'_id': self.guild_id, 'currencies.name': self.base_currency_name},
+                                        {'$push': {'currencies.$.denominations': {
+                                            'name': new_name,
+                                            'value': float(self.denomination_value_text_input.value)}}},
+                                        upsert=True)
+            await self.calling_view.setup_select()
+            await self.calling_view.setup_embed(self.base_currency_name)
+            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ConfigRemoveDenominationView(discord.ui.View):
+    def __init__(self, guild_id, gdb, currency_name):
+        super().__init__(timeout=None)
+        self.embed = discord.Embed(
+            title=f'Server Configuration - Remove {currency_name} Denomination',
+            description='Select a denomination to remove.',
+            type='rich'
+        )
+        self.guild_id = guild_id
+        self.gdb = gdb
+        self.currency_name = currency_name
+        self.selected_denomination_name = None
+        self.add_item(BackButton(ConfigEditCurrencyView, guild_id, gdb, setup_embed=False))
+
+    async def setup_select(self):
+        try:
+            self.remove_denomination_select.options.clear()
+            collection = self.gdb['currency']
+            query = await collection.find_one({'_id': self.guild_id, 'currencies.name': self.currency_name})
+            currency = next((item for item in query['currencies'] if item['name'] == self.currency_name), None)
+            logger.info(f'Found Currency: {currency}')
+            denominations = currency['denominations']
+            if len(denominations) > 0:
+                for denomination in denominations:
+                    denomination_name = denomination['name']
+                    self.remove_denomination_select.options.append(discord.SelectOption(label=denomination_name,
+                                                                                        value=denomination_name))
+            else:
+                self.remove_denomination_select.options.append(discord.SelectOption(label='None available',
+                                                                                    value='None'))
+                self.remove_denomination_select.placeholder = (f'There are no remaining denominations for '
+                                                               f'{self.currency_name}.')
+                self.remove_denomination_select.disabled = True
+        except Exception as e:
+            await log_exception(e)
+
+    async def setup_embed(self):
+        try:
+            self.embed.clear_fields()
+            self.embed.add_field(name=f'Deleting {self.selected_denomination_name}',
+                                 value='Confirm?')
+        except Exception as e:
+            await log_exception(e)
+
+    async def remove_currency_denomination(self, denomination_name):
+        try:
+            collection = self.gdb['currency']
+            await collection.update_one({'_id': self.guild_id, 'currencies.name': self.currency_name},
+                                        {'$pull': {'currencies.$.denominations': {'name': denomination_name}}})
+        except Exception as e:
+            await log_exception(e)
+
+    @discord.ui.select(cls=discord.ui.Select, placeholder='Select a denomination', options=[],
+                       custom_id='remove_denomination_select', row=0)
+    async def remove_denomination_select(self, interaction: discord.Interaction, select: discord.ui.Select):
+        try:
+            self.selected_denomination_name = select.values[0]
+            self.remove_denomination_confirm_button.label = f'Confirm deletion of {self.selected_denomination_name}'
+            self.remove_denomination_confirm_button.disabled = False
+            await self.setup_embed()
+            await interaction.response.edit_message(embed=self.embed, view=self)
+        except Exception as e:
+            await log_exception(e)
+
+    @discord.ui.button(label='Confirm', style=discord.ButtonStyle.danger,
+                       custom_id='remove_denomination_confirm_button', disabled=True)
+    async def remove_denomination_confirm_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            await self.remove_currency_denomination(self.selected_denomination_name)
+            self.embed.clear_fields()
+            await self.setup_select()
+            self.remove_denomination_confirm_button.disabled = True
+            self.remove_denomination_confirm_button.label = 'Confirm'
+            await interaction.response.edit_message(embed=self.embed, view=self)
+        except Exception as e:
+            await log_exception(e)
+
+
+class ConfigEditCurrencyView(discord.ui.View):
+    def __init__(self, guild_id, gdb):
+        super().__init__(timeout=None)
+        self.embed = discord.Embed(
+            title='Server Configuration - Edit Currency',
+            description=(
+                '__**Toggle View**__\n'
+                'Toggles between integer (10) and double (10.00) display views.\n\n'
+                '__**Add Denomination**__\n'
+                'Add one or more denomination(s) to the selected currency.\n\n'
+                '__**Edit Denomination**__\n'
+                'Edit the value of an existing denomination.\n\n'
+                '__**Remove Denomination**__\n'
+                'Remove one or more denomination(s) from the selected currency.\n\n'
+                '-----'
+            ),
+            type='rich'
+        )
+        self.guild_id = guild_id
+        self.gdb = gdb
+        # TODO: Implement (self.collection = self.gdb['currency']) in classes instead of every function
+        self.add_item(BackButton(ConfigCurrencyView, guild_id, gdb))
+        self.selected_currency_name = None
+
+    async def setup_embed(self, currency_name):
+        try:
+            collection = self.gdb['currency']
+            query = await collection.find_one({'_id': self.guild_id, 'currencies.name': currency_name})
+            currency = next((item for item in query['currencies'] if item['name'] == currency_name), None)
+            logger.info(f'Found currency: {currency}')
+            self.embed.clear_fields()
+            if currency['isDouble']:
+                display = 'Double (10.00)'
+            else:
+                display = 'Integer (10)'
+
+            denominations = currency['denominations']
+            if len(denominations) > 0:
+                values = []
+                for denomination in denominations:
+                    denomination_name = denomination['name']
+                    value = denomination['value']
+                    values.append(f'{denomination_name}: {value}')
+                denominations_string = '\n- '.join(values)
+                self.remove_denomination_button.disabled = False
+            else:
+                self.remove_denomination_button.disabled = True
+                denominations_string = 'None'
+
+            self.embed.add_field(name=f'{currency_name}',
+                                 value=f'__Display:__ {display}\n'
+                                       f'__Denominations__:\n- {denominations_string}',
+                                 inline=True)
+        except Exception as e:
+            await log_exception(e)
+
+    async def setup_select(self):
+        try:
+            self.edit_currency_select.options.clear()
+
+            collection = self.gdb['currency']
+            query = await collection.find_one({'_id': self.guild_id})
+            for currency in query['currencies']:
+                name = currency['name']
+                self.edit_currency_select.options.append(discord.SelectOption(label=name, value=name))
+        except Exception as e:
+            await log_exception(e)
+
+    @discord.ui.select(cls=discord.ui.Select, placeholder='Choose a currency to edit', options=[],
+                       custom_id='edit_currency_select', row=0)
+    async def edit_currency_select(self, interaction: discord.Interaction, select: discord.ui.Select):
+        try:
+            self.selected_currency_name = select.values[0]
+            self.toggle_double_button.disabled = False
+            self.toggle_double_button.label = f'Toggle Display for {self.selected_currency_name}'
+            self.add_denomination_button.disabled = False
+            self.add_denomination_button.label = f'Add Denomination to {self.selected_currency_name}'
+            self.remove_denomination_button.label = f'Remove Denomination from {self.selected_currency_name}'
+            await self.setup_embed(self.selected_currency_name)
+            await interaction.response.edit_message(embed=self.embed, view=self)
+        except Exception as e:
+            await log_exception(e)
+
+    @discord.ui.button(label='Select a currency', style=discord.ButtonStyle.secondary, custom_id='toggle_double_button',
+                       disabled=True)
+    async def toggle_double_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            collection = self.gdb['currency']
+            query = await collection.find_one({'_id': self.guild_id, 'currencies.name': self.selected_currency_name})
+            currency = next((item for item in query['currencies'] if item['name'] == self.selected_currency_name), None)
+            if currency['isDouble']:
+                value = False
+            else:
+                value = True
+            await collection.update_one({'_id': self.guild_id, 'currencies.name': self.selected_currency_name},
+                                        {'$set': {'currencies.$.isDouble': value}})
+            await self.setup_embed(self.selected_currency_name)
+            await interaction.response.edit_message(embed=self.embed, view=self)
+        except Exception as e:
+            await log_exception(e)
+
+    @discord.ui.button(label='Select a currency', style=discord.ButtonStyle.success,
+                       custom_id='add_denomination_button', disabled=True)
+    async def add_denomination_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            new_modal = AddCurrencyDenominationTextModal(
+                guild_id=self.guild_id,
+                gdb=self.gdb,
+                calling_view=self,
+                base_currency_name=self.selected_currency_name
+            )
+            await interaction.response.send_modal(new_modal)
+        except Exception as e:
+            await log_exception(e)
+
+    @discord.ui.button(label='Select a currency', style=discord.ButtonStyle.danger,
+                       custom_id='remove_denomination_button', disabled=True)
+    async def remove_denomination_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            new_view = ConfigRemoveDenominationView(self.guild_id, self.gdb, self.selected_currency_name)
+            await new_view.setup_select()
+            await interaction.response.edit_message(embed=new_view.embed, view=new_view)
+        except Exception as e:
+            await log_exception(e)
+
+
+class ConfigCurrencyView(discord.ui.View):
+    def __init__(self, guild_id, gdb):
+        super().__init__(timeout=None)
+        self.embed = discord.Embed(
+            title='Server Configuration - Currency',
+            description=(
+                '__**Add New Currency**__\n'
+                'Creates a new currency.\n\n'
+                '__**Edit Currency**__\n'
+                'Update options for an existing currency, such as the double representation and optional denominations.'
+                '\n\n'
+                '__**Remove Currency**__\n'
+                'Remove a currency entirely.\n\n'
+                '__** Key Definitions **__\n'
+                '- **Name:** The name of the currency. Always has a base value of 1. Example: Gold\n'
+                ' ```Note: ReQuest does not care about letter case from a functional standpoint, but any presentations '
+                'of your currency in menus will use the case you input when the currency is created, I.E. "Gold" vs. '
+                '"gold".```\n'
+                '- **Double:** This optional value specifies whether or not currency is displayed as whole integers '
+                '(10) or as a double (10.00). Default is `False`\n'
+                '- **Denominations:** This optional configuration adds denominations under the base currency. '
+                'Following the gold example, this would be Silver (at a value of 0.1), and Platinum (at a value of '
+                '10).\n'
+                '-----'
+            ),
+            type='rich'
+        )
+        self.guild_id = guild_id
+        self.gdb = gdb
+        self.add_item(BackButton(ConfigBaseView, guild_id, gdb))
+
+    async def setup_embed(self):
+        try:
+            self.embed.clear_fields()
+            collection = self.gdb['currency']
+            query = await collection.find_one({'_id': self.guild_id})
+            self.config_edit_currency_button.disabled = True
+            self.config_remove_currency_button.disabled = True
+
+            if query and len(query['currencies']) > 0:
+                self.config_edit_currency_button.disabled = False
+                self.config_remove_currency_button.disabled = False
+
+                currency_names = []
+                for currency in query['currencies']:
+                    currency_names.append(currency['name'])
+
+                self.embed.add_field(name='Active Currencies', value=', '.join(currency_names))
+        except Exception as e:
+            await log_exception(e)
+
+    @discord.ui.button(label='Add New Currency', style=discord.ButtonStyle.success,
+                       custom_id='config_add_currency_button')
+    async def config_add_currency_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            await interaction.response.send_modal(AddCurrencyTextModal(guild_id=self.guild_id,
+                                                                       gdb=self.gdb,
+                                                                       calling_view=self))
+        except Exception as e:
+            await log_exception(e)
+
+    @discord.ui.button(label='Edit Currency', style=discord.ButtonStyle.secondary,
+                       custom_id='config_edit_currency_button')
+    async def config_edit_currency_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            new_view = ConfigEditCurrencyView(guild_id=self.guild_id, gdb=self.gdb)
+            await new_view.setup_select()
+            await interaction.response.edit_message(embed=new_view.embed, view=new_view)
+        except Exception as e:
+            await log_exception(e)
+
+    @discord.ui.button(label='Remove Currency', style=discord.ButtonStyle.danger,
+                       custom_id='config_remove_currency_button')
+    async def config_remove_currency_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            new_view = RemoveCurrencyView(guild_id=self.guild_id, gdb=self.gdb)
+            await new_view.setup_select()
+            await interaction.response.edit_message(embed=new_view.embed, view=new_view)
+        except Exception as e:
+            await log_exception(e)
+
+
+class RemoveCurrencyView(discord.ui.View):
+    def __init__(self, guild_id, gdb):
+        super().__init__(timeout=None)
+        self.embed = discord.Embed(
+            title='Server Configuration - Remove Currency',
+            description='Select a currency to remove',
+            type='rich'
+        )
+        self.guild_id = guild_id
+        self.gdb = gdb
+        self.add_item(BackButton(ConfigCurrencyView, guild_id, gdb))
+        self.selected_currency = None
+
+    async def setup_embed(self):
+        try:
+            self.embed.clear_fields()
+            self.embed.add_field(name=f'Deleting {self.selected_currency}',
+                                 value='Confirm?')
+        except Exception as e:
+            await log_exception(e)
+
+    async def setup_select(self):
+        try:
+            self.remove_currency_select.options.clear()
+            collection = self.gdb['currency']
+            query = await collection.find_one({'_id': self.guild_id})
+            currencies = query['currencies']
+            if len(currencies) > 0:
+                for currency in currencies:
+                    name = currency['name']
+                    option = discord.SelectOption(label=name, value=name)
+                    self.remove_currency_select.options.append(option)
+            else:
+                self.remove_currency_select.options.append(discord.SelectOption(label='None', value='None'))
+                self.remove_currency_select.placeholder = 'There are no remaining currencies on this server!'
+                self.remove_currency_select.disabled = True
+        except Exception as e:
+            await log_exception(e)
+
+    async def remove_currency(self, currency_name):
+        try:
+            collection = self.gdb['currency']
+            await collection.update_one({'_id': self.guild_id, 'currencies.name': currency_name},
+                                        {'$pull': {'currencies': {'name': currency_name}}}, upsert=True)
+        except Exception as e:
+            await log_exception(e)
+
+    @discord.ui.select(cls=discord.ui.Select, placeholder='Select a currency', options=[],
+                       custom_id='remove_currency_select', row=0)
+    async def remove_currency_select(self, interaction: discord.Interaction, select: discord.ui.Select):
+        try:
+            self.selected_currency = select.values[0]
+            self.remove_currency_confirm_button.label = f'Confirm deletion of {self.selected_currency}'
+            self.remove_currency_confirm_button.disabled = False
+            await self.setup_embed()
+            await interaction.response.edit_message(embed=self.embed, view=self)
+        except Exception as e:
+            await log_exception(e)
+
+    @discord.ui.button(label='Confirm', style=discord.ButtonStyle.danger,
+                       custom_id='remove_currency_confirm_button', disabled=True)
+    async def remove_currency_confirm_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            await self.remove_currency(self.selected_currency)
+            self.embed.clear_fields()
+            await self.setup_select()
+            self.remove_currency_confirm_button.disabled = True
+            self.remove_currency_confirm_button.label = 'Confirm'
+            await interaction.response.edit_message(embed=self.embed, view=self)
+        except Exception as e:
+            await log_exception(e)
 
 
 async def setup(bot):

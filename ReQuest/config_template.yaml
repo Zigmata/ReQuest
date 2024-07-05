@@ -22,6 +22,7 @@ load_extensions:
     - 'ReQuest.cogs.admin'
     - 'ReQuest.cogs.player'
     - 'ReQuest.cogs.wallet'
+    - 'ReQuest.cogs.config'
 
 # Whitelist
 whiteList: False # Set true if utilizing a server white list.

@@ -3,6 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import GroupCog, is_owner
 
+from ..utilities.supportFunctions import log_exception
 
 # from ..utilities.checks import is_owner
 
@@ -37,9 +38,11 @@ class Admin(GroupCog, name='admin', description='Administrative commands for bot
     @is_owner()
     @app_commands.command(name='reload')
     async def reload(self, interaction: discord.Interaction, module: str):
-        await self.bot.reload_extension('ReQuest.cogs.' + module)
-
-        await interaction.response.send_message(f'Extension successfully reloaded: `{module}`', ephemeral=True)
+        try:
+            await self.bot.reload_extension('ReQuest.cogs.' + module)
+            await interaction.response.send_message(f'Extension successfully reloaded: `{module}`', ephemeral=True)
+        except Exception as e:
+            await log_exception(e)
 
     # Echoes the first argument provided
     @is_owner()
