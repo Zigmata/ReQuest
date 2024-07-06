@@ -13,20 +13,20 @@ logger = logging.getLogger(__name__)
 
 # -------- BUTTONS --------
 class BackButton(discord.ui.Button):
-    def __init__(self, returning_view_class, guild_id, gdb, setup_embed=True, setup_select=True):
+    def __init__(self, returning_view_class, guild_id, db, setup_embed=True, setup_select=True):
         super().__init__(
             label='Back',
             style=discord.ButtonStyle.primary,
             custom_id='back_button')
         self.guild_id = guild_id
-        self.gdb = gdb
+        self.db = db
         self.returning_view_class = returning_view_class
         self.setup_embed = setup_embed
         self.setup_select = setup_select
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            new_view = self.returning_view_class(self.guild_id, self.gdb)
+            new_view = self.returning_view_class(self.guild_id, self.db)
             if hasattr(new_view, 'setup_select') and self.setup_select:
                 await new_view.setup_select()
             if hasattr(new_view, 'setup_embed') and self.setup_embed:
@@ -50,6 +50,27 @@ class ConfigMenuButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             new_view = self.submenu_view_class(self.guild_id, self.gdb)
+            await new_view.setup_embed()
+            await interaction.response.edit_message(embed=new_view.embed, view=new_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class AdminMenuButton(discord.ui.Button):
+    def __init__(self, submenu_view_class, label, cdb, bot):
+        super().__init__(
+            label=label,
+            style=discord.ButtonStyle.primary,
+            custom_id=f'admin_{label.lower()}_button'
+        )
+        self.cdb = cdb
+        self.submenu_view_class = submenu_view_class
+        self.bot = bot
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            new_view = self.submenu_view_class(self.cdb, self.bot)
+            await new_view.setup_select()
             await new_view.setup_embed()
             await interaction.response.edit_message(embed=new_view.embed, view=new_view)
         except Exception as e:

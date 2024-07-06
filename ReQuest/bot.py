@@ -32,7 +32,7 @@ class ReQuest(commands.AutoShardedBot):
         with open(config_file, 'r') as yaml_file:
             config = yaml.safe_load(yaml_file)
         self.config = config
-        self.white_list = []
+        self.allow_list = []
 
     async def setup_hook(self):
         # Grab the event loop from asyncio, so we can pass it around
@@ -54,19 +54,19 @@ class ReQuest(commands.AutoShardedBot):
                 print('{}: {}'.format(type(e).__name__, e))
 
         # If the white list is enabled, load it async in the background
-        if self.config['whiteList']:
-            await asyncio.create_task(self.load_white_list())
+        if self.config['allowList']:
+            await asyncio.create_task(self.load_allow_list())
 
     async def close(self):
         await super().close()
         await self.session.close()
 
-    async def load_white_list(self):
-        white_list = await self.cdb['botWhiteList'].find_one({'servers': {'$exists': True}})
-        if not white_list:
-            await self.cdb.create_collection('botWhiteList')
+    async def load_allow_list(self):
+        allow_list = await self.cdb['serverAllowlist'].find_one({'servers': {'$exists': True}})
+        if not allow_list:
+            await self.cdb.create_collection('serverAllowlist')
         else:
-            self.white_list = white_list['servers']
+            self.allow_list = allow_list['servers']
 
     # Overridden from base to delete command invocation messages
     async def invoke(self, ctx):

@@ -3,7 +3,7 @@
 # Discord bot token. DO NOT INCLUDE THIS ANYWHERE IN YOUR DISTRIBUTED CODE!
 token: '<your token goes here>'
 
-# Default bot command prefix
+# Default bot command prefix. This only affects the hidden 'commandsync' command, everything else uses slash commands
 prefix: '<prefix>'
 
 # Database connection string and collection references
@@ -24,5 +24,5 @@ load_extensions:
     - 'ReQuest.cogs.wallet'
     - 'ReQuest.cogs.config'
 
-# Whitelist
-whiteList: False # Set true if utilizing a server white list.
+# Server Allowlist
+allowList: False # Set true if utilizing a server allowlist.
