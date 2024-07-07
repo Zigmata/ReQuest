@@ -6,7 +6,7 @@ from discord import app_commands
 from discord.ext.commands import Cog
 
 from ..utilities.supportFunctions import log_exception
-from ..utilities.ui import BackButton, ConfigMenuButton, MenuDoneButton, SingleChannelConfigSelect
+from ..utilities.ui import ConfigBackButton, ConfigMenuButton, MenuDoneButton, SingleChannelConfigSelect
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -77,7 +77,7 @@ class ConfigRolesView(discord.ui.View):
         )
         self.guild_id = guild_id
         self.gdb = gdb
-        self.add_item(BackButton(ConfigBaseView, guild_id, gdb))
+        self.add_item(ConfigBackButton(ConfigBaseView, guild_id, gdb))
 
     async def query_role(self, role_type):
         try:
@@ -228,7 +228,7 @@ class ConfigGMRoleRemoveView(discord.ui.View):
         self.guild_id = guild_id
         self.gdb = gdb
         self.add_item(GMRoleSelect(guild_id, gdb, options))
-        self.add_item(BackButton(ConfigRolesView, guild_id, gdb))
+        self.add_item(ConfigBackButton(ConfigRolesView, guild_id, gdb))
 
     async def setup_embed(self):
         try:
@@ -278,7 +278,7 @@ class ConfigChannelsView(discord.ui.View):
                                                 config_name='Quest Archive',
                                                 guild_id=guild_id,
                                                 gdb=gdb))
-        self.add_item(BackButton(ConfigBaseView, guild_id, gdb))
+        self.add_item(ConfigBackButton(ConfigBaseView, guild_id, gdb))
 
     async def query_channel(self, channel_type):
         try:
@@ -323,7 +323,7 @@ class ConfigQuestsView(discord.ui.View):
         )
         self.guild_id = guild_id
         self.gdb = gdb
-        self.add_item(BackButton(ConfigBaseView, guild_id, gdb))
+        self.add_item(ConfigBackButton(ConfigBaseView, guild_id, gdb))
 
     async def query_quest_config(self, config_type):
         try:
@@ -405,7 +405,7 @@ class ConfigPlayersView(discord.ui.View):
         )
         self.guild_id = guild_id
         self.gdb = gdb
-        self.add_item(BackButton(ConfigBaseView, guild_id, gdb))
+        self.add_item(ConfigBackButton(ConfigBaseView, guild_id, gdb))
 
     async def query_player_config(self, config_type):
         try:
@@ -571,7 +571,7 @@ class ConfigRemoveDenominationView(discord.ui.View):
         self.gdb = gdb
         self.currency_name = currency_name
         self.selected_denomination_name = None
-        self.add_item(BackButton(ConfigEditCurrencyView, guild_id, gdb, setup_embed=False))
+        self.add_item(ConfigBackButton(ConfigEditCurrencyView, guild_id, gdb, setup_embed=False))
 
     async def setup_select(self):
         try:
@@ -658,7 +658,7 @@ class ConfigEditCurrencyView(discord.ui.View):
         self.guild_id = guild_id
         self.gdb = gdb
         # TODO: Implement (self.collection = self.gdb['currency']) in classes instead of every function
-        self.add_item(BackButton(ConfigCurrencyView, guild_id, gdb))
+        self.add_item(ConfigBackButton(ConfigCurrencyView, guild_id, gdb))
         self.selected_currency_name = None
 
     async def setup_embed(self, currency_name):
@@ -792,7 +792,7 @@ class ConfigCurrencyView(discord.ui.View):
         )
         self.guild_id = guild_id
         self.gdb = gdb
-        self.add_item(BackButton(ConfigBaseView, guild_id, gdb))
+        self.add_item(ConfigBackButton(ConfigBaseView, guild_id, gdb))
 
     async def setup_embed(self):
         try:
@@ -855,7 +855,7 @@ class RemoveCurrencyView(discord.ui.View):
         )
         self.guild_id = guild_id
         self.gdb = gdb
-        self.add_item(BackButton(ConfigCurrencyView, guild_id, gdb))
+        self.add_item(ConfigBackButton(ConfigCurrencyView, guild_id, gdb))
         self.selected_currency = None
 
     async def setup_embed(self):

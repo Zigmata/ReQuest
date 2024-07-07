@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 # -------- BUTTONS --------
-class BackButton(discord.ui.Button):
+class ConfigBackButton(discord.ui.Button):
     def __init__(self, returning_view_class, guild_id, db, setup_embed=True, setup_select=True):
         super().__init__(
             label='Back',
@@ -27,6 +27,30 @@ class BackButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             new_view = self.returning_view_class(self.guild_id, self.db)
+            if hasattr(new_view, 'setup_select') and self.setup_select:
+                await new_view.setup_select()
+            if hasattr(new_view, 'setup_embed') and self.setup_embed:
+                await new_view.setup_embed()
+            await interaction.response.edit_message(embed=new_view.embed, view=new_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class AdminBackButton(discord.ui.Button):
+    def __init__(self, returning_view_class, cdb, bot, setup_embed=True, setup_select=True):
+        super().__init__(
+            label='Back',
+            style=discord.ButtonStyle.primary,
+            custom_id='back_button')
+        self.cdb = cdb
+        self.bot = bot
+        self.returning_view_class = returning_view_class
+        self.setup_embed = setup_embed
+        self.setup_select = setup_select
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            new_view = self.returning_view_class(self.cdb, self.bot)
             if hasattr(new_view, 'setup_select') and self.setup_select:
                 await new_view.setup_select()
             if hasattr(new_view, 'setup_embed') and self.setup_embed:
@@ -57,7 +81,7 @@ class ConfigMenuButton(discord.ui.Button):
 
 
 class AdminMenuButton(discord.ui.Button):
-    def __init__(self, submenu_view_class, label, cdb, bot):
+    def __init__(self, submenu_view_class, label, cdb, bot, setup_select=True, setup_embed=True):
         super().__init__(
             label=label,
             style=discord.ButtonStyle.primary,
@@ -66,12 +90,16 @@ class AdminMenuButton(discord.ui.Button):
         self.cdb = cdb
         self.submenu_view_class = submenu_view_class
         self.bot = bot
+        self.setup_select = setup_select
+        self.setup_embed = setup_embed
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction: discord.Interaction, ):
         try:
             new_view = self.submenu_view_class(self.cdb, self.bot)
-            await new_view.setup_select()
-            await new_view.setup_embed()
+            if hasattr(new_view, 'setup_select') and self.setup_select:
+                await new_view.setup_select()
+            if hasattr(new_view, 'setup_embed') and self.setup_embed:
+                await new_view.setup_embed()
             await interaction.response.edit_message(embed=new_view.embed, view=new_view)
         except Exception as e:
             await log_exception(e, interaction)
