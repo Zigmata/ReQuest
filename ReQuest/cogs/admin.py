@@ -1,16 +1,14 @@
 import discord
 import discord.ui
+import logging
 from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Cog
-import aiohttp
-import logging
+from ..utilities.supportFunctions import log_exception
+from ..utilities.ui import MenuDoneButton, AdminMenuButton, AdminBackButton
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-from ..utilities.supportFunctions import log_exception
-from ..utilities.ui import MenuDoneButton, AdminMenuButton, AdminBackButton
 
 
 class Admin(Cog):
@@ -99,6 +97,7 @@ class AdminBaseView(discord.ui.View):
         self.add_item(AdminMenuButton(AdminAllowlistView, 'Allowlist', self.cdb, self.bot, setup_embed=False))
         self.add_item(AdminMenuButton(AdminCogView, 'Cogs', self.cdb, self.bot,
                                       setup_select=False, setup_embed=False))
+        self.add_item(AdminShutdownButton(bot, self))
         self.add_item(MenuDoneButton(self))
 
 
@@ -281,47 +280,29 @@ class AdminCogTextModal(discord.ui.Modal):
         except Exception as e:
             await log_exception(e, interaction)
 
-    # # Echoes the first argument provided
-    # @is_owner()
-    # @app_commands.command(name='echo')
-    # async def echo(self, interaction: discord.Interaction, text: str):
-    #     await interaction.response.send_message(text, ephemeral=True)
-    #
-    # # Shut down the bot
-    # @is_owner()
-    # @app_commands.command(name='shutdown')
-    # async def shutdown(self, interaction: discord.Interaction):
-    #     try:
-    #         await interaction.response.send_message('Shutting down!', ephemeral=True)
-    #         await self.bot.close()
-    #     except Exception as e:
-    #         await interaction.response.send_message(f'{type(e).__name__}: {e}', ephemeral=True)
-    #
-    # @is_owner()
-    # @allowlist_group.command(name='add')
-    # async def allowlist_add(self, interaction: discord.Interaction, guild: str):
-    #     collection = self.cdb['serverAllowlist']
-    #     guild_id = int(guild)
-    #     self.bot.allow_list.append(guild_id)
-    #
-    #     await collection.update_one({'servers': {'$exists': True}}, {'$push': {'servers': guild_id}}, upsert=True)
-    #
-    #     await interaction.response.send_message(f'Guild ID `{guild_id}` added to allowlist!', ephemeral=True)
-    #
-    # @is_owner()
-    # @allowlist_group.command(name='remove')
-    # async def allowlist_remove(self, interaction: discord.Interaction, guild: str):
-    #     collection = self.cdb['serverAllowlist']
-    #     guild_id = int(guild)
-    #     self.bot.allow_list.remove(guild_id)
-    #
-    #     if await collection.count_documents({'servers': {'$exists': True}}, limit=1) != 0:
-    #         await collection.update_one({'servers': {'$exists': True}}, {'$pull': {'servers': guild_id}})
-    #     else:
-    #         return
-    #
-    #     await interaction.response.send_message(f'Guild ID `{guild_id}` removed from allowlist!', ephemeral=True)
-    #
+
+class AdminShutdownButton(discord.ui.Button):
+    def __init__(self, bot, calling_view):
+        super().__init__(
+            label='Shutdown',
+            style=discord.ButtonStyle.danger,
+            custom_id='shutdown_bot_button'
+        )
+        self.confirm = False
+        self.bot = bot
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            if self.confirm:
+                await interaction.response.send_message('Shutting down!', ephemeral=True)
+                await self.bot.close()
+            else:
+                self.confirm = True
+                self.label = 'CONFIRM SHUTDOWN?'
+                await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+        except Exception as e:
+            await log_exception(e)
 
 
 async def setup(bot):

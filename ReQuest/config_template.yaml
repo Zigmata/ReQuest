@@ -15,14 +15,15 @@ configDb: '<name of your config database>'
 
 # A list of all cogs we are loading when starting up the bot. Don't change this unless you write your own custom cogs or change the directory structure.
 load_extensions:
-    - 'ReQuest.cogs.questBoard'
+    - 'ReQuest.cogs.admin'
+    - 'ReQuest.cogs.config'
+    - 'ReQuest.cogs.gm'
     - 'ReQuest.cogs.help'
     - 'ReQuest.cogs.inventory'
-    - 'ReQuest.cogs.playerBoard'
-    - 'ReQuest.cogs.admin'
     - 'ReQuest.cogs.player'
+    - 'ReQuest.cogs.playerBoard'
+    - 'ReQuest.cogs.questBoard'
     - 'ReQuest.cogs.wallet'
-    - 'ReQuest.cogs.config'
 
 # Server Allowlist
 allowList: False # Set true if utilizing a server allowlist.
