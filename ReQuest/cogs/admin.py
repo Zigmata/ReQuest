@@ -3,9 +3,15 @@ import discord.ui
 from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Cog
+import aiohttp
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 from ..utilities.supportFunctions import log_exception
 from ..utilities.ui import MenuDoneButton, AdminMenuButton, AdminBackButton
+
 
 class Admin(Cog):
     def __init__(self, bot):
@@ -102,7 +108,9 @@ class AdminAllowlistView(discord.ui.View):
         self.embed = discord.Embed(
             title='Administration - Server Allowlist',
             description=('__**Add New Server**__\n'
-                         'Adds a new Discord Server ID to the allowlist.\n\n'
+                         'Adds a new Discord Server ID to the allowlist.\n'
+                         '**WARNING: There is no way to verify the server ID provided is valid without the bot being a'
+                         'server member. Double-check your inputs!**\n\n'
                          '__**Remove**__\n'
                          'Removes the selected Discord Server from the allowlist.\n\n'),
             type='rich'
@@ -119,7 +127,7 @@ class AdminAllowlistView(discord.ui.View):
             query = await collection.find_one()
             if len(query['servers']) > 0:
                 for server in query['servers']:
-                    option = discord.SelectOption(label=server, value=server)
+                    option = discord.SelectOption(label=server['name'], value=server['id'])
                     self.remove_guild_allowlist_select.options.append(option)
             else:
                 option = discord.SelectOption(label='There are no servers in the allowlist', value='None')
@@ -133,9 +141,14 @@ class AdminAllowlistView(discord.ui.View):
                        options=[], custom_id='remove_guild_allowlist_select', row=0)
     async def remove_guild_allowlist_select(self, interaction: discord.Interaction, select: discord.ui.Select):
         try:
-            self.selected_guild = select.values[0]
+            guild_id = int(select.values[0])
+            collection = self.cdb['serverAllowlist']
+            query = await collection.find_one({'servers': {'$exists': True}, 'servers.id': guild_id})
+            server = next((server for server in query['servers'] if server['id'] == guild_id))
+            logger.info(f'Found server: {server}')
+            self.selected_guild = server['id']
             self.confirm_allowlist_remove_button.disabled = False
-            self.confirm_allowlist_remove_button.label = f'Confirm removal of {select.values[0]}'
+            self.confirm_allowlist_remove_button.label = f'Confirm removal of {guild_id}'
             await interaction.response.edit_message(embed=self.embed, view=self)
         except Exception as e:
             await log_exception(e, interaction)
@@ -154,7 +167,8 @@ class AdminAllowlistView(discord.ui.View):
     async def confirm_allowlist_remove_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         try:
             collection = self.cdb['serverAllowlist']
-            await collection.update_one({'servers': {'$exists': True}}, {'$pull': {'servers': self.selected_guild}})
+            await collection.update_one({'servers': {'$exists': True}},
+                                        {'$pull': {'servers': {'id': self.selected_guild}}})
             await self.setup_select()
             self.confirm_allowlist_remove_button.disabled = True
             self.confirm_allowlist_remove_button.label = 'Confirm'
@@ -171,32 +185,37 @@ class AllowServerModal(discord.ui.Modal):
         )
         self.cdb = cdb
         self.calling_view = calling_view
-        self.allow_server_text_input = AllowServerTextInput()
-        self.add_item(self.allow_server_text_input)
-        self.bot = bot
-
-    async def on_submit(self, interaction: discord.Interaction):
-        try:
-            input_id = int(self.allow_server_text_input.value)
-            await self.bot.fetch_guild(input_id)
-            collection = self.cdb['serverAllowlist']
-            guild_id = input_id
-            self.bot.allow_list.append(guild_id)
-            await collection.update_one({'servers': {'$exists': True}}, {'$push': {'servers': guild_id}}, upsert=True)
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-
-class AllowServerTextInput(discord.ui.TextInput):
-    def __init__(self):
-        super().__init__(
+        self.allow_server_name_input = discord.ui.TextInput(
+            label='Server Name',
+            style=discord.TextStyle.short,
+            custom_id='allow_server_name_input',
+            placeholder='Type a short name for the Discord Server',
+            required=True
+        )
+        self.allow_server_id_input = discord.ui.TextInput(
             label='Server ID',
             style=discord.TextStyle.short,
             custom_id='allow_server_text_input',
             placeholder='Type the ID of the Discord Server',
             required=True
         )
+        self.add_item(self.allow_server_name_input)
+        self.add_item(self.allow_server_id_input)
+        self.bot = bot
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            input_name = self.allow_server_name_input.value
+            guild_id = int(self.allow_server_id_input.value)
+            collection = self.cdb['serverAllowlist']
+            self.bot.allow_list.append(guild_id)
+            await collection.update_one({'servers': {'$exists': True}},
+                                        {'$push': {'servers': {'name': input_name, 'id': guild_id}}},
+                                        upsert=True)
+            await self.calling_view.setup_select()
+            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
 
 
 class AdminCogView(discord.ui.View):

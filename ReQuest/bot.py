@@ -66,7 +66,8 @@ class ReQuest(commands.AutoShardedBot):
         if not allow_list:
             await self.cdb.create_collection('serverAllowlist')
         else:
-            self.allow_list = allow_list['servers']
+            for server in allow_list['servers']:
+                self.allow_list.append(server['id'])
 
     # Overridden from base to delete command invocation messages
     async def invoke(self, ctx):
