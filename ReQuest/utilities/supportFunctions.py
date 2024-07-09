@@ -15,14 +15,6 @@ async def attempt_delete(message):
         pass
 
 
-async def get_prefix(bot, message):
-    prefix = await bot.cdb['prefixes'].find_one({'guildId': message.guild.id})
-    if not prefix:
-        return f'{bot.config["prefix"]}'
-    else:
-        return f'{prefix["prefix"]}'
-
-
 def strip_id(mention) -> int:
     stripped_mention = re.sub(r'[<>#!@&]', '', mention)
     parsed_id = int(stripped_mention)

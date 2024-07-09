@@ -3,9 +3,6 @@
 # Discord bot token. DO NOT INCLUDE THIS ANYWHERE IN YOUR DISTRIBUTED CODE!
 token: '<your token goes here>'
 
-# Default bot command prefix. This only affects the hidden 'commandsync' command, everything else uses slash commands
-prefix: '<prefix>'
-
 # Database connection string and collection references
 dbServer: '<server address>'
 port: <port>

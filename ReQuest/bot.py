@@ -8,7 +8,7 @@ from discord.ext import commands
 from discord.ext.commands import errors
 from motor.motor_asyncio import AsyncIOMotorClient as MotorClient
 
-from utilities.supportFunctions import get_prefix, attempt_delete, log_exception
+from utilities.supportFunctions import attempt_delete, log_exception
 
 
 class ReQuest(commands.AutoShardedBot):
@@ -24,7 +24,7 @@ class ReQuest(commands.AutoShardedBot):
         intents.message_content = True  # Subscribe to the privileged message content intent.
         allowed_mentions = discord.AllowedMentions(roles=True, everyone=False, users=True)
         super(ReQuest, self).__init__(activity=discord.Game(name=f'by Post'), allowed_mentions=allowed_mentions,
-                                      case_insensitive=True, chunk_guild_at_startup=False, command_prefix=get_prefix,
+                                      case_insensitive=True, chunk_guild_at_startup=False, command_prefix='!',
                                       intents=intents)
 
         # Open the config file and load it to the bot
