@@ -8,7 +8,7 @@ from discord.ext import commands
 from discord.ext.commands import errors
 from motor.motor_asyncio import AsyncIOMotorClient as MotorClient
 
-from utilities.supportFunctions import get_prefix, attempt_delete
+from utilities.supportFunctions import get_prefix, attempt_delete, log_exception
 
 
 class ReQuest(commands.AutoShardedBot):
@@ -90,8 +90,6 @@ class ReQuest(commands.AutoShardedBot):
     async def on_message(self, message):
         if message.author.bot:
             return
-        elif len(message.mentions) > 0 and self.user in message.mentions:
-            await message.channel.send(f'My prefix for this server is `{await get_prefix(self, message)}`')
         else:
             try:
                 await self.process_commands(message)
@@ -104,6 +102,11 @@ class ReQuest(commands.AutoShardedBot):
 
 
 bot = ReQuest()
+
+
+@bot.tree.error
+async def on_app_command_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+    await log_exception(error, interaction)
 
 
 async def main():

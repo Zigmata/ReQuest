@@ -6,6 +6,7 @@ from discord.ext import commands
 from discord.ext.commands import Cog
 from ..utilities.supportFunctions import log_exception
 from ..utilities.ui import MenuDoneButton, AdminMenuButton, AdminBackButton
+from ..utilities.checks import is_owner
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -35,6 +36,7 @@ class Admin(Cog):
 
     # -------------Private Commands-------------
 
+    @commands.dm_only()
     @commands.is_owner()
     @commands.command(name='commandsync', case_insensitive=True, hidden=True, pass_context=True)
     async def command_sync(self, ctx, guild_id=None):
@@ -46,14 +48,18 @@ class Admin(Cog):
         """
 
         try:
-            guild = self.bot.get_guild(int(guild_id))
+            if guild_id:
+                guild = self.bot.get_guild(int(guild_id))
+            else:
+                guild = None
+
             self.bot.tree.copy_global_to(guild=guild)
             status = await self.bot.tree.sync(guild=guild)
             synced_commands = []
             if guild_id:
-                embed_title = f"The following commands were synchronized to guild ID {guild_id}"
+                embed_title = f'The following commands were synchronized to {guild.name}, ID {guild_id}'
             else:
-                embed_title = "The following commands were synchronized globally"
+                embed_title = 'The following commands were synchronized globally'
 
             for synced_command in status:
                 synced_commands.append(synced_command.name)
@@ -66,10 +72,9 @@ class Admin(Cog):
         except Exception as e:
             await ctx.send(f'There was an error syncing commands: {e}')
 
-    @app_commands.checks.has_permissions(manage_guild=True)
-    @app_commands.default_permissions(manage_guild=True)
+    @is_owner()
     @app_commands.command(name='admin')
-    @app_commands.guild_only()
+    @app_commands.dm_only()
     async def admin(self, interaction: discord.Interaction):
         """
         Administration wizard. Bot owner only

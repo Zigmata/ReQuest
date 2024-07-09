@@ -61,20 +61,22 @@ class AdminBackButton(discord.ui.Button):
 
 
 class PlayerBackButton(discord.ui.Button):
-    def __init__(self, returning_view_class, mdb, bot, setup_embed=True, setup_select=True):
+    def __init__(self, returning_view_class, mdb, bot, member_id, guild_id, setup_embed=True, setup_select=True):
         super().__init__(
             label='Back',
             style=discord.ButtonStyle.primary,
             custom_id='back_button')
         self.mdb = mdb
         self.bot = bot
+        self.member_id = member_id
+        self.guild_id = guild_id
         self.returning_view_class = returning_view_class
         self.setup_embed = setup_embed
         self.setup_select = setup_select
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            new_view = self.returning_view_class(self.mdb, self.bot)
+            new_view = self.returning_view_class(self.mdb, self.bot, self.member_id, self.guild_id)
             if hasattr(new_view, 'setup_select') and self.setup_select:
                 await new_view.setup_select()
             if hasattr(new_view, 'setup_embed') and self.setup_embed:
@@ -130,21 +132,23 @@ class AdminMenuButton(discord.ui.Button):
 
 
 class PlayerMenuButton(discord.ui.Button):
-    def __init__(self, submenu_view_class, label, mdb, bot, setup_select=True, setup_embed=True):
+    def __init__(self, submenu_view_class, label, mdb, bot, member_id, guild_id, setup_select=True, setup_embed=True):
         super().__init__(
             label=label,
             style=discord.ButtonStyle.primary,
             custom_id=f'player_{label.lower()}_button'
         )
-        self.mdb = mdb
         self.submenu_view_class = submenu_view_class
+        self.mdb = mdb
         self.bot = bot
+        self.member_id = member_id
+        self.guild_id = guild_id
         self.setup_select = setup_select
         self.setup_embed = setup_embed
 
     async def callback(self, interaction: discord.Interaction, ):
         try:
-            new_view = self.submenu_view_class(self.mdb, self.bot)
+            new_view = self.submenu_view_class(self.mdb, self.bot, self.member_id, self.guild_id)
             if hasattr(new_view, 'setup_select') and self.setup_select:
                 await new_view.setup_select()
             if hasattr(new_view, 'setup_embed') and self.setup_embed:

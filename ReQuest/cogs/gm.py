@@ -1,6 +1,7 @@
 import discord
 from discord.ext.commands import Cog
 from discord import app_commands
+from ..utilities.checks import has_gm_role
 
 
 class GameMaster(Cog):
@@ -10,9 +11,69 @@ class GameMaster(Cog):
         self.mdb = bot.mdb
         self.gdb = bot.gdb
 
+    @has_gm_role()
+    @app_commands.command(name='gm')
+    async def gm(self, interaction: discord.Interaction):
+        await interaction.response.send_message('Here\'s where I would keep all my GM commands, if I had any.',
+                                                ephemeral=True)
+
 
 async def setup(bot):
     await bot.add_cog(GameMaster(bot))
+
+    # @has_gm_or_mod()
+    # @app_commands.command(name='mod')
+    # async def inventory_mod(self, interaction: discord.Interaction, user_mention: str, item_name: str,
+    #                         quantity: int = 1):
+    #     """
+    #     Modifies a player's currently active character's inventory. GM Command.
+    #     Requires an assigned GM role or Server Moderator privileges.
+    #
+    #     Arguments:
+    #     <item_name>: The name of the item. Case-sensitive!
+    #     <quantity>: Quantity to give or take.
+    #     <user_mention>: User mention of the receiving player.
+    #     """
+    #     if quantity == 0:
+    #         await interaction.response.send_message('Stop being a tease and enter an actual quantity!', ephemeral=True)
+    #         return
+    #
+    #     gm_member_id = interaction.user.id
+    #     guild_id = interaction.guild_id
+    #     collection = self.mdb['characters']
+    #     transaction_id = str(shortuuid.uuid()[:12])
+    #
+    #     member_id = strip_id(user_mention)
+    #
+    #     query = await collection.find_one({'_id': member_id})
+    #     active_character = query['activeChars'][str(guild_id)]
+    #     inventory = query['characters'][active_character]['attributes']['inventory']
+    #     if item_name in inventory:
+    #         current_quantity = inventory[item_name]
+    #         new_quantity = current_quantity + quantity
+    #         if new_quantity == 0:
+    #             await collection.update_one({'_id': member_id}, {
+    #                 '$unset': {f'characters.{active_character}.attributes.inventory.{item_name}': ''}}, upsert=True)
+    #         else:
+    #             await collection.update_one({'_id': member_id}, {
+    #                 '$set': {f'characters.{active_character}.attributes.inventory.{item_name}': new_quantity}},
+    #                                         upsert=True)
+    #     else:
+    #         await collection.update_one({'_id': member_id}, {
+    #             '$set': {f'characters.{active_character}.attributes.inventory.{item_name}': quantity}}, upsert=True)
+    #     recipient_string = f'<@!{member_id}> as {query["characters"][active_character]["name"]}'
+    #
+    #     inventory_embed = discord.Embed(description=f'Item: **{item_name}**\nQuantity: **{abs(quantity)}**',
+    #                                     type='rich').set_footer(text=f'{datetime.utcnow().strftime("%Y-%m-%d")}'
+    #                                                                  f' Transaction ID: {transaction_id}')
+    #     if quantity > 0:
+    #         inventory_embed.title = 'Item Awarded!'
+    #     elif quantity < 0:
+    #         inventory_embed.title = 'Item Removed!'
+    #     inventory_embed.add_field(name="Recipient", value=recipient_string)
+    #     inventory_embed.add_field(name='Game Master', value=f'<@!{gm_member_id}>', inline=False)
+    #     await interaction.response.send_message(embed=inventory_embed)
+
 
 # @experience_group.command(name='mod')
 # @has_gm_or_mod()

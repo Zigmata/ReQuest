@@ -1,11 +1,12 @@
-import shortuuid
+import logging
+from datetime import datetime, timezone
+
 import discord
 import discord.ui
-import logging
-from ..utilities.checks import has_gm_or_mod
-from datetime import datetime, timezone
+import shortuuid
 from discord import app_commands
 from discord.ext.commands import Cog
+
 from ..utilities.supportFunctions import log_exception
 from ..utilities.ui import MenuDoneButton, PlayerMenuButton, PlayerBackButton
 
@@ -26,17 +27,21 @@ class Player(Cog):
         Player Commands
         """
         try:
-            view = PlayerBaseView(self.mdb, self.bot)
+            member_id = interaction.user.id
+            guild_id = interaction.guild_id
+            view = PlayerBaseView(self.mdb, self.bot, member_id, guild_id)
             await interaction.response.send_message(embed=view.embed, view=view, ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)
 
 
 class PlayerBaseView(discord.ui.View):
-    def __init__(self, mdb, bot):
+    def __init__(self, mdb, bot, member_id, guild_id):
         super().__init__(timeout=None)
         self.mdb = mdb
         self.bot = bot
+        self.member_id = member_id
+        self.guild_id = guild_id
         self.embed = discord.Embed(
             title='Player Commands - Main Menu',
             description=(
@@ -45,48 +50,61 @@ class PlayerBaseView(discord.ui.View):
             ),
             type='rich'
         )
-        self.add_item(PlayerMenuButton(CharacterBaseView, 'Characters', mdb, bot))
-        self.add_item(MenuDoneButton(PlayerBaseView))
+        self.add_item(PlayerMenuButton(CharacterBaseView, 'Characters', mdb, bot, member_id, guild_id))
+        self.add_item(MenuDoneButton(self))
 
 
 class CharacterBaseView(discord.ui.View):
-    def __init__(self, mdb, bot):
+    def __init__(self, mdb, bot, member_id, guild_id):
         super().__init__(timeout=None)
         self.mdb = mdb
         self.bot = bot
+        self.member_id = member_id
+        self.guild_id = guild_id
         self.embed = discord.Embed(
             title='Player Commands - Characters',
             description=(
                 '__**Register**__\n'
                 'Registers a new character, and activates that character on the current server.\n\n'
-                '__**List**__\n'
-                'List all registered characters.'
-                '__**Activate**__\n'
+                '__**List/Activate**__\n'
+                'Show all registered characters, and change the active character for this server.\n\n'
                 '__**Remove**__\n'
-                ''
+                'Removes a character permanently.\n\n'
             ),
             type='rich'
         )
+        self.add_item(PlayerBackButton(PlayerBaseView, mdb, bot, member_id, guild_id))
 
-    async def setup_embed(self):
-        return
-
-    async def setup_select(self):
-        return
-
-    # TODO: Implement max_length of 40 for names and notes
-    @discord.ui.button(label='Register New Character', style=discord.ButtonStyle.success,
-                       custom_id='register_character_button')
+    @discord.ui.button(label='Register', style=discord.ButtonStyle.success, custom_id='register_character_button')
     async def register_character_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         try:
-            modal = CharacterRegisterModal(self, self.mdb)
+            modal = CharacterRegisterModal(self, self.mdb, self.member_id, self.guild_id)
             await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    @discord.ui.button(label='List/Activate', style=discord.ButtonStyle.secondary, custom_id='list_characters_button')
+    async def list_characters_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            new_view = ListCharactersView(self.mdb, self.bot, self.member_id, self.guild_id)
+            await new_view.setup_select()
+            await new_view.setup_embed()
+            await interaction.response.edit_message(embed=new_view.embed, view=new_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    @discord.ui.button(label='Remove', style=discord.ButtonStyle.danger, custom_id='remove_character_button')
+    async def remove_character_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            new_view = RemoveCharacterView(self.mdb, self.bot, self.member_id, self.guild_id)
+            await new_view.setup_select()
+            await interaction.response.edit_message(embed=new_view.embed, view=new_view)
         except Exception as e:
             await log_exception(e, interaction)
 
 
 class CharacterRegisterModal(discord.ui.Modal):
-    def __init__(self, calling_view, mdb):
+    def __init__(self, calling_view, mdb, member_id, guild_id):
         super().__init__(
             title='Register New Character',
             timeout=180
@@ -95,31 +113,33 @@ class CharacterRegisterModal(discord.ui.Modal):
             label='Name',
             style=discord.TextStyle.short,
             custom_id='character_name_text_input',
-            placeholder='Enter your character\'s name'
+            placeholder='Enter your character\'s name.',
+            max_length=40
         )
         self.note_text_input = discord.ui.TextInput(
             label='Note',
             style=discord.TextStyle.short,
             custom_id='character_note_text_input',
-            placeholder='Enter a note to identify your character'
+            placeholder='Enter a note to identify your character',
+            max_length=80
         )
         self.calling_view = calling_view
         self.mdb = mdb
+        self.member_id = member_id
+        self.guild_id = guild_id
         self.add_item(self.name_text_input)
         self.add_item(self.note_text_input)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            member_id = interaction.user.id
-            guild_id = interaction.guild_id
             character_id = str(shortuuid.uuid())
             collection = self.mdb['characters']
             date = datetime.now(timezone.utc)
             character_name = self.name_text_input.value
             character_note = self.note_text_input.value
 
-            await collection.update_one({'_id': member_id},
-                                        {'$set': {f'activeCharacters.{guild_id}': character_id,
+            await collection.update_one({'_id': self.member_id},
+                                        {'$set': {f'activeCharacters.{self.guild_id}': character_id,
                                                   f'characters.{character_id}': {
                                                       'name': character_name,
                                                       'note': character_note,
@@ -132,216 +152,156 @@ class CharacterRegisterModal(discord.ui.Modal):
                                                       }}}},
                                         upsert=True)
 
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+            await interaction.response.send_message(f'{character_name} was born!', ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)
 
-    # @app_commands.command(name='character')
-    # async def character(self, interaction: discord.Interaction, character_name: str = None):
-    #     """
-    #     Commands for registration and management of player characters.
-    #
-    #     Arguments:
-    #     <none>: Displays current active character for this server.
-    #     <character_name>: Name of the character to set as active for this server.
-    #     """
-    #     member_id = interaction.user.id
-    #     guild_id = interaction.guild_id
-    #     collection = self.mdb['characters']
-    #     query = await collection.find_one({'_id': member_id})
-    #     error_title = None
-    #     error_message = None
-    #
-    #     if character_name:
-    #         ids = []
-    #         if not query:
-    #             error_title = 'Error'
-    #             error_message = 'You have no registered characters!'
-    #         else:
-    #             for character_id in query['characters']:
-    #                 ids.append(character_id)
-    #
-    #         name = character_name.lower()
-    #         matches = []
-    #         for character_id in ids:
-    #             char = query['characters'][character_id]
-    #             if name in char['name'].lower():
-    #                 matches.append(character_id)
-    #
-    #         if not matches:
-    #             error_title = 'Search failed.'
-    #             error_message = 'No characters found with that name!'
-    #         elif len(matches) == 1:
-    #             char = query['characters'][matches[0]]
-    #             await collection.update_one({'_id': member_id}, {'$set': {f'activeCharacters.{guild_id}': matches[0]}})
-    #             await interaction.response.send_message(f'Active character changed to {char["name"]} ({char["note"]})',
-    #                                                     ephemeral=True)
-    #         elif len(matches) > 1:
-    #             options = []
-    #             for match in matches:
-    #                 char = query['characters'][match]
-    #                 options.append(discord.SelectOption(label=f'{char["name"][:40]} ({char["note"][:40]})',
-    #                                                     value=match))
-    #             select = SingleChoiceDropdown(placeholder='Choose One', options=options)
-    #             view = DropdownView(select)
-    #             await interaction.response.send_message('Multiple matches found!', view=view, ephemeral=True)
-    #             await view.wait()
-    #             selection_id = select.values[0]
-    #             selection = query['characters'][selection_id]
-    #             await interaction.edit_original_response(content=f'Active character changed to {selection["name"]} '
-    #                                                      f'({selection["note"]})', embed=None, view=None)
-    #             await collection.update_one({'_id': member_id}, {'$set': {f'activeCharacters.{guild_id}': selection_id}})
-    #     else:
-    #         if not query:
-    #             error_title = 'Error'
-    #             error_message = 'You have no registered characters!'
-    #         elif not str(guild_id) in query['activeCharacters']:
-    #             error_title = 'Error'
-    #             error_message = 'You have no active characters on this server!'
-    #         else:
-    #             active_character = query['activeCharacters'][str(guild_id)]
-    #             await interaction.response.send_message(f'Active character: '
-    #                                                     f'{query["characters"][active_character]["name"]} '
-    #                                                     f'({query["characters"][active_character]["note"]})',
-    #                                                     ephemeral=True)
-    #
-    #     if error_message:
-    #         error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
-    #         interaction.response.send_message(embed=error_embed, ephemeral=True)
-    #
-    # @app_commands.command(name='list')
-    # async def character_list(self, interaction: discord.Interaction):
-    #     """
-    #     Lists the player's registered characters.
-    #     """
-    #     member_id = interaction.user.id
-    #     guild_id = interaction.guild_id
-    #     collection = self.mdb['characters']
-    #     query = await collection.find_one({'_id': member_id})
-    #
-    #     if not query or not query['characters']:
-    #         error_embed = discord.Embed(title='Error', description='You have no registered characters!', type='rich')
-    #         await interaction.response.send_message(embed=error_embed, ephemeral=True)
-    #     else:
-    #         ids = []
-    #         for character_id in query['characters']:
-    #             ids.append(character_id)
-    #
-    #         post_embed = discord.Embed(title='Registered Characters', type='rich')
-    #         for character_id in ids:
-    #             char = query['characters'][character_id]
-    #             if str(guild_id) in query['activeCharacters']:
-    #                 if character_id == query['activeCharacters'][str(guild_id)]:
-    #                     post_embed.add_field(name=char['name'] + ' (Active)', value=char['note'], inline=False)
-    #                     continue
-    #
-    #             post_embed.add_field(name=char['name'], value=char['note'], inline=False)
-    #
-    #         await interaction.response.send_message(embed=post_embed, ephemeral=True)
-    #
 
-    #
-    # @app_commands.command(name='delete')
-    # async def character_delete(self, interaction: discord.Interaction, character_name: str):
-    #     """
-    #     Deletes a player character.
-    #
-    #     Arguments:
-    #     <character_name>: The name of the character.
-    #     """
-    #     member_id = interaction.user.id
-    #     guild_id = interaction.guild_id
-    #     collection = self.mdb['characters']
-    #     query = await collection.find_one({'_id': member_id})
-    #     error_title = None
-    #     error_message = None
-    #
-    #     ids = []
-    #     if not query:
-    #         error_title = 'Error!'
-    #         error_message = 'You have no registered characters!'
-    #     else:
-    #         for character_id in query['characters']:
-    #             ids.append(character_id)
-    #
-    #         name = character_name.lower()
-    #         matches = []
-    #         for character_id in ids:
-    #             char = query['characters'][character_id]
-    #             if name in char['name'].lower():
-    #                 matches.append(character_id)
-    #
-    #         if not matches:
-    #             error_title = 'Error!'
-    #             error_message = 'No characters found with that name!'
-    #         elif len(matches) == 1:
-    #             name = query['characters'][matches[0]]['name']
-    #
-    #             # TODO: Create confirmation modal
-    #             await collection.update_one({'_id': member_id}, {'$unset': {f'characters.{matches[0]}': ''}},
-    #                                         upsert=True)
-    #             for guild in query['activeCharacters']:
-    #                 if query[f'activeCharacters'][guild] == matches[0]:
-    #                     await collection.update_one({'_id': member_id}, {'$unset': {f'activeCharacters.{guild_id}': ''}},
-    #                                                 upsert=True)
-    #             await interaction.response.send_message(f'`{name}` deleted!', ephemeral=True)
-    #         else:
-    #             options = []
-    #             for match in matches:
-    #                 char = query['characters'][match]
-    #                 options.append(discord.SelectOption(label=f'{char["name"][:40]} ({char["note"][:40]})',
-    #                                                     value=match))
-    #             select = SingleChoiceDropdown(placeholder='Choose One', options=options)
-    #             view = DropdownView(select)
-    #             await interaction.response.send_message('Multiple matches found!', view=view, ephemeral=True)
-    #             await view.wait()
-    #             selection_id = select.values[0]
-    #             await collection.update_one({'_id': member_id}, {'$unset': {f'characters.{selection_id}': ''}},
-    #                                         upsert=True)
-    #             for guild in query['activeCharacters']:
-    #                 if query[f'activeCharacters'][guild] == selection_id:
-    #                     await collection.update_one({'_id': member_id}, {'$unset': {f'activeCharacters.{guild_id}': ''}},
-    #                                                 upsert=True)
-    #             await interaction.edit_original_response(content=f'`{query["characters"][selection_id]["name"]}` '
-    #                                                              f'deleted!', embed=None, view=None)
-    #
-    #     if error_message:
-    #         error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
-    #         await interaction.response.send_message(embed=error_embed, ephemeral=True)
-    #
-    # @experience_group.command(name='view')
-    # async def view_experience(self, interaction: discord.Interaction):
-    #     """
-    #     Commands for modifying experience points. Displays the current value if no subcommand is used.
-    #     """
-    #     member_id = interaction.user.id
-    #     guild_id = interaction.guild_id
-    #     collection = self.mdb['characters']
-    #     error_title = None
-    #     error_message = None
-    #
-    #     # Load the player's characters
-    #     query = await collection.find_one({'_id': member_id})
-    #     if not query:  # If none exist, output the error
-    #         error_title = 'Error!'
-    #         error_message = 'You have no registered characters!'
-    #     elif not str(guild_id) in query['activeCharacters']:
-    #         error_title = 'Error!'
-    #         error_message = 'You have no active characters on this server!'
-    #     else:  # Otherwise, proceed to query the active character and retrieve its xp
-    #         active_character = query['activeCharacters'][str(guild_id)]
-    #         char = query['characters'][active_character]
-    #         name = char['name']
-    #         xp = char['attributes']['experience']
-    #
-    #         xp_embed = discord.Embed(title=f'{name}', type='rich', description=f'Total Experience: **{xp}**')
-    #         await interaction.response.send_message(embed=xp_embed, ephemeral=True)
-    #
-    #     if error_message:
-    #         error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
-    #         await interaction.response.send_message(embed=error_embed, ephemeral=True)
-    #
+class ListCharactersView(discord.ui.View):
+    def __init__(self, mdb, bot, member_id, guild_id):
+        super().__init__(timeout=None)
+        self.mdb = mdb
+        self.bot = bot
+        self.member_id = member_id
+        self.guild_id = guild_id
+        self.embed = discord.Embed(
+            title='Player Commands - List Characters',
+            description='Registered Characters are listed below. Select a character from the dropdown to activate '
+                        'that character for this server.',
+            type='rich'
+        )
+        self.add_item(PlayerBackButton(CharacterBaseView, mdb, bot, member_id, guild_id))
 
+    async def setup_embed(self):
+        try:
+            self.embed.clear_fields()
+            collection = self.mdb['characters']
+            query = await collection.find_one({'_id': self.member_id})
+            if not query or not query['characters']:
+                self.embed.description = 'You have no registered characters!'
+            else:
+                ids = []
+                for character_id in query['characters']:
+                    ids.append(character_id)
+                for character_id in ids:
+                    character = query['characters'][character_id]
+                    if (str(self.guild_id) in query['activeCharacters']
+                            and character_id == query['activeCharacters'][str(self.guild_id)]):
+                        character_info = (f'{character['name']}: {character['attributes']['experience']} XP '
+                                          f'(Active Character)')
+                    else:
+                        character_info = f'{character['name']}: {character['attributes']['experience']} XP'
+                    self.embed.add_field(name=character_info, value=character['note'], inline=False)
+        except Exception as e:
+            await log_exception(e)
+
+    async def setup_select(self):
+        try:
+            self.active_character_select.options.clear()
+            options = []
+            collection = self.mdb['characters']
+            query = await collection.find_one({'_id': self.member_id})
+            if not query or not query['characters'] or len(query['characters']) == 0:
+                options.append(discord.SelectOption(label='No characters', value='None'))
+            else:
+                for character_id in query['characters']:
+                    character = query['characters'][character_id]
+                    character_name = character['name']
+                    option = discord.SelectOption(label=character_name, value=character_id)
+                    options.append(option)
+                self.active_character_select.disabled = False
+                self.active_character_select.placeholder = 'Select a character to activate on this server'
+
+            self.active_character_select.options = options
+        except Exception as e:
+            await log_exception(e)
+
+    @discord.ui.select(cls=discord.ui.Select, placeholder='You have no registered characters', options=[],
+                       custom_id='active_character_select', disabled=True)
+    async def active_character_select(self, interaction: discord.Interaction, select: discord.ui.Select):
+        try:
+            selected_character_id = select.values[0]
+            collection = self.mdb['characters']
+            await collection.update_one({'_id': self.member_id},
+                                        {'$set': {f'activeCharacters.{self.guild_id}': selected_character_id}},
+                                        upsert=True)
+            await self.setup_embed()
+            await self.setup_select()
+            await interaction.response.edit_message(embed=self.embed, view=self)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RemoveCharacterView(discord.ui.View):
+    def __init__(self, mdb, bot, member_id, guild_id):
+        super().__init__(timeout=None)
+        self.mdb = mdb
+        self.bot = bot
+        self.member_id = member_id
+        self.guild_id = guild_id
+        self.embed = discord.Embed(
+            title='Player Commands - Remove Character',
+            description='Select a character from the dropdown. Confirm to permanently remove that character.',
+            type='rich'
+        )
+        self.add_item(PlayerBackButton(CharacterBaseView, mdb, bot, member_id, guild_id))
+        self.selected_character_id = None
+
+    async def setup_select(self):
+        try:
+            self.remove_character_select.options.clear()
+            options = []
+            collection = self.mdb['characters']
+            query = await collection.find_one({'_id': self.member_id})
+            if not query or not query['characters'] or len(query['characters']) == 0:
+                options.append(discord.SelectOption(label='No characters', value='None'))
+                self.remove_character_select.disabled = True
+            else:
+                for character_id in query['characters']:
+                    character = query['characters'][character_id]
+                    character_name = character['name']
+                    option = discord.SelectOption(label=character_name, value=character_id)
+                    options.append(option)
+                self.remove_character_select.disabled = False
+
+            self.remove_character_select.options = options
+        except Exception as e:
+            await log_exception(e)
+
+    @discord.ui.select(cls=discord.ui.Select, placeholder='Select a character to remove', options=[],
+                       custom_id='remove_character_select')
+    async def remove_character_select(self, interaction: discord.Interaction, select: discord.ui.Select):
+        try:
+            self.selected_character_id = select.values[0]
+            collection = self.mdb['characters']
+            query = await collection.find_one({'_id': self.member_id})
+            character_name = query['characters'][self.selected_character_id]['name']
+            self.embed.add_field(name=f'Removing {character_name}', value='**This action is permanent!** Confirm?')
+            self.confirm_button.disabled = False
+            self.confirm_button.label = f'Confirm removal of {character_name}'
+            await interaction.response.edit_message(embed=self.embed, view=self)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    @discord.ui.button(label='Confirm', style=discord.ButtonStyle.danger, custom_id='confirm_button', disabled=True)
+    async def confirm_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        try:
+            collection = self.mdb['characters']
+            query = await collection.find_one({'_id': self.member_id})
+            await collection.update_one({'_id': self.member_id},
+                                        {'$unset': {f'characters.{self.selected_character_id}': ''}}, upsert=True)
+            for guild in query['activeCharacters']:
+                if query['activeCharacters'][guild] == self.selected_character_id:
+                    await collection.update_one({'_id': self.member_id},
+                                                {'$unset': {f'activeCharacters.{self.guild_id}': ''}}, upsert=True)
+            await self.setup_select()
+            self.embed.clear_fields()
+            self.confirm_button.disabled = True
+            self.confirm_button.label = 'Confirm'
+            self.selected_character_id = None
+            await interaction.response.edit_message(embed=self.embed, view=self)
+        except Exception as e:
+            await log_exception(e, interaction)
 
 
 async def setup(bot):

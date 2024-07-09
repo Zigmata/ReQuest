@@ -40,4 +40,4 @@ async def log_exception(exception, interaction=None):
     logger.error(traceback.format_exc())
     if interaction:
         await interaction.response.defer()
-        await interaction.followup.send(f'An error occurred: {type(exception).__name__}: {exception}', ephemeral=True)
+        await interaction.followup.send(exception, ephemeral=True)
