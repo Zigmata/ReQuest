@@ -36,9 +36,9 @@ class Admin(Cog):
 
     # -------------Private Commands-------------
 
+    @commands.command(name='commandsync', case_insensitive=True, hidden=True, pass_context=True)
     @commands.dm_only()
     @commands.is_owner()
-    @commands.command(name='commandsync', case_insensitive=True, hidden=True, pass_context=True)
     async def command_sync(self, ctx, guild_id=None):
         """
         Syncs the application commands to Discord.
@@ -50,10 +50,10 @@ class Admin(Cog):
         try:
             if guild_id:
                 guild = self.bot.get_guild(int(guild_id))
+                self.bot.tree.copy_global_to(guild=guild)
             else:
                 guild = None
 
-            self.bot.tree.copy_global_to(guild=guild)
             status = await self.bot.tree.sync(guild=guild)
             synced_commands = []
             if guild_id:
@@ -72,8 +72,33 @@ class Admin(Cog):
         except Exception as e:
             await ctx.send(f'There was an error syncing commands: {e}')
 
-    @is_owner()
+    @commands.command(name='commandclear', case_insensitive=True, hidden=True, pass_context=True)
+    @commands.dm_only()
+    @commands.is_owner()
+    async def command_clear(self, ctx, guild_id=None):
+        """
+        Clears application commands. Sync your commands after doing this.
+
+        NOTE: Provide a guild_id argument when testing to clear a specific guild. No argument performs a global clear.
+        """
+
+        try:
+            if guild_id:
+                guild = self.bot.get_guild(int(guild_id))
+            else:
+                guild = None
+
+            self.bot.tree.clear_commands(guild=guild)
+
+            await ctx.author.send('Commands cleared.')
+        except discord.Forbidden:
+            await ctx.send(f'ReQuest does not have the correct scope in the target guild. Add `applications.commands`'
+                           f' permission and try again.')
+        except Exception as e:
+            await ctx.send(f'There was an error syncing commands: {e}')
+
     @app_commands.command(name='admin')
+    @is_owner()
     @app_commands.dm_only()
     async def admin(self, interaction: discord.Interaction):
         """
