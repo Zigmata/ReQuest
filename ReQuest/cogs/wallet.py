@@ -5,9 +5,8 @@ import shortuuid
 from discord import app_commands
 from discord.ext.commands import Cog
 
-from ..utilities.checks import has_gm_or_mod, has_active_character
+from ..utilities.checks import has_active_character
 from ..utilities.supportFunctions import strip_id
-from ..utilities.ui import SingleChoiceDropdown, DropdownView
 
 listener = Cog.listener
 
@@ -41,17 +40,17 @@ class Wallet(Cog):
         elif not character_query:
             error_title = 'Error!'
             error_message = 'You do not have any registered characters!'
-        elif str(guild_id) not in character_query['activeChars']:
+        elif str(guild_id) not in character_query['activeCharacters']:
             error_title = 'Error!'
             error_message = 'You do not have an active character for this server!'
         else:
             for currency in currency_query['currencies']:
                 currency_names.append(currency['name'].lower())
-                if 'denoms' in currency:
-                    for denom in currency['denoms']:
-                        currency_names.append(denom['name'].lower())
+                if 'denominations' in currency:
+                    for denomination in currency['denominations']:
+                        currency_names.append(denomination['name'].lower())
 
-            active_id = character_query['activeChars'][f'{guild_id}']
+            active_id = character_query['activeCharacters'][f'{guild_id}']
             character = character_query['characters'][active_id]
             name = character['name']
             inventory = character['attributes']['inventory']
@@ -69,102 +68,6 @@ class Wallet(Cog):
             post_embed.set_footer(text='Yeah, this output sucks. I\'ll have related denominations nested more'
                                        ' cleanly in a future patch.')
             await interaction.response.send_message(embed=post_embed, ephemeral=private)
-
-        if error_message:
-            error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
-            await interaction.response.send_message(embed=error_embed, ephemeral=True)
-
-    @has_gm_or_mod()
-    @currency_group.command(name='mod')
-    async def currency_mod(self, interaction: discord.Interaction, user_mention: str, currency_name: str,
-                           quantity: int = 1):
-        """
-        Modifies a player's currently active character's inventory. GM Command.
-        Requires an assigned GM role or Server Moderator privileges.
-
-        Arguments:
-        <name>: The name of the inventory.
-        <quantity>: Quantity to give or take.
-        <user_mentions>: User mention(s) of the receiving player(s). Can be chained.
-        """
-        gm_user_id = interaction.user.id
-        guild_id = interaction.guild_id
-        character_collection = self.mdb['characters']
-        guild_collection = self.gdb['currency']
-        transaction_id = str(shortuuid.uuid()[:12])
-        error_title = None
-        error_message = None
-
-        # Make sure the referenced currency is a valid name used in the server
-        currency_query = await guild_collection.find_one({'_id': guild_id})
-        # TODO: Extract to validation function
-        matches = []
-        for currency in currency_query['currencies']:
-            if currency_name.lower() in currency['name'].lower():
-                matches.append(currency['name'])
-            if 'denoms' in currency:
-                denominations = currency['denoms']
-                for i in range(len(denominations)):
-                    if currency_name.lower() in denominations[i]['name'].lower():
-                        matches.append(denominations[i]['name'])
-        if quantity == 0:
-            error_title = 'Invalid Quantity!'
-            error_message = 'Stop being a tease and enter an actual quantity!'
-        elif not matches:
-            error_title = 'Incorrect Currency Name!'
-            error_message = 'No currency with that name is used on this server!'
-        else:
-            member_id = strip_id(user_mention)
-            query = await character_collection.find_one({'_id': member_id})
-            active_character = query['activeChars'][str(guild_id)]
-            inventory = query['characters'][active_character]['attributes']['inventory']
-
-            if len(matches) == 1:
-                cname = matches[0]
-            else:
-                options = []
-                for match in matches:
-                    options.append(discord.SelectOption(label=match))
-                select = SingleChoiceDropdown(placeholder='Choose One', options=options)
-                view = DropdownView(select)
-                if not interaction.response.is_done():  # Make sure this is the first response
-                    await interaction.response.send_message(f'Multiple matches found for {currency_name}!',
-                                                            view=view, ephemeral=True)
-                else:  # If the interaction has been responded to, update the original message
-                    await interaction.edit_original_response(
-                        content=f'Multiple matches found for {currency_name}!', view=view)
-                await view.wait()
-                cname = select.values[0]
-
-            if cname in inventory:
-                current_quantity = inventory[cname]
-                new_quantity = current_quantity + quantity
-                if new_quantity == 0:
-                    await character_collection.update_one({'_id': member_id}, {
-                        '$unset': {f'characters.{active_character}.attributes.inventory.{cname}': ''}}, upsert=True)
-                else:
-                    await character_collection.update_one({'_id': member_id}, {
-                        '$set': {f'characters.{active_character}.attributes.inventory.{cname}': new_quantity}},
-                                                          upsert=True)
-            else:
-                await character_collection.update_one({'_id': member_id}, {
-                    '$set': {f'characters.{active_character}.attributes.inventory.{cname}': quantity}}, upsert=True)
-
-            recipient_string = f'<@!{member_id}> as {query["characters"][active_character]["name"]}'
-
-            currency_embed = discord.Embed(type='rich')
-            if quantity > 0:
-                currency_embed.title = 'Currency Awarded!'
-            elif quantity < 0:
-                currency_embed.title = 'Currency Removed!'
-            currency_embed.description = f'Currency: **{cname}**\nQuantity: **{abs(quantity)}**'
-            currency_embed.add_field(name="Recipient", value=recipient_string)
-            currency_embed.add_field(name='Game Master', value=f'<@!{gm_user_id}>', inline=False)
-            currency_embed.set_footer(text=f'{datetime.utcnow().strftime("%Y-%m-%d")} Transaction ID: {transaction_id}')
-            if interaction.response.is_done():
-                await interaction.edit_original_response(content=None, embed=currency_embed, view=None)
-            else:
-                await interaction.response.send_message(embed=currency_embed)
 
         if error_message:
             error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
@@ -201,8 +104,8 @@ class Wallet(Cog):
             if currency_name.lower() in currency_type['name'].lower():
                 cname = currency_type['name']
                 valid = True
-            if 'denoms' in currency_type:
-                denominations = currency_type['denoms']
+            if 'denominations' in currency_type:
+                denominations = currency_type['denominations']
                 for i in range(len(denominations)):
                     if currency_name.lower() in denominations[i]['name'].lower():
                         cname = denominations[i]['name']
@@ -213,13 +116,13 @@ class Wallet(Cog):
         elif not recipient_query:
             error_title = 'Error!'
             error_message = f'{user_mention} does not have any registered characters!'
-        elif str(guild_id) not in recipient_query['activeChars']:
+        elif str(guild_id) not in recipient_query['activeCharacters']:
             error_title = 'Error!'
             error_message = f'{user_mention} does not have an active character on this server!'
         else:
             transaction_id = str(shortuuid.uuid()[:12])
             donor_query = await character_collection.find_one({'_id': donor_id})
-            donor_active = donor_query['activeChars'][str(guild_id)]
+            donor_active = donor_query['activeCharacters'][str(guild_id)]
             inventory = donor_query['characters'][donor_active]['attributes']['inventory']
 
             if cname not in inventory:
@@ -241,7 +144,7 @@ class Wallet(Cog):
                                                                         f'inventory.{cname}': new_quantity}},
                                                               upsert=True)
 
-                    recipient_active = recipient_query['activeChars'][str(guild_id)]
+                    recipient_active = recipient_query['activeCharacters'][str(guild_id)]
                     recipient_inventory = recipient_query['characters'][recipient_active]['attributes']['inventory']
                     if cname in recipient_inventory:  # Check to see if the recipient has the currency already
                         recipient_current_quantity = recipient_inventory[cname]
@@ -298,8 +201,8 @@ class Wallet(Cog):
             if currency_name.lower() in currency_type['name'].lower():
                 cname = currency_type['name']
                 valid = True
-            if 'denoms' in currency_type:
-                denominations = currency_type['denoms']
+            if 'denominations' in currency_type:
+                denominations = currency_type['denominations']
                 for i in range(len(denominations)):
                     if currency_name.lower() in denominations[i]['name'].lower():
                         cname = denominations[i]['name']
@@ -310,7 +213,7 @@ class Wallet(Cog):
             error_message = 'No currency with that name is used on this server!'
         else:
             query = await character_collection.find_one({'_id': member_id})
-            active_character = query['activeChars'][f'{guild_id}']
+            active_character = query['activeCharacters'][f'{guild_id}']
             character = query['characters'][active_character]
             name = character['name']
             inventory = character['attributes']['inventory']

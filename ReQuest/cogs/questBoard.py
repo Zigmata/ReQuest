@@ -2,9 +2,9 @@ import discord
 import shortuuid
 from discord import app_commands
 from discord.ext.commands import Cog, GroupCog
+
+from ..utilities.checks import has_gm_role
 from ..utilities.supportFunctions import attempt_delete, parse_list, strip_id
-from ..utilities.checks import has_gm_role, has_gm_or_mod
-from ..utilities.ui import SingleChoiceDropdown, DropdownView
 
 listener = Cog.listener
 
@@ -1018,92 +1018,6 @@ class QuestBoard(GroupCog, name='quest', description='Commands for posting and u
 
     # --- GM Options ---
 
-    @has_gm_or_mod()
-    @app_commands.command(name='role')
-    async def role(self, interaction: discord.Interaction, role_name: str = None):
-        """
-        Configures a role to be issued to a GM's party.
-
-        WARNING: Avoid placing ReQuest's role higher than any roles you don't want players to have access to.
-        Placing ReQuest's role above privileged roles could enable GMs to circumvent your server's hierarchy!
-
-        Arguments:
-        [party_role]: The role to set as the calling GM's party role.
-        --(no argument): Displays the current setting.
-        --(role name): Sets the role for questing parties.
-        --(delete|remove): Clears the role.
-        """
-        guild_id = interaction.guild_id
-        guild = self.bot.get_guild(guild_id)
-        user_id = interaction.user.id
-        collection = self.gdb['partyRole']
-        query = await collection.find_one({'guildId': guild_id, 'gm': user_id})
-        error_title = None
-        error_message = None
-
-        if role_name:
-            if role_name.lower() == 'delete' or role_name.lower() == 'remove':
-                if query:
-                    await collection.delete_one({'guildId': guild_id, 'gm': user_id})
-                await interaction.response.send_message('Party role cleared!', ephemeral=True)
-            else:
-                # Search the list of guild roles for all name matches
-                search = filter(lambda r: role_name.lower() in r.name.lower(), guild.roles)
-                matches = []
-                if search:
-                    for match in search:
-                        if match.id == guild_id:
-                            continue  # Prevent the @everyone role from being added to the list
-                        bot_member = guild.get_member(self.bot.user.id)
-                        bot_roles = bot_member.roles
-                        if match.position >= bot_roles[len(bot_roles) - 1].position:
-                            continue  # Prevent roles at or above the bot from being assigned.
-                        matches.append({'name': match.name, 'id': int(match.id)})
-
-                if not matches:
-                    error_title = f'No valid roles matching `{role_name}` were found!'
-                    error_message = 'Check your spelling and use of quotes. ReQuest cannot assign roles above itself ' \
-                                    'in your server hierarchy.'
-                elif len(matches) == 1:
-                    new_role = matches[0]
-                    # Add the new role's ID to the database
-                    await collection.update_one({'guildId': guild_id, 'gm': user_id},
-                                                {'$set': {'role': new_role['id']}}, upsert=True)
-                    # Report the changes made
-                    role_embed = discord.Embed(title='Party Role Set!', type='rich',
-                                               description=f'<@&{new_role["id"]}>')
-                    await interaction.response.send_message(embed=role_embed, ephemeral=True)
-                elif len(matches) > 1:
-                    options = []
-                    for match in matches:
-                        options.append(discord.SelectOption(label=match['name'], value=str(match['id'])))
-                    select = SingleChoiceDropdown(placeholder='Choose One', options=options)
-                    view = DropdownView(select)
-                    await interaction.response.send_message('Multiple matches found!', view=view, ephemeral=True)
-                    await view.wait()
-                    new_role = int(select.values[0])
-
-                    # Add the new role's ID to the database
-                    await collection.update_one({'guildId': guild_id, 'gm': user_id}, {'$set': {'role': new_role}},
-                                                upsert=True)
-                    # Report the changes made
-                    role_embed = discord.Embed(title='Party Role Set!', type='rich', description=f'<@&{new_role}>')
-                    await interaction.edit_original_response(content=None, embed=role_embed, view=None)
-
-        # If no argument is provided, query the db for the current setting
-        else:
-            if not query:
-                error_title = 'Missing Configuration!'
-                error_message = f'Party role not set! Configure with `/quest role <role name>`'
-            else:
-                current_role = query['role']
-                post_embed = discord.Embed(title='Quest - Role (This Server)', type='rich',
-                                           description=f'<@&{current_role}>')
-                await interaction.response.send_message(embed=post_embed, ephemeral=True)
-
-        if error_message:
-            error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
-            await interaction.response.send_message(embed=error_embed, ephemeral=True)
 
 
 async def setup(bot):

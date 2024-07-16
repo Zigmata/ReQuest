@@ -7,8 +7,9 @@ import shortuuid
 from discord import app_commands
 from discord.ext.commands import Cog
 
+from ..utilities.checks import has_active_character
 from ..utilities.supportFunctions import log_exception
-from ..utilities.ui import MenuDoneButton, PlayerMenuButton, PlayerBackButton
+from ..utilities.ui import MenuDoneButton, PlayerMenuButton, PlayerBackButton, TradeModal
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -33,6 +34,17 @@ class Player(Cog):
             await interaction.response.send_message(embed=view.embed, view=view, ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)
+
+
+@has_active_character()
+@app_commands.guild_only()
+@app_commands.context_menu(name='Trade')
+async def trade(interaction: discord.Interaction, target: discord.Member):
+    try:
+        modal = TradeModal(target=target)
+        await interaction.response.send_modal(modal)
+    except Exception as e:
+        await log_exception(e, interaction)
 
 
 class PlayerBaseView(discord.ui.View):
@@ -306,3 +318,4 @@ class RemoveCharacterView(discord.ui.View):
 
 async def setup(bot):
     await bot.add_cog(Player(bot))
+    bot.tree.add_command(trade)
