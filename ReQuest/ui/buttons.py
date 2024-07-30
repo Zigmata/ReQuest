@@ -671,3 +671,71 @@ class AdminReloadCogButton(discord.ui.Button):
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)
+
+
+class ViewInventoryButton(discord.ui.Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='View',
+            style=discord.ButtonStyle.secondary,
+            custom_id='view_inventory_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            view = self.calling_view
+            character = view.active_character
+            character_name = character['name']
+            inventory = character['attributes']['inventory']
+            player_currencies = character['attributes']['currency']
+            items = []
+            currencies = []
+
+            for item in inventory:
+                pair = (str(item), f'**{inventory[item]}**')
+                value = ': '.join(pair)
+                items.append(value)
+
+            for currency in player_currencies:
+                pair = (str(currency), f'**{player_currencies[currency]}**')
+                value = ': '.join(pair)
+                currencies.append(value)
+
+            post_embed = discord.Embed(title=f'{character_name}\'s Possessions', type='rich',
+                                       description='\n'.join(items))
+            post_embed.add_field(name='Currency', value='\n'.join(currencies))
+
+            await interaction.response.send_message(embed=post_embed, ephemeral=True)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class SpendCurrencyButton(discord.ui.Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Spend Currency',
+            style=discord.ButtonStyle.secondary,
+            custom_id='spend_currency_button'
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.send_message('Not Implemented!', ephemeral=True)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class TradeButton(discord.ui.Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Trade',
+            style=discord.ButtonStyle.secondary,
+            custom_id='trade_button'
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.send_message('Not Implemented!', ephemeral=True)
+        except Exception as e:
+            await log_exception(e, interaction)

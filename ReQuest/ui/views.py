@@ -7,7 +7,8 @@ from ReQuest.ui.buttons import PlayerMenuButton, MenuDoneButton, PlayerBackButto
     RemoveCharacterButton, ConfirmButton, QuestAnnounceRoleRemoveButton, GMRoleRemoveButton, QuestSummaryToggleButton, \
     PlayerExperienceToggleButton, RemoveDenominationConfirmButton, ToggleDoubleButton, AddDenominationButton, \
     RemoveDenominationButton, AddCurrencyButton, EditCurrencyButton, RemoveCurrencyButton, RemoveCurrencyConfirmButton, \
-    AllowlistAddServerButton, ConfirmAllowlistRemoveButton, AdminLoadCogButton, AdminReloadCogButton
+    AllowlistAddServerButton, ConfirmAllowlistRemoveButton, AdminLoadCogButton, AdminReloadCogButton, \
+    ViewInventoryButton, SpendCurrencyButton, TradeButton
 from ReQuest.ui.selects import GMRoleRemoveSelect, SingleChannelConfigSelect, ActiveCharacterSelect, \
     RemoveCharacterSelect, AddGMRoleSelect, QuestAnnounceRoleSelect, ConfigWaitListSelect, RemoveDenominationSelect, \
     EditCurrencySelect, RemoveCurrencySelect, RemoveGuildAllowlistSelect
@@ -797,6 +798,12 @@ class InventoryBaseView(discord.ui.View):
         self.member_id = member_id
         self.guild_id = guild_id
         self.active_character = None
+        self.view_inventory_button = ViewInventoryButton(self)
+        self.spend_currency_button = SpendCurrencyButton(self)
+        self.trade_button = TradeButton(self)
+        self.add_item(self.view_inventory_button)
+        self.add_item(self.spend_currency_button)
+        self.add_item(self.trade_button)
         self.add_item(PlayerBackButton(PlayerBaseView, mdb, bot, member_id, guild_id))
 
     async def setup_embed(self):
@@ -817,44 +824,3 @@ class InventoryBaseView(discord.ui.View):
             active_character_id = query['activeCharacters'][str(self.guild_id)]
             self.active_character = query['characters'][active_character_id]
             self.embed.add_field(name='Active Character', value=self.active_character['name'])
-
-    @discord.ui.button(label='View', style=discord.ButtonStyle.secondary, custom_id='view_inventory_button')
-    async def view_inventory_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        try:
-            character_name = self.active_character['name']
-            inventory = self.active_character['attributes']['inventory']
-            player_currencies = self.active_character['attributes']['currency']
-            items = []
-            currencies = []
-
-            for item in inventory:
-                pair = (str(item), f'**{inventory[item]}**')
-                value = ': '.join(pair)
-                items.append(value)
-
-            for currency in player_currencies:
-                pair = (str(currency), f'**{player_currencies[currency]}**')
-                value = ': '.join(pair)
-                currencies.append(value)
-
-            post_embed = discord.Embed(title=f'{character_name}\'s Possessions', type='rich',
-                                       description='\n'.join(items))
-            post_embed.add_field(name='Currency', value='\n'.join(currencies))
-
-            await interaction.response.send_message(embed=post_embed, ephemeral=True)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-    @discord.ui.button(label='Spend Currency', style=discord.ButtonStyle.secondary, custom_id='spend_currency_button')
-    async def spend_currency_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        try:
-            return
-        except Exception as e:
-            await log_exception(e, interaction)
-
-    @discord.ui.button(label='Trade', style=discord.ButtonStyle.secondary, custom_id='trade_button')
-    async def trade_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        try:
-            return
-        except Exception as e:
-            await log_exception(e, interaction)
