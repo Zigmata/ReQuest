@@ -16,7 +16,6 @@ load_extensions:
     - 'ReQuest.cogs.config'
     - 'ReQuest.cogs.gm'
     - 'ReQuest.cogs.help'
-    - 'ReQuest.cogs.inventory'
     - 'ReQuest.cogs.player'
     - 'ReQuest.cogs.playerBoard'
     - 'ReQuest.cogs.questBoard'

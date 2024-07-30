@@ -6,7 +6,7 @@ from discord import ButtonStyle, Interaction
 from discord.ui import Button
 
 from .modals import CharacterRegisterModal, AddCurrencyDenominationTextModal, AddCurrencyTextModal, AllowServerModal, \
-    AdminCogTextModal
+    AdminCogTextModal, SpendCurrencyModal
 from ..utilities.supportFunctions import log_exception
 
 logging.basicConfig(level=logging.INFO)
@@ -686,7 +686,6 @@ class ViewInventoryButton(discord.ui.Button):
         try:
             view = self.calling_view
             character = view.active_character
-            character_name = character['name']
             inventory = character['attributes']['inventory']
             player_currencies = character['attributes']['currency']
             items = []
@@ -702,11 +701,13 @@ class ViewInventoryButton(discord.ui.Button):
                 value = ': '.join(pair)
                 currencies.append(value)
 
-            post_embed = discord.Embed(title=f'{character_name}\'s Possessions', type='rich',
-                                       description='\n'.join(items))
-            post_embed.add_field(name='Currency', value='\n'.join(currencies))
+            await view.setup_embed()
+            view.embed.add_field(name='Possessions',
+                                 value='\n'.join(items))
+            view.embed.add_field(name='Currency',
+                                 value='\n'.join(currencies))
 
-            await interaction.response.send_message(embed=post_embed, ephemeral=True)
+            await interaction.response.edit_message(embed=view.embed, view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -718,10 +719,13 @@ class SpendCurrencyButton(discord.ui.Button):
             style=discord.ButtonStyle.secondary,
             custom_id='spend_currency_button'
         )
+        self.calling_view = calling_view
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            await interaction.response.send_message('Not Implemented!', ephemeral=True)
+            view = self.calling_view
+            modal = SpendCurrencyModal(view)
+            await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -733,6 +737,7 @@ class TradeButton(discord.ui.Button):
             style=discord.ButtonStyle.secondary,
             custom_id='trade_button'
         )
+        self.calling_view = calling_view
 
     async def callback(self, interaction: discord.Interaction):
         try:

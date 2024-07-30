@@ -785,11 +785,12 @@ class InventoryBaseView(discord.ui.View):
             title='Player Commands - Inventory',
             description=(
                 '__**View**__\n'
-                'Displays the inventory of the active character.\n\n'
+                'Displays your inventory.\n\n'
                 '__**Spend Currency**__\n'
-                'Spend some of the active character\'s currency.\n\n'
+                'Spend some currency.\n\n'
                 '__**Trade**__\n'
                 'Trade with another character.\n\n'
+                '------\n\n'
             ),
             type='rich'
         )
@@ -807,6 +808,7 @@ class InventoryBaseView(discord.ui.View):
         self.add_item(PlayerBackButton(PlayerBaseView, mdb, bot, member_id, guild_id))
 
     async def setup_embed(self):
+        self.embed.clear_fields()
         collection = self.mdb['characters']
         query = await collection.find_one({'_id': self.member_id})
         if not query:
@@ -823,4 +825,4 @@ class InventoryBaseView(discord.ui.View):
         else:
             active_character_id = query['activeCharacters'][str(self.guild_id)]
             self.active_character = query['characters'][active_character_id]
-            self.embed.add_field(name='Active Character', value=self.active_character['name'])
+            self.embed.title = f'Player Commands - {self.active_character['name']}\'s Inventory'

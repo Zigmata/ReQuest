@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timezone
 
 import discord
@@ -6,7 +7,11 @@ import shortuuid
 from discord.ui import Modal
 
 from .inputs import AddCurrencyDenominationTextInput
-from ..utilities.supportFunctions import find_currency_or_denomination, log_exception, trade_currency, trade_item
+from ..utilities.supportFunctions import find_currency_or_denomination, log_exception, trade_currency, trade_item, \
+    normalize_currency_keys, consolidate_currency
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class TradeModal(Modal):
@@ -304,5 +309,112 @@ class AdminCogTextModal(discord.ui.Modal):
     async def on_submit(self, interaction: discord.Interaction):
         try:
             await self._on_submit(interaction, self.text_input.value)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class SpendCurrencyModal(discord.ui.Modal):
+    def __init__(self, calling_view):
+        super().__init__(
+            title=f'Spend Currency',
+            timeout=180
+        )
+        self.calling_view = calling_view
+        self.currency_name_text_input = discord.ui.TextInput(label='Currency Name',
+                                                             style=discord.TextStyle.short,
+                                                             placeholder=f'Enter the name of the currency you are '
+                                                                         f'spending',
+                                                             custom_id='currency_name_text_input',
+                                                             required=True)
+        self.currency_amount_text_input = discord.ui.TextInput(label='Amount',
+                                                               style=discord.TextStyle.short,
+                                                               placeholder='Enter the amount to spend',
+                                                               custom_id='currency_amount_text_input',
+                                                               required=True)
+        self.add_item(self.currency_name_text_input)
+        self.add_item(self.currency_amount_text_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            currency_collection = interaction.client.gdb['currency']
+            currency_query = await currency_collection.find_one({'_id': interaction.guild_id})
+
+            if not currency_query:
+                raise Exception('Currency definition not found for this server')
+
+            # Validate currency name
+            currency_name = self.currency_name_text_input.value.strip().lower()
+            amount = float(self.currency_amount_text_input.value.strip())
+
+            if amount <= 0:
+                raise ValueError('You cannot spend a negative amount of currency')
+
+            base_currency_name, currency_parent_name = find_currency_or_denomination(currency_query, currency_name)
+            if not base_currency_name:
+                raise Exception('Currency or denomination not found')
+
+            base_currency_name = currency_parent_name
+            denominations = {d['name'].lower(): d['value'] for currency in currency_query['currencies'] if
+                             currency['name'].lower() == base_currency_name.lower() for d in currency['denominations']}
+            denominations[base_currency_name.lower()] = 1.0
+
+            logger.info(f'Denominations: {denominations}')
+
+            user_id = interaction.user.id
+            guild_id = interaction.guild_id
+            character_collection = interaction.client.mdb['characters']
+
+            character_query = await character_collection.find_one({'_id': user_id})
+            if not character_query:
+                raise Exception('You do not have any characters!')
+
+            if not str(guild_id) in character_query['activeCharacters']:
+                raise Exception('You do not have any characters activated on this server!')
+
+            active_character_id = character_query['activeCharacters'][str(guild_id)]
+            character = character_query['characters'][active_character_id]
+
+            user_currency = normalize_currency_keys(character['attributes'].get('currency', {}))
+
+            # Convert the total currency of the user to the lowest denomination
+            user_total_in_lowest_denomination = sum(
+                user_currency.get(denomination, 0) * (value / min(denominations.values())) for
+                denomination, value in denominations.items())
+            amount_in_lowest_denomination = amount * (denominations[currency_name] / min(denominations.values()))
+
+            if user_total_in_lowest_denomination < amount_in_lowest_denomination:
+                raise Exception('You have insufficient funds to cover that transaction.')
+
+            # Deduct the amount from the user's total in the lowest denomination
+            user_total_in_lowest_denomination -= amount_in_lowest_denomination
+
+            # Convert the user's remaining total back to the original denominations
+            remaining_user_currency = {}
+            for denomination, value in sorted(denominations.items(), key=lambda x: -x[1]):
+                denomination_value_in_lowest_denomination = value / min(denominations.values())
+                if user_total_in_lowest_denomination >= denomination_value_in_lowest_denomination:
+                    remaining_user_currency[denomination] = int(user_total_in_lowest_denomination //
+                                                                denomination_value_in_lowest_denomination)
+                    user_total_in_lowest_denomination %= denomination_value_in_lowest_denomination
+
+            # Consolidate the user's currency
+            user_currency = consolidate_currency(remaining_user_currency, denominations)
+
+            user_currency_db = {k.capitalize(): v for k, v in user_currency.items()}
+
+            await character_collection.update_one(
+                {'_id': user_id,
+                 f'characters.{active_character_id}.attributes.currency': {'$exists': True}},
+                {'$set': {f'characters.{active_character_id}.attributes.currency': user_currency_db}}, upsert=True
+            )
+
+            await self.calling_view.setup_embed()
+            self.calling_view.embed.add_field(name='Spent',
+                                              value=f'{int(amount)} {currency_name.capitalize()}',
+                                              inline=False)
+            self.calling_view.embed.add_field(name=f'Remaining',
+                                              value=', '.join([f'{amount} {denomination}' for denomination, amount
+                                                               in user_currency_db.items()]))
+            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
