@@ -5,7 +5,7 @@ import discord.ui
 from discord import ButtonStyle, Interaction
 from discord.ui import Button
 
-from .modals import CharacterRegisterModal
+from .modals import CharacterRegisterModal, AddCurrencyDenominationTextModal
 from ..utilities.supportFunctions import log_exception
 
 logging.basicConfig(level=logging.INFO)
@@ -365,3 +365,148 @@ class GMRoleRemoveButton(discord.ui.Button):
             await interaction.response.edit_message(embed=self.new_view.embed, view=self.new_view)
         except Exception as e:
             await log_exception(e, interaction)
+
+
+class QuestSummaryToggleButton(discord.ui.Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Toggle Quest Summary',
+            style=discord.ButtonStyle.primary,
+            custom_id='quest_summary_toggle_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            guild_id = interaction.guild_id
+            collection = interaction.client.gdb['questSummary']
+            query = await collection.find_one({'_id': guild_id})
+            if not query:
+                await collection.insert_one({'_id': guild_id, 'questSummary': True})
+            else:
+                if query['questSummary']:
+                    await collection.update_one({'_id': guild_id}, {'$set': {'questSummary': False}})
+                else:
+                    await collection.update_one({'_id': guild_id}, {'$set': {'questSummary': True}})
+
+            await self.calling_view.setup_embed()
+            await interaction.response.edit_message(embed=self.calling_view.embed)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class PlayerExperienceToggleButton(discord.ui.Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Toggle Player Experience',
+            style=discord.ButtonStyle.primary,
+            custom_id='config_player_experience_toggle_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            guild_id = interaction.guild_id
+            collection = interaction.client.gdb['playerExperience']
+            query = await collection.find_one({'_id': guild_id})
+            if query and query['playerExperience']:
+                await collection.update_one({'_id': guild_id}, {'$set': {'playerExperience': False}},
+                                            upsert=True)
+            else:
+                await collection.update_one({'_id': guild_id}, {'$set': {'playerExperience': True}},
+                                            upsert=True)
+
+            await self.calling_view.setup_embed()
+            await interaction.response.edit_message(embed=self.calling_view.embed)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RemoveDenominationConfirmButton(discord.ui.Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Confirm',
+            style=discord.ButtonStyle.danger,
+            custom_id='remove_denomination_confirm_button',
+            disabled=True
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await self.calling_view.remove_currency_denomination(self.calling_view.selected_denomination_name)
+            self.calling_view.embed.clear_fields()
+            await self.calling_view.setup_select()
+            self.disabled = True
+            self.label = 'Confirm'
+            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+        except Exception as e:
+            await log_exception(e)
+
+
+class ToggleDoubleButton(discord.ui.Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Select a currency',
+            style=discord.ButtonStyle.secondary,
+            custom_id='toggle_double_button',
+            disabled=True
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            view = self.calling_view
+            currency_name = view.selected_currency_name
+            collection = interaction.client.gdb['currency']
+            query = await collection.find_one({'_id': interaction.guild_id, 'currencies.name': currency_name})
+            currency = next((item for item in query['currencies'] if item['name'] == currency_name), None)
+            if currency['isDouble']:
+                value = False
+            else:
+                value = True
+            await collection.update_one({'_id': interaction.guild_id, 'currencies.name': currency_name},
+                                        {'$set': {'currencies.$.isDouble': value}})
+            await view.setup_embed(currency_name)
+            await interaction.response.edit_message(embed=view.embed, view=view)
+        except Exception as e:
+            await log_exception(e)
+
+
+class AddDenominationButton(discord.ui.Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Select a currency',
+            style=discord.ButtonStyle.success,
+            custom_id='add_denomination_button',
+            disabled=True
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            new_modal = AddCurrencyDenominationTextModal(
+                calling_view=self.calling_view,
+                base_currency_name=self.calling_view.selected_currency_name
+            )
+            await interaction.response.send_modal(new_modal)
+        except Exception as e:
+            await log_exception(e)
+
+
+class RemoveDenominationButton(discord.ui.Button):
+    def __init__(self, new_view):
+        super().__init__(
+            label='Select a currency',
+            style=discord.ButtonStyle.danger,
+            custom_id='remove_denomination_button',
+            disabled=True
+        )
+        self.new_view = new_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await self.new_view.setup_select()
+            await interaction.response.edit_message(embed=self.new_view.embed, view=self.new_view)
+        except Exception as e:
+            await log_exception(e)

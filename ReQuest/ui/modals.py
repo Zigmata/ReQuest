@@ -199,13 +199,11 @@ class AddCurrencyTextModal(discord.ui.Modal):
 
 
 class AddCurrencyDenominationTextModal(discord.ui.Modal):
-    def __init__(self, guild_id, gdb, calling_view, base_currency_name):
+    def __init__(self, calling_view, base_currency_name):
         super().__init__(
             title=f'Add {base_currency_name} Denomination',
             timeout=300
         )
-        self.guild_id = guild_id
-        self.gdb = gdb
         self.calling_view = calling_view
         self.base_currency_name = base_currency_name
         self.denomination_name_text_input = AddCurrencyDenominationTextInput(input_type='Name',
@@ -217,9 +215,10 @@ class AddCurrencyDenominationTextModal(discord.ui.Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            guild_id = interaction.guild_id
             new_name = self.denomination_name_text_input.value
-            collection = self.gdb['currency']
-            query = await collection.find_one({'_id': self.guild_id})
+            collection = interaction.client.gdb['currency']
+            query = await collection.find_one({'_id': guild_id})
             for currency in query['currencies']:
                 if new_name.lower() == currency['name'].lower():
                     raise Exception(f'New denomination name cannot match an existing currency on this server! Found '
@@ -237,7 +236,7 @@ class AddCurrencyDenominationTextModal(discord.ui.Modal):
                     raise Exception(f'Denominations under a single currency must have unique values! '
                                     f'{using_name} already has this value assigned.')
 
-            await collection.update_one({'_id': self.guild_id, 'currencies.name': self.base_currency_name},
+            await collection.update_one({'_id': guild_id, 'currencies.name': self.base_currency_name},
                                         {'$push': {'currencies.$.denominations': {
                                             'name': new_name,
                                             'value': float(self.denomination_value_text_input.value)}}},

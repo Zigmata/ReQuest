@@ -4,11 +4,13 @@ import discord
 
 from ReQuest.ui.buttons import PlayerMenuButton, MenuDoneButton, PlayerBackButton, ConfigMenuButton, ConfigBackButton, \
     AdminMenuButton, AdminBackButton, AdminShutdownButton, RegisterCharacterButton, ListCharactersButton, \
-    RemoveCharacterButton, ConfirmButton, QuestAnnounceRoleRemoveButton, GMRoleRemoveButton
-from ReQuest.ui.modals import AddCurrencyTextModal, AdminCogTextModal, AllowServerModal, \
-    AddCurrencyDenominationTextModal
+    RemoveCharacterButton, ConfirmButton, QuestAnnounceRoleRemoveButton, GMRoleRemoveButton, QuestSummaryToggleButton, \
+    PlayerExperienceToggleButton, RemoveDenominationConfirmButton, ToggleDoubleButton, AddDenominationButton, \
+    RemoveDenominationButton
+from ReQuest.ui.modals import AddCurrencyTextModal, AdminCogTextModal, AllowServerModal
 from ReQuest.ui.selects import GMRoleRemoveSelect, SingleChannelConfigSelect, ActiveCharacterSelect, \
-    RemoveCharacterSelect, AddGMRoleSelect, QuestAnnounceRoleSelect
+    RemoveCharacterSelect, AddGMRoleSelect, QuestAnnounceRoleSelect, ConfigWaitListSelect, RemoveDenominationSelect, \
+    EditCurrencySelect
 from ReQuest.utilities.supportFunctions import log_exception
 
 logging.basicConfig(level=logging.INFO)
@@ -258,7 +260,7 @@ class ConfigRolesView(discord.ui.View):
 
 
 class ConfigGMRoleRemoveView(discord.ui.View):
-    def __init__(self, guild_id, gdb, options):
+    def __init__(self, guild_id, gdb):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
             title='Server Configuration - Remove GM Role(s)',
@@ -380,6 +382,8 @@ class ConfigQuestsView(discord.ui.View):
         )
         self.guild_id = guild_id
         self.gdb = gdb
+        self.add_item(ConfigWaitListSelect(self))
+        self.add_item(QuestSummaryToggleButton(self))
         self.add_item(ConfigBackButton(ConfigBaseView, guild_id, gdb))
 
     async def query_quest_config(self, config_type):
@@ -406,47 +410,6 @@ class ConfigQuestsView(discord.ui.View):
         except Exception as e:
             await log_exception(e)
 
-    @discord.ui.button(label='Toggle Quest Summary', style=discord.ButtonStyle.primary,
-                       custom_id='config_quest_summary_toggle_button')
-    async def config_quest_summary_toggle_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        try:
-            collection = self.gdb['questSummary']
-            query = await collection.find_one({'_id': self.guild_id})
-            if not query:
-                await collection.insert_one({'_id': self.guild_id, 'questSummary': True})
-            else:
-                if query['questSummary']:
-                    await collection.update_one({'_id': self.guild_id}, {'$set': {'questSummary': False}})
-                else:
-                    await collection.update_one({'_id': self.guild_id}, {'$set': {'questSummary': True}})
-
-            await self.setup_embed()
-            await interaction.response.edit_message(embed=self.embed)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-    @discord.ui.select(cls=discord.ui.Select,
-                       row=0,
-                       options=[
-                           discord.SelectOption(label='0 (Disabled)', value='0'),
-                           discord.SelectOption(label='1', value='1'),
-                           discord.SelectOption(label='2', value='2'),
-                           discord.SelectOption(label='3', value='3'),
-                           discord.SelectOption(label='4', value='4'),
-                           discord.SelectOption(label='5', value='5')
-                       ],
-                       placeholder='Select Wait List size',
-                       custom_id='config_wait_list_select')
-    async def config_wait_list_select(self, interaction: discord.Interaction, select: discord.ui.Select):
-        try:
-            collection = self.gdb['questWaitList']
-            await collection.update_one({'_id': self.guild_id}, {'$set': {'questWaitList': int(select.values[0])}},
-                                        upsert=True)
-            await self.setup_embed()
-            await interaction.response.edit_message(embed=self.embed)
-        except Exception as e:
-            await log_exception(e, interaction)
-
 
 class ConfigPlayersView(discord.ui.View):
     def __init__(self, guild_id, gdb):
@@ -462,6 +425,7 @@ class ConfigPlayersView(discord.ui.View):
         )
         self.guild_id = guild_id
         self.gdb = gdb
+        self.add_item(PlayerExperienceToggleButton(self))
         self.add_item(ConfigBackButton(ConfigBaseView, guild_id, gdb))
 
     async def query_player_config(self, config_type):
@@ -486,45 +450,32 @@ class ConfigPlayersView(discord.ui.View):
         except Exception as e:
             await log_exception(e)
 
-    @discord.ui.button(label='Toggle Player Experience', style=discord.ButtonStyle.primary,
-                       custom_id='config_player_experience_toggle_button')
-    async def config_player_experience_toggle_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        try:
-            collection = self.gdb['playerExperience']
-            query = await collection.find_one({'_id': self.guild_id})
-            if query and query['playerExperience']:
-                await collection.update_one({'_id': self.guild_id}, {'$set': {'playerExperience': False}},
-                                            upsert=True)
-            else:
-                await collection.update_one({'_id': self.guild_id}, {'$set': {'playerExperience': True}},
-                                            upsert=True)
-
-            await self.setup_embed()
-            await interaction.response.edit_message(embed=self.embed)
-        except Exception as e:
-            await log_exception(e, interaction)
-
 
 class ConfigRemoveDenominationView(discord.ui.View):
-    def __init__(self, guild_id, gdb, currency_name):
+    def __init__(self, guild_id, gdb, calling_view):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
-            title=f'Server Configuration - Remove {currency_name} Denomination',
+            title=f'Server Configuration - Remove Denomination',
             description='Select a denomination to remove.',
             type='rich'
         )
         self.guild_id = guild_id
         self.gdb = gdb
-        self.currency_name = currency_name
+        self.calling_view = calling_view
         self.selected_denomination_name = None
+        self.remove_denomination_select = RemoveDenominationSelect(self)
+        self.remove_denomination_confirm_button = RemoveDenominationConfirmButton(self)
+        self.add_item(self.remove_denomination_select)
+        self.add_item(self.remove_denomination_confirm_button)
         self.add_item(ConfigBackButton(ConfigEditCurrencyView, guild_id, gdb, setup_embed=False))
 
     async def setup_select(self):
         try:
+            currency_name = self.calling_view.selected_currency_name
             self.remove_denomination_select.options.clear()
             collection = self.gdb['currency']
-            query = await collection.find_one({'_id': self.guild_id, 'currencies.name': self.currency_name})
-            currency = next((item for item in query['currencies'] if item['name'] == self.currency_name), None)
+            query = await collection.find_one({'_id': self.guild_id, 'currencies.name': currency_name})
+            currency = next((item for item in query['currencies'] if item['name'] == currency_name), None)
             logger.info(f'Found Currency: {currency}')
             denominations = currency['denominations']
             if len(denominations) > 0:
@@ -536,7 +487,7 @@ class ConfigRemoveDenominationView(discord.ui.View):
                 self.remove_denomination_select.options.append(discord.SelectOption(label='None available',
                                                                                     value='None'))
                 self.remove_denomination_select.placeholder = (f'There are no remaining denominations for '
-                                                               f'{self.currency_name}.')
+                                                               f'{currency_name}.')
                 self.remove_denomination_select.disabled = True
         except Exception as e:
             await log_exception(e)
@@ -552,33 +503,9 @@ class ConfigRemoveDenominationView(discord.ui.View):
     async def remove_currency_denomination(self, denomination_name):
         try:
             collection = self.gdb['currency']
-            await collection.update_one({'_id': self.guild_id, 'currencies.name': self.currency_name},
+            currency_name = self.calling_view.selected_currency_name
+            await collection.update_one({'_id': self.guild_id, 'currencies.name': currency_name},
                                         {'$pull': {'currencies.$.denominations': {'name': denomination_name}}})
-        except Exception as e:
-            await log_exception(e)
-
-    @discord.ui.select(cls=discord.ui.Select, placeholder='Select a denomination', options=[],
-                       custom_id='remove_denomination_select', row=0)
-    async def remove_denomination_select(self, interaction: discord.Interaction, select: discord.ui.Select):
-        try:
-            self.selected_denomination_name = select.values[0]
-            self.remove_denomination_confirm_button.label = f'Confirm deletion of {self.selected_denomination_name}'
-            self.remove_denomination_confirm_button.disabled = False
-            await self.setup_embed()
-            await interaction.response.edit_message(embed=self.embed, view=self)
-        except Exception as e:
-            await log_exception(e)
-
-    @discord.ui.button(label='Confirm', style=discord.ButtonStyle.danger,
-                       custom_id='remove_denomination_confirm_button', disabled=True)
-    async def remove_denomination_confirm_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        try:
-            await self.remove_currency_denomination(self.selected_denomination_name)
-            self.embed.clear_fields()
-            await self.setup_select()
-            self.remove_denomination_confirm_button.disabled = True
-            self.remove_denomination_confirm_button.label = 'Confirm'
-            await interaction.response.edit_message(embed=self.embed, view=self)
         except Exception as e:
             await log_exception(e)
 
@@ -604,8 +531,17 @@ class ConfigEditCurrencyView(discord.ui.View):
         self.guild_id = guild_id
         self.gdb = gdb
         # TODO: Implement (self.collection = self.gdb['currency']) in classes instead of every function
-        self.add_item(ConfigBackButton(ConfigCurrencyView, guild_id, gdb))
         self.selected_currency_name = None
+        self.remove_denomination_view = ConfigRemoveDenominationView(self.guild_id, self.gdb, self)
+        self.edit_currency_select = EditCurrencySelect(self)
+        self.toggle_double_button = ToggleDoubleButton(self)
+        self.add_denomination_button = AddDenominationButton(self)
+        self.remove_denomination_button = RemoveDenominationButton(self.remove_denomination_view)
+        self.add_item(self.edit_currency_select)
+        self.add_item(self.toggle_double_button)
+        self.add_item(self.add_denomination_button)
+        self.add_item(self.remove_denomination_button)
+        self.add_item(ConfigBackButton(ConfigCurrencyView, guild_id, gdb))
 
     async def setup_embed(self, currency_name):
         try:
@@ -648,63 +584,6 @@ class ConfigEditCurrencyView(discord.ui.View):
             for currency in query['currencies']:
                 name = currency['name']
                 self.edit_currency_select.options.append(discord.SelectOption(label=name, value=name))
-        except Exception as e:
-            await log_exception(e)
-
-    @discord.ui.select(cls=discord.ui.Select, placeholder='Choose a currency to edit', options=[],
-                       custom_id='edit_currency_select', row=0)
-    async def edit_currency_select(self, interaction: discord.Interaction, select: discord.ui.Select):
-        try:
-            self.selected_currency_name = select.values[0]
-            self.toggle_double_button.disabled = False
-            self.toggle_double_button.label = f'Toggle Display for {self.selected_currency_name}'
-            self.add_denomination_button.disabled = False
-            self.add_denomination_button.label = f'Add Denomination to {self.selected_currency_name}'
-            self.remove_denomination_button.label = f'Remove Denomination from {self.selected_currency_name}'
-            await self.setup_embed(self.selected_currency_name)
-            await interaction.response.edit_message(embed=self.embed, view=self)
-        except Exception as e:
-            await log_exception(e)
-
-    @discord.ui.button(label='Select a currency', style=discord.ButtonStyle.secondary, custom_id='toggle_double_button',
-                       disabled=True)
-    async def toggle_double_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        try:
-            collection = self.gdb['currency']
-            query = await collection.find_one({'_id': self.guild_id, 'currencies.name': self.selected_currency_name})
-            currency = next((item for item in query['currencies'] if item['name'] == self.selected_currency_name), None)
-            if currency['isDouble']:
-                value = False
-            else:
-                value = True
-            await collection.update_one({'_id': self.guild_id, 'currencies.name': self.selected_currency_name},
-                                        {'$set': {'currencies.$.isDouble': value}})
-            await self.setup_embed(self.selected_currency_name)
-            await interaction.response.edit_message(embed=self.embed, view=self)
-        except Exception as e:
-            await log_exception(e) \
- \
-    @discord.ui.button(label='Select a currency', style=discord.ButtonStyle.success,
-                       custom_id='add_denomination_button', disabled=True)
-    async def add_denomination_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        try:
-            new_modal = AddCurrencyDenominationTextModal(
-                guild_id=self.guild_id,
-                gdb=self.gdb,
-                calling_view=self,
-                base_currency_name=self.selected_currency_name
-            )
-            await interaction.response.send_modal(new_modal)
-        except Exception as e:
-            await log_exception(e)
-
-    @discord.ui.button(label='Select a currency', style=discord.ButtonStyle.danger,
-                       custom_id='remove_denomination_button', disabled=True)
-    async def remove_denomination_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        try:
-            new_view = ConfigRemoveDenominationView(self.guild_id, self.gdb, self.selected_currency_name)
-            await new_view.setup_select()
-            await interaction.response.edit_message(embed=new_view.embed, view=new_view)
         except Exception as e:
             await log_exception(e)
 

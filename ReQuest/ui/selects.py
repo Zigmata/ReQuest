@@ -151,3 +151,78 @@ class AddGMRoleSelect(discord.ui.RoleSelect):
             await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
+
+
+class ConfigWaitListSelect(discord.ui.Select):
+    def __init__(self, calling_view):
+        super().__init__(
+            options=[
+                discord.SelectOption(label='0 (Disabled)', value='0'),
+                discord.SelectOption(label='1', value='1'),
+                discord.SelectOption(label='2', value='2'),
+                discord.SelectOption(label='3', value='3'),
+                discord.SelectOption(label='4', value='4'),
+                discord.SelectOption(label='5', value='5')
+            ],
+            placeholder='Select Wait List size',
+            custom_id='config_wait_list_select'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            collection = interaction.client.gdb['questWaitList']
+            await collection.update_one({'_id': interaction.guild_id},
+                                        {'$set': {'questWaitList': int(self.values[0])}},
+                                        upsert=True)
+            await self.calling_view.setup_embed()
+            await interaction.response.edit_message(embed=self.calling_view.embed)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RemoveDenominationSelect(discord.ui.Select):
+    def __init__(self, calling_view):
+        super().__init__(
+            placeholder='Select a denomination',
+            options=[],
+            custom_id='remove_denomination_select',
+            row=0
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            denomination_name = self.values[0]
+            self.calling_view.selected_denomination_name = denomination_name
+            self.calling_view.remove_denomination_confirm_button.label = f'Confirm deletion of {denomination_name}'
+            self.calling_view.remove_denomination_confirm_button.disabled = False
+            await self.calling_view.setup_embed()
+            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+        except Exception as e:
+            await log_exception(e)
+
+
+class EditCurrencySelect(discord.ui.Select):
+    def __init__(self, calling_view):
+        super().__init__(
+            placeholder='Choose a currency to edit',
+            options=[],
+            custom_id='edit_currency_select'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            view = self.calling_view
+            currency_name = self.values[0]
+            view.selected_currency_name = currency_name
+            view.toggle_double_button.disabled = False
+            view.toggle_double_button.label = f'Toggle Display for {currency_name}'
+            view.add_denomination_button.disabled = False
+            view.add_denomination_button.label = f'Add Denomination to {currency_name}'
+            view.remove_denomination_button.label = f'Remove Denomination from {currency_name}'
+            await view.setup_embed(currency_name)
+            await interaction.response.edit_message(embed=view.embed, view=view)
+        except Exception as e:
+            await log_exception(e)
