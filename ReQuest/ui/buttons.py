@@ -728,19 +728,3 @@ class SpendCurrencyButton(discord.ui.Button):
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)
-
-
-class TradeButton(discord.ui.Button):
-    def __init__(self, calling_view):
-        super().__init__(
-            label='Trade',
-            style=discord.ButtonStyle.secondary,
-            custom_id='trade_button'
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            await interaction.response.send_message('Not Implemented!', ephemeral=True)
-        except Exception as e:
-            await log_exception(e, interaction)

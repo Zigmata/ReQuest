@@ -8,7 +8,7 @@ from ReQuest.ui.buttons import PlayerMenuButton, MenuDoneButton, PlayerBackButto
     PlayerExperienceToggleButton, RemoveDenominationConfirmButton, ToggleDoubleButton, AddDenominationButton, \
     RemoveDenominationButton, AddCurrencyButton, EditCurrencyButton, RemoveCurrencyButton, RemoveCurrencyConfirmButton, \
     AllowlistAddServerButton, ConfirmAllowlistRemoveButton, AdminLoadCogButton, AdminReloadCogButton, \
-    ViewInventoryButton, SpendCurrencyButton, TradeButton
+    ViewInventoryButton, SpendCurrencyButton
 from ReQuest.ui.selects import GMRoleRemoveSelect, SingleChannelConfigSelect, ActiveCharacterSelect, \
     RemoveCharacterSelect, AddGMRoleSelect, QuestAnnounceRoleSelect, ConfigWaitListSelect, RemoveDenominationSelect, \
     EditCurrencySelect, RemoveCurrencySelect, RemoveGuildAllowlistSelect
@@ -789,7 +789,8 @@ class InventoryBaseView(discord.ui.View):
                 '__**Spend Currency**__\n'
                 'Spend some currency.\n\n'
                 '__**Trade**__\n'
-                'Trade with another character.\n\n'
+                'Sends an item or currency to another character. Trading is now handled as a User Context command. '
+                'Right-click or long-press another user and select Apps -> Trade\n\n'
                 '------\n\n'
             ),
             type='rich'
@@ -801,10 +802,8 @@ class InventoryBaseView(discord.ui.View):
         self.active_character = None
         self.view_inventory_button = ViewInventoryButton(self)
         self.spend_currency_button = SpendCurrencyButton(self)
-        self.trade_button = TradeButton(self)
         self.add_item(self.view_inventory_button)
         self.add_item(self.spend_currency_button)
-        self.add_item(self.trade_button)
         self.add_item(PlayerBackButton(PlayerBaseView, mdb, bot, member_id, guild_id))
 
     async def setup_embed(self):
@@ -814,12 +813,10 @@ class InventoryBaseView(discord.ui.View):
         if not query:
             self.view_inventory_button.disabled = True
             self.spend_currency_button.disabled = True
-            self.trade_button.disabled = True
             self.embed.add_field(name='No Characters', value='Register a character to use these menus.')
         elif str(self.guild_id) not in query['activeCharacters']:
             self.view_inventory_button.disabled = True
             self.spend_currency_button.disabled = True
-            self.trade_button.disabled = True
             self.embed.add_field(name='No Active Character', value='Activate a character for this server to use these'
                                                                    'menus.')
         else:
