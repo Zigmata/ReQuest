@@ -1,6 +1,11 @@
+import logging
+
 import discord
 
 from ReQuest.utilities.supportFunctions import log_exception
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class GMRoleRemoveSelect(discord.ui.Select):
@@ -226,3 +231,49 @@ class EditCurrencySelect(discord.ui.Select):
             await interaction.response.edit_message(embed=view.embed, view=view)
         except Exception as e:
             await log_exception(e)
+
+
+class RemoveCurrencySelect(discord.ui.Select):
+    def __init__(self, calling_view):
+        super().__init__(
+            placeholder='Select a currency',
+            options=[],
+            custom_id='remove_currency_select'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            view = self.calling_view
+            view.selected_currency = self.values[0]
+            view.remove_currency_confirm_button.label = f'Confirm deletion of {self.values[0]}'
+            view.remove_currency_confirm_button.disabled = False
+            await view.setup_embed()
+            await interaction.response.edit_message(embed=view.embed, view=view)
+        except Exception as e:
+            await log_exception(e)
+
+
+class RemoveGuildAllowlistSelect(discord.ui.Select):
+    def __init__(self, calling_view):
+        super().__init__(
+            placeholder='Select a server to remove',
+            options=[],
+            custom_id='remove_guild_allowlist_select'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            view = self.calling_view
+            guild_id = int(self.values[0])
+            collection = interaction.client.cdb['serverAllowlist']
+            query = await collection.find_one({'servers': {'$exists': True}, 'servers.id': guild_id})
+            server = next((server for server in query['servers'] if server['id'] == guild_id))
+            logger.info(f'Found server: {server}')
+            view.selected_guild = server['id']
+            view.confirm_allowlist_remove_button.disabled = False
+            view.confirm_allowlist_remove_button.label = f'Confirm removal of {server['name']}'
+            await interaction.response.edit_message(embed=view.embed, view=view)
+        except Exception as e:
+            await log_exception(e, interaction)

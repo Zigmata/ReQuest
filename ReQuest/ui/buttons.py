@@ -5,7 +5,8 @@ import discord.ui
 from discord import ButtonStyle, Interaction
 from discord.ui import Button
 
-from .modals import CharacterRegisterModal, AddCurrencyDenominationTextModal
+from .modals import CharacterRegisterModal, AddCurrencyDenominationTextModal, AddCurrencyTextModal, AllowServerModal, \
+    AdminCogTextModal
 from ..utilities.supportFunctions import log_exception
 
 logging.basicConfig(level=logging.INFO)
@@ -510,3 +511,163 @@ class RemoveDenominationButton(discord.ui.Button):
             await interaction.response.edit_message(embed=self.new_view.embed, view=self.new_view)
         except Exception as e:
             await log_exception(e)
+
+
+class AddCurrencyButton(discord.ui.Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Add New Currency',
+            style=discord.ButtonStyle.success,
+            custom_id='add_currency_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.send_modal(AddCurrencyTextModal(guild_id=interaction.guild_id,
+                                                                       gdb=interaction.client.gdb,
+                                                                       calling_view=self.calling_view))
+        except Exception as e:
+            await log_exception(e)
+
+
+class EditCurrencyButton(discord.ui.Button):
+    def __init__(self, new_view):
+        super().__init__(
+            label='Edit Currency',
+            style=discord.ButtonStyle.secondary,
+            custom_id='edit_currency_button'
+        )
+        self.new_view = new_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await self.new_view.setup_select()
+            await interaction.response.edit_message(embed=self.new_view.embed, view=self.new_view)
+        except Exception as e:
+            await log_exception(e)
+
+
+class RemoveCurrencyButton(discord.ui.Button):
+    def __init__(self, new_view):
+        super().__init__(
+            label='Remove Currency',
+            style=discord.ButtonStyle.danger,
+            custom_id='remove_currency_button'
+        )
+        self.new_view = new_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await self.new_view.setup_select()
+            await interaction.response.edit_message(embed=self.new_view.embed, view=self.new_view)
+        except Exception as e:
+            await log_exception(e)
+
+
+class RemoveCurrencyConfirmButton(discord.ui.Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Confirm',
+            style=discord.ButtonStyle.danger,
+            custom_id='remove_currency_confirm_button',
+            disabled=True
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            view = self.calling_view
+            await view.remove_currency(view.selected_currency)
+            view.embed.clear_fields()
+            await view.setup_select()
+            view.remove_currency_confirm_button.disabled = True
+            view.remove_currency_confirm_button.label = 'Confirm'
+            await interaction.response.edit_message(embed=view.embed, view=view)
+        except Exception as e:
+            await log_exception(e)
+
+
+class AllowlistAddServerButton(discord.ui.Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Add New Server',
+            style=discord.ButtonStyle.success,
+            custom_id='allowlist_add_server_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            new_modal = AllowServerModal(interaction.client.cdb, self.calling_view, interaction.client)
+            await interaction.response.send_modal(new_modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ConfirmAllowlistRemoveButton(discord.ui.Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Confirm',
+            style=discord.ButtonStyle.danger,
+            custom_id='confirm_allowlist_remove_button',
+            disabled=True
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            view = self.calling_view
+            collection = interaction.client.cdb['serverAllowlist']
+            await collection.update_one({'servers': {'$exists': True}},
+                                        {'$pull': {'servers': {'id': view.selected_guild}}})
+            await view.setup_select()
+            view.confirm_allowlist_remove_button.disabled = True
+            view.confirm_allowlist_remove_button.label = 'Confirm'
+            await interaction.response.edit_message(embed=view.embed, view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class AdminLoadCogButton(discord.ui.Button):
+    def __init__(self):
+        super().__init__(
+            label='Load Cog',
+            style=discord.ButtonStyle.secondary,
+            custom_id='admin_load_cog_button'
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            async def modal_callback(modal_interaction: discord.Interaction, input_value):
+                module = input_value.lower()
+                await interaction.client.load_extension(f'ReQuest.cogs.{module}')
+                await modal_interaction.response.send_message(f'Extension successfully loaded: `{module}`',
+                                                              ephemeral=True)
+
+            modal = AdminCogTextModal('load', modal_callback)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class AdminReloadCogButton(discord.ui.Button):
+    def __init__(self):
+        super().__init__(
+            label='Reload Cog',
+            style=discord.ButtonStyle.secondary,
+            custom_id='admin_reload_cog_button'
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            async def modal_callback(modal_interaction: discord.Interaction, input_value):
+                module = input_value.lower()
+                await interaction.client.reload_extension(f'ReQuest.cogs.{module}')
+                await modal_interaction.response.send_message(f'Extension successfully reloaded: `{module}`',
+                                                              ephemeral=True)
+
+            modal = AdminCogTextModal('reload', modal_callback)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
