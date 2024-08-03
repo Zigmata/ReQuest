@@ -15,7 +15,6 @@ class Config(Cog):
     def __init__(self, bot):
         super().__init__()
         self.bot = bot
-        self.gdb = bot.gdb
 
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.default_permissions(manage_guild=True)
@@ -27,7 +26,7 @@ class Config(Cog):
         """
         try:
             guild_id = interaction.guild.id
-            view = ConfigBaseView(guild_id, self.gdb)
+            view = ConfigBaseView(guild_id, interaction.client.gdb)
             await interaction.response.send_message(embed=view.embed, view=view, ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)

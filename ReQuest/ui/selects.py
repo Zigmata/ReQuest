@@ -277,3 +277,37 @@ class RemoveGuildAllowlistSelect(discord.ui.Select):
             await interaction.response.edit_message(embed=view.embed, view=view)
         except Exception as e:
             await log_exception(e, interaction)
+
+
+class ManageQuestSelect(discord.ui.Select):
+    def __init__(self, calling_view):
+        super().__init__(
+            placeholder='Select a quest to manage',
+            options=[],
+            custom_id='manage_quest_select',
+            disabled=True
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            quest_id = self.values[0]
+            view = self.calling_view
+            view.selected_quest_id = quest_id
+            view.edit_quest_button.disabled = False
+            view.toggle_ready_button.disabled = False
+            view.rewards_menu_button.disabled = False
+            view.remove_player_button.disabled = False
+            view.cancel_quest_button.disabled = False
+            await view.setup_embed()
+
+            quest_title = None
+            for quest in view.quests:
+                if quest['questId'] == quest_id:
+                    quest_title = quest['title']
+                    break
+
+            view.embed.add_field(name='Selected Quest', value=f'`{quest_id}`: **{quest_title}**')
+            await interaction.response.edit_message(embed=view.embed, view=view)
+        except Exception as e:
+            await log_exception(e, interaction)

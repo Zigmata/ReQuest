@@ -2,21 +2,28 @@ import discord
 from discord import app_commands
 from discord.ext.commands import Cog
 
-from ..utilities.checks import has_gm_role
+from ..ui.views import GMBaseView
+from ..utilities.checks import has_gm_or_mod
+from ..utilities.supportFunctions import log_exception
 
 
 class GameMaster(Cog):
     def __init__(self, bot):
         super().__init__()
         self.bot = bot
-        self.mdb = bot.mdb
-        self.gdb = bot.gdb
 
-    @has_gm_role()
+    @has_gm_or_mod()
     @app_commands.command(name='gm')
+    @app_commands.guild_only()
     async def gm(self, interaction: discord.Interaction):
-        await interaction.response.send_message('Here\'s where I would keep all my GM commands, if I had any.',
-                                                ephemeral=True)
+        """
+        GM Commands
+        """
+        try:
+            view = GMBaseView(interaction.client, interaction.user, interaction.guild_id)
+            await interaction.response.send_message(embed=view.embed, view=view, ephemeral=True)
+        except Exception as e:
+            await log_exception(e, interaction)
 
 
 async def setup(bot):
