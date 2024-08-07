@@ -8,7 +8,7 @@ from discord.ui import Modal
 
 from .inputs import AddCurrencyDenominationTextInput
 from ..utilities.supportFunctions import find_currency_or_denomination, log_exception, trade_currency, trade_item, \
-    normalize_currency_keys, consolidate_currency, strip_id
+    normalize_currency_keys, consolidate_currency, strip_id, update_quest_embed
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -421,11 +421,12 @@ class SpendCurrencyModal(discord.ui.Modal):
 
 
 class CreateQuestModal(discord.ui.Modal):
-    def __init__(self):
+    def __init__(self, quest_view_class):
         super().__init__(
             title='Create New Quest',
             timeout=None
         )
+        self.quest_view_class = quest_view_class
         self.quest_title_text_input = discord.ui.TextInput(label='Quest Title', style=discord.TextStyle.short,
                                                            custom_id='quest_title_text_input',
                                                            placeholder='Title of your quest')
@@ -496,27 +497,35 @@ class CreateQuestModal(discord.ui.Modal):
             party: [int] = []
             wait_list: [int] = []
             lock_state = False
-            if restrictions:
-                post_description = (f'**GM:** {author_mention}\n**Party Restrictions:** {restrictions}\n\n{description}'
-                                    f'\n\n------')
-            else:
-                post_description = f'**GM:** {author_mention}\n\n{description}\n\n------'
-
-            post_embed = discord.Embed(title=title, type='rich',
-                                       description=post_description)
-            post_embed.add_field(name=f'__Party (0/{max_party_size})__', value=None)
-            if max_wait_list_size > 0:
-                post_embed.add_field(name=f'__Wait List (0/{max_wait_list_size})__', value=None)
-            post_embed.set_footer(text='Quest ID: ' + quest_id)
 
             # If an announcement role is set, ping it and then delete the message.
             if announce_role != 0:
                 ping_msg = await quest_channel.send(f'{announce_role} **NEW QUEST!**')
                 await ping_msg.delete()
 
-            msg = await quest_channel.send(embed=post_embed)
-            emoji = '<:acceptquest:601559094293430282>'
-            await msg.add_reaction(emoji)
+            quest = {
+                'guildId': guild_id,
+                'questId': quest_id,
+                'messageId': 0,
+                'title': title,
+                'description': description,
+                'maxPartySize': max_party_size,
+                'restrictions': restrictions,
+                'gm': author_id,
+                'party': party,
+                'waitList': wait_list,
+                'xp': 0,
+                'maxWaitListSize': max_wait_list_size,
+                'lockState': lock_state,
+                'rewards': {}
+            }
+
+            view = self.quest_view_class(quest)
+            await view.setup_embed()
+            msg = await quest_channel.send(embed=view.embed, view=view)
+
+            # emoji = '<:acceptquest:601559094293430282>'
+            # await msg.add_reaction(emoji)
             message_id = msg.id
 
             await quest_collection.insert_one({'guildId': guild_id, 'questId': quest_id, 'messageId': message_id,
@@ -529,43 +538,128 @@ class CreateQuestModal(discord.ui.Modal):
         except Exception as e:
             await log_exception(e, interaction)
 
+    # async def on_submit(self, interaction: discord.Interaction):
+    #     try:
+    #         # TODO: Research exception catching on function argument TypeError
+    #         # TODO: Level min/max for enabled servers
+    #         title = self.quest_title_text_input.value
+    #         restrictions = self.quest_restrictions_text_input.value
+    #         max_party_size = int(self.quest_party_size_text_input.value)
+    #         description = self.quest_description_text_input.value
+    #
+    #         guild_id = interaction.guild_id
+    #         quest_id = str(shortuuid.uuid()[:8])
+    #         bot = interaction.client
+    #         max_wait_list_size = 0
+    #
+    #         # Get the server's wait list configuration
+    #         wait_list_query = await bot.gdb['questWaitList'].find_one({'_id': guild_id})
+    #         if wait_list_query:
+    #             max_wait_list_size = wait_list_query['questWaitList']
+    #
+    #         # Query the collection to see if a channel is set
+    #         quest_channel_query = await bot.gdb['questChannel'].find_one({'_id': guild_id})
+    #
+    #         # Inform user if quest channel is not set. Otherwise, get the channel string
+    #         if not quest_channel_query:
+    #             raise Exception('A channel has not yet been designated for quest posts. Contact a server admin to '
+    #                             'configure the Quest Channel.')
+    #         else:
+    #             quest_channel_mention = quest_channel_query['questChannel']
+    #
+    #         # Query the collection to see if a role is set
+    #         announce_role_query = await bot.gdb['announceRole'].find_one({'_id': guild_id})
+    #
+    #         # Grab the announcement role, if configured.
+    #         announce_role = None
+    #         if announce_role_query:
+    #             announce_role = announce_role_query['announceRole']
+    #
+    #         quest_collection = bot.gdb['quests']
+    #         # Get the channel object.
+    #         quest_channel = bot.get_channel(strip_id(quest_channel_mention))
+    #
+    #         # Log the author, then post the new quest with an emoji reaction.
+    #         author_id = interaction.user.id
+    #         author_mention = interaction.user.mention
+    #         party: [int] = []
+    #         wait_list: [int] = []
+    #         lock_state = False
+    #         if restrictions:
+    #             post_description = (f'**GM:** {author_mention}\n**Party Restrictions:** {restrictions}\n\n{description}'
+    #                                 f'\n\n------')
+    #         else:
+    #             post_description = f'**GM:** {author_mention}\n\n{description}\n\n------'
+    #
+    #         post_embed = discord.Embed(title=title, type='rich',
+    #                                    description=post_description)
+    #         post_embed.add_field(name=f'__Party (0/{max_party_size})__', value=None)
+    #         if max_wait_list_size > 0:
+    #             post_embed.add_field(name=f'__Wait List (0/{max_wait_list_size})__', value=None)
+    #         post_embed.set_footer(text='Quest ID: ' + quest_id)
+    #
+    #         # If an announcement role is set, ping it and then delete the message.
+    #         if announce_role != 0:
+    #             ping_msg = await quest_channel.send(f'{announce_role} **NEW QUEST!**')
+    #             await ping_msg.delete()
+    #
+    #         msg = await quest_channel.send(embed=post_embed)
+    #         emoji = '<:acceptquest:601559094293430282>'
+    #         await msg.add_reaction(emoji)
+    #         message_id = msg.id
+    #
+    #         await quest_collection.insert_one({'guildId': guild_id, 'questId': quest_id, 'messageId': message_id,
+    #                                            'title': title, 'description': description,
+    #                                            'maxPartySize': max_party_size, 'restrictions': restrictions,
+    #                                            'gm': author_id, 'party': party, 'waitList': wait_list, 'xp': 0,
+    #                                            'maxWaitListSize': max_wait_list_size, 'lockState': lock_state,
+    #                                            'rewards': {}})
+    #         await interaction.response.send_message(f'Quest `{quest_id}`: **{title}** posted!', ephemeral=True)
+    #     except Exception as e:
+    #         await log_exception(e, interaction)
+
 
 class EditQuestModal(discord.ui.Modal):
-    def __init__(self, quest):
+    def __init__(self, calling_view, quest):
         super().__init__(
             title=f'Editing {quest['title']}',
             timeout=600
         )
+
+        # Get the current quest's values
+        self.calling_view = calling_view
         self.quest = quest
         title = quest['title']
         restrictions = quest['restrictions']
         max_party_size = quest['maxPartySize']
         description = quest['description']
+
+        # Build the text inputs w/ the existing values
         self.title_text_input = discord.ui.TextInput(
             label='Title',
             style=discord.TextStyle.short,
-            placeholder=title,
+            default=title,
             custom_id='title_text_input',
             required=False
         )
         self.restrictions_text_input = discord.ui.TextInput(
             label='Restrictions',
             style=discord.TextStyle.short,
-            placeholder=restrictions,
+            default=restrictions,
             custom_id='restrictions_text_input',
             required=False
         )
         self.max_party_size_text_input = discord.ui.TextInput(
             label='Max Party Size',
             style=discord.TextStyle.short,
-            placeholder=max_party_size,
+            default=max_party_size,
             custom_id='max_party_size_text_input',
             required=False
         )
         self.description_text_input = discord.ui.TextInput(
             label='Description',
             style=discord.TextStyle.paragraph,
-            placeholder=description,
+            default=description,
             custom_id='description_text_input',
             required=False
         )
@@ -576,6 +670,38 @@ class EditQuestModal(discord.ui.Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            raise Exception('Not implemented!')
+            # Push the updates
+            gdb = interaction.client.gdb
+            guild_id = interaction.guild_id
+            quest_collection = gdb['quests']
+            await quest_collection.update_one({'guildId': interaction.guild_id, 'questId': self.quest['questId']},
+                                              {'$set': {'title': self.title_text_input.value,
+                                                        'restrictions': self.restrictions_text_input.value,
+                                                        'maxPartySize': int(self.max_party_size_text_input.value),
+                                                        'description': self.description_text_input.value}})
+
+            # Get the updated quest
+            updated_quest = await quest_collection.find_one({'guildId': interaction.guild_id,
+                                                             'questId': self.quest['questId']})
+
+            # Get the quest board channel
+            quest_channel_collection = gdb['questChannel']
+            quest_channel_query = await quest_channel_collection.find_one({'_id': guild_id})
+            quest_channel_id = strip_id(quest_channel_query['questChannel'])
+            guild = interaction.client.get_guild(guild_id)
+            quest_channel = guild.get_channel(quest_channel_id)
+
+            # Get the original quest post message object and create a new embed
+            message = quest_channel.get_partial_message(self.quest['messageId'])
+            quest_embed = await update_quest_embed(interaction.client, updated_quest)
+
+            # Update the quest post
+            await message.edit(embed=quest_embed)
+
+            # Reload the UI view
+            view = self.calling_view
+            await view.setup_select()
+            await view.setup_embed()
+            await interaction.response.edit_message(embed=view.embed, view=view)
         except Exception as e:
             await log_exception(e, interaction)

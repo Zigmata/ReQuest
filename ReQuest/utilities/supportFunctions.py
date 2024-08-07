@@ -269,20 +269,20 @@ async def update_quest_embed(bot, quest, is_archival=False) -> discord.Embed:
         formatted_party = []
         # Map int list to string for formatting, then format the list of users as user mentions
         if len(party) > 0:
-            for member in party:
-                for key in member:
-                    character_query = await bot.mdb['characters'].find_one({'_id': int(key)})
-                    character_name = character_query['characters'][member[key]]['name']
-                    formatted_party.append(f'- <@!{key}> as {character_name}')
+            for player in party:
+                for member_id in player:
+                    for character_id in player[str(member_id)]:
+                        character = player[str(member_id)][str(character_id)]
+                        formatted_party.append(f'- <@!{member_id}> as {character['name']}')
 
         formatted_wait_list = []
         # Only format the wait list if there is one.
         if len(wait_list) > 0:
-            for member in wait_list:
-                for key in member:
-                    character_query = await bot.mdb['characters'].find_one({'_id': int(key)})
-                    character_name = character_query['characters'][member[key]]['name']
-                    formatted_wait_list.append(f'- <@!{key}> as {character_name}')
+            for player in wait_list:
+                for member_id in player:
+                    for character_id in player[str(member_id)]:
+                        character = player[str(member_id)][str(character_id)]
+                        formatted_wait_list.append(f'- <@!{member_id}> as {character['name']}')
 
         # Shows the quest is locked if applicable, unless it is being archived.
         if lock_state is True and is_archival is False:
@@ -327,6 +327,7 @@ async def reaction_operation(bot, payload):
         user_id = payload.user_id
         user = bot.get_user(user_id)
         if user.bot:
+            logger.info(f'user.bot: {user.bot}')
             return
 
         # Find the configured Quest Channel and get the name (string in <#channelID> format)
@@ -355,13 +356,21 @@ async def reaction_operation(bot, payload):
         max_party_size = quest['maxPartySize']
         member_collection = bot.mdb['characters']
         player_characters = await member_collection.find_one({'_id': user_id})
-        if ('activeCharacters' not in player_characters or
-                str(guild_id) not in player_characters['activeCharacters']):
+        if (payload.event_type == 'REACTION_ADD' and
+                (not player_characters or
+                 'activeCharacters' not in player_characters or
+                 str(guild_id) not in player_characters['activeCharacters'])):
             await cancel_reaction(bot, payload, f'Error joining quest **{quest["title"]}**: '
                                                 f'You do not have an active character on that server. Use the '
                                                 f'`/player` menu commands to activate or register!')
             return
+
+        # This prevents a second cancellation message from occurring on reaction cancel
+        if payload.event_type == 'REACTION_REMOVE' and not player_characters:
+            return
+
         active_character_id = player_characters['activeCharacters'][str(guild_id)]
+        active_character = player_characters['characters'][active_character_id]
 
         # If a reaction is added, add the reacting user to the party/wait list if there is room
         if payload.event_type == 'REACTION_ADD':
@@ -382,11 +391,17 @@ async def reaction_operation(bot, payload):
                     # If there is room in the party, add the user.
                     if len(current_party) < max_party_size:
                         await collection.update_one({'messageId': message_id},
-                                                    {'$push': {'party': {f'{user_id}': active_character_id}}})
+                                                    {'$push': {
+                                                        'party': {
+                                                            f'{user_id}': {
+                                                                f'{active_character_id}': active_character}}}})
                     # If the party is full but the wait list is not, add the user to wait list.
                     elif len(current_party) >= max_party_size and len(current_wait_list) < max_wait_list_size:
                         await collection.update_one({'messageId': message_id},
-                                                    {'$push': {'waitList': {f'{user_id}': active_character_id}}})
+                                                    {'$push': {
+                                                        'waitList': {
+                                                            f'{user_id}': {
+                                                                f'{active_character_id}': active_character}}}})
 
                     # Otherwise, DM the user that the party/wait list is full
                     else:
@@ -410,7 +425,10 @@ async def reaction_operation(bot, payload):
                     # If there is room in the party, add the user.
                     if len(current_party) < max_party_size:
                         await collection.update_one({'messageId': message_id},
-                                                    {'$push': {'party': {f'{user_id}': active_character_id}}})
+                                                    {'$push': {
+                                                        'party': {
+                                                            f'{user_id}': {
+                                                                f'{active_character_id}': active_character}}}})
                     else:
                         await cancel_reaction(bot, payload, f'Error joining quest **{quest["title"]}**: '
                                                             f'The quest roster is full!')
@@ -486,14 +504,10 @@ async def reaction_operation(bot, payload):
         await log_exception(e)
 
 
-async def quest_ready_toggle(interaction: discord.Interaction, quest_id: str):
+async def quest_ready_toggle(interaction: discord.Interaction, quest) -> dict:
     guild_id = interaction.guild_id
     user_id = interaction.user.id
     guild = interaction.client.get_guild(guild_id)
-
-    # Fetch the quest
-    quest_collection = interaction.client.gdb['quests']
-    quest = await quest_collection.find_one({'questId': quest_id})
 
     # Fetch the quest channel to retrieve the message object
     channel_collection = interaction.client.gdb['questChannel']
@@ -510,17 +524,18 @@ async def quest_ready_toggle(interaction: discord.Interaction, quest_id: str):
     # Check to see if the GM has a party role configured
     role_collection = interaction.client.gdb['partyRole']
     role_query = await role_collection.find_one({'_id': guild_id, 'gm': user_id})
+    role = None
     if role_query and role_query['role']:
         role_id = role_query['role']
         role = guild.get_role(role_id)
-    else:
-        role = None
 
     party = quest['party']
     title = quest['title']
+    quest_id = quest['questId']
     tasks = []
 
     # Locks the quest roster and alerts party members that the quest is ready.
+    quest_collection = interaction.client.gdb['quests']
     if not quest['lockState']:
         await quest_collection.update_one({'questId': quest_id}, {'$set': {'lockState': True}})
 
@@ -533,9 +548,9 @@ async def quest_ready_toggle(interaction: discord.Interaction, quest_id: str):
                 member = guild.get_member(int(key))
                 # If the GM has a party role configured, assign it to each party member
                 if role:
-                    tasks.append(await member.add_roles(role))
-                tasks.append(await member.send(f'Game Master <@{user_id}> has marked your quest, **"{title}"**, '
-                                               f'ready to start!'))
+                    tasks.append(member.add_roles(role))
+                tasks.append(member.send(f'Game Master <@{user_id}> has marked your quest, **"{title}"**, '
+                                         f'ready to start!'))
 
         await interaction.user.send('Quest roster locked and party notified!')
     # Unlocks a quest if members are not ready.
@@ -545,7 +560,7 @@ async def quest_ready_toggle(interaction: discord.Interaction, quest_id: str):
             for player in party:
                 for key in player:
                     member = guild.get_member(int(key))
-                    tasks.append(await member.remove_roles(role))
+                    tasks.append(member.remove_roles(role))
 
         # Unlock the quest
         await quest_collection.update_one({'questId': quest_id}, {'$set': {'lockState': False}})
@@ -561,6 +576,8 @@ async def quest_ready_toggle(interaction: discord.Interaction, quest_id: str):
     # Create the updated embed, and edit the message
     post_embed = await update_quest_embed(interaction.client, updated_quest)
     await message.edit(embed=post_embed)
+    logger.info(type(updated_quest))
+    return updated_quest
 
 
 async def remove_party_member(interaction, quest, removed_member_id):

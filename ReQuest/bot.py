@@ -8,6 +8,7 @@ from discord.ext import commands
 from discord.ext.commands import errors
 from motor.motor_asyncio import AsyncIOMotorClient as MotorClient
 
+from ReQuest.ui.views import QuestPostView
 from utilities.supportFunctions import attempt_delete, log_exception
 
 
@@ -56,6 +57,15 @@ class ReQuest(commands.AutoShardedBot):
         # If the white list is enabled, load it async in the background
         if self.config['allowList']:
             await asyncio.create_task(self.load_allow_list())
+
+        quests = []
+        quest_collection = self.gdb['quests']
+        cursor = quest_collection.find()
+        for document in await cursor.to_list(length=None):
+            quests.append(document)
+
+        for quest in quests:
+            self.add_view(view=QuestPostView(quest), message_id=quest['messageId'])
 
     async def close(self):
         await super().close()

@@ -6,7 +6,7 @@ from discord import ButtonStyle, Interaction
 from discord.ui import Button
 
 from .modals import CharacterRegisterModal, AddCurrencyDenominationTextModal, AddCurrencyTextModal, AllowServerModal, \
-    AdminCogTextModal, SpendCurrencyModal, CreateQuestModal
+    AdminCogTextModal, SpendCurrencyModal, CreateQuestModal, EditQuestModal
 from ..utilities.supportFunctions import log_exception, quest_ready_toggle
 
 logging.basicConfig(level=logging.INFO)
@@ -306,26 +306,7 @@ class ConfirmButton(discord.ui.Button):
         self.calling_view = calling_view
 
     async def callback(self, interaction: discord.Interaction):
-        try:
-            selected_character_id = self.calling_view.selected_character_id
-            collection = interaction.client.mdb['characters']
-            member_id = interaction.user.id
-            query = await collection.find_one({'_id': member_id})
-            await collection.update_one({'_id': member_id},
-                                        {'$unset': {f'characters.{selected_character_id}': ''}}, upsert=True)
-            for guild in query['activeCharacters']:
-                if query['activeCharacters'][guild] == selected_character_id:
-                    await collection.update_one({'_id': member_id},
-                                                {'$unset': {f'activeCharacters.{interaction.guild_id}': ''}},
-                                                upsert=True)
-            self.calling_view.selected_character_id = None
-            await self.calling_view.setup_select()
-            self.calling_view.embed.clear_fields()
-            self.disabled = True
-            self.label = 'Confirm'
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
-        except Exception as e:
-            await log_exception(e, interaction)
+        await self.calling_view.confirm_callback(interaction)
 
 
 class QuestAnnounceRoleRemoveButton(discord.ui.Button):
@@ -754,23 +735,24 @@ class MenuViewButton(discord.ui.Button):
 
 
 class CreateQuestButton(discord.ui.Button):
-    def __init__(self):
+    def __init__(self, quest_view_class):
         super().__init__(
             label='Create',
             style=discord.ButtonStyle.success,
             custom_id='create_quest_button'
         )
+        self.quest_view_class = quest_view_class
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            modal = CreateQuestModal()
+            modal = CreateQuestModal(self.quest_view_class)
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)
 
 
 class EditQuestButton(discord.ui.Button):
-    def __init__(self, calling_view, quest_id):
+    def __init__(self, calling_view):
         super().__init__(
             label='Edit',
             style=discord.ButtonStyle.secondary,
@@ -778,21 +760,18 @@ class EditQuestButton(discord.ui.Button):
             disabled=True
         )
         self.calling_view = calling_view
-        self.quest_id = quest_id
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            view = self.calling_view
-            quest_collection = interaction.client.gdb['quests']
-            quest = await quest_collection.find_one({'guildId': interaction.guild_id, 'questId': self.quest_id})
-            modal = EditQuestModal(quest)
+            quest = self.calling_view.selected_quest
+            modal = EditQuestModal(self.calling_view, quest)
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)
 
 
 class ToggleReadyButton(discord.ui.Button):
-    def __init__(self, calling_view, quest_id):
+    def __init__(self, calling_view):
         super().__init__(
             label='Toggle Ready',
             style=discord.ButtonStyle.secondary,
@@ -800,20 +779,19 @@ class ToggleReadyButton(discord.ui.Button):
             disabled=True
         )
         self.calling_view = calling_view
-        self.quest_id = quest_id
 
     async def callback(self, interaction: discord.Interaction):
         try:
             view = self.calling_view
-            await quest_ready_toggle(interaction, view.selected_quest_id)
-            await view.setup_embed()
+            updated_quest = await quest_ready_toggle(interaction, view.selected_quest)
+            view.selected_quest = updated_quest
             await interaction.response.edit_message(embed=view.embed, view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
 
 class RewardsMenuButton(discord.ui.Button):
-    def __init__(self, calling_view, quest_id):
+    def __init__(self, calling_view, rewards_view_class):
         super().__init__(
             label='Rewards',
             style=discord.ButtonStyle.secondary,
@@ -821,7 +799,49 @@ class RewardsMenuButton(discord.ui.Button):
             disabled=True
         )
         self.calling_view = calling_view
-        self.quest_id = quest_id
+        self.rewards_view_class = rewards_view_class
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            new_view = self.rewards_view_class(self.calling_view, interaction.client, interaction.guild_id)
+            await new_view.setup_select()
+            await new_view.setup_embed()
+            await interaction.response.edit_message(embed=new_view.embed, view=new_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RemovePlayerButton(discord.ui.Button):
+    def __init__(self, calling_view, target_view_class):
+        super().__init__(
+            label='Remove Player',
+            style=discord.ButtonStyle.danger,
+            custom_id='remove_player_button',
+            disabled=True
+        )
+        self.calling_view = calling_view
+        self.target_view_class = target_view_class
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            quest = self.calling_view.selected_quest
+            new_view = self.target_view_class(quest)
+            await new_view.setup_select()
+            await new_view.setup_embed()
+            await interaction.response.edit_message(embed=new_view.embed, view=new_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class CancelQuestButton(discord.ui.Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Cancel Quest',
+            style=discord.ButtonStyle.danger,
+            custom_id='cancel_quest_button',
+            disabled=True
+        )
+        self.calling_view = calling_view
 
     async def callback(self, interaction: discord.Interaction):
         try:
@@ -830,26 +850,63 @@ class RewardsMenuButton(discord.ui.Button):
             await log_exception(e, interaction)
 
 
-class RemovePlayerButton(discord.ui.Button):
-    def __init__(self, calling_view, quest_id):
+class PartyRewardsButton(discord.ui.Button):
+    def __init__(self, calling_view):
         super().__init__(
-            label='Remove Player',
-            style=discord.ButtonStyle.danger,
-            custom_id='remove_player_button',
-            disabled=True
+            label='Party Rewards',
+            style=discord.ButtonStyle.secondary,
+            custom_id='party_rewards_button'
         )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            raise Exception('Not implemented!')
+        except Exception as e:
+            await log_exception(e, interaction)
 
 
-class CancelQuestButton(discord.ui.Button):
-    def __init__(self, calling_view, quest_id):
+class IndividualRewardsButton(discord.ui.Button):
+    def __init__(self, calling_view):
         super().__init__(
-            label='Cancel',
-            style=discord.ButtonStyle.danger,
-            custom_id='cancel_quest_button',
+            label='Individual Rewards',
+            style=discord.ButtonStyle.secondary,
+            custom_id='individual_rewards_button',
             disabled=True
         )
         self.calling_view = calling_view
-        self.quest_id = quest_id
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            raise Exception('Not implemented!')
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class JoinQuestButton(discord.ui.Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Join',
+            style=discord.ButtonStyle.success,
+            custom_id='join_quest_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            raise Exception('Not implemented!')
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class LeaveQuestButton(discord.ui.Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Leave',
+            style=discord.ButtonStyle.danger,
+            custom_id='leave_quest_button'
+        )
+        self.calling_view = calling_view
 
     async def callback(self, interaction: discord.Interaction):
         try:

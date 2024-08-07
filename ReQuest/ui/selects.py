@@ -293,7 +293,9 @@ class ManageQuestSelect(discord.ui.Select):
         try:
             quest_id = self.values[0]
             view = self.calling_view
-            view.selected_quest_id = quest_id
+            quest_collection = interaction.client.gdb['quests']
+            quest = await quest_collection.find_one({'guildId': interaction.guild_id, 'questId': quest_id})
+            view.selected_quest = quest
             view.edit_quest_button.disabled = False
             view.toggle_ready_button.disabled = False
             view.rewards_menu_button.disabled = False
@@ -301,13 +303,65 @@ class ManageQuestSelect(discord.ui.Select):
             view.cancel_quest_button.disabled = False
             await view.setup_embed()
 
-            quest_title = None
-            for quest in view.quests:
-                if quest['questId'] == quest_id:
-                    quest_title = quest['title']
-                    break
+            view.embed.add_field(name='Selected Quest', value=f'`{quest_id}`: **{quest['title']}**')
+            await interaction.response.edit_message(embed=view.embed, view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
 
-            view.embed.add_field(name='Selected Quest', value=f'`{quest_id}`: **{quest_title}**')
+
+class PartyMemberSelect(discord.ui.Select):
+    def __init__(self, calling_view):
+        super().__init__(
+            placeholder='Select a party member',
+            options=[],
+            custom_id='party_member_select',
+            disabled=True
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            character_id = self.values[0]
+            view = self.calling_view
+            quest = view.quest
+            for player in quest['party']:
+                for member_id in player:
+                    for character_id_key in player[str(member_id)]:
+                        if character_id_key == character_id:
+                            character = player[str(member_id)][character_id]
+                            logger.info(f'Character: {character}')
+                            view.selected_character = character
+            await view.setup_embed()
+            await view.setup_select()
+            view.individual_rewards_button.disabled = False
+            await interaction.response.edit_message(embed=view.embed, view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RemovePlayerSelect(discord.ui.Select):
+    def __init__(self, calling_view):
+        super().__init__(
+            placeholder='Select a party member',
+            options=[],
+            custom_id='remove_player_select'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            view = self.calling_view
+            party = view.quest['party']
+            for player in party:
+                for member_id in player:
+                    if str(member_id) == self.values[0]:
+                        for character_id in player[str(member_id)]:
+                            character = player[str(member_id)][str(character_id)]
+                            view.selected_character = character
+                            view.selected_party_member_id = member_id
+            view.confirm_button.disabled = False
+            view.confirm_button.label = 'Confirm?'
+            await view.setup_embed()
             await interaction.response.edit_message(embed=view.embed, view=view)
         except Exception as e:
             await log_exception(e, interaction)
