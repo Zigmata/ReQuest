@@ -15,10 +15,9 @@ load_extensions:
     - 'ReQuest.cogs.admin'
     - 'ReQuest.cogs.config'
     - 'ReQuest.cogs.gm'
-    - 'ReQuest.cogs.help'
+    - 'ReQuest.cogs.info'
     - 'ReQuest.cogs.player'
     - 'ReQuest.cogs.playerBoard'
-    - 'ReQuest.cogs.questBoard'
     - 'ReQuest.cogs.wallet'
 
 # Server Allowlist

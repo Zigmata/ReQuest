@@ -8,7 +8,7 @@ from discord.ui import Modal
 
 from .inputs import AddCurrencyDenominationTextInput
 from ..utilities.supportFunctions import find_currency_or_denomination, log_exception, trade_currency, trade_item, \
-    normalize_currency_keys, consolidate_currency, strip_id, update_quest_embed
+    normalize_currency_keys, consolidate_currency, strip_id
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -620,7 +620,7 @@ class CreateQuestModal(discord.ui.Modal):
 
 
 class EditQuestModal(discord.ui.Modal):
-    def __init__(self, calling_view, quest):
+    def __init__(self, calling_view, quest, quest_post_view_class):
         super().__init__(
             title=f'Editing {quest['title']}',
             timeout=600
@@ -629,6 +629,7 @@ class EditQuestModal(discord.ui.Modal):
         # Get the current quest's values
         self.calling_view = calling_view
         self.quest = quest
+        self.quest_post_view_class = quest_post_view_class
         title = quest['title']
         restrictions = quest['restrictions']
         max_party_size = quest['maxPartySize']
@@ -693,10 +694,11 @@ class EditQuestModal(discord.ui.Modal):
 
             # Get the original quest post message object and create a new embed
             message = quest_channel.get_partial_message(self.quest['messageId'])
-            quest_embed = await update_quest_embed(interaction.client, updated_quest)
 
-            # Update the quest post
-            await message.edit(embed=quest_embed)
+            # Create a fresh quest view, and update the original post message
+            quest_view = self.quest_post_view_class(updated_quest)
+            await quest_view.setup_embed()
+            await message.edit(embed=quest_view.embed, view=quest_view)
 
             # Reload the UI view
             view = self.calling_view

@@ -7,7 +7,7 @@ from discord.ui import Button
 
 from .modals import CharacterRegisterModal, AddCurrencyDenominationTextModal, AddCurrencyTextModal, AllowServerModal, \
     AdminCogTextModal, SpendCurrencyModal, CreateQuestModal, EditQuestModal
-from ..utilities.supportFunctions import log_exception, quest_ready_toggle
+from ..utilities.supportFunctions import log_exception
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -288,9 +288,9 @@ class MenuDoneButton(discord.ui.Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            for child in self.view.children.copy():
-                self.view.remove_item(child)
-            await interaction.response.edit_message(view=self.view)
+
+            await interaction.response.defer()
+            await interaction.followup.delete_message(interaction.message.id)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -752,7 +752,7 @@ class CreateQuestButton(discord.ui.Button):
 
 
 class EditQuestButton(discord.ui.Button):
-    def __init__(self, calling_view):
+    def __init__(self, calling_view, quest_post_view_class):
         super().__init__(
             label='Edit',
             style=discord.ButtonStyle.secondary,
@@ -760,11 +760,12 @@ class EditQuestButton(discord.ui.Button):
             disabled=True
         )
         self.calling_view = calling_view
+        self.quest_post_view_class = quest_post_view_class
 
     async def callback(self, interaction: discord.Interaction):
         try:
             quest = self.calling_view.selected_quest
-            modal = EditQuestModal(self.calling_view, quest)
+            modal = EditQuestModal(self.calling_view, quest, self.quest_post_view_class)
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)
@@ -782,10 +783,7 @@ class ToggleReadyButton(discord.ui.Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            view = self.calling_view
-            updated_quest = await quest_ready_toggle(interaction, view.selected_quest)
-            view.selected_quest = updated_quest
-            await interaction.response.edit_message(embed=view.embed, view=view)
+            await self.calling_view.quest_ready_toggle(interaction)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -894,7 +892,7 @@ class JoinQuestButton(discord.ui.Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            raise Exception('Not implemented!')
+            await self.calling_view.join_callback(interaction)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -910,6 +908,6 @@ class LeaveQuestButton(discord.ui.Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            raise Exception('Not implemented!')
+            await self.calling_view.leave_callback(interaction)
         except Exception as e:
             await log_exception(e, interaction)

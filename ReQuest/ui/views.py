@@ -1,10 +1,11 @@
+import asyncio
 import logging
 
 import discord
 
 import ReQuest.ui.buttons as buttons
 import ReQuest.ui.selects as selects
-from ReQuest.utilities.supportFunctions import log_exception, strip_id
+from ReQuest.utilities.supportFunctions import log_exception, strip_id, attempt_delete
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -880,7 +881,9 @@ class GMQuestMenuView(discord.ui.View):
                 '__**Create**__\n'
                 'Create and post a new quest.\n\n'
                 '__**Manage**__\n'
-                'Manage the lifecycle of a quest: Rewards, detail editing, deletion, etc.\n\n'
+                'Manage an active quest: Rewards, edits, etc.\n\n'
+                '__**Complete**__\n'
+                'Complete an active quest. Issues rewards, if any, to party members.\n\n'
             ),
             type='rich'
         )
@@ -890,9 +893,12 @@ class GMQuestMenuView(discord.ui.View):
         self.create_quest_button = buttons.CreateQuestButton(QuestPostView)
         self.manage_quests_view_button = buttons.MenuViewButton(target_view_class=ManageQuestsView, label='Manage',
                                                                 setup_select=True, setup_embed=False)
+        self.complete_quests_button = buttons.MenuViewButton(target_view_class=CompleteQuestsView, label='Complete',
+                                                             setup_select=True, setup_embed=False)
         self.back_button = buttons.MenuViewButton(target_view_class=GMBaseView, label='Back')
         self.add_item(self.create_quest_button)
         self.add_item(self.manage_quests_view_button)
+        self.add_item(self.complete_quests_button)
         self.add_item(self.back_button)
 
 
@@ -924,7 +930,7 @@ class ManageQuestsView(discord.ui.View):
         self.selected_quest = None
         self.quests = None
         self.manage_quest_select = selects.ManageQuestSelect(self)
-        self.edit_quest_button = buttons.EditQuestButton(self)
+        self.edit_quest_button = buttons.EditQuestButton(self, QuestPostView)
         self.toggle_ready_button = buttons.ToggleReadyButton(self)
         self.rewards_menu_button = buttons.RewardsMenuButton(self, RewardsMenuView)
         self.remove_player_button = buttons.RemovePlayerButton(self, RemovePlayerView)
@@ -977,6 +983,85 @@ class ManageQuestsView(discord.ui.View):
             self.embed.clear_fields()
         except Exception as e:
             await log_exception(e)
+
+    async def quest_ready_toggle(self, interaction: discord.Interaction):
+        quest = self.selected_quest
+        guild_id = interaction.guild_id
+        user_id = interaction.user.id
+        guild = interaction.client.get_guild(guild_id)
+
+        # Fetch the quest channel to retrieve the message object
+        channel_collection = interaction.client.gdb['questChannel']
+        channel_id_query = await channel_collection.find_one({'_id': guild_id})
+        if not channel_id_query:
+            raise Exception('Quest channel has not been set!')
+        channel_id = strip_id(channel_id_query['questChannel'])
+        channel = interaction.client.get_channel(channel_id)
+
+        # Retrieve the message object
+        message_id = quest['messageId']
+        message = channel.get_partial_message(message_id)
+
+        # Check to see if the GM has a party role configured
+        role_collection = interaction.client.gdb['partyRole']
+        role_query = await role_collection.find_one({'_id': guild_id, 'gm': user_id})
+        role = None
+        if role_query and role_query['role']:
+            role_id = role_query['role']
+            role = guild.get_role(role_id)
+
+        party = quest['party']
+        title = quest['title']
+        quest_id = quest['questId']
+        tasks = []
+
+        # Locks the quest roster and alerts party members that the quest is ready.
+        quest_collection = interaction.client.gdb['quests']
+        if not quest['lockState']:
+            await quest_collection.update_one({'questId': quest_id}, {'$set': {'lockState': True}})
+
+            # Fetch the updated quest
+            updated_quest = await quest_collection.find_one({'questId': quest_id})
+
+            # Notify each party member that the quest is ready
+            for player in party:
+                for key in player:
+                    member = guild.get_member(int(key))
+                    # If the GM has a party role configured, assign it to each party member
+                    if role:
+                        tasks.append(member.add_roles(role))
+                    tasks.append(member.send(f'Game Master <@{user_id}> has marked your quest, **"{title}"**, '
+                                             f'ready to start!'))
+
+            await interaction.user.send('Quest roster locked and party notified!')
+        # Unlocks a quest if members are not ready.
+        else:
+            # Remove the role from the players
+            if role:
+                for player in party:
+                    for key in player:
+                        member = guild.get_member(int(key))
+                        tasks.append(member.remove_roles(role))
+
+            # Unlock the quest
+            await quest_collection.update_one({'questId': quest_id}, {'$set': {'lockState': False}})
+
+            # Fetch the updated quest
+            updated_quest = await quest_collection.find_one({'questId': quest_id})
+
+            await interaction.user.send('Quest roster has been unlocked.')
+
+        if len(tasks) > 0:
+            await asyncio.gather(*tasks)
+
+        self.selected_quest = updated_quest
+
+        # Create a fresh quest view, and update the original post message
+        quest_view = QuestPostView(updated_quest)
+        await quest_view.setup_embed()
+        await message.edit(embed=quest_view.embed, view=quest_view)
+
+        await interaction.response.edit_message(embed=self.embed, view=self)
 
 
 class RewardsMenuView(discord.ui.View):
@@ -1044,6 +1129,87 @@ class RewardsMenuView(discord.ui.View):
                 self.embed.add_field(name='Selected Party Member', value=self.selected_character['name'])
         except Exception as e:
             await log_exception(e)
+
+
+#     async def quest_rewards(self, interaction: discord.Interaction, quest_id: str, recipients: str, reward_name: str,
+#                             quantity: int = 1):
+#         """
+#         Assigns item rewards to a quest for one, some, or all characters in the party.
+#
+#         Arguments:
+#         <quest_id>: The ID of the quest.
+#         <reward_name>: The name of the item to award.
+#         <quantity>: The quantity of the item to award each recipient.
+#         <recipients>: User mentions of recipients. Can be chained.
+#         """
+#         guild_id = interaction.guild_id
+#         guild = self.bot.get_guild(guild_id)
+#         user_id = interaction.user.id
+#         member = guild.get_member(user_id)
+#         collection = self.gdb['quests']
+#         quest_query = await collection.find_one({'questId': quest_id})
+#         error_title = None
+#         error_message = None
+#
+#         if quantity < 1:
+#             error_title = 'Quantity Error!'
+#             error_message = 'Quantity must be a positive integer!'
+#         elif not quest_query:
+#             error_title = 'Error!'
+#             error_message = f'A quest with id {quest_id} was not found in the database!'
+#         elif user_id != quest_query['gm'] and not member.guild_permissions.manage_guild:
+#             error_title = 'Quest Not Edited!'
+#             error_message = 'Quests can only be manipulated by their GM or staff!'
+#         else:
+#             title = quest_query['title']
+#             current_rewards = quest_query['rewards']
+#             party = quest_query['party']
+#             valid_players = []
+#             invalid_players = []
+#
+#             for player in recipients:
+#                 user_id = strip_id(player)
+#                 user_name = self.bot.get_user(user_id).name
+#                 present = False
+#                 for entry in party:
+#                     if str(user_id) in entry:
+#                         present = True
+#
+#                 if not present:
+#                     invalid_players.append(user_name)
+#                     continue
+#                 else:
+#                     valid_players.append(player)
+#
+#                     if str(user_id) in current_rewards and reward_name in current_rewards[f'{user_id}']:
+#                         current_quantity = current_rewards[f'{user_id}'][reward_name]
+#                         new_quantity = current_quantity + quantity
+#                         await collection.update_one({'questId': quest_id},
+#                                                     {'$set': {f'rewards.{user_id}.{reward_name}': new_quantity}},
+#                                                     upsert=True)
+#                     else:
+#                         await collection.update_one({'questId': quest_id},
+#                                                     {'$set': {f'rewards.{user_id}.{reward_name}': quantity}},
+#                                                     upsert=True)
+#
+#             if not valid_players:
+#                 error_title = 'Error!'
+#                 error_message = 'No valid players were provided!'
+#             else:
+#                 update_embed = discord.Embed(title='Rewards updated!', type='rich',
+#                                              description=f'Quest ID: **{quest_id}**\n'
+#                                                          f'Title: **{title}**\n'
+#                                                          f'Reward: **{quantity}x {reward_name} each**')
+#                 update_embed.add_field(name="Recipients", value='\n'.join(valid_players))
+#                 update_embed.add_field(name='The following players were not found in the roster',
+#                                        value='\n'.join(invalid_players))
+#
+#                 await interaction.response.send_message(embed=update_embed, ephemeral=True)
+#
+#         if error_message:
+#             error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
+#             await interaction.response.send_message(embed=error_embed, ephemeral=True)
+
 
 
 class GMPlayerMenuView(discord.ui.View):
@@ -1147,10 +1313,6 @@ class RemovePlayerView(discord.ui.View):
         guild = interaction.client.get_guild(guild_id)
         member = guild.get_member(int(removed_member_id))
 
-        # Remove the player's reactions from the post. This triggers the on_raw_reaction_remove
-        # event handled in questBoard.py
-        [await reaction.remove(member) for reaction in message.reactions]
-
         # Notify the player they have been removed.
         await member.send(f'You have been removed from the party for the quest, **{quest["title"]}**.')
 
@@ -1174,6 +1336,7 @@ class QuestPostView(discord.ui.View):
     async def setup_embed(self):
         try:
             embed = self.embed
+            embed.clear_fields()
             quest = self.quest
             # Initialize all the current quest values
             (guild_id, quest_id, title, description, max_party_size, restrictions, gm, party, wait_list, xp,
@@ -1198,12 +1361,441 @@ class QuestPostView(discord.ui.View):
                     f'------'
                 )
 
+            if lock_state:
+                title = title + ' (LOCKED)'
+
+            current_party_size = len(party)
+            current_wait_list_size = 0
+            if wait_list:
+                current_wait_list_size = len(wait_list)
+
+            formatted_party = []
+            # Map int list to string for formatting, then format the list of users as user mentions
+            if len(party) > 0:
+                self.leave_button.disabled = False
+                for player in party:
+                    for member_id in player:
+                        for character_id in player[str(member_id)]:
+                            character = player[str(member_id)][str(character_id)]
+                            formatted_party.append(f'- <@!{member_id}> as {character['name']}')
+            else:
+                self.leave_button.disabled = True
+
+            formatted_wait_list = []
+            # Only format the wait list if there is one.
+            if len(wait_list) > 0:
+                for player in wait_list:
+                    for member_id in player:
+                        for character_id in player[str(member_id)]:
+                            character = player[str(member_id)][str(character_id)]
+                            formatted_wait_list.append(f'- <@!{member_id}> as {character['name']}')
+
             # Set the embed fields and footer
             embed.title = title
             embed.description = post_description
-            embed.add_field(name=f'__Party (0/{max_party_size})__', value=None)
+            if len(formatted_party) == 0:
+                embed.add_field(name=f'__Party ({current_party_size}/{max_party_size})__',
+                                value='None')
+            else:
+                embed.add_field(name=f'__Party ({current_party_size}/{max_party_size})__',
+                                value='\n'.join(formatted_party))
+
+            # Add a wait list field if one is present, unless the quest is being archived.
             if max_wait_list_size > 0:
-                embed.add_field(name=f'__Wait List (0/{max_wait_list_size})__', value=None)
+                if len(formatted_wait_list) == 0:
+                    embed.add_field(name=f'__Wait List ({current_wait_list_size}/{max_wait_list_size})__',
+                                    value='None')
+                else:
+                    embed.add_field(name=f'__Wait List ({current_wait_list_size}/{max_wait_list_size})__',
+                                    value='\n'.join(formatted_wait_list))
+
             embed.set_footer(text='Quest ID: ' + quest_id)
         except Exception as e:
             await log_exception(e)
+
+    async def join_callback(self, interaction: discord.Interaction):
+        try:
+            # TODO: Level restrictions if enabled
+            guild_id = interaction.guild_id
+            user_id = interaction.user.id
+
+            quest_collection = interaction.client.gdb['quests']
+            quest_id = self.quest['questId']
+            quest = await quest_collection.find_one({'guildId': guild_id, 'questId': quest_id})
+
+            current_party = quest['party']
+            current_wait_list = quest['waitList']
+            for player in current_party:
+                if str(user_id) in player:
+                    for character_id, character_data in player[str(user_id)].items():
+                        raise Exception(f'You are already on this quest as {character_data['name']}')
+            max_wait_list_size = quest['maxWaitListSize']
+            max_party_size = quest['maxPartySize']
+            member_collection = interaction.client.mdb['characters']
+            player_characters = await member_collection.find_one({'_id': user_id})
+            if (not player_characters or
+                    'activeCharacters' not in player_characters or
+                    str(guild_id) not in player_characters['activeCharacters']):
+                raise Exception('You do not have an active character on this server. Use the `/player` menus to create'
+                                'a new character, or activate an existing one on this server.')
+            active_character_id = player_characters['activeCharacters'][str(guild_id)]
+            active_character = player_characters['characters'][active_character_id]
+
+            if quest['lockState']:
+                raise Exception(f'Error joining quest **{quest["title"]}**: The quest is locked and not accepting new '
+                                f'players.')
+            else:
+                # If the wait list is enabled, this section formats the embed to include the wait list
+                if max_wait_list_size > 0:
+                    # If there is room in the party, add the user.
+                    if len(current_party) < max_party_size:
+                        await quest_collection.update_one(
+                            {'guildId': guild_id, 'questId': quest_id},
+                            {'$push': {'party': {f'{user_id}': {f'{active_character_id}': active_character}}}}
+                        )
+                    # If the party is full but the wait list is not, add the user to wait list.
+                    elif len(current_party) >= max_party_size and len(current_wait_list) < max_wait_list_size:
+                        await quest_collection.update_one(
+                            {'guildId': guild_id, 'questId': quest_id},
+                            {'$push': {'waitList': {f'{user_id}': {f'{active_character_id}': active_character}}}}
+                        )
+
+                    # Otherwise, inform the user that the party/wait list is full
+                    else:
+                        raise Exception(f'Error joining quest **{quest["title"]}**: The quest roster is full!')
+                # If there is no wait list, this section formats the embed without it
+                else:
+                    # If there is room in the party, add the user.
+                    if len(current_party) < max_party_size:
+                        await quest_collection.update_one(
+                            {'guildId': guild_id, 'questId': quest_id},
+                            {'$push': {'party': {f'{user_id}': {f'{active_character_id}': active_character}}}}
+                        )
+                    else:
+                        raise Exception(f'Error joining quest **{quest["title"]}**: The quest roster is full!')
+
+                # The document is queried again to build the updated post
+                self.quest = await quest_collection.find_one({'guildId': guild_id, 'questId': quest_id})
+                await self.setup_embed()
+                await interaction.response.edit_message(embed=self.embed, view=self)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def leave_callback(self, interaction):
+        try:
+            guild_id = interaction.guild_id
+            user_id = interaction.user.id
+            guild = interaction.client.get_guild(guild_id)
+
+            quest_collection = interaction.client.gdb['quests']
+            quest_id = self.quest['questId']
+            quest = await quest_collection.find_one({'guildId': guild_id, 'questId': quest_id})
+
+            current_party = quest['party']
+            current_wait_list = quest['waitList']
+            not_party = False
+            for player in current_party:
+                if str(user_id) not in player:
+                    not_party = True
+            not_wait_list = False
+            if len(current_wait_list) > 0:
+                for player in current_wait_list:
+                    if str(user_id) not in player:
+                        not_wait_list = True
+            if not_party and not_wait_list:
+                raise Exception(f'You are not signed up for this quest.')
+
+            max_wait_list_size = quest['maxWaitListSize']
+            role_query = await interaction.client.gdb['partyRole'].find_one({'_id': guild_id, 'gm': quest['gm']})
+
+            # If the quest list is locked and a party role exists, fetch the role.
+            role = None
+            if quest['lockState'] and role_query:
+                role = guild.get_role(role_query['role'])
+
+                # Get the member object and remove the role
+                member = guild.get_member(user_id)
+                await member.remove_roles(role)
+
+            if max_wait_list_size > 0:
+                # Find which list the user is in, and remove them from the database
+                for entry in current_party:
+                    if str(user_id) in entry:
+                        await quest_collection.update_one(
+                            {'guildId': guild_id, 'questId': quest_id},
+                            {'$pull': {'party': {f'{user_id}': {'$exists': True}}}}
+                        )
+                        # If there is a wait list, move the first entry into the party automatically
+                        if len(current_wait_list) > 0:
+                            for new_player in current_wait_list:
+                                for key in new_player:
+                                    new_member = guild.get_member(int(key))
+
+                                    await quest_collection.update_one(
+                                        {'guildId': guild_id, 'questId': quest_id},
+                                        {'$push': {'party': new_player}}
+                                    )
+                                    await quest_collection.update_one(
+                                        {'guildId': guild_id, 'questId': quest_id},
+                                        {'$pull': {'waitList': new_player}}
+                                    )
+
+                                    # Notify the member they have been moved into the main party
+                                    await new_member.send(f'You have been added to the party for '
+                                                          f'**{quest["title"]}**, due to a player dropping!')
+
+                                    # If a role is set, assign it to the player
+                                    if role:
+                                        await new_member.add_roles(role)
+
+                for entry in current_wait_list:
+                    if str(user_id) in entry:
+                        await quest_collection.update_one(
+                            {'guildId': guild_id, 'questId': quest_id},
+                            {'$pull': {'waitList': {f'{user_id}': {'$exists': True}}}}
+                        )
+            # If there is no wait list, this section formats the embed without it
+            else:
+                # Remove the user from the quest in the database
+                await quest_collection.update_one(
+                    {'guildId': guild_id, 'questId': quest_id},
+                    {'$pull': {'party': {f'{user_id}': {'$exists': True}}}}
+                )
+
+            # Refresh the query with the new document and edit the post
+            self.quest = await quest_collection.find_one({'guildId': guild_id, 'questId': quest_id})
+            await self.setup_embed()
+            await interaction.response.edit_message(embed=self.embed, view=self)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class CompleteQuestsView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.embed = discord.Embed(
+            title='',
+            description='',
+            type='rich'
+        )
+        self.quest_select = selects.ManageableQuestSelect(self)
+
+    async def setup_select(self):
+        try:
+            raise Exception('Not implemented!')
+        except Exception as e:
+            await log_exception(e)
+
+    async def setup_embed(self):
+        try:
+            self.embed.clear_fields()
+            raise Exception('Not implemented!')
+        except Exception as e:
+            await log_exception(e)
+
+    async def select_callback(self):
+        try:
+            raise Exception('Not implemented!')
+        except Exception as e:
+            await log_exception(e)
+
+    async def complete_quest(self, interaction: discord.Interaction, quest_id: str, summary: str = None):
+        """
+        Closes a quest and issues rewards.
+
+        Arguments:
+        [quest_id]: The ID of the quest.
+        [summary](Optional): A summary of the quest, if enabled (see help config quest summary).
+        """
+        # TODO: Implement quest removal/archival, optional summary, player and GM reward distribution
+        guild_id = interaction.guild_id
+        user_id = interaction.user.id
+        guild = self.bot.get_guild(guild_id)
+
+        # Fetch the quest
+        quest = await self.gdb['quests'].find_one({'questId': quest_id})
+
+        # Confirm the user calling the command is the GM that created the quest
+        if not quest['gm'] == user_id:
+            error_embed = discord.Embed(title='Quest Not Edited!', description='GMs can only manage their own quests!',
+                                        type='rich')
+            await interaction.response.send_message(embed=error_embed, ephemeral=True)
+        else:
+            # Check if there is a configured quest archive channel
+            archive_channel = None
+            archive_query = await self.gdb['archiveChannel'].find_one({'guildId': guild_id})
+            if archive_query:
+                archive_channel = archive_query['archiveChannel']
+
+            # Check if a GM role was configured
+            gm_role = None
+            gm = quest['gm']
+            role_query = await self.gdb['partyRole'].find_one({'guildId': guild_id, 'gm': gm})
+            if role_query:
+                gm_role = role_query['role']
+
+            # Get party members and message them with results
+            party = quest['party']
+            title = quest['title']
+            xp_value = quest['xp']
+            rewards = quest['rewards']
+            reward_summary = []
+            member_collection = self.mdb['characters']
+            for entry in party:
+                for player_id in entry:
+                    player = int(player_id)
+                    member = guild.get_member(player)
+                    # Remove the party role, if applicable
+                    if gm_role:
+                        role = guild.get_role(gm_role)
+                        await member.remove_roles(role)
+
+                    character_query = await member_collection.find_one({'_id': player})
+                    character_id = entry[player_id]
+                    character = character_query['characters'][character_id]
+                    reward_strings = []
+
+                    if str(player) in rewards:
+                        if archive_channel:
+                            reward_summary.append(f'\n<@!{player}>')
+                        inventory = character['attributes']['inventory']
+                        for item_name in rewards[f'{player}']:
+                            quantity = rewards[f'{player}'][item_name]
+                            if item_name in inventory:
+                                current_quantity = inventory[item_name]
+                                new_quantity = current_quantity + quantity
+                                await member_collection.update_one(
+                                    {'_id': player},
+                                    {'$set': {
+                                        f'characters.{character_id}.attributes.inventory.{item_name}': new_quantity}},
+                                    upsert=True)
+                            else:
+                                await member_collection.update_one({'_id': player}, {
+                                    '$set': {f'characters.{character_id}.attributes.inventory.{item_name}': quantity}},
+                                                                   upsert=True)
+
+                            reward_strings.append(f'{quantity}x {item_name}')
+                            if archive_channel:
+                                reward_summary.append(f'{quantity}x {item_name}')
+
+                    if xp_value:
+                        current_xp = character['attributes']['experience']
+
+                        if current_xp:
+                            current_xp += xp_value
+                        else:
+                            current_xp = xp_value
+
+                        # Update the db
+                        await member_collection.update_one({'_id': player}, {
+                            '$set': {f'characters.{character_id}.attributes.experience': current_xp}}, upsert=True)
+
+                        reward_strings.append(f'{xp_value} experience points')
+
+                    dm_embed = discord.Embed(title=f'Quest Complete: {title}',
+                                             type='rich')
+                    if reward_strings:
+                        dm_embed.add_field(name='Rewards', value='\n'.join(reward_strings))
+
+                    await member.send(embed=dm_embed)
+
+            # Archive the quest, if applicable
+            if archive_channel:
+                # Fetch the channel object
+                channel = guild.get_channel(archive_channel)
+
+                # Build the embed
+                post_embed = await self.update_quest_embed(quest, True)
+                # If quest summary is configured, add it
+                summary_enabled = await self.gdb['questSummary'].find_one({'guildId': guild_id})
+                if summary_enabled and summary_enabled['questSummary']:
+                    post_embed.add_field(name='Summary', value=summary, inline=False)
+
+                if rewards:
+                    post_embed.add_field(name='Rewards', value='\n'.join(reward_summary), inline=True)
+
+                if xp_value:
+                    post_embed.add_field(name='Experience Points', value=f'{xp_value} each', inline=True)
+
+                await channel.send(embed=post_embed)
+
+            # Delete the quest from the database
+            await self.gdb['quests'].delete_one({'questId': quest_id})
+
+            # Delete the quest from the quest channel
+            channel_query = await self.gdb['questChannel'].find_one({'guildId': guild_id})
+            channel_id = channel_query['questChannel']
+            quest_channel = guild.get_channel(channel_id)
+            message_id = quest['messageId']
+            message = quest_channel.get_partial_message(message_id)
+            await attempt_delete(message)
+
+            await interaction.response.send_message(f'Quest `{quest_id}`: **{title}** completed!', ephemeral=True)
+
+
+class CancelQuestView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    # async def delete(self, interaction: discord.Interaction, quest_id: str):
+    #     """
+    #     Deletes a quest.
+    #
+    #     Arguments:
+    #     [quest_id]: The ID of the quest.
+    #     """
+    #     guild_id = interaction.guild_id
+    #     user_id = interaction.user.id
+    #     guild = self.bot.get_guild(guild_id)
+    #     member = guild.get_member(user_id)
+    #     error_title = None
+    #     error_message = None
+    #
+    #     # Fetch the quest
+    #     quest = await self.gdb['quests'].find_one({'questId': quest_id})
+    #     if not quest:
+    #         error_title = 'Error!'
+    #         error_message = 'Quest ID not found!'
+    #     # Confirm the user calling the command is the GM that created the quest, or has administrative rights.
+    #     elif not quest['gm'] == user_id and not member.guild_permissions.manage_guild:
+    #         error_title = 'Quest Not Edited!'
+    #         error_message = 'GMs can only manage their own quests!'
+    #     else:
+    #         # If a party exists
+    #         party = quest['party']
+    #         title = quest['title']
+    #         if party:
+    #             # Check if a GM role was configured
+    #             gm_role = None
+    #             gm = quest['gm']
+    #             role_query = await self.gdb['partyRole'].find_one({'guildId': guild_id, 'gm': gm})
+    #             if role_query:
+    #                 gm_role = role_query['role']
+    #
+    #             # Get party members and message them with results
+    #             for player in party:
+    #                 for key in player:
+    #                     member = await guild.fetch_member(int(key))
+    #                     # Remove the party role, if applicable
+    #                     if gm_role:
+    #                         role = guild.get_role(gm_role)
+    #                         await member.remove_roles(role)
+    #                     # TODO: Implement loot and XP after those functions are added
+    #                     await member.send(f'Quest **{title}** was cancelled by the GM.')
+    #
+    #         # Delete the quest from the database
+    #         await self.gdb['quests'].delete_one({'questId': quest_id})
+    #
+    #         # Delete the quest from the quest channel
+    #         channel_query = await self.gdb['questChannel'].find_one({'guildId': guild_id})
+    #         channel_id = channel_query['questChannel']
+    #         quest_channel = guild.get_channel(channel_id)
+    #         message_id = quest['messageId']
+    #         message = quest_channel.get_partial_message(message_id)
+    #         await attempt_delete(message)
+    #
+    #         await interaction.response.send_message(f'Quest `{quest_id}`: **{title}** deleted!', ephemeral=True)
+    #
+    #     if error_message:
+    #         error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
+    #         await interaction.response.send_message(embed=error_embed, ephemeral=True)
