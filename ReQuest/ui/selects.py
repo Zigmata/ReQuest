@@ -310,7 +310,7 @@ class ManageQuestSelect(discord.ui.Select):
 
 
 class PartyMemberSelect(discord.ui.Select):
-    def __init__(self, calling_view):
+    def __init__(self, calling_view, disabled_components=None):
         super().__init__(
             placeholder='Select a party member',
             options=[],
@@ -318,6 +318,7 @@ class PartyMemberSelect(discord.ui.Select):
             disabled=True
         )
         self.calling_view = calling_view
+        self.disabled_components = disabled_components
 
     async def callback(self, interaction: discord.Interaction):
         try:
@@ -329,11 +330,13 @@ class PartyMemberSelect(discord.ui.Select):
                     for character_id_key in player[str(member_id)]:
                         if character_id_key == character_id:
                             character = player[str(member_id)][character_id]
-                            logger.info(f'Character: {character}')
                             view.selected_character = character
+                            view.selected_character_id = character_id
             await view.setup_embed()
             await view.setup_select()
-            view.individual_rewards_button.disabled = False
+            if self.disabled_components:
+                for component in self.disabled_components:
+                    component.disabled = False
             await interaction.response.edit_message(embed=view.embed, view=view)
         except Exception as e:
             await log_exception(e, interaction)

@@ -452,7 +452,6 @@ class CreateQuestModal(discord.ui.Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            # TODO: Research exception catching on function argument TypeError
             # TODO: Level min/max for enabled servers
             title = self.quest_title_text_input.value
             restrictions = self.quest_restrictions_text_input.value
@@ -493,7 +492,6 @@ class CreateQuestModal(discord.ui.Modal):
 
             # Log the author, then post the new quest with an emoji reaction.
             author_id = interaction.user.id
-            author_mention = interaction.user.mention
             party: [int] = []
             wait_list: [int] = []
             lock_state = False
@@ -514,7 +512,6 @@ class CreateQuestModal(discord.ui.Modal):
                 'gm': author_id,
                 'party': party,
                 'waitList': wait_list,
-                'xp': 0,
                 'maxWaitListSize': max_wait_list_size,
                 'lockState': lock_state,
                 'rewards': {}
@@ -523,100 +520,12 @@ class CreateQuestModal(discord.ui.Modal):
             view = self.quest_view_class(quest)
             await view.setup_embed()
             msg = await quest_channel.send(embed=view.embed, view=view)
+            quest['messageId'] = msg.id
 
-            # emoji = '<:acceptquest:601559094293430282>'
-            # await msg.add_reaction(emoji)
-            message_id = msg.id
-
-            await quest_collection.insert_one({'guildId': guild_id, 'questId': quest_id, 'messageId': message_id,
-                                               'title': title, 'description': description,
-                                               'maxPartySize': max_party_size, 'restrictions': restrictions,
-                                               'gm': author_id, 'party': party, 'waitList': wait_list, 'xp': 0,
-                                               'maxWaitListSize': max_wait_list_size, 'lockState': lock_state,
-                                               'rewards': {}})
+            await quest_collection.insert_one(quest)
             await interaction.response.send_message(f'Quest `{quest_id}`: **{title}** posted!', ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)
-
-    # async def on_submit(self, interaction: discord.Interaction):
-    #     try:
-    #         # TODO: Research exception catching on function argument TypeError
-    #         # TODO: Level min/max for enabled servers
-    #         title = self.quest_title_text_input.value
-    #         restrictions = self.quest_restrictions_text_input.value
-    #         max_party_size = int(self.quest_party_size_text_input.value)
-    #         description = self.quest_description_text_input.value
-    #
-    #         guild_id = interaction.guild_id
-    #         quest_id = str(shortuuid.uuid()[:8])
-    #         bot = interaction.client
-    #         max_wait_list_size = 0
-    #
-    #         # Get the server's wait list configuration
-    #         wait_list_query = await bot.gdb['questWaitList'].find_one({'_id': guild_id})
-    #         if wait_list_query:
-    #             max_wait_list_size = wait_list_query['questWaitList']
-    #
-    #         # Query the collection to see if a channel is set
-    #         quest_channel_query = await bot.gdb['questChannel'].find_one({'_id': guild_id})
-    #
-    #         # Inform user if quest channel is not set. Otherwise, get the channel string
-    #         if not quest_channel_query:
-    #             raise Exception('A channel has not yet been designated for quest posts. Contact a server admin to '
-    #                             'configure the Quest Channel.')
-    #         else:
-    #             quest_channel_mention = quest_channel_query['questChannel']
-    #
-    #         # Query the collection to see if a role is set
-    #         announce_role_query = await bot.gdb['announceRole'].find_one({'_id': guild_id})
-    #
-    #         # Grab the announcement role, if configured.
-    #         announce_role = None
-    #         if announce_role_query:
-    #             announce_role = announce_role_query['announceRole']
-    #
-    #         quest_collection = bot.gdb['quests']
-    #         # Get the channel object.
-    #         quest_channel = bot.get_channel(strip_id(quest_channel_mention))
-    #
-    #         # Log the author, then post the new quest with an emoji reaction.
-    #         author_id = interaction.user.id
-    #         author_mention = interaction.user.mention
-    #         party: [int] = []
-    #         wait_list: [int] = []
-    #         lock_state = False
-    #         if restrictions:
-    #             post_description = (f'**GM:** {author_mention}\n**Party Restrictions:** {restrictions}\n\n{description}'
-    #                                 f'\n\n------')
-    #         else:
-    #             post_description = f'**GM:** {author_mention}\n\n{description}\n\n------'
-    #
-    #         post_embed = discord.Embed(title=title, type='rich',
-    #                                    description=post_description)
-    #         post_embed.add_field(name=f'__Party (0/{max_party_size})__', value=None)
-    #         if max_wait_list_size > 0:
-    #             post_embed.add_field(name=f'__Wait List (0/{max_wait_list_size})__', value=None)
-    #         post_embed.set_footer(text='Quest ID: ' + quest_id)
-    #
-    #         # If an announcement role is set, ping it and then delete the message.
-    #         if announce_role != 0:
-    #             ping_msg = await quest_channel.send(f'{announce_role} **NEW QUEST!**')
-    #             await ping_msg.delete()
-    #
-    #         msg = await quest_channel.send(embed=post_embed)
-    #         emoji = '<:acceptquest:601559094293430282>'
-    #         await msg.add_reaction(emoji)
-    #         message_id = msg.id
-    #
-    #         await quest_collection.insert_one({'guildId': guild_id, 'questId': quest_id, 'messageId': message_id,
-    #                                            'title': title, 'description': description,
-    #                                            'maxPartySize': max_party_size, 'restrictions': restrictions,
-    #                                            'gm': author_id, 'party': party, 'waitList': wait_list, 'xp': 0,
-    #                                            'maxWaitListSize': max_wait_list_size, 'lockState': lock_state,
-    #                                            'rewards': {}})
-    #         await interaction.response.send_message(f'Quest `{quest_id}`: **{title}** posted!', ephemeral=True)
-    #     except Exception as e:
-    #         await log_exception(e, interaction)
 
 
 class EditQuestModal(discord.ui.Modal):
@@ -705,5 +614,53 @@ class EditQuestModal(discord.ui.Modal):
             await view.setup_select()
             await view.setup_embed()
             await interaction.response.edit_message(embed=view.embed, view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RewardsModal(discord.ui.Modal):
+    def __init__(self, caller):
+        super().__init__(
+            title='Add Reward',
+            timeout=600
+        )
+        self.caller = caller
+        self.xp_input = discord.ui.TextInput(
+            label='Experience Points',
+            style=discord.TextStyle.short,
+            custom_id='experience_text_input',
+            placeholder='Enter a number',
+            required=False
+        )
+        self.item_input = discord.ui.TextInput(
+            label='Items',
+            style=discord.TextStyle.paragraph,
+            custom_id='items_text_input',
+            placeholder='{item}: {quantity}\n'
+                        '{item2}: {quantity}\n'
+                        'etc.',
+            required=False
+        )
+        self.add_item(self.xp_input)
+        self.add_item(self.item_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            xp = None
+            items = None
+            if self.xp_input.value:
+                xp = int(self.xp_input.value)
+            if self.item_input.value:
+                logger.info(f'input value present')
+                if self.item_input.value.lower() == 'none':
+                    items = 'none'
+                else:
+                    items = {}
+                    for item in self.item_input.value.strip().split('\n'):
+                        item_name, quantity = item.split(':', 1)
+                        items[item_name.strip().capitalize()] = int(quantity.strip())
+
+            logger.info(f'xp: {xp}, items: {items}')
+            await self.caller.modal_callback(interaction, xp, items)
         except Exception as e:
             await log_exception(e, interaction)

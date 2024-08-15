@@ -233,79 +233,85 @@ async def trade_item(mdb, item_name, quantity, sending_member_id, receiving_memb
     )
 
 
-# --------- Quest Posts -------------------
+async def update_character_inventory(interaction: discord.Interaction, player_id: int, character_id: str,
+                                     item_name: str, quantity: float):
+    character_collection = interaction.client.mdb['characters']
+    player_data = await character_collection.find_one({'_id': player_id})
+    character_data = player_data['characters'].get(character_id)
 
-# async def quest_ready_toggle(interaction: discord.Interaction, quest, quest_post_view_class) -> dict:
-#     guild_id = interaction.guild_id
-#     user_id = interaction.user.id
-#     guild = interaction.client.get_guild(guild_id)
-#
-#     # Fetch the quest channel to retrieve the message object
-#     channel_collection = interaction.client.gdb['questChannel']
-#     channel_id_query = await channel_collection.find_one({'_id': guild_id})
-#     if not channel_id_query:
-#         raise Exception('Quest channel has not been set!')
-#     channel_id = strip_id(channel_id_query['questChannel'])
-#     channel = interaction.client.get_channel(channel_id)
-#
-#     # Retrieve the message object
-#     message_id = quest['messageId']
-#     message = channel.get_partial_message(message_id)
-#
-#     # Check to see if the GM has a party role configured
-#     role_collection = interaction.client.gdb['partyRole']
-#     role_query = await role_collection.find_one({'_id': guild_id, 'gm': user_id})
-#     role = None
-#     if role_query and role_query['role']:
-#         role_id = role_query['role']
-#         role = guild.get_role(role_id)
-#
-#     party = quest['party']
-#     title = quest['title']
-#     quest_id = quest['questId']
-#     tasks = []
-#
-#     # Locks the quest roster and alerts party members that the quest is ready.
-#     quest_collection = interaction.client.gdb['quests']
-#     if not quest['lockState']:
-#         await quest_collection.update_one({'questId': quest_id}, {'$set': {'lockState': True}})
-#
-#         # Fetch the updated quest
-#         updated_quest = await quest_collection.find_one({'questId': quest_id})
-#
-#         # Notify each party member that the quest is ready
-#         for player in party:
-#             for key in player:
-#                 member = guild.get_member(int(key))
-#                 # If the GM has a party role configured, assign it to each party member
-#                 if role:
-#                     tasks.append(member.add_roles(role))
-#                 tasks.append(member.send(f'Game Master <@{user_id}> has marked your quest, **"{title}"**, '
-#                                          f'ready to start!'))
-#
-#         await interaction.user.send('Quest roster locked and party notified!')
-#     # Unlocks a quest if members are not ready.
-#     else:
-#         # Remove the role from the players
-#         if role:
-#             for player in party:
-#                 for key in player:
-#                     member = guild.get_member(int(key))
-#                     tasks.append(member.remove_roles(role))
-#
-#         # Unlock the quest
-#         await quest_collection.update_one({'questId': quest_id}, {'$set': {'lockState': False}})
-#
-#         # Fetch the updated quest
-#         updated_quest = await quest_collection.find_one({'questId': quest_id})
-#
-#         await interaction.user.send('Quest roster has been unlocked.')
-#
-#     if len(tasks) > 0:
-#         await asyncio.gather(*tasks)
-#
-#     # Create a fresh quest view, and update the original post message
-#     quest_view = quest_post_view_class(updated_quest)
-#     await quest_view.setup_embed()
-#     await message.edit(embed=quest_view.embed, view=quest_view)
-#     return updated_quest
+    # Fetch server currency definitions
+    currency_collection = interaction.client.gdb['currency']
+    currency_query = await currency_collection.find_one({'_id': interaction.guild_id})
+
+    # If the server has a currency defined, check if the provided item name is a currency or denomination
+    is_currency, currency_parent_name = None, None
+    if currency_query:
+        is_currency, currency_parent_name = find_currency_or_denomination(currency_query, item_name)
+
+    if is_currency:
+        # Update currency
+        denominations = {d['name'].lower(): d['value'] for currency in currency_query['currencies'] if
+                         currency['name'].lower() == currency_parent_name.lower() for d in currency['denominations']}
+        denominations[currency_parent_name.lower()] = 1  # Base currency
+
+        character_currency = normalize_currency_keys(character_data['attributes'].get('currency', {}))
+
+        # Convert the character's total currency to the lowest denomination
+        total_in_lowest_denom = sum(
+            character_currency.get(denom, 0) * (value / min(denominations.values()))
+            for denom, value in denominations.items()
+        )
+        amount_in_lowest_denom = quantity * (denominations[item_name.lower()] / min(denominations.values()))
+
+        # Update the total in the lowest denomination
+        total_in_lowest_denom += amount_in_lowest_denom
+
+        # Convert the total back to the original denominations
+        remaining_currency = {}
+        for denom, value in sorted(denominations.items(), key=lambda x: -x[1]):
+            denom_value_in_lowest_denom = value / min(denominations.values())
+            if total_in_lowest_denom >= denom_value_in_lowest_denom:
+                remaining_currency[denom] = int(total_in_lowest_denom // denom_value_in_lowest_denom)
+                total_in_lowest_denom %= denom_value_in_lowest_denom
+
+        # Consolidate the currency
+        consolidated_currency = consolidate_currency(remaining_currency, denominations)
+        logger.info(f"Updated currency: {consolidated_currency}")
+
+        character_currency_db = {k.capitalize(): v for k, v in consolidated_currency.items()}
+
+        await character_collection.update_one(
+            {'_id': player_id},
+            {'$set': {f'characters.{character_id}.attributes.currency': character_currency_db}}
+        )
+
+    else:
+        # Handle inventory update
+        character_inventory = character_data['attributes'].get('inventory', {})
+        item_name_lower = item_name.lower()
+
+        # Find the item in the inventory (case-insensitive)
+        for key in character_inventory.keys():
+            if key.lower() == item_name_lower:
+                character_inventory[key.capitalize()] += quantity
+                break
+        else:
+            # If item not found, add new item
+            character_inventory[item_name.capitalize()] = quantity
+
+        await character_collection.update_one(
+            {'_id': player_id},
+            {'$set': {f'characters.{character_id}.attributes.inventory': character_inventory}}
+        )
+
+
+async def update_character_experience(interaction: discord.Interaction, player_id: int, character_id: str,
+                                      amount: int):
+    character_collection = interaction.client.mdb['characters']
+    player_data = await character_collection.find_one({'_id': player_id})
+    character_data = player_data['characters'].get(character_id)
+    character_data['attributes']['experience'] += amount
+    await character_collection.update_one(
+        {'_id': player_id},
+        {'$set': {f'characters.{character_id}': character_data}}
+    )

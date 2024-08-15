@@ -5,8 +5,7 @@ import discord.ui
 from discord import ButtonStyle, Interaction
 from discord.ui import Button
 
-from .modals import CharacterRegisterModal, AddCurrencyDenominationTextModal, AddCurrencyTextModal, AllowServerModal, \
-    AdminCogTextModal, SpendCurrencyModal, CreateQuestModal, EditQuestModal
+import ReQuest.ui.modals as modals
 from ..utilities.supportFunctions import log_exception
 
 logging.basicConfig(level=logging.INFO)
@@ -23,10 +22,11 @@ class RegisterCharacterButton(Button):
 
     async def callback(self, interaction: Interaction):
         try:
-            modal = CharacterRegisterModal(self, interaction.client.mdb, interaction.user.id, interaction.guild_id)
+            modal = modals.CharacterRegisterModal(self, interaction.client.mdb, interaction.user.id,
+                                                  interaction.guild_id)
             await interaction.response.send_modal(modal)
-        except Exception as e:
-            await log_exception(e, interaction)
+        except Exception as e: \
+                await log_exception(e, interaction)
 
 
 class ListCharactersButton(Button):
@@ -467,7 +467,7 @@ class AddDenominationButton(discord.ui.Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            new_modal = AddCurrencyDenominationTextModal(
+            new_modal = modals.AddCurrencyDenominationTextModal(
                 calling_view=self.calling_view,
                 base_currency_name=self.calling_view.selected_currency_name
             )
@@ -505,9 +505,9 @@ class AddCurrencyButton(discord.ui.Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            await interaction.response.send_modal(AddCurrencyTextModal(guild_id=interaction.guild_id,
-                                                                       gdb=interaction.client.gdb,
-                                                                       calling_view=self.calling_view))
+            await interaction.response.send_modal(modals.AddCurrencyTextModal(guild_id=interaction.guild_id,
+                                                                              gdb=interaction.client.gdb,
+                                                                              calling_view=self.calling_view))
         except Exception as e:
             await log_exception(e)
 
@@ -580,7 +580,7 @@ class AllowlistAddServerButton(discord.ui.Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            new_modal = AllowServerModal(interaction.client.cdb, self.calling_view, interaction.client)
+            new_modal = modals.AllowServerModal(interaction.client.cdb, self.calling_view, interaction.client)
             await interaction.response.send_modal(new_modal)
         except Exception as e:
             await log_exception(e, interaction)
@@ -626,7 +626,7 @@ class AdminLoadCogButton(discord.ui.Button):
                 await modal_interaction.response.send_message(f'Extension successfully loaded: `{module}`',
                                                               ephemeral=True)
 
-            modal = AdminCogTextModal('load', modal_callback)
+            modal = modals.AdminCogTextModal('load', modal_callback)
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)
@@ -648,7 +648,7 @@ class AdminReloadCogButton(discord.ui.Button):
                 await modal_interaction.response.send_message(f'Extension successfully reloaded: `{module}`',
                                                               ephemeral=True)
 
-            modal = AdminCogTextModal('reload', modal_callback)
+            modal = modals.AdminCogTextModal('reload', modal_callback)
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)
@@ -704,7 +704,7 @@ class SpendCurrencyButton(discord.ui.Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            modal = SpendCurrencyModal(self.calling_view)
+            modal = modals.SpendCurrencyModal(self.calling_view)
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)
@@ -745,7 +745,7 @@ class CreateQuestButton(discord.ui.Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            modal = CreateQuestModal(self.quest_view_class)
+            modal = modals.CreateQuestModal(self.quest_view_class)
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)
@@ -765,7 +765,7 @@ class EditQuestButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             quest = self.calling_view.selected_quest
-            modal = EditQuestModal(self.calling_view, quest, self.quest_post_view_class)
+            modal = modals.EditQuestModal(self.calling_view, quest, self.quest_post_view_class)
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)
@@ -859,7 +859,37 @@ class PartyRewardsButton(discord.ui.Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            raise Exception('Not implemented!')
+            rewards_modal = modals.RewardsModal(self)
+            await interaction.response.send_modal(rewards_modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def modal_callback(self, interaction: discord.Interaction, xp, items):
+        try:
+            view = self.calling_view
+            quest = view.quest
+            if 'party' not in quest['rewards']:
+                quest['rewards']['party'] = {}
+            if xp and xp > 0:
+                quest['rewards']['party']['xp'] = xp
+            elif xp is not None and xp == 0:
+                quest['rewards']['party']['xp'] = 0
+
+            if items == 'none':
+                quest['rewards']['party']['items'] = {}
+            elif items:
+                if len(quest['rewards']['party']['items']) == 0:
+                    quest['rewards']['party']['items'] = items
+                else:
+                    merged_items: dict = quest['rewards']['party']['items']
+                    merged_items.update(items)
+                    quest['rewards']['party']['items'] = merged_items
+
+            quest_collection = interaction.client.gdb['quests']
+            await quest_collection.update_one({'guildId': quest['guildId'], 'questId': quest['questId']},
+                                              {'$set': quest})
+            await view.setup_embed()
+            await interaction.response.edit_message(embed=view.embed, view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -876,7 +906,44 @@ class IndividualRewardsButton(discord.ui.Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            raise Exception('Not implemented!')
+            rewards_modal = modals.RewardsModal(self)
+            await interaction.response.send_modal(rewards_modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def modal_callback(self, interaction: discord.Interaction, xp, items):
+        try:
+            view = self.calling_view
+            quest = view.quest
+            character_id = view.selected_character_id
+            if character_id not in quest['rewards']:
+                quest['rewards'][character_id] = {}
+            if 'items' not in quest['rewards'][character_id]:
+                quest['rewards'][character_id]['items'] = {}
+            if 'xp' not in quest['rewards'][character_id]:
+                quest['rewards'][character_id]['xp'] = 0
+
+            if xp and xp > 0:
+                quest['rewards'][character_id]['xp'] = xp
+            elif xp is not None and xp == 0:
+                quest['rewards'][character_id]['xp'] = 0
+
+            if items == 'none':
+                quest['rewards'][character_id]['items'] = {}
+            elif items:
+                if len(quest['rewards'][character_id]['items']) == 0:
+                    quest['rewards'][character_id]['items'] = items
+                else:
+                    merged_items: dict = quest['rewards'][character_id]['items']
+                    merged_items.update(items)
+                    quest['rewards'][character_id]['items'] = merged_items
+
+            quest_collection = interaction.client.gdb['quests']
+            await quest_collection.update_one({'guildId': quest['guildId'], 'questId': quest['questId']},
+                                              {'$set': quest})
+            view.quest = quest
+            await view.setup_embed()
+            await interaction.response.edit_message(embed=view.embed, view=view)
         except Exception as e:
             await log_exception(e, interaction)
 

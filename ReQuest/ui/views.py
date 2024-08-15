@@ -5,7 +5,8 @@ import discord
 
 import ReQuest.ui.buttons as buttons
 import ReQuest.ui.selects as selects
-from ReQuest.utilities.supportFunctions import log_exception, strip_id, attempt_delete
+from ReQuest.utilities.supportFunctions import log_exception, strip_id, update_character_inventory, \
+    update_character_experience
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -1074,7 +1075,16 @@ class RewardsMenuView(discord.ui.View):
                 'Assigns experience and/or currency rewards to be split evenly across all party members.\n\n'
                 '__**Individual Rewards**__\n'
                 'Assigns additional bonus rewards for the selected party member.\n\n'
-                '------\n\n'
+                '**How To Input Rewards**\n\n'
+                '> Experience Points\n'
+                '- Input the total reward. This field is not additive.\n\n'
+                '> Items/Currency\n'
+                '- New item names will be added to the existing list.\n'
+                '- Items with the same name will overwrite the previous quantity with the new one.\n'
+                '- Note the {name}: {quantity} format in the placeholder text.\n'
+                '- A value of \"None\" will reset the item list.\n'
+                '- Item/Currency names are case-insensitive, so \"gOLd\" == \"Gold\"\n\n'
+                '------'
             ),
             type='rich'
         )
@@ -1083,9 +1093,11 @@ class RewardsMenuView(discord.ui.View):
         self.quest = calling_view.selected_quest
         self.guild_id = guild_id
         self.selected_character = None
-        self.party_member_select = selects.PartyMemberSelect(self)
-        self.party_rewards_button = buttons.PartyRewardsButton(self)
+        self.selected_character_id = None
         self.individual_rewards_button = buttons.IndividualRewardsButton(self)
+        self.party_rewards_button = buttons.PartyRewardsButton(self)
+        self.party_member_select = selects.PartyMemberSelect(calling_view=self,
+                                                             disabled_components=[self.individual_rewards_button])
         back_button = buttons.MenuViewButton(target_view_class=ManageQuestsView, label='Back', setup_select=True,
                                              setup_embed=True)
         self.add_item(self.party_member_select)
@@ -1121,12 +1133,32 @@ class RewardsMenuView(discord.ui.View):
             self.embed.clear_fields()
             quest = self.calling_view.selected_quest
             self.embed.title = f'Quest Rewards - {quest['title']}'
-            for reward in quest['rewards']:
-                self.embed.add_field(name='Name', value=reward)
+            if 'party' in quest['rewards']:
+                party_rewards = quest['rewards']['party']
+                party_rewards_list = []
+                if 'xp' in party_rewards and party_rewards['xp']:
+                    party_rewards_list.append(f'Experience: {party_rewards['xp']}')
+                if 'items' in party_rewards:
+                    for item, quantity in party_rewards['items'].items():
+                        party_rewards_list.append(f'{item.capitalize()}: {quantity}')
+                party_rewards_string = '\n'.join(party_rewards_list)
+                self.embed.add_field(name='Party Rewards',
+                                     value=party_rewards_string if party_rewards_string else 'None')
 
             if self.selected_character:
-                logger.info(self.selected_character)
-                self.embed.add_field(name='Selected Party Member', value=self.selected_character['name'])
+                character_id = self.selected_character_id
+                individual_rewards_list = []
+                for key in quest['rewards']:
+                    if key == character_id:
+                        individual_rewards = quest['rewards'][character_id]
+                        if 'xp' in individual_rewards and individual_rewards['xp']:
+                            individual_rewards_list.append(f'Experience: {quest['rewards'][character_id]['xp']}')
+                        for item, quantity in individual_rewards['items'].items():
+                            individual_rewards_list.append(f'{item.capitalize()}: {quantity}')
+                rewards_string = '\n'.join(individual_rewards_list)
+                self.embed.add_field(name=f'Additional rewards for {self.selected_character['name']}',
+                                     value=rewards_string if rewards_string else 'None',
+                                     inline=False)
         except Exception as e:
             await log_exception(e)
 
@@ -1211,7 +1243,6 @@ class RewardsMenuView(discord.ui.View):
 #             await interaction.response.send_message(embed=error_embed, ephemeral=True)
 
 
-
 class GMPlayerMenuView(discord.ui.View):
     def __init__(self, bot, user, guild_id):
         super().__init__(timeout=None)
@@ -1268,8 +1299,8 @@ class RemovePlayerView(discord.ui.View):
         self.selected_character = None
         self.remove_player_select = selects.RemovePlayerSelect(self)
         self.confirm_button = buttons.ConfirmButton(self)
-        self.back_button = buttons.MenuViewButton(target_view_class=ManageQuestsView, label='Back')
-        self.add_item(self.remove_player_select)
+        self.back_button = \
+            self.add_item(self.remove_player_select)
         self.add_item(self.confirm_button)
         self.add_item(self.back_button)
 
@@ -1296,27 +1327,31 @@ class RemovePlayerView(discord.ui.View):
             await log_exception(e)
 
     async def confirm_callback(self, interaction):
-        quest = self.quest
-        removed_member_id = self.selected_party_member_id
-        guild_id = interaction.guild_id
-        message_id = quest['messageId']
+        try:
+            # TODO: Remove player from rewards, if any
+            quest = self.quest
+            removed_member_id = self.selected_party_member_id
+            guild_id = interaction.guild_id
+            message_id = quest['messageId']
 
-        # Fetch the quest channel to retrieve the message object
-        channel_collection = interaction.client.gdb['questChannel']
-        channel_id_query = await channel_collection.find_one({'_id': guild_id})
-        if not channel_id_query:
-            raise Exception('Quest channel has not been set!')
-        channel_id = strip_id(channel_id_query['questChannel'])
-        channel = interaction.client.get_channel(channel_id)
-        message = await channel.fetch_message(message_id)
+            # Fetch the quest channel to retrieve the message object
+            channel_collection = interaction.client.gdb['questChannel']
+            channel_id_query = await channel_collection.find_one({'_id': guild_id})
+            if not channel_id_query:
+                raise Exception('Quest channel has not been set!')
+            channel_id = strip_id(channel_id_query['questChannel'])
+            channel = interaction.client.get_channel(channel_id)
+            message = await channel.fetch_message(message_id)
 
-        guild = interaction.client.get_guild(guild_id)
-        member = guild.get_member(int(removed_member_id))
+            guild = interaction.client.get_guild(guild_id)
+            member = guild.get_member(int(removed_member_id))
 
-        # Notify the player they have been removed.
-        await member.send(f'You have been removed from the party for the quest, **{quest["title"]}**.')
+            # Notify the player they have been removed.
+            await member.send(f'You have been removed from the party for the quest, **{quest["title"]}**.')
 
-        await interaction.response.send_message(f'Quest roster has been updated.', ephemeral=True)
+            await interaction.response.send_message(f'Quest roster has been updated.', ephemeral=True)
+        except Exception as e:
+            await log_exception(e, interaction)
 
 
 class QuestPostView(discord.ui.View):
@@ -1339,11 +1374,11 @@ class QuestPostView(discord.ui.View):
             embed.clear_fields()
             quest = self.quest
             # Initialize all the current quest values
-            (guild_id, quest_id, title, description, max_party_size, restrictions, gm, party, wait_list, xp,
+            (guild_id, quest_id, title, description, max_party_size, restrictions, gm, party, wait_list,
              max_wait_list_size, lock_state, rewards) = (quest['guildId'], quest['questId'], quest['title'],
                                                          quest['description'], quest['maxPartySize'],
                                                          quest['restrictions'], quest['gm'], quest['party'],
-                                                         quest['waitList'], quest['xp'], quest['maxWaitListSize'],
+                                                         quest['waitList'], quest['maxWaitListSize'],
                                                          quest['lockState'], quest['rewards'])
 
             # Format the main embed body
@@ -1571,166 +1606,238 @@ class QuestPostView(discord.ui.View):
 
 
 class CompleteQuestsView(discord.ui.View):
-    def __init__(self):
+    def __init__(self, bot, user, guild_id):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
             title='',
             description='',
             type='rich'
         )
+        self.bot = bot
+        self.user = user
+        self.guild_id = guild_id
+        self.quests = None
+        self.selected_quest = None
         self.quest_select = selects.ManageableQuestSelect(self)
+        self.complete_quest_button = buttons.CompleteQuestButton(self)
+        self.back_button = buttons.MenuViewButton(target_view_class=GMQuestMenuView, label='Back')
+        self.add_item(self.quest_select)
+        self.add_item(self.complete_quest_button)
+        self.add_item(self.back_button)
 
     async def setup_select(self):
         try:
-            raise Exception('Not implemented!')
+            quest_collection = self.bot.gdb['quests']
+            options = []
+            quests = []
+
+            # Check to see if the user has guild admin privileges. This lets them edit any quest in the guild.
+            if self.user.guild_permissions.manage_guild:
+                quest_query = quest_collection.find({'guildId': self.guild_id})
+            else:
+                quest_query = quest_collection.find({'guildId': self.guild_id, 'gm': self.user.id})
+
+            async for document in quest_query:
+                quests.append(dict(document))
+
+            if len(quests) > 0:
+                for quest in quests:
+                    options.append(discord.SelectOption(label=f'{quest['questId']}: {quest['title']}',
+                                                        value=quest['questId']))
+                self.quests = quests
+                logger.info(f'Found {len(quests)} quests.')
+                self.quest_select.disabled = False
+            else:
+                options.append(discord.SelectOption(label='No quests were found, or you do not have permissions to edit'
+                                                          ' them.', value='None'))
+                self.quest_select.disabled = True
+                await self.setup_embed()
+                self.embed.add_field(name='No Quests Available', value='No quests were found, or you do not have '
+                                                                       'permissions to edit them.')
+            self.quest_select.options = options
         except Exception as e:
             await log_exception(e)
 
     async def setup_embed(self):
         try:
             self.embed.clear_fields()
-            raise Exception('Not implemented!')
+            quest = self.selected_quest
+            if quest:
+                self.embed.add_field(name='Selected Quest', value=f'`{quest['questId']}`: {quest['title']}')
         except Exception as e:
             await log_exception(e)
 
-    async def select_callback(self):
+    async def select_callback(self, interaction):
         try:
-            raise Exception('Not implemented!')
+            quests = self.quests
+            for quest in quests:
+                if self.quest_select.value[0] == quest['questId']:
+                    self.selected_quest = quest
+
+            await self.setup_embed()
+            self.complete_quest_button.disabled = False
+            await interaction.response.edit_message(embed=self.embed, view=self)
         except Exception as e:
-            await log_exception(e)
+            await log_exception(e, interaction)
 
-    async def complete_quest(self, interaction: discord.Interaction, quest_id: str, summary: str = None):
-        """
-        Closes a quest and issues rewards.
-
-        Arguments:
-        [quest_id]: The ID of the quest.
-        [summary](Optional): A summary of the quest, if enabled (see help config quest summary).
-        """
-        # TODO: Implement quest removal/archival, optional summary, player and GM reward distribution
+    async def complete_quest(self, interaction: discord.Interaction):
         guild_id = interaction.guild_id
-        user_id = interaction.user.id
-        guild = self.bot.get_guild(guild_id)
+        guild = interaction.client.get_guild(guild_id)
 
         # Fetch the quest
-        quest = await self.gdb['quests'].find_one({'questId': quest_id})
+        quest = self.selected_quest
 
-        # Confirm the user calling the command is the GM that created the quest
-        if not quest['gm'] == user_id:
-            error_embed = discord.Embed(title='Quest Not Edited!', description='GMs can only manage their own quests!',
-                                        type='rich')
-            await interaction.response.send_message(embed=error_embed, ephemeral=True)
-        else:
-            # Check if there is a configured quest archive channel
-            archive_channel = None
-            archive_query = await self.gdb['archiveChannel'].find_one({'guildId': guild_id})
-            if archive_query:
-                archive_channel = archive_query['archiveChannel']
+        # Check if there is a configured quest archive channel
+        archive_channel = None
+        archive_query = await interaction.client.gdb['archiveChannel'].find_one({'_id': guild_id})
+        if archive_query:
+            archive_channel = archive_query['archiveChannel']
 
-            # Check if a GM role was configured
-            gm_role = None
-            gm = quest['gm']
-            role_query = await self.gdb['partyRole'].find_one({'guildId': guild_id, 'gm': gm})
-            if role_query:
-                gm_role = role_query['role']
+        # Check if a GM role was configured
+        gm_role = None
+        gm = quest['gm']
+        role_query = await interaction.client.gdb['partyRole'].find_one({'_id': guild_id, 'gm': gm})
+        if role_query:
+            gm_role = role_query['role']
 
-            # Get party members and message them with results
-            party = quest['party']
-            title = quest['title']
-            xp_value = quest['xp']
-            rewards = quest['rewards']
-            reward_summary = []
-            member_collection = self.mdb['characters']
-            for entry in party:
-                for player_id in entry:
-                    player = int(player_id)
-                    member = guild.get_member(player)
-                    # Remove the party role, if applicable
-                    if gm_role:
-                        role = guild.get_role(gm_role)
-                        await member.remove_roles(role)
+        # Get party members and message them with results
+        party = quest['party']
+        title = quest['title']
+        rewards = quest['rewards']
+        reward_summary = []
+        member_collection = interaction.client.mdb['characters']
 
-                    character_query = await member_collection.find_one({'_id': player})
-                    character_id = entry[player_id]
-                    character = character_query['characters'][character_id]
-                    reward_strings = []
+        party_xp = rewards.get('party', {}).get('xp', 0) // len(party)
+        party_items = rewards.get('party', {}).get('items', {})
 
-                    if str(player) in rewards:
-                        if archive_channel:
-                            reward_summary.append(f'\n<@!{player}>')
-                        inventory = character['attributes']['inventory']
-                        for item_name in rewards[f'{player}']:
-                            quantity = rewards[f'{player}'][item_name]
-                            if item_name in inventory:
-                                current_quantity = inventory[item_name]
-                                new_quantity = current_quantity + quantity
-                                await member_collection.update_one(
-                                    {'_id': player},
-                                    {'$set': {
-                                        f'characters.{character_id}.attributes.inventory.{item_name}': new_quantity}},
-                                    upsert=True)
-                            else:
-                                await member_collection.update_one({'_id': player}, {
-                                    '$set': {f'characters.{character_id}.attributes.inventory.{item_name}': quantity}},
-                                                                   upsert=True)
+        for entry in party:
+            for player_id, character_info in entry.items():
+                member = guild.get_member(int(player_id))
 
-                            reward_strings.append(f'{quantity}x {item_name}')
-                            if archive_channel:
-                                reward_summary.append(f'{quantity}x {item_name}')
+                # Remove the party role, if applicable
+                if gm_role:
+                    role = guild.get_role(gm_role)
+                    await member.remove_roles(role)
 
-                    if xp_value:
-                        current_xp = character['attributes']['experience']
+                # Get character data
+                character_id = next(iter(character_info))
+                character = character_info[character_id]
 
-                        if current_xp:
-                            current_xp += xp_value
-                        else:
-                            current_xp = xp_value
+                # Prep reward data
+                total_xp = party_xp
+                combined_items = party_items.copy()
 
-                        # Update the db
-                        await member_collection.update_one({'_id': player}, {
-                            '$set': {f'characters.{character_id}.attributes.experience': current_xp}}, upsert=True)
+                # Check if character has individual rewards
+                if character_id in rewards:
+                    individual_rewards = rewards[character_id]
+                    total_xp += individual_rewards.get('xp', 0)
 
-                        reward_strings.append(f'{xp_value} experience points')
+                    # Merge individual items with party items
+                    for item, quantity in individual_rewards.get('items', {}).items():
+                        combined_items[item] = combined_items.get(item, 0) + quantity
 
-                    dm_embed = discord.Embed(title=f'Quest Complete: {title}',
-                                             type='rich')
-                    if reward_strings:
-                        dm_embed.add_field(name='Rewards', value='\n'.join(reward_strings))
+                # Update the character's XP and inventory
+                await update_character_experience(interaction, player_id, character_id, total_xp)
+                for item_name, quantity in combined_items.items():
+                    await update_character_inventory(interaction, player_id, character_id, item_name, quantity)
 
-                    await member.send(embed=dm_embed)
+                # Send reward summary to player
+                reward_strings = self.build_reward_summary(total_xp, combined_items)
+                dm_embed = discord.Embed(
+                    title=f'Quest Complete: {title}',
+                    type='rich'
+                )
+                if reward_strings:
+                    dm_embed.add_field(name='Rewards', value='\n'.join(reward_strings))
+                await member.send(embed=dm_embed)
 
-            # Archive the quest, if applicable
-            if archive_channel:
-                # Fetch the channel object
-                channel = guild.get_channel(archive_channel)
+    @staticmethod
+    def build_reward_summary(xp, items) -> list[str]:
+        reward_strings = []
+        if xp:
+            reward_strings.append(f'Experience Points: {xp}')
+        if items:
+            for item, quantity in items.items():
+                reward_strings.append(f'{quantity}x {item}')
+        return reward_strings
 
-                # Build the embed
-                post_embed = await self.update_quest_embed(quest, True)
-                # If quest summary is configured, add it
-                summary_enabled = await self.gdb['questSummary'].find_one({'guildId': guild_id})
-                if summary_enabled and summary_enabled['questSummary']:
-                    post_embed.add_field(name='Summary', value=summary, inline=False)
+        #         if archive_channel:
+        #             reward_summary.append(f'\n<@!{player_id}>')
+        #         individual_rewards = rewards[character_id]
+        #         party_share =
+        #     inventory = character['attributes']['inventory']
+        #     for item_name in rewards[f'{player}']:
+        #         quantity = rewards[f'{player}'][item_name]
+        #         if item_name in inventory:
+        #             current_quantity = inventory[item_name]
+        #             new_quantity = current_quantity + quantity
+        #             await member_collection.update_one(
+        #                 {'_id': player},
+        #                 {'$set': {
+        #                     f'characters.{character_id}.attributes.inventory.{item_name}': new_quantity}},
+        #                 upsert=True)
+        #         else:
+        #             await member_collection.update_one({'_id': player}, {
+        #                 '$set': {f'characters.{character_id}.attributes.inventory.{item_name}': quantity}},
+        #                                                upsert=True)
+        #
+        #         reward_strings.append(f'{quantity}x {item_name}')
+        #         if archive_channel:
+        #             reward_summary.append(f'{quantity}x {item_name}')
+        #
+        # if xp_value:
+        #     current_xp = character['attributes']['experience']
+        #
+        #     if current_xp:
+        #         current_xp += xp_value
+        #     else:
+        #         current_xp = xp_value
+        #
+        #     # Update the db
+        #     await member_collection.update_one({'_id': player}, {
+        #         '$set': {f'characters.{character_id}.attributes.experience': current_xp}}, upsert=True)
+        #
+        #     reward_strings.append(f'{xp_value} experience points')
+        #
+        # dm_embed = discord.Embed(title=f'Quest Complete: {title}',
+        #                          type='rich')
+        # if reward_strings:
+        #     dm_embed.add_field(name='Rewards', value='\n'.join(reward_strings))
+        #
+        # await member.send(embed=dm_embed)
 
-                if rewards:
-                    post_embed.add_field(name='Rewards', value='\n'.join(reward_summary), inline=True)
-
-                if xp_value:
-                    post_embed.add_field(name='Experience Points', value=f'{xp_value} each', inline=True)
-
-                await channel.send(embed=post_embed)
-
-            # Delete the quest from the database
-            await self.gdb['quests'].delete_one({'questId': quest_id})
-
-            # Delete the quest from the quest channel
-            channel_query = await self.gdb['questChannel'].find_one({'guildId': guild_id})
-            channel_id = channel_query['questChannel']
-            quest_channel = guild.get_channel(channel_id)
-            message_id = quest['messageId']
-            message = quest_channel.get_partial_message(message_id)
-            await attempt_delete(message)
-
-            await interaction.response.send_message(f'Quest `{quest_id}`: **{title}** completed!', ephemeral=True)
+        # # Archive the quest, if applicable
+        # if archive_channel:
+        #     # Fetch the channel object
+        #     channel = guild.get_channel(archive_channel)
+        #
+        #     # Build the embed
+        #     post_embed = await self.update_quest_embed(quest, True)
+        #     # If quest summary is configured, add it
+        #     summary_enabled = await interaction.client.gdb['questSummary'].find_one({'guildId': guild_id})
+        #     if summary_enabled and summary_enabled['questSummary']:
+        #         post_embed.add_field(name='Summary', value=summary, inline=False)
+        #
+        #     if rewards:
+        #         post_embed.add_field(name='Rewards', value='\n'.join(reward_summary), inline=True)
+        #
+        #     if xp_value:
+        #         post_embed.add_field(name='Experience Points', value=f'{xp_value} each', inline=True)
+        #
+        #     await channel.send(embed=post_embed)
+        #
+        # # Delete the quest from the database
+        # await interaction.client.gdb['quests'].delete_one({'guildId': guild_id, 'questId': quest['questId']})
+        #
+        # # Delete the quest from the quest channel
+        # channel_query = await interaction.client.gdb['questChannel'].find_one({'_id': guild_id})
+        # channel_id = channel_query['questChannel']
+        # quest_channel = guild.get_channel(strip_id(channel_id))
+        # message_id = quest['messageId']
+        # message = quest_channel.get_partial_message(message_id)
+        # await attempt_delete(message)\
+        #
+        # await interaction.response.send_message(f'Quest `{quest['questId']}`: **{title}** completed!', ephemeral=True)
 
 
 class CancelQuestView(discord.ui.View):
