@@ -270,7 +270,7 @@ class RemoveGuildAllowlistSelect(discord.ui.Select):
             collection = interaction.client.cdb['serverAllowlist']
             query = await collection.find_one({'servers': {'$exists': True}, 'servers.id': guild_id})
             server = next((server for server in query['servers'] if server['id'] == guild_id))
-            logger.info(f'Found server: {server}')
+            logger.debug(f'Found server: {server}')
             view.selected_guild = server['id']
             view.confirm_allowlist_remove_button.disabled = False
             view.confirm_allowlist_remove_button.label = f'Confirm removal of {server['name']}'

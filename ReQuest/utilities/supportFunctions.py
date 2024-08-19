@@ -122,7 +122,7 @@ async def trade_currency(mdb, gdb, currency_name, amount, sending_member_id, rec
                      currency['name'].lower() == base_currency_name.lower() for d in currency['denominations']}
     denominations[base_currency_name.lower()] = 1
 
-    logger.info(f"Denominations: {denominations}")
+    logger.debug(f"Denominations: {denominations}")
 
     sender_currency = normalize_currency_keys(sender_character['attributes'].get('currency', {}))
     receiver_currency = normalize_currency_keys(receiver_character['attributes'].get('currency', {}))
@@ -132,11 +132,11 @@ async def trade_currency(mdb, gdb, currency_name, amount, sending_member_id, rec
         sender_currency.get(denom, 0) * (value / min(denominations.values())) for denom, value in denominations.items())
     amount_in_lowest_denom = amount * (denominations[currency_name.lower()] / min(denominations.values()))
 
-    logger.info(f"Sender's total in lowest denomination: {sender_total_in_lowest_denom}")
-    logger.info(f"Amount in lowest denomination: {amount_in_lowest_denom}")
+    logger.debug(f"Sender's total in lowest denomination: {sender_total_in_lowest_denom}")
+    logger.debug(f"Amount in lowest denomination: {amount_in_lowest_denom}")
 
     if sender_total_in_lowest_denom < amount_in_lowest_denom:
-        logger.info(f"Insufficient funds: {sender_total_in_lowest_denom} < {amount_in_lowest_denom}")
+        logger.debug(f"Insufficient funds: {sender_total_in_lowest_denom} < {amount_in_lowest_denom}")
         raise Exception('Insufficient funds')
 
     # Deduct the amount from the sender's total in the lowest denomination
@@ -152,7 +152,7 @@ async def trade_currency(mdb, gdb, currency_name, amount, sending_member_id, rec
 
     # Consolidate the sender's currency
     sender_currency = consolidate_currency(remaining_sender_currency, denominations)
-    logger.info(f"Sender's currency after deduction: {sender_currency}")
+    logger.debug(f"Sender's currency after deduction: {sender_currency}")
 
     # Add the amount to the receiver's total in the lowest denomination
     receiver_total_in_lowest_denom = sum(
@@ -170,7 +170,7 @@ async def trade_currency(mdb, gdb, currency_name, amount, sending_member_id, rec
 
     # Consolidate the receiver's currency
     receiver_currency = consolidate_currency(remaining_receiver_currency, denominations)
-    logger.info(f"Receiver's currency after addition: {receiver_currency}")
+    logger.debug(f"Receiver's currency after addition: {receiver_currency}")
 
     sender_currency_db = {k.capitalize(): v for k, v in sender_currency.items()}
     receiver_currency_db = {k.capitalize(): v for k, v in receiver_currency.items()}

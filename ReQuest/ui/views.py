@@ -315,7 +315,7 @@ class ConfigGMRoleRemoveView(discord.ui.View):
                 name = result['name']
                 options.append(discord.SelectOption(label=name, value=name))
 
-            logger.info(f'Options: {options}')
+            logger.debug(f'Options: {options}')
             self.gm_role_remove_select.options = options
         except Exception as e:
             await log_exception(e)
@@ -372,7 +372,7 @@ class ConfigChannelsView(discord.ui.View):
             collection = self.gdb[channel_type]
 
             query = await collection.find_one({'_id': self.guild_id})
-            logger.info(f'{channel_type} query: {query}')
+            logger.debug(f'{channel_type} query: {query}')
             if not query:
                 return 'Not Configured'
             else:
@@ -419,7 +419,7 @@ class ConfigQuestsView(discord.ui.View):
             collection = self.gdb[config_type]
 
             query = await collection.find_one({'_id': self.guild_id})
-            logger.info(f'{config_type} query: {query}')
+            logger.debug(f'{config_type} query: {query}')
             if not query:
                 return 'Not Configured'
             else:
@@ -461,7 +461,7 @@ class ConfigPlayersView(discord.ui.View):
             collection = self.gdb[config_type]
 
             query = await collection.find_one({'_id': self.guild_id})
-            logger.info(f'{config_type} query: {query}')
+            logger.debug(f'{config_type} query: {query}')
             if not query:
                 return 'Not Configured'
             else:
@@ -504,7 +504,7 @@ class ConfigRemoveDenominationView(discord.ui.View):
             collection = self.gdb['currency']
             query = await collection.find_one({'_id': self.guild_id, 'currencies.name': currency_name})
             currency = next((item for item in query['currencies'] if item['name'] == currency_name), None)
-            logger.info(f'Found Currency: {currency}')
+            logger.debug(f'Found Currency: {currency}')
             denominations = currency['denominations']
             if len(denominations) > 0:
                 for denomination in denominations:
@@ -576,7 +576,7 @@ class ConfigEditCurrencyView(discord.ui.View):
             collection = self.gdb['currency']
             query = await collection.find_one({'_id': self.guild_id, 'currencies.name': currency_name})
             currency = next((item for item in query['currencies'] if item['name'] == currency_name), None)
-            logger.info(f'Found currency: {currency}')
+            logger.debug(f'Found currency: {currency}')
             self.embed.clear_fields()
             if currency['isDouble']:
                 display = 'Double (10.00)'
@@ -977,7 +977,7 @@ class ManageQuestsView(discord.ui.View):
                     options.append(discord.SelectOption(label=f'{quest['questId']}: {quest['title']}',
                                                         value=quest['questId']))
                 self.quests = quests
-                logger.info(f'Found {len(quests)} quests.')
+                logger.debug(f'Found {len(quests)} quests.')
                 self.manage_quest_select.disabled = False
             else:
                 options.append(discord.SelectOption(label='No quests were found, or you do not have permissions to edit'
@@ -1664,7 +1664,7 @@ class CompleteQuestsView(discord.ui.View):
                     options.append(discord.SelectOption(label=f'{quest['questId']}: {quest['title']}',
                                                         value=quest['questId']))
                 self.quests = quests
-                logger.info(f'Found {len(quests)} quests.')
+                logger.debug(f'Found {len(quests)} quests.')
                 self.quest_select.disabled = False
             else:
                 options.append(discord.SelectOption(label='No quests were found, or you do not have permissions to edit'

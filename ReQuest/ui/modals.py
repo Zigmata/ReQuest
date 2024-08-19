@@ -358,7 +358,7 @@ class SpendCurrencyModal(discord.ui.Modal):
                              currency['name'].lower() == base_currency_name.lower() for d in currency['denominations']}
             denominations[base_currency_name.lower()] = 1.0
 
-            logger.info(f'Denominations: {denominations}')
+            logger.debug(f'Denominations: {denominations}')
 
             user_id = interaction.user.id
             guild_id = interaction.guild_id
@@ -651,7 +651,7 @@ class RewardsModal(discord.ui.Modal):
             if self.xp_input.value:
                 xp = int(self.xp_input.value)
             if self.item_input.value:
-                logger.info(f'input value present')
+                logger.debug(f'input value present')
                 if self.item_input.value.lower() == 'none':
                     items = 'none'
                 else:
@@ -660,7 +660,7 @@ class RewardsModal(discord.ui.Modal):
                         item_name, quantity = item.split(':', 1)
                         items[item_name.strip().capitalize()] = int(quantity.strip())
 
-            logger.info(f'xp: {xp}, items: {items}')
+            logger.debug(f'xp: {xp}, items: {items}')
             await self.caller.modal_callback(interaction, xp, items)
         except Exception as e:
             await log_exception(e, interaction)
