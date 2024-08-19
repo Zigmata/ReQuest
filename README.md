@@ -25,3 +25,10 @@ Made possible by [discord.py](https://discordpy.readthedocs.io/en/stable/) and [
 If you want to modify the bot, you will need to educate yourself on discord.py, cogs, extensions, and asyncio in order to be marginally successful like me.
 
 Don't forget to join the [Discord](https://discord.gg/Zq37gj4)!~~~~
+
+Packages:
+
+- PyYaml
+- discord.py
+- shortuuid
+- motor

@@ -978,3 +978,54 @@ class LeaveQuestButton(discord.ui.Button):
             await self.calling_view.leave_callback(interaction)
         except Exception as e:
             await log_exception(e, interaction)
+
+
+class CompleteQuestButton(discord.ui.Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Confirm?',
+            style=discord.ButtonStyle.danger,
+            custom_id='complete_quest_button',
+            disabled=True
+        )
+        self.calling_view = calling_view
+        self.quest_summary_modal = modals.QuestSummaryModal(self)
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            quest_summary_collection = interaction.client.gdb['questSummary']
+            quest_summary_config_query = await quest_summary_collection.find_one({'_id': interaction.guild_id})
+            if quest_summary_config_query and quest_summary_config_query['questSummary']:
+                await interaction.response.send_modal(self.quest_summary_modal)
+            else:
+                await self.calling_view.complete_quest(interaction)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def modal_callback(self, interaction: discord.Interaction):
+        try:
+            summary = self.quest_summary_modal.summary_input.value
+            await self.calling_view.complete_quest(interaction, summary=summary)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ClearChannelsButton(discord.ui.Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Clear Channels',
+            style=discord.ButtonStyle.danger,
+            custom_id='clear_channels_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            view = self.calling_view
+            await interaction.client.gdb['questChannel'].delete_one({'_id': interaction.guild_id})
+            await interaction.client.gdb['playerBoardChannel'].delete_one({'_id': interaction.guild_id})
+            await interaction.client.gdb['archiveChannel'].delete_one({'_id': interaction.guild_id})
+            await view.setup_embed()
+            await interaction.response.edit_message(embed=view.embed, view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
