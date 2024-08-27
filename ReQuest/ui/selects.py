@@ -2,7 +2,7 @@ import logging
 
 import discord
 
-from ReQuest.utilities.supportFunctions import log_exception
+from ReQuest.utilities.supportFunctions import log_exception, find_member_and_character_id_in_lists
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -355,13 +355,10 @@ class RemovePlayerSelect(discord.ui.Select):
         try:
             view = self.calling_view
             party = view.quest['party']
-            for player in party:
-                for member_id in player:
-                    if str(member_id) == self.values[0]:
-                        for character_id in player[str(member_id)]:
-                            character = player[str(member_id)][str(character_id)]
-                            view.selected_character = character
-                            view.selected_party_member_id = member_id
+            wait_list = view.quest['waitList']
+            member_id, character_id = find_member_and_character_id_in_lists([party, wait_list], self.values[0])
+            view.selected_character_id = character_id
+            view.selected_member_id = member_id
             view.confirm_button.disabled = False
             view.confirm_button.label = 'Confirm?'
             await view.setup_embed()

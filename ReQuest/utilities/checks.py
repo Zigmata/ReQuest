@@ -1,6 +1,7 @@
 import discord
 from discord import app_commands, Interaction
 from discord.app_commands.commands import check
+
 from .enums import EditTarget
 
 
@@ -40,7 +41,7 @@ def has_gm_or_mod():
         else:
             collection = interaction.client.gdb['gmRoles']
             guild_id = interaction.guild.id
-            query = await collection.find_one({'guildId': guild_id})
+            query = await collection.find_one({'_id': guild_id})
             if query:
                 gm_role_mentions = []
                 gm_roles = query['gmRoles']

@@ -284,7 +284,6 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
                 {'_id': player_id},
                 {'$set': {f'characters.{character_id}.attributes.currency': character_currency_db}}
             )
-
         else:
             # Handle inventory update
             character_inventory = character_data['attributes'].get('inventory', {})
@@ -322,3 +321,100 @@ async def update_character_experience(interaction: discord.Interaction, player_i
         )
     except Exception as e:
         await log_exception(e, interaction)
+
+
+async def update_quest_embed(quest) -> discord.Embed:
+    try:
+        embed = discord.Embed()
+        # Initialize all the current quest values
+        (guild_id, quest_id, title, description, max_party_size, restrictions, gm, party, wait_list,
+         max_wait_list_size, lock_state, rewards) = (quest['guildId'], quest['questId'], quest['title'],
+                                                     quest['description'], quest['maxPartySize'],
+                                                     quest['restrictions'], quest['gm'], quest['party'],
+                                                     quest['waitList'], quest['maxWaitListSize'],
+                                                     quest['lockState'], quest['rewards'])
+
+        # Format the main embed body
+        if restrictions:
+            post_description = (
+                f'**GM:** <@!{gm}>\n'
+                f'**Party Restrictions:** {restrictions}\n\n'
+                f'{description}\n\n'
+                f'------'
+            )
+        else:
+            post_description = (
+                f'**GM:** <@!{gm}>\n\n'
+                f'{description}\n\n'
+                f'------'
+            )
+
+        if lock_state:
+            title = title + ' (LOCKED)'
+
+        current_party_size = len(party)
+        current_wait_list_size = 0
+        if wait_list:
+            current_wait_list_size = len(wait_list)
+
+        formatted_party = []
+        # Map int list to string for formatting, then format the list of users as user mentions
+        if len(party) > 0:
+            for player in party:
+                for member_id in player:
+                    for character_id in player[str(member_id)]:
+                        character = player[str(member_id)][str(character_id)]
+                        formatted_party.append(f'- <@!{member_id}> as {character['name']}')
+
+        formatted_wait_list = []
+        # Only format the wait list if there is one.
+        if len(wait_list) > 0:
+            for player in wait_list:
+                for member_id in player:
+                    for character_id in player[str(member_id)]:
+                        character = player[str(member_id)][str(character_id)]
+                        formatted_wait_list.append(f'- <@!{member_id}> as {character['name']}')
+
+        # Set the embed fields and footer
+        embed.title = title
+        embed.description = post_description
+        if len(formatted_party) == 0:
+            embed.add_field(name=f'__Party ({current_party_size}/{max_party_size})__',
+                            value='None')
+        else:
+            embed.add_field(name=f'__Party ({current_party_size}/{max_party_size})__',
+                            value='\n'.join(formatted_party))
+
+        # Add a wait list field if one is present, unless the quest is being archived.
+        if max_wait_list_size > 0:
+            if len(formatted_wait_list) == 0:
+                embed.add_field(name=f'__Wait List ({current_wait_list_size}/{max_wait_list_size})__',
+                                value='None')
+            else:
+                embed.add_field(name=f'__Wait List ({current_wait_list_size}/{max_wait_list_size})__',
+                                value='\n'.join(formatted_wait_list))
+
+        embed.set_footer(text='Quest ID: ' + quest_id)
+
+        return embed
+    except Exception as e:
+        await log_exception(e)
+
+
+def find_character_in_lists(lists, selected_member_id, selected_character_id):
+    for list_name in lists:
+        for player in list_name:
+            for member_id, character_data in player.items():
+                if selected_member_id == member_id and selected_character_id in character_data:
+                    return character_data[selected_character_id]
+    return None
+
+
+def find_member_and_character_id_in_lists(lists, selected_member_id):
+    for list_name in lists:
+        for player in list_name:
+            for member_id, character_data in player.items():
+                if str(member_id) == selected_member_id:
+                    for character_id in character_data:
+                        return member_id, character_id
+    return None, None

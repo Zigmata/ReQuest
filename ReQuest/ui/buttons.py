@@ -254,30 +254,6 @@ class PlayerMenuButton(discord.ui.Button):
             await log_exception(e, interaction)
 
 
-class MenuForwardButton(discord.ui.Button):
-    def __init__(self, menu_view, label, bot, member_id, guild_id):
-        super().__init__(
-            label=label,
-            style=discord.ButtonStyle.primary,
-            custom_id=f'{label.lower()}_menu_button'
-        )
-        self.menu_view = menu_view
-        self.bot = bot
-        self.member_id = member_id
-        self.guild_id = guild_id
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            new_view = self.menu_view
-            if hasattr(new_view, 'setup_select'):
-                await new_view.setup_select()
-            if hasattr(new_view, 'setup_embed'):
-                await new_view.setup_embed()
-            await interaction.response.edit_message(embed=new_view.embed, view=new_view)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-
 class MenuDoneButton(discord.ui.Button):
     def __init__(self):
         super().__init__(
@@ -306,7 +282,10 @@ class ConfirmButton(discord.ui.Button):
         self.calling_view = calling_view
 
     async def callback(self, interaction: discord.Interaction):
-        await self.calling_view.confirm_callback(interaction)
+        try:
+            await self.calling_view.confirm_callback(interaction)
+        except Exception as e:
+            await log_exception(e, interaction)
 
 
 class QuestAnnounceRoleRemoveButton(discord.ui.Button):
@@ -832,7 +811,7 @@ class RemovePlayerButton(discord.ui.Button):
 
 
 class CancelQuestButton(discord.ui.Button):
-    def __init__(self, calling_view):
+    def __init__(self, calling_view, target_view_class):
         super().__init__(
             label='Cancel Quest',
             style=discord.ButtonStyle.danger,
@@ -840,10 +819,12 @@ class CancelQuestButton(discord.ui.Button):
             disabled=True
         )
         self.calling_view = calling_view
+        self.target_view_class = target_view_class
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            raise Exception('Not implemented!')
+            view = self.target_view_class(self.calling_view.selected_quest)
+            await interaction.response.edit_message(embed=view.embed, view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -868,16 +849,24 @@ class PartyRewardsButton(discord.ui.Button):
         try:
             view = self.calling_view
             quest = view.quest
+            # Initialize the party key if it is not present
             if 'party' not in quest['rewards']:
                 quest['rewards']['party'] = {}
+
+            # Set the XP if provided, otherwise reset to 0
             if xp and xp > 0:
                 quest['rewards']['party']['xp'] = xp
             elif xp is not None and xp == 0:
                 quest['rewards']['party']['xp'] = 0
 
-            if items == 'none':
+            if items and items == 'none':
                 quest['rewards']['party']['items'] = {}
-            elif items:
+            else:
+                # Initialize the items key if not present
+                if 'items' not in quest['rewards']['party']:
+                    quest['rewards']['party']['items'] = {}
+
+                # If the items dict is empty, set it to the provided item dict. Otherwise, merge the two
                 if len(quest['rewards']['party']['items']) == 0:
                     quest['rewards']['party']['items'] = items
                 else:
@@ -1025,6 +1014,89 @@ class ClearChannelsButton(discord.ui.Button):
             await interaction.client.gdb['questChannel'].delete_one({'_id': interaction.guild_id})
             await interaction.client.gdb['playerBoardChannel'].delete_one({'_id': interaction.guild_id})
             await interaction.client.gdb['archiveChannel'].delete_one({'_id': interaction.guild_id})
+            await view.setup_embed()
+            await interaction.response.edit_message(embed=view.embed, view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class CreatePartyRoleButton(discord.ui.Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Create Role',
+            style=discord.ButtonStyle.success,
+            custom_id='create_party_role_button',
+            disabled=False
+        )
+        self.calling_view = calling_view
+        self.create_party_role_modal = modals.CreatePartyRoleModal(self)
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.send_modal(self.create_party_role_modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def modal_callback(self, interaction: discord.Interaction):
+        try:
+            guild = interaction.guild
+            role_name = self.create_party_role_modal.role_name_input.value
+            # TODO: Expand this forbidden name concept to be server-admin-configurable
+            forbidden_names = [
+                'everyone',
+                'administrator',
+                'game master',
+                'gm',
+            ]
+            for role in guild.roles:
+                if role.name.lower() in forbidden_names:
+                    raise Exception('That name is forbidden.')
+                if role.name.lower() == role_name.lower():
+                    raise Exception('The proposed name for your role already exists on this server!')
+            else:
+                role = await guild.create_role(
+                    name=role_name,
+                    reason=f'Automated party role creation from ReQuest. Requested by {interaction.user.name}.'
+                )
+                party_role_collection = interaction.client.gdb['partyRole']
+                await party_role_collection.update_one({'guildId': interaction.guild_id, 'gm': interaction.user.id},
+                                                       {'$set': {'roleId': role.id}},
+                                                       upsert=True)
+                view = self.calling_view
+                await view.setup_embed()
+                await interaction.response.edit_message(embed=view.embed, view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RemovePartyRoleButton(discord.ui.Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Remove Role',
+            style=discord.ButtonStyle.danger,
+            custom_id='remove_party_role_button',
+            disabled=False
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            # Get the current role ID
+            party_role_collection = interaction.client.gdb['partyRole']
+            party_role_query = await party_role_collection.find_one({'guildId': interaction.guild_id,
+                                                                     'gm': interaction.user.id})
+            role_id = party_role_query['roleId']
+
+            # Remove the role from the guild
+            guild = interaction.guild
+            role = guild.get_role(role_id)
+            await role.delete()
+
+            # Delete the db entry
+            await party_role_collection.delete_one({'guildId': interaction.guild_id, 'gm': interaction.user.id})
+
+            # Update the view
+            view = self.calling_view
             await view.setup_embed()
             await interaction.response.edit_message(embed=view.embed, view=view)
         except Exception as e:

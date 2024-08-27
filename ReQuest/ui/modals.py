@@ -8,7 +8,7 @@ from discord.ui import Modal
 
 from .inputs import AddCurrencyDenominationTextInput
 from ..utilities.supportFunctions import find_currency_or_denomination, log_exception, trade_currency, trade_item, \
-    normalize_currency_keys, consolidate_currency, strip_id
+    normalize_currency_keys, consolidate_currency, strip_id, update_character_inventory, update_character_experience
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -651,7 +651,6 @@ class RewardsModal(discord.ui.Modal):
             if self.xp_input.value:
                 xp = int(self.xp_input.value)
             if self.item_input.value:
-                logger.debug(f'input value present')
                 if self.item_input.value.lower() == 'none':
                     items = 'none'
                 else:
@@ -684,5 +683,76 @@ class QuestSummaryModal(discord.ui.Modal):
     async def on_submit(self, interaction: discord.Interaction):
         try:
             await self.calling_button.modal_callback(interaction)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class CreatePartyRoleModal(discord.ui.Modal):
+    def __init__(self, calling_button):
+        super().__init__(
+            title='Create Party Role',
+            timeout=600
+        )
+        self.calling_button = calling_button
+        self.role_name_input = discord.ui.TextInput(
+            label='Role Name',
+            style=discord.TextStyle.short,
+            custom_id='role_name_input',
+            placeholder='Name for the new role.'
+        )
+        self.add_item(self.role_name_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            await self.calling_button.modal_callback(interaction)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ModPlayerModal(discord.ui.Modal):
+    def __init__(self, member: discord.Member, character_id):
+        super().__init__(
+            title=f'Modifying {member.name}',
+            timeout=600
+        )
+        self.member = member
+        self.character_id = character_id
+        self.experience_text_input = discord.ui.TextInput(
+            label='Experience Points',
+            placeholder='Enter a positive or negative number.',
+            custom_id='experience_text_input',
+            required=False
+        )
+        self.inventory_text_input = discord.ui.TextInput(
+            label='Inventory',
+            placeholder='{item}: {quantity}\n'
+                        '{item2}: {quantity}\n'
+                        'etc.',
+            custom_id='inventory_text_input',
+            required=False
+        )
+        self.add_item(self.experience_text_input)
+        self.add_item(self.inventory_text_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            xp = None
+            items = None
+            if self.experience_text_input.value:
+                xp = int(self.experience_text_input.value)
+            if self.inventory_text_input.value:
+                items = {}
+                for item in self.inventory_text_input.value.strip().split('\n'):
+                    item_name, quantity = item.split(':', 1)
+                    items[item_name.strip().capitalize()] = int(quantity.strip())
+
+            logger.debug(f'xp: {xp}, items: {items}')
+
+            if xp:
+                await update_character_experience(interaction, self.member.id, self.character_id, xp)
+            if items:
+                for item_name, quantity in items.items():
+                    await update_character_inventory(interaction, self.member.id, self.character_id,
+                                                     item_name, quantity)
         except Exception as e:
             await log_exception(e, interaction)
