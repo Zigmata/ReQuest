@@ -1184,10 +1184,12 @@ class GMPlayerMenuView(discord.ui.View):
         self.embed = discord.Embed(
             title='Game Master - Player Management',
             description=(
-                '__**Modify Experience**__\n'
-                'Modifies a player\'s experience total.\n\n'
-                '__**Modify Inventory**__\n'
-                'Modifies a player\'s inventory.\n\n'
+                '__**Modifying Players**__\n'
+                'This command is access through context menus. Right-click or long-press a player and choose Apps -> '
+                'Modify Player to bring up the input modal.\n\n'
+                'Values entered will be added/subtracted from the player\'s current total. To reduce a value, make '
+                'sure you precede the amount/quantity with a `-`. For items, put each item on a separate line and '
+                'follow the `item: quantity` format in the placeholder text.\n\n'
             ),
             type='rich'
         )
