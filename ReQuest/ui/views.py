@@ -221,6 +221,10 @@ class ConfigRolesView(discord.ui.View):
                 'This role is mentioned when a quest is posted.\n\n'
                 '__**GM Role**__\n'
                 'A role designated as GM will gain access to extended Game Master commands and functionality.\n\n'
+                '__**Forbidden Roles**__\n'
+                'Configures a list of role names that cannot be used by Game Masters for their party roles. By '
+                'default, `everyone`, `administrator`, `gm`, and `game master` cannot be used. This configuration '
+                'extends that list.\n\n'
                 '-----'
             ),
             type='rich'
@@ -229,10 +233,12 @@ class ConfigRolesView(discord.ui.View):
         self.gdb = gdb
         self.quest_announce_role_remove_button = buttons.QuestAnnounceRoleRemoveButton(self)
         self.gm_role_remove_button = buttons.GMRoleRemoveButton(ConfigGMRoleRemoveView(self.guild_id, self.gdb))
+        self.forbidden_roles_button = buttons.ForbiddenRolesButton(self)
         self.add_item(selects.QuestAnnounceRoleSelect(self))
         self.add_item(selects.AddGMRoleSelect(self))
         self.add_item(self.quest_announce_role_remove_button)
         self.add_item(self.gm_role_remove_button)
+        self.add_item(self.forbidden_roles_button)
         self.add_item(buttons.ConfigBackButton(ConfigBaseView, guild_id, gdb))
 
     async def query_role(self, role_type):
@@ -558,7 +564,6 @@ class ConfigEditCurrencyView(discord.ui.View):
         )
         self.guild_id = guild_id
         self.gdb = gdb
-        # TODO: Implement (self.collection = self.gdb['currency']) in classes instead of every function
         self.selected_currency_name = None
         self.remove_denomination_view = ConfigRemoveDenominationView(self.guild_id, self.gdb, self)
         self.edit_currency_select = selects.EditCurrencySelect(self)

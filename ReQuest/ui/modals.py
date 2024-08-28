@@ -452,7 +452,6 @@ class CreateQuestModal(discord.ui.Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            # TODO: Level min/max for enabled servers
             title = self.quest_title_text_input.value
             restrictions = self.quest_restrictions_text_input.value
             max_party_size = int(self.quest_party_size_text_input.value)
@@ -773,5 +772,35 @@ class ModPlayerModal(discord.ui.Modal):
 
             await interaction.response.send_message(embed=mod_summary_embed, ephemeral=True)
             await self.member.send(embed=mod_summary_embed)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ForbiddenRolesModal(discord.ui.Modal):
+    def __init__(self, current_list):
+        super().__init__(
+            title='Forbidden Role Names',
+            timeout=600
+        )
+        self.names_text_input = discord.ui.TextInput(
+            label='Names',
+            style=discord.TextStyle.paragraph,
+            placeholder='Input names separated by commas',
+            default=', '.join(current_list),
+            custom_id='names_text_input',
+            required=False
+        )
+        self.add_item(self.names_text_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            names = []
+            for name in self.names_text_input.value.strip().split(','):
+                names.append(name.lower().strip())
+            config_collection = interaction.client.cdb['forbiddenRoles']
+            await config_collection.update_one({'_id': interaction.guild_id},
+                                               {'$set': {'forbiddenRoles': names}},
+                                               upsert=True)
+            await interaction.response.send_message('Forbidden roles updated!', ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)

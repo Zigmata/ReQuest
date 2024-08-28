@@ -1029,10 +1029,11 @@ class CreatePartyRoleButton(discord.ui.Button):
             disabled=False
         )
         self.calling_view = calling_view
-        self.create_party_role_modal = modals.CreatePartyRoleModal(self)
+        self.create_party_role_modal = None
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            self.create_party_role_modal = modals.CreatePartyRoleModal(self)
             await interaction.response.send_modal(self.create_party_role_modal)
         except Exception as e:
             await log_exception(e, interaction)
@@ -1041,30 +1042,37 @@ class CreatePartyRoleButton(discord.ui.Button):
         try:
             guild = interaction.guild
             role_name = self.create_party_role_modal.role_name_input.value
-            # TODO: Expand this forbidden name concept to be server-admin-configurable
-            forbidden_names = [
+            default_forbidden_names = [
                 'everyone',
                 'administrator',
                 'game master',
                 'gm',
             ]
+            custom_forbidden_names = []
+            config_collection = interaction.client.cdb['forbiddenRoles']
+            config_query = await config_collection.find_one({'_id': interaction.guild_id})
+            if config_query and config_query['forbiddenRoles']:
+                for name in config_query['forbiddenRoles']:
+                    custom_forbidden_names.append(name)
+
+            if role_name.lower() in default_forbidden_names or role_name.lower() in custom_forbidden_names:
+                raise Exception('That name is forbidden.')
+
             for role in guild.roles:
-                if role.name.lower() in forbidden_names:
-                    raise Exception('That name is forbidden.')
                 if role.name.lower() == role_name.lower():
                     raise Exception('The proposed name for your role already exists on this server!')
-            else:
-                role = await guild.create_role(
-                    name=role_name,
-                    reason=f'Automated party role creation from ReQuest. Requested by {interaction.user.name}.'
-                )
-                party_role_collection = interaction.client.gdb['partyRole']
-                await party_role_collection.update_one({'guildId': interaction.guild_id, 'gm': interaction.user.id},
-                                                       {'$set': {'roleId': role.id}},
-                                                       upsert=True)
-                view = self.calling_view
-                await view.setup_embed()
-                await interaction.response.edit_message(embed=view.embed, view=view)
+
+            role = await guild.create_role(
+                name=role_name,
+                reason=f'Automated party role creation from ReQuest. Requested by {interaction.user.name}.'
+            )
+            party_role_collection = interaction.client.gdb['partyRole']
+            await party_role_collection.update_one({'guildId': interaction.guild_id, 'gm': interaction.user.id},
+                                                   {'$set': {'roleId': role.id}},
+                                                   upsert=True)
+            view = self.calling_view
+            await view.setup_embed()
+            await interaction.response.edit_message(embed=view.embed, view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -1099,5 +1107,27 @@ class RemovePartyRoleButton(discord.ui.Button):
             view = self.calling_view
             await view.setup_embed()
             await interaction.response.edit_message(embed=view.embed, view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ForbiddenRolesButton(discord.ui.Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Forbidden Roles',
+            style=discord.ButtonStyle.secondary,
+            custom_id='forbidden_roles_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            current_roles = []
+            config_collection = interaction.client.cdb['forbiddenRoles']
+            config_query = await config_collection.find_one({'_id': interaction.guild_id})
+            if config_query and config_query['forbiddenRoles']:
+                current_roles = config_query['forbiddenRoles']
+            modal = modals.ForbiddenRolesModal(current_roles)
+            await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)

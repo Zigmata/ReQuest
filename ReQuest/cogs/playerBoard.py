@@ -111,7 +111,6 @@ class PlayerBoard(GroupCog, name='playerboard', description='Commands for use of
     #         error_embed = discord.Embed(title=error_title, description=error_message, type='rich')
     #         await interaction.response.send_message(embed=error_embed, ephemeral=True)
     #
-    # # TODO: Explore options of combining edit commands into a single modal
     # @edit_group.command(name='title')
     # async def pbtitle(self, interaction: discord.Interaction, post_id: str, new_title: str):
     #     """
@@ -227,11 +226,6 @@ class PlayerBoard(GroupCog, name='playerboard', description='Commands for use of
     #     [days]: The number of days before a post is purged.
     #     --<all>: Purges all posts.
     #     """
-    #
-    #     # TODO: Refactor with channel.delete_messages() or possibly channel.purge()
-    #
-    #     # TODO: Experiment with channel.history() to get all messages and pass to pymongo unordered bulk write
-    #
     #     # Get the guild object
     #     guild_id = interaction.guild_id
     #     guild = self.bot.get_guild(guild_id)

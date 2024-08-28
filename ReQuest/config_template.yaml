@@ -18,7 +18,6 @@ load_extensions:
     - 'ReQuest.cogs.info'
     - 'ReQuest.cogs.player'
     - 'ReQuest.cogs.playerBoard'
-    - 'ReQuest.cogs.wallet'
 
 # Server Allowlist
 allowList: False # Set true if utilizing a server allowlist.
