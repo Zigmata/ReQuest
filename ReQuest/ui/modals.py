@@ -710,13 +710,14 @@ class CreatePartyRoleModal(discord.ui.Modal):
 
 
 class ModPlayerModal(discord.ui.Modal):
-    def __init__(self, member: discord.Member, character_id):
+    def __init__(self, member: discord.Member, character_id, character_data):
         super().__init__(
             title=f'Modifying {member.name}',
             timeout=600
         )
         self.member = member
         self.character_id = character_id
+        self.character_data = character_data
         self.experience_text_input = discord.ui.TextInput(
             label='Experience Points',
             placeholder='Enter a positive or negative number.',
@@ -725,6 +726,7 @@ class ModPlayerModal(discord.ui.Modal):
         )
         self.inventory_text_input = discord.ui.TextInput(
             label='Inventory',
+            style=discord.TextStyle.paragraph,
             placeholder='{item}: {quantity}\n'
                         '{item2}: {quantity}\n'
                         'etc.',
@@ -748,11 +750,28 @@ class ModPlayerModal(discord.ui.Modal):
 
             logger.debug(f'xp: {xp}, items: {items}')
 
+            mod_summary_embed = discord.Embed(
+                title=f'GM Player Modification Report',
+                description=(
+                    f'Game Master: {interaction.user.mention}\n'
+                    f'Recipient: {self.member.mention} as `{self.character_data['name']}`'
+                ),
+                type='rich'
+            )
+
             if xp:
                 await update_character_experience(interaction, self.member.id, self.character_id, xp)
+                mod_summary_embed.add_field(name='Experience', value=xp)
             if items:
                 for item_name, quantity in items.items():
                     await update_character_inventory(interaction, self.member.id, self.character_id,
                                                      item_name, quantity)
+                    mod_summary_embed.add_field(name=item_name.lower().capitalize(), value=quantity)
+
+            transaction_id = shortuuid.uuid()[:12]
+            mod_summary_embed.set_footer(text=f'Transaction ID: {transaction_id}')
+
+            await interaction.response.send_message(embed=mod_summary_embed, ephemeral=True)
+            await self.member.send(embed=mod_summary_embed)
         except Exception as e:
             await log_exception(e, interaction)

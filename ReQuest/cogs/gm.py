@@ -39,17 +39,18 @@ class GameMaster(Cog):
     @app_commands.guild_only()
     async def mod_player_menu(self, interaction: discord.Interaction, member: discord.Member):
         try:
-            guild_id = interaction.guild_id
+            guild_id = str(interaction.guild_id)
             character_collection = interaction.client.mdb['characters']
             player_query = await character_collection.find_one({'_id': member.id})
             if not player_query:
                 raise Exception('The target player does not have any registered characters.')
 
-            if str(guild_id) not in player_query['activeCharacters']:
+            if guild_id not in player_query['activeCharacters']:
                 raise Exception('The target player does not have a character activated on this server.')
 
             character_id = player_query['activeCharacters'][guild_id]
-            modal = modals.ModPlayerModal(member, character_id)
+            character_data = player_query['characters'][character_id]
+            modal = modals.ModPlayerModal(member, character_id, character_data)
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)
