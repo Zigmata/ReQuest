@@ -31,7 +31,7 @@ class Player(Cog):
     @app_commands.guild_only()
     async def player(self, interaction: discord.Interaction):
         """
-        Player Commands
+        Player Menus
         """
         try:
             member_id = interaction.user.id

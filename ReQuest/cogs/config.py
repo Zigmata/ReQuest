@@ -22,7 +22,7 @@ class Config(Cog):
     @app_commands.guild_only()
     async def config(self, interaction: discord.Interaction):
         """
-        Server Configuration Wizard (Server Admins only)
+        Server Configuration Menus (Server Admins only)
         """
         try:
             guild_id = interaction.guild.id

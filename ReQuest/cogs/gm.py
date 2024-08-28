@@ -27,7 +27,7 @@ class GameMaster(Cog):
     @app_commands.guild_only()
     async def gm(self, interaction: discord.Interaction):
         """
-        GM Commands
+        Game Master Menus
         """
         try:
             view = GMBaseView(interaction.client, interaction.user, interaction.guild_id)
@@ -38,6 +38,9 @@ class GameMaster(Cog):
     @has_gm_or_mod()
     @app_commands.guild_only()
     async def mod_player_menu(self, interaction: discord.Interaction, member: discord.Member):
+        """
+        Add or remove items or experience from a player.
+        """
         try:
             guild_id = str(interaction.guild_id)
             character_collection = interaction.client.mdb['characters']
