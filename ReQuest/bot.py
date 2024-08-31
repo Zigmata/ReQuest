@@ -2,12 +2,14 @@ import asyncio
 from pathlib import Path
 
 import aiohttp
-import yaml
 import discord
+import yaml
 from discord.ext import commands
 from discord.ext.commands import errors
 from motor.motor_asyncio import AsyncIOMotorClient as MotorClient
-from utilities.supportFunctions import get_prefix, attempt_delete
+
+from ReQuest.ui.views import QuestPostView
+from utilities.supportFunctions import attempt_delete, log_exception
 
 
 class ReQuest(commands.AutoShardedBot):
@@ -20,10 +22,10 @@ class ReQuest(commands.AutoShardedBot):
         intents = discord.Intents.default()
         intents.members = True  # Subscribe to the privileged members intent.
         intents.presences = True  # Subscribe to the privileged presences intent.
-        intents.message_content = True # Subscribe to the privileged message content intent.
+        intents.message_content = True  # Subscribe to the privileged message content intent.
         allowed_mentions = discord.AllowedMentions(roles=True, everyone=False, users=True)
         super(ReQuest, self).__init__(activity=discord.Game(name=f'by Post'), allowed_mentions=allowed_mentions,
-                                      case_insensitive=True, chunk_guild_at_startup=False, command_prefix=get_prefix,
+                                      case_insensitive=True, chunk_guild_at_startup=False, command_prefix='!',
                                       intents=intents)
 
         # Open the config file and load it to the bot
@@ -31,7 +33,7 @@ class ReQuest(commands.AutoShardedBot):
         with open(config_file, 'r') as yaml_file:
             config = yaml.safe_load(yaml_file)
         self.config = config
-        self.white_list = []
+        self.allow_list = []
 
     async def setup_hook(self):
         # Grab the event loop from asyncio, so we can pass it around
@@ -45,25 +47,37 @@ class ReQuest(commands.AutoShardedBot):
 
         # Grab the list of extensions and load them asynchronously
         initial_extensions = self.config['load_extensions']
-        # TODO: Verify async loop isn't needed
         for ext in initial_extensions:
             try:
-                asyncio.create_task(self.load_extension(ext))
+                await asyncio.create_task(self.load_extension(ext))
             except Exception as e:
                 print(f'Failed to load extension: {ext}')
                 print('{}: {}'.format(type(e).__name__, e))
 
         # If the white list is enabled, load it async in the background
-        if self.config['whiteList']:
-            asyncio.create_task(self.load_white_list())
+        if self.config['allowList']:
+            await asyncio.create_task(self.load_allow_list())
+
+        quests = []
+        quest_collection = self.gdb['quests']
+        cursor = quest_collection.find()
+        for document in await cursor.to_list(length=None):
+            quests.append(document)
+
+        for quest in quests:
+            self.add_view(view=QuestPostView(quest), message_id=quest['messageId'])
 
     async def close(self):
         await super().close()
         await self.session.close()
 
-    async def load_white_list(self):
-        white_list = await self.cdb['botWhiteList'].find_one({'servers': {'$exists': True}})
-        self.white_list = white_list['servers']
+    async def load_allow_list(self):
+        allow_list = await self.cdb['serverAllowlist'].find_one({'servers': {'$exists': True}})
+        if not allow_list:
+            await self.cdb.create_collection('serverAllowlist')
+        else:
+            for server in allow_list['servers']:
+                self.allow_list.append(server['id'])
 
     # Overridden from base to delete command invocation messages
     async def invoke(self, ctx):
@@ -86,10 +100,11 @@ class ReQuest(commands.AutoShardedBot):
     async def on_message(self, message):
         if message.author.bot:
             return
-        elif len(message.mentions) > 0 and self.user in message.mentions:
-            await message.channel.send(f'My prefix for this server is `{await get_prefix(self, message)}`')
         else:
-            await self.process_commands(message)
+            try:
+                await self.process_commands(message)
+            except discord.ext.commands.CommandError as command_error:
+                await message.channel.send(f'{command_error}')
 
     @staticmethod
     async def on_ready():
@@ -97,6 +112,11 @@ class ReQuest(commands.AutoShardedBot):
 
 
 bot = ReQuest()
+
+
+@bot.tree.error
+async def on_app_command_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+    await log_exception(error, interaction)
 
 
 async def main():

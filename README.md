@@ -9,18 +9,11 @@ Made possible by [discord.py](https://discordpy.readthedocs.io/en/stable/) and [
 
 ### Prerequesites
 - MongoDB version 5 or later.
-- Python version 3.7 or later.
+- Python version 3.12 or later.
 - A Discord bot application, using the process outlined [here](https://discord.com/developers/docs/getting-started).
-> You'll need to read and understand bot scopes, permissions, and privileged intents for the bot to function. ReQuest requires access to the privileged gateways for presences, server members, and message content. 
 
-#### Package dependencies
-- Motor version 2.5 or later
-- discord.py version 2 or later
-- Latest PyYAML and shortuuid
-
-> Note as of April 2022: Motor will install PyMongo version 3.12+, do not manually upgrade your version of PyMongo to 4+ as it is incompatible with Motor at this time. Motor devs are including PyMongo 4+ support in Motor version 3.
-
-Yes I know there's a way to automatically include pip dependencies, I'll incorporate that in this repo when I bother to learn it.
+> You'll need to read and understand bot scopes, permissions, and privileged intents for the bot to function. ReQuest
+> requires access to the privileged gateways for presences, server members, and message content.
 
 ### Instructions
 
@@ -32,3 +25,10 @@ Yes I know there's a way to automatically include pip dependencies, I'll incorpo
 If you want to modify the bot, you will need to educate yourself on discord.py, cogs, extensions, and asyncio in order to be marginally successful like me.
 
 Don't forget to join the [Discord](https://discord.gg/Zq37gj4)!~~~~
+
+Packages:
+
+- PyYaml
+- discord.py
+- shortuuid
+- motor
