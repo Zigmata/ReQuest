@@ -1,12 +1,21 @@
 import asyncio
+import datetime
 import logging
 
 import discord
+import shortuuid
 
 import ReQuest.ui.buttons as buttons
 import ReQuest.ui.selects as selects
-from ReQuest.utilities.supportFunctions import log_exception, strip_id, update_character_inventory, \
-    update_character_experience, attempt_delete, update_quest_embed, find_character_in_lists
+from ReQuest.utilities.supportFunctions import (
+    log_exception,
+    strip_id,
+    update_character_inventory,
+    update_character_experience,
+    attempt_delete,
+    update_quest_embed,
+    find_character_in_lists
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -23,15 +32,50 @@ class PlayerBaseView(discord.ui.View):
             title='Player Commands - Main Menu',
             description=(
                 '__**Characters**__\n'
-                'Commands to register, view, and activate player characters.\n\n'
+                'Register, view, and activate player characters.\n\n'
                 '__**Inventory**__\n'
-                'Commands to view your active character\'s inventory, spend currency, and trade with other players.'
+                'View your active character\'s inventory, spend currency, and trade with other players.\n\n'
+                '__**Player Board**__\n'
+                'Create a post for the Player Board, if configured on your server.\n\n'
             ),
             type='rich'
         )
-        self.add_item(buttons.PlayerMenuButton(CharacterBaseView, 'Characters', mdb, bot, member_id, guild_id))
-        self.add_item(buttons.PlayerMenuButton(InventoryBaseView, 'Inventory', mdb, bot, member_id, guild_id))
-        self.add_item(buttons.MenuDoneButton())
+
+    async def setup(self):
+        try:
+            self.add_item(buttons.PlayerMenuButton(
+                submenu_view_class=CharacterBaseView,
+                label='Characters',
+                mdb=self.mdb,
+                bot=self.bot,
+                member_id=self.member_id,
+                guild_id=self.guild_id
+            ))
+            self.add_item(buttons.PlayerMenuButton(
+                submenu_view_class=InventoryBaseView,
+                label='Inventory',
+                mdb=self.mdb,
+                bot=self.bot,
+                member_id=self.member_id,
+                guild_id=self.guild_id
+            ))
+            channel_collection = self.bot.gdb['playerBoardChannel']
+            channel_query = await channel_collection.find_one({'_id': self.guild_id})
+            if channel_query:
+                channel_id = strip_id(channel_query['playerBoardChannel'])
+
+                player_board_button = buttons.PlayerBoardViewButton(
+                    player_board_channel_id=channel_id,
+                    target_view_class=PlayerBoardView,
+                    label='Player Board',
+                    setup_embed=True,
+                    setup_select=True
+                )
+                self.add_item(player_board_button)
+
+            self.add_item(buttons.MenuDoneButton())
+        except Exception as e:
+            await log_exception(e)
 
 
 class CharacterBaseView(discord.ui.View):
@@ -453,13 +497,17 @@ class ConfigPlayersView(discord.ui.View):
             description=(
                 '__**Experience**__\n'
                 'Enables/Disables the use of experience points (or similar value-based character progression).\n\n'
+                '__**Player Board Purge**__\n'
+                'Purges posts from the player board (if enabled).\n\n'
                 '-----'
             ),
             type='rich'
         )
         self.guild_id = guild_id
         self.gdb = gdb
+        self.player_board_purge_button = buttons.PlayerBoardPurgeButton(self)
         self.add_item(buttons.PlayerExperienceToggleButton(self))
+        self.add_item(self.player_board_purge_button)
         self.add_item(buttons.ConfigBackButton(ConfigBaseView, guild_id, gdb))
 
     async def query_player_config(self, config_type):
@@ -483,6 +531,28 @@ class ConfigPlayersView(discord.ui.View):
             self.embed.add_field(name='Player Experience Enabled', value=player_experience, inline=False)
         except Exception as e:
             await log_exception(e)
+
+    async def purge_player_board(self, age, interaction: discord.Interaction):
+        try:
+            # Get the current datetime and calculate the cutoff date
+            current_datetime = datetime.datetime.now(datetime.UTC)
+            cutoff_date = current_datetime - datetime.timedelta(days=age)
+
+            # Delete all records in the db matching this guild that are older than the cutoff
+            player_board_collection = interaction.client.gdb['playerBoard']
+            player_board_collection.delete_many({'guildId': interaction.guild_id,
+                                                 'timestamp': {'$lt': cutoff_date}})
+
+            # Get the channel object and purge all messages older than the cutoff
+            config_collection = interaction.client.gdb['playerBoardChannel']
+            config_query = await config_collection.find_one({'_id': interaction.guild_id})
+            channel_id = strip_id(config_query['playerBoardChannel'])
+            channel = interaction.guild.get_channel(channel_id)
+            await channel.purge(before=cutoff_date)
+
+            await interaction.response.send_message(f'Posts older than {age} days have been purged!', ephemeral=True)
+        except Exception as e:
+            await log_exception(e, interaction)
 
 
 class ConfigRemoveDenominationView(discord.ui.View):
@@ -1841,6 +1911,163 @@ class CancelQuestView(discord.ui.View):
             await attempt_delete(message)
 
             await interaction.response.send_message(f'Quest `{quest['questId']}`: **{title}** cancelled!',
+                                                    ephemeral=True)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class PlayerBoardView(discord.ui.View):
+    def __init__(self, bot, user, guild_id, player_board_channel_id):
+        super().__init__(timeout=None)
+        self.bot = bot
+        self.user = user
+        self.guild_id = guild_id
+        self.player_board_channel_id = player_board_channel_id
+        self.embed = discord.Embed(
+            title='Player Commands - Player Board',
+            description=(
+                '__**Create Post**__\n'
+                'Creates a new post for the Player Board.\n\n'
+                '__**Edit Post**__\n'
+                'Edits the selected post.\n\n'
+                '__**Remove Post**__\n'
+                'Removes the selected post from the Player Board.\n\n'
+                '------'
+            ),
+            type='rich'
+        )
+        self.selected_post_id = None
+        self.posts = []
+        self.selected_post = None
+        self.manageable_post_select = selects.ManageablePostSelect(self)
+        self.create_player_post_button = buttons.CreatePlayerPostButton(self)
+        self.edit_player_post_button = buttons.EditPlayerPostButton(self)
+        self.remove_player_post_button = buttons.RemovePlayerPostButton(self)
+        self.back_button = buttons.PlayerBackButton(PlayerBaseView, self.bot.mdb, self.bot, self.user.id, self.guild_id)
+        self.add_item(self.manageable_post_select)
+        self.add_item(self.create_player_post_button)
+        self.add_item(self.edit_player_post_button)
+        self.add_item(self.remove_player_post_button)
+        self.add_item(self.back_button)
+
+    async def setup_embed(self):
+        try:
+            self.posts.clear()
+            self.embed.clear_fields()
+            post_collection = self.bot.gdb['playerBoard']
+            post_cursor = post_collection.find({'guildId': self.guild_id, 'playerId': self.user.id})
+            async for post in post_cursor:
+                self.posts.append(dict(post))
+
+            if self.selected_post_id:
+                self.edit_player_post_button.disabled = False
+                self.remove_player_post_button.disabled = False
+                self.selected_post = next((post for post in self.posts if post['postId'] == self.selected_post_id),
+                                          None)
+                self.embed.add_field(name='Selected Post',
+                                     value=f'`{self.selected_post['postId']}`: {self.selected_post['title']}')
+            else:
+                self.edit_player_post_button.disabled = True
+                self.remove_player_post_button.disabled = True
+        except Exception as e:
+            await log_exception(e)
+
+    async def setup_select(self):
+        try:
+            options = []
+            if self.posts:
+                for post in self.posts:
+                    options.append(discord.SelectOption(
+                        label=post['title'],
+                        value=post['postId']
+                    ))
+                self.manageable_post_select.disabled = False
+            else:
+                options.append(discord.SelectOption(
+                    label='You don\'t have any current posts',
+                    value='None'
+                ))
+                self.manageable_post_select.disabled = True
+            self.manageable_post_select.options = options
+        except Exception as e:
+            await log_exception(e)
+
+    async def select_callback(self, interaction: discord.Interaction):
+        try:
+            self.selected_post_id = self.manageable_post_select.values[0]
+            await self.setup_embed()
+            await interaction.response.edit_message(embed=self.embed, view=self)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def create_post(self, title, content, interaction: discord.Interaction):
+        try:
+            post_collection = interaction.client.gdb['playerBoard']
+            post_id = str(shortuuid.uuid()[:8])
+            post_embed = discord.Embed(
+                title=title,
+                description=content,
+                type='rich'
+            )
+            post_embed.add_field(name='Author', value=interaction.user.mention)
+            post_embed.set_footer(text=f'Post ID: {post_id}')
+            channel = interaction.client.get_channel(self.player_board_channel_id)
+            message = await channel.send(embed=post_embed)
+
+            post = {
+                'guildId': interaction.guild_id,
+                'playerId': interaction.user.id,
+                'postId': post_id,
+                'messageId': message.id,
+                'timestamp': message.created_at,
+                'title': title,
+                'content': content
+            }
+
+            await post_collection.insert_one(post)
+
+            await interaction.response.send_message(f'Post `{post_id}`: **{title}** posted!', ephemeral=True)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def edit_post(self, title, content, interaction: discord.Interaction):
+        try:
+            self.selected_post['title'] = title
+            self.selected_post['content'] = content
+            post_embed = discord.Embed(
+                title=title,
+                description=content,
+                type='rich'
+            )
+            post_embed.add_field(name='Author', value=interaction.user.mention)
+            post_embed.set_footer(text=f'Post ID: {self.selected_post_id}')
+
+            message_id = self.selected_post['messageId']
+            channel = interaction.client.get_channel(self.player_board_channel_id)
+            message = channel.get_partial_message(message_id)
+            await message.edit(embed=post_embed)
+
+            post_collection = interaction.client.gdb['playerBoard']
+            await post_collection.replace_one({'guildId': interaction.guild_id, 'postId': self.selected_post_id},
+                                              self.selected_post)
+
+            await interaction.response.send_message(f'Post `{self.selected_post_id}`: **{title}** updated!',
+                                                    ephemeral=True)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def remove_post(self, interaction: discord.Interaction):
+        try:
+            post = self.selected_post
+            post_collection = interaction.client.gdb['playerBoard']
+            await post_collection.delete_one({'guildId': self.guild_id, 'postId': self.selected_post_id})
+
+            message_id = post['messageId']
+            channel = interaction.client.get_channel(self.player_board_channel_id)
+            message = channel.get_partial_message(message_id)
+            await attempt_delete(message)
+
+            await interaction.response.send_message(f'Post `{post['postId']}`: **{post['title']}** deleted!',
                                                     ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)

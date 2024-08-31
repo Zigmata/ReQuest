@@ -381,3 +381,19 @@ class ManageableQuestSelect(discord.ui.Select):
             await self.calling_view.select_callback(interaction)
         except Exception as e:
             await log_exception(e, interaction)
+
+
+class ManageablePostSelect(discord.ui.Select):
+    def __init__(self, calling_view):
+        super().__init__(
+            placeholder='Select a post',
+            options=[],
+            custom_id='manageable_post_select'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await self.calling_view.select_callback(interaction)
+        except Exception as e:
+            await log_exception(e, interaction)

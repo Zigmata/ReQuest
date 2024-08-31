@@ -797,10 +797,97 @@ class ForbiddenRolesModal(discord.ui.Modal):
             names = []
             for name in self.names_text_input.value.strip().split(','):
                 names.append(name.lower().strip())
-            config_collection = interaction.client.cdb['forbiddenRoles']
+            config_collection = interaction.client.gdb['forbiddenRoles']
             await config_collection.update_one({'_id': interaction.guild_id},
                                                {'$set': {'forbiddenRoles': names}},
                                                upsert=True)
             await interaction.response.send_message('Forbidden roles updated!', ephemeral=True)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class CreatePlayerPostModal(discord.ui.Modal):
+    def __init__(self, calling_view):
+        super().__init__(
+            title='Create Player Board Post',
+            timeout=600
+        )
+        self.title_text_input = discord.ui.TextInput(
+            label='Title',
+            custom_id='title_text_input',
+            placeholder='Enter a title for your post'
+        )
+        self.content_text_input = discord.ui.TextInput(
+            label='Post Content',
+            style=discord.TextStyle.paragraph,
+            custom_id='content_text_input',
+            placeholder='Enter the body of your post'
+        )
+        self.calling_view = calling_view
+        self.add_item(self.title_text_input)
+        self.add_item(self.content_text_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            title = self.title_text_input.value
+            content = self.content_text_input.value
+            await self.calling_view.create_post(title, content, interaction)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditPlayerPostModal(discord.ui.Modal):
+    def __init__(self, calling_view):
+        super().__init__(
+            title='Edit Player Board Post',
+            timeout=600
+        )
+        self.calling_view = calling_view
+        post = calling_view.selected_post
+        self.title_text_input = discord.ui.TextInput(
+            label='Title',
+            custom_id='title_text_input',
+            placeholder='Enter a title for your post',
+            default=post['title'],
+            required=False
+        )
+        self.content_text_input = discord.ui.TextInput(
+            label='Post Content',
+            style=discord.TextStyle.paragraph,
+            custom_id='content_text_input',
+            placeholder='Enter the body of your post',
+            default=post['content'],
+            required=False
+        )
+        self.add_item(self.title_text_input)
+        self.add_item(self.content_text_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            title = self.title_text_input.value
+            content = self.content_text_input.value
+            await self.calling_view.edit_post(title, content, interaction)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class PlayerBoardPurgeModal(discord.ui.Modal):
+    def __init__(self, calling_view):
+        super().__init__(
+            title='Purge Player Board',
+            timeout=600
+        )
+        self.calling_view = calling_view
+        self.age_text_input = discord.ui.TextInput(
+            label='Age',
+            custom_id='age_text_input',
+            placeholder='Enter the maximum post age (in days) to keep'
+        )
+        self.add_item(self.age_text_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            age = int(self.age_text_input.value)
+            await self.calling_view.purge_player_board(age, interaction)
         except Exception as e:
             await log_exception(e, interaction)

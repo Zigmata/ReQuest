@@ -37,6 +37,7 @@ class Player(Cog):
             member_id = interaction.user.id
             guild_id = interaction.guild_id
             player_base_view = PlayerBaseView(interaction.client.mdb, interaction.client, member_id, guild_id)
+            await player_base_view.setup()
             await interaction.response.send_message(embed=player_base_view.embed, view=player_base_view, ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)

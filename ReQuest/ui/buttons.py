@@ -173,6 +173,8 @@ class PlayerBackButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             new_view = self.returning_view_class(self.mdb, self.bot, self.member_id, self.guild_id)
+            if hasattr(new_view, 'setup'):
+                await new_view.setup()
             if hasattr(new_view, 'setup_select') and self.setup_select:
                 await new_view.setup_select()
             if hasattr(new_view, 'setup_embed') and self.setup_embed:
@@ -1049,7 +1051,7 @@ class CreatePartyRoleButton(discord.ui.Button):
                 'gm',
             ]
             custom_forbidden_names = []
-            config_collection = interaction.client.cdb['forbiddenRoles']
+            config_collection = interaction.client.gdb['forbiddenRoles']
             config_query = await config_collection.find_one({'_id': interaction.guild_id})
             if config_query and config_query['forbiddenRoles']:
                 for name in config_query['forbiddenRoles']:
@@ -1123,11 +1125,107 @@ class ForbiddenRolesButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             current_roles = []
-            config_collection = interaction.client.cdb['forbiddenRoles']
+            config_collection = interaction.client.gdb['forbiddenRoles']
             config_query = await config_collection.find_one({'_id': interaction.guild_id})
             if config_query and config_query['forbiddenRoles']:
                 current_roles = config_query['forbiddenRoles']
             modal = modals.ForbiddenRolesModal(current_roles)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class CreatePlayerPostButton(discord.ui.Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Create Post',
+            style=discord.ButtonStyle.success,
+            custom_id='create_player_post_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            modal = modals.CreatePlayerPostModal(self.calling_view)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RemovePlayerPostButton(discord.ui.Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Remove Post',
+            style=discord.ButtonStyle.danger,
+            custom_id='remove_player_post_button',
+            disabled=True
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await self.calling_view.remove_post(interaction)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class PlayerBoardViewButton(MenuViewButton):
+    def __init__(self, player_board_channel_id, target_view_class, label, setup_select=False, setup_embed=False):
+        super().__init__(
+            target_view_class=target_view_class,
+            label=label,
+            setup_select=setup_select,
+            setup_embed=setup_embed,
+        )
+        self.player_board_channel_id = player_board_channel_id
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            new_view = self.target_view_class(
+                bot=interaction.client,
+                user=interaction.user,
+                guild_id=interaction.guild_id,
+                player_board_channel_id=self.player_board_channel_id
+            )
+            if hasattr(new_view, 'setup_embed') and self.setup_embed:
+                await new_view.setup_embed()
+            if hasattr(new_view, 'setup_select') and self.setup_select:
+                await new_view.setup_select()
+            await interaction.response.edit_message(embed=new_view.embed, view=new_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditPlayerPostButton(discord.ui.Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Edit Post',
+            style=discord.ButtonStyle.secondary,
+            custom_id='edit_player_post_button',
+            disabled=True
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            modal = modals.EditPlayerPostModal(self.calling_view)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class PlayerBoardPurgeButton(discord.ui.Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Purge Player Board',
+            style=discord.ButtonStyle.danger,
+            custom_id='player_board_purge_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            modal = modals.PlayerBoardPurgeModal(self.calling_view)
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)
