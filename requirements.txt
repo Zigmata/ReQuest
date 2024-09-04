@@ -1,0 +1,4 @@
+discord.py
+PyYaml
+motor
+shortuuid

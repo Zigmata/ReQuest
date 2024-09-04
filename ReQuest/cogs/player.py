@@ -29,22 +29,20 @@ class Player(Cog):
 
     @app_commands.command(name='player')
     @app_commands.guild_only()
-    async def player(self, interaction: discord.Interaction):
+    async def player(self, interaction):
         """
         Player Menus
         """
         try:
-            member_id = interaction.user.id
-            guild_id = interaction.guild_id
-            player_base_view = PlayerBaseView(interaction.client.mdb, interaction.client, member_id, guild_id)
-            await player_base_view.setup()
-            await interaction.response.send_message(embed=player_base_view.embed, view=player_base_view, ephemeral=True)
+            new_view = PlayerBaseView()
+            await new_view.setup(bot=interaction.client, guild=interaction.guild)
+            await interaction.response.send_message(embed=new_view.embed, view=new_view, ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)
 
     @has_active_character()
     @app_commands.guild_only()
-    async def trade_menu(self, interaction: discord.Interaction, target: discord.Member):
+    async def trade_menu(self, interaction, target: discord.Member):
         try:
             modal = modals.TradeModal(target=target)
             await interaction.response.send_modal(modal)

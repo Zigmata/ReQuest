@@ -1,4 +1,5 @@
 import asyncio
+import os
 from pathlib import Path
 
 import aiohttp
@@ -12,7 +13,7 @@ from ReQuest.ui.views import QuestPostView
 from utilities.supportFunctions import attempt_delete, log_exception
 
 
-class ReQuest(commands.AutoShardedBot):
+class ReQuest(commands.Bot):
     def __init__(self):
         self.motor_client = None
         self.cdb = None
@@ -24,9 +25,12 @@ class ReQuest(commands.AutoShardedBot):
         intents.presences = True  # Subscribe to the privileged presences intent.
         intents.message_content = True  # Subscribe to the privileged message content intent.
         allowed_mentions = discord.AllowedMentions(roles=True, everyone=False, users=True)
-        super(ReQuest, self).__init__(activity=discord.Game(name=f'by Post'), allowed_mentions=allowed_mentions,
-                                      case_insensitive=True, chunk_guild_at_startup=False, command_prefix='!',
-                                      intents=intents)
+        super(ReQuest, self).__init__(
+            activity=discord.Game(name=f'by Post'),
+            allowed_mentions=allowed_mentions,
+            case_insensitive=True,
+            command_prefix='!',
+            intents=intents)
 
         # Open the config file and load it to the bot
         config_file = Path('config.yaml')
@@ -39,8 +43,22 @@ class ReQuest(commands.AutoShardedBot):
         # Grab the event loop from asyncio, so we can pass it around
         loop = asyncio.get_running_loop()
 
-        # Instantiate the motor client with the current event loop, and prep the databases
-        self.motor_client = MotorClient(self.config['dbServer'], self.config['port'], io_loop=loop)
+        # Instantiate the motor client with the current event loop, and prep the databases. This instantiation uses
+        # a local mongoDB deployment on the default port.
+        # self.motor_client = MotorClient('localhost', 27017, io_loop=loop)
+
+        # If you are using a connection URI, uncomment the next block of code use it instead of the client
+        # instantiation above. In this example, we are using environment variables from the host system to hold the
+        # necessary values.
+        mongo_user = os.getenv('MONGO_USER')
+        mongo_password = os.getenv('MONGO_PASSWORD')
+        mongo_host = os.getenv('MONGO_HOST')
+        mongo_port = os.getenv('MONGO_PORT')
+        auth_db = os.getenv('AUTH_DB')
+        db_uri = f'mongodb://{mongo_user}:{mongo_password}@{mongo_host}:{mongo_port}/?authSource={auth_db}'
+        self.motor_client = MotorClient(db_uri, io_loop=loop)
+
+        # Instantiate the database objects as Discord client attributes
         self.mdb = self.motor_client[self.config['memberDb']]
         self.cdb = self.motor_client[self.config['configDb']]
         self.gdb = self.motor_client[self.config['guildDb']]
@@ -58,12 +76,12 @@ class ReQuest(commands.AutoShardedBot):
         if self.config['allowList']:
             await asyncio.create_task(self.load_allow_list())
 
+        # If the bot is restarted with any existing quests, this reloads their views so they can be interacted with.
         quests = []
         quest_collection = self.gdb['quests']
         cursor = quest_collection.find()
         for document in await cursor.to_list(length=None):
             quests.append(document)
-
         for quest in quests:
             self.add_view(view=QuestPostView(quest), message_id=quest['messageId'])
 
@@ -110,14 +128,11 @@ class ReQuest(commands.AutoShardedBot):
     async def on_ready():
         print("ReQuest is online.")
 
-
 bot = ReQuest()
-
 
 @bot.tree.error
 async def on_app_command_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
     await log_exception(error, interaction)
-
 
 async def main():
     async with aiohttp.ClientSession() as session:

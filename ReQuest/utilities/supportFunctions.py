@@ -1,3 +1,4 @@
+import datetime
 import logging
 import re
 import traceback
@@ -418,3 +419,26 @@ def find_member_and_character_id_in_lists(lists, selected_member_id):
                     for character_id in character_data:
                         return member_id, character_id
     return None, None
+
+
+async def purge_player_board(age, interaction):
+    try:
+        # Get the current datetime and calculate the cutoff date
+        current_datetime = datetime.datetime.now(datetime.UTC)
+        cutoff_date = current_datetime - datetime.timedelta(days=age)
+
+        # Delete all records in the db matching this guild that are older than the cutoff
+        player_board_collection = interaction.client.gdb['playerBoard']
+        player_board_collection.delete_many({'guildId': interaction.guild_id,
+                                             'timestamp': {'$lt': cutoff_date}})
+
+        # Get the channel object and purge all messages older than the cutoff
+        config_collection = interaction.client.gdb['playerBoardChannel']
+        config_query = await config_collection.find_one({'_id': interaction.guild_id})
+        channel_id = strip_id(config_query['playerBoardChannel'])
+        channel = interaction.guild.get_channel(channel_id)
+        await channel.purge(before=cutoff_date)
+
+        await interaction.response.send_message(f'Posts older than {age} days have been purged!', ephemeral=True)
+    except Exception as e:
+        await log_exception(e, interaction)

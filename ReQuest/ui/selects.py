@@ -16,7 +16,7 @@ class GMRoleRemoveSelect(discord.ui.Select):
         )
         self.new_view = new_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             collection = interaction.client.gdb['gmRoles']
             for value in self.values:
@@ -40,7 +40,7 @@ class SingleChannelConfigSelect(discord.ui.ChannelSelect):
         self.guild_id = guild_id
         self.gdb = gdb
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             collection = self.gdb[self.config_type]
             await collection.update_one({'_id': self.guild_id}, {'$set': {self.config_type: self.values[0].mention}},
@@ -61,15 +61,14 @@ class ActiveCharacterSelect(discord.ui.Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             selected_character_id = self.values[0]
             collection = interaction.client.mdb['characters']
             await collection.update_one({'_id': interaction.user.id},
                                         {'$set': {f'activeCharacters.{interaction.guild_id}': selected_character_id}},
                                         upsert=True)
-            await self.calling_view.setup_embed()
-            await self.calling_view.setup_select()
+            await self.calling_view.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
             await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
@@ -85,7 +84,7 @@ class RemoveCharacterSelect(discord.ui.Select):
         self.calling_view = calling_view
         self.confirm_button = confirm_button
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             selected_character_id = self.values[0]
             self.calling_view.selected_character_id = selected_character_id
@@ -109,7 +108,7 @@ class QuestAnnounceRoleSelect(discord.ui.RoleSelect):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             collection = interaction.client.gdb['announceRole']
             await collection.update_one({'_id': interaction.guild_id},
@@ -130,7 +129,7 @@ class AddGMRoleSelect(discord.ui.RoleSelect):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             collection = interaction.client.gdb['gmRoles']
             query = await collection.find_one({'_id': interaction.guild_id})
@@ -174,7 +173,7 @@ class ConfigWaitListSelect(discord.ui.Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             collection = interaction.client.gdb['questWaitList']
             await collection.update_one({'_id': interaction.guild_id},
@@ -196,7 +195,7 @@ class RemoveDenominationSelect(discord.ui.Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             denomination_name = self.values[0]
             self.calling_view.selected_denomination_name = denomination_name
@@ -217,7 +216,7 @@ class EditCurrencySelect(discord.ui.Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             view = self.calling_view
             currency_name = self.values[0]
@@ -242,7 +241,7 @@ class RemoveCurrencySelect(discord.ui.Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             view = self.calling_view
             view.selected_currency = self.values[0]
@@ -263,7 +262,7 @@ class RemoveGuildAllowlistSelect(discord.ui.Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             view = self.calling_view
             guild_id = int(self.values[0])
@@ -289,7 +288,7 @@ class ManageQuestSelect(discord.ui.Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             quest_id = self.values[0]
             view = self.calling_view
@@ -301,7 +300,7 @@ class ManageQuestSelect(discord.ui.Select):
             view.rewards_menu_button.disabled = False
             view.remove_player_button.disabled = False
             view.cancel_quest_button.disabled = False
-            await view.setup_embed()
+            await view.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
 
             view.embed.add_field(name='Selected Quest', value=f'`{quest_id}`: **{quest['title']}**')
             await interaction.response.edit_message(embed=view.embed, view=view)
@@ -320,7 +319,7 @@ class PartyMemberSelect(discord.ui.Select):
         self.calling_view = calling_view
         self.disabled_components = disabled_components
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             character_id = self.values[0]
             view = self.calling_view
@@ -351,7 +350,7 @@ class RemovePlayerSelect(discord.ui.Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             view = self.calling_view
             party = view.quest['party']
@@ -376,7 +375,7 @@ class ManageableQuestSelect(discord.ui.Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             await self.calling_view.select_callback(interaction)
         except Exception as e:
@@ -392,7 +391,7 @@ class ManageablePostSelect(discord.ui.Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             await self.calling_view.select_callback(interaction)
         except Exception as e:

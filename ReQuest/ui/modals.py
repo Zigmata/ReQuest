@@ -8,7 +8,8 @@ from discord.ui import Modal
 
 from .inputs import AddCurrencyDenominationTextInput
 from ..utilities.supportFunctions import find_currency_or_denomination, log_exception, trade_currency, trade_item, \
-    normalize_currency_keys, consolidate_currency, strip_id, update_character_inventory, update_character_experience
+    normalize_currency_keys, consolidate_currency, strip_id, update_character_inventory, update_character_experience, \
+    purge_player_board
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -30,7 +31,7 @@ class TradeModal(Modal):
         self.add_item(self.item_name_text_input)
         self.add_item(self.item_quantity_text_input)
 
-    async def on_submit(self, interaction: discord.Interaction):
+    async def on_submit(self, interaction):
         try:
             transaction_id = shortuuid.uuid()[:12]
             mdb = interaction.client.mdb
@@ -127,7 +128,7 @@ class CharacterRegisterModal(discord.ui.Modal):
         self.add_item(self.name_text_input)
         self.add_item(self.note_text_input)
 
-    async def on_submit(self, interaction: discord.Interaction):
+    async def on_submit(self, interaction):
         try:
             character_id = str(shortuuid.uuid())
             collection = self.mdb['characters']
@@ -167,7 +168,7 @@ class AddCurrencyTextModal(discord.ui.Modal):
                                                custom_id='new_currency_name_text_input')
         self.add_item(self.text_input)
 
-    async def on_submit(self, interaction: discord.Interaction):
+    async def on_submit(self, interaction):
         try:
             collection = self.gdb['currency']
             query = await collection.find_one({'_id': self.guild_id})
@@ -218,7 +219,7 @@ class AddCurrencyDenominationTextModal(discord.ui.Modal):
         self.add_item(self.denomination_name_text_input)
         self.add_item(self.denomination_value_text_input)
 
-    async def on_submit(self, interaction: discord.Interaction):
+    async def on_submit(self, interaction):
         try:
             guild_id = interaction.guild_id
             new_name = self.denomination_name_text_input.value
@@ -279,7 +280,7 @@ class AllowServerModal(discord.ui.Modal):
         self.add_item(self.allow_server_id_input)
         self.bot = bot
 
-    async def on_submit(self, interaction: discord.Interaction):
+    async def on_submit(self, interaction):
         try:
             input_name = self.allow_server_name_input.value
             guild_id = int(self.allow_server_id_input.value)
@@ -306,7 +307,7 @@ class AdminCogTextModal(discord.ui.Modal):
         self.add_item(self.text_input)
         self._on_submit = on_submit
 
-    async def on_submit(self, interaction: discord.Interaction):
+    async def on_submit(self, interaction):
         try:
             await self._on_submit(interaction, self.text_input.value)
         except Exception as e:
@@ -334,7 +335,7 @@ class SpendCurrencyModal(discord.ui.Modal):
         self.add_item(self.currency_name_text_input)
         self.add_item(self.currency_amount_text_input)
 
-    async def on_submit(self, interaction: discord.Interaction):
+    async def on_submit(self, interaction):
         try:
             currency_collection = interaction.client.gdb['currency']
             currency_query = await currency_collection.find_one({'_id': interaction.guild_id})
@@ -408,7 +409,7 @@ class SpendCurrencyModal(discord.ui.Modal):
                 {'$set': {f'characters.{active_character_id}.attributes.currency': user_currency_db}}, upsert=True
             )
 
-            await self.calling_view.setup_embed()
+            await self.calling_view.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
             self.calling_view.embed.add_field(name='Spent',
                                               value=f'{int(amount)} {currency_name.capitalize()}',
                                               inline=False)
@@ -427,19 +428,22 @@ class CreateQuestModal(discord.ui.Modal):
             timeout=None
         )
         self.quest_view_class = quest_view_class
-        self.quest_title_text_input = discord.ui.TextInput(label='Quest Title', style=discord.TextStyle.short,
+        self.quest_title_text_input = discord.ui.TextInput(label='Quest Title',
                                                            custom_id='quest_title_text_input',
                                                            placeholder='Title of your quest')
-        self.quest_restrictions_text_input = discord.ui.TextInput(label='Restrictions', style=discord.TextStyle.short,
+        self.quest_restrictions_text_input = discord.ui.TextInput(label='Restrictions',
                                                                   custom_id='quest_restrictions_text_input',
                                                                   placeholder='Restrictions, if any, such as player '
                                                                               'levels',
                                                                   required=False)
         self.quest_party_size_text_input = discord.ui.TextInput(label='Maximum Party Size',
-                                                                style=discord.TextStyle.short,
                                                                 custom_id='quest_party_size_text_input',
                                                                 placeholder='Max size of the party for this quest',
                                                                 max_length=2)
+        self.quest_party_role_text_input = discord.ui.TextInput(label='Party Role',
+                                                                custom_id='quest_party_role',
+                                                                placeholder='Create a role for this quest (Optional)',
+                                                                required=False)
         self.quest_description_text_input = discord.ui.TextInput(label='Description',
                                                                  style=discord.TextStyle.paragraph,
                                                                  custom_id='quest_description_text_input',
@@ -448,13 +452,15 @@ class CreateQuestModal(discord.ui.Modal):
         self.add_item(self.quest_title_text_input)
         self.add_item(self.quest_restrictions_text_input)
         self.add_item(self.quest_party_size_text_input)
+        self.add_item(self.quest_party_role_text_input)
         self.add_item(self.quest_description_text_input)
 
-    async def on_submit(self, interaction: discord.Interaction):
+    async def on_submit(self, interaction):
         try:
             title = self.quest_title_text_input.value
             restrictions = self.quest_restrictions_text_input.value
             max_party_size = int(self.quest_party_size_text_input.value)
+            party_role = self.quest_party_role_text_input.value
             description = self.quest_description_text_input.value
 
             guild_id = interaction.guild_id
@@ -577,7 +583,7 @@ class EditQuestModal(discord.ui.Modal):
         self.add_item(self.max_party_size_text_input)
         self.add_item(self.description_text_input)
 
-    async def on_submit(self, interaction: discord.Interaction):
+    async def on_submit(self, interaction):
         try:
             # Push the updates
             gdb = interaction.client.gdb
@@ -610,8 +616,7 @@ class EditQuestModal(discord.ui.Modal):
 
             # Reload the UI view
             view = self.calling_view
-            await view.setup_select()
-            await view.setup_embed()
+            await view.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
             await interaction.response.edit_message(embed=view.embed, view=view)
         except Exception as e:
             await log_exception(e, interaction)
@@ -643,7 +648,7 @@ class RewardsModal(discord.ui.Modal):
         self.add_item(self.xp_input)
         self.add_item(self.item_input)
 
-    async def on_submit(self, interaction: discord.Interaction):
+    async def on_submit(self, interaction):
         try:
             xp = None
             items = None
@@ -679,7 +684,7 @@ class QuestSummaryModal(discord.ui.Modal):
         )
         self.add_item(self.summary_input)
 
-    async def on_submit(self, interaction: discord.Interaction):
+    async def on_submit(self, interaction):
         try:
             await self.calling_button.modal_callback(interaction)
         except Exception as e:
@@ -701,7 +706,7 @@ class CreatePartyRoleModal(discord.ui.Modal):
         )
         self.add_item(self.role_name_input)
 
-    async def on_submit(self, interaction: discord.Interaction):
+    async def on_submit(self, interaction):
         try:
             await self.calling_button.modal_callback(interaction)
         except Exception as e:
@@ -735,7 +740,7 @@ class ModPlayerModal(discord.ui.Modal):
         self.add_item(self.experience_text_input)
         self.add_item(self.inventory_text_input)
 
-    async def on_submit(self, interaction: discord.Interaction):
+    async def on_submit(self, interaction):
         try:
             xp = None
             items = None
@@ -792,7 +797,7 @@ class ForbiddenRolesModal(discord.ui.Modal):
         )
         self.add_item(self.names_text_input)
 
-    async def on_submit(self, interaction: discord.Interaction):
+    async def on_submit(self, interaction):
         try:
             names = []
             for name in self.names_text_input.value.strip().split(','):
@@ -827,7 +832,7 @@ class CreatePlayerPostModal(discord.ui.Modal):
         self.add_item(self.title_text_input)
         self.add_item(self.content_text_input)
 
-    async def on_submit(self, interaction: discord.Interaction):
+    async def on_submit(self, interaction):
         try:
             title = self.title_text_input.value
             content = self.content_text_input.value
@@ -862,7 +867,7 @@ class EditPlayerPostModal(discord.ui.Modal):
         self.add_item(self.title_text_input)
         self.add_item(self.content_text_input)
 
-    async def on_submit(self, interaction: discord.Interaction):
+    async def on_submit(self, interaction):
         try:
             title = self.title_text_input.value
             content = self.content_text_input.value
@@ -885,9 +890,9 @@ class PlayerBoardPurgeModal(discord.ui.Modal):
         )
         self.add_item(self.age_text_input)
 
-    async def on_submit(self, interaction: discord.Interaction):
+    async def on_submit(self, interaction):
         try:
             age = int(self.age_text_input.value)
-            await self.calling_view.purge_player_board(age, interaction)
+            await purge_player_board(age, interaction)
         except Exception as e:
             await log_exception(e, interaction)

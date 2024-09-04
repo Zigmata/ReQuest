@@ -1,8 +1,7 @@
 import logging
 
-import discord
 import discord.ui
-from discord import ButtonStyle, Interaction
+from discord import ButtonStyle
 from discord.ui import Button
 
 import ReQuest.ui.modals as modals
@@ -16,11 +15,11 @@ class RegisterCharacterButton(Button):
     def __init__(self):
         super().__init__(
             label='Register',
-            style=ButtonStyle.success,
+            style=ButtonStyle.primary,
             custom_id='register_character_button'
         )
 
-    async def callback(self, interaction: Interaction):
+    async def callback(self, interaction):
         try:
             modal = modals.CharacterRegisterModal(self, interaction.client.mdb, interaction.user.id,
                                                   interaction.guild_id)
@@ -38,7 +37,7 @@ class ListCharactersButton(Button):
         )
         self.target_view = target_view
 
-    async def callback(self, interaction: Interaction):
+    async def callback(self, interaction):
         try:
             await self.target_view.setup_select()
             await self.target_view.setup_embed()
@@ -56,7 +55,7 @@ class RemoveCharacterButton(Button):
         )
         self.target_view = target_view
 
-    async def callback(self, interaction: Interaction):
+    async def callback(self, interaction):
         try:
             await self.target_view.setup_select()
             await interaction.response.edit_message(embed=self.target_view.embed, view=self.target_view)
@@ -68,13 +67,15 @@ class BackButton(discord.ui.Button):
     def __init__(self, new_view):
         super().__init__(
             label='Back',
-            style=discord.ButtonStyle.secondary,
+            style=ButtonStyle.secondary,
             custom_id='menu_back_button'
         )
         self.new_view = new_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
+            if hasattr(self.new_view, 'setup'):
+                await self.new_view.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
             if hasattr(self.new_view, 'setup_select'):
                 await self.new_view.setup_select()
             if hasattr(self.new_view, 'setup_embed'):
@@ -88,14 +89,14 @@ class AdminShutdownButton(discord.ui.Button):
     def __init__(self, bot, calling_view):
         super().__init__(
             label='Shutdown',
-            style=discord.ButtonStyle.danger,
+            style=ButtonStyle.danger,
             custom_id='shutdown_bot_button'
         )
         self.confirm = False
         self.bot = bot
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             if self.confirm:
                 await interaction.response.send_message('Shutting down!', ephemeral=True)
@@ -112,7 +113,7 @@ class ConfigBackButton(discord.ui.Button):
     def __init__(self, returning_view_class, guild_id, db, setup_embed=True, setup_select=True):
         super().__init__(
             label='Back',
-            style=discord.ButtonStyle.primary,
+            style=ButtonStyle.primary,
             custom_id='back_button')
         self.guild_id = guild_id
         self.db = db
@@ -120,7 +121,7 @@ class ConfigBackButton(discord.ui.Button):
         self.setup_embed = setup_embed
         self.setup_select = setup_select
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             new_view = self.returning_view_class(self.guild_id, self.db)
             if hasattr(new_view, 'setup_select') and self.setup_select:
@@ -136,7 +137,7 @@ class AdminBackButton(discord.ui.Button):
     def __init__(self, returning_view_class, cdb, bot, setup_embed=True, setup_select=True):
         super().__init__(
             label='Back',
-            style=discord.ButtonStyle.primary,
+            style=ButtonStyle.primary,
             custom_id='back_button')
         self.cdb = cdb
         self.bot = bot
@@ -144,37 +145,9 @@ class AdminBackButton(discord.ui.Button):
         self.setup_embed = setup_embed
         self.setup_select = setup_select
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             new_view = self.returning_view_class(self.cdb, self.bot)
-            if hasattr(new_view, 'setup_select') and self.setup_select:
-                await new_view.setup_select()
-            if hasattr(new_view, 'setup_embed') and self.setup_embed:
-                await new_view.setup_embed()
-            await interaction.response.edit_message(embed=new_view.embed, view=new_view)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-
-class PlayerBackButton(discord.ui.Button):
-    def __init__(self, returning_view_class, mdb, bot, member_id, guild_id, setup_embed=True, setup_select=True):
-        super().__init__(
-            label='Back',
-            style=discord.ButtonStyle.primary,
-            custom_id='back_button')
-        self.mdb = mdb
-        self.bot = bot
-        self.member_id = member_id
-        self.guild_id = guild_id
-        self.returning_view_class = returning_view_class
-        self.setup_embed = setup_embed
-        self.setup_select = setup_select
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            new_view = self.returning_view_class(self.mdb, self.bot, self.member_id, self.guild_id)
-            if hasattr(new_view, 'setup'):
-                await new_view.setup()
             if hasattr(new_view, 'setup_select') and self.setup_select:
                 await new_view.setup_select()
             if hasattr(new_view, 'setup_embed') and self.setup_embed:
@@ -188,14 +161,14 @@ class ConfigMenuButton(discord.ui.Button):
     def __init__(self, submenu_view_class, label, guild_id, gdb):
         super().__init__(
             label=label,
-            style=discord.ButtonStyle.primary,
+            style=ButtonStyle.primary,
             custom_id=f'config_{label.lower()}_button'
         )
         self.guild_id = guild_id
         self.gdb = gdb
         self.submenu_view_class = submenu_view_class
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             new_view = self.submenu_view_class(self.guild_id, self.gdb)
             await new_view.setup_embed()
@@ -208,7 +181,7 @@ class AdminMenuButton(discord.ui.Button):
     def __init__(self, submenu_view_class, label, cdb, bot, setup_select=True, setup_embed=True):
         super().__init__(
             label=label,
-            style=discord.ButtonStyle.primary,
+            style=ButtonStyle.primary,
             custom_id=f'admin_{label.lower()}_button'
         )
         self.cdb = cdb
@@ -217,7 +190,7 @@ class AdminMenuButton(discord.ui.Button):
         self.setup_select = setup_select
         self.setup_embed = setup_embed
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             new_view = self.submenu_view_class(self.cdb, self.bot)
             if hasattr(new_view, 'setup_select') and self.setup_select:
@@ -230,23 +203,20 @@ class AdminMenuButton(discord.ui.Button):
 
 
 class PlayerMenuButton(discord.ui.Button):
-    def __init__(self, submenu_view_class, label, mdb, bot, member_id, guild_id, setup_select=True, setup_embed=True):
+    def __init__(self, submenu_view_class, label, setup_select=True, setup_embed=True):
         super().__init__(
             label=label,
-            style=discord.ButtonStyle.primary,
+            style=ButtonStyle.primary,
             custom_id=f'player_{label.lower()}_button'
         )
         self.submenu_view_class = submenu_view_class
-        self.mdb = mdb
-        self.bot = bot
-        self.member_id = member_id
-        self.guild_id = guild_id
         self.setup_select = setup_select
         self.setup_embed = setup_embed
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
-            new_view = self.submenu_view_class(self.mdb, self.bot, self.member_id, self.guild_id)
+            new_view = self.submenu_view_class(interaction.client.mdb, interaction.client, interaction.user,
+                                               interaction.guild_id)
             if hasattr(new_view, 'setup_select') and self.setup_select:
                 await new_view.setup_select()
             if hasattr(new_view, 'setup_embed') and self.setup_embed:
@@ -260,11 +230,11 @@ class MenuDoneButton(discord.ui.Button):
     def __init__(self):
         super().__init__(
             label='Done',
-            style=discord.ButtonStyle.gray,
+            style=ButtonStyle.gray,
             custom_id='done_button'
         )
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
 
             await interaction.response.defer()
@@ -277,13 +247,13 @@ class ConfirmButton(discord.ui.Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Confirm',
-            style=discord.ButtonStyle.danger,
+            style=ButtonStyle.danger,
             custom_id='confirm_button',
             disabled=True
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             await self.calling_view.confirm_callback(interaction)
         except Exception as e:
@@ -294,12 +264,12 @@ class QuestAnnounceRoleRemoveButton(discord.ui.Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Remove Quest Announcement Role',
-            style=discord.ButtonStyle.red,
+            style=ButtonStyle.red,
             custom_id='quest_announce_role_remove_button'
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             collection = interaction.client.gdb['announceRole']
             query = await collection.find_one({'_id': interaction.guild_id})
@@ -316,12 +286,12 @@ class GMRoleRemoveButton(discord.ui.Button):
     def __init__(self, new_view):
         super().__init__(
             label='Remove GM Roles',
-            style=discord.ButtonStyle.red,
+            style=ButtonStyle.red,
             custom_id='gm_role_remove_button'
         )
         self.new_view = new_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             await self.new_view.setup_select()
             await self.new_view.setup_embed()
@@ -334,12 +304,12 @@ class QuestSummaryToggleButton(discord.ui.Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Toggle Quest Summary',
-            style=discord.ButtonStyle.primary,
+            style=ButtonStyle.primary,
             custom_id='quest_summary_toggle_button'
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             guild_id = interaction.guild_id
             collection = interaction.client.gdb['questSummary']
@@ -362,12 +332,12 @@ class PlayerExperienceToggleButton(discord.ui.Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Toggle Player Experience',
-            style=discord.ButtonStyle.primary,
+            style=ButtonStyle.primary,
             custom_id='config_player_experience_toggle_button'
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             guild_id = interaction.guild_id
             collection = interaction.client.gdb['playerExperience']
@@ -389,13 +359,13 @@ class RemoveDenominationConfirmButton(discord.ui.Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Confirm',
-            style=discord.ButtonStyle.danger,
+            style=ButtonStyle.danger,
             custom_id='remove_denomination_confirm_button',
             disabled=True
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             await self.calling_view.remove_currency_denomination(self.calling_view.selected_denomination_name)
             self.calling_view.embed.clear_fields()
@@ -411,13 +381,13 @@ class ToggleDoubleButton(discord.ui.Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Select a currency',
-            style=discord.ButtonStyle.secondary,
+            style=ButtonStyle.secondary,
             custom_id='toggle_double_button',
             disabled=True
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             view = self.calling_view
             currency_name = view.selected_currency_name
@@ -440,13 +410,13 @@ class AddDenominationButton(discord.ui.Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Select a currency',
-            style=discord.ButtonStyle.success,
+            style=ButtonStyle.success,
             custom_id='add_denomination_button',
             disabled=True
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             new_modal = modals.AddCurrencyDenominationTextModal(
                 calling_view=self.calling_view,
@@ -461,13 +431,13 @@ class RemoveDenominationButton(discord.ui.Button):
     def __init__(self, new_view):
         super().__init__(
             label='Select a currency',
-            style=discord.ButtonStyle.danger,
+            style=ButtonStyle.danger,
             custom_id='remove_denomination_button',
             disabled=True
         )
         self.new_view = new_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             await self.new_view.setup_select()
             await interaction.response.edit_message(embed=self.new_view.embed, view=self.new_view)
@@ -479,12 +449,12 @@ class AddCurrencyButton(discord.ui.Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Add New Currency',
-            style=discord.ButtonStyle.success,
+            style=ButtonStyle.success,
             custom_id='add_currency_button'
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             await interaction.response.send_modal(modals.AddCurrencyTextModal(guild_id=interaction.guild_id,
                                                                               gdb=interaction.client.gdb,
@@ -497,12 +467,12 @@ class EditCurrencyButton(discord.ui.Button):
     def __init__(self, new_view):
         super().__init__(
             label='Edit Currency',
-            style=discord.ButtonStyle.secondary,
+            style=ButtonStyle.secondary,
             custom_id='edit_currency_button'
         )
         self.new_view = new_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             await self.new_view.setup_select()
             await interaction.response.edit_message(embed=self.new_view.embed, view=self.new_view)
@@ -514,12 +484,12 @@ class RemoveCurrencyButton(discord.ui.Button):
     def __init__(self, new_view):
         super().__init__(
             label='Remove Currency',
-            style=discord.ButtonStyle.danger,
+            style=ButtonStyle.danger,
             custom_id='remove_currency_button'
         )
         self.new_view = new_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             await self.new_view.setup_select()
             await interaction.response.edit_message(embed=self.new_view.embed, view=self.new_view)
@@ -531,13 +501,13 @@ class RemoveCurrencyConfirmButton(discord.ui.Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Confirm',
-            style=discord.ButtonStyle.danger,
+            style=ButtonStyle.danger,
             custom_id='remove_currency_confirm_button',
             disabled=True
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             view = self.calling_view
             await view.remove_currency(view.selected_currency)
@@ -554,12 +524,12 @@ class AllowlistAddServerButton(discord.ui.Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Add New Server',
-            style=discord.ButtonStyle.success,
+            style=ButtonStyle.success,
             custom_id='allowlist_add_server_button'
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             new_modal = modals.AllowServerModal(interaction.client.cdb, self.calling_view, interaction.client)
             await interaction.response.send_modal(new_modal)
@@ -571,13 +541,13 @@ class ConfirmAllowlistRemoveButton(discord.ui.Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Confirm',
-            style=discord.ButtonStyle.danger,
+            style=ButtonStyle.danger,
             custom_id='confirm_allowlist_remove_button',
             disabled=True
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             view = self.calling_view
             collection = interaction.client.cdb['serverAllowlist']
@@ -595,13 +565,13 @@ class AdminLoadCogButton(discord.ui.Button):
     def __init__(self):
         super().__init__(
             label='Load Cog',
-            style=discord.ButtonStyle.secondary,
+            style=ButtonStyle.secondary,
             custom_id='admin_load_cog_button'
         )
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
-            async def modal_callback(modal_interaction: discord.Interaction, input_value):
+            async def modal_callback(modal_interaction, input_value):
                 module = input_value.lower()
                 await interaction.client.load_extension(f'ReQuest.cogs.{module}')
                 await modal_interaction.response.send_message(f'Extension successfully loaded: `{module}`',
@@ -617,13 +587,13 @@ class AdminReloadCogButton(discord.ui.Button):
     def __init__(self):
         super().__init__(
             label='Reload Cog',
-            style=discord.ButtonStyle.secondary,
+            style=ButtonStyle.secondary,
             custom_id='admin_reload_cog_button'
         )
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
-            async def modal_callback(modal_interaction: discord.Interaction, input_value):
+            async def modal_callback(modal_interaction, input_value):
                 module = input_value.lower()
                 await interaction.client.reload_extension(f'ReQuest.cogs.{module}')
                 await modal_interaction.response.send_message(f'Extension successfully reloaded: `{module}`',
@@ -639,12 +609,12 @@ class ViewInventoryButton(discord.ui.Button):
     def __init__(self, calling_view):
         super().__init__(
             label='View',
-            style=discord.ButtonStyle.secondary,
+            style=ButtonStyle.secondary,
             custom_id='view_inventory_button'
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             view = self.calling_view
             character = view.active_character
@@ -663,7 +633,7 @@ class ViewInventoryButton(discord.ui.Button):
                 value = ': '.join(pair)
                 currencies.append(value)
 
-            await view.setup_embed()
+            await view.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
             view.embed.add_field(name='Possessions',
                                  value='\n'.join(items))
             view.embed.add_field(name='Currency',
@@ -678,12 +648,12 @@ class SpendCurrencyButton(discord.ui.Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Spend Currency',
-            style=discord.ButtonStyle.secondary,
+            style=ButtonStyle.secondary,
             custom_id='spend_currency_button'
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             modal = modals.SpendCurrencyModal(self.calling_view)
             await interaction.response.send_modal(modal)
@@ -695,21 +665,24 @@ class MenuViewButton(discord.ui.Button):
     def __init__(self, target_view_class, label, setup_select=False, setup_embed=False):
         super().__init__(
             label=label,
-            style=discord.ButtonStyle.primary,
+            style=ButtonStyle.primary,
             custom_id=f'{label.lower()}_view_button'
         )
         self.target_view_class = target_view_class
         self.setup_select = setup_select
         self.setup_embed = setup_embed
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
-            new_view = self.target_view_class(bot=interaction.client, user=interaction.user,
-                                              guild_id=interaction.guild_id)
+            new_view = self.target_view_class()
+            if hasattr(new_view, 'setup'):
+                await new_view.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
             if hasattr(new_view, 'setup_select') and self.setup_select:
-                await new_view.setup_select()
+                await new_view.setup_select(bot=interaction.client, user=interaction.user,
+                                            guild_id=interaction.guild_id)
             if hasattr(new_view, 'setup_embed') and self.setup_embed:
-                await new_view.setup_embed()
+                await new_view.setup_embed(bot=interaction.client, user=interaction.user,
+                                           guild_id=interaction.guild_id)
             await interaction.response.edit_message(embed=new_view.embed, view=new_view)
         except Exception as e:
             await log_exception(e, interaction)
@@ -719,12 +692,12 @@ class CreateQuestButton(discord.ui.Button):
     def __init__(self, quest_view_class):
         super().__init__(
             label='Create',
-            style=discord.ButtonStyle.success,
+            style=ButtonStyle.success,
             custom_id='create_quest_button'
         )
         self.quest_view_class = quest_view_class
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             modal = modals.CreateQuestModal(self.quest_view_class)
             await interaction.response.send_modal(modal)
@@ -736,14 +709,14 @@ class EditQuestButton(discord.ui.Button):
     def __init__(self, calling_view, quest_post_view_class):
         super().__init__(
             label='Edit',
-            style=discord.ButtonStyle.secondary,
+            style=ButtonStyle.secondary,
             custom_id='edit_quest_button',
             disabled=True
         )
         self.calling_view = calling_view
         self.quest_post_view_class = quest_post_view_class
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             quest = self.calling_view.selected_quest
             modal = modals.EditQuestModal(self.calling_view, quest, self.quest_post_view_class)
@@ -756,13 +729,13 @@ class ToggleReadyButton(discord.ui.Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Toggle Ready',
-            style=discord.ButtonStyle.secondary,
+            style=ButtonStyle.secondary,
             custom_id='toggle_ready_button',
             disabled=True
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             await self.calling_view.quest_ready_toggle(interaction)
         except Exception as e:
@@ -773,14 +746,14 @@ class RewardsMenuButton(discord.ui.Button):
     def __init__(self, calling_view, rewards_view_class):
         super().__init__(
             label='Rewards',
-            style=discord.ButtonStyle.secondary,
+            style=ButtonStyle.secondary,
             custom_id='rewards_menu_button',
             disabled=True
         )
         self.calling_view = calling_view
         self.rewards_view_class = rewards_view_class
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             new_view = self.rewards_view_class(self.calling_view, interaction.client, interaction.guild_id)
             await new_view.setup_select()
@@ -794,14 +767,14 @@ class RemovePlayerButton(discord.ui.Button):
     def __init__(self, calling_view, target_view_class):
         super().__init__(
             label='Remove Player',
-            style=discord.ButtonStyle.danger,
+            style=ButtonStyle.danger,
             custom_id='remove_player_button',
             disabled=True
         )
         self.calling_view = calling_view
         self.target_view_class = target_view_class
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             quest = self.calling_view.selected_quest
             new_view = self.target_view_class(quest)
@@ -816,14 +789,14 @@ class CancelQuestButton(discord.ui.Button):
     def __init__(self, calling_view, target_view_class):
         super().__init__(
             label='Cancel Quest',
-            style=discord.ButtonStyle.danger,
+            style=ButtonStyle.danger,
             custom_id='cancel_quest_button',
             disabled=True
         )
         self.calling_view = calling_view
         self.target_view_class = target_view_class
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             view = self.target_view_class(self.calling_view.selected_quest)
             await interaction.response.edit_message(embed=view.embed, view=view)
@@ -835,19 +808,19 @@ class PartyRewardsButton(discord.ui.Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Party Rewards',
-            style=discord.ButtonStyle.secondary,
+            style=ButtonStyle.secondary,
             custom_id='party_rewards_button'
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             rewards_modal = modals.RewardsModal(self)
             await interaction.response.send_modal(rewards_modal)
         except Exception as e:
             await log_exception(e, interaction)
 
-    async def modal_callback(self, interaction: discord.Interaction, xp, items):
+    async def modal_callback(self, interaction, xp, items):
         try:
             view = self.calling_view
             quest = view.quest
@@ -889,20 +862,20 @@ class IndividualRewardsButton(discord.ui.Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Individual Rewards',
-            style=discord.ButtonStyle.secondary,
+            style=ButtonStyle.secondary,
             custom_id='individual_rewards_button',
             disabled=True
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             rewards_modal = modals.RewardsModal(self)
             await interaction.response.send_modal(rewards_modal)
         except Exception as e:
             await log_exception(e, interaction)
 
-    async def modal_callback(self, interaction: discord.Interaction, xp, items):
+    async def modal_callback(self, interaction, xp, items):
         try:
             view = self.calling_view
             quest = view.quest
@@ -943,12 +916,12 @@ class JoinQuestButton(discord.ui.Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Join',
-            style=discord.ButtonStyle.success,
+            style=ButtonStyle.success,
             custom_id='join_quest_button'
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             await self.calling_view.join_callback(interaction)
         except Exception as e:
@@ -959,12 +932,12 @@ class LeaveQuestButton(discord.ui.Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Leave',
-            style=discord.ButtonStyle.danger,
+            style=ButtonStyle.danger,
             custom_id='leave_quest_button'
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             await self.calling_view.leave_callback(interaction)
         except Exception as e:
@@ -975,14 +948,14 @@ class CompleteQuestButton(discord.ui.Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Confirm?',
-            style=discord.ButtonStyle.danger,
+            style=ButtonStyle.danger,
             custom_id='complete_quest_button',
             disabled=True
         )
         self.calling_view = calling_view
         self.quest_summary_modal = modals.QuestSummaryModal(self)
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             quest_summary_collection = interaction.client.gdb['questSummary']
             quest_summary_config_query = await quest_summary_collection.find_one({'_id': interaction.guild_id})
@@ -993,7 +966,7 @@ class CompleteQuestButton(discord.ui.Button):
         except Exception as e:
             await log_exception(e, interaction)
 
-    async def modal_callback(self, interaction: discord.Interaction):
+    async def modal_callback(self, interaction):
         try:
             summary = self.quest_summary_modal.summary_input.value
             await self.calling_view.complete_quest(interaction, summary=summary)
@@ -1005,12 +978,12 @@ class ClearChannelsButton(discord.ui.Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Clear Channels',
-            style=discord.ButtonStyle.danger,
+            style=ButtonStyle.danger,
             custom_id='clear_channels_button'
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             view = self.calling_view
             await interaction.client.gdb['questChannel'].delete_one({'_id': interaction.guild_id})
@@ -1026,21 +999,21 @@ class CreatePartyRoleButton(discord.ui.Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Create Role',
-            style=discord.ButtonStyle.success,
+            style=ButtonStyle.success,
             custom_id='create_party_role_button',
             disabled=False
         )
         self.calling_view = calling_view
         self.create_party_role_modal = None
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             self.create_party_role_modal = modals.CreatePartyRoleModal(self)
             await interaction.response.send_modal(self.create_party_role_modal)
         except Exception as e:
             await log_exception(e, interaction)
 
-    async def modal_callback(self, interaction: discord.Interaction):
+    async def modal_callback(self, interaction):
         try:
             guild = interaction.guild
             role_name = self.create_party_role_modal.role_name_input.value
@@ -1073,7 +1046,7 @@ class CreatePartyRoleButton(discord.ui.Button):
                                                    {'$set': {'roleId': role.id}},
                                                    upsert=True)
             view = self.calling_view
-            await view.setup_embed()
+            await view.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
             await interaction.response.edit_message(embed=view.embed, view=view)
         except Exception as e:
             await log_exception(e, interaction)
@@ -1083,13 +1056,13 @@ class RemovePartyRoleButton(discord.ui.Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Remove Role',
-            style=discord.ButtonStyle.danger,
+            style=ButtonStyle.danger,
             custom_id='remove_party_role_button',
             disabled=False
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             # Get the current role ID
             party_role_collection = interaction.client.gdb['partyRole']
@@ -1107,7 +1080,7 @@ class RemovePartyRoleButton(discord.ui.Button):
 
             # Update the view
             view = self.calling_view
-            await view.setup_embed()
+            await view.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
             await interaction.response.edit_message(embed=view.embed, view=view)
         except Exception as e:
             await log_exception(e, interaction)
@@ -1117,12 +1090,12 @@ class ForbiddenRolesButton(discord.ui.Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Forbidden Roles',
-            style=discord.ButtonStyle.secondary,
+            style=ButtonStyle.secondary,
             custom_id='forbidden_roles_button'
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             current_roles = []
             config_collection = interaction.client.gdb['forbiddenRoles']
@@ -1139,12 +1112,12 @@ class CreatePlayerPostButton(discord.ui.Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Create Post',
-            style=discord.ButtonStyle.success,
+            style=ButtonStyle.success,
             custom_id='create_player_post_button'
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             modal = modals.CreatePlayerPostModal(self.calling_view)
             await interaction.response.send_modal(modal)
@@ -1156,42 +1129,15 @@ class RemovePlayerPostButton(discord.ui.Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Remove Post',
-            style=discord.ButtonStyle.danger,
+            style=ButtonStyle.danger,
             custom_id='remove_player_post_button',
             disabled=True
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             await self.calling_view.remove_post(interaction)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-
-class PlayerBoardViewButton(MenuViewButton):
-    def __init__(self, player_board_channel_id, target_view_class, label, setup_select=False, setup_embed=False):
-        super().__init__(
-            target_view_class=target_view_class,
-            label=label,
-            setup_select=setup_select,
-            setup_embed=setup_embed,
-        )
-        self.player_board_channel_id = player_board_channel_id
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            new_view = self.target_view_class(
-                bot=interaction.client,
-                user=interaction.user,
-                guild_id=interaction.guild_id,
-                player_board_channel_id=self.player_board_channel_id
-            )
-            if hasattr(new_view, 'setup_embed') and self.setup_embed:
-                await new_view.setup_embed()
-            if hasattr(new_view, 'setup_select') and self.setup_select:
-                await new_view.setup_select()
-            await interaction.response.edit_message(embed=new_view.embed, view=new_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -1200,13 +1146,13 @@ class EditPlayerPostButton(discord.ui.Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Edit Post',
-            style=discord.ButtonStyle.secondary,
+            style=ButtonStyle.secondary,
             custom_id='edit_player_post_button',
             disabled=True
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             modal = modals.EditPlayerPostModal(self.calling_view)
             await interaction.response.send_modal(modal)
@@ -1218,12 +1164,12 @@ class PlayerBoardPurgeButton(discord.ui.Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Purge Player Board',
-            style=discord.ButtonStyle.danger,
+            style=ButtonStyle.danger,
             custom_id='player_board_purge_button'
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             modal = modals.PlayerBoardPurgeModal(self.calling_view)
             await interaction.response.send_modal(modal)

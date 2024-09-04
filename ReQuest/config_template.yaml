@@ -11,7 +11,8 @@ memberDb: '<name of your member database>'
 configDb: '<name of your config database>'
 version: '0.6.0-a.1'
 
-# A list of all cogs we are loading when starting up the bot. Don't change this unless you write your own custom cogs or change the directory structure.
+# A list of all cogs we are loading when starting up the bot. Don't change this unless you write your own
+# custom cogs or change the directory structure.
 load_extensions:
     - 'ReQuest.cogs.admin'
     - 'ReQuest.cogs.config'
