@@ -90,11 +90,14 @@ class ReQuest(commands.Bot):
         await self.session.close()
 
     async def load_allow_list(self):
-        allow_list = await self.cdb['serverAllowlist'].find_one({'servers': {'$exists': True}})
-        if not allow_list:
+        collection_list = await self.cdb.list_collection_names()
+        if 'serverAllowlist' not in collection_list:
             await self.cdb.create_collection('serverAllowlist')
-        else:
-            for server in allow_list['servers']:
+
+        allow_list_collection = self.cdb['serverAllowlist']
+        allow_list_query = await allow_list_collection.find_one({'servers': {'$exists': True}})
+        if allow_list_query:
+            for server in allow_list_query['servers']:
                 self.allow_list.append(server['id'])
 
     # Overridden from base to delete command invocation messages

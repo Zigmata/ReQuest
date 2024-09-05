@@ -1,3 +1,4 @@
+import inspect
 import logging
 
 import discord.ui
@@ -75,7 +76,19 @@ class BackButton(discord.ui.Button):
     async def callback(self, interaction):
         try:
             if hasattr(self.new_view, 'setup'):
-                await self.new_view.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
+                setup_function = self.new_view.setup
+                sig = inspect.signature(setup_function)
+                params = sig.parameters
+
+                kwargs = {}
+                if 'bot' in params:
+                    kwargs['bot'] = interaction.client
+                if 'user' in params:
+                    kwargs['user'] = interaction.user
+                if 'guild' in params:
+                    kwargs['guild'] = interaction.guild
+
+                await setup_function(**kwargs)
             if hasattr(self.new_view, 'setup_select'):
                 await self.new_view.setup_select()
             if hasattr(self.new_view, 'setup_embed'):
