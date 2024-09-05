@@ -3,6 +3,7 @@ import logging
 
 import discord
 import shortuuid
+from discord.ui import View
 
 import ReQuest.ui.buttons as buttons
 import ReQuest.ui.selects as selects
@@ -20,7 +21,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class PlayerBaseView(discord.ui.View):
+class PlayerBaseView(View):
     def __init__(self):
         super().__init__()
         self.embed = discord.Embed(
@@ -60,7 +61,7 @@ class PlayerBaseView(discord.ui.View):
             await log_exception(e)
 
 
-class CharacterBaseView(discord.ui.View):
+class CharacterBaseView(View):
     def __init__(self):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
@@ -78,10 +79,10 @@ class CharacterBaseView(discord.ui.View):
         self.add_item(buttons.RegisterCharacterButton())
         self.add_item(buttons.MenuViewButton(ListCharactersView, 'List/Activate'))
         self.add_item(buttons.MenuViewButton(RemoveCharacterView, 'Remove'))
-        self.add_item(buttons.BackButton(PlayerBaseView()))
+        self.add_item(buttons.BackButton(PlayerBaseView))
 
 
-class ListCharactersView(discord.ui.View):
+class ListCharactersView(View):
     def __init__(self):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
@@ -92,7 +93,7 @@ class ListCharactersView(discord.ui.View):
         )
         self.active_character_select = selects.ActiveCharacterSelect(self)
         self.add_item(self.active_character_select)
-        self.add_item(buttons.BackButton(CharacterBaseView()))
+        self.add_item(buttons.BackButton(CharacterBaseView))
 
     async def setup(self, bot, user, guild):
         try:
@@ -135,7 +136,7 @@ class ListCharactersView(discord.ui.View):
             await log_exception(e)
 
 
-class RemoveCharacterView(discord.ui.View):
+class RemoveCharacterView(View):
     def __init__(self):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
@@ -148,7 +149,7 @@ class RemoveCharacterView(discord.ui.View):
         self.remove_character_select = selects.RemoveCharacterSelect(self, self.confirm_button)
         self.add_item(self.remove_character_select)
         self.add_item(self.confirm_button)
-        self.add_item(buttons.BackButton(CharacterBaseView()))
+        self.add_item(buttons.BackButton(CharacterBaseView))
 
     async def setup(self, bot, user):
         try:
@@ -194,11 +195,9 @@ class RemoveCharacterView(discord.ui.View):
             await log_exception(e, interaction)
 
 
-class ConfigBaseView(discord.ui.View):
-    def __init__(self, guild_id, gdb):
+class ConfigBaseView(View):
+    def __init__(self):
         super().__init__(timeout=None)
-        self.guild_id = guild_id
-        self.gdb = gdb
         self.embed = discord.Embed(
             title='Server Configuration - Main Menu',
             description=('__**Roles**__\n'
@@ -213,16 +212,16 @@ class ConfigBaseView(discord.ui.View):
                          'Server-wide currency settings.'),
             type='rich'
         )
-        self.add_item(buttons.ConfigMenuButton(ConfigRolesView, 'Roles', guild_id, gdb))
-        self.add_item(buttons.ConfigMenuButton(ConfigChannelsView, 'Channels', guild_id, gdb))
-        self.add_item(buttons.ConfigMenuButton(ConfigQuestsView, 'Quests', guild_id, gdb))
-        self.add_item(buttons.ConfigMenuButton(ConfigPlayersView, 'Players', guild_id, gdb))
-        self.add_item(buttons.ConfigMenuButton(ConfigCurrencyView, 'Currency', guild_id, gdb))
+        self.add_item(buttons.MenuViewButton(ConfigRolesView, 'Roles'))
+        self.add_item(buttons.MenuViewButton(ConfigChannelsView, 'Channels'))
+        self.add_item(buttons.MenuViewButton(ConfigQuestsView, 'Quests'))
+        self.add_item(buttons.MenuViewButton(ConfigPlayersView, 'Players'))
+        self.add_item(buttons.MenuViewButton(ConfigCurrencyView, 'Currency'))
         self.add_item(buttons.MenuDoneButton())
 
 
-class ConfigRolesView(discord.ui.View):
-    def __init__(self, guild_id, gdb):
+class ConfigRolesView(View):
+    def __init__(self):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
             title='Server Configuration - Roles',
@@ -239,23 +238,22 @@ class ConfigRolesView(discord.ui.View):
             ),
             type='rich'
         )
-        self.guild_id = guild_id
-        self.gdb = gdb
         self.quest_announce_role_remove_button = buttons.QuestAnnounceRoleRemoveButton(self)
-        self.gm_role_remove_button = buttons.GMRoleRemoveButton(ConfigGMRoleRemoveView(self.guild_id, self.gdb))
+        self.gm_role_remove_view_button = buttons.GMRoleRemoveViewButton(ConfigGMRoleRemoveView)
         self.forbidden_roles_button = buttons.ForbiddenRolesButton(self)
         self.add_item(selects.QuestAnnounceRoleSelect(self))
         self.add_item(selects.AddGMRoleSelect(self))
         self.add_item(self.quest_announce_role_remove_button)
-        self.add_item(self.gm_role_remove_button)
+        self.add_item(self.gm_role_remove_view_button)
         self.add_item(self.forbidden_roles_button)
-        self.add_item(buttons.ConfigBackButton(ConfigBaseView, guild_id, gdb))
+        self.add_item(buttons.BackButton(ConfigBaseView))
 
-    async def query_role(self, role_type):
+    @staticmethod
+    async def query_role(role_type, bot, guild):
         try:
-            collection = self.gdb[role_type]
+            collection = bot.gdb[role_type]
 
-            query = await collection.find_one({'_id': self.guild_id})
+            query = await collection.find_one({'_id': guild.id})
             if not query:
                 return None
             else:
@@ -263,10 +261,11 @@ class ConfigRolesView(discord.ui.View):
         except Exception as e:
             await log_exception(e)
 
-    async def setup_embed(self):
+    async def setup(self, bot, guild):
         try:
-            announcement_role = await self.query_role('announceRole')
-            gm_roles = await self.query_role('gmRoles')
+            self.embed.clear_fields()
+            announcement_role = await self.query_role('announceRole', bot, guild)
+            gm_roles = await self.query_role('gmRoles', bot, guild)
 
             if not announcement_role:
                 announcement_role_string = 'Not Configured'
@@ -276,24 +275,23 @@ class ConfigRolesView(discord.ui.View):
                 self.quest_announce_role_remove_button.disabled = False
             if not gm_roles:
                 gm_roles_string = 'Not Configured'
-                self.gm_role_remove_button.disabled = True
+                self.gm_role_remove_view_button.disabled = True
             else:
                 role_mentions = []
                 for role in gm_roles:
                     role_mentions.append(role['mention'])
 
                 gm_roles_string = f'- {'\n- '.join(role_mentions)}'
-                self.gm_role_remove_button.disabled = False
+                self.gm_role_remove_view_button.disabled = False
 
-            self.embed.clear_fields()
             self.embed.add_field(name='Announcement Role', value=announcement_role_string)
             self.embed.add_field(name='GM Roles', value=gm_roles_string)
         except Exception as e:
             await log_exception(e)
 
 
-class ConfigGMRoleRemoveView(discord.ui.View):
-    def __init__(self, guild_id, gdb):
+class ConfigGMRoleRemoveView(View):
+    def __init__(self):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
             title='Server Configuration - Remove GM Role(s)',
@@ -301,44 +299,41 @@ class ConfigGMRoleRemoveView(discord.ui.View):
                         '-----',
             type='rich'
         )
-        self.guild_id = guild_id
-        self.gdb = gdb
         self.gm_role_remove_select = selects.GMRoleRemoveSelect(self)
         self.add_item(self.gm_role_remove_select)
-        self.add_item(buttons.ConfigBackButton(ConfigRolesView, guild_id, gdb))
+        self.add_item(buttons.BackButton(ConfigRolesView))
 
-    async def setup_embed(self):
+    async def setup(self, bot, guild):
         try:
-            collection = self.gdb['gmRoles']
-            query = await collection.find_one({'_id': self.guild_id})
-            gm_roles = query['gmRoles']
-            role_mentions = []
-            for role in gm_roles:
-                role_mentions.append(role['mention'])
-
+            # Clear any embed fields or select options
             self.embed.clear_fields()
-            self.embed.add_field(name='Current GM Roles', value=f'- {'\n- '.join(role_mentions)}')
-        except Exception as e:
-            await log_exception(e)
-
-    async def setup_select(self):
-        try:
             self.gm_role_remove_select.options.clear()
-            collection = self.gdb['gmRoles']
-            query = await collection.find_one({'_id': self.guild_id})
-            options = []
-            for result in query['gmRoles']:
-                name = result['name']
-                options.append(discord.SelectOption(label=name, value=name))
 
-            logger.debug(f'Options: {options}')
+            # Query the db for configured GM roles
+            collection = bot.gdb['gmRoles']
+            query = await collection.find_one({'_id': guild.id})
+            options = []
+            role_mentions = []
+
+            # If roles are configured, populate the select options and build a string to display in the embed
+            if query and query['gmRoles']:
+                roles = query['gmRoles']
+                for role in roles:
+                    name = role['name']
+                    role_mentions.append(role['mention'])
+                    options.append(discord.SelectOption(label=name, value=name))
+                self.embed.add_field(name='Current GM Roles', value=f'- {'\n- '.join(role_mentions)}')
+                self.gm_role_remove_select.disabled = False
+            else:
+                options.append(discord.SelectOption(label='None', value='None'))
+                self.gm_role_remove_select.disabled = True
             self.gm_role_remove_select.options = options
         except Exception as e:
             await log_exception(e)
 
 
-class ConfigChannelsView(discord.ui.View):
-    def __init__(self, guild_id, gdb):
+class ConfigChannelsView(View):
+    def __init__(self):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
             title='Server Configuration - Channels',
@@ -353,41 +348,34 @@ class ConfigChannelsView(discord.ui.View):
             ),
             type='rich'
         )
-        self.guild_id = guild_id
-        self.gdb = gdb
-        self.clear_channels_button = buttons.ClearChannelsButton(self)
         self.quest_channel_select = selects.SingleChannelConfigSelect(
-            self,
+            calling_view=self,
             config_type='questChannel',
-            config_name='Quest Board',
-            guild_id=guild_id,
-            gdb=gdb
+            config_name='Quest Board'
         )
         self.player_board_channel_select = selects.SingleChannelConfigSelect(
-            self,
+            calling_view=self,
             config_type='playerBoardChannel',
-            config_name='Player Board',
-            guild_id=guild_id,
-            gdb=gdb
+            config_name='Player Board'
         )
         self.archive_channel_select = selects.SingleChannelConfigSelect(
-            self,
+            calling_view=self,
             config_type='archiveChannel',
-            config_name='Quest Archive',
-            guild_id=guild_id,
-            gdb=gdb
+            config_name='Quest Archive'
         )
+        self.clear_channels_button = buttons.ClearChannelsButton(self)
         self.add_item(self.quest_channel_select)
         self.add_item(self.player_board_channel_select)
         self.add_item(self.archive_channel_select)
         self.add_item(self.clear_channels_button)
-        self.add_item(buttons.ConfigBackButton(ConfigBaseView, guild_id, gdb))
+        self.add_item(buttons.BackButton(ConfigBaseView))
 
-    async def query_channel(self, channel_type):
+    @staticmethod
+    async def query_channel(channel_type, database, guild_id):
         try:
-            collection = self.gdb[channel_type]
+            collection = database[channel_type]
 
-            query = await collection.find_one({'_id': self.guild_id})
+            query = await collection.find_one({'_id': guild_id})
             logger.debug(f'{channel_type} query: {query}')
             if not query:
                 return 'Not Configured'
@@ -396,11 +384,13 @@ class ConfigChannelsView(discord.ui.View):
         except Exception as e:
             await log_exception(e)
 
-    async def setup_embed(self):
+    async def setup(self, bot, guild):
         try:
-            player_board = await self.query_channel('playerBoardChannel')
-            quest_board = await self.query_channel('questChannel')
-            quest_archive = await self.query_channel('archiveChannel')
+            database = bot.gdb
+            guild_id = guild.id
+            player_board = await self.query_channel('playerBoardChannel', database, guild_id)
+            quest_board = await self.query_channel('questChannel', database, guild_id)
+            quest_archive = await self.query_channel('archiveChannel', database, guild_id)
 
             self.embed.clear_fields()
             self.embed.add_field(name='Quest Board', value=quest_board, inline=False)
@@ -410,8 +400,8 @@ class ConfigChannelsView(discord.ui.View):
             await log_exception(e)
 
 
-class ConfigQuestsView(discord.ui.View):
-    def __init__(self, guild_id, gdb):
+class ConfigQuestsView(View):
+    def __init__(self):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
             title='Server Configuration - Quests',
@@ -424,17 +414,16 @@ class ConfigQuestsView(discord.ui.View):
             ),
             type='rich'
         )
-        self.guild_id = guild_id
-        self.gdb = gdb
         self.add_item(selects.ConfigWaitListSelect(self))
         self.add_item(buttons.QuestSummaryToggleButton(self))
-        self.add_item(buttons.ConfigBackButton(ConfigBaseView, guild_id, gdb))
+        self.add_item(buttons.BackButton(ConfigBaseView))
 
-    async def query_quest_config(self, config_type):
+    @staticmethod
+    async def query_quest_config(config_type, bot, guild):
         try:
-            collection = self.gdb[config_type]
+            collection = bot.gdb[config_type]
 
-            query = await collection.find_one({'_id': self.guild_id})
+            query = await collection.find_one({'_id': guild.id})
             logger.debug(f'{config_type} query: {query}')
             if not query:
                 return 'Not Configured'
@@ -443,20 +432,20 @@ class ConfigQuestsView(discord.ui.View):
         except Exception as e:
             await log_exception(e)
 
-    async def setup_embed(self):
+    async def setup(self, bot, guild):
         try:
-            quest_summary = await self.query_quest_config('questSummary')
-            wait_list = await self.query_quest_config('questWaitList')
-
             self.embed.clear_fields()
+            quest_summary = await self.query_quest_config('questSummary', bot, guild)
+            wait_list = await self.query_quest_config('questWaitList', bot, guild)
+
             self.embed.add_field(name='Quest Summary Enabled', value=quest_summary, inline=False)
             self.embed.add_field(name='Quest Wait List', value=wait_list, inline=False)
         except Exception as e:
             await log_exception(e)
 
 
-class ConfigPlayersView(discord.ui.View):
-    def __init__(self, guild_id, gdb):
+class ConfigPlayersView(View):
+    def __init__(self):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
             title='Server Configuration - Players',
@@ -469,18 +458,17 @@ class ConfigPlayersView(discord.ui.View):
             ),
             type='rich'
         )
-        self.guild_id = guild_id
-        self.gdb = gdb
         self.player_board_purge_button = buttons.PlayerBoardPurgeButton(self)
         self.add_item(buttons.PlayerExperienceToggleButton(self))
         self.add_item(self.player_board_purge_button)
-        self.add_item(buttons.ConfigBackButton(ConfigBaseView, guild_id, gdb))
+        self.add_item(buttons.BackButton(ConfigBaseView))
 
-    async def query_player_config(self, config_type):
+    @staticmethod
+    async def query_player_config(config_type, bot, guild):
         try:
-            collection = self.gdb[config_type]
+            collection = bot.gdb[config_type]
 
-            query = await collection.find_one({'_id': self.guild_id})
+            query = await collection.find_one({'_id': guild.id})
             logger.debug(f'{config_type} query: {query}')
             if not query:
                 return 'Not Configured'
@@ -489,42 +477,41 @@ class ConfigPlayersView(discord.ui.View):
         except Exception as e:
             await log_exception(e)
 
-    async def setup_embed(self):
+    async def setup(self, bot, guild):
         try:
-            player_experience = await self.query_player_config('playerExperience')
-
             self.embed.clear_fields()
+
+            player_experience = await self.query_player_config('playerExperience', bot, guild)
             self.embed.add_field(name='Player Experience Enabled', value=player_experience, inline=False)
         except Exception as e:
             await log_exception(e)
 
 
-class ConfigRemoveDenominationView(discord.ui.View):
-    def __init__(self, guild_id, gdb, calling_view):
+class ConfigRemoveDenominationView(View):
+    def __init__(self, calling_view):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
             title=f'Server Configuration - Remove Denomination',
             description='Select a denomination to remove.',
             type='rich'
         )
-        self.guild_id = guild_id
-        self.gdb = gdb
         self.calling_view = calling_view
         self.selected_denomination_name = None
         self.remove_denomination_select = selects.RemoveDenominationSelect(self)
         self.remove_denomination_confirm_button = buttons.RemoveDenominationConfirmButton(self)
         self.add_item(self.remove_denomination_select)
         self.add_item(self.remove_denomination_confirm_button)
-        self.add_item(buttons.ConfigBackButton(ConfigEditCurrencyView, guild_id, gdb, setup_embed=False))
+        self.add_item(buttons.BackButton(ConfigEditCurrencyView))
 
-    async def setup_select(self):
+    async def setup(self, bot, guild):
         try:
-            currency_name = self.calling_view.selected_currency_name
+            self.embed.clear_fields()
             self.remove_denomination_select.options.clear()
-            collection = self.gdb['currency']
-            query = await collection.find_one({'_id': self.guild_id, 'currencies.name': currency_name})
+
+            currency_name = self.calling_view.selected_currency_name
+            collection = bot.gdb['currency']
+            query = await collection.find_one({'_id': guild.id, 'currencies.name': currency_name})
             currency = next((item for item in query['currencies'] if item['name'] == currency_name), None)
-            logger.debug(f'Found Currency: {currency}')
             denominations = currency['denominations']
             if len(denominations) > 0:
                 for denomination in denominations:
@@ -537,29 +524,24 @@ class ConfigRemoveDenominationView(discord.ui.View):
                 self.remove_denomination_select.placeholder = (f'There are no remaining denominations for '
                                                                f'{currency_name}.')
                 self.remove_denomination_select.disabled = True
+
+            if self.selected_denomination_name:
+                self.embed.add_field(name=f'Deleting {self.selected_denomination_name}', value='Confirm?')
         except Exception as e:
             await log_exception(e)
 
-    async def setup_embed(self):
+    async def remove_currency_denomination(self, denomination_name, bot, guild):
         try:
-            self.embed.clear_fields()
-            self.embed.add_field(name=f'Deleting {self.selected_denomination_name}',
-                                 value='Confirm?')
-        except Exception as e:
-            await log_exception(e)
-
-    async def remove_currency_denomination(self, denomination_name):
-        try:
-            collection = self.gdb['currency']
+            collection = bot.gdb['currency']
             currency_name = self.calling_view.selected_currency_name
-            await collection.update_one({'_id': self.guild_id, 'currencies.name': currency_name},
+            await collection.update_one({'_id': guild.id, 'currencies.name': currency_name},
                                         {'$pull': {'currencies.$.denominations': {'name': denomination_name}}})
         except Exception as e:
             await log_exception(e)
 
 
-class ConfigEditCurrencyView(discord.ui.View):
-    def __init__(self, guild_id, gdb):
+class ConfigEditCurrencyView(View):
+    def __init__(self):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
             title='Server Configuration - Edit Currency',
@@ -576,10 +558,8 @@ class ConfigEditCurrencyView(discord.ui.View):
             ),
             type='rich'
         )
-        self.guild_id = guild_id
-        self.gdb = gdb
         self.selected_currency_name = None
-        self.remove_denomination_view = ConfigRemoveDenominationView(self.guild_id, self.gdb, self)
+        self.remove_denomination_view = ConfigRemoveDenominationView(self)
         self.edit_currency_select = selects.EditCurrencySelect(self)
         self.toggle_double_button = buttons.ToggleDoubleButton(self)
         self.add_denomination_button = buttons.AddDenominationButton(self)
@@ -588,55 +568,61 @@ class ConfigEditCurrencyView(discord.ui.View):
         self.add_item(self.toggle_double_button)
         self.add_item(self.add_denomination_button)
         self.add_item(self.remove_denomination_button)
-        self.add_item(buttons.ConfigBackButton(ConfigCurrencyView, guild_id, gdb))
+        self.add_item(buttons.BackButton(ConfigCurrencyView))
 
-    async def setup_embed(self, currency_name):
+    async def setup(self, bot, guild):
         try:
-            collection = self.gdb['currency']
-            query = await collection.find_one({'_id': self.guild_id, 'currencies.name': currency_name})
-            currency = next((item for item in query['currencies'] if item['name'] == currency_name), None)
-            logger.debug(f'Found currency: {currency}')
             self.embed.clear_fields()
-            if currency['isDouble']:
-                display = 'Double (10.00)'
-            else:
-                display = 'Integer (10)'
-
-            denominations = currency['denominations']
-            if len(denominations) > 0:
-                values = []
-                for denomination in denominations:
-                    denomination_name = denomination['name']
-                    value = denomination['value']
-                    values.append(f'{denomination_name}: {value}')
-                denominations_string = '\n- '.join(values)
-                self.remove_denomination_button.disabled = False
-            else:
-                self.remove_denomination_button.disabled = True
-                denominations_string = 'None'
-
-            self.embed.add_field(name=f'{currency_name}',
-                                 value=f'__Display:__ {display}\n'
-                                       f'__Denominations__:\n- {denominations_string}',
-                                 inline=True)
-        except Exception as e:
-            await log_exception(e)
-
-    async def setup_select(self):
-        try:
             self.edit_currency_select.options.clear()
 
-            collection = self.gdb['currency']
-            query = await collection.find_one({'_id': self.guild_id})
-            for currency in query['currencies']:
-                name = currency['name']
-                self.edit_currency_select.options.append(discord.SelectOption(label=name, value=name))
+            collection = bot.gdb['currency']
+            query = await collection.find_one({'_id': guild.id})
+
+            if self.selected_currency_name:
+                currency_name = self.selected_currency_name
+                self.toggle_double_button.disabled = False
+                self.toggle_double_button.label = f'Toggle Display for {currency_name}'
+                self.add_denomination_button.disabled = False
+                self.add_denomination_button.label = f'Add Denomination to {currency_name}'
+                self.remove_denomination_button.label = f'Remove Denomination from {currency_name}'
+
+                currency = next((item for item in query['currencies'] if item['name'] == currency_name),
+                                None)
+                if currency['isDouble']:
+                    display = 'Double (10.00)'
+                else:
+                    display = 'Integer (10)'
+
+                denominations = currency['denominations']
+                if len(denominations) > 0:
+                    values = []
+                    for denomination in denominations:
+                        denomination_name = denomination['name']
+                        value = denomination['value']
+                        values.append(f'{denomination_name}: {value}')
+                    denominations_string = '\n- '.join(values)
+                    self.remove_denomination_button.disabled = False
+                else:
+                    self.remove_denomination_button.disabled = True
+                    denominations_string = 'None'
+
+                self.embed.add_field(name=f'{self.selected_currency_name}',
+                                     value=f'__Display:__ {display}\n'
+                                           f'__Denominations__:\n- {denominations_string}',
+                                     inline=True)
+
+                for currency in query['currencies']:
+                    name = currency['name']
+                    self.edit_currency_select.options.append(discord.SelectOption(label=name, value=name))
+            else:
+                self.toggle_double_button.disabled = True
+                self.add_denomination_button.disabled = True
         except Exception as e:
             await log_exception(e)
 
 
-class ConfigCurrencyView(discord.ui.View):
-    def __init__(self, guild_id, gdb):
+class ConfigCurrencyView(View):
+    def __init__(self):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
             title='Server Configuration - Currency',
@@ -662,22 +648,18 @@ class ConfigCurrencyView(discord.ui.View):
             ),
             type='rich'
         )
-        self.guild_id = guild_id
-        self.gdb = gdb
-        self.edit_currency_button = buttons.EditCurrencyButton(ConfigEditCurrencyView(guild_id=self.guild_id,
-                                                                                      gdb=self.gdb))
-        self.remove_currency_button = buttons.RemoveCurrencyButton(RemoveCurrencyView(guild_id=self.guild_id,
-                                                                                      gdb=self.gdb))
+        self.edit_currency_button = buttons.EditCurrencyButton(ConfigEditCurrencyView)
+        self.remove_currency_button = buttons.RemoveCurrencyButton(RemoveCurrencyView)
         self.add_item(buttons.AddCurrencyButton(self))
         self.add_item(self.edit_currency_button)
         self.add_item(self.remove_currency_button)
-        self.add_item(buttons.ConfigBackButton(ConfigBaseView, guild_id, gdb))
+        self.add_item(buttons.BackButton(ConfigBaseView))
 
-    async def setup_embed(self):
+    async def setup(self, bot, guild):
         try:
             self.embed.clear_fields()
-            collection = self.gdb['currency']
-            query = await collection.find_one({'_id': self.guild_id})
+            collection = bot.gdb['currency']
+            query = await collection.find_one({'_id': guild.id})
             self.edit_currency_button.disabled = True
             self.remove_currency_button.disabled = True
 
@@ -694,63 +676,62 @@ class ConfigCurrencyView(discord.ui.View):
             await log_exception(e)
 
 
-class RemoveCurrencyView(discord.ui.View):
-    def __init__(self, guild_id, gdb):
+class RemoveCurrencyView(View):
+    def __init__(self):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
             title='Server Configuration - Remove Currency',
             description='Select a currency to remove',
             type='rich'
         )
-        self.guild_id = guild_id
-        self.gdb = gdb
+        self.selected_currency_name = None
         self.remove_currency_select = selects.RemoveCurrencySelect(self)
         self.remove_currency_confirm_button = buttons.RemoveCurrencyConfirmButton(self)
         self.add_item(self.remove_currency_select)
         self.add_item(self.remove_currency_confirm_button)
-        self.add_item(buttons.ConfigBackButton(ConfigCurrencyView, guild_id, gdb))
-        self.selected_currency = None
+        self.add_item(buttons.BackButton(ConfigCurrencyView))
 
-    async def setup_embed(self):
+    async def setup(self, bot, guild):
         try:
             self.embed.clear_fields()
-            self.embed.add_field(name=f'Deleting {self.selected_currency}',
-                                 value='Confirm?')
-        except Exception as e:
-            await log_exception(e)
-
-    async def setup_select(self):
-        try:
             self.remove_currency_select.options.clear()
-            collection = self.gdb['currency']
-            query = await collection.find_one({'_id': self.guild_id})
+
+            if self.selected_currency_name:
+                self.embed.add_field(name=f'Deleting {self.selected_currency_name}',
+                                     value='Confirm?')
+
+            collection = bot.gdb['currency']
+            query = await collection.find_one({'_id': guild.id})
             currencies = query['currencies']
+            options = []
             if len(currencies) > 0:
                 for currency in currencies:
                     name = currency['name']
                     option = discord.SelectOption(label=name, value=name)
-                    self.remove_currency_select.options.append(option)
+                    options.append(option)
+                    self.remove_currency_select.disabled = False
             else:
-                self.remove_currency_select.options.append(discord.SelectOption(label='None', value='None'))
+                options.append(discord.SelectOption(label='None', value='None'))
                 self.remove_currency_select.placeholder = 'There are no remaining currencies on this server!'
                 self.remove_currency_select.disabled = True
+
+            self.remove_currency_select.options = options
         except Exception as e:
             await log_exception(e)
 
-    async def remove_currency(self, currency_name):
+    async def remove_currency(self, bot, guild):
         try:
-            collection = self.gdb['currency']
-            await collection.update_one({'_id': self.guild_id, 'currencies.name': currency_name},
+            currency_name = self.selected_currency_name
+            collection = bot.gdb['currency']
+            await collection.update_one({'_id': guild.id, 'currencies.name': currency_name},
                                         {'$pull': {'currencies': {'name': currency_name}}}, upsert=True)
         except Exception as e:
             await log_exception(e)
 
 
-class AdminBaseView(discord.ui.View):
-    def __init__(self, cdb, bot):
+class AdminBaseView(View):
+    def __init__(self):
         super().__init__(timeout=None)
-        self.cdb = cdb
-        self.bot = bot
         self.embed = discord.Embed(
             title='Administrative - Main Menu',
             description=(
@@ -759,15 +740,14 @@ class AdminBaseView(discord.ui.View):
             ),
             type='rich'
         )
-        self.add_item(buttons.AdminMenuButton(AdminAllowlistView, 'Allowlist', self.cdb, self.bot, setup_embed=False))
-        self.add_item(buttons.AdminMenuButton(AdminCogView, 'Cogs', self.cdb, self.bot,
-                                              setup_select=False, setup_embed=False))
-        self.add_item(buttons.AdminShutdownButton(bot, self))
+        self.add_item(buttons.MenuViewButton(AdminAllowlistView, 'Allowlist'))
+        self.add_item(buttons.MenuViewButton(AdminCogView, 'Cogs'))
+        self.add_item(buttons.AdminShutdownButton(self))
         self.add_item(buttons.MenuDoneButton())
 
 
-class AdminAllowlistView(discord.ui.View):
-    def __init__(self, cdb, bot):
+class AdminAllowlistView(View):
+    def __init__(self):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
             title='Administration - Server Allowlist',
@@ -779,36 +759,35 @@ class AdminAllowlistView(discord.ui.View):
                          'Removes the selected Discord Server from the allowlist.\n\n'),
             type='rich'
         )
-        self.bot = bot
-        self.cdb = cdb
         self.selected_guild = None
         self.remove_guild_allowlist_select = selects.RemoveGuildAllowlistSelect(self)
         self.confirm_allowlist_remove_button = buttons.ConfirmAllowlistRemoveButton(self)
         self.add_item(self.remove_guild_allowlist_select)
         self.add_item(buttons.AllowlistAddServerButton(self))
         self.add_item(self.confirm_allowlist_remove_button)
-        self.add_item(buttons.AdminBackButton(AdminBaseView, cdb, bot))
+        self.add_item(buttons.BackButton(AdminBaseView))
 
-    async def setup_select(self):
+    async def setup(self, bot):
         try:
             self.remove_guild_allowlist_select.options.clear()
-            collection = self.cdb['serverAllowlist']
+            collection = bot.cdb['serverAllowlist']
             query = await collection.find_one()
-            if len(query['servers']) > 0:
+            options = []
+            if query and len(query['servers']) > 0:
                 for server in query['servers']:
-                    option = discord.SelectOption(label=server['name'], value=server['id'])
-                    self.remove_guild_allowlist_select.options.append(option)
+                    options.append(discord.SelectOption(label=server['name'], value=server['id']))
             else:
-                option = discord.SelectOption(label='There are no servers in the allowlist', value='None')
-                self.remove_guild_allowlist_select.options.append(option)
+                options.append(discord.SelectOption(label='There are no servers in the allowlist', value='None'))
                 self.remove_guild_allowlist_select.placeholder = 'There are no servers in the allowlist'
                 self.remove_guild_allowlist_select.disabled = True
+
+            self.remove_guild_allowlist_select.options = options
         except Exception as e:
             await log_exception(e)
 
 
-class AdminCogView(discord.ui.View):
-    def __init__(self, cdb, bot):
+class AdminCogView(View):
+    def __init__(self):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
             title='Administration - Cogs',
@@ -820,13 +799,12 @@ class AdminCogView(discord.ui.View):
             ),
             type='rich'
         )
-        self.bot = bot
         self.add_item(buttons.AdminLoadCogButton())
         self.add_item(buttons.AdminReloadCogButton())
-        self.add_item(buttons.AdminBackButton(AdminBaseView, cdb, bot))
+        self.add_item(buttons.BackButton(AdminBaseView))
 
 
-class InventoryBaseView(discord.ui.View):
+class InventoryBaseView(View):
     def __init__(self):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
@@ -848,7 +826,7 @@ class InventoryBaseView(discord.ui.View):
         self.spend_currency_button = buttons.SpendCurrencyButton(self)
         self.add_item(self.view_inventory_button)
         self.add_item(self.spend_currency_button)
-        self.add_item(buttons.BackButton(PlayerBaseView()))
+        self.add_item(buttons.BackButton(PlayerBaseView))
 
     async def setup(self, bot, user, guild):
         self.embed.clear_fields()
@@ -872,7 +850,7 @@ class InventoryBaseView(discord.ui.View):
 # ---------- GM Views -----------------
 
 
-class GMBaseView(discord.ui.View):
+class GMBaseView(View):
     def __init__(self):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
@@ -887,17 +865,16 @@ class GMBaseView(discord.ui.View):
             ),
             type='rich'
         )
-        self.gm_quest_menu_button = buttons.MenuViewButton(target_view_class=GMQuestMenuView, label='Quests')
-        self.gm_config_menu_button = buttons.MenuViewButton(target_view_class=GMConfigMenuView, label='Configs',
-                                                            setup_embed=True)
-        self.gm_player_menu_button = buttons.MenuViewButton(target_view_class=GMPlayerMenuView, label='Players')
+        self.gm_quest_menu_button = buttons.MenuViewButton(GMQuestMenuView, 'Quests')
+        self.gm_config_menu_button = buttons.MenuViewButton(GMConfigMenuView, 'Configs')
+        self.gm_player_menu_button = buttons.MenuViewButton(GMPlayerMenuView, 'Players')
         self.add_item(self.gm_quest_menu_button)
         self.add_item(self.gm_config_menu_button)
         self.add_item(self.gm_player_menu_button)
         self.add_item(buttons.MenuDoneButton())
 
 
-class GMQuestMenuView(discord.ui.View):
+class GMQuestMenuView(View):
     def __init__(self):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
@@ -913,17 +890,15 @@ class GMQuestMenuView(discord.ui.View):
             type='rich'
         )
         self.create_quest_button = buttons.CreateQuestButton(QuestPostView)
-        self.manage_quests_view_button = buttons.MenuViewButton(target_view_class=ManageQuestsView, label='Manage',
-                                                                setup_select=True)
-        self.complete_quests_button = buttons.MenuViewButton(target_view_class=CompleteQuestsView, label='Complete',
-                                                             setup_select=True)
+        self.manage_quests_view_button = buttons.MenuViewButton(ManageQuestsView, 'Manage')
+        self.complete_quests_button = buttons.MenuViewButton(CompleteQuestsView, 'Complete')
         self.add_item(self.create_quest_button)
         self.add_item(self.manage_quests_view_button)
         self.add_item(self.complete_quests_button)
-        self.add_item(buttons.BackButton(GMBaseView()))
+        self.add_item(buttons.BackButton(GMBaseView))
 
 
-class ManageQuestsView(discord.ui.View):
+class ManageQuestsView(View):
     def __init__(self):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
@@ -959,7 +934,7 @@ class ManageQuestsView(discord.ui.View):
         self.add_item(self.rewards_menu_button)
         self.add_item(self.remove_player_button)
         self.add_item(self.cancel_quest_button)
-        self.add_item(buttons.BackButton(GMQuestMenuView()))
+        self.add_item(buttons.BackButton(GMQuestMenuView))
 
     async def setup(self, bot, user, guild):
         try:
@@ -1070,7 +1045,7 @@ class ManageQuestsView(discord.ui.View):
 
             # Create a fresh quest view, and update the original post message
             quest_view = QuestPostView(updated_quest)
-            await quest_view.setup_embed()
+            await quest_view.setup()
             await message.edit(embed=quest_view.embed, view=quest_view)
 
             await interaction.response.edit_message(embed=self.embed, view=self)
@@ -1078,8 +1053,8 @@ class ManageQuestsView(discord.ui.View):
             await log_exception(e, interaction)
 
 
-class RewardsMenuView(discord.ui.View):
-    def __init__(self, calling_view, bot, guild_id):
+class RewardsMenuView(View):
+    def __init__(self, calling_view):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
             title='',
@@ -1101,25 +1076,24 @@ class RewardsMenuView(discord.ui.View):
             ),
             type='rich'
         )
-        self.bot = bot
-        self.calling_view = calling_view
         self.quest = calling_view.selected_quest
-        self.guild_id = guild_id
         self.selected_character = None
         self.selected_character_id = None
         self.individual_rewards_button = buttons.IndividualRewardsButton(self)
         self.party_rewards_button = buttons.PartyRewardsButton(self)
         self.party_member_select = selects.PartyMemberSelect(calling_view=self,
                                                              disabled_components=[self.individual_rewards_button])
-        back_button = buttons.MenuViewButton(target_view_class=ManageQuestsView, label='Back', setup_select=True,
-                                             setup_embed=True)
+        back_button = buttons.BackButton(ManageQuestsView)
         self.add_item(self.party_member_select)
         self.add_item(self.party_rewards_button)
         self.add_item(self.individual_rewards_button)
         self.add_item(back_button)
 
-    async def setup_select(self):
+    async def setup(self):
         try:
+            self.party_member_select.options.clear()
+            self.embed.clear_fields()
+
             quest = self.quest
             party = quest['party']
             options = []
@@ -1138,13 +1112,7 @@ class RewardsMenuView(discord.ui.View):
                 self.party_member_select.disabled = True
 
             self.party_member_select.options = options
-        except Exception as e:
-            await log_exception(e)
 
-    async def setup_embed(self):
-        try:
-            self.embed.clear_fields()
-            quest = self.calling_view.selected_quest
             self.embed.title = f'Quest Rewards - {quest['title']}'
             if 'party' in quest['rewards']:
                 party_rewards = quest['rewards']['party']
@@ -1176,7 +1144,7 @@ class RewardsMenuView(discord.ui.View):
             await log_exception(e)
 
 
-class GMPlayerMenuView(discord.ui.View):
+class GMPlayerMenuView(View):
     def __init__(self):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
@@ -1192,10 +1160,10 @@ class GMPlayerMenuView(discord.ui.View):
             ),
             type='rich'
         )
-        self.add_item(buttons.BackButton(GMBaseView()))
+        self.add_item(buttons.BackButton(GMBaseView))
 
 
-class GMConfigMenuView(discord.ui.View):
+class GMConfigMenuView(View):
     def __init__(self):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
@@ -1211,7 +1179,7 @@ class GMConfigMenuView(discord.ui.View):
         self.remove_party_role_button = buttons.RemovePartyRoleButton(self)
         self.add_item(self.create_party_role_button)
         self.add_item(self.remove_party_role_button)
-        self.add_item(buttons.BackButton(GMBaseView()))
+        self.add_item(buttons.BackButton(GMBaseView))
 
     async def setup(self, bot, user, guild):
         self.embed.clear_fields()
@@ -1227,7 +1195,7 @@ class GMConfigMenuView(discord.ui.View):
             self.remove_party_role_button.disabled = True
 
 
-class RemovePlayerView(discord.ui.View):
+class RemovePlayerView(View):
     def __init__(self, quest):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
@@ -1246,13 +1214,15 @@ class RemovePlayerView(discord.ui.View):
         self.selected_character_id = None
         self.remove_player_select = selects.RemovePlayerSelect(self)
         self.confirm_button = buttons.ConfirmButton(self)
-        self.back_button = buttons.MenuViewButton(target_view_class=ManageQuestsView, label='Back', setup_select=True)
         self.add_item(self.remove_player_select)
         self.add_item(self.confirm_button)
-        self.add_item(self.back_button)
+        self.add_item(buttons.BackButton(ManageQuestsView))
 
-    async def setup_select(self):
+    async def setup(self):
         try:
+            self.embed.clear_fields()
+            self.remove_player_select.options.clear()
+
             options = []
             party = self.quest['party']
             wait_list = self.quest['waitList']
@@ -1267,12 +1237,7 @@ class RemovePlayerView(discord.ui.View):
                         character = player[str(member_id)][str(character_id)]
                         options.append(discord.SelectOption(label=f'{character['name']}', value=member_id))
             self.remove_player_select.options = options
-        except Exception as e:
-            await log_exception(e)
 
-    async def setup_embed(self):
-        try:
-            self.embed.clear_fields()
             if self.selected_character_id:
                 character = find_character_in_lists([self.quest['party'], self.quest['waitList']],
                                                     self.selected_member_id,
@@ -1362,10 +1327,9 @@ class RemovePlayerView(discord.ui.View):
 
             # Refresh the views with the updated local quest object
             refreshed_view = RemovePlayerView(self.quest)
-            await refreshed_view.setup_embed()
-            await refreshed_view.setup_select()
+            await refreshed_view.setup()
             quest_view = QuestPostView(self.quest)
-            await quest_view.setup_embed()
+            await quest_view.setup()
 
             # Update the menu view and the quest post
             await message.edit(embed=quest_view.embed, view=quest_view)
@@ -1377,7 +1341,7 @@ class RemovePlayerView(discord.ui.View):
             await log_exception(e, interaction)
 
 
-class QuestPostView(discord.ui.View):
+class QuestPostView(View):
     def __init__(self, quest):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
@@ -1391,7 +1355,7 @@ class QuestPostView(discord.ui.View):
         self.add_item(self.join_button)
         self.add_item(self.leave_button)
 
-    async def setup_embed(self):
+    async def setup(self):
         try:
             self.embed = await update_quest_embed(self.quest)
         except Exception as e:
@@ -1459,7 +1423,7 @@ class QuestPostView(discord.ui.View):
 
                 # The document is queried again to build the updated post
                 self.quest = await quest_collection.find_one({'guildId': guild_id, 'questId': quest_id})
-                await self.setup_embed()
+                await self.setup()
                 await interaction.response.edit_message(embed=self.embed, view=self)
         except Exception as e:
             await log_exception(e, interaction)
@@ -1530,13 +1494,13 @@ class QuestPostView(discord.ui.View):
             await quest_collection.replace_one({'guildId': guild_id, 'questId': quest_id}, self.quest)
 
             # Refresh the query with the new document and edit the post
-            await self.setup_embed()
+            await self.setup()
             await interaction.response.edit_message(embed=self.embed, view=self)
         except Exception as e:
             await log_exception(e, interaction)
 
 
-class CompleteQuestsView(discord.ui.View):
+class CompleteQuestsView(View):
     def __init__(self):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
@@ -1559,7 +1523,7 @@ class CompleteQuestsView(discord.ui.View):
         self.complete_quest_button = buttons.CompleteQuestButton(self)
         self.add_item(self.quest_select)
         self.add_item(self.complete_quest_button)
-        self.add_item(buttons.BackButton(GMQuestMenuView()))
+        self.add_item(buttons.BackButton(GMQuestMenuView))
 
     async def setup(self, bot, user, guild):
         try:
@@ -1756,7 +1720,7 @@ class CompleteQuestsView(discord.ui.View):
         return reward_strings
 
 
-class CancelQuestView(discord.ui.View):
+class CancelQuestView(View):
     def __init__(self, selected_quest):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
@@ -1769,9 +1733,8 @@ class CancelQuestView(discord.ui.View):
         self.selected_quest = selected_quest
         self.confirm_button = buttons.ConfirmButton(self)
         self.confirm_button.disabled = False
-        self.back_button = buttons.MenuViewButton(target_view_class=ManageQuestsView, label='Back', setup_select=True)
         self.add_item(self.confirm_button)
-        self.add_item(self.back_button)
+        self.add_item(buttons.BackButton(ManageQuestsView))
 
     async def confirm_callback(self, interaction):
         try:
@@ -1819,7 +1782,7 @@ class CancelQuestView(discord.ui.View):
             await log_exception(e, interaction)
 
 
-class PlayerBoardView(discord.ui.View):
+class PlayerBoardView(View):
     def __init__(self):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
@@ -1847,7 +1810,7 @@ class PlayerBoardView(discord.ui.View):
         self.add_item(self.create_player_post_button)
         self.add_item(self.edit_player_post_button)
         self.add_item(self.remove_player_post_button)
-        self.add_item(buttons.BackButton(PlayerBaseView()))
+        self.add_item(buttons.BackButton(PlayerBaseView))
 
     async def setup(self, bot, user, guild):
         try:
