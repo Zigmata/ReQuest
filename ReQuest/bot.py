@@ -1,5 +1,6 @@
 import asyncio
 import os
+import signal
 from pathlib import Path
 
 import aiohttp
@@ -142,5 +143,21 @@ async def main():
         async with bot:
             bot.session = session
             await bot.start(bot.config['token'], reconnect=True)
+
+
+# Handlers for graceful bot shutdown on container stop/restart
+async def shutdown_bot():
+    print("Shutting down ReQuest gracefully...")
+    await bot.close()
+
+
+def handle_shutdown_signal(signal_number, frame):
+    print(f'Received signal {signal_number}, shutting down...')
+    loop = asyncio.get_event_loop()
+    loop.create_task(shutdown_bot())
+
+
+signal.signal(signal.SIGINT, handle_shutdown_signal)
+signal.signal(signal.SIGTERM, handle_shutdown_signal)
 
 asyncio.run(main())

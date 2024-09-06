@@ -768,6 +768,7 @@ class AdminAllowlistView(View):
 
     async def setup(self, bot):
         try:
+            self.embed.clear_fields()
             self.remove_guild_allowlist_select.options.clear()
             collection = bot.cdb['serverAllowlist']
             query = await collection.find_one()

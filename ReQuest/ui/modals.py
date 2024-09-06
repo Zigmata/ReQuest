@@ -289,6 +289,7 @@ class AllowServerModal(Modal):
                                         {'$push': {'servers': {'name': input_name, 'id': guild_id}}},
                                         upsert=True)
             await self.calling_view.setup(bot=interaction.client)
+            await self.calling_view.embed.add_field(name=f'{input_name} added to allowlist', value=f'ID: `{guild_id}`')
             await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
