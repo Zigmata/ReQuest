@@ -559,11 +559,10 @@ class ConfigEditCurrencyView(View):
             type='rich'
         )
         self.selected_currency_name = None
-        self.remove_denomination_view = ConfigRemoveDenominationView(self)
         self.edit_currency_select = selects.EditCurrencySelect(self)
         self.toggle_double_button = buttons.ToggleDoubleButton(self)
         self.add_denomination_button = buttons.AddDenominationButton(self)
-        self.remove_denomination_button = buttons.RemoveDenominationButton(self.remove_denomination_view)
+        self.remove_denomination_button = buttons.RemoveDenominationButton(ConfigRemoveDenominationView, self)
         self.add_item(self.edit_currency_select)
         self.add_item(self.toggle_double_button)
         self.add_item(self.add_denomination_button)
@@ -610,13 +609,13 @@ class ConfigEditCurrencyView(View):
                                      value=f'__Display:__ {display}\n'
                                            f'__Denominations__:\n- {denominations_string}',
                                      inline=True)
-
-                for currency in query['currencies']:
-                    name = currency['name']
-                    self.edit_currency_select.options.append(discord.SelectOption(label=name, value=name))
             else:
                 self.toggle_double_button.disabled = True
                 self.add_denomination_button.disabled = True
+
+            for currency in query['currencies']:
+                name = currency['name']
+                self.edit_currency_select.options.append(discord.SelectOption(label=name, value=name))
         except Exception as e:
             await log_exception(e)
 
@@ -1652,42 +1651,42 @@ class CompleteQuestsView(View):
                         dm_embed.add_field(name='Rewards', value='\n'.join(reward_strings))
                     await member.send(embed=dm_embed)
 
-            # If an archive channel is configured, build an embed and post it
+            # Build an embed for feedbck
+            quest_embed = discord.Embed(
+                title=title,
+                description='',
+                type='rich'
+            )
+            # Format the main embed body
+            post_description = (
+                f'**GM:** <@!{gm}>\n\n'
+                f'{description}\n\n'
+                f'------'
+            )
+            formatted_party = []
+            for player in party:
+                for member_id in player:
+                    for character_id in player[str(member_id)]:
+                        character = player[str(member_id)][str(character_id)]
+                        formatted_party.append(f'- <@!{member_id}> as {character['name']}')
+
+            # Set the embed fields and footer
+            quest_embed.title = f'QUEST COMPLETED: {title}'
+            quest_embed.description = post_description
+            quest_embed.add_field(name=f'__Party__',
+                                  value='\n'.join(formatted_party))
+            quest_embed.set_footer(text='Quest ID: ' + quest_id)
+
+            # Add the summary if provided
+            if summary:
+                quest_embed.add_field(name='Summary', value=summary, inline=False)
+
+            if reward_summary:
+                quest_embed.add_field(name='Rewards', value='\n'.join(reward_summary), inline=True)
+
+            # If an archive channel is configured, post the archived quest
             if archive_channel:
-                archive_embed = discord.Embed(
-                    title=title,
-                    description='',
-                    type='rich'
-                )
-                # Format the main embed body
-                post_description = (
-                    f'**GM:** <@!{gm}>\n\n'
-                    f'{description}\n\n'
-                    f'------'
-                )
-                formatted_party = []
-                for player in party:
-                    for member_id in player:
-                        for character_id in player[str(member_id)]:
-                            character = player[str(member_id)][str(character_id)]
-                            formatted_party.append(f'- <@!{member_id}> as {character['name']}')
-
-                # Set the embed fields and footer
-                archive_embed.title = title
-                archive_embed.description = post_description
-                archive_embed.add_field(name=f'__Party__',
-                                        value='\n'.join(formatted_party))
-                archive_embed.set_footer(text='Quest ID: ' + quest_id)
-
-                # Add the summary if provided
-                if summary:
-                    archive_embed.add_field(name='Summary', value=summary, inline=False)
-
-                if reward_summary:
-                    archive_embed.add_field(name='Rewards', value='\n'.join(reward_summary), inline=True)
-
-                # Post the archived quest
-                await archive_channel.send(embed=archive_embed)
+                await archive_channel.send(embed=quest_embed)
 
             # Delete the original quest post
             quest_channel_query = await interaction.client.gdb['questChannel'].find_one({'_id': guild_id})
@@ -1699,6 +1698,9 @@ class CompleteQuestsView(View):
             # Remove the quest from the database
             quest_collection = interaction.client.gdb['quests']
             await quest_collection.delete_one({'guildId': guild_id, 'questId': quest_id})
+
+            # Message feedback to the Game Master
+            await interaction.user.send(embed=quest_embed)
 
             # Reset the view and handle the interaction response
             self.selected_quest = None
@@ -1887,8 +1889,10 @@ class PlayerBoardView(View):
             }
 
             await post_collection.insert_one(post)
+            await self.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
+            self.embed.add_field(name='Post Created!', value=f'`{post_id}`: **{title}**')
 
-            await interaction.response.send_message(f'Post `{post_id}`: **{title}** posted!', ephemeral=True)
+            await interaction.response.edit_message(embed=self.embed, view=self)
         except Exception as e:
             await log_exception(e, interaction)
 

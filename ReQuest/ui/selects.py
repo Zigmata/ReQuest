@@ -241,7 +241,7 @@ class RemoveCurrencySelect(Select):
             view.selected_currency_name = self.values[0]
             view.remove_currency_confirm_button.label = f'Confirm deletion of {self.values[0]}'
             view.remove_currency_confirm_button.disabled = False
-            await view.setup_embed()
+            await view.setup(bot=interaction.client, guild=interaction.guild)
             await interaction.response.edit_message(embed=view.embed, view=view)
         except Exception as e:
             await log_exception(e)

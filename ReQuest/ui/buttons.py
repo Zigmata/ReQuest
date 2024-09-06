@@ -294,14 +294,23 @@ class AddDenominationButton(Button):
             await log_exception(e)
 
 
-class RemoveDenominationButton(BaseViewButton):
-    def __init__(self, target_view_class):
+class RemoveDenominationButton(Button):
+    def __init__(self, target_view_class, calling_view):
         super().__init__(
-            target_view_class=target_view_class,
             label='Select a currency',
             style=ButtonStyle.danger,
             custom_id='remove_denomination_button'
         )
+        self.target_view_class = target_view_class
+        self.calling_view = calling_view
+
+    async def callback(self, interaction):
+        try:
+            view = self.target_view_class(self.calling_view)
+            await view.setup(interaction.client, interaction.guild)
+            await interaction.response.edit_message(embed=view.embed, view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
 
 
 class AddCurrencyButton(Button):
