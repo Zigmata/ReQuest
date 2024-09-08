@@ -1,11 +1,9 @@
 import asyncio
 import os
 import signal
-from pathlib import Path
 
 import aiohttp
 import discord
-import yaml
 from discord.ext import commands
 from discord.ext.commands import errors
 from motor.motor_asyncio import AsyncIOMotorClient as MotorClient
@@ -34,11 +32,8 @@ class ReQuest(commands.Bot):
             intents=intents)
 
         # Open the config file and load it to the bot
-        config_file = Path('config.yaml')
-        with open(config_file, 'r') as yaml_file:
-            config = yaml.safe_load(yaml_file)
-        self.config = config
         self.allow_list = []
+        self.version = os.getenv('VERSION')
 
     async def setup_hook(self):
         # Grab the event loop from asyncio, so we can pass it around
@@ -56,16 +51,17 @@ class ReQuest(commands.Bot):
         mongo_host = os.getenv('MONGO_HOST')
         mongo_port = os.getenv('MONGO_PORT')
         auth_db = os.getenv('AUTH_DB')
+
         db_uri = f'mongodb://{mongo_user}:{mongo_password}@{mongo_host}:{mongo_port}/?authSource={auth_db}'
         self.motor_client = MotorClient(db_uri, io_loop=loop)
 
         # Instantiate the database objects as Discord client attributes
-        self.mdb = self.motor_client[self.config['memberDb']]
-        self.cdb = self.motor_client[self.config['configDb']]
-        self.gdb = self.motor_client[self.config['guildDb']]
+        self.mdb = self.motor_client[os.getenv('MEMBER_DB')]
+        self.cdb = self.motor_client[os.getenv('CONFIG_DB')]
+        self.gdb = self.motor_client[os.getenv('GUILD_DB')]
 
         # Grab the list of extensions and load them asynchronously
-        initial_extensions = self.config['load_extensions']
+        initial_extensions = os.getenv('LOAD_EXTENSIONS')
         for ext in initial_extensions:
             try:
                 await asyncio.create_task(self.load_extension(ext))
@@ -74,7 +70,7 @@ class ReQuest(commands.Bot):
                 print('{}: {}'.format(type(e).__name__, e))
 
         # If the white list is enabled, load it async in the background
-        if self.config['allowList']:
+        if os.getenv('ALLOWLIST'):
             await asyncio.create_task(self.load_allow_list())
 
         # If the bot is restarted with any existing quests, this reloads their views so they can be interacted with.
@@ -142,7 +138,8 @@ async def main():
     async with aiohttp.ClientSession() as session:
         async with bot:
             bot.session = session
-            await bot.start(bot.config['token'], reconnect=True)
+            bot_token = os.getenv('BOT_TOKEN')
+            await bot.start(bot_token, reconnect=True)
 
 
 # Handlers for graceful bot shutdown on container stop/restart
