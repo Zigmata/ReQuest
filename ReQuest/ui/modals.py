@@ -460,13 +460,44 @@ class CreateQuestModal(Modal):
             title = self.quest_title_text_input.value
             restrictions = self.quest_restrictions_text_input.value
             max_party_size = int(self.quest_party_size_text_input.value)
-            party_role = self.quest_party_role_text_input.value
+            party_role_name = self.quest_party_role_text_input.value
             description = self.quest_description_text_input.value
 
-            guild_id = interaction.guild_id
+            guild = interaction.guild
+            guild_id = guild.id
             quest_id = str(shortuuid.uuid()[:8])
             bot = interaction.client
             max_wait_list_size = 0
+
+            # Validate the party role name, if provided
+            party_role_id = None
+            if party_role_name:
+                default_forbidden_names = [
+                    'everyone',
+                    'administrator',
+                    'game master',
+                    'gm',
+                ]
+                custom_forbidden_names = []
+                config_collection = interaction.client.gdb['forbiddenRoles']
+                config_query = await config_collection.find_one({'_id': interaction.guild_id})
+                if config_query and config_query['forbiddenRoles']:
+                    for name in config_query['forbiddenRoles']:
+                        custom_forbidden_names.append(name)
+
+                if party_role_name.lower() in default_forbidden_names or party_role_name.lower() in custom_forbidden_names:
+                    raise Exception('The name provided for the party role is forbidden.')
+
+                for role in guild.roles:
+                    if role.name.lower() == party_role_name.lower():
+                        raise Exception('The name provided for the party role already exists on this server!')
+
+                party_role = await guild.create_role(
+                    name=party_role_name,
+                    reason=f'Automated party role creation from ReQuest for quest ID {quest_id}. Requested by '
+                           f'game master: {interaction.user.mention}.'
+                )
+                party_role_id = party_role.id
 
             # Get the server's wait list configuration
             wait_list_query = await bot.gdb['questWaitList'].find_one({'_id': guild_id})
@@ -516,6 +547,7 @@ class CreateQuestModal(Modal):
                 'restrictions': restrictions,
                 'gm': author_id,
                 'party': party,
+                'partyRoleId': party_role_id,
                 'waitList': wait_list,
                 'maxWaitListSize': max_wait_list_size,
                 'lockState': lock_state,
