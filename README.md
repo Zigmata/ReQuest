@@ -105,7 +105,46 @@ the GNU GPL v3 and will always be shared freely, forever.
 
 ### Running ReQuest on Docker
 
-- Coming Soon<sup>TM</sup>!
+Use the following docker compose to grab containers for ReQuest and MongoDB:
+
+**docker-compose.yml**
+
+```yaml
+services:
+  mongodb:
+    image: mongodb/mongodb-community-server:latest
+    container_name: mongodb
+    user: 999:999
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: # Give MongoDB an initial root username
+      MONGO_INITDB_ROOT_PASSWORD: # Give MongoDB an intitial root password
+    volumes:
+      - /var/lib/mongodb-data:/data/db
+    restart: unless-stopped
+
+#  request:
+#    image: zigmata/request:latest
+#    container_name: request
+#    environment:
+#      MONGO_USER: # your mongo user name
+#      MONGO_PASSWORD: # your mongo user password
+#      AUTH_DB: # name of the database your mongo user lives in
+#      MONGO_HOST: mongodb
+#      MONGO_PORT: 27017
+#      BOT_TOKEN: # insert your bot's token here
+#      GUILD_DB: guilds
+#      MEMBER_DB: members
+#      CONFIG_DB: config
+#      VERSION: 0.6.0-a.2
+#      LOAD_EXTENSIONS: ReQuest.cogs.admin, ReQuest.cogs.config, ReQuest.cogs.gm, ReQuest.cogs.info, ReQuest.cogs.player
+#      ALLOWLIST: False
+#    depends_on:
+#      - mongodb
+#    restart: unless-stopped
+```
+
+It is recommended that you run mongoDB by itself first, create a special user for ReQuest, and then un-comment the
+request service in docker-compose.yml and add your values accordingly.
 
 If you want to modify ReQuest, you will need to educate yourself on discord.py, cogs, extensions, and asyncio in order
 to be marginally successful like me.
