@@ -107,7 +107,7 @@ class Admin(Cog):
         Administration wizard. Bot owner only
         """
         try:
-            view = AdminBaseView(cdb=self.cdb, bot=self.bot)
+            view = AdminBaseView()
             await interaction.response.send_message(embed=view.embed, view=view, ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)

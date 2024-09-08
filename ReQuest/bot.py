@@ -1,9 +1,9 @@
 import asyncio
-from pathlib import Path
+import os
+import signal
 
 import aiohttp
 import discord
-import yaml
 from discord.ext import commands
 from discord.ext.commands import errors
 from motor.motor_asyncio import AsyncIOMotorClient as MotorClient
@@ -12,7 +12,7 @@ from ReQuest.ui.views import QuestPostView
 from utilities.supportFunctions import attempt_delete, log_exception
 
 
-class ReQuest(commands.AutoShardedBot):
+class ReQuest(commands.Bot):
     def __init__(self):
         self.motor_client = None
         self.cdb = None
@@ -24,29 +24,44 @@ class ReQuest(commands.AutoShardedBot):
         intents.presences = True  # Subscribe to the privileged presences intent.
         intents.message_content = True  # Subscribe to the privileged message content intent.
         allowed_mentions = discord.AllowedMentions(roles=True, everyone=False, users=True)
-        super(ReQuest, self).__init__(activity=discord.Game(name=f'by Post'), allowed_mentions=allowed_mentions,
-                                      case_insensitive=True, chunk_guild_at_startup=False, command_prefix='!',
-                                      intents=intents)
+        super(ReQuest, self).__init__(
+            activity=discord.Game(name=f'by Post'),
+            allowed_mentions=allowed_mentions,
+            case_insensitive=True,
+            command_prefix='!',
+            intents=intents)
 
         # Open the config file and load it to the bot
-        config_file = Path('config.yaml')
-        with open(config_file, 'r') as yaml_file:
-            config = yaml.safe_load(yaml_file)
-        self.config = config
         self.allow_list = []
+        self.version = os.getenv('VERSION')
 
     async def setup_hook(self):
         # Grab the event loop from asyncio, so we can pass it around
         loop = asyncio.get_running_loop()
 
-        # Instantiate the motor client with the current event loop, and prep the databases
-        self.motor_client = MotorClient(self.config['dbServer'], self.config['port'], io_loop=loop)
-        self.mdb = self.motor_client[self.config['memberDb']]
-        self.cdb = self.motor_client[self.config['configDb']]
-        self.gdb = self.motor_client[self.config['guildDb']]
+        # Instantiate the motor client with the current event loop, and prep the databases. This instantiation uses
+        # a local mongoDB deployment on the default port.
+        # self.motor_client = MotorClient('localhost', 27017, io_loop=loop)
+
+        # If you are using a connection URI, uncomment the next block of code use it instead of the client
+        # instantiation above. In this example, we are using environment variables from the host system to hold the
+        # necessary values.
+        mongo_user = os.getenv('MONGO_USER')
+        mongo_password = os.getenv('MONGO_PASSWORD')
+        mongo_host = os.getenv('MONGO_HOST')
+        mongo_port = os.getenv('MONGO_PORT')
+        auth_db = os.getenv('AUTH_DB')
+
+        db_uri = f'mongodb://{mongo_user}:{mongo_password}@{mongo_host}:{mongo_port}/?authSource={auth_db}'
+        self.motor_client = MotorClient(db_uri, io_loop=loop)
+
+        # Instantiate the database objects as Discord client attributes
+        self.mdb = self.motor_client[os.getenv('MEMBER_DB')]
+        self.cdb = self.motor_client[os.getenv('CONFIG_DB')]
+        self.gdb = self.motor_client[os.getenv('GUILD_DB')]
 
         # Grab the list of extensions and load them asynchronously
-        initial_extensions = self.config['load_extensions']
+        initial_extensions = os.getenv('LOAD_EXTENSIONS').split(', ')
         for ext in initial_extensions:
             try:
                 await asyncio.create_task(self.load_extension(ext))
@@ -55,15 +70,15 @@ class ReQuest(commands.AutoShardedBot):
                 print('{}: {}'.format(type(e).__name__, e))
 
         # If the white list is enabled, load it async in the background
-        if self.config['allowList']:
+        if os.getenv('ALLOWLIST'):
             await asyncio.create_task(self.load_allow_list())
 
+        # If the bot is restarted with any existing quests, this reloads their views so they can be interacted with.
         quests = []
         quest_collection = self.gdb['quests']
         cursor = quest_collection.find()
         for document in await cursor.to_list(length=None):
             quests.append(document)
-
         for quest in quests:
             self.add_view(view=QuestPostView(quest), message_id=quest['messageId'])
 
@@ -72,11 +87,14 @@ class ReQuest(commands.AutoShardedBot):
         await self.session.close()
 
     async def load_allow_list(self):
-        allow_list = await self.cdb['serverAllowlist'].find_one({'servers': {'$exists': True}})
-        if not allow_list:
+        collection_list = await self.cdb.list_collection_names()
+        if 'serverAllowlist' not in collection_list:
             await self.cdb.create_collection('serverAllowlist')
-        else:
-            for server in allow_list['servers']:
+
+        allow_list_collection = self.cdb['serverAllowlist']
+        allow_list_query = await allow_list_collection.find_one({'servers': {'$exists': True}})
+        if allow_list_query:
+            for server in allow_list_query['servers']:
                 self.allow_list.append(server['id'])
 
     # Overridden from base to delete command invocation messages
@@ -110,19 +128,33 @@ class ReQuest(commands.AutoShardedBot):
     async def on_ready():
         print("ReQuest is online.")
 
-
 bot = ReQuest()
-
 
 @bot.tree.error
 async def on_app_command_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
     await log_exception(error, interaction)
 
-
 async def main():
     async with aiohttp.ClientSession() as session:
         async with bot:
             bot.session = session
-            await bot.start(bot.config['token'], reconnect=True)
+            bot_token = os.getenv('BOT_TOKEN')
+            await bot.start(bot_token, reconnect=True)
+
+
+# Handlers for graceful bot shutdown on container stop/restart
+async def shutdown_bot():
+    print("Shutting down ReQuest gracefully...")
+    await bot.close()
+
+
+def handle_shutdown_signal(signal_number, frame):
+    print(f'Received signal {signal_number}, shutting down...')
+    loop = asyncio.get_event_loop()
+    loop.create_task(shutdown_bot())
+
+
+signal.signal(signal.SIGINT, handle_shutdown_signal)
+signal.signal(signal.SIGTERM, handle_shutdown_signal)
 
 asyncio.run(main())

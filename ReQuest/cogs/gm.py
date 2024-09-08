@@ -25,19 +25,19 @@ class GameMaster(Cog):
     @has_gm_or_mod()
     @app_commands.command(name='gm')
     @app_commands.guild_only()
-    async def gm(self, interaction: discord.Interaction):
+    async def gm(self, interaction):
         """
         Game Master Menus
         """
         try:
-            view = GMBaseView(interaction.client, interaction.user, interaction.guild_id)
+            view = GMBaseView()
             await interaction.response.send_message(embed=view.embed, view=view, ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)
 
     @has_gm_or_mod()
     @app_commands.guild_only()
-    async def mod_player_menu(self, interaction: discord.Interaction, member: discord.Member):
+    async def mod_player_menu(self, interaction, member: discord.Member):
         """
         Add or remove items or experience from a player.
         """

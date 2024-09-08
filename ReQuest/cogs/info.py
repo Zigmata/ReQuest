@@ -35,7 +35,7 @@ class Info(Cog):
         Prints the bot version and a link to the development server.
         """
         await interaction.response.send_message(
-            f'**ReQuest v{interaction.client.config['version']}**\n\nBugs? Feature Requests? Join the development '
+            f'**ReQuest v{interaction.client.version}**\n\nBugs? Feature Requests? Join the development '
             f'server at https://discord.gg/Zq37gj4')
 
     @app_commands.command(name='help')

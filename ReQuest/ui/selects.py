@@ -1,6 +1,7 @@
 import logging
 
 import discord
+from discord.ui import Select, RoleSelect, ChannelSelect
 
 from ReQuest.utilities.supportFunctions import log_exception, find_member_and_character_id_in_lists
 
@@ -8,28 +9,27 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class GMRoleRemoveSelect(discord.ui.Select):
-    def __init__(self, new_view):
+class GMRoleRemoveSelect(Select):
+    def __init__(self, calling_view):
         super().__init__(
             placeholder='Select Role(s)',
             options=[]
         )
-        self.new_view = new_view
+        self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             collection = interaction.client.gdb['gmRoles']
             for value in self.values:
                 await collection.update_one({'_id': interaction.guild_id}, {'$pull': {'gmRoles': {'name': value}}})
-            await self.new_view.setup_select()
-            await self.new_view.setup_embed()
-            await interaction.response.edit_message(embed=self.new_view.embed, view=self.new_view)
+            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
+            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
 
-class SingleChannelConfigSelect(discord.ui.ChannelSelect):
-    def __init__(self, calling_view, config_type, config_name, guild_id, gdb):
+class SingleChannelConfigSelect(ChannelSelect):
+    def __init__(self, calling_view, config_type, config_name):
         super().__init__(
             channel_types=[discord.ChannelType.text],
             placeholder=f'Search for your {config_name} Channel',
@@ -37,21 +37,20 @@ class SingleChannelConfigSelect(discord.ui.ChannelSelect):
         )
         self.calling_view = calling_view
         self.config_type = config_type
-        self.guild_id = guild_id
-        self.gdb = gdb
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
-            collection = self.gdb[self.config_type]
-            await collection.update_one({'_id': self.guild_id}, {'$set': {self.config_type: self.values[0].mention}},
+            collection = interaction.client.gdb[self.config_type]
+            await collection.update_one({'_id': interaction.guild_id},
+                                        {'$set': {self.config_type: self.values[0].mention}},
                                         upsert=True)
-            await self.calling_view.setup_embed()
+            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
             return await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
 
-class ActiveCharacterSelect(discord.ui.Select):
+class ActiveCharacterSelect(Select):
     def __init__(self, calling_view):
         super().__init__(
             placeholder='You have no registered characters',
@@ -61,21 +60,20 @@ class ActiveCharacterSelect(discord.ui.Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             selected_character_id = self.values[0]
             collection = interaction.client.mdb['characters']
             await collection.update_one({'_id': interaction.user.id},
                                         {'$set': {f'activeCharacters.{interaction.guild_id}': selected_character_id}},
                                         upsert=True)
-            await self.calling_view.setup_embed()
-            await self.calling_view.setup_select()
+            await self.calling_view.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
             await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
 
-class RemoveCharacterSelect(discord.ui.Select):
+class RemoveCharacterSelect(Select):
     def __init__(self, calling_view, confirm_button):
         super().__init__(
             placeholder='Select a character to remove',
@@ -85,7 +83,7 @@ class RemoveCharacterSelect(discord.ui.Select):
         self.calling_view = calling_view
         self.confirm_button = confirm_button
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             selected_character_id = self.values[0]
             self.calling_view.selected_character_id = selected_character_id
@@ -101,7 +99,7 @@ class RemoveCharacterSelect(discord.ui.Select):
             await log_exception(e, interaction)
 
 
-class QuestAnnounceRoleSelect(discord.ui.RoleSelect):
+class QuestAnnounceRoleSelect(RoleSelect):
     def __init__(self, calling_view):
         super().__init__(
             placeholder='Search for your Quest Announcement Role',
@@ -109,19 +107,19 @@ class QuestAnnounceRoleSelect(discord.ui.RoleSelect):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             collection = interaction.client.gdb['announceRole']
             await collection.update_one({'_id': interaction.guild_id},
                                         {'$set': {'announceRole': self.values[0].mention}},
                                         upsert=True)
-            await self.calling_view.setup_embed()
+            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
             await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
 
-class AddGMRoleSelect(discord.ui.RoleSelect):
+class AddGMRoleSelect(RoleSelect):
     def __init__(self, calling_view):
         super().__init__(
             placeholder='Search for your GM Role(s)',
@@ -130,7 +128,7 @@ class AddGMRoleSelect(discord.ui.RoleSelect):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             collection = interaction.client.gdb['gmRoles']
             query = await collection.find_one({'_id': interaction.guild_id})
@@ -152,13 +150,13 @@ class AddGMRoleSelect(discord.ui.RoleSelect):
                                                         'gmRoles': {'mention': value.mention, 'name': value.name}}},
                                                     upsert=True)
 
-            await self.calling_view.setup_embed()
+            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
             await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
 
-class ConfigWaitListSelect(discord.ui.Select):
+class ConfigWaitListSelect(Select):
     def __init__(self, calling_view):
         super().__init__(
             options=[
@@ -174,19 +172,19 @@ class ConfigWaitListSelect(discord.ui.Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             collection = interaction.client.gdb['questWaitList']
             await collection.update_one({'_id': interaction.guild_id},
                                         {'$set': {'questWaitList': int(self.values[0])}},
                                         upsert=True)
-            await self.calling_view.setup_embed()
+            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
             await interaction.response.edit_message(embed=self.calling_view.embed)
         except Exception as e:
             await log_exception(e, interaction)
 
 
-class RemoveDenominationSelect(discord.ui.Select):
+class RemoveDenominationSelect(Select):
     def __init__(self, calling_view):
         super().__init__(
             placeholder='Select a denomination',
@@ -196,19 +194,19 @@ class RemoveDenominationSelect(discord.ui.Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             denomination_name = self.values[0]
             self.calling_view.selected_denomination_name = denomination_name
             self.calling_view.remove_denomination_confirm_button.label = f'Confirm deletion of {denomination_name}'
             self.calling_view.remove_denomination_confirm_button.disabled = False
-            await self.calling_view.setup_embed()
+            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
             await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
         except Exception as e:
             await log_exception(e)
 
 
-class EditCurrencySelect(discord.ui.Select):
+class EditCurrencySelect(Select):
     def __init__(self, calling_view):
         super().__init__(
             placeholder='Choose a currency to edit',
@@ -217,23 +215,18 @@ class EditCurrencySelect(discord.ui.Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             view = self.calling_view
-            currency_name = self.values[0]
-            view.selected_currency_name = currency_name
-            view.toggle_double_button.disabled = False
-            view.toggle_double_button.label = f'Toggle Display for {currency_name}'
-            view.add_denomination_button.disabled = False
-            view.add_denomination_button.label = f'Add Denomination to {currency_name}'
-            view.remove_denomination_button.label = f'Remove Denomination from {currency_name}'
-            await view.setup_embed(currency_name)
+            view.selected_currency_name = self.values[0]
+
+            await view.setup(bot=interaction.client, guild=interaction.guild)
             await interaction.response.edit_message(embed=view.embed, view=view)
         except Exception as e:
             await log_exception(e)
 
 
-class RemoveCurrencySelect(discord.ui.Select):
+class RemoveCurrencySelect(Select):
     def __init__(self, calling_view):
         super().__init__(
             placeholder='Select a currency',
@@ -242,19 +235,19 @@ class RemoveCurrencySelect(discord.ui.Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             view = self.calling_view
-            view.selected_currency = self.values[0]
+            view.selected_currency_name = self.values[0]
             view.remove_currency_confirm_button.label = f'Confirm deletion of {self.values[0]}'
             view.remove_currency_confirm_button.disabled = False
-            await view.setup_embed()
+            await view.setup(bot=interaction.client, guild=interaction.guild)
             await interaction.response.edit_message(embed=view.embed, view=view)
         except Exception as e:
             await log_exception(e)
 
 
-class RemoveGuildAllowlistSelect(discord.ui.Select):
+class RemoveGuildAllowlistSelect(Select):
     def __init__(self, calling_view):
         super().__init__(
             placeholder='Select a server to remove',
@@ -263,7 +256,7 @@ class RemoveGuildAllowlistSelect(discord.ui.Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             view = self.calling_view
             guild_id = int(self.values[0])
@@ -279,7 +272,7 @@ class RemoveGuildAllowlistSelect(discord.ui.Select):
             await log_exception(e, interaction)
 
 
-class ManageQuestSelect(discord.ui.Select):
+class ManageQuestSelect(Select):
     def __init__(self, calling_view):
         super().__init__(
             placeholder='Select a quest to manage',
@@ -289,7 +282,7 @@ class ManageQuestSelect(discord.ui.Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             quest_id = self.values[0]
             view = self.calling_view
@@ -301,7 +294,7 @@ class ManageQuestSelect(discord.ui.Select):
             view.rewards_menu_button.disabled = False
             view.remove_player_button.disabled = False
             view.cancel_quest_button.disabled = False
-            await view.setup_embed()
+            await view.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
 
             view.embed.add_field(name='Selected Quest', value=f'`{quest_id}`: **{quest['title']}**')
             await interaction.response.edit_message(embed=view.embed, view=view)
@@ -309,7 +302,7 @@ class ManageQuestSelect(discord.ui.Select):
             await log_exception(e, interaction)
 
 
-class PartyMemberSelect(discord.ui.Select):
+class PartyMemberSelect(Select):
     def __init__(self, calling_view, disabled_components=None):
         super().__init__(
             placeholder='Select a party member',
@@ -320,7 +313,7 @@ class PartyMemberSelect(discord.ui.Select):
         self.calling_view = calling_view
         self.disabled_components = disabled_components
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             character_id = self.values[0]
             view = self.calling_view
@@ -332,8 +325,7 @@ class PartyMemberSelect(discord.ui.Select):
                             character = player[str(member_id)][character_id]
                             view.selected_character = character
                             view.selected_character_id = character_id
-            await view.setup_embed()
-            await view.setup_select()
+            await view.setup()
             if self.disabled_components:
                 for component in self.disabled_components:
                     component.disabled = False
@@ -342,7 +334,7 @@ class PartyMemberSelect(discord.ui.Select):
             await log_exception(e, interaction)
 
 
-class RemovePlayerSelect(discord.ui.Select):
+class RemovePlayerSelect(Select):
     def __init__(self, calling_view):
         super().__init__(
             placeholder='Select a party member',
@@ -351,7 +343,7 @@ class RemovePlayerSelect(discord.ui.Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             view = self.calling_view
             party = view.quest['party']
@@ -361,13 +353,13 @@ class RemovePlayerSelect(discord.ui.Select):
             view.selected_member_id = member_id
             view.confirm_button.disabled = False
             view.confirm_button.label = 'Confirm?'
-            await view.setup_embed()
+            await view.setup()
             await interaction.response.edit_message(embed=view.embed, view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
 
-class ManageableQuestSelect(discord.ui.Select):
+class ManageableQuestSelect(Select):
     def __init__(self, calling_view):
         super().__init__(
             placeholder='Select a quest',
@@ -376,14 +368,14 @@ class ManageableQuestSelect(discord.ui.Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             await self.calling_view.select_callback(interaction)
         except Exception as e:
             await log_exception(e, interaction)
 
 
-class ManageablePostSelect(discord.ui.Select):
+class ManageablePostSelect(Select):
     def __init__(self, calling_view):
         super().__init__(
             placeholder='Select a post',
@@ -392,7 +384,7 @@ class ManageablePostSelect(discord.ui.Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction):
         try:
             await self.calling_view.select_callback(interaction)
         except Exception as e:
