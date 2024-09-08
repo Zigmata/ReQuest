@@ -986,11 +986,9 @@ class ManageQuestsView(View):
             message = channel.get_partial_message(message_id)
 
             # Check to see if the GM has a party role configured
-            role_collection = interaction.client.gdb['partyRole']
-            role_query = await role_collection.find_one({'guildId': guild_id, 'gm': user_id})
             role = None
-            if role_query and role_query['roleId']:
-                role_id = role_query['roleId']
+            if quest['partyRoleId']:
+                role_id = quest['partyRoleId']
                 role = guild.get_role(role_id)
 
             party = quest['party']
@@ -1190,16 +1188,20 @@ class RemovePlayerView(View):
             options = []
             party = self.quest['party']
             wait_list = self.quest['waitList']
-            for player in party:
-                for member_id in player:
-                    for character_id in player[str(member_id)]:
-                        character = player[str(member_id)][str(character_id)]
-                        options.append(discord.SelectOption(label=f'{character['name']}', value=member_id))
-            for player in wait_list:
-                for member_id in player:
-                    for character_id in player[str(member_id)]:
-                        character = player[str(member_id)][str(character_id)]
-                        options.append(discord.SelectOption(label=f'{character['name']}', value=member_id))
+            if party:
+                for player in party:
+                    for member_id in player:
+                        for character_id in player[str(member_id)]:
+                            character = player[str(member_id)][str(character_id)]
+                            options.append(discord.SelectOption(label=f'{character['name']}', value=member_id))
+            if wait_list:
+                for player in wait_list:
+                    for member_id in player:
+                        for character_id in player[str(member_id)]:
+                            character = player[str(member_id)][str(character_id)]
+                            options.append(discord.SelectOption(label=f'{character['name']}', value=member_id))
+            if not party and not wait_list:
+                options.append(discord.SelectOption(label='No players in quest roster', value='None'))
             self.remove_player_select.options = options
 
             if self.selected_character_id:
@@ -1439,7 +1441,7 @@ class QuestPostView(View):
                                           f'**{quest["title"]}**, due to a player dropping!')
 
                 # If the quest list is locked and a party role exists, fetch the role.
-                party_role_id = quest['party_role_id']
+                party_role_id = quest['partyRoleId']
                 if lock_state and party_role_id:
                     role = guild.get_role(party_role_id)
 
@@ -1556,8 +1558,10 @@ class CompleteQuestsView(View):
             if archive_query:
                 archive_channel = guild.get_channel(strip_id(archive_query['archiveChannel']))
 
-            # Check if a party role was configured
+            # Check if a party role was configured, and delete it
             party_role_id = quest['partyRoleId']
+            role = guild.get_role(party_role_id)
+            await role.delete(reason=f'Quest ID {quest['questId']} was completed by {interaction.user.mention}.')
 
             # Get party members and message them with results
             reward_summary = []
@@ -1566,11 +1570,6 @@ class CompleteQuestsView(View):
             for entry in party:
                 for player_id, character_info in entry.items():
                     member = guild.get_member(int(player_id))
-
-                    # Remove the party role, if applicable
-                    if party_role_id:
-                        role = guild.get_role(party_role_id)
-                        await member.remove_roles(role)
 
                     # Get character data
                     character_id = next(iter(character_info))
@@ -1707,14 +1706,15 @@ class CancelQuestView(View):
                 # Get party members and message them with results
                 for player in party:
                     for member_id in player:
-                        member = await guild.fetch_member(int(member_id))
-                        # Remove the party role, if applicable
-                        party_role_id = quest['partyRoleId']
-                        if party_role_id:
-                            party_role = guild.get_role(party_role_id)
-                            await member.remove_roles(party_role)
                         # Message the player that the quest was cancelled.
+                        member = await guild.fetch_member(int(member_id))
                         await member.send(f'Quest **{title}** was cancelled by the GM.')
+
+            # Remove the party role, if applicable
+            party_role_id = quest['partyRoleId']
+            if party_role_id:
+                party_role = guild.get_role(party_role_id)
+                await party_role.delete(reason=f'Quest {quest['questId']} cancelled by {interaction.user.mention}.')
 
             # Delete the quest from the database
             await interaction.client.gdb['quests'].delete_one({'guildId': guild_id, 'questId': quest['questId']})

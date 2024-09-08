@@ -61,7 +61,7 @@ class ReQuest(commands.Bot):
         self.gdb = self.motor_client[os.getenv('GUILD_DB')]
 
         # Grab the list of extensions and load them asynchronously
-        initial_extensions = os.getenv('LOAD_EXTENSIONS')
+        initial_extensions = os.getenv('LOAD_EXTENSIONS').split(', ')
         for ext in initial_extensions:
             try:
                 await asyncio.create_task(self.load_extension(ext))

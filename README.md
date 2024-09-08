@@ -91,7 +91,7 @@ the GNU GPL v3 and will always be shared freely, forever.
   - MEMBER_DB: The name of the database you want to use for member documents (characters).
   - CONFIG_DB: The name of the database you want to use for bot configs (/admin menu)
   - VERSION: The version of the bot for informational purposes only.
-  - LOAD_EXTENSIONS: String array of extension names in ReQuest/cogs/. Use relative paths I.E. `ReQuest.cogs.gm`.
+- LOAD_EXTENSIONS: String with comma-separated relative paths to extensions in ReQuest/cogs/. E.G. `ReQuest.cogs.gm`.
   - ALLOWLIST: True if you want to prohibit bot joins to a specific allowlist of guild IDs. False if you want to disable
     the allowlist.
 4. Run bot.py and everything *should* work.
