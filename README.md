@@ -105,7 +105,7 @@ the GNU GPL v3 and will always be shared freely, forever.
 
 ### Running ReQuest on Docker
 
-Use the following docker compose to grab containers for ReQuest and MongoDB:
+Use the following docker compose to grab containers for [ReQuest](https://hub.docker.com/r/zigmata/request) and MongoDB:
 
 **docker-compose.yml**
 
