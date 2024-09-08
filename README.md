@@ -78,7 +78,22 @@ the GNU GPL v3 and will always be shared freely, forever.
 
 1. Clone this sucker and install the dependencies into your choice of environment.
 2. Make sure your .gitignore is set up properly if you are running a public repo. You're going to want to ignore `config.yaml` in addition to your defaults.
-3. Change the name of `config_template.yaml` to `config.yaml` and fill out accordingly. Don't forget your bot's token! AND DON'T LET ANYONE ELSE KNOW IT.
+3. Set your environment variables:
+
+   > The first three variables are only needed if you are running mongoDB with authentication.
+  - MONGO_USER: The user you created in mongoDB for the bot's specific access.
+  - MONGO_PASSWORD: The password for the user above.
+  - AUTH_DB: The database the user exists in (usually `admin`).
+  - MONGO_HOST: The hostname/IP of your mongoDB server.
+  - MONGO_PORT: The port your mongoDB service is hosted on.
+  - BOT_TOKEN: The token for your Discord bot application. NEVER SHARE THIS!
+  - GUILD_DB: The name of the database you want to use for guild documents (configs, quests, etc.).
+  - MEMBER_DB: The name of the database you want to use for member documents (characters).
+  - CONFIG_DB: The name of the database you want to use for bot configs (/admin menu)
+  - VERSION: The version of the bot for informational purposes only.
+  - LOAD_EXTENSIONS: String array of extension names in ReQuest/cogs/. Use relative paths I.E. `ReQuest.cogs.gm`.
+  - ALLOWLIST: True if you want to prohibit bot joins to a specific allowlist of guild IDs. False if you want to disable
+    the allowlist.
 4. Run bot.py and everything *should* work.
 
 ### Special Considerations
