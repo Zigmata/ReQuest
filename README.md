@@ -79,7 +79,6 @@ the GNU GPL v3 and will always be shared freely, forever.
 1. Clone this sucker and install the dependencies into your choice of environment.
 2. Make sure your .gitignore is set up properly if you are running a public repo. You're going to want to ignore `config.yaml` in addition to your defaults.
 3. Set your environment variables:
-
    > The first three variables are only needed if you are running mongoDB with authentication.
   - MONGO_USER: The user you created in mongoDB for the bot's specific access.
   - MONGO_PASSWORD: The password for the user above.
@@ -92,8 +91,8 @@ the GNU GPL v3 and will always be shared freely, forever.
   - CONFIG_DB: The name of the database you want to use for bot configs (/admin menu)
   - VERSION: The version of the bot for informational purposes only.
 - LOAD_EXTENSIONS: String with comma-separated relative paths to extensions in ReQuest/cogs/. E.G. `ReQuest.cogs.gm`.
-  - ALLOWLIST: True if you want to prohibit bot joins to a specific allowlist of guild IDs. False if you want to disable
-    the allowlist.
+- ALLOWLIST: True if you want to prohibit bot joins to a specific allowlist of guild IDs. False if you want to disable
+  the allowlist.
 4. Run bot.py and everything *should* work.
 
 ### Special Considerations
@@ -126,7 +125,7 @@ services:
 #    image: zigmata/request:latest
 #    container_name: request
 #    environment:
-#      MONGO_USER: # your mongo user name
+#      MONGO_USER: # your mongo username
 #      MONGO_PASSWORD: # your mongo user password
 #      AUTH_DB: # name of the database your mongo user lives in
 #      MONGO_HOST: mongodb
