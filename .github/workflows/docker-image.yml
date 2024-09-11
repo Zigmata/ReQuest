@@ -20,7 +20,7 @@ jobs:
     
     - name: Docker Hub Login
       if: github.event_name != 'pull_request'
-      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+      run: echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
     - name: Set tag based on branch
       id: docker_tag
