@@ -25,10 +25,12 @@ jobs:
     - name: Set tag based on branch
       id: docker_tag
       run: |
-        if [[ "${{ github.ref }} "refs/heads/main" ]]; then
+        if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
           echo "::set-output name=tag::latest"
-        elif [[ "${{ github.ref }} "refs/heads/dev" ]]; then
+        elif [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
           echo "::set-output name=tag::dev"
+        else
+          echo "::set-output name=tag::pr-${{ github.event.number }}"
         fi
 
     - name: Build Docker Image
