@@ -26,11 +26,11 @@ jobs:
       id: docker_tag
       run: |
         if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-          echo "::set-output name=tag::latest"
+          echo "tag=latest" >> $GITHUB_OUTPUT
         elif [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
-          echo "::set-output name=tag::dev"
+          echo "tag=dev" >> $GITHUB_OUTPUT
         else
-          echo "::set-output name=tag::pr-${{ github.event.number }}"
+          echo "tag=pr-${{ github.event.number }}" >> $GITHUB_OUTPUT
         fi
 
     - name: Build Docker Image
