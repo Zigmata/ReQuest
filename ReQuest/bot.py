@@ -1,6 +1,7 @@
 import asyncio
 import os
 import signal
+from urllib.parse import quote_plus
 
 import aiohttp
 import discord
@@ -43,7 +44,7 @@ class ReQuest(commands.Bot):
         # a local mongoDB deployment on the default port.
         # self.motor_client = MotorClient('localhost', 27017, io_loop=loop)
 
-        # If you are using a connection URI, uncomment the next block of code use it instead of the client
+        # If you are using a connection URI, uncomment the next few blocks of code and use them instead of the client
         # instantiation above. In this example, we are using environment variables from the host system to hold the
         # necessary values.
         mongo_user = os.getenv('MONGO_USER')
@@ -52,7 +53,11 @@ class ReQuest(commands.Bot):
         mongo_port = os.getenv('MONGO_PORT')
         auth_db = os.getenv('AUTH_DB')
 
-        db_uri = f'mongodb://{mongo_user}:{mongo_password}@{mongo_host}:{mongo_port}/?authSource={auth_db}'
+        # Properly escape any special characters in the username/password
+        username = quote_plus(mongo_user)
+        password = quote_plus(mongo_password)
+
+        db_uri = f'mongodb://{username}:{password}@{mongo_host}:{mongo_port}/?authSource={auth_db}'
         self.motor_client = MotorClient(db_uri, io_loop=loop)
 
         # Instantiate the database objects as Discord client attributes
