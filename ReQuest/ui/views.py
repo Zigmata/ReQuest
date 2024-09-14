@@ -421,7 +421,7 @@ class GMRewardsView(View):
         try:
             self.embed.clear_fields()
             gm_rewards_collection = bot.gdb['gmRewards']
-            gm_rewards_query = await gm_rewards_collection.find_one({'guildId': guild.id, 'gm': user.id})
+            gm_rewards_query = await gm_rewards_collection.find_one({'_id': guild.id})
             experience = None
             items = None
             if gm_rewards_query:
@@ -1597,6 +1597,9 @@ class CompleteQuestsView(View):
                                                                             quest['gm'], quest['party'],
                                                                             quest['rewards'])
 
+            if not party:
+                raise Exception('You cannot complete a quest with an empty roster. Try cancelling instead.')
+
             # Check if there is a configured quest archive channel
             archive_channel = None
             archive_query = await interaction.client.gdb['archiveChannel'].find_one({'_id': guild_id})
@@ -1605,8 +1608,9 @@ class CompleteQuestsView(View):
 
             # Check if a party role was configured, and delete it
             party_role_id = quest['partyRoleId']
-            role = guild.get_role(party_role_id)
-            await role.delete(reason=f'Quest ID {quest['questId']} was completed by {interaction.user.mention}.')
+            if party_role_id:
+                role = guild.get_role(party_role_id)
+                await role.delete(reason=f'Quest ID {quest['questId']} was completed by {interaction.user.mention}.')
 
             # Get party members and message them with results
             reward_summary = []
@@ -1702,6 +1706,53 @@ class CompleteQuestsView(View):
             # Message feedback to the Game Master
             await interaction.user.send(embed=quest_embed)
 
+            # Check if GM rewards are enabled, and reward the GM accordingly
+            gm_rewards_collection = interaction.client.gdb['gmRewards']
+            gm_rewards_query = await gm_rewards_collection.find_one({'_id': interaction.guild_id})
+            if gm_rewards_query:
+                experience = gm_rewards_query['experience'] if gm_rewards_query['experience'] else None
+                items = gm_rewards_query['items'] if gm_rewards_query['items'] else None
+
+                character_collection = interaction.client.mdb['characters']
+                character_query = await character_collection.find_one({'_id': interaction.user.id})
+                if not character_query:
+                    character_string = ('Your server admin has configured rewards for Game Masters when they complete '
+                                        'quests. However, since you have no registered characters, your rewards could '
+                                        'not be automatically issued at this time.')
+                else:
+                    if str(interaction.guild_id) not in character_query['activeCharacters']:
+                        character_string = ('Your server admin has configured rewards for Game Masters when they '
+                                            'complete quests. However, since you have no active characters on this '
+                                            'server, your rewards could not be automatically issued at this time.')
+                    else:
+                        active_character_id = character_query['activeCharacters'][str(interaction.guild_id)]
+                        character_string = (f'The following has been awarded to your active character, '
+                                            f'{character_query['characters'][active_character_id]['name']}')
+                        if experience:
+                            await update_character_experience(interaction, interaction.user.id, active_character_id,
+                                                              experience)
+                        if items:
+                            for item_name, quantity in items.items():
+                                await update_character_inventory(interaction, interaction.user.id, active_character_id,
+                                                                 item_name, quantity)
+
+                gm_rewards_embed = discord.Embed(
+                    title='GM Rewards Issued',
+                    description=character_string,
+                    type='rich'
+                )
+
+                if experience:
+                    gm_rewards_embed.add_field(name='Experience', value=experience)
+
+                if items:
+                    item_strings = []
+                    for item_name, quantity in items.items():
+                        item_strings.append(f'{item_name.capitalize()}: {quantity}')
+                    gm_rewards_embed.add_field(name='Items', value='\n'.join(item_strings))
+
+                await interaction.user.send(embed=gm_rewards_embed)
+
             # Reset the view and handle the interaction response
             self.selected_quest = None
             self.complete_quest_button.label = 'Confirm?'
@@ -1709,7 +1760,7 @@ class CompleteQuestsView(View):
             await self.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
             await interaction.response.edit_message(embed=self.embed, view=self)
         except Exception as e:
-            await log_exception(e)
+            await log_exception(e, interaction)
 
     @staticmethod
     def build_reward_summary(xp, items) -> list[str]:

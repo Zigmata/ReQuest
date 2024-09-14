@@ -972,7 +972,7 @@ class GMRewardsModal(Modal):
                     items[item_name.strip().capitalize()] = int(quantity.strip())
 
             gm_rewards_collection = interaction.client.gdb['gmRewards']
-            await gm_rewards_collection.update_one({'guildId': interaction.guild.id, 'gm': interaction.user.id},
+            await gm_rewards_collection.update_one({'_id': interaction.guild.id},
                                                    {'$set': {'experience': experience, 'items': items}},
                                                    upsert=True)
             await self.calling_view.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
