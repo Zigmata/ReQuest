@@ -928,3 +928,62 @@ class PlayerBoardPurgeModal(Modal):
             await purge_player_board(age, interaction)
         except Exception as e:
             await log_exception(e, interaction)
+
+
+class GMRewardsModal(Modal):
+    def __init__(self, calling_view):
+        super().__init__(
+            title='Add/Modify GM Rewards',
+            timeout=600
+        )
+        self.calling_view = calling_view
+        current_rewards = calling_view.current_rewards
+        self.experience_text_input = discord.ui.TextInput(
+            label='Experience',
+            custom_id='experience_text_input',
+            placeholder='Enter a number',
+            default=current_rewards['experience'] if current_rewards and current_rewards['experience'] else None,
+            required=False
+        )
+        self.items_text_input = discord.ui.TextInput(
+            label='Items',
+            style=discord.TextStyle.paragraph,
+            custom_id='items_text_input',
+            placeholder='{item}: {quantity}\n'
+                        '{item2}: {quantity}\n'
+                        'etc.',
+            default=(self.parse_items_to_string(current_rewards['items'])
+                     if current_rewards and current_rewards['items']
+                     else None),
+            required=False
+        )
+        self.add_item(self.experience_text_input)
+        self.add_item(self.items_text_input)
+
+    async def on_submit(self, interaction):
+        try:
+            experience = int(self.experience_text_input.value) if self.experience_text_input.value else None
+
+            items = None
+            if self.items_text_input.value:
+                items = {}
+                for item in self.items_text_input.value.strip().split('\n'):
+                    item_name, quantity = item.split(':', 1)
+                    items[item_name.strip().capitalize()] = int(quantity.strip())
+
+            gm_rewards_collection = interaction.client.gdb['gmRewards']
+            await gm_rewards_collection.update_one({'guildId': interaction.guild.id, 'gm': interaction.user.id},
+                                                   {'$set': {'experience': experience, 'items': items}},
+                                                   upsert=True)
+            await self.calling_view.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
+            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    @staticmethod
+    def parse_items_to_string(items) -> str:
+        item_list = []
+        for item_name, quantity in items.items():
+            item_list.append(f'{item_name.capitalize()}: {quantity}')
+        item_string = '\n'.join(item_list)
+        return item_string

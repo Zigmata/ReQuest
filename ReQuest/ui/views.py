@@ -400,6 +400,48 @@ class ConfigChannelsView(View):
             await log_exception(e)
 
 
+class GMRewardsView(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.embed = discord.Embed(
+            title='Server Configuration - GM Rewards',
+            description=(
+                '__**Add/Modify Rewards**__\n'
+                'Opens an input modal to add, modify, or remove GM rewards.\n\n'
+                '> Rewards configured are on a per-quest basis. Every time a Game Master completes a quest, they will '
+                'receive the rewards configured here on their active character.\n\n'
+                '------'
+            )
+        )
+        self.current_rewards = None
+        self.add_item(buttons.GMRewardsButton(self))
+        self.add_item(buttons.BackButton(ConfigQuestsView))
+
+    async def setup(self, bot, user, guild):
+        try:
+            self.embed.clear_fields()
+            gm_rewards_collection = bot.gdb['gmRewards']
+            gm_rewards_query = await gm_rewards_collection.find_one({'guildId': guild.id, 'gm': user.id})
+            experience = None
+            items = None
+            if gm_rewards_query:
+                self.current_rewards = gm_rewards_query
+                experience = gm_rewards_query['experience']
+                items = gm_rewards_query['items']
+
+            if experience:
+                self.embed.add_field(name='Experience', value=experience)
+
+            if items:
+                rewards_list = []
+                for item, quantity in items.items():
+                    rewards_list.append(f'{item.capitalize()}: {quantity}')
+                rewards_string = '\n'.join(rewards_list)
+                self.embed.add_field(name='Items', value=rewards_string, inline=False)
+        except Exception as e:
+            await log_exception(e)
+
+
 class ConfigQuestsView(View):
     def __init__(self):
         super().__init__(timeout=None)
@@ -410,12 +452,15 @@ class ConfigQuestsView(View):
                 'This option enables GMs to provide a short summary block when closing out quests.\n\n'
                 '__**Quest Wait List**__\n'
                 'This option enables the specified number of players to queue for a quest, in case a player drops.\n\n'
+                '__**GM Rewards**__\n'
+                'Configure rewards for GMs to receive upon completing quests.\n\n'
                 '-----'
             ),
             type='rich'
         )
         self.add_item(selects.ConfigWaitListSelect(self))
         self.add_item(buttons.QuestSummaryToggleButton(self))
+        self.add_item(buttons.MenuViewButton(GMRewardsView, 'GM Rewards'))
         self.add_item(buttons.BackButton(ConfigBaseView))
 
     @staticmethod
@@ -1606,7 +1651,7 @@ class CompleteQuestsView(View):
                         dm_embed.add_field(name='Rewards', value='\n'.join(reward_strings))
                     await member.send(embed=dm_embed)
 
-            # Build an embed for feedbck
+            # Build an embed for feedback
             quest_embed = discord.Embed(
                 title=title,
                 description='',
