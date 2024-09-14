@@ -4,6 +4,8 @@ A Discord bot for TTRPG communities.
 
 Now open source! This bot is my own personal project to learn Python, asyncio, Discord, and many other things.
 
+Don't forget to join the official development [Discord](https://discord.gg/Zq37gj4)!
+
 Made possible by [discord.py](https://discordpy.readthedocs.io/en/stable/) and [Motor](https://motor.readthedocs.io/en/stable/).
 
 1. [Summary](#summary)
@@ -20,46 +22,46 @@ to trade amongst each other without needing to ping staff and hope someone is in
 
 ## Features
 
-#### System-Agnostic
+### System-Agnostic
 
 ReQuest is designed to work for any system. Let your players, or your choice of specialty bot, handle the mechanics and
 dice rolling. Let ReQuest handle all the boring busy work.
 
-#### Hands-off Inventory Validation
+### Hands-off Inventory Validation
 
 With ReQuest, character inventories and experience are awarded from game masters only. Players cannot simply add things
 to their characters; they must be received from another player's inventory or awarded directly from a Game Master or
 quest. Players can freely trade without the need of GM oversight.
 
-#### Automated Quest Lifecycle Management
+### Automated Quest Lifecycle Management
 
 Game Masters can create quests, modify details, assign party roles, and even award shared or individual loot, all
 through a simple menu interface. Players sign themselves up directly, receive notifications when the Game Master is
 ready to start, and automatically receive rewards (if any) once the quest is marked complete. Server admins can even
 configure wait lists for quests, and an optional archive channel to view past adventures!
 
-#### Fully-Custom Currency System
+### Fully-Custom Currency System
 
 Define your currency, be it anything from credits and reputation, to gold or the U.S. Dollar. ReQuest keeps transactions
 simple and makes change for you so you can get back to your adventures.
 
-#### Easy User Interface
+### Easy User Interface
 
 Forget typing lengthy commands just to miss a letter and have to start over. Every single function a game master,
 player, or server admin needs, is under one command with easily-navigated menus.
 
-#### Streamlined Help
+### Streamlined Help
 
 Sick of typing `/help` every time you need to do something? Each menu page clearly outlines its functions so you don't
 have to memorize the bot, or re-learn it when features are added.
 
-#### Optional Player Message Board
+### Optional Player Message Board
 
 Want your player characters to advertise their crafting? Looking to form an ad-hoc party for some role play? The message
 board lets players post in-character in the same clean embed format as the quest board, letting server admins lock down
 channels to prevent clutter.
 
-#### Open Source
+### Open Source
 
 Tools that enhance TTRPGs and their communities don't deserve to be locked behind a paywall. ReQuest is licensed under
 the GNU GPL v3 and will always be shared freely, forever.
@@ -77,7 +79,7 @@ the GNU GPL v3 and will always be shared freely, forever.
 ### Instructions
 
 1. Clone this sucker and install the dependencies into your choice of environment.
-2. Make sure your .gitignore is set up properly if you are running a public repo. You're going to want to ignore `config.yaml` in addition to your defaults.
+2. Make sure your .gitignore is set up properly if you are running a public repo.
 3. Set your environment variables:
    > The first three variables are only needed if you are running mongoDB with authentication.
   - MONGO_USER: The user you created in mongoDB for the bot's specific access.
@@ -100,7 +102,7 @@ the GNU GPL v3 and will always be shared freely, forever.
 - If you are running this bot locally, you can use the recommended default installation of mongoDB for your chosen OS,
   and a very simple connection string which is included in the setup hook for bot.py.
 - If you are hosting this bot anywhere publicly accessible, it is highly recommended you familiarize yourself with
-  mongoDB users and roles, and run your bot with specific credentials.
+  mongoDB users and roles, and run your bot with specific credentials and database access.
 
 ### Running ReQuest on Docker
 
@@ -113,19 +115,16 @@ services:
   mongodb:
     image: mongodb/mongodb-community-server:latest
     container_name: mongodb
-    user: 999:999
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: # Give MongoDB an initial root username
-      MONGO_INITDB_ROOT_PASSWORD: # Give MongoDB an intitial root password
-    volumes:
-      - /var/lib/mongodb-data:/data/db
+    #     environment:
+    #       MONGO_INITDB_ROOT_USERNAME: # Give MongoDB an initial root username
+    #       MONGO_INITDB_ROOT_PASSWORD: # Give MongoDB an initial root password
     restart: unless-stopped
 
 #  request:
 #    image: zigmata/request:latest
 #    container_name: request
 #    environment:
-#      MONGO_USER: # your mongo username
+#      MONGO_USER: # Username if you are using auth in your mongoDB deployment
 #      MONGO_PASSWORD: # your mongo user password
 #      AUTH_DB: # name of the database your mongo user lives in
 #      MONGO_HOST: mongodb
@@ -142,10 +141,17 @@ services:
 #    restart: unless-stopped
 ```
 
-It is recommended that you run mongoDB by itself first, create a special user for ReQuest, and then un-comment the
-request service in docker-compose.yml and add your values accordingly.
+### Docker Installation Notes
 
-If you want to modify ReQuest, you will need to educate yourself on discord.py, cogs, extensions, and asyncio in order
-to be marginally successful like me.
-
-Don't forget to join the [Discord](https://discord.gg/Zq37gj4)!~~~~
+- The above example has commented-out lines for launching mongoDB with authentication. You can leave these commented out
+  if security is not a concern (I.E. local deployment).
+    - If you do so, you will need to modify the URI in `bot.py` to omit the user/password details, as well as relevant
+      lines for grabbing those environment variables and encoding them.
+- You will not need to expose any ports past your host firewall if your mongoDB and ReQuest containers are on the same
+  docker bridge network. Docker creates this bridge network by default if no network definitions are provided.
+- If your bot runs on a publicly-accessible host, it is strongly recommended to research and implement best practices
+  regarding mongoDB user authentication, least-privilege database access, and persistent database volume file security.
+  You will also need to modify your docker-compose accordingly for specific volume mounts, users, etc. Guidance on these
+  topics is well outside the scope of this README.
+- A `dev` branch of this repo tracks any current feature implementation work and builds a corresponding `dev` tag in
+  Docker Hub. Be warned when pulling this tag, for here there be dragons.
