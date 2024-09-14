@@ -306,6 +306,7 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
     except Exception as e:
         await log_exception(e, interaction)
 
+
 async def update_character_experience(interaction: discord.Interaction, player_id: int, character_id: str,
                                       amount: int):
     try:

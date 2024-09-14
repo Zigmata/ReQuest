@@ -58,5 +58,6 @@ class GameMaster(Cog):
         except Exception as e:
             await log_exception(e, interaction)
 
+
 async def setup(bot):
     await bot.add_cog(GameMaster(bot))

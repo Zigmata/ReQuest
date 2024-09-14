@@ -75,8 +75,8 @@ class RegisterCharacterButton(Button):
             modal = modals.CharacterRegisterModal(self, interaction.client.mdb, interaction.user.id,
                                                   interaction.guild_id)
             await interaction.response.send_modal(modal)
-        except Exception as e: \
-                await log_exception(e, interaction)
+        except Exception as e:
+            await log_exception(e, interaction)
 
 
 class AdminShutdownButton(Button):
@@ -903,6 +903,23 @@ class PlayerBoardPurgeButton(Button):
     async def callback(self, interaction):
         try:
             modal = modals.PlayerBoardPurgeModal(self.calling_view)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class GMRewardsButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Add/Modify Rewards',
+            style=ButtonStyle.secondary,
+            custom_id='gm_rewards_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction):
+        try:
+            modal = modals.GMRewardsModal(self.calling_view)
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)
