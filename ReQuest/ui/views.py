@@ -417,7 +417,7 @@ class GMRewardsView(View):
         self.add_item(buttons.GMRewardsButton(self))
         self.add_item(buttons.BackButton(ConfigQuestsView))
 
-    async def setup(self, bot, user, guild):
+    async def setup(self, bot, guild):
         try:
             self.embed.clear_fields()
             gm_rewards_collection = bot.gdb['gmRewards']

@@ -133,11 +133,14 @@ class ReQuest(commands.Bot):
     async def on_ready():
         print("ReQuest is online.")
 
+
 bot = ReQuest()
+
 
 @bot.tree.error
 async def on_app_command_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
     await log_exception(error, interaction)
+
 
 async def main():
     async with aiohttp.ClientSession() as session:

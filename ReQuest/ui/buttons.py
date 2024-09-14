@@ -75,8 +75,8 @@ class RegisterCharacterButton(Button):
             modal = modals.CharacterRegisterModal(self, interaction.client.mdb, interaction.user.id,
                                                   interaction.guild_id)
             await interaction.response.send_modal(modal)
-        except Exception as e: \
-                await log_exception(e, interaction)
+        except Exception as e:
+            await log_exception(e, interaction)
 
 
 class AdminShutdownButton(Button):

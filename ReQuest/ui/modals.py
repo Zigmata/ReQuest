@@ -485,7 +485,8 @@ class CreateQuestModal(Modal):
                     for name in config_query['forbiddenRoles']:
                         custom_forbidden_names.append(name)
 
-                if party_role_name.lower() in default_forbidden_names or party_role_name.lower() in custom_forbidden_names:
+                if (party_role_name.lower() in default_forbidden_names or
+                        party_role_name.lower() in custom_forbidden_names):
                     raise Exception('The name provided for the party role is forbidden.')
 
                 for role in guild.roles:
