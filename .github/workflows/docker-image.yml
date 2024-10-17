@@ -16,26 +16,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Docker Hub Login
-      if: github.event_name != 'pull_request'
-      run: echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+      - uses: actions/checkout@main
 
-    - name: Set tag based on branch
-      id: docker_tag
-      run: |
-        if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-          echo "tag=latest" >> $GITHUB_OUTPUT
-        elif [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
-          echo "tag=dev" >> $GITHUB_OUTPUT
-        else
-          echo "tag=pr-${{ github.event.number }}" >> $GITHUB_OUTPUT
-        fi
+      - name: Docker Hub Login
+        if: github.event_name != 'pull_request'
+        run: echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-    - name: Build Docker Image
-      run: docker build . --file Dockerfile --tag ${{ secrets.DOCKER_USERNAME }}/request:${{ steps.docker_tag.outputs.tag }}
+      - name: Set tag based on branch
+        id: docker_tag
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
+            echo "tag=dev" >> $GITHUB_OUTPUT
+          else
+            echo "tag=pr-${{ github.event.number }}" >> $GITHUB_OUTPUT
+          fi
 
-    - name: Push Docker Image
-      if: github.event_name != 'pull_request'
-      run: docker push ${{ secrets.DOCKER_USERNAME }}/request:${{ steps.docker_tag.outputs.tag }}
+      - name: Build Docker Image
+        run: docker build . --file Dockerfile --tag ${{ secrets.DOCKER_USERNAME }}/request:${{ steps.docker_tag.outputs.tag }}
+
+      - name: Push Docker Image
+        if: github.event_name != 'pull_request'
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/request:${{ steps.docker_tag.outputs.tag }}
