@@ -1,5 +1,5 @@
 discord.py~=2.4.0
 PyYaml~=6.0.2
-motor~=3.5.1
+motor~=3.6.0
 shortuuid~=1.0.13
-aiohttp~=3.10.5
+aiohttp~=3.10.8

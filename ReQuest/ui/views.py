@@ -195,25 +195,40 @@ class RemoveCharacterView(View):
             await log_exception(e, interaction)
 
 
+class ConfigQueuesView(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.embed = discord.Embed(
+            title='Server Configuration - Custom Queues',
+            description=(
+                '__****__'
+            ),
+            type='rich'
+        )
+
+
 class ConfigBaseView(View):
     def __init__(self):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
             title='Server Configuration - Main Menu',
-            description=('__**Roles**__\n'
-                         'Configuration options for pingable or privileged roles.\n\n'
-                         '__**Channels**__\n'
-                         'Set designated channels for ReQuest posts.\n\n'
-                         '__**Quests**__\n'
-                         'Global quest settings, such as wait lists.\n\n'
-                         '__**Players**__\n'
-                         'Global player settings, such as experience point tracking.\n\n'
-                         '__**Currency**__\n'
-                         'Server-wide currency settings.'),
+            description=(
+                '__**Roles**__\n'
+                'Configuration options for pingable or privileged roles.\n\n'
+                '__**Channels**__\n'
+                'Set designated channels for ReQuest posts.\n\n'
+                '__**Quests**__\n'
+                'Global quest settings, such as wait lists.\n\n'
+                '__**Players**__\n'
+                'Global player settings, such as experience point tracking.\n\n'
+                '__**Currency**__\n'
+                'Server-wide currency settings.'
+            ),
             type='rich'
         )
         self.add_item(buttons.MenuViewButton(ConfigRolesView, 'Roles'))
         self.add_item(buttons.MenuViewButton(ConfigChannelsView, 'Channels'))
+        self.add_item(buttons.MenuViewButton(ConfigQueuesView, 'Custom Queues'))
         self.add_item(buttons.MenuViewButton(ConfigQuestsView, 'Quests'))
         self.add_item(buttons.MenuViewButton(ConfigPlayersView, 'Players'))
         self.add_item(buttons.MenuViewButton(ConfigCurrencyView, 'Currency'))
