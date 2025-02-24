@@ -1,4 +1,4 @@
-FROM python:3.12.5-slim
+FROM python:3.13.2-slim
 
 # Make request user
 RUN groupadd -g 1001 request && \

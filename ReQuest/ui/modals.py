@@ -6,7 +6,7 @@ import discord.ui
 import shortuuid
 from discord.ui import Modal
 
-from .inputs import AddCurrencyDenominationTextInput
+from inputs import AddCurrencyDenominationTextInput
 from ..utilities.supportFunctions import find_currency_or_denomination, log_exception, trade_currency, trade_item, \
     normalize_currency_keys, consolidate_currency, strip_id, update_character_inventory, update_character_experience, \
     purge_player_board

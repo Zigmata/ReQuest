@@ -325,7 +325,7 @@ async def update_character_experience(interaction: discord.Interaction, player_i
         await log_exception(e, interaction)
 
 
-async def update_quest_embed(quest) -> discord.Embed:
+async def update_quest_embed(quest) -> discord.Embed | None:
     try:
         embed = discord.Embed()
         # Initialize all the current quest values
