@@ -925,11 +925,11 @@ class GMRewardsButton(Button):
             await log_exception(e, interaction)
 
 
-class CreateCustomQueueButton:
+class CreateCustomQueueButton(Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Create Custom Queue',
-            style=ButtonStyle.success,
+            style=ButtonStyle['success'],
             custom_id='create_custom_queue_button'
         )
         self.calling_view = calling_view

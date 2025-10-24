@@ -213,11 +213,11 @@ class ConfigQueuesView(View):
         )
         self.queues = None
         self.create_custom_queue_button = buttons.CreateCustomQueueButton(self)
-        self.edit_custom_queue_button = buttons.EditCustomQueueButton(self, self.queues)
-        self.remove_custom_queue_button = buttons.RemoveCustomQueueButton(self, self.queues)
+        # self.edit_custom_queue_button = buttons.EditCustomQueueButton(self, self.queues)
+        # self.remove_custom_queue_button = buttons.RemoveCustomQueueButton(self, self.queues)
         self.add_item(self.create_custom_queue_button)
-        self.add_item(self.edit_custom_queue_button)
-        self.add_item(self.remove_custom_queue_button)
+        # self.add_item(self.edit_custom_queue_button)
+        # self.add_item(self.remove_custom_queue_button)
         self.add_item(buttons.BackButton(ConfigBaseView))
 
     @staticmethod
