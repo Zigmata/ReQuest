@@ -195,25 +195,116 @@ class RemoveCharacterView(View):
             await log_exception(e, interaction)
 
 
+class ConfigQueuesView(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.embed = discord.Embed(
+            title='Server Configuration - Custom Queues',
+            description=(
+                '__**Create**__\n'
+                'Create a new custom queue.\n\n'
+                '__**Edit**__\n'
+                'Edit an existing custom queue.\n\n'
+                '__**Remove**__\n'
+                'Remove an existing custom queue.\n\n'
+                '___'
+            ),
+            type='rich'
+        )
+        self.queues = None
+        self.create_custom_queue_button = buttons.CreateCustomQueueButton(self)
+        self.edit_custom_queue_button = buttons.EditCustomQueueButton(self, self.queues)
+        self.remove_custom_queue_button = buttons.RemoveCustomQueueButton(self, self.queues)
+        self.add_item(self.create_custom_queue_button)
+        self.add_item(self.edit_custom_queue_button)
+        self.add_item(self.remove_custom_queue_button)
+        self.add_item(buttons.BackButton(ConfigBaseView))
+
+    @staticmethod
+    async def query_queues(bot, guild):
+        try:
+            collection = bot.gdb['customQueues']
+
+            query = await collection.find_one({'_id': guild.id})
+            logger.debug(f'customQueues query: {query}')
+            if not query:
+                return None
+            else:
+                return query['queues']
+        except Exception as e:
+            await log_exception(e)
+
+    async def setup(self, bot, guild):
+        try:
+            self.embed.clear_fields()
+            queues = await self.query_queues(bot, guild)
+            if not queues:
+                self.embed.add_field(name='Custom Queues', value='No custom queues configured.', inline=False)
+                self.edit_custom_queue_button.enabled = False
+                self.remove_custom_queue_button.enabled = False
+            else:
+                self.queues = queues
+                queue_names = []
+                for queue in queues:
+                    queue_names.append(queue['name'])
+                self.embed.add_field(name='Custom Queues', value=', '.join(queue_names), inline=False)
+                self.edit_custom_queue_button.enabled = True
+                self.remove_custom_queue_button.enabled = True
+        except Exception as e:
+            await log_exception(e)
+
+    async def create_custom_queue(self, queue_name, queue_channel, submission_roles, approver_roles,
+                                                        log_channel, interaction):
+        try:
+            collection = interaction.client.gdb['customQueues']
+            guild_id = interaction.guild.id
+            queue_id = shortuuid.uuid()
+            logger.debug(f'Creating custom queue with ID: {queue_id}\n'
+                         f'Name: {queue_name}\n'
+                         f'Channel: {queue_channel}\n'
+                         f'Submission Roles: {submission_roles}\n'
+                         f'Approver Roles: {approver_roles}\n'
+                         f'Log Channel: {log_channel}')
+            await collection.update_one({'_id': guild_id},
+                                        {'$push': {'queues': {
+                                            'id': queue_id,
+                                            'name': queue_name,
+                                            'queueChannel': queue_channel,
+                                            'submissionRoles': submission_roles,
+                                            'approverRoles': approver_roles,
+                                            'logChannel': log_channel
+                                        }}},
+                                        upsert=True)
+            await self.setup(bot=interaction.client, guild=interaction.guild)
+            await interaction.response.edit_message(embed=self.embed, view=self)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
 class ConfigBaseView(View):
     def __init__(self):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
             title='Server Configuration - Main Menu',
-            description=('__**Roles**__\n'
-                         'Configuration options for pingable or privileged roles.\n\n'
-                         '__**Channels**__\n'
-                         'Set designated channels for ReQuest posts.\n\n'
-                         '__**Quests**__\n'
-                         'Global quest settings, such as wait lists.\n\n'
-                         '__**Players**__\n'
-                         'Global player settings, such as experience point tracking.\n\n'
-                         '__**Currency**__\n'
-                         'Server-wide currency settings.'),
+            description=(
+                '__**Roles**__\n'
+                'Configuration options for pingable or privileged roles.\n\n'
+                '__**Channels**__\n'
+                'Set designated channels for ReQuest posts.\n\n'
+                '__**Quests**__\n'
+                'Global quest settings, such as wait lists.\n\n'
+                '__**Players**__\n'
+                'Global player settings, such as experience point tracking.\n\n'
+                '__**Currency**__\n'
+                'Server-wide currency settings.\n\n'
+                '__**Custom Queues**__\n'
+                'Configuration options for custom queues.'
+            ),
             type='rich'
         )
         self.add_item(buttons.MenuViewButton(ConfigRolesView, 'Roles'))
         self.add_item(buttons.MenuViewButton(ConfigChannelsView, 'Channels'))
+        self.add_item(buttons.MenuViewButton(ConfigQueuesView, 'Custom Queues'))
         self.add_item(buttons.MenuViewButton(ConfigQuestsView, 'Quests'))
         self.add_item(buttons.MenuViewButton(ConfigPlayersView, 'Players'))
         self.add_item(buttons.MenuViewButton(ConfigCurrencyView, 'Currency'))

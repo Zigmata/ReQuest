@@ -89,7 +89,8 @@ class ReQuest(commands.Bot):
 
     async def close(self):
         await super().close()
-        await self.session.close()
+        if self.session:
+            await self.session.close()
 
     async def load_allow_list(self):
         collection_list = await self.cdb.list_collection_names()
@@ -147,6 +148,8 @@ async def main():
         async with bot:
             bot.session = session
             bot_token = os.getenv('BOT_TOKEN')
+            if not bot_token:
+                raise ValueError("BOT_TOKEN environment variable is not set.")
             await bot.start(bot_token, reconnect=True)
 
 
@@ -158,6 +161,7 @@ async def shutdown_bot():
 
 def handle_shutdown_signal(signal_number, frame):
     print(f'Received signal {signal_number}, shutting down...')
+    print(f'Shutdown requested by function: {frame.f_code.co_name}')
     loop = asyncio.get_event_loop()
     loop.create_task(shutdown_bot())
 
