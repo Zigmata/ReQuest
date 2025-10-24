@@ -2,7 +2,7 @@
 
 A Discord bot for TTRPG communities.
 
-Now open source! This bot is my own personal project to learn Python, asyncio, Discord, and many other things.
+![GitHub release](https://img.shields.io/github/release/zigmata/ReQuest.svg)
 
 Don't forget to join the official development [Discord](https://discord.gg/Zq37gj4)!
 
@@ -60,6 +60,12 @@ have to memorize the bot, or re-learn it when features are added.
 Want your player characters to advertise their crafting? Looking to form an ad-hoc party for some role play? The message
 board lets players post in-character in the same clean embed format as the quest board, letting server admins lock down
 channels to prevent clutter.
+
+### Custom Queues
+
+Designate channels for queues for anything you desire. Want your players to submit sheets for review? Or perhaps you
+want homebrew or other game suggestions! Optional role-based access for both submissions and approvals helps split the
+workload and control spam.
 
 ### Open Source
 

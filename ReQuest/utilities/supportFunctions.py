@@ -23,7 +23,7 @@ def strip_id(mention) -> int:
     return parsed_id
 
 
-def parse_list(mentions) -> [int]:
+def parse_list(mentions) -> list[int]:
     stripped_list = [re.sub(r'[<>#!@&]', '', item) for item in mentions]
     mapped_list = list(map(int, stripped_list))
     return mapped_list
