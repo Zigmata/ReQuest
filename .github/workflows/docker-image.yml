@@ -45,7 +45,7 @@ jobs:
         run: docker build . --file Dockerfile --tag ${{ secrets.DOCKER_USERNAME }}/request:${{ steps.docker_tag.outputs.tag }}
 
       - name: Debug Image Name
-        run: echo "Image name: ${{ secrets.DOCKER_USERNAME }}/request:${{ steps.docker_tag.outputs.tag }}"
+        run: echo "${{ secrets.DOCKER_USERNAME }}/request:${{ steps.docker_tag.outputs.tag }}"
 
       - name: Push Docker Image (dev/main merges)
         if: github.event_name != 'pull_request'
