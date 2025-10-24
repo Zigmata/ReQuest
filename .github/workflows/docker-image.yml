@@ -9,6 +9,10 @@ on:
     branches:
       - main
       - dev
+    types:
+      - opened
+      - synchronize
+      - reopened
   workflow_dispatch:
 
 jobs:
@@ -22,20 +26,28 @@ jobs:
         if: github.event_name != 'pull_request'
         run: echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: Set tag based on branch
+      - name: Set tag based on ref
         id: docker_tag
         run: |
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            echo "tag=latest" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             echo "tag=dev" >> $GITHUB_OUTPUT
           else
-            echo "tag=pr-${{ github.event.number }}" >> $GITHUB_OUTPUT
+            if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+              echo "tag=latest" >> $GITHUB_OUTPUT
+            elif [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
+              echo "tag=dev" >> $GITHUB_OUTPUT
+            else
+              echo "tag=pr-${{ github.event.number }}" >> $GITHUB_OUTPUT
+            fi
           fi
 
       - name: Build Docker Image
         run: docker build . --file Dockerfile --tag ${{ secrets.DOCKER_USERNAME }}/request:${{ steps.docker_tag.outputs.tag }}
 
-      - name: Push Docker Image
+      - name: Push Docker Image (dev/main merges)
         if: github.event_name != 'pull_request'
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/request:${{ steps.docker_tag.outputs.tag }}
+
+      - name: Push Docker Image (Dev PRs)
+        if: github.event_name == 'pull_request' && github.base_ref == 'dev'
         run: docker push ${{ secrets.DOCKER_USERNAME }}/request:${{ steps.docker_tag.outputs.tag }}
