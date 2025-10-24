@@ -1,4 +1,4 @@
-FROM python:3.14-slim
+FROM python:alpine
 
 # Make request user
 RUN groupadd -g 1001 request && \
