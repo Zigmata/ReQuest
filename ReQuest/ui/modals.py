@@ -1006,39 +1006,40 @@ class CreateCustomQueueModal(Modal):
         self.queue_channel_select = discord.ui.ChannelSelect(
             custom_id='queue_channel_select',
             placeholder='Select the channel for this queue',
-            channel_types=[discord.ChannelType['text']],
+            channel_types=[discord.ChannelType.text],
             max_values=1,
             min_values=1,
             required=True
         )
-        self.queue_submission_roles_select = discord.ui.RoleSelect(
-            custom_id='queue_submission_roles_select',
-            placeholder='(Optional) Choose up to 5 roles required to submit to this queue. Default is @everyone.',
-            max_values=5,
-            min_values=1,
-            required=False
-        )
-        self.queue_approver_roles_select = discord.ui.RoleSelect(
-            custom_id='queue_approver_roles_select',
-            placeholder='(Optional) Choose up to 5 roles that can approve submissions, in addition to the default of'
-                        'anyone with Server Admin permissions.',
-            max_values=5,
-            min_values=0,
-            required=False
-        )
-        self.queue_log_channel_select = discord.ui.ChannelSelect(
-            custom_id='queue_log_channel_select',
-            placeholder='(Optional) Select a channel to log queue submissions and approvals.',
-            channel_types=[discord.ChannelType['text']],
-            max_values=1,
-            min_values=0,
-            required=False
-        )
+        # self.queue_submission_roles_select = discord.ui.RoleSelect(
+        #     custom_id='queue_submission_roles_select',
+        #
+        #     placeholder='(Optional) Choose up to 5 roles required to submit to this queue. Default is @everyone.',
+        #     max_values=5,
+        #     min_values=1,
+        #     required=False
+        # )
+        # self.queue_approver_roles_select = discord.ui.RoleSelect(
+        #     custom_id='queue_approver_roles_select',
+        #     placeholder='(Optional) Choose up to 5 roles that can approve submissions, in addition to the default of'
+        #                 'anyone with Server Admin permissions.',
+        #     max_values=5,
+        #     min_values=0,
+        #     required=False
+        # )
+        # self.queue_log_channel_select = discord.ui.ChannelSelect(
+        #     custom_id='queue_log_channel_select',
+        #     placeholder='(Optional) Select a channel to log queue submissions and approvals.',
+        #     channel_types=[discord.ChannelType['text']],
+        #     max_values=1,
+        #     min_values=0,
+        #     required=False
+        # )
         self.add_item(self.queue_name_text_input)
         self.add_item(self.queue_channel_select)
-        self.add_item(self.queue_submission_roles_select)
-        self.add_item(self.queue_approver_roles_select)
-        self.add_item(self.queue_log_channel_select)
+        # self.add_item(self.queue_submission_roles_select)
+        # self.add_item(self.queue_approver_roles_select)
+        # self.add_item(self.queue_log_channel_select)
 
     async def on_submit(self, interaction):
         try:
