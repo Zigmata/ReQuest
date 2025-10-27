@@ -1,0 +1,118 @@
+import inspect
+import logging
+
+from discord import ButtonStyle
+from discord.ui import Button
+
+import ReQuest.ui.modals as modals
+from ..utilities.supportFunctions import log_exception
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+class AdminShutdownButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Shutdown',
+            style=ButtonStyle.danger,
+            custom_id='shutdown_bot_button'
+        )
+        self.confirm = False
+        self.calling_view = calling_view
+
+    async def callback(self, interaction):
+        try:
+            if self.confirm:
+                await interaction.response.send_message('Shutting down!', ephemeral=True)
+                await interaction.client.close()
+            else:
+                self.confirm = True
+                self.label = 'CONFIRM SHUTDOWN?'
+                await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+        except Exception as e:
+            await log_exception(e)
+
+class AllowlistAddServerButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Add New Server',
+            style=ButtonStyle.success,
+            custom_id='allowlist_add_server_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction):
+        try:
+            new_modal = modals.AllowServerModal(self.calling_view)
+            await interaction.response.send_modal(new_modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ConfirmAllowlistRemoveButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Confirm',
+            style=ButtonStyle.danger,
+            custom_id='confirm_allowlist_remove_button',
+            disabled=True
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction):
+        try:
+            view = self.calling_view
+            collection = interaction.client.cdb['serverAllowlist']
+            await collection.update_one({'servers': {'$exists': True}},
+                                        {'$pull': {'servers': {'id': view.selected_guild}}})
+            await view.setup(bot=interaction.client)
+            view.confirm_allowlist_remove_button.disabled = True
+            view.confirm_allowlist_remove_button.label = 'Confirm'
+            await interaction.response.edit_message(embed=view.embed, view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class AdminLoadCogButton(Button):
+    def __init__(self):
+        super().__init__(
+            label='Load Cog',
+            style=ButtonStyle.secondary,
+            custom_id='admin_load_cog_button'
+        )
+
+    async def callback(self, interaction):
+        try:
+            async def modal_callback(modal_interaction, input_value):
+                module = input_value.lower()
+                await interaction.client.load_extension(f'ReQuest.cogs.{module}')
+                await modal_interaction.response.send_message(f'Extension successfully loaded: `{module}`',
+                                                              ephemeral=True)
+
+            modal = modals.AdminCogTextModal('load', modal_callback)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class AdminReloadCogButton(Button):
+    def __init__(self):
+        super().__init__(
+            label='Reload Cog',
+            style=ButtonStyle.secondary,
+            custom_id='admin_reload_cog_button'
+        )
+
+    async def callback(self, interaction):
+        try:
+            async def modal_callback(modal_interaction, input_value):
+                module = input_value.lower()
+                await interaction.client.reload_extension(f'ReQuest.cogs.{module}')
+                await modal_interaction.response.send_message(f'Extension successfully reloaded: `{module}`',
+                                                              ephemeral=True)
+
+            modal = modals.AdminCogTextModal('reload', modal_callback)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)

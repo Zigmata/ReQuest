@@ -6,9 +6,9 @@ from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Cog
 
-from ..ui.views import AdminBaseView
-from ..utilities.checks import is_owner
-from ..utilities.supportFunctions import log_exception
+from ReQuest.ui.admin import views
+from ReQuest.utilities.checks import is_owner
+from ReQuest.utilities.supportFunctions import log_exception
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ class Admin(Cog):
     async def on_guild_join(self, guild):
         try:
             if not self.bot.config['allowList'] or guild.id in self.bot.allow_list:
-                return
+                return None
             else:
                 await guild.owner.send(
                     'Thank you for your interest in ReQuest! Your server is not in ReQuest\'s list of '
@@ -38,7 +38,7 @@ class Admin(Cog):
 
     # -------------Private Commands-------------
 
-    @commands.command(name='commandsync', case_insensitive=True, hidden=True, pass_context=True)
+    @commands.command(name='commandsync', hidden=True)
     @commands.dm_only()
     @commands.is_owner()
     async def command_sync(self, ctx, guild_id=None):
@@ -74,7 +74,7 @@ class Admin(Cog):
         except Exception as e:
             await ctx.send(f'There was an error syncing commands: {e}')
 
-    @commands.command(name='commandclear', case_insensitive=True, hidden=True, pass_context=True)
+    @commands.command(name='commandclear', hidden=True)
     @commands.dm_only()
     @commands.is_owner()
     async def command_clear(self, ctx, guild_id=None):
@@ -107,7 +107,7 @@ class Admin(Cog):
         Administration wizard. Bot owner only
         """
         try:
-            view = AdminBaseView()
+            view = views.AdminBaseView()
             await interaction.response.send_message(embed=view.embed, view=view, ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)

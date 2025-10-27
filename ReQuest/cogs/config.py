@@ -4,8 +4,8 @@ import discord.ui
 from discord import app_commands
 from discord.ext.commands import Cog
 
-from ..ui.views import ConfigBaseView
-from ..utilities.supportFunctions import log_exception
+from ReQuest.ui.config import views
+from ReQuest.utilities.supportFunctions import log_exception
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ class Config(Cog):
         Server Configuration Menus (Server Admins only)
         """
         try:
-            view = ConfigBaseView()
+            view = views.ConfigBaseView()
             await interaction.response.send_message(embed=view.embed, view=view, ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)
