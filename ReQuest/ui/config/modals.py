@@ -208,7 +208,7 @@ class GMRewardsModal(Modal):
             await gm_rewards_collection.update_one({'_id': interaction.guild.id},
                                                    {'$set': {'experience': experience, 'items': items}},
                                                    upsert=True)
-            await self.calling_view.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
+            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
             await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
