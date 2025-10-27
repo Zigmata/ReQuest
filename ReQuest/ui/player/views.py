@@ -370,8 +370,9 @@ class PlayerBoardView(View):
             channel = interaction.client.get_channel(self.player_board_channel_id)
             message = channel.get_partial_message(message_id)
             await attempt_delete(message)
-
+            self.selected_post = None
             await interaction.response.send_message(f'Post `{post['postId']}`: **{post['title']}** deleted!',
                                                     ephemeral=True)
+            await self.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
         except Exception as e:
             await log_exception(e, interaction)
