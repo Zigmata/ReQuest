@@ -9,7 +9,7 @@ from discord.ext import commands
 from discord.ext.commands import errors
 from motor.motor_asyncio import AsyncIOMotorClient as MotorClient
 
-from ReQuest.ui.views import QuestPostView
+from ReQuest.ui.gm.views import QuestPostView
 from utilities.supportFunctions import attempt_delete, log_exception
 
 
