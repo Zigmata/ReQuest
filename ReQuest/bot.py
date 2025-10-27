@@ -1,6 +1,7 @@
 import asyncio
 import os
 import signal
+from urllib.parse import quote_plus
 
 import aiohttp
 import discord
@@ -43,7 +44,7 @@ class ReQuest(commands.Bot):
         # a local mongoDB deployment on the default port.
         # self.motor_client = MotorClient('localhost', 27017, io_loop=loop)
 
-        # If you are using a connection URI, uncomment the next block of code use it instead of the client
+        # If you are using a connection URI, uncomment the next few blocks of code and use them instead of the client
         # instantiation above. In this example, we are using environment variables from the host system to hold the
         # necessary values.
         mongo_user = os.getenv('MONGO_USER')
@@ -52,7 +53,11 @@ class ReQuest(commands.Bot):
         mongo_port = os.getenv('MONGO_PORT')
         auth_db = os.getenv('AUTH_DB')
 
-        db_uri = f'mongodb://{mongo_user}:{mongo_password}@{mongo_host}:{mongo_port}/?authSource={auth_db}'
+        # Properly escape any special characters in the username/password
+        username = quote_plus(mongo_user)
+        password = quote_plus(mongo_password)
+
+        db_uri = f'mongodb://{username}:{password}@{mongo_host}:{mongo_port}/?authSource={auth_db}'
         self.motor_client = MotorClient(db_uri, io_loop=loop)
 
         # Instantiate the database objects as Discord client attributes
@@ -84,7 +89,8 @@ class ReQuest(commands.Bot):
 
     async def close(self):
         await super().close()
-        await self.session.close()
+        if self.session:
+            await self.session.close()
 
     async def load_allow_list(self):
         collection_list = await self.cdb.list_collection_names()
@@ -128,17 +134,22 @@ class ReQuest(commands.Bot):
     async def on_ready():
         print("ReQuest is online.")
 
+
 bot = ReQuest()
+
 
 @bot.tree.error
 async def on_app_command_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
     await log_exception(error, interaction)
+
 
 async def main():
     async with aiohttp.ClientSession() as session:
         async with bot:
             bot.session = session
             bot_token = os.getenv('BOT_TOKEN')
+            if not bot_token:
+                raise ValueError("BOT_TOKEN environment variable is not set.")
             await bot.start(bot_token, reconnect=True)
 
 
@@ -150,6 +161,7 @@ async def shutdown_bot():
 
 def handle_shutdown_signal(signal_number, frame):
     print(f'Received signal {signal_number}, shutting down...')
+    print(f'Shutdown requested by function: {frame.f_code.co_name}')
     loop = asyncio.get_event_loop()
     loop.create_task(shutdown_bot())
 

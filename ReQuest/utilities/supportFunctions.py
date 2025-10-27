@@ -23,7 +23,7 @@ def strip_id(mention) -> int:
     return parsed_id
 
 
-def parse_list(mentions) -> [int]:
+def parse_list(mentions) -> list[int]:
     stripped_list = [re.sub(r'[<>#!@&]', '', item) for item in mentions]
     mapped_list = list(map(int, stripped_list))
     return mapped_list
@@ -306,6 +306,7 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
     except Exception as e:
         await log_exception(e, interaction)
 
+
 async def update_character_experience(interaction: discord.Interaction, player_id: int, character_id: str,
                                       amount: int):
     try:
@@ -324,7 +325,7 @@ async def update_character_experience(interaction: discord.Interaction, player_i
         await log_exception(e, interaction)
 
 
-async def update_quest_embed(quest) -> discord.Embed:
+async def update_quest_embed(quest) -> discord.Embed | None:
     try:
         embed = discord.Embed()
         # Initialize all the current quest values
