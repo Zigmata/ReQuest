@@ -1,24 +1,15 @@
-import asyncio
 import logging
 
 import discord
-import shortuuid
 from discord.ui import View
 
-import ReQuest.ui.buttons as buttons
-import ReQuest.ui.selects as selects
-from ReQuest.utilities.supportFunctions import (
-    log_exception,
-    strip_id,
-    update_character_inventory,
-    update_character_experience,
-    attempt_delete,
-    update_quest_embed,
-    find_character_in_lists
-)
+from ReQuest.ui.config import buttons, selects
+from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
+from ReQuest.utilities.supportFunctions import log_exception, query_config
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 class ConfigBaseView(View):
     def __init__(self):
@@ -39,12 +30,12 @@ class ConfigBaseView(View):
             ),
             type='rich'
         )
-        self.add_item(buttons.MenuViewButton(ConfigRolesView, 'Roles'))
-        self.add_item(buttons.MenuViewButton(ConfigChannelsView, 'Channels'))
-        self.add_item(buttons.MenuViewButton(ConfigQuestsView, 'Quests'))
-        self.add_item(buttons.MenuViewButton(ConfigPlayersView, 'Players'))
-        self.add_item(buttons.MenuViewButton(ConfigCurrencyView, 'Currency'))
-        self.add_item(buttons.MenuDoneButton())
+        self.add_item(MenuViewButton(ConfigRolesView, 'Roles'))
+        self.add_item(MenuViewButton(ConfigChannelsView, 'Channels'))
+        self.add_item(MenuViewButton(ConfigQuestsView, 'Quests'))
+        self.add_item(MenuViewButton(ConfigPlayersView, 'Players'))
+        self.add_item(MenuViewButton(ConfigCurrencyView, 'Currency'))
+        self.add_item(MenuDoneButton())
 
 
 class ConfigRolesView(View):
@@ -73,7 +64,7 @@ class ConfigRolesView(View):
         self.add_item(self.quest_announce_role_remove_button)
         self.add_item(self.gm_role_remove_view_button)
         self.add_item(self.forbidden_roles_button)
-        self.add_item(buttons.BackButton(ConfigBaseView))
+        self.add_item(BackButton(ConfigBaseView))
 
     @staticmethod
     async def query_role(role_type, bot, guild):
@@ -100,6 +91,7 @@ class ConfigRolesView(View):
             else:
                 announcement_role_string = f'{announcement_role}'
                 self.quest_announce_role_remove_button.disabled = False
+
             if not gm_roles:
                 gm_roles_string = 'Not Configured'
                 self.gm_role_remove_view_button.disabled = True
@@ -128,7 +120,7 @@ class ConfigGMRoleRemoveView(View):
         )
         self.gm_role_remove_select = selects.GMRoleRemoveSelect(self)
         self.add_item(self.gm_role_remove_select)
-        self.add_item(buttons.BackButton(ConfigRolesView))
+        self.add_item(BackButton(ConfigRolesView))
 
     async def setup(self, bot, guild):
         try:
@@ -195,7 +187,7 @@ class ConfigChannelsView(View):
         self.add_item(self.player_board_channel_select)
         self.add_item(self.archive_channel_select)
         self.add_item(self.clear_channels_button)
-        self.add_item(buttons.BackButton(ConfigBaseView))
+        self.add_item(BackButton(ConfigBaseView))
 
     @staticmethod
     async def query_channel(channel_type, database, guild_id):
@@ -242,7 +234,7 @@ class GMRewardsView(View):
         )
         self.current_rewards = None
         self.add_item(buttons.GMRewardsButton(self))
-        self.add_item(buttons.BackButton(ConfigQuestsView))
+        self.add_item(BackButton(ConfigQuestsView))
 
     async def setup(self, bot, guild):
         try:
@@ -287,28 +279,14 @@ class ConfigQuestsView(View):
         )
         self.add_item(selects.ConfigWaitListSelect(self))
         self.add_item(buttons.QuestSummaryToggleButton(self))
-        self.add_item(buttons.MenuViewButton(GMRewardsView, 'GM Rewards'))
-        self.add_item(buttons.BackButton(ConfigBaseView))
-
-    @staticmethod
-    async def query_quest_config(config_type, bot, guild):
-        try:
-            collection = bot.gdb[config_type]
-
-            query = await collection.find_one({'_id': guild.id})
-            logger.debug(f'{config_type} query: {query}')
-            if not query:
-                return 'Not Configured'
-            else:
-                return query[config_type]
-        except Exception as e:
-            await log_exception(e)
+        self.add_item(MenuViewButton(GMRewardsView, 'GM Rewards'))
+        self.add_item(BackButton(ConfigBaseView))
 
     async def setup(self, bot, guild):
         try:
             self.embed.clear_fields()
-            quest_summary = await self.query_quest_config('questSummary', bot, guild)
-            wait_list = await self.query_quest_config('questWaitList', bot, guild)
+            quest_summary = await query_config('questSummary', bot, guild)
+            wait_list = await query_config('questWaitList', bot, guild)
 
             self.embed.add_field(name='Quest Summary Enabled', value=quest_summary, inline=False)
             self.embed.add_field(name='Quest Wait List', value=wait_list, inline=False)
@@ -333,27 +311,13 @@ class ConfigPlayersView(View):
         self.player_board_purge_button = buttons.PlayerBoardPurgeButton(self)
         self.add_item(buttons.PlayerExperienceToggleButton(self))
         self.add_item(self.player_board_purge_button)
-        self.add_item(buttons.BackButton(ConfigBaseView))
-
-    @staticmethod
-    async def query_player_config(config_type, bot, guild):
-        try:
-            collection = bot.gdb[config_type]
-
-            query = await collection.find_one({'_id': guild.id})
-            logger.debug(f'{config_type} query: {query}')
-            if not query:
-                return 'Not Configured'
-            else:
-                return query[config_type]
-        except Exception as e:
-            await log_exception(e)
+        self.add_item(BackButton(ConfigBaseView))
 
     async def setup(self, bot, guild):
         try:
             self.embed.clear_fields()
 
-            player_experience = await self.query_player_config('playerExperience', bot, guild)
+            player_experience = await query_config('playerExperience', bot, guild)
             self.embed.add_field(name='Player Experience Enabled', value=player_experience, inline=False)
         except Exception as e:
             await log_exception(e)
@@ -373,7 +337,7 @@ class ConfigRemoveDenominationView(View):
         self.remove_denomination_confirm_button = buttons.RemoveDenominationConfirmButton(self)
         self.add_item(self.remove_denomination_select)
         self.add_item(self.remove_denomination_confirm_button)
-        self.add_item(buttons.BackButton(ConfigEditCurrencyView))
+        self.add_item(BackButton(ConfigEditCurrencyView))
 
     async def setup(self, bot, guild):
         try:
@@ -439,7 +403,7 @@ class ConfigEditCurrencyView(View):
         self.add_item(self.toggle_double_button)
         self.add_item(self.add_denomination_button)
         self.add_item(self.remove_denomination_button)
-        self.add_item(buttons.BackButton(ConfigCurrencyView))
+        self.add_item(BackButton(ConfigCurrencyView))
 
     async def setup(self, bot, guild):
         try:
@@ -524,7 +488,7 @@ class ConfigCurrencyView(View):
         self.add_item(buttons.AddCurrencyButton(self))
         self.add_item(self.edit_currency_button)
         self.add_item(self.remove_currency_button)
-        self.add_item(buttons.BackButton(ConfigBaseView))
+        self.add_item(BackButton(ConfigBaseView))
 
     async def setup(self, bot, guild):
         try:
@@ -560,7 +524,7 @@ class RemoveCurrencyView(View):
         self.remove_currency_confirm_button = buttons.RemoveCurrencyConfirmButton(self)
         self.add_item(self.remove_currency_select)
         self.add_item(self.remove_currency_confirm_button)
-        self.add_item(buttons.BackButton(ConfigCurrencyView))
+        self.add_item(BackButton(ConfigCurrencyView))
 
     async def setup(self, bot, guild):
         try:

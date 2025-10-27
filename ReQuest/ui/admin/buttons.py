@@ -1,11 +1,11 @@
-import inspect
 import logging
 
+import discord
 from discord import ButtonStyle
 from discord.ui import Button
 
-import ReQuest.ui.modals as modals
-from ..utilities.supportFunctions import log_exception
+from ReQuest.ui.admin import modals
+from ReQuest.utilities.supportFunctions import log_exception
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ class AdminShutdownButton(Button):
         self.confirm = False
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             if self.confirm:
                 await interaction.response.send_message('Shutting down!', ephemeral=True)
@@ -33,6 +33,7 @@ class AdminShutdownButton(Button):
         except Exception as e:
             await log_exception(e)
 
+
 class AllowlistAddServerButton(Button):
     def __init__(self, calling_view):
         super().__init__(
@@ -42,7 +43,7 @@ class AllowlistAddServerButton(Button):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             new_modal = modals.AllowServerModal(self.calling_view)
             await interaction.response.send_modal(new_modal)
@@ -60,7 +61,7 @@ class ConfirmAllowlistRemoveButton(Button):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             view = self.calling_view
             collection = interaction.client.cdb['serverAllowlist']
@@ -78,11 +79,10 @@ class AdminLoadCogButton(Button):
     def __init__(self):
         super().__init__(
             label='Load Cog',
-            style=ButtonStyle.secondary,
             custom_id='admin_load_cog_button'
         )
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             async def modal_callback(modal_interaction, input_value):
                 module = input_value.lower()
@@ -100,11 +100,10 @@ class AdminReloadCogButton(Button):
     def __init__(self):
         super().__init__(
             label='Reload Cog',
-            style=ButtonStyle.secondary,
             custom_id='admin_reload_cog_button'
         )
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             async def modal_callback(modal_interaction, input_value):
                 module = input_value.lower()

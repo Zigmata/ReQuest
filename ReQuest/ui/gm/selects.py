@@ -1,3 +1,14 @@
+import logging
+
+import discord
+from discord.ui import Select
+
+from ReQuest.utilities.supportFunctions import log_exception, find_member_and_character_id_in_lists
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
 class ManageQuestSelect(Select):
     def __init__(self, calling_view):
         super().__init__(
@@ -8,7 +19,7 @@ class ManageQuestSelect(Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             quest_id = self.values[0]
             view = self.calling_view
@@ -39,7 +50,7 @@ class PartyMemberSelect(Select):
         self.calling_view = calling_view
         self.disabled_components = disabled_components
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             character_id = self.values[0]
             view = self.calling_view
@@ -69,7 +80,7 @@ class RemovePlayerSelect(Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             view = self.calling_view
             party = view.quest['party']
@@ -94,7 +105,7 @@ class ManageableQuestSelect(Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             await self.calling_view.select_callback(interaction)
         except Exception as e:

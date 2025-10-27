@@ -1,15 +1,10 @@
 import logging
-from datetime import datetime, timezone
 
 import discord
 import discord.ui
-import shortuuid
 from discord.ui import Modal
 
-from ReQuest.ui.inputs import AddCurrencyDenominationTextInput
-from ReQuest.utilities.supportFunctions import find_currency_or_denomination, log_exception, trade_currency, trade_item, \
-    normalize_currency_keys, consolidate_currency, strip_id, update_character_inventory, update_character_experience, \
-    purge_player_board
+from ReQuest.utilities.supportFunctions import log_exception, purge_player_board
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -28,14 +23,14 @@ class AddCurrencyTextModal(Modal):
             custom_id='new_currency_name_text_input')
         self.add_item(self.text_input)
 
-    async def on_submit(self, interaction):
+    async def on_submit(self, interaction: discord.Interaction):
         try:
             guild_id = interaction.guild_id
             view = self.calling_view
             collection = interaction.client.gdb['currency']
             query = await collection.find_one({'_id': guild_id})
+            matches = 0
             if query:
-                matches = 0
                 for currency in query['currencies']:
                     if currency['name'].lower() == self.text_input.value.lower():
                         matches += 1
@@ -44,17 +39,10 @@ class AddCurrencyTextModal(Modal):
                             if denomination['name'].lower() == self.text_input.value.lower():
                                 matches += 1
 
-                if matches > 0:
-                    await interaction.response.defer(ephemeral=True, thinking=True)
-                    await interaction.followup.send(f'A currency or denomination named {self.text_input.value} '
-                                                    f'already exists!')
-                else:
-                    await collection.update_one({'_id': guild_id},
-                                                {'$push': {'currencies': {'name': self.text_input.value,
-                                                                          'isDouble': False, 'denominations': []}}},
-                                                upsert=True)
-                    await view.setup(bot=interaction.client, guild=interaction.guild)
-                    await interaction.response.edit_message(embed=view.embed, view=view)
+            if matches > 0:
+                await interaction.response.defer(ephemeral=True, thinking=True)
+                await interaction.followup.send(f'A currency or denomination named {self.text_input.value} '
+                                                f'already exists!')
             else:
                 await collection.update_one({'_id': guild_id},
                                             {'$push': {'currencies': {'name': self.text_input.value,
@@ -88,7 +76,7 @@ class AddCurrencyDenominationTextModal(Modal):
         self.add_item(self.denomination_name_text_input)
         self.add_item(self.denomination_value_text_input)
 
-    async def on_submit(self, interaction):
+    async def on_submit(self, interaction: discord.Interaction):
         try:
             guild_id = interaction.guild_id
             new_name = self.denomination_name_text_input.value
@@ -105,21 +93,23 @@ class AddCurrencyDenominationTextModal(Modal):
                                         f'currency named \"{currency['name']}\".')
             base_currency = next((item for item in query['currencies'] if item['name'] == self.base_currency_name),
                                  None)
-            for denomination in base_currency['denominations']:
-                if float(self.denomination_value_text_input.value) == denomination['value']:
-                    using_name = denomination['name']
-                    raise Exception(f'Denominations under a single currency must have unique values! '
-                                    f'{using_name} already has this value assigned.')
+            if base_currency:
+                for denomination in base_currency['denominations']:
+                    if float(self.denomination_value_text_input.value) == denomination['value']:
+                        using_name = denomination['name']
+                        raise Exception(f'Denominations under a single currency must have unique values! '
+                                        f'{using_name} already has this value assigned.')
 
-            await collection.update_one({'_id': guild_id, 'currencies.name': self.base_currency_name},
-                                        {'$push': {'currencies.$.denominations': {
-                                            'name': new_name,
-                                            'value': float(self.denomination_value_text_input.value)}}},
-                                        upsert=True)
+                await collection.update_one({'_id': guild_id, 'currencies.name': self.base_currency_name},
+                                            {'$push': {'currencies.$.denominations': {
+                                                'name': new_name,
+                                                'value': float(self.denomination_value_text_input.value)}}},
+                                            upsert=True)
             await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
             await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
+
 
 class ForbiddenRolesModal(Modal):
     def __init__(self, current_list):
@@ -137,7 +127,7 @@ class ForbiddenRolesModal(Modal):
         )
         self.add_item(self.names_text_input)
 
-    async def on_submit(self, interaction):
+    async def on_submit(self, interaction: discord.Interaction):
         try:
             names = []
             for name in self.names_text_input.value.strip().split(','):
@@ -149,6 +139,7 @@ class ForbiddenRolesModal(Modal):
             await interaction.response.send_message('Forbidden roles updated!', ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)
+
 
 class PlayerBoardPurgeModal(Modal):
     def __init__(self, calling_view):
@@ -164,7 +155,7 @@ class PlayerBoardPurgeModal(Modal):
         )
         self.add_item(self.age_text_input)
 
-    async def on_submit(self, interaction):
+    async def on_submit(self, interaction: discord.Interaction):
         try:
             age = int(self.age_text_input.value)
             await purge_player_board(age, interaction)
@@ -202,7 +193,7 @@ class GMRewardsModal(Modal):
         self.add_item(self.experience_text_input)
         self.add_item(self.items_text_input)
 
-    async def on_submit(self, interaction):
+    async def on_submit(self, interaction: discord.Interaction):
         try:
             experience = int(self.experience_text_input.value) if self.experience_text_input.value else None
 

@@ -1,15 +1,16 @@
 import logging
-from datetime import datetime, timezone
 
 import discord
 import discord.ui
 import shortuuid
 from discord.ui import Modal
 
-from ReQuest.ui.inputs import AddCurrencyDenominationTextInput
-from ReQuest.utilities.supportFunctions import find_currency_or_denomination, log_exception, trade_currency, trade_item, \
-    normalize_currency_keys, consolidate_currency, strip_id, update_character_inventory, update_character_experience, \
-    purge_player_board
+from ReQuest.utilities.supportFunctions import (
+    log_exception,
+    strip_id,
+    update_character_inventory,
+    update_character_experience
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -49,7 +50,7 @@ class CreateQuestModal(Modal):
         self.add_item(self.quest_party_role_text_input)
         self.add_item(self.quest_description_text_input)
 
-    async def on_submit(self, interaction):
+    async def on_submit(self, interaction: discord.Interaction):
         try:
             title = self.quest_title_text_input.value
             restrictions = self.quest_restrictions_text_input.value
@@ -210,7 +211,7 @@ class EditQuestModal(Modal):
         self.add_item(self.max_party_size_text_input)
         self.add_item(self.description_text_input)
 
-    async def on_submit(self, interaction):
+    async def on_submit(self, interaction: discord.Interaction):
         try:
             # Push the updates
             gdb = interaction.client.gdb
@@ -275,7 +276,7 @@ class RewardsModal(Modal):
         self.add_item(self.xp_input)
         self.add_item(self.item_input)
 
-    async def on_submit(self, interaction):
+    async def on_submit(self, interaction: discord.Interaction):
         try:
             xp = None
             items = None
@@ -311,7 +312,7 @@ class QuestSummaryModal(Modal):
         )
         self.add_item(self.summary_input)
 
-    async def on_submit(self, interaction):
+    async def on_submit(self, interaction: discord.Interaction):
         try:
             await self.calling_button.modal_callback(interaction)
         except Exception as e:
@@ -345,7 +346,7 @@ class ModPlayerModal(Modal):
         self.add_item(self.experience_text_input)
         self.add_item(self.inventory_text_input)
 
-    async def on_submit(self, interaction):
+    async def on_submit(self, interaction: discord.Interaction):
         try:
             xp = None
             items = None

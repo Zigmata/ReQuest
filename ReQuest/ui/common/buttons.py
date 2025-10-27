@@ -1,11 +1,11 @@
 import inspect
 import logging
 
+import discord
 from discord import ButtonStyle
 from discord.ui import Button
 
-import ReQuest.ui.modals as modals
-from ..utilities.supportFunctions import log_exception
+from ReQuest.utilities.supportFunctions import log_exception
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ class BaseViewButton(Button):
         )
         self.target_view_class = target_view_class
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             view = self.target_view_class()
             if hasattr(view, 'setup'):
@@ -41,8 +41,9 @@ class BaseViewButton(Button):
         except Exception as e:
             await log_exception(e, interaction)
 
+
 class MenuViewButton(BaseViewButton):
-    def __init__(self, target_view_class, label):
+    def __init__(self, target_view_class, label: str):
         super().__init__(
             target_view_class=target_view_class,
             label=label,
@@ -60,15 +61,16 @@ class BackButton(BaseViewButton):
             custom_id='menu_back_button'
         )
 
+
 class MenuDoneButton(Button):
     def __init__(self):
         super().__init__(
             label='Done',
-            style=ButtonStyle.gray,
+            style=ButtonStyle.secondary,
             custom_id='done_button'
         )
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             await interaction.response.defer()
             await interaction.followup.delete_message(interaction.message.id)
@@ -86,7 +88,7 @@ class ConfirmButton(Button):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             await self.calling_view.confirm_callback(interaction)
         except Exception as e:

@@ -2,11 +2,10 @@ import asyncio
 import logging
 
 import discord
-import shortuuid
 from discord.ui import View
 
-import ReQuest.ui.buttons as buttons
-import ReQuest.ui.selects as selects
+from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton, ConfirmButton
+from ReQuest.ui.gm import buttons, selects
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
@@ -19,6 +18,7 @@ from ReQuest.utilities.supportFunctions import (
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 class GMBaseView(View):
     def __init__(self):
@@ -33,11 +33,11 @@ class GMBaseView(View):
             ),
             type='rich'
         )
-        self.gm_quest_menu_button = buttons.MenuViewButton(GMQuestMenuView, 'Quests')
-        self.gm_player_menu_button = buttons.MenuViewButton(GMPlayerMenuView, 'Players')
+        self.gm_quest_menu_button = MenuViewButton(GMQuestMenuView, 'Quests')
+        self.gm_player_menu_button = MenuViewButton(GMPlayerMenuView, 'Players')
         self.add_item(self.gm_quest_menu_button)
         self.add_item(self.gm_player_menu_button)
-        self.add_item(buttons.MenuDoneButton())
+        self.add_item(MenuDoneButton())
 
 
 class GMQuestMenuView(View):
@@ -56,12 +56,12 @@ class GMQuestMenuView(View):
             type='rich'
         )
         self.create_quest_button = buttons.CreateQuestButton(QuestPostView)
-        self.manage_quests_view_button = buttons.MenuViewButton(ManageQuestsView, 'Manage')
-        self.complete_quests_button = buttons.MenuViewButton(CompleteQuestsView, 'Complete')
+        self.manage_quests_view_button = MenuViewButton(ManageQuestsView, 'Manage')
+        self.complete_quests_button = MenuViewButton(CompleteQuestsView, 'Complete')
         self.add_item(self.create_quest_button)
         self.add_item(self.manage_quests_view_button)
         self.add_item(self.complete_quests_button)
-        self.add_item(buttons.BackButton(GMBaseView))
+        self.add_item(BackButton(GMBaseView))
 
 
 class ManageQuestsView(View):
@@ -100,7 +100,7 @@ class ManageQuestsView(View):
         self.add_item(self.rewards_menu_button)
         self.add_item(self.remove_player_button)
         self.add_item(self.cancel_quest_button)
-        self.add_item(buttons.BackButton(GMQuestMenuView))
+        self.add_item(BackButton(GMQuestMenuView))
 
     async def setup(self, bot, user, guild):
         try:
@@ -136,7 +136,7 @@ class ManageQuestsView(View):
         except Exception as e:
             await log_exception(e)
 
-    async def quest_ready_toggle(self, interaction):
+    async def quest_ready_toggle(self, interaction: discord.Interaction):
         try:
             quest = self.selected_quest
             guild_id = interaction.guild_id
@@ -247,7 +247,7 @@ class RewardsMenuView(View):
         self.party_rewards_button = buttons.PartyRewardsButton(self)
         self.party_member_select = selects.PartyMemberSelect(calling_view=self,
                                                              disabled_components=[self.individual_rewards_button])
-        back_button = buttons.BackButton(ManageQuestsView)
+        back_button = BackButton(ManageQuestsView)
         self.add_item(self.party_member_select)
         self.add_item(self.party_rewards_button)
         self.add_item(self.individual_rewards_button)
@@ -324,7 +324,7 @@ class GMPlayerMenuView(View):
             ),
             type='rich'
         )
-        self.add_item(buttons.BackButton(GMBaseView))
+        self.add_item(BackButton(GMBaseView))
 
 
 class RemovePlayerView(View):
@@ -345,10 +345,10 @@ class RemovePlayerView(View):
         self.selected_member_id = None
         self.selected_character_id = None
         self.remove_player_select = selects.RemovePlayerSelect(self)
-        self.confirm_button = buttons.ConfirmButton(self)
+        self.confirm_button = ConfirmButton(self)
         self.add_item(self.remove_player_select)
         self.add_item(self.confirm_button)
-        self.add_item(buttons.BackButton(ManageQuestsView))
+        self.add_item(BackButton(ManageQuestsView))
 
     async def setup(self):
         try:
@@ -385,7 +385,7 @@ class RemovePlayerView(View):
         except Exception as e:
             await log_exception(e)
 
-    async def confirm_callback(self, interaction):
+    async def confirm_callback(self, interaction: discord.Interaction):
         try:
             quest = self.quest
             (quest_id, message_id, title, gm, party,
@@ -496,7 +496,7 @@ class QuestPostView(View):
         except Exception as e:
             await log_exception(e)
 
-    async def join_callback(self, interaction):
+    async def join_callback(self, interaction: discord.Interaction):
         try:
             guild_id = interaction.guild_id
             user_id = interaction.user.id
@@ -563,7 +563,7 @@ class QuestPostView(View):
         except Exception as e:
             await log_exception(e, interaction)
 
-    async def leave_callback(self, interaction):
+    async def leave_callback(self, interaction: discord.Interaction):
         try:
             guild_id = interaction.guild_id
             user_id = interaction.user.id
@@ -654,7 +654,7 @@ class CompleteQuestsView(View):
         self.complete_quest_button = buttons.CompleteQuestButton(self)
         self.add_item(self.quest_select)
         self.add_item(self.complete_quest_button)
-        self.add_item(buttons.BackButton(GMQuestMenuView))
+        self.add_item(BackButton(GMQuestMenuView))
 
     async def setup(self, bot, user, guild):
         try:
@@ -694,7 +694,7 @@ class CompleteQuestsView(View):
         except Exception as e:
             await log_exception(e)
 
-    async def select_callback(self, interaction):
+    async def select_callback(self, interaction: discord.Interaction):
         try:
             quests = self.quests
             for quest in quests:
@@ -708,7 +708,7 @@ class CompleteQuestsView(View):
         except Exception as e:
             await log_exception(e, interaction)
 
-    async def complete_quest(self, interaction, summary=None):
+    async def complete_quest(self, interaction: discord.Interaction, summary=None):
         try:
             guild_id = interaction.guild_id
             guild = interaction.client.get_guild(guild_id)
@@ -909,12 +909,12 @@ class CancelQuestView(View):
             type='rich'
         )
         self.selected_quest = selected_quest
-        self.confirm_button = buttons.ConfirmButton(self)
+        self.confirm_button = ConfirmButton(self)
         self.confirm_button.disabled = False
         self.add_item(self.confirm_button)
-        self.add_item(buttons.BackButton(ManageQuestsView))
+        self.add_item(BackButton(ManageQuestsView))
 
-    async def confirm_callback(self, interaction):
+    async def confirm_callback(self, interaction: discord.Interaction):
         try:
             quest = self.selected_quest
             guild_id = interaction.guild_id
@@ -927,7 +927,7 @@ class CancelQuestView(View):
                 # Get party members and message them with results
                 for player in party:
                     for member_id in player:
-                        # Message the player that the quest was cancelled.
+                        # Message the player that the quest was canceled.
                         member = await guild.fetch_member(int(member_id))
                         await member.send(f'Quest **{title}** was cancelled by the GM.')
 

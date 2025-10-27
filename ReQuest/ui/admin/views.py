@@ -1,24 +1,15 @@
-import asyncio
 import logging
 
 import discord
-import shortuuid
 from discord.ui import View
 
-import ReQuest.ui.buttons as buttons
-import ReQuest.ui.selects as selects
-from ReQuest.utilities.supportFunctions import (
-    log_exception,
-    strip_id,
-    update_character_inventory,
-    update_character_experience,
-    attempt_delete,
-    update_quest_embed,
-    find_character_in_lists
-)
+from ReQuest.ui.admin import buttons, selects
+from ReQuest.ui.common import buttons as common_buttons
+from ReQuest.utilities.supportFunctions import log_exception
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 class AdminBaseView(View):
     def __init__(self):
@@ -31,10 +22,10 @@ class AdminBaseView(View):
             ),
             type='rich'
         )
-        self.add_item(buttons.MenuViewButton(AdminAllowlistView, 'Allowlist'))
-        self.add_item(buttons.MenuViewButton(AdminCogView, 'Cogs'))
+        self.add_item(common_buttons.MenuViewButton(AdminAllowlistView, 'Allowlist'))
+        self.add_item(common_buttons.MenuViewButton(AdminCogView, 'Cogs'))
         self.add_item(buttons.AdminShutdownButton(self))
-        self.add_item(buttons.MenuDoneButton())
+        self.add_item(common_buttons.MenuDoneButton())
 
 
 class AdminAllowlistView(View):
@@ -56,7 +47,7 @@ class AdminAllowlistView(View):
         self.add_item(self.remove_guild_allowlist_select)
         self.add_item(buttons.AllowlistAddServerButton(self))
         self.add_item(self.confirm_allowlist_remove_button)
-        self.add_item(buttons.BackButton(AdminBaseView))
+        self.add_item(common_buttons.BackButton(AdminBaseView))
 
     async def setup(self, bot):
         try:
@@ -93,4 +84,4 @@ class AdminCogView(View):
         )
         self.add_item(buttons.AdminLoadCogButton())
         self.add_item(buttons.AdminReloadCogButton())
-        self.add_item(buttons.BackButton(AdminBaseView))
+        self.add_item(common_buttons.BackButton(AdminBaseView))

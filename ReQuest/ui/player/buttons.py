@@ -1,11 +1,11 @@
-import inspect
 import logging
 
+import discord
 from discord import ButtonStyle
 from discord.ui import Button
 
-import ReQuest.ui.modals as modals
-from ..utilities.supportFunctions import log_exception
+from ReQuest.ui.player import modals
+from ReQuest.utilities.supportFunctions import log_exception
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ class RegisterCharacterButton(Button):
             custom_id='register_character_button'
         )
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             modal = modals.CharacterRegisterModal(self, interaction.client.mdb, interaction.user.id,
                                                   interaction.guild_id)
@@ -27,16 +27,16 @@ class RegisterCharacterButton(Button):
         except Exception as e:
             await log_exception(e, interaction)
 
+
 class ViewInventoryButton(Button):
     def __init__(self, calling_view):
         super().__init__(
             label='View',
-            style=ButtonStyle.secondary,
             custom_id='view_inventory_button'
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             view = self.calling_view
             character = view.active_character
@@ -70,17 +70,17 @@ class SpendCurrencyButton(Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Spend Currency',
-            style=ButtonStyle.secondary,
             custom_id='spend_currency_button'
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             modal = modals.SpendCurrencyModal(self.calling_view)
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)
+
 
 class CreatePlayerPostButton(Button):
     def __init__(self, calling_view):
@@ -91,7 +91,7 @@ class CreatePlayerPostButton(Button):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             modal = modals.CreatePlayerPostModal(self.calling_view)
             await interaction.response.send_modal(modal)
@@ -109,7 +109,7 @@ class RemovePlayerPostButton(Button):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             await self.calling_view.remove_post(interaction)
         except Exception as e:
@@ -120,13 +120,12 @@ class EditPlayerPostButton(Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Edit Post',
-            style=ButtonStyle.secondary,
             custom_id='edit_player_post_button',
             disabled=True
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             modal = modals.EditPlayerPostModal(self.calling_view)
             await interaction.response.send_modal(modal)

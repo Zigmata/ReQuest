@@ -6,10 +6,14 @@ import discord.ui
 import shortuuid
 from discord.ui import Modal
 
-from ReQuest.ui.inputs import AddCurrencyDenominationTextInput
-from ReQuest.utilities.supportFunctions import find_currency_or_denomination, log_exception, trade_currency, trade_item, \
-    normalize_currency_keys, consolidate_currency, strip_id, update_character_inventory, update_character_experience, \
-    purge_player_board
+from ReQuest.utilities.supportFunctions import (
+    find_currency_or_denomination,
+    log_exception,
+    trade_currency,
+    trade_item,
+    normalize_currency_keys,
+    consolidate_currency
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -31,7 +35,7 @@ class TradeModal(Modal):
         self.add_item(self.item_name_text_input)
         self.add_item(self.item_quantity_text_input)
 
-    async def on_submit(self, interaction):
+    async def on_submit(self, interaction: discord.Interaction):
         try:
             transaction_id = shortuuid.uuid()[:12]
             mdb = interaction.client.mdb
@@ -109,14 +113,12 @@ class CharacterRegisterModal(Modal):
         )
         self.name_text_input = discord.ui.TextInput(
             label='Name',
-            style=discord.TextStyle.short,
             custom_id='character_name_text_input',
             placeholder='Enter your character\'s name.',
             max_length=40
         )
         self.note_text_input = discord.ui.TextInput(
             label='Note',
-            style=discord.TextStyle.short,
             custom_id='character_note_text_input',
             placeholder='Enter a note to identify your character',
             max_length=80
@@ -128,8 +130,7 @@ class CharacterRegisterModal(Modal):
         self.add_item(self.name_text_input)
         self.add_item(self.note_text_input)
 
-
-    async def on_submit(self, interaction):
+    async def on_submit(self, interaction: discord.Interaction):
         try:
             character_id = str(shortuuid.uuid())
             collection = self.mdb['characters']
@@ -155,6 +156,7 @@ class CharacterRegisterModal(Modal):
         except Exception as e:
             await log_exception(e, interaction)
 
+
 class SpendCurrencyModal(Modal):
     def __init__(self, calling_view):
         super().__init__(
@@ -162,21 +164,22 @@ class SpendCurrencyModal(Modal):
             timeout=180
         )
         self.calling_view = calling_view
-        self.currency_name_text_input = discord.ui.TextInput(label='Currency Name',
-                                                             style=discord.TextStyle.short,
-                                                             placeholder=f'Enter the name of the currency you are '
-                                                                         f'spending',
-                                                             custom_id='currency_name_text_input',
-                                                             required=True)
-        self.currency_amount_text_input = discord.ui.TextInput(label='Amount',
-                                                               style=discord.TextStyle.short,
-                                                               placeholder='Enter the amount to spend',
-                                                               custom_id='currency_amount_text_input',
-                                                               required=True)
+        self.currency_name_text_input = discord.ui.TextInput(
+            label='Currency Name',
+            placeholder=f'Enter the name of the currency you are spending',
+            custom_id='currency_name_text_input',
+            required=True
+        )
+        self.currency_amount_text_input = discord.ui.TextInput(
+            label='Amount',
+            placeholder='Enter the amount to spend',
+            custom_id='currency_amount_text_input',
+            required=True
+        )
         self.add_item(self.currency_name_text_input)
         self.add_item(self.currency_amount_text_input)
 
-    async def on_submit(self, interaction):
+    async def on_submit(self, interaction: discord.Interaction):
         try:
             currency_collection = interaction.client.gdb['currency']
             currency_query = await currency_collection.find_one({'_id': interaction.guild_id})
@@ -261,6 +264,7 @@ class SpendCurrencyModal(Modal):
         except Exception as e:
             await log_exception(e, interaction)
 
+
 class CreatePlayerPostModal(Modal):
     def __init__(self, calling_view):
         super().__init__(
@@ -282,7 +286,7 @@ class CreatePlayerPostModal(Modal):
         self.add_item(self.title_text_input)
         self.add_item(self.content_text_input)
 
-    async def on_submit(self, interaction):
+    async def on_submit(self, interaction: discord.Interaction):
         try:
             title = self.title_text_input.value
             content = self.content_text_input.value
@@ -317,7 +321,7 @@ class EditPlayerPostModal(Modal):
         self.add_item(self.title_text_input)
         self.add_item(self.content_text_input)
 
-    async def on_submit(self, interaction):
+    async def on_submit(self, interaction: discord.Interaction):
         try:
             title = self.title_text_input.value
             content = self.content_text_input.value

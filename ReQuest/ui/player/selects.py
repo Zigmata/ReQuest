@@ -1,14 +1,12 @@
 import logging
 
 import discord
-from discord.ui import Select, RoleSelect, ChannelSelect
+from discord.ui import Select
 
-from ReQuest.utilities.supportFunctions import log_exception, find_member_and_character_id_in_lists
+from ReQuest.utilities.supportFunctions import log_exception
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-
 
 
 class ActiveCharacterSelect(Select):
@@ -21,7 +19,7 @@ class ActiveCharacterSelect(Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             selected_character_id = self.values[0]
             collection = interaction.client.mdb['characters']
@@ -44,7 +42,7 @@ class RemoveCharacterSelect(Select):
         self.calling_view = calling_view
         self.confirm_button = confirm_button
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             selected_character_id = self.values[0]
             self.calling_view.selected_character_id = selected_character_id
@@ -69,7 +67,7 @@ class ManageablePostSelect(Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             await self.calling_view.select_callback(interaction)
         except Exception as e:

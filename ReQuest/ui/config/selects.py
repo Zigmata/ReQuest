@@ -3,7 +3,7 @@ import logging
 import discord
 from discord.ui import Select, RoleSelect, ChannelSelect
 
-from ReQuest.utilities.supportFunctions import log_exception, find_member_and_character_id_in_lists
+from ReQuest.utilities.supportFunctions import log_exception
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ class GMRoleRemoveSelect(Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             collection = interaction.client.gdb['gmRoles']
             for value in self.values:
@@ -31,14 +31,14 @@ class GMRoleRemoveSelect(Select):
 class SingleChannelConfigSelect(ChannelSelect):
     def __init__(self, calling_view, config_type, config_name):
         super().__init__(
-            channel_types=[discord.ChannelType.text],
+            channel_types=[discord.ChannelType['text']],
             placeholder=f'Search for your {config_name} Channel',
             custom_id=f'config_{config_type}_channel_select'
         )
         self.calling_view = calling_view
         self.config_type = config_type
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             collection = interaction.client.gdb[self.config_type]
             await collection.update_one({'_id': interaction.guild_id},
@@ -49,6 +49,7 @@ class SingleChannelConfigSelect(ChannelSelect):
         except Exception as e:
             await log_exception(e, interaction)
 
+
 class QuestAnnounceRoleSelect(RoleSelect):
     def __init__(self, calling_view):
         super().__init__(
@@ -57,7 +58,7 @@ class QuestAnnounceRoleSelect(RoleSelect):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             collection = interaction.client.gdb['announceRole']
             await collection.update_one({'_id': interaction.guild_id},
@@ -78,7 +79,7 @@ class AddGMRoleSelect(RoleSelect):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             collection = interaction.client.gdb['gmRoles']
             query = await collection.find_one({'_id': interaction.guild_id})
@@ -122,7 +123,7 @@ class ConfigWaitListSelect(Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             collection = interaction.client.gdb['questWaitList']
             await collection.update_one({'_id': interaction.guild_id},
@@ -144,7 +145,7 @@ class RemoveDenominationSelect(Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             denomination_name = self.values[0]
             self.calling_view.selected_denomination_name = denomination_name
@@ -165,7 +166,7 @@ class EditCurrencySelect(Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             view = self.calling_view
             view.selected_currency_name = self.values[0]
@@ -185,7 +186,7 @@ class RemoveCurrencySelect(Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             view = self.calling_view
             view.selected_currency_name = self.values[0]

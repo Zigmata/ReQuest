@@ -1,11 +1,11 @@
-import inspect
 import logging
 
+import discord
 from discord import ButtonStyle
 from discord.ui import Button
 
-import ReQuest.ui.modals as modals
-from ..utilities.supportFunctions import log_exception
+from ReQuest.ui.gm import modals
+from ReQuest.utilities.supportFunctions import log_exception
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ class CreateQuestButton(Button):
         )
         self.quest_view_class = quest_view_class
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             modal = modals.CreateQuestModal(self.quest_view_class)
             await interaction.response.send_modal(modal)
@@ -39,7 +39,7 @@ class EditQuestButton(Button):
         self.calling_view = calling_view
         self.quest_post_view_class = quest_post_view_class
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             quest = self.calling_view.selected_quest
             modal = modals.EditQuestModal(self.calling_view, quest, self.quest_post_view_class)
@@ -58,7 +58,7 @@ class ToggleReadyButton(Button):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             await self.calling_view.quest_ready_toggle(interaction)
         except Exception as e:
@@ -76,7 +76,7 @@ class RewardsMenuButton(Button):
         self.calling_view = calling_view
         self.rewards_view_class = rewards_view_class
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             new_view = self.rewards_view_class(self.calling_view)
             await new_view.setup()
@@ -96,7 +96,7 @@ class RemovePlayerButton(Button):
         self.calling_view = calling_view
         self.target_view_class = target_view_class
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             quest = self.calling_view.selected_quest
             new_view = self.target_view_class(quest)
@@ -117,7 +117,7 @@ class CancelQuestButton(Button):
         self.calling_view = calling_view
         self.target_view_class = target_view_class
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             view = self.target_view_class(self.calling_view.selected_quest)
             await interaction.response.edit_message(embed=view.embed, view=view)
@@ -134,14 +134,14 @@ class PartyRewardsButton(Button):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             rewards_modal = modals.RewardsModal(self)
             await interaction.response.send_modal(rewards_modal)
         except Exception as e:
             await log_exception(e, interaction)
 
-    async def modal_callback(self, interaction, xp, items):
+    async def modal_callback(self, interaction: discord.Interaction, xp, items):
         try:
             view = self.calling_view
             quest = view.quest
@@ -189,14 +189,14 @@ class IndividualRewardsButton(Button):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             rewards_modal = modals.RewardsModal(self)
             await interaction.response.send_modal(rewards_modal)
         except Exception as e:
             await log_exception(e, interaction)
 
-    async def modal_callback(self, interaction, xp, items):
+    async def modal_callback(self, interaction: discord.Interaction, xp, items):
         try:
             view = self.calling_view
             quest = view.quest
@@ -242,7 +242,7 @@ class JoinQuestButton(Button):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             await self.calling_view.join_callback(interaction)
         except Exception as e:
@@ -258,7 +258,7 @@ class LeaveQuestButton(Button):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             await self.calling_view.leave_callback(interaction)
         except Exception as e:
@@ -276,7 +276,7 @@ class CompleteQuestButton(Button):
         self.calling_view = calling_view
         self.quest_summary_modal = modals.QuestSummaryModal(self)
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             quest_summary_collection = interaction.client.gdb['questSummary']
             quest_summary_config_query = await quest_summary_collection.find_one({'_id': interaction.guild_id})

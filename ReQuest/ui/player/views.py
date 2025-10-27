@@ -1,21 +1,12 @@
-import asyncio
 import logging
 
 import discord
 import shortuuid
 from discord.ui import View
 
-import ReQuest.ui.buttons as buttons
-import ReQuest.ui.selects as selects
-from ReQuest.utilities.supportFunctions import (
-    log_exception,
-    strip_id,
-    update_character_inventory,
-    update_character_experience,
-    attempt_delete,
-    update_quest_embed,
-    find_character_in_lists
-)
+from ReQuest.ui.player import buttons, selects
+from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton, ConfirmButton
+from ReQuest.utilities.supportFunctions import log_exception, strip_id, attempt_delete
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -36,11 +27,11 @@ class PlayerBaseView(View):
             ),
             type='rich'
         )
-        self.player_board_button = buttons.MenuViewButton(PlayerBoardView, 'Player Board')
-        self.add_item(buttons.MenuViewButton(CharacterBaseView, 'Characters'))
-        self.add_item(buttons.MenuViewButton(InventoryBaseView, 'Inventory'))
+        self.player_board_button = MenuViewButton(PlayerBoardView, 'Player Board')
+        self.add_item(MenuViewButton(CharacterBaseView, 'Characters'))
+        self.add_item(MenuViewButton(InventoryBaseView, 'Inventory'))
         self.add_item(self.player_board_button)
-        self.add_item(buttons.MenuDoneButton())
+        self.add_item(MenuDoneButton())
 
     async def setup(self, bot, guild):
         try:
@@ -52,6 +43,7 @@ class PlayerBaseView(View):
                 self.player_board_button.enabled = False
         except Exception as e:
             await log_exception(e)
+
 
 class CharacterBaseView(View):
     def __init__(self):
@@ -69,9 +61,10 @@ class CharacterBaseView(View):
             type='rich'
         )
         self.add_item(buttons.RegisterCharacterButton())
-        self.add_item(buttons.MenuViewButton(ListCharactersView, 'List/Activate'))
-        self.add_item(buttons.MenuViewButton(RemoveCharacterView, 'Remove'))
-        self.add_item(buttons.BackButton(PlayerBaseView))
+        self.add_item(MenuViewButton(ListCharactersView, 'List/Activate'))
+        self.add_item(MenuViewButton(RemoveCharacterView, 'Remove'))
+        self.add_item(BackButton(PlayerBaseView))
+
 
 class ListCharactersView(View):
     def __init__(self):
@@ -84,7 +77,7 @@ class ListCharactersView(View):
         )
         self.active_character_select = selects.ActiveCharacterSelect(self)
         self.add_item(self.active_character_select)
-        self.add_item(buttons.BackButton(CharacterBaseView))
+        self.add_item(BackButton(CharacterBaseView))
 
     async def setup(self, bot, user, guild):
         try:
@@ -136,11 +129,11 @@ class RemoveCharacterView(View):
             type='rich'
         )
         self.selected_character_id = None
-        self.confirm_button = buttons.ConfirmButton(self)
+        self.confirm_button = ConfirmButton(self)
         self.remove_character_select = selects.RemoveCharacterSelect(self, self.confirm_button)
         self.add_item(self.remove_character_select)
         self.add_item(self.confirm_button)
-        self.add_item(buttons.BackButton(CharacterBaseView))
+        self.add_item(BackButton(CharacterBaseView))
 
     async def setup(self, bot, user):
         try:
@@ -163,7 +156,7 @@ class RemoveCharacterView(View):
         except Exception as e:
             await log_exception(e)
 
-    async def confirm_callback(self, interaction):
+    async def confirm_callback(self, interaction: discord.Interaction):
         try:
             selected_character_id = self.selected_character_id
             collection = interaction.client.mdb['characters']
@@ -184,6 +177,7 @@ class RemoveCharacterView(View):
             await interaction.response.edit_message(embed=self.embed, view=self)
         except Exception as e:
             await log_exception(e, interaction)
+
 
 class InventoryBaseView(View):
     def __init__(self):
@@ -207,7 +201,7 @@ class InventoryBaseView(View):
         self.spend_currency_button = buttons.SpendCurrencyButton(self)
         self.add_item(self.view_inventory_button)
         self.add_item(self.spend_currency_button)
-        self.add_item(buttons.BackButton(PlayerBaseView))
+        self.add_item(BackButton(PlayerBaseView))
 
     async def setup(self, bot, user, guild):
         self.embed.clear_fields()
@@ -226,6 +220,7 @@ class InventoryBaseView(View):
             active_character_id = query['activeCharacters'][str(guild.id)]
             self.active_character = query['characters'][active_character_id]
             self.embed.title = f'Player Commands - {self.active_character['name']}\'s Inventory'
+
 
 class PlayerBoardView(View):
     def __init__(self):
@@ -255,7 +250,7 @@ class PlayerBoardView(View):
         self.add_item(self.create_player_post_button)
         self.add_item(self.edit_player_post_button)
         self.add_item(self.remove_player_post_button)
-        self.add_item(buttons.BackButton(PlayerBaseView))
+        self.add_item(BackButton(PlayerBaseView))
 
     async def setup(self, bot, user, guild):
         try:
@@ -299,7 +294,7 @@ class PlayerBoardView(View):
         except Exception as e:
             await log_exception(e)
 
-    async def select_callback(self, interaction):
+    async def select_callback(self, interaction: discord.Interaction):
         try:
             self.selected_post_id = self.manageable_post_select.values[0]
             await self.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
@@ -365,7 +360,7 @@ class PlayerBoardView(View):
         except Exception as e:
             await log_exception(e, interaction)
 
-    async def remove_post(self, interaction):
+    async def remove_post(self, interaction: discord.Interaction):
         try:
             post = self.selected_post
             post_collection = interaction.client.gdb['playerBoard']

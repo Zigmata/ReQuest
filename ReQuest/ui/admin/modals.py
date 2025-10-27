@@ -1,15 +1,10 @@
 import logging
-from datetime import datetime, timezone
 
 import discord
 import discord.ui
-import shortuuid
 from discord.ui import Modal
 
-from ReQuest.ui.inputs import AddCurrencyDenominationTextInput
-from ReQuest.utilities.supportFunctions import find_currency_or_denomination, log_exception, trade_currency, trade_item, \
-    normalize_currency_keys, consolidate_currency, strip_id, update_character_inventory, update_character_experience, \
-    purge_player_board
+from ReQuest.utilities.supportFunctions import log_exception
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -24,22 +19,18 @@ class AllowServerModal(Modal):
         self.calling_view = calling_view
         self.allow_server_name_input = discord.ui.TextInput(
             label='Server Name',
-            style=discord.TextStyle.short,
             custom_id='allow_server_name_input',
-            placeholder='Type a short name for the Discord Server',
-            required=True
+            placeholder='Type a short name for the Discord Server'
         )
         self.allow_server_id_input = discord.ui.TextInput(
             label='Server ID',
-            style=discord.TextStyle.short,
             custom_id='allow_server_text_input',
-            placeholder='Type the ID of the Discord Server',
-            required=True
+            placeholder='Type the ID of the Discord Server'
         )
         self.add_item(self.allow_server_name_input)
         self.add_item(self.allow_server_id_input)
 
-    async def on_submit(self, interaction):
+    async def on_submit(self, interaction: discord.Interaction):
         try:
             input_name = self.allow_server_name_input.value
             guild_id = int(self.allow_server_id_input.value)
@@ -61,13 +52,15 @@ class AdminCogTextModal(Modal):
             title=f'{function.capitalize()} Cog',
             timeout=180
         )
-        self.text_input = discord.ui.TextInput(label='Name', style=discord.TextStyle.short,
-                                               placeholder=f'Enter the name of the Cog to {function}',
-                                               custom_id='cog_name_text_input', required=True)
+        self.text_input = discord.ui.TextInput(
+            label='Name',
+            placeholder=f'Enter the name of the Cog to {function}',
+            custom_id='cog_name_text_input'
+        )
         self.add_item(self.text_input)
         self._on_submit = on_submit
 
-    async def on_submit(self, interaction):
+    async def on_submit(self, interaction: discord.Interaction):
         try:
             await self._on_submit(interaction, self.text_input.value)
         except Exception as e:

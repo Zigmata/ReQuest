@@ -1,11 +1,12 @@
-import inspect
 import logging
 
+import discord
 from discord import ButtonStyle
 from discord.ui import Button
 
-import ReQuest.ui.modals as modals
-from ..utilities.supportFunctions import log_exception
+from ReQuest.ui.config import modals
+from ReQuest.ui.common.buttons import BaseViewButton
+from ReQuest.utilities.supportFunctions import log_exception
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -15,12 +16,12 @@ class QuestAnnounceRoleRemoveButton(Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Remove Quest Announcement Role',
-            style=ButtonStyle.red,
+            style=ButtonStyle.danger,
             custom_id='quest_announce_role_remove_button'
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             collection = interaction.client.gdb['announceRole']
             query = await collection.find_one({'_id': interaction.guild_id})
@@ -52,7 +53,7 @@ class QuestSummaryToggleButton(Button):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             guild_id = interaction.guild_id
             collection = interaction.client.gdb['questSummary']
@@ -80,7 +81,7 @@ class PlayerExperienceToggleButton(Button):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             guild_id = interaction.guild_id
             collection = interaction.client.gdb['playerExperience']
@@ -108,7 +109,7 @@ class RemoveDenominationConfirmButton(Button):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             await self.calling_view.remove_currency_denomination(self.calling_view.selected_denomination_name,
                                                                  interaction.client, interaction.guild)
@@ -124,20 +125,19 @@ class ToggleDoubleButton(Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Select a currency',
-            style=ButtonStyle.secondary,
             custom_id='toggle_double_button',
             disabled=True
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             view = self.calling_view
             currency_name = view.selected_currency_name
             collection = interaction.client.gdb['currency']
             query = await collection.find_one({'_id': interaction.guild_id, 'currencies.name': currency_name})
             currency = next((item for item in query['currencies'] if item['name'] == currency_name), None)
-            if currency['isDouble']:
+            if currency and currency['isDouble']:
                 value = False
             else:
                 value = True
@@ -159,7 +159,7 @@ class AddDenominationButton(Button):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             new_modal = modals.AddCurrencyDenominationTextModal(
                 calling_view=self.calling_view,
@@ -180,7 +180,7 @@ class RemoveDenominationButton(Button):
         self.target_view_class = target_view_class
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             view = self.target_view_class(self.calling_view)
             await view.setup(interaction.client, interaction.guild)
@@ -198,7 +198,7 @@ class AddCurrencyButton(Button):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             await interaction.response.send_modal(modals.AddCurrencyTextModal(self.calling_view))
         except Exception as e:
@@ -235,7 +235,7 @@ class RemoveCurrencyConfirmButton(Button):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             view = self.calling_view
             await view.remove_currency(bot=interaction.client, guild=interaction.guild)
@@ -246,6 +246,7 @@ class RemoveCurrencyConfirmButton(Button):
         except Exception as e:
             await log_exception(e)
 
+
 class ClearChannelsButton(Button):
     def __init__(self, calling_view):
         super().__init__(
@@ -255,7 +256,7 @@ class ClearChannelsButton(Button):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             view = self.calling_view
             await interaction.client.gdb['questChannel'].delete_one({'_id': interaction.guild_id})
@@ -271,12 +272,11 @@ class ForbiddenRolesButton(Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Forbidden Roles',
-            style=ButtonStyle.secondary,
             custom_id='forbidden_roles_button'
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             current_roles = []
             config_collection = interaction.client.gdb['forbiddenRoles']
@@ -288,6 +288,7 @@ class ForbiddenRolesButton(Button):
         except Exception as e:
             await log_exception(e, interaction)
 
+
 class PlayerBoardPurgeButton(Button):
     def __init__(self, calling_view):
         super().__init__(
@@ -297,7 +298,7 @@ class PlayerBoardPurgeButton(Button):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             modal = modals.PlayerBoardPurgeModal(self.calling_view)
             await interaction.response.send_modal(modal)
@@ -309,12 +310,11 @@ class GMRewardsButton(Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Add/Modify Rewards',
-            style=ButtonStyle.secondary,
             custom_id='gm_rewards_button'
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             modal = modals.GMRewardsModal(self.calling_view)
             await interaction.response.send_modal(modal)

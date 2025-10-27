@@ -1,9 +1,9 @@
 import logging
 
 import discord
-from discord.ui import Select, RoleSelect, ChannelSelect
+from discord.ui import Select
 
-from ReQuest.utilities.supportFunctions import log_exception, find_member_and_character_id_in_lists
+from ReQuest.utilities.supportFunctions import log_exception
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ class RemoveGuildAllowlistSelect(Select):
         )
         self.calling_view = calling_view
 
-    async def callback(self, interaction):
+    async def callback(self, interaction: discord.Interaction):
         try:
             view = self.calling_view
             guild_id = int(self.values[0])
