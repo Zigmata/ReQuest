@@ -443,3 +443,17 @@ async def purge_player_board(age, interaction):
         await interaction.response.send_message(f'Posts older than {age} days have been purged!', ephemeral=True)
     except Exception as e:
         await log_exception(e, interaction)
+
+
+async def query_config(config_type, bot, guild):
+    try:
+        collection = bot.gdb[config_type]
+
+        query = await collection.find_one({'_id': guild.id})
+        logger.debug(f'{config_type} query: {query}')
+        if not query:
+            return 'Not Configured'
+        else:
+            return query[config_type]
+    except Exception as e:
+        await log_exception(e)

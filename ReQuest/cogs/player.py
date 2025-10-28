@@ -5,10 +5,9 @@ from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Cog
 
-from ..ui import modals
-from ..ui.views import PlayerBaseView
-from ..utilities.checks import has_active_character
-from ..utilities.supportFunctions import log_exception
+from ReQuest.ui.player import modals, views
+from ReQuest.utilities.checks import has_active_character
+from ReQuest.utilities.supportFunctions import log_exception
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -34,7 +33,7 @@ class Player(Cog):
         Player Menus
         """
         try:
-            new_view = PlayerBaseView()
+            new_view = views.PlayerBaseView()
             await new_view.setup(bot=interaction.client, guild=interaction.guild)
             await interaction.response.send_message(embed=new_view.embed, view=new_view, ephemeral=True)
         except Exception as e:

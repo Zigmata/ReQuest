@@ -3,10 +3,9 @@ from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Cog
 
-import ReQuest.ui.modals as modals
-from ..ui.views import GMBaseView
-from ..utilities.checks import has_gm_or_mod
-from ..utilities.supportFunctions import log_exception
+from ReQuest.ui.gm import views, modals
+from ReQuest.utilities.checks import has_gm_or_mod
+from ReQuest.utilities.supportFunctions import log_exception
 
 
 class GameMaster(Cog):
@@ -30,7 +29,7 @@ class GameMaster(Cog):
         Game Master Menus
         """
         try:
-            view = GMBaseView()
+            view = views.GMBaseView()
             await interaction.response.send_message(embed=view.embed, view=view, ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)
