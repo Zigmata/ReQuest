@@ -2,7 +2,7 @@
 
 A Discord bot for TTRPG communities.
 
-![GitHub release](/github/v/release/zigmata/request?sort=semver)
+![GitHub Release](https://img.shields.io/github/v/release/zigmata/request)
 
 Don't forget to join the official development [Discord](https://discord.gg/Zq37gj4)!
 
@@ -61,12 +61,6 @@ Want your player characters to advertise their crafting? Looking to form an ad-h
 board lets players post in-character in the same clean embed format as the quest board, letting server admins lock down
 channels to prevent clutter.
 
-### Custom Queues
-
-Designate channels for queues for anything you desire. Want your players to submit sheets for review? Or perhaps you
-want homebrew or other game suggestions! Optional role-based access for both submissions and approvals helps split the
-workload and control spam.
-
 ### Open Source
 
 Tools that enhance TTRPGs and their communities don't deserve to be locked behind a paywall. ReQuest is licensed under
@@ -88,19 +82,19 @@ the GNU GPL v3 and will always be shared freely, forever.
 2. Make sure your .gitignore is set up properly if you are running a public repo.
 3. Set your environment variables:
    > The first three variables are only needed if you are running mongoDB with authentication.
-  - MONGO_USER: The user you created in mongoDB for the bot's specific access.
-  - MONGO_PASSWORD: The password for the user above.
-  - AUTH_DB: The database the user exists in (usually `admin`).
-  - MONGO_HOST: The hostname/IP of your mongoDB server.
-  - MONGO_PORT: The port your mongoDB service is hosted on.
-  - BOT_TOKEN: The token for your Discord bot application. NEVER SHARE THIS!
-  - GUILD_DB: The name of the database you want to use for guild documents (configs, quests, etc.).
-  - MEMBER_DB: The name of the database you want to use for member documents (characters).
-  - CONFIG_DB: The name of the database you want to use for bot configs (/admin menu)
-  - VERSION: The version of the bot for informational purposes only.
-- LOAD_EXTENSIONS: String with comma-separated relative paths to extensions in ReQuest/cogs/. E.G. `ReQuest.cogs.gm`.
-- ALLOWLIST: True if you want to prohibit bot joins to a specific allowlist of guild IDs. False if you want to disable
-  the allowlist.
+   - MONGO_USER: The user you created in mongoDB for the bot's specific access.
+   - MONGO_PASSWORD: The password for the user above.
+   - AUTH_DB: The database the user exists in (usually `admin`).
+   - MONGO_HOST: The hostname/IP of your mongoDB server.
+   - MONGO_PORT: The port your mongoDB service is hosted on.
+   - BOT_TOKEN: The token for your Discord bot application. NEVER SHARE THIS!
+   - GUILD_DB: The name of the database you want to use for guild documents (configs, quests, etc.).
+   - MEMBER_DB: The name of the database you want to use for member documents (characters).
+   - CONFIG_DB: The name of the database you want to use for bot configs (/admin menu)
+   - VERSION: The version of the bot for informational purposes only.
+   - LOAD_EXTENSIONS: String with comma-separated relative paths to extensions in ReQuest/cogs/. E.G. `ReQuest.cogs.gm`.
+   - ALLOWLIST: True if you want to prohibit bot joins to a specific allowlist of guild IDs. False if you want to disable
+    the allowlist.
 4. Run bot.py and everything *should* work.
 
 ### Special Considerations
