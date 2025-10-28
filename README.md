@@ -2,7 +2,7 @@
 
 A Discord bot for TTRPG communities.
 
-![GitHub release](https://img.shields.io/github/release/zigmata/ReQuest.svg)
+![GitHub release](/github/v/release/zigmata/request?sort=semver)
 
 Don't forget to join the official development [Discord](https://discord.gg/Zq37gj4)!
 
