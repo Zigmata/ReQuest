@@ -4,6 +4,7 @@ import discord
 from discord.ui import Select
 
 from ReQuest.utilities.supportFunctions import log_exception
+from ReQuest.ui.common import modals
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -33,27 +34,25 @@ class ActiveCharacterSelect(Select):
 
 
 class RemoveCharacterSelect(Select):
-    def __init__(self, calling_view, confirm_button):
+    def __init__(self, calling_view):
         super().__init__(
             placeholder='Select a character to remove',
             options=[],
             custom_id='remove_character_select'
         )
         self.calling_view = calling_view
-        self.confirm_button = confirm_button
 
     async def callback(self, interaction: discord.Interaction):
         try:
             selected_character_id = self.values[0]
             self.calling_view.selected_character_id = selected_character_id
-            collection = interaction.client.mdb['characters']
-            query = await collection.find_one({'_id': interaction.user.id})
-            character_name = query['characters'][selected_character_id]['name']
-            self.calling_view.embed.add_field(name=f'Removing {character_name}',
-                                              value='**This action is permanent!** Confirm?')
-            self.confirm_button.disabled = False
-            self.confirm_button.label = f'Confirm removal of {character_name}'
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+            confirm_modal = modals.ConfirmModal(
+                title='Confirm Character Removal',
+                prompt_label='WARNING: This action is irreversible!',
+                prompt_placeholder='Type CONFIRM to proceed',
+                calling_view=self.calling_view
+            )
+            await interaction.response.send_modal(confirm_modal)
         except Exception as e:
             await log_exception(e, interaction)
 

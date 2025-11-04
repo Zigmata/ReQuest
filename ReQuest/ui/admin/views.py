@@ -35,7 +35,7 @@ class AdminAllowlistView(View):
             title='Administration - Server Allowlist',
             description=('__**Add New Server**__\n'
                          'Adds a new Discord Server ID to the allowlist.\n'
-                         '**WARNING: There is no way to verify the server ID provided is valid without the bot being a'
+                         '**WARNING: There is no way to verify the server ID provided is valid without the bot being a '
                          'server member. Double-check your inputs!**\n\n'
                          '__**Remove**__\n'
                          'Removes the selected Discord Server from the allowlist.\n\n'),
