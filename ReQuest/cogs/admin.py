@@ -69,8 +69,8 @@ class Admin(Cog):
             message_embed = discord.Embed(title=embed_title, description='\n'.join(synced_commands))
             await ctx.author.send(embed=message_embed)
         except discord.Forbidden:
-            await ctx.send(f'ReQuest does not have the correct scope in the target guild. Add `applications.commands`'
-                           f' permission and try again.')
+            await ctx.send(f'ReQuest does not have the correct scope in the target guild. Add `applications.commands` '
+                           f'permission and try again.')
         except Exception as e:
             await ctx.send(f'There was an error syncing commands: {e}')
 
@@ -94,8 +94,8 @@ class Admin(Cog):
 
             await ctx.author.send('Commands cleared.')
         except discord.Forbidden:
-            await ctx.send(f'ReQuest does not have the correct scope in the target guild. Add `applications.commands`'
-                           f' permission and try again.')
+            await ctx.send(f'ReQuest does not have the correct scope in the target guild. Add `applications.commands` '
+                           f'permission and try again.')
         except Exception as e:
             await ctx.send(f'There was an error syncing commands: {e}')
 
