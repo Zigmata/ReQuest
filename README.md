@@ -1,6 +1,6 @@
 # ReQuest
 
-A Discord bot for TTRPG communities.
+A Discord bot for TTRPG communities. [Official Website](https://request.gg)
 
 ![GitHub Release](https://img.shields.io/github/v/release/zigmata/request)
 
