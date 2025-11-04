@@ -5,6 +5,7 @@ import discord.ui
 import shortuuid
 from discord.ui import Modal
 
+from ReQuest.ui.common.enums import RewardType
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
@@ -251,17 +252,35 @@ class EditQuestModal(Modal):
 
 
 class RewardsModal(Modal):
-    def __init__(self, caller):
+    def __init__(self, caller, calling_view, reward_type: RewardType):
         super().__init__(
             title='Add Reward',
             timeout=600
         )
         self.caller = caller
+        self.calling_view = calling_view
+        self.reward_type = reward_type
+
+        if self.reward_type == RewardType.PARTY:
+            rewards = calling_view.current_party_rewards
+        else:
+            rewards = calling_view.current_individual_rewards
+
+        xp_default = ''
+        if rewards.get('xp') is not None:
+            xp_default = str(rewards['xp'])
+
+        items_default = ''
+        if rewards.get('items'):
+            lines = [f'{name}: {quantity}' for name, quantity in rewards['items'].items()]
+            items_default = '\n'.join(lines)
+
         self.xp_input = discord.ui.TextInput(
             label='Experience Points',
             style=discord.TextStyle.short,
             custom_id='experience_text_input',
             placeholder='Enter a number',
+            default=xp_default,
             required=False
         )
         self.item_input = discord.ui.TextInput(
@@ -271,6 +290,7 @@ class RewardsModal(Modal):
             placeholder='{item}: {quantity}\n'
                         '{item2}: {quantity}\n'
                         'etc.',
+            default=items_default,
             required=False
         )
         self.add_item(self.xp_input)

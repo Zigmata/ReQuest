@@ -6,7 +6,7 @@ A Discord bot for TTRPG communities. [Official Website](https://request.gg)
 
 Don't forget to join the official development [Discord](https://discord.gg/Zq37gj4)!
 
-Made possible by [discord.py](https://discordpy.readthedocs.io/en/stable/) and [Motor](https://motor.readthedocs.io/en/stable/).
+Made possible by [discord.py](https://discordpy.readthedocs.io/en/stable/).
 
 1. [Summary](#summary)
 2. [Features](#features)
@@ -133,7 +133,7 @@ services:
 #      GUILD_DB: guilds
 #      MEMBER_DB: members
 #      CONFIG_DB: config
-#      VERSION: 0.6.0-a.2
+#      VERSION: 1.0.1
 #      LOAD_EXTENSIONS: ReQuest.cogs.admin, ReQuest.cogs.config, ReQuest.cogs.gm, ReQuest.cogs.info, ReQuest.cogs.player
 #      ALLOWLIST: False
 #    depends_on:

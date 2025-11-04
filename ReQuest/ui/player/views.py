@@ -21,7 +21,7 @@ class PlayerBaseView(View):
                 '__**Characters**__\n'
                 'Register, view, and activate player characters.\n\n'
                 '__**Inventory**__\n'
-                'View your active character\'s inventory, spend currency, and trade with other players.\n\n'
+                'View your active character\'s inventory and spend currency.\n\n'
                 '__**Player Board**__\n'
                 'Create a post for the Player Board, if configured on your server.\n\n'
             ),
@@ -38,9 +38,10 @@ class PlayerBaseView(View):
             channel_collection = bot.gdb['playerBoardChannel']
             channel_query = await channel_collection.find_one({'_id': guild.id})
             if channel_query:
-                self.player_board_button.enabled = True
+                self.player_board_button.disabled = False
             else:
-                self.player_board_button.enabled = False
+                self.player_board_button.disabled = True
+                self.player_board_button.label = 'Player Board (Not Configured)'
         except Exception as e:
             await log_exception(e)
 
@@ -129,19 +130,19 @@ class RemoveCharacterView(View):
             type='rich'
         )
         self.selected_character_id = None
-        self.confirm_button = ConfirmButton(self)
-        self.remove_character_select = selects.RemoveCharacterSelect(self, self.confirm_button)
+        self.remove_character_select = selects.RemoveCharacterSelect(self)
         self.add_item(self.remove_character_select)
-        self.add_item(self.confirm_button)
         self.add_item(BackButton(CharacterBaseView))
 
     async def setup(self, bot, user):
         try:
+            self.embed.clear_fields()
             self.remove_character_select.options.clear()
             options = []
             collection = bot.mdb['characters']
             query = await collection.find_one({'_id': user.id})
             if not query or not query['characters'] or len(query['characters']) == 0:
+                self.remove_character_select.placeholder = "You have no registered characters!"
                 options.append(discord.SelectOption(label='No characters', value='None'))
                 self.remove_character_select.disabled = True
             else:
@@ -162,6 +163,7 @@ class RemoveCharacterView(View):
             collection = interaction.client.mdb['characters']
             member_id = interaction.user.id
             query = await collection.find_one({'_id': member_id})
+            character_name = query['characters'][selected_character_id]['name']
             await collection.update_one({'_id': member_id},
                                         {'$unset': {f'characters.{selected_character_id}': ''}}, upsert=True)
             for guild in query['activeCharacters']:
@@ -171,9 +173,7 @@ class RemoveCharacterView(View):
                                                 upsert=True)
             self.selected_character_id = None
             await self.setup(bot=interaction.client, user=interaction.user)
-            self.embed.clear_fields()
-            self.confirm_button.disabled = True
-            self.confirm_button.label = 'Confirm'
+            self.embed.add_field(name='Success!', value=f'Character {character_name} has been removed.')
             await interaction.response.edit_message(embed=self.embed, view=self)
         except Exception as e:
             await log_exception(e, interaction)
@@ -185,21 +185,17 @@ class InventoryBaseView(View):
         self.embed = discord.Embed(
             title='Player Commands - Inventory',
             description=(
-                '__**View**__\n'
-                'Displays your inventory.\n\n'
                 '__**Spend Currency**__\n'
                 'Spend some currency.\n\n'
                 '__**Trade**__\n'
-                'Sends an item or currency to another character. Trading is now handled as a User Context command. '
+                'Trading is now handled as a User Context command.\n'
                 'Right-click or long-press another user and select Apps -> Trade\n\n'
                 '------\n\n'
             ),
             type='rich'
         )
         self.active_character = None
-        self.view_inventory_button = buttons.ViewInventoryButton(self)
         self.spend_currency_button = buttons.SpendCurrencyButton(self)
-        self.add_item(self.view_inventory_button)
         self.add_item(self.spend_currency_button)
         self.add_item(BackButton(PlayerBaseView))
 
@@ -208,11 +204,9 @@ class InventoryBaseView(View):
         collection = bot.mdb['characters']
         query = await collection.find_one({'_id': user.id})
         if not query:
-            self.view_inventory_button.disabled = True
             self.spend_currency_button.disabled = True
             self.embed.add_field(name='No Characters', value='Register a character to use these menus.')
         elif str(guild.id) not in query['activeCharacters']:
-            self.view_inventory_button.disabled = True
             self.spend_currency_button.disabled = True
             self.embed.add_field(name='No Active Character', value='Activate a character for this server to use these'
                                                                    'menus.')
@@ -220,6 +214,25 @@ class InventoryBaseView(View):
             active_character_id = query['activeCharacters'][str(guild.id)]
             self.active_character = query['characters'][active_character_id]
             self.embed.title = f'Player Commands - {self.active_character['name']}\'s Inventory'
+            inventory = self.active_character['attributes']['inventory']
+            player_currencies = self.active_character['attributes']['currency']
+            items = []
+            currencies = []
+
+            for item in inventory:
+                pair = (str(item), f'**{inventory[item]}**')
+                value = ': '.join(pair)
+                items.append(value)
+
+            for currency in player_currencies:
+                pair = (str(currency), f'**{player_currencies[currency]}**')
+                value = ': '.join(pair)
+                currencies.append(value)
+
+            self.embed.add_field(name='Possessions',
+                                 value='\n'.join(items))
+            self.embed.add_field(name='Currency',
+                                 value='\n'.join(currencies))
 
 
 class PlayerBoardView(View):

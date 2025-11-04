@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from typing import Any, Dict, Iterator, Optional, Tuple
 
 import discord
 from discord.ui import View
@@ -224,17 +225,14 @@ class RewardsMenuView(View):
             title='',
             description=(
                 '__**Party Rewards**__\n'
-                'Assigns experience and/or currency rewards to be split evenly across all party members.\n\n'
+                'Assigns rewards shared across all party members. XP and currency will be split evenly.\n\n'
                 '__**Individual Rewards**__\n'
                 'Assigns additional bonus rewards for the selected party member.\n\n'
                 '**How To Input Rewards**\n\n'
                 '> Experience Points\n'
-                '- Input the total amount of experience to award. New values will override the old.\n\n'
+                '- Input the total amount of experience to award.\n\n'
                 '> Items/Currency\n'
-                '- New item names will be added to the existing list.\n'
-                '- Items with the same name will overwrite the previous quantity with the new one.\n'
                 '- Note the {name}: {quantity} format in the placeholder text.\n'
-                '- A value of \"None\" will reset the item list.\n'
                 '- Item/Currency names are case-insensitive, so \"gOLd\" == \"Gold\"\n\n'
                 '------'
             ),
@@ -243,6 +241,9 @@ class RewardsMenuView(View):
         self.quest = calling_view.selected_quest
         self.selected_character = None
         self.selected_character_id = None
+        self.current_party_rewards = {'xp': None, 'items': {}}
+        self.current_individual_rewards = {'xp': None, 'items': {}}
+
         self.individual_rewards_button = buttons.IndividualRewardsButton(self)
         self.party_rewards_button = buttons.PartyRewardsButton(self)
         self.party_member_select = selects.PartyMemberSelect(calling_view=self,
@@ -255,57 +256,177 @@ class RewardsMenuView(View):
 
     async def setup(self):
         try:
+            # Clear old UI state
             self.party_member_select.options.clear()
             self.embed.clear_fields()
 
             quest = self.quest
-            party = quest['party']
-            options = []
+            self.embed.title = f"Quest Rewards - {quest.get('title', 'Unknown Quest')}"
 
-            if len(party) > 0:
-                for player in party:
-                    for member_id in player:
-                        for character_id in player[str(member_id)]:
-                            character = player[str(member_id)][str(character_id)]
-                            options.append(discord.SelectOption(label=character['name'], value=character_id))
+            # 1) Build the select options from quest['party']
+            options = self._build_party_member_options(quest)
+            if options:
                 self.party_member_select.placeholder = 'Select a party member'
                 self.party_member_select.disabled = False
+                self.party_member_select.options = options
             else:
-                options.append(discord.SelectOption(label='None', value='None'))
                 self.party_member_select.placeholder = 'No party members'
                 self.party_member_select.disabled = True
+                self.party_member_select.options = [
+                    discord.SelectOption(label='None', value='None')
+                ]
 
-            self.party_member_select.options = options
+            # 2) Extract and store PARTY rewards (for modal prefill)
+            party_rewards = self._extract_party_rewards(quest)
+            self.current_party_rewards = party_rewards  # <- modal can read this
+            self.embed.add_field(
+                name='Party Rewards',
+                value=self._format_rewards_field(party_rewards),
+                inline=False
+            )
 
-            self.embed.title = f'Quest Rewards - {quest['title']}'
-            if 'party' in quest['rewards']:
-                party_rewards = quest['rewards']['party']
-                party_rewards_list = []
-                if 'xp' in party_rewards and party_rewards['xp']:
-                    party_rewards_list.append(f'Experience: {party_rewards['xp']}')
-                if 'items' in party_rewards:
-                    for item, quantity in party_rewards['items'].items():
-                        party_rewards_list.append(f'{item.capitalize()}: {quantity}')
-                party_rewards_string = '\n'.join(party_rewards_list)
-                self.embed.add_field(name='Party Rewards',
-                                     value=party_rewards_string if party_rewards_string else 'None')
+            # 3) If a character is selected, extract & store INDIVIDUAL rewards
+            if self.selected_character and self.selected_character_id:
+                indiv = self._extract_individual_rewards(quest, self.selected_character_id)
+                self.current_individual_rewards = indiv  # <- modal can read this
 
-            if self.selected_character:
-                character_id = self.selected_character_id
-                individual_rewards_list = []
-                for key in quest['rewards']:
-                    if key == character_id:
-                        individual_rewards = quest['rewards'][character_id]
-                        if 'xp' in individual_rewards and individual_rewards['xp']:
-                            individual_rewards_list.append(f'Experience: {quest['rewards'][character_id]['xp']}')
-                        for item, quantity in individual_rewards['items'].items():
-                            individual_rewards_list.append(f'{item.capitalize()}: {quantity}')
-                rewards_string = '\n'.join(individual_rewards_list)
-                self.embed.add_field(name=f'Additional rewards for {self.selected_character['name']}',
-                                     value=rewards_string if rewards_string else 'None',
-                                     inline=False)
+                char_name = self.selected_character.get('name', 'Selected Character')
+                self.embed.add_field(
+                    name=f'Additional rewards for {char_name}',
+                    value=self._format_rewards_field(indiv),
+                    inline=False
+                )
+            else:
+                # Reset when none selected
+                self.current_individual_rewards = {"xp": None, "items": {}}
+
+            # self.party_member_select.options.clear()
+            # self.embed.clear_fields()
+            #
+            # quest = self.quest
+            # party = quest['party']
+            # options = []
+            #
+            # if len(party) > 0:
+            #     for player in party:
+            #         for member_id in player:
+            #             for character_id in player[str(member_id)]:
+            #                 character = player[str(member_id)][str(character_id)]
+            #                 options.append(discord.SelectOption(label=character['name'], value=character_id))
+            #     self.party_member_select.placeholder = 'Select a party member'
+            #     self.party_member_select.disabled = False
+            # else:
+            #     options.append(discord.SelectOption(label='None', value='None'))
+            #     self.party_member_select.placeholder = 'No party members'
+            #     self.party_member_select.disabled = True
+            #
+            # self.party_member_select.options = options
+            #
+            # self.embed.title = f'Quest Rewards - {quest['title']}'
+            # if 'party' in quest['rewards']:
+            #     party_rewards = quest['rewards']['party']
+            #     party_rewards_list = []
+            #     if 'xp' in party_rewards and party_rewards['xp']:
+            #         party_rewards_list.append(f'Experience: {party_rewards['xp']}')
+            #     if 'items' in party_rewards and party_rewards['items']:
+            #         for item, quantity in party_rewards['items'].items():
+            #             party_rewards_list.append(f'{item.capitalize()}: {quantity}')
+            #     party_rewards_string = '\n'.join(party_rewards_list)
+            #     self.embed.add_field(name='Party Rewards',
+            #                          value=party_rewards_string if party_rewards_string else 'None')
+            #
+            # if self.selected_character:
+            #     character_id = self.selected_character_id
+            #     individual_rewards_list = []
+            #     for key in quest['rewards']:
+            #         if key == character_id:
+            #             individual_rewards = quest['rewards'][character_id]
+            #             if 'xp' in individual_rewards and individual_rewards['xp']:
+            #                 individual_rewards_list.append(f'Experience: {quest['rewards'][character_id]['xp']}')
+            #             for item, quantity in individual_rewards['items'].items():
+            #                 individual_rewards_list.append(f'{item.capitalize()}: {quantity}')
+            #     rewards_string = '\n'.join(individual_rewards_list)
+            #     self.embed.add_field(name=f'Additional rewards for {self.selected_character['name']}',
+            #                          value=rewards_string if rewards_string else 'None',
+            #                          inline=False)
         except Exception as e:
             await log_exception(e)
+
+    def _build_party_member_options(self, quest: Dict[str, Any]) -> list[discord.SelectOption]:
+        """
+        Your party shape looks like a list of player dicts keyed by member_id -> character_id -> character.
+        We’ll iterate safely and produce SelectOptions.
+        """
+        options: list[discord.SelectOption] = []
+        party = quest.get('party') or []
+
+        for member_id, character_id, character in self._iter_party_members(party):
+            name = character.get('name', f'Character {character_id}')
+            options.append(discord.SelectOption(label=name, value=str(character_id)))
+
+        return options
+
+    @staticmethod
+    def _iter_party_members(party: Any) -> Iterator[Tuple[str, str, Dict[str, Any]]]:
+        """
+        Yields (member_id, character_id, character) from your nested party layout.
+        Tolerant to odd shapes; won’t explode if something’s missing.
+        """
+        # Expected: party is a list[dict[str -> dict[str -> character_dict]]]
+        for player in party if isinstance(party, list) else []:
+            if not isinstance(player, dict):
+                continue
+            for member_id, chars in player.items():
+                if not isinstance(chars, dict):
+                    continue
+                for character_id, character in chars.items():
+                    if isinstance(character, dict):
+                        yield str(member_id), str(character_id), character
+
+    @staticmethod
+    def _extract_party_rewards(quest: Dict[str, Any]) -> Dict[str, Any]:
+        rewards = (quest.get('rewards') or {}).get('party') or {}
+        xp = rewards.get('xp')
+        items = rewards.get('items') or {}
+
+        # normalize types
+        xp_val = int(xp) if isinstance(xp, (int, float, str)) and str(xp).isdigit() else (
+            xp if isinstance(xp, int) else None)
+        items_val = dict(items) if isinstance(items, dict) else {}
+
+        return {"xp": xp_val, "items": items_val}
+
+    @staticmethod
+    def _extract_individual_rewards(quest: Dict[str, Any], character_id: str) -> Dict[str, Any]:
+        rewards = (quest.get('rewards') or {}).get(character_id) or {}
+        xp = rewards.get('xp')
+        items = rewards.get('items') or {}
+
+        xp_val = int(xp) if isinstance(xp, (int, float, str)) and str(xp).isdigit() else (
+            xp if isinstance(xp, int) else None)
+        items_val = dict(items) if isinstance(items, dict) else {}
+
+        return {"xp": xp_val, "items": items_val}
+
+    @staticmethod
+    def _format_rewards_field(rewards: Dict[str, Any]) -> str:
+        """
+        Turn {"xp": 10, "items": {"gold": 3, "potion": 1}} into a neat string.
+        """
+        lines: list[str] = []
+
+        xp = rewards.get('xp')
+        if isinstance(xp, int) and xp > 0:
+            lines.append(f'Experience: {xp}')
+
+        items = rewards.get('items') or {}
+        if isinstance(items, dict) and items:
+            for item_name, qty in items.items():
+                # display-friendly: Titleize key, print raw qty
+                pretty = str(item_name).capitalize()
+                lines.append(f'{pretty}: {qty}')
+
+        return '\n'.join(lines) if lines else 'None'
 
 
 class GMPlayerMenuView(View):
@@ -335,9 +456,9 @@ class RemovePlayerView(View):
             description=(
                 'This action will remove the selected player, and fill the vacancy from a wait list, if '
                 'applicable.\n\n'
-                'Any individual rewards configured for the removed player will be removed from this quest. If you still'
-                'want to reward the player for any contributions prior to removal, use the `GM --> Player` menus to '
-                'directly issue rewards.'
+                'Any individual rewards configured for the removed player will be removed from this quest. If you '
+                'still want to reward the player for any contributions prior to removal, use the `Modify Player` '
+                'context menus to directly issue rewards.'
             ),
             type='rich'
         )
@@ -345,9 +466,7 @@ class RemovePlayerView(View):
         self.selected_member_id = None
         self.selected_character_id = None
         self.remove_player_select = selects.RemovePlayerSelect(self)
-        self.confirm_button = ConfirmButton(self)
         self.add_item(self.remove_player_select)
-        self.add_item(self.confirm_button)
         self.add_item(BackButton(ManageQuestsView))
 
     async def setup(self):
@@ -372,6 +491,8 @@ class RemovePlayerView(View):
                             options.append(discord.SelectOption(label=f'{character['name']}', value=member_id))
             if not party and not wait_list:
                 options.append(discord.SelectOption(label='No players in quest roster', value='None'))
+                self.remove_player_select.placeholder = 'No players in quest roster'
+                self.remove_player_select.disabled = True
             self.remove_player_select.options = options
 
             if self.selected_character_id:

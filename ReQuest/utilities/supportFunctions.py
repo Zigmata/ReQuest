@@ -1,4 +1,5 @@
 import datetime
+import inspect
 import logging
 import re
 import traceback
@@ -457,3 +458,19 @@ async def query_config(config_type, bot, guild):
             return query[config_type]
     except Exception as e:
         await log_exception(e)
+
+
+async def setup_view(view, interaction):
+    setup_function = view.setup
+    sig = inspect.signature(setup_function)
+    params = sig.parameters
+
+    kwargs = {}
+    if 'bot' in params:
+        kwargs['bot'] = interaction.client
+    if 'user' in params:
+        kwargs['user'] = interaction.user
+    if 'guild' in params:
+        kwargs['guild'] = interaction.guild
+
+    await setup_function(**kwargs)

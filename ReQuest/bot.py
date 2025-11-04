@@ -7,7 +7,7 @@ import aiohttp
 import discord
 from discord.ext import commands
 from discord.ext.commands import errors
-from motor.motor_asyncio import AsyncIOMotorClient as MotorClient
+from pymongo import AsyncMongoClient as MongoClient
 
 from ReQuest.ui.gm.views import QuestPostView
 from utilities.supportFunctions import attempt_delete, log_exception
@@ -15,7 +15,7 @@ from utilities.supportFunctions import attempt_delete, log_exception
 
 class ReQuest(commands.Bot):
     def __init__(self):
-        self.motor_client = None
+        self.mongo_client = None
         self.cdb = None
         self.mdb = None
         self.gdb = None
@@ -37,12 +37,9 @@ class ReQuest(commands.Bot):
         self.version = os.getenv('VERSION')
 
     async def setup_hook(self):
-        # Grab the event loop from asyncio, so we can pass it around
-        loop = asyncio.get_running_loop()
 
-        # Instantiate the motor client with the current event loop, and prep the databases. This instantiation uses
-        # a local mongoDB deployment on the default port.
-        # self.motor_client = MotorClient('localhost', 27017, io_loop=loop)
+        # Instantiate the motor client and prep the databases in a local mongoDB deployment on the default port.
+        # self.mongo_client = MongoClient('localhost', 27017)
 
         # If you are using a connection URI, uncomment the next few blocks of code and use them instead of the client
         # instantiation above. In this example, we are using environment variables from the host system to hold the
@@ -58,12 +55,12 @@ class ReQuest(commands.Bot):
         password = quote_plus(mongo_password)
 
         db_uri = f'mongodb://{username}:{password}@{mongo_host}:{mongo_port}/?authSource={auth_db}'
-        self.motor_client = MotorClient(db_uri, io_loop=loop)
+        self.mongo_client = MongoClient(db_uri)
 
         # Instantiate the database objects as Discord client attributes
-        self.mdb = self.motor_client[os.getenv('MEMBER_DB')]
-        self.cdb = self.motor_client[os.getenv('CONFIG_DB')]
-        self.gdb = self.motor_client[os.getenv('GUILD_DB')]
+        self.mdb = self.mongo_client[os.getenv('MEMBER_DB')]
+        self.cdb = self.mongo_client[os.getenv('CONFIG_DB')]
+        self.gdb = self.mongo_client[os.getenv('GUILD_DB')]
 
         # Grab the list of extensions and load them asynchronously
         initial_extensions = os.getenv('LOAD_EXTENSIONS').split(', ')

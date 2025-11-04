@@ -152,7 +152,7 @@ class CharacterRegisterModal(Modal):
                                                       }}}},
                                         upsert=True)
 
-            await interaction.response.send_message(f'{character_name} was born!', ephemeral=True)
+            await interaction.response.send_message(f'{character_name} was born!', ephemeral=True, delete_after=5)
         except Exception as e:
             await log_exception(e, interaction)
 

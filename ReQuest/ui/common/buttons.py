@@ -5,7 +5,7 @@ import discord
 from discord import ButtonStyle
 from discord.ui import Button
 
-from ReQuest.utilities.supportFunctions import log_exception
+from ReQuest.utilities.supportFunctions import log_exception, setup_view
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -24,19 +24,7 @@ class BaseViewButton(Button):
         try:
             view = self.target_view_class()
             if hasattr(view, 'setup'):
-                setup_function = view.setup
-                sig = inspect.signature(setup_function)
-                params = sig.parameters
-
-                kwargs = {}
-                if 'bot' in params:
-                    kwargs['bot'] = interaction.client
-                if 'user' in params:
-                    kwargs['user'] = interaction.user
-                if 'guild' in params:
-                    kwargs['guild'] = interaction.guild
-
-                await setup_function(**kwargs)
+                await setup_view(view, interaction)
             await interaction.response.edit_message(embed=view.embed, view=view)
         except Exception as e:
             await log_exception(e, interaction)
