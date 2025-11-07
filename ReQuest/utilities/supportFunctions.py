@@ -472,5 +472,7 @@ async def setup_view(view, interaction):
         kwargs['user'] = interaction.user
     if 'guild' in params:
         kwargs['guild'] = interaction.guild
+    if 'interaction' in params:
+        kwargs['interaction'] = interaction
 
     await setup_function(**kwargs)

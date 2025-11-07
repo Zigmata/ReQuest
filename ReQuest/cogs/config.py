@@ -1,14 +1,9 @@
-import logging
-
 import discord.ui
 from discord import app_commands
 from discord.ext.commands import Cog
 
 from ReQuest.ui.config import views
 from ReQuest.utilities.supportFunctions import log_exception
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 class Config(Cog):
