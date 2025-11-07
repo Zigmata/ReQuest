@@ -1,4 +1,5 @@
 import discord
+import shortuuid
 from discord import ButtonStyle
 from discord.ui import Button
 
@@ -77,6 +78,8 @@ class ShopItemButton(Button):
             embed.add_field(name='Current Possessions', value='\n'.join(items))
             embed.add_field(name='Remaining Currency', value='\n'.join(currencies))
 
+            transaction_id = shortuuid.uuid()[:12]
+            embed.set_footer(text=f'Transaction ID: {transaction_id}')
             await interaction.response.send_message(embed=embed)
         except Exception as e:
             await log_exception(e, interaction)
