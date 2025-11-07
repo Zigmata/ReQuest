@@ -29,7 +29,7 @@ class Shop(Cog):
             shop_data = shop_query['shopChannels'][channel_id]
 
             view = views.ShopBaseView(shop_data)
-            await interaction.response.send_message(view=view)
+            await interaction.response.send_message(view=view, ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)
 

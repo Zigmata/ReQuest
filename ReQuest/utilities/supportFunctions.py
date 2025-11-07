@@ -98,93 +98,29 @@ def make_change(sender_currency, remaining_amount, denom_value, denominations):
 
 async def trade_currency(mdb, gdb, currency_name, amount, sending_member_id, receiving_member_id, guild_id):
     collection = mdb['characters']
-
     sender_data = await collection.find_one({'_id': sending_member_id})
     sender_character_id = sender_data['activeCharacters'][str(guild_id)]
-    sender_character = sender_data['characters'][sender_character_id]
-
-    receiver_data = await collection.find_one({'_id': receiving_member_id})
-    receiver_character_id = receiver_data['activeCharacters'][str(guild_id)]
-    receiver_character = receiver_data['characters'][receiver_character_id]
+    sender_currency = sender_data['characters'][sender_character_id]['attributes'].get('currency', {})
 
     currency_collection = gdb['currency']
-    currency_query = await currency_collection.find_one({'_id': guild_id})
-    if not currency_query:
+    currency_config = await currency_collection.find_one({'_id': guild_id})
+    if not currency_config:
         raise Exception('Currency definition not found')
 
-    currencies = currency_query['currencies']
+    can_afford, message = check_sufficient_funds(sender_currency, currency_config, currency_name, amount)
+    if not can_afford:
+        raise Exception(f"Sender has insufficient funds: {message}")
 
-    base_currency_name, currency_parent_name = find_currency_or_denomination(currency_query, currency_name)
-    if not base_currency_name:
-        raise Exception('Currency or denomination not found')
+    await update_character_inventory(None, sending_member_id, sender_character_id, currency_name, -amount)
+    receiver_data = await collection.find_one({'_id': receiving_member_id})
+    receiver_character_id = receiver_data['activeCharacters'][str(guild_id)]
+    await update_character_inventory(None, receiving_member_id, receiver_character_id, currency_name, amount)
 
-    base_currency_name = currency_parent_name
+    sender_data = await collection.find_one({'_id': sending_member_id})
+    sender_currency_db = sender_data['characters'][sender_character_id]['attributes'].get('currency', {})
 
-    denominations = {d['name'].lower(): d['value'] for currency in currencies if
-                     currency['name'].lower() == base_currency_name.lower() for d in currency['denominations']}
-    denominations[base_currency_name.lower()] = 1
-
-    logger.debug(f"Denominations: {denominations}")
-
-    sender_currency = normalize_currency_keys(sender_character['attributes'].get('currency', {}))
-    receiver_currency = normalize_currency_keys(receiver_character['attributes'].get('currency', {}))
-
-    # Convert the total currency of the sender to the lowest denomination
-    sender_total_in_lowest_denom = sum(
-        sender_currency.get(denom, 0) * (value / min(denominations.values())) for denom, value in denominations.items())
-    amount_in_lowest_denom = amount * (denominations[currency_name.lower()] / min(denominations.values()))
-
-    logger.debug(f"Sender's total in lowest denomination: {sender_total_in_lowest_denom}")
-    logger.debug(f"Amount in lowest denomination: {amount_in_lowest_denom}")
-
-    if sender_total_in_lowest_denom < amount_in_lowest_denom:
-        logger.debug(f"Insufficient funds: {sender_total_in_lowest_denom} < {amount_in_lowest_denom}")
-        raise Exception('Insufficient funds')
-
-    # Deduct the amount from the sender's total in the lowest denomination
-    sender_total_in_lowest_denom -= amount_in_lowest_denom
-
-    # Convert the sender's remaining total back to the original denominations
-    remaining_sender_currency = {}
-    for denom, value in sorted(denominations.items(), key=lambda x: -x[1]):
-        denom_value_in_lowest_denom = value / min(denominations.values())
-        if sender_total_in_lowest_denom >= denom_value_in_lowest_denom:
-            remaining_sender_currency[denom] = int(sender_total_in_lowest_denom // denom_value_in_lowest_denom)
-            sender_total_in_lowest_denom %= denom_value_in_lowest_denom
-
-    # Consolidate the sender's currency
-    sender_currency = consolidate_currency(remaining_sender_currency, denominations)
-    logger.debug(f"Sender's currency after deduction: {sender_currency}")
-
-    # Add the amount to the receiver's total in the lowest denomination
-    receiver_total_in_lowest_denom = sum(
-        receiver_currency.get(denom, 0) * (value / min(denominations.values())) for denom, value in
-        denominations.items())
-    receiver_total_in_lowest_denom += amount_in_lowest_denom
-
-    # Convert the receiver's total back to the original denominations
-    remaining_receiver_currency = {}
-    for denom, value in sorted(denominations.items(), key=lambda x: -x[1]):
-        denom_value_in_lowest_denom = value / min(denominations.values())
-        if receiver_total_in_lowest_denom >= denom_value_in_lowest_denom:
-            remaining_receiver_currency[denom] = int(receiver_total_in_lowest_denom // denom_value_in_lowest_denom)
-            receiver_total_in_lowest_denom %= denom_value_in_lowest_denom
-
-    # Consolidate the receiver's currency
-    receiver_currency = consolidate_currency(remaining_receiver_currency, denominations)
-    logger.debug(f"Receiver's currency after addition: {receiver_currency}")
-
-    sender_currency_db = {k.capitalize(): v for k, v in sender_currency.items()}
-    receiver_currency_db = {k.capitalize(): v for k, v in receiver_currency.items()}
-
-    await collection.update_one(
-        {'_id': sending_member_id, f'characters.{sender_character_id}.attributes.currency': {'$exists': True}},
-        {'$set': {f'characters.{sender_character_id}.attributes.currency': sender_currency_db}}
-    )
-    await collection.update_one(
-        {'_id': receiving_member_id, f'characters.{receiver_character_id}.attributes.currency': {'$exists': True}},
-        {'$set': {f'characters.{receiver_character_id}.attributes.currency': receiver_currency_db}}
-    )
+    receiver_data = await collection.find_one({'_id': receiving_member_id})
+    receiver_currency_db = receiver_data['characters'][receiver_character_id]['attributes'].get('currency', {})
 
     return sender_currency_db, receiver_currency_db
 
@@ -242,63 +178,80 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
         player_data = await character_collection.find_one({'_id': player_id})
         character_data = player_data['characters'].get(character_id)
 
-        # Fetch server currency definitions
         currency_collection = interaction.client.gdb['currency']
         currency_query = await currency_collection.find_one({'_id': interaction.guild_id})
 
-        # If the server has a currency defined, check if the provided item name is a currency or denomination
         is_currency, currency_parent_name = None, None
         if currency_query:
             is_currency, currency_parent_name = find_currency_or_denomination(currency_query, item_name)
 
         if is_currency:
-            # Update currency
-            denominations = {d['name'].lower(): d['value'] for currency in currency_query['currencies'] if
-                             currency['name'].lower() == currency_parent_name.lower() for d in
-                             currency['denominations']}
-            denominations[currency_parent_name.lower()] = 1  # Base currency
+            denomination_map, _ = get_denomination_map(currency_query, item_name)
+            if not denomination_map:
+                raise Exception(f"Currency {item_name} could not be processed.")
+
+            min_value = min(denomination_map.values())
+            if min_value <= 0:
+                raise Exception(f"Currency {currency_parent_name} has a non-positive denomination value.")
 
             character_currency = normalize_currency_keys(character_data['attributes'].get('currency', {}))
 
-            # Convert the character's total currency to the lowest denomination
-            total_in_lowest_denom = sum(
-                character_currency.get(denom, 0) * (value / min(denominations.values()))
-                for denom, value in denominations.items()
-            )
-            amount_in_lowest_denom = quantity * (denominations[item_name.lower()] / min(denominations.values()))
+            total_in_lowest_denom = 0.0
+            for denom, value in denomination_map.items():
+                total_in_lowest_denom += character_currency.get(denom, 0) * (value / min_value)
 
-            # Update the total in the lowest denomination
-            total_in_lowest_denom += amount_in_lowest_denom
+            change_value_in_lowest = quantity * (denomination_map[item_name.lower()] / min_value)
 
-            # Convert the total back to the original denominations
-            remaining_currency = {}
-            for denom, value in sorted(denominations.items(), key=lambda x: -x[1]):
-                denom_value_in_lowest_denom = value / min(denominations.values())
-                if total_in_lowest_denom >= denom_value_in_lowest_denom:
-                    remaining_currency[denom] = int(total_in_lowest_denom // denom_value_in_lowest_denom)
-                    total_in_lowest_denom %= denom_value_in_lowest_denom
+            total_in_lowest_denom += change_value_in_lowest
 
-            # Consolidate the currency
-            consolidated_currency = consolidate_currency(remaining_currency, denominations)
-            character_currency_db = {k.capitalize(): v for k, v in consolidated_currency.items()}
+            tolerance = 1e-9
+            if total_in_lowest_denom < -tolerance:
+                raise Exception(f"Insufficient funds to cover this transaction.")
+
+            if total_in_lowest_denom < 0:
+                total_in_lowest_denom = 0  # Set to 0 if it's a tiny negative float
+
+            new_character_currency = {}
+            for denom, value in sorted(denomination_map.items(), key=lambda x: -x[1]):
+                denom_value_in_lowest = value / min_value
+                if total_in_lowest_denom + tolerance >= denom_value_in_lowest:
+                    qty = int(total_in_lowest_denom // denom_value_in_lowest)
+                    new_character_currency[denom] = qty
+                    total_in_lowest_denom %= denom_value_in_lowest
+
+            final_wallet = normalize_currency_keys(character_data['attributes'].get('currency', {}))
+
+            for denom_name in denomination_map.keys():
+                if denom_name in new_character_currency:
+                    final_wallet[denom_name] = new_character_currency[denom_name]
+                elif denom_name in final_wallet:
+                    del final_wallet[denom_name]  # Remove if new qty is 0
+
+            character_currency_db = {k.capitalize(): v for k, v in final_wallet.items() if v > 0}
 
             await character_collection.update_one(
                 {'_id': player_id},
                 {'$set': {f'characters.{character_id}.attributes.currency': character_currency_db}}
             )
+
         else:
-            # Handle inventory update
             character_inventory = character_data['attributes'].get('inventory', {})
             item_name_lower = item_name.lower()
 
-            # Find the item in the inventory (case-insensitive)
+            found_key = None
             for key in character_inventory.keys():
                 if key.lower() == item_name_lower:
-                    character_inventory[key.capitalize()] += quantity
+                    found_key = key
                     break
-            else:
-                # If item not found, add new item
-                character_inventory[item_name.capitalize()] = quantity
+
+            if found_key:
+                character_inventory[found_key] += int(quantity)
+                if character_inventory[found_key] <= 0:
+                    del character_inventory[found_key]
+            elif quantity > 0:
+                character_inventory[item_name.capitalize()] = int(quantity)
+            elif quantity < 0:
+                raise Exception(f"Insufficient item: {item_name.capitalize()}")
 
             await character_collection.update_one(
                 {'_id': player_id},
@@ -476,3 +429,138 @@ async def setup_view(view, interaction):
         kwargs['interaction'] = interaction
 
     await setup_function(**kwargs)
+
+
+def get_denomination_map(currency_config: dict, currency_name: str) -> (dict | None, str | None):
+    if not currency_config or 'currencies' not in currency_config:
+        return None, None
+
+    _denom_name, parent_name = find_currency_or_denomination(currency_config, currency_name)
+
+    if not parent_name:
+        return None, None  # Not a valid configured currency
+
+    parent_currency_config = next(
+        (c for c in currency_config['currencies'] if c['name'].lower() == parent_name.lower()), None)
+
+    if not parent_currency_config:
+        return None, None  # Config is inconsistent
+
+    denomination_map = {parent_name.lower(): 1.0}
+    for denom in parent_currency_config.get('denominations', []):
+        denomination_map[denom['name'].lower()] = float(denom['value'])
+
+    return denomination_map, parent_name
+
+
+def check_sufficient_funds(player_currency: dict, currency_config: dict, cost_currency_name: str,
+                           cost_amount: float) -> (bool, str):
+    try:
+        if cost_amount <= 0:
+            return True, "OK"  # No cost
+
+        denomination_map, _ = get_denomination_map(currency_config, cost_currency_name)
+
+        if not denomination_map:
+            return False, f"Currency '{cost_currency_name}' is not configured on this server."
+
+        cost_name_lower = cost_currency_name.lower()
+        if cost_name_lower not in denomination_map:
+            return False, f"Cost currency '{cost_currency_name}' is not part of its own currency system."
+
+        min_value = min(denomination_map.values())
+        if min_value <= 0:
+            return False, "Currency configuration error: 0 or negative denomination value."
+
+        norm_player_currency = normalize_currency_keys(player_currency)
+        player_total_value = 0.0
+
+        for denom_name_lower, denom_value in denomination_map.items():
+            player_qty = norm_player_currency.get(denom_name_lower, 0)
+            player_total_value += player_qty * (denom_value / min_value)
+
+        cost_denom_value = denomination_map[cost_name_lower]
+        cost_total_value = cost_amount * (cost_denom_value / min_value)
+
+        tolerance = 1e-9
+        if player_total_value + tolerance < cost_total_value:
+            return False, "Insufficient funds."
+
+        return True, "OK"
+
+    except Exception as e:
+        logger.error(f"Error in check_sufficient_funds: {e}")
+        logger.error(traceback.format_exc())
+        return False, f"An error occurred during currency validation: {e}"
+
+
+def apply_item_change_local(character_data: dict, item_name: str, quantity: int) -> dict:
+    inventory = character_data['attributes'].get('inventory', {})
+    item_name_lower = item_name.lower()
+
+    found_key = None
+    for key in inventory.keys():
+        if key.lower() == item_name_lower:
+            found_key = key
+            break
+
+    if found_key:
+        inventory[found_key] += int(quantity)
+        if inventory[found_key] <= 0:
+            del inventory[found_key]  # Remove if zero or less
+    elif quantity > 0:
+        inventory[item_name.capitalize()] = int(quantity)
+    elif quantity < 0:
+        raise Exception(f"Insufficient item: {item_name.capitalize()}")
+
+    character_data['attributes']['inventory'] = inventory
+    return character_data
+
+
+def apply_currency_change_local(character_data: dict, currency_config: dict, item_name: str, quantity: float) -> dict:
+    is_currency, currency_parent_name = find_currency_or_denomination(currency_config, item_name)
+
+    if not is_currency:
+        raise Exception(f"{item_name} is not a valid currency.")
+
+    denomination_map, _ = get_denomination_map(currency_config, item_name)
+    if not denomination_map:
+        raise Exception(f"Currency {item_name} could not be processed.")
+
+    min_value = min(denomination_map.values())
+    if min_value <= 0:
+        raise Exception(f"Currency {currency_parent_name} has a non-positive denomination value.")
+
+    character_currency = normalize_currency_keys(character_data['attributes'].get('currency', {}))
+
+    total_in_lowest_denom = 0.0
+    for denom, value in denomination_map.items():
+        total_in_lowest_denom += character_currency.get(denom, 0) * (value / min_value)
+
+    change_value_in_lowest = quantity * (denomination_map[item_name.lower()] / min_value)
+
+    total_in_lowest_denom += change_value_in_lowest
+
+    tolerance = 1e-9
+    if total_in_lowest_denom < -tolerance:
+        raise Exception("Insufficient funds for this transaction.")
+    if total_in_lowest_denom < 0:
+        total_in_lowest_denom = 0.0
+
+    new_character_currency = {}
+    for denom, value in sorted(denomination_map.items(), key=lambda x: -x[1]):
+        denom_value_in_lowest = value / min_value
+        if total_in_lowest_denom + tolerance >= denom_value_in_lowest:
+            qty = int(total_in_lowest_denom // denom_value_in_lowest)
+            new_character_currency[denom] = qty
+            total_in_lowest_denom %= denom_value_in_lowest
+
+    final_wallet = normalize_currency_keys(character_data['attributes'].get('currency', {}))
+    for denom_name in denomination_map.keys():
+        if denom_name in new_character_currency:
+            final_wallet[denom_name] = new_character_currency[denom_name]
+        elif denom_name in final_wallet:
+            del final_wallet[denom_name]  # Remove if new qty is 0
+
+    character_data['attributes']['currency'] = {k.capitalize(): v for k, v in final_wallet.items() if v > 0}
+    return character_data

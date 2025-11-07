@@ -12,7 +12,7 @@ from ReQuest.utilities.supportFunctions import (
     trade_currency,
     trade_item,
     normalize_currency_keys,
-    consolidate_currency
+    consolidate_currency, check_sufficient_funds, update_character_inventory
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -181,85 +181,39 @@ class SpendCurrencyModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            currency_collection = interaction.client.gdb['currency']
-            currency_query = await currency_collection.find_one({'_id': interaction.guild_id})
-
-            if not currency_query:
-                raise Exception('Currency definition not found for this server')
-
-            # Validate currency name
-            currency_name = self.currency_name_text_input.value.strip().lower()
+            currency_name = self.currency_name_text_input.value.strip()
             amount = float(self.currency_amount_text_input.value.strip())
 
             if amount <= 0:
-                raise ValueError('You cannot spend a negative amount of currency')
+                raise ValueError('You must spend a positive amount.')
 
-            base_currency_name, currency_parent_name = find_currency_or_denomination(currency_query, currency_name)
-            if not base_currency_name:
-                raise Exception('Currency or denomination not found')
-
-            base_currency_name = currency_parent_name
-            denominations = {d['name'].lower(): d['value'] for currency in currency_query['currencies'] if
-                             currency['name'].lower() == base_currency_name.lower() for d in currency['denominations']}
-            denominations[base_currency_name.lower()] = 1.0
-
-            logger.debug(f'Denominations: {denominations}')
-
-            user_id = interaction.user.id
+            member_id = interaction.user.id
             guild_id = interaction.guild_id
-            character_collection = interaction.client.mdb['characters']
+            mdb = interaction.client.mdb
+            gdb = interaction.client.gdb
 
-            character_query = await character_collection.find_one({'_id': user_id})
-            if not character_query:
-                raise Exception('You do not have any characters!')
-
-            if not str(guild_id) in character_query['activeCharacters']:
-                raise Exception('You do not have any characters activated on this server!')
+            character_query = await mdb['characters'].find_one({'_id': member_id})
+            if not character_query or str(guild_id) not in character_query['activeCharacters']:
+                raise Exception("You do not have an active character on this server.")
 
             active_character_id = character_query['activeCharacters'][str(guild_id)]
-            character = character_query['characters'][active_character_id]
+            player_currency = character_query['characters'][active_character_id]['attributes'].get('currency', {})
 
-            user_currency = normalize_currency_keys(character['attributes'].get('currency', {}))
+            currency_config = await gdb['currency'].find_one({'_id': guild_id})
+            if not currency_config:
+                raise Exception("Currency is not configured on this server.")
 
-            # Convert the total currency of the user to the lowest denomination
-            user_total_in_lowest_denomination = sum(
-                user_currency.get(denomination, 0) * (value / min(denominations.values())) for
-                denomination, value in denominations.items())
-            amount_in_lowest_denomination = amount * (denominations[currency_name] / min(denominations.values()))
+            can_afford, message = check_sufficient_funds(player_currency, currency_config, currency_name, amount)
+            if not can_afford:
+                raise Exception(message)
 
-            if user_total_in_lowest_denomination < amount_in_lowest_denomination:
-                raise Exception('You have insufficient funds to cover that transaction.')
-
-            # Deduct the amount from the user's total in the lowest denomination
-            user_total_in_lowest_denomination -= amount_in_lowest_denomination
-
-            # Convert the user's remaining total back to the original denominations
-            remaining_user_currency = {}
-            for denomination, value in sorted(denominations.items(), key=lambda x: -x[1]):
-                denomination_value_in_lowest_denomination = value / min(denominations.values())
-                if user_total_in_lowest_denomination >= denomination_value_in_lowest_denomination:
-                    remaining_user_currency[denomination] = int(user_total_in_lowest_denomination //
-                                                                denomination_value_in_lowest_denomination)
-                    user_total_in_lowest_denomination %= denomination_value_in_lowest_denomination
-
-            # Consolidate the user's currency
-            user_currency = consolidate_currency(remaining_user_currency, denominations)
-
-            user_currency_db = {k.capitalize(): v for k, v in user_currency.items()}
-
-            await character_collection.update_one(
-                {'_id': user_id,
-                 f'characters.{active_character_id}.attributes.currency': {'$exists': True}},
-                {'$set': {f'characters.{active_character_id}.attributes.currency': user_currency_db}}, upsert=True
-            )
+            await update_character_inventory(interaction, member_id, active_character_id, currency_name, -amount)
 
             await self.calling_view.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
             self.calling_view.embed.add_field(name='Spent',
-                                              value=f'{int(amount)} {currency_name.capitalize()}',
+                                              value=f'{amount} {currency_name.capitalize()}',
                                               inline=False)
-            self.calling_view.embed.add_field(name=f'Remaining',
-                                              value=', '.join([f'{amount} {denomination}' for denomination, amount
-                                                               in user_currency_db.items()]))
+
             await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
