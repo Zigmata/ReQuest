@@ -3,8 +3,8 @@ import logging
 import discord
 from discord.ui import View
 
-from ReQuest.ui.config import buttons, selects
 from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
+from ReQuest.ui.config import buttons, selects
 from ReQuest.utilities.supportFunctions import log_exception, query_config
 
 logging.basicConfig(level=logging.INFO)
