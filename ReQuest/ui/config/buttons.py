@@ -1,10 +1,13 @@
 import logging
+import json
+import io
 
 import discord
 from discord import ButtonStyle
 from discord.ui import Button
 
 from ReQuest.ui.config import modals
+from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.common.buttons import BaseViewButton
 from ReQuest.utilities.supportFunctions import log_exception
 
@@ -341,9 +344,10 @@ class AddShopWizardButton(Button):
 class AddShopJSONButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Add Shop (from JSON)',
-            style=ButtonStyle.secondary,
-            custom_id='add_shop_json_button'
+            label='Add Shop (JSON)',
+            style=ButtonStyle.success,
+            custom_id='add_shop_json_button',
+            row=2
         )
         self.calling_view = calling_view
 
@@ -357,7 +361,7 @@ class AddShopJSONButton(Button):
 class EditShopButton(Button):
     def __init__(self, target_view_class, calling_view):
         super().__init__(
-            label='Edit Shop',
+            label='Edit Shop (Wizard)',
             style=ButtonStyle.primary,
             custom_id='edit_shop_button',
             disabled=True
@@ -393,12 +397,31 @@ class RemoveShopButton(Button):
             label='Remove Shop',
             style=ButtonStyle.danger,
             custom_id='remove_shop_button',
+            row=4,
             disabled=True
         )
         self.calling_view = calling_view
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            if not self.calling_view.selected_channel_id:
+                raise Exception('No shop selected')
+
+            confirm_modal = common_modals.ConfirmModal(
+                title='Confirm Shop Removal',
+                prompt_label='WARNING: This action is irreversible!',
+                prompt_placeholder='Type CONFIRM to proceed',
+                confirm_callback=self._confirm_delete_callback
+            )
+            await interaction.response.send_modal(confirm_modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def _confirm_delete_callback(self, interaction: discord.Interaction):
+        try:
+            if not self.calling_view.selected_channel_id:
+                raise Exception('No shop was selected for removal')
+
             guild_id = interaction.guild_id
             collection = interaction.client.gdb['shops']
             channel_id = self.calling_view.selected_channel_id
@@ -409,9 +432,9 @@ class RemoveShopButton(Button):
             )
 
             self.calling_view.selected_channel_id = None
+
             await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
             await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
-
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -551,5 +574,71 @@ class EditShopDetailsButton(Button):
                 existing_channel_id=self.calling_view.channel_id
             )
             await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class DownloadShopJSONButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Download JSON',
+            style=ButtonStyle.secondary,
+            custom_id='download_shop_json_button',
+            row=2,
+            disabled=True
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            guild_id = interaction.guild_id
+            channel_id = self.calling_view.selected_channel_id
+            if not channel_id:
+                raise Exception("No shop selected.")
+
+            collection = interaction.client.gdb['shops']
+            query = await collection.find_one({'_id': guild_id})
+            shop_data = query.get('shopChannels', {}).get(channel_id)
+
+            if not shop_data:
+                raise Exception("Could not find shop data.")
+
+            shop_name = shop_data.get("shopName", "shop")
+            file_name = f"{shop_name.replace(' ', '_')}_{channel_id}.json"
+
+            json_string = json.dumps(shop_data, indent=4)
+            json_bytes = io.BytesIO(json_string.encode('utf-8'))
+
+            shop_file = discord.File(json_bytes, filename=file_name)
+
+            await interaction.response.send_message(
+                f"Here is the JSON definition for **{shop_name}**.",
+                file=shop_file,
+                ephemeral=True
+            )
+
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class UpdateShopJSONButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Edit Shop (JSON)',
+            style=ButtonStyle.primary,
+            custom_id='update_shop_json_button',
+            row=2,
+            disabled=True
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            if not self.calling_view.selected_channel_id:
+                raise Exception("No shop selected.")
+
+            await interaction.response.send_modal(
+                modals.ConfigUpdateShopJSONModal(self.calling_view)
+            )
         except Exception as e:
             await log_exception(e, interaction)

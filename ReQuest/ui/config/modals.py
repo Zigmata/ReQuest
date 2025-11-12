@@ -1,6 +1,9 @@
 import json
 import logging
 
+import jsonschema
+from jsonschema import validate
+
 import discord
 import discord.ui
 from discord.ui import Modal, Label
@@ -9,6 +12,30 @@ from ReQuest.utilities.supportFunctions import log_exception, purge_player_board
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+SHOP_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "shopName": {"type": "string"},
+        "shopKeeper": {"type": "string"},
+        "shopDescription": {"type": "string"},
+        "shopImage": {"type": "string", "format": "uri"},
+        "shopStock": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "description": {"type": "string"},
+                    "price": {"type": "number"},
+                    "currency": {"type": "string"}
+                },
+                "required": ["name", "price", "currency"]
+            }
+        }
+    },
+    "required": ["shopName", "shopStock"]
+}
 
 
 class AddCurrencyTextModal(Modal):
@@ -246,7 +273,11 @@ class ConfigShopDetailsModal(Modal):
                 custom_id='shop_channel_select',
                 required=True
             )
-            self.add_item(self.shop_channel_select)
+            self.channel_label = Label(
+                text='Select a channel',
+                component=self.shop_channel_select
+            )
+            self.add_item(self.channel_label)
         self.shop_name_text_input = discord.ui.TextInput(
             label='Shop Name',
             custom_id='shop_name_text_input',
@@ -295,7 +326,7 @@ class ConfigShopDetailsModal(Modal):
 
             if not self.existing_channel_id:
                 query = await collection.find_one({'_id': guild_id})
-                if query and f'shopChannels.{channel_id}' in query.get('shopChannels', {}):
+                if query and channel_id in query.get('shopChannels', {}):
                     raise Exception('A shop is already registered in the selected channel. '
                                     'Please choose a different channel or edit the existing shop.')
 
@@ -336,44 +367,21 @@ class ConfigShopJSONModal(Modal):
             timeout=600
         )
         self.calling_view = calling_view
-        default_json = '''{
-    "shopName": "Example Shop",
-    "shopKeeper": "John the Merchant",
-    "shopDescription": "My Shop",
-    "shopImage": "https://example.com/image.png",
-    "shopStock": [
-        {
-            "itemName": "Health Potion",
-            "description": "Restores 50 HP.",
-            "price": 10,
-            "currency": "gold"
-        },
-        {
-            "itemName": "Mana Potion",
-            "description": "Restores 30 MP.",
-            "price": 12,
-            "currency": "gold"
-        }
-    ]
-}'''
 
         self.shop_channel_select = discord.ui.ChannelSelect(
             channel_types=[discord.ChannelType.text],
             placeholder='Select the channel for this shop',
-            custom_id='shop_channel_select',
-            required=True
+            custom_id='shop_channel_select'
         )
         self.shop_json_file_upload = discord.ui.FileUpload(
-            max_values=1,
-            custom_id='shop_json_file_upload',
-            required=True
+            custom_id='shop_json_file_upload'
         )
         self.select_label = Label(
             text='Select a channel',
             component=self.shop_channel_select
         )
         self.upload_label = Label(
-            text='Upload a JSON file with the shop details',
+            text='Upload a .json file containing the shop data',
             component=self.shop_json_file_upload
         )
         self.add_item(self.select_label)
@@ -386,19 +394,30 @@ class ConfigShopJSONModal(Modal):
             channel_id = str(self.shop_channel_select.values[0].id)
 
             query = await collection.find_one({'_id': guild_id})
-            if query and f'shopChannels.{channel_id}' in query:
+            if query and channel_id in query.get('shopChannels', {}):
                 raise Exception('A shop is already registered in the selected channel. '
                                 'Please choose a different channel or edit the existing shop.')
 
+            if not self.shop_json_file_upload.values:
+                raise Exception('No JSON file uploaded for the shop.')
+
+            uploaded_file = self.shop_json_file_upload.values[0]
+            if not uploaded_file.filename.endswith('.json'):
+                raise Exception('Uploaded file must be a JSON file (.json).')
+
+            file_bytes = await uploaded_file.read()
+
+            file_content = file_bytes.decode('utf-8')
+
             try:
-                shop_data = json.loads(self.shop_json_text_input.value)
+                shop_data = json.loads(file_content)
             except json.JSONDecodeError as jde:
                 raise Exception(f'Invalid JSON format: {str(jde)}')
 
-            if 'shopName' not in shop_data or 'shopStock' not in shop_data:
-                raise Exception('JSON must include at least "shopName" and "shopStock" fields.')
-            if not isinstance(shop_data['shopStock'], list):
-                raise Exception('"shopStock" must be a list of items.')
+            try:
+                validate(instance=shop_data, schema=SHOP_SCHEMA)
+            except jsonschema.exceptions.ValidationError as ve:
+                raise Exception(f'JSON does not conform to schema: {str(ve)}')
 
             await collection.update_one(
                 {'_id': guild_id},
@@ -503,6 +522,64 @@ class ShopItemModal(Modal):
             )
 
             await view.refresh(interaction)
+
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ConfigUpdateShopJSONModal(Modal):
+    def __init__(self, calling_view):
+        super().__init__(
+            title='Update Shop via JSON',
+            timeout=600
+        )
+        self.calling_view = calling_view
+
+        self.shop_json_file_upload = discord.ui.FileUpload(
+            max_values=1,
+            custom_id='shop_json_file_upload',
+            required=True
+        )
+        self.upload_label = Label(
+            text=f"Upload new JSON definition",
+            component=self.shop_json_file_upload
+        )
+        self.add_item(self.upload_label)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            guild_id = interaction.guild_id
+            collection = interaction.client.gdb['shops']
+            channel_id = self.calling_view.selected_channel_id
+
+            if not self.shop_json_file_upload.values:
+                raise Exception("No file was uploaded.")
+
+            uploaded_file = self.shop_json_file_upload.values[0]
+            if not uploaded_file.filename.endswith('.json'):
+                raise Exception("File must be a `.json` file.")
+
+            file_bytes = await uploaded_file.read()
+            file_content = file_bytes.decode('utf-8')
+
+            try:
+                shop_data = json.loads(file_content)
+            except json.JSONDecodeError as jde:
+                raise Exception(f'Invalid JSON format: {str(jde)}')
+
+            try:
+                validate(instance=shop_data, schema=SHOP_SCHEMA)
+            except jsonschema.exceptions.ValidationError as err:
+                raise Exception(f"JSON validation failed: {err.message}")
+
+            await collection.update_one(
+                {'_id': guild_id},
+                {'$set': {f'shopChannels.{channel_id}': shop_data}},
+                upsert=False
+            )
+
+            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
+            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
 
         except Exception as e:
             await log_exception(e, interaction)

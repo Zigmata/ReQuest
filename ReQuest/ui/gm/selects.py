@@ -93,7 +93,7 @@ class RemovePlayerSelect(Select):
                 title=f'Remove character from quest',
                 prompt_label=f'Confirm character removal?',
                 prompt_placeholder='Type "CONFIRM" to proceed.',
-                calling_view=view
+                confirm_callback=view.confirm_callback
             )
             await interaction.response.send_modal(confirm_modal)
         except Exception as e:

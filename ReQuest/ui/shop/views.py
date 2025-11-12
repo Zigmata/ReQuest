@@ -3,7 +3,6 @@ import math
 import shortuuid
 
 import discord
-from discord import TextDisplay
 from discord.ui import (
     LayoutView,
     ActionRow,
@@ -55,8 +54,7 @@ class ShopBaseView(LayoutView):
                 for item in header_items:
                     container.add_item(item)
 
-            if header_items:
-                container.add_item(Separator())
+            container.add_item(Separator())
 
             start_index = self.current_page * self.items_per_page
             end_index = start_index + self.items_per_page
@@ -67,8 +65,11 @@ class ShopBaseView(LayoutView):
                 section = Section(accessory=buy_button)
 
                 item_name = item.get('name', 'Unknown Item')
-                item_description = item.get('description', 'No description available.')
-                section.add_item(TextDisplay(f'**{item_name}**\n{item_description}'))
+                item_description = item.get('description', None)
+                if item_description:
+                    section.add_item(TextDisplay(f'**{item_name}**\n*{item_description}*'))
+                else:
+                    section.add_item(TextDisplay(f'**{item_name}**'))
                 container.add_item(section)
 
             self.add_item(container)

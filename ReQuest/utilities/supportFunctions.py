@@ -34,8 +34,19 @@ async def log_exception(exception, interaction=None):
     logger.error(f'{type(exception).__name__}: {exception}')
     logger.error(traceback.format_exc())
     if interaction:
-        await interaction.response.defer()
-        await interaction.followup.send(exception, ephemeral=True)
+        try:
+            if not interaction.response.is_done():
+                await interaction.response.defer(ephemeral=True)
+                await interaction.followup.send(exception, ephemeral=True)
+            else:
+                await interaction.followup.send(exception, ephemeral=True)
+        except discord.errors.InteractionResponded:
+            try:
+                await interaction.followup.send(exception, ephemeral=True)
+            except Exception as e:
+                logger.error(f'Failed to send followup error message: {e}')
+        except Exception as e:
+            logger.error(f'Failed to handle exception in log_exception: {e}')
 
 
 def find_currency_or_denomination(currency_def_query, search_name):

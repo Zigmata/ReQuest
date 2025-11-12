@@ -80,6 +80,6 @@ class ShopItemButton(Button):
 
             transaction_id = shortuuid.uuid()[:12]
             embed.set_footer(text=f'Transaction ID: {transaction_id}')
-            await interaction.response.send_message(embed=embed)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)
