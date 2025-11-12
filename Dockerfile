@@ -6,6 +6,7 @@ RUN apk add --no-cache --virtual .build-deps  \
       musl-dev \
       libffi-dev \
       openssl-dev \
+      git \
     && apk add --no-cache bash ca-certificates
 
 # Make request user
