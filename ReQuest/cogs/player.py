@@ -1,5 +1,3 @@
-import logging
-
 import discord.ui
 from discord import app_commands
 from discord.ext import commands
@@ -8,9 +6,6 @@ from discord.ext.commands import Cog
 from ReQuest.ui.player import modals, views
 from ReQuest.utilities.checks import has_active_character
 from ReQuest.utilities.supportFunctions import log_exception
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 class Player(Cog):

@@ -1,5 +1,3 @@
-import logging
-
 import discord
 import discord.ui
 from discord import app_commands
@@ -9,9 +7,6 @@ from discord.ext.commands import Cog
 from ReQuest.ui.admin import views
 from ReQuest.utilities.checks import is_owner
 from ReQuest.utilities.supportFunctions import log_exception
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 class Admin(Cog):

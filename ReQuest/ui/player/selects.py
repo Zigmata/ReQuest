@@ -50,7 +50,7 @@ class RemoveCharacterSelect(Select):
                 title='Confirm Character Removal',
                 prompt_label='WARNING: This action is irreversible!',
                 prompt_placeholder='Type CONFIRM to proceed',
-                calling_view=self.calling_view
+                confirm_callback=self.calling_view.confirm_callback
             )
             await interaction.response.send_modal(confirm_modal)
         except Exception as e:

@@ -37,13 +37,18 @@ class ReQuest(commands.Bot):
         self.version = os.getenv('VERSION')
 
     async def setup_hook(self):
+        # The following two sections are two different ways to connect to MongoDB.
+        #
+        # The first is a default local installation without authentication (not recommended for production).
+        #
+        # The second is a method of loading environment variables to craft a connection string with
+        # authentication (recommended). See the README for details on setting up your environment variables.
 
-        # Instantiate the motor client and prep the databases in a local mongoDB deployment on the default port.
+        # ----- DEFAULT LOCAL MONGODB INSTALLATION (UNSECURE)-----
         # self.mongo_client = MongoClient('localhost', 27017)
+        # --------------------------------------------------------
 
-        # If you are using a connection URI, uncomment the next few blocks of code and use them instead of the client
-        # instantiation above. In this example, we are using environment variables from the host system to hold the
-        # necessary values.
+        # ----- MONGODB WITH AUTHENTICATION (RECOMMENDED) -----
         mongo_user = os.getenv('MONGO_USER')
         mongo_password = os.getenv('MONGO_PASSWORD')
         mongo_host = os.getenv('MONGO_HOST')
@@ -56,8 +61,9 @@ class ReQuest(commands.Bot):
 
         db_uri = f'mongodb://{username}:{password}@{mongo_host}:{mongo_port}/?authSource={auth_db}'
         self.mongo_client = MongoClient(db_uri)
+        # ------------------------------------------------------
 
-        # Instantiate the database objects as Discord client attributes
+        # Instantiate the database environment variables as Discord client attributes
         self.mdb = self.mongo_client[os.getenv('MEMBER_DB')]
         self.cdb = self.mongo_client[os.getenv('CONFIG_DB')]
         self.gdb = self.mongo_client[os.getenv('GUILD_DB')]
@@ -66,7 +72,7 @@ class ReQuest(commands.Bot):
         initial_extensions = os.getenv('LOAD_EXTENSIONS').split(', ')
         for ext in initial_extensions:
             try:
-                await asyncio.create_task(self.load_extension(ext))
+                await asyncio.create_task(self.load_extension(f'ReQuest.cogs.{ext}'))
             except Exception as e:
                 print(f'Failed to load extension: {ext}')
                 print('{}: {}'.format(type(e).__name__, e))

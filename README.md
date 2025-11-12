@@ -78,13 +78,13 @@ the GNU GPL v3 and will always be shared freely, forever.
 
 ### Instructions
 
-1. Clone this sucker and install the dependencies into your choice of environment.
+1. Clone this repository and install the dependencies into your choice of environment.
 2. Make sure your .gitignore is set up properly if you are running a public repo.
 3. Set your environment variables:
-   > The first three variables are only needed if you are running mongoDB with authentication.
    - MONGO_USER: The user you created in mongoDB for the bot's specific access.
    - MONGO_PASSWORD: The password for the user above.
    - AUTH_DB: The database the user exists in (usually `admin`).
+   > The three above variables are only needed if you are running mongoDB with authentication (recommended).
    - MONGO_HOST: The hostname/IP of your mongoDB server.
    - MONGO_PORT: The port your mongoDB service is hosted on.
    - BOT_TOKEN: The token for your Discord bot application. NEVER SHARE THIS!
@@ -92,7 +92,7 @@ the GNU GPL v3 and will always be shared freely, forever.
    - MEMBER_DB: The name of the database you want to use for member documents (characters).
    - CONFIG_DB: The name of the database you want to use for bot configs (/admin menu)
    - VERSION: The version of the bot for informational purposes only.
-   - LOAD_EXTENSIONS: String with comma-separated relative paths to extensions in ReQuest/cogs/. E.G. `ReQuest.cogs.gm`.
+   - LOAD_EXTENSIONS: String with comma-separated extension names, e.g. `gm`. See example below.
    - ALLOWLIST: True if you want to prohibit bot joins to a specific allowlist of guild IDs. False if you want to disable
     the allowlist.
 4. Run bot.py and everything *should* work.
@@ -107,6 +107,11 @@ the GNU GPL v3 and will always be shared freely, forever.
 ### Running ReQuest on Docker
 
 Use the following docker compose to grab containers for [ReQuest](https://hub.docker.com/r/zigmata/request) and MongoDB:
+
+> Note: You may want to specify a version tag for MongoDB rather than `latest`, depending on how frequently you pull 
+> containers. MongoDB major versions require incremental updates with some manual configuration changes, so 
+> inadvertently skipping a x.0 release may result in your database becoming inaccessible until you perform the necessary
+> migration steps.
 
 **docker-compose.yml**
 
@@ -134,7 +139,7 @@ services:
 #      MEMBER_DB: members
 #      CONFIG_DB: config
 #      VERSION: 1.0.1
-#      LOAD_EXTENSIONS: ReQuest.cogs.admin, ReQuest.cogs.config, ReQuest.cogs.gm, ReQuest.cogs.info, ReQuest.cogs.player
+#      LOAD_EXTENSIONS: admin, config, gm, info, player, shop
 #      ALLOWLIST: False
 #    depends_on:
 #      - mongodb
@@ -145,8 +150,9 @@ services:
 
 - The above example has commented-out lines for launching mongoDB with authentication. You can leave these commented out
   if security is not a concern (I.E. local deployment).
-    - If you do so, you will need to modify the URI in `bot.py` to omit the user/password details, as well as relevant
-      lines for grabbing those environment variables and encoding them.
+    - Make note of the mongoDB instantiation in the `setup_hook()` function of `bot.py`. There are two methods provided,
+      one for a default unauthenticated connection, and one using an authenticated connection URI. Comment/un-comment 
+      the appropriate lines as needed.
 - You will not need to expose any ports past your host firewall if your mongoDB and ReQuest containers are on the same
   docker bridge network. Docker creates this bridge network by default if no network definitions are provided.
 - If your bot runs on a publicly-accessible host, it is strongly recommended to research and implement best practices
