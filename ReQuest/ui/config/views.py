@@ -1,10 +1,13 @@
 import logging
+import math
 
 import discord
-from discord.ui import View
+from discord import ButtonStyle
+from discord.ui import View, LayoutView, Container, Section, Separator, ActionRow, Button, TextDisplay, Thumbnail
 
-from ReQuest.ui.config import buttons, selects
 from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
+from ReQuest.ui.common import modals as common_modals
+from ReQuest.ui.config import buttons, selects
 from ReQuest.utilities.supportFunctions import log_exception, query_config
 
 logging.basicConfig(level=logging.INFO)
@@ -26,7 +29,9 @@ class ConfigBaseView(View):
                 '__**Players**__\n'
                 'Global player settings, such as experience point tracking.\n\n'
                 '__**Currency**__\n'
-                'Server-wide currency settings.\n\n'
+                'Global currency settings.\n\n'
+                '__**Shops**__\n'
+                'Configure custom shops.\n\n'
             ),
             type='rich'
         )
@@ -35,7 +40,8 @@ class ConfigBaseView(View):
         self.add_item(MenuViewButton(ConfigQuestsView, 'Quests'))
         self.add_item(MenuViewButton(ConfigPlayersView, 'Players'))
         self.add_item(MenuViewButton(ConfigCurrencyView, 'Currency'))
-        self.add_item(MenuDoneButton())
+        self.add_item(MenuViewButton(ConfigShopsView, 'Shops'))
+        self.add_item(MenuDoneButton(row=None))
 
 
 class ConfigRolesView(View):
@@ -562,3 +568,232 @@ class RemoveCurrencyView(View):
                                         {'$pull': {'currencies': {'name': currency_name}}}, upsert=True)
         except Exception as e:
             await log_exception(e)
+
+
+# ------ SHOPS ------
+class ConfigShopsView(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.embed = discord.Embed(
+            title='Server Configuration - Shops',
+            description=(
+                '__**Add Shop (Wizard)**__\n'
+                'Create a new, empty shop from a form.\n\n'
+                '__**Add Shop (JSON)**__\n'
+                'Create a new shop by providing a full JSON definition. (Advanced)\n\n'
+                '__**Edit Shop (Wizard)**__\n'
+                'Edit the selected shop using a UI wizard.\n\n'
+                '__**Edit Shop (JSON)**__\n'
+                'Upload a new JSON file to replace the selected shop\'s definition.\n\n'
+                '__**Download JSON**__\n'
+                'Download the selected shop\'s current JSON definition.\n\n'
+                '__**Remove Shop**__\n'
+                'Removes the selected shop.\n\n'
+                '-----'
+            ),
+            type='rich'
+        )
+        self.selected_channel_id = None
+
+        self.shop_select = selects.ConfigShopSelect(self)
+        self.add_shop_wizard_button = buttons.AddShopWizardButton(self)
+        self.add_shop_json_button = buttons.AddShopJSONButton(self)
+        self.edit_shop_button = buttons.EditShopButton(EditShopView, self)
+        self.download_shop_json_button = buttons.DownloadShopJSONButton(self)
+        self.update_shop_json_button = buttons.UpdateShopJSONButton(self)
+        self.remove_shop_button = buttons.RemoveShopButton(self)
+
+        self.add_item(self.shop_select)
+        self.add_item(self.add_shop_wizard_button)
+        self.add_item(self.add_shop_json_button)
+        self.add_item(self.edit_shop_button)
+        self.add_item(self.update_shop_json_button)
+        self.add_item(self.download_shop_json_button)
+        self.add_item(self.remove_shop_button)
+        self.add_item(BackButton(target_view_class=ConfigBaseView))
+
+    async def setup(self, bot, guild):
+        try:
+            self.embed.clear_fields()
+            self.shop_select.options.clear()
+
+            collection = bot.gdb['shops']
+            query = await collection.find_one({'_id': guild.id})
+
+            shop_options = []
+            if query and query.get('shopChannels'):
+                for channel_id, shop_data in query['shopChannels'].items():
+                    shop_name = shop_data.get('shopName')
+                    channel_name = guild.get_channel(int(channel_id)).name
+                    shop_options.append(discord.SelectOption(label=f'{shop_name} (#{channel_name})', value=channel_id))
+
+            if shop_options:
+                self.shop_select.options = shop_options
+                self.shop_select.disabled = False
+                self.shop_select.placeholder = 'Select a shop to manage'
+            else:
+                self.shop_select.options = [discord.SelectOption(label='No shops configured', value='None')]
+                self.shop_select.disabled = True
+                self.shop_select.placeholder = 'No shops configured'
+
+            if self.selected_channel_id:
+                shop_name = next((opt.label for opt in shop_options if opt.value == self.selected_channel_id),
+                                 "Unknown").split('(')[0].strip()
+                shop_id = next((opt.value for opt in shop_options if opt.value == self.selected_channel_id),
+                               None)
+                self.embed.add_field(name='Selected Shop', value=f'{shop_name}: <#{shop_id}>')
+                self.edit_shop_button.disabled = False
+                self.download_shop_json_button.disabled = False
+                self.update_shop_json_button.disabled = False
+                self.remove_shop_button.disabled = False
+
+            if not self.selected_channel_id:
+                self.edit_shop_button.disabled = True
+                self.download_shop_json_button.disabled = True
+                self.update_shop_json_button.disabled = True
+                self.remove_shop_button.disabled = True
+
+        except Exception as e:
+            await log_exception(e)
+
+
+class EditShopView(LayoutView):
+    def __init__(self, channel_id: str, shop_data: dict):
+        super().__init__(timeout=None)
+        self.channel_id = channel_id
+        self.shop_data = shop_data
+        self.all_stock = self.shop_data.get('shopStock', [])
+
+        self.items_per_page = 6
+        self.current_page = 0
+        self.total_pages = math.ceil(len(self.all_stock) / self.items_per_page)
+
+    async def refresh(self, interaction: discord.Interaction):
+        try:
+            collection = interaction.client.gdb['shops']
+            query = await collection.find_one({'_id': interaction.guild_id})
+            self.shop_data = query.get('shopChannels', {}).get(self.channel_id, {})
+            self.all_stock = self.shop_data.get('shopStock', [])
+
+            self.total_pages = math.ceil(len(self.all_stock) / self.items_per_page)
+            if self.current_page >= self.total_pages:
+                self.current_page = max(0, self.total_pages - 1)
+
+            self.build_view()
+
+            await interaction.response.edit_message(view=self)
+
+        except Exception as e:
+            logger.error(f"Failed to refresh EditShopView: {e}")
+
+    def build_view(self):
+        self.clear_items()
+        container = Container()
+        header_items = [TextDisplay(f'**Editing Shop: {self.shop_data.get("shopName")}**')]
+
+        if shop_keeper := self.shop_data.get('shopKeeper'):
+            header_items.append(TextDisplay(f'Shopkeeper: **{shop_keeper}**'))
+        if shop_description := self.shop_data.get('shopDescription'):
+            header_items.append(TextDisplay(f'*{shop_description}*'))
+
+        if shop_image := self.shop_data.get('shopImage'):
+            shop_image = Thumbnail(media=f'{shop_image}')
+            shop_header = Section(accessory=shop_image)
+
+            for item in header_items:
+                shop_header.add_item(item)
+
+            container.add_item(shop_header)
+        else:
+            for item in header_items:
+                container.add_item(item)
+        header_buttons = ActionRow()
+        header_buttons.add_item(buttons.AddItemButton(self))
+        header_buttons.add_item(buttons.EditShopDetailsButton(self))
+        container.add_item(header_buttons)
+        container.add_item(Separator())
+
+        start_index = self.current_page * self.items_per_page
+        end_index = start_index + self.items_per_page
+        current_stock = self.all_stock[start_index:end_index]
+
+        for item in current_stock:
+            item_name = item.get('name')
+            item_desc = item.get('description', None)
+            item_price = item.get('price')
+            item_currency = item.get('currency')
+            if item_desc:
+                item_text = TextDisplay(
+                    f'**{item_name}**: {item_price} {item_currency}\n'
+                    f'*{item_desc}*'
+                )
+            else:
+                item_text = TextDisplay(
+                    f'**{item_name}**: {item_price} {item_currency}'
+                )
+
+            container.add_item(item_text)
+
+            item_buttons = ActionRow()
+            item_buttons.add_item(buttons.EditShopItemButton(item, self))
+            item_buttons.add_item(buttons.DeleteShopItemButton(item, self))
+
+            container.add_item(item_buttons)
+
+        self.add_item(container)
+
+        if self.total_pages > 1:
+            pagination_row = ActionRow()
+
+            prev_button = Button(
+                label='Previous',
+                style=ButtonStyle.secondary,
+                custom_id='shop_edit_prev',
+                disabled=(self.current_page == 0)
+            )
+            prev_button.callback = self.prev_page
+
+            page_display = Button(
+                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                style=ButtonStyle.secondary,
+                custom_id='shop_edit_page'
+            )
+            page_display.callback = self.show_page_jump_modal
+
+            next_button = Button(
+                label='Next',
+                style=ButtonStyle.primary,
+                custom_id='shop_edit_next',
+                disabled=(self.current_page >= self.total_pages - 1)
+            )
+            next_button.callback = self.next_page
+
+            pagination_row.add_item(prev_button)
+            pagination_row.add_item(page_display)
+            pagination_row.add_item(next_button)
+            pagination_row.add_item(MenuDoneButton())
+
+            self.add_item(pagination_row)
+        else:
+            button_row = ActionRow()
+            button_row.add_item(MenuDoneButton())
+            self.add_item(button_row)
+
+    async def prev_page(self, interaction: discord.Interaction):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction: discord.Interaction):
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def show_page_jump_modal(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.send_modal(common_modals.PageJumpModal(self))
+        except Exception as e:
+            logging.error(f'Failed to send PageJumpModal: {e}')
+            await interaction.response.send_message('Could not open page selector', ephemeral=True)

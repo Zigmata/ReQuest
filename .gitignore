@@ -8,6 +8,8 @@
 *.user
 *.userosscache
 *.sln.docstates
+Dockerfile-dev
+requirements-dev.txt
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
