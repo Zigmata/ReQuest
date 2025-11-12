@@ -1,4 +1,4 @@
-discord.py~=2.6.4
+discord.py @ git+https://github.com/rapptz/discord.py
 PyYaml~=6.0.3
 pymongo~=4.15.4
 shortuuid~=1.0.13
