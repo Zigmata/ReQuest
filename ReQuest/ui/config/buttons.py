@@ -320,3 +320,236 @@ class GMRewardsButton(Button):
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)
+
+
+class AddShopWizardButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Add Shop (Wizard)',
+            style=ButtonStyle.success,
+            custom_id='add_shop_wizard_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.send_modal(modals.ConfigShopDetailsModal(self.calling_view))
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class AddShopJSONButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Add Shop (from JSON)',
+            style=ButtonStyle.secondary,
+            custom_id='add_shop_json_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.send_modal(modals.ConfigShopJSONModal(self.calling_view))
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditShopButton(Button):
+    def __init__(self, target_view_class, calling_view):
+        super().__init__(
+            label='Edit Shop',
+            style=ButtonStyle.primary,
+            custom_id='edit_shop_button',
+            disabled=True
+        )
+        self.target_view_class = target_view_class
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            collection = interaction.client.gdb['shops']
+            query = await collection.find_one({'_id': interaction.guild_id})
+            shop_data = query.get('shopChannels', {}).get(self.calling_view.selected_channel_id)
+
+            if not shop_data:
+                await interaction.response.send_message("Error: Could not find that shop's data.", ephemeral=True)
+                return
+
+            view = self.target_view_class(
+                channel_id=self.calling_view.selected_channel_id,
+                shop_data=shop_data
+            )
+            view.build_view()
+
+            await interaction.response.send_message(view=view, ephemeral=True)
+
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RemoveShopButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Remove Shop',
+            style=ButtonStyle.danger,
+            custom_id='remove_shop_button',
+            disabled=True
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            guild_id = interaction.guild_id
+            collection = interaction.client.gdb['shops']
+            channel_id = self.calling_view.selected_channel_id
+
+            await collection.update_one(
+                {'_id': guild_id},
+                {'$unset': {f'shopChannels.{channel_id}': ''}}
+            )
+
+            self.calling_view.selected_channel_id = None
+            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
+            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditItemButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Edit Item',
+            style=ButtonStyle.primary,
+            custom_id='edit_shop_item_button',
+            disabled=True
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            selected_item = next(
+                (item for item in self.calling_view.shop_stock if item['name'] == self.calling_view.selected_item_name),
+                None
+            )
+            if not selected_item:
+                raise Exception("Selected item not found.")
+
+            await interaction.response.send_modal(modals.ShopItemModal(self.calling_view, existing_item=selected_item))
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RemoveItemButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Remove Item',
+            style=ButtonStyle.danger,
+            custom_id='remove_shop_item_button',
+            disabled=True
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            guild_id = interaction.guild_id
+            collection = interaction.client.gdb['shops']
+            channel_id = self.calling_view.channel_id
+            item_name = self.calling_view.selected_item_name
+
+            await collection.update_one(
+                {'_id': guild_id},
+                {'$pull': {f'shopChannels.{channel_id}.shopStock': {'name': item_name}}}
+            )
+
+            self.calling_view.selected_item_name = None
+            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
+            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditShopItemButton(Button):
+    def __init__(self, item: dict, calling_view):
+        super().__init__(
+            label='Edit',
+            style=ButtonStyle.primary,
+            custom_id=f"edit_shop_item_{item['name']}"
+        )
+        self.item = item
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            modal = modals.ShopItemModal(
+                calling_view=self.calling_view,
+                existing_item=self.item
+            )
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class DeleteShopItemButton(Button):
+    def __init__(self, item: dict, calling_view):
+        super().__init__(
+            label='Delete',
+            style=ButtonStyle.danger,
+            custom_id=f"delete_shop_item_{item['name']}"
+        )
+        self.item = item
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            guild_id = interaction.guild_id
+            collection = interaction.client.gdb['shops']
+            channel_id = self.calling_view.channel_id
+            item_name = self.item['name']
+
+            await collection.update_one(
+                {'_id': guild_id},
+                {'$pull': {f'shopChannels.{channel_id}.shopStock': {'name': item_name}}}
+            )
+
+            await self.calling_view.refresh(interaction)
+
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class AddItemButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Add Item',
+            style=ButtonStyle.success,
+            custom_id='add_shop_item_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.send_modal(modals.ShopItemModal(self.calling_view))
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditShopDetailsButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Edit Shop Details',
+            style=ButtonStyle.secondary,
+            custom_id='edit_shop_details_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            modal = modals.ConfigShopDetailsModal(
+                calling_view=self.calling_view,
+                existing_shop_data=self.calling_view.shop_data,
+                existing_channel_id=self.calling_view.channel_id
+            )
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)

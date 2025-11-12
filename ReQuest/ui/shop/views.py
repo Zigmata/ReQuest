@@ -14,7 +14,8 @@ from discord.ui import (
     Thumbnail,
     Button
 )
-from ReQuest.ui.shop import buttons, modals
+from ReQuest.ui.shop import buttons
+from ReQuest.ui.common import modals as common_modals
 
 
 class ShopBaseView(LayoutView):
@@ -121,7 +122,7 @@ class ShopBaseView(LayoutView):
 
     async def show_page_jump_modal(self, interaction: discord.Interaction):
         try:
-            await interaction.response.send_modal(modals.PageJumpModal(self))
+            await interaction.response.send_modal(common_modals.PageJumpModal(self))
         except Exception as e:
             logging.error(f'Failed to send PageJumpModal: {e}')
             await interaction.response.send_message('Could not open page selector', ephemeral=True)

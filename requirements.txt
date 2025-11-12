@@ -1,5 +1,5 @@
 discord.py~=2.6.4
 PyYaml~=6.0.3
-pymongo~=4.15.3
+pymongo~=4.15.4
 shortuuid~=1.0.13
 aiohttp~=3.13.2
