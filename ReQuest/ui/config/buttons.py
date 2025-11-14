@@ -535,8 +535,11 @@ class DeleteShopItemButton(Button):
                 {'$pull': {f'shopChannels.{channel_id}.shopStock': {'name': item_name}}}
             )
 
-            await self.calling_view.refresh(interaction)
+            new_stock = [item for item in self.calling_view.all_stock if item['name'] != item_name]
+            self.calling_view.update_stock(new_stock)
 
+            self.calling_view.build_view()
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 

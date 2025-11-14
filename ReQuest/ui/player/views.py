@@ -130,49 +130,80 @@ class RemoveCharacterView(View):
             type='rich'
         )
         self.selected_character_id = None
+        self.all_characters = {}
+        self.active_characters = {}
         self.remove_character_select = selects.RemoveCharacterSelect(self)
         self.add_item(self.remove_character_select)
         self.add_item(BackButton(CharacterBaseView))
 
     async def setup(self, bot, user):
         try:
-            self.embed.clear_fields()
-            self.remove_character_select.options.clear()
-            options = []
             collection = bot.mdb['characters']
             query = await collection.find_one({'_id': user.id})
-            if not query or not query['characters'] or len(query['characters']) == 0:
-                self.remove_character_select.placeholder = "You have no registered characters!"
-                options.append(discord.SelectOption(label='No characters', value='None'))
-                self.remove_character_select.disabled = True
+            if not query or not query.get('characters'):
+                self.all_characters = {}
+                self.active_characters = {}
             else:
-                for character_id in query['characters']:
-                    character = query['characters'][character_id]
-                    character_name = character['name']
-                    option = discord.SelectOption(label=character_name, value=character_id)
-                    options.append(option)
-                self.remove_character_select.disabled = False
+                self.all_characters = query.get('characters', {})
+                self.active_characters = query.get('activeCharacters', {})
 
-            self.remove_character_select.options = options
+            self._build_ui()
+
         except Exception as e:
             await log_exception(e)
+
+    def _build_ui(self):
+        self.embed.clear_fields()
+        self.remove_character_select.options.clear()
+        options = []
+
+        if not self.all_characters:
+            self.remove_character_select.placeholder = "You have no registered characters!"
+            options.append(discord.SelectOption(label='No characters to remove', value='None'))
+            self.remove_character_select.disabled = True
+        else:
+            for character_id, character in self.all_characters.items():
+                character_name = character['name']
+                if character_id in self.active_characters.values():
+                    option_label = f'{character_name} (Active)'
+                else:
+                    option_label = character_name
+                option = discord.SelectOption(label=option_label, value=character_id)
+                options.append(option)
+            self.remove_character_select.disabled = False
+            self.remove_character_select.placeholder = 'Select a character to remove'
+
+        self.remove_character_select.options = options
 
     async def confirm_callback(self, interaction: discord.Interaction):
         try:
             selected_character_id = self.selected_character_id
             collection = interaction.client.mdb['characters']
             member_id = interaction.user.id
-            query = await collection.find_one({'_id': member_id})
-            character_name = query['characters'][selected_character_id]['name']
+
+            character_name = self.all_characters[selected_character_id]['name']
             await collection.update_one({'_id': member_id},
-                                        {'$unset': {f'characters.{selected_character_id}': ''}}, upsert=True)
-            for guild in query['activeCharacters']:
-                if query['activeCharacters'][guild] == selected_character_id:
-                    await collection.update_one({'_id': member_id},
-                                                {'$unset': {f'activeCharacters.{interaction.guild_id}': ''}},
-                                                upsert=True)
+                                        {'$unset': {f'characters.{selected_character_id}': ''}})
+
+            active_guild_id = None
+            for guild_id, character_id in self.active_characters.items():
+                if character_id == selected_character_id:
+                    active_guild_id = guild_id
+                    break
+
+            if active_guild_id:
+                await collection.update_one({'_id': member_id},
+                                            {'$unset': {f'activeCharacters.{active_guild_id}': ''}})
+
+            if selected_character_id in self.all_characters:
+                del self.all_characters[selected_character_id]
+            if active_guild_id and active_guild_id in self.active_characters:
+                del self.active_characters[active_guild_id]
+
             self.selected_character_id = None
-            await self.setup(bot=interaction.client, user=interaction.user)
+
+            self._build_ui()
+
             self.embed.add_field(name='Success!', value=f'Character {character_name} has been removed.')
             await interaction.response.edit_message(embed=self.embed, view=self)
         except Exception as e:

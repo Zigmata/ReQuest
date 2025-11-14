@@ -240,7 +240,7 @@ class EditQuestModal(Modal):
 
             # Create a fresh quest view, and update the original post message
             quest_view = self.quest_post_view_class(updated_quest)
-            await quest_view.setup_embed()
+            await quest_view.setup()
             await message.edit(embed=quest_view.embed, view=quest_view)
 
             # Reload the UI view

@@ -23,7 +23,6 @@ class ShopItemButton(Button):
             member_id = interaction.user.id
             guild_id = interaction.guild_id
 
-            #
             character_query = await mdb['characters'].find_one({'_id': member_id})
             if not character_query:
                 raise Exception("You do not have any characters.")
@@ -33,7 +32,6 @@ class ShopItemButton(Button):
             active_character_id = character_query['activeCharacters'][str(guild_id)]
             character_data = character_query['characters'][active_character_id]
 
-            #
             currency_config = await gdb['currency'].find_one({'_id': guild_id})
             if not currency_config:
                 raise Exception("Currency is not configured on this server.")
@@ -41,7 +39,6 @@ class ShopItemButton(Button):
             item_cost = float(self.item['price'])
             item_currency = self.item['currency']
 
-            #
             can_afford, message = check_sufficient_funds(
                 character_data['attributes'].get('currency', {}),
                 currency_config,
@@ -70,11 +67,9 @@ class ShopItemButton(Button):
             inventory = character_data['attributes'].get('inventory', {})
             player_currencies = character_data['attributes'].get('currency', {})
 
-            #
             items = [f"{k}: **{v}**" for k, v in inventory.items()] or ['None']
             currencies = [f"{k}: **{v}**" for k, v in player_currencies.items()] or ['None']
 
-            #
             embed.add_field(name='Current Possessions', value='\n'.join(items))
             embed.add_field(name='Remaining Currency', value='\n'.join(currencies))
 

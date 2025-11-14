@@ -204,7 +204,12 @@ class ManageQuestsView(View):
                 await interaction.user.send('Quest roster has been unlocked.')
 
             if len(tasks) > 0:
-                await asyncio.gather(*tasks)
+                results = await asyncio.gather(*tasks, return_exceptions=True)
+                for result in results:
+                    if isinstance(result, discord.errors.Forbidden):
+                        logger.warning(f'Permission error when updating roles or sending DMs: {result}')
+                    elif isinstance(result, Exception):
+                        await log_exception(result)
 
             self.selected_quest = updated_quest
 
@@ -241,30 +246,27 @@ class RewardsMenuView(View):
         self.quest = calling_view.selected_quest
         self.selected_character = None
         self.selected_character_id = None
-        self.current_party_rewards = {'xp': None, 'items': {}}
+
+        self.current_party_rewards = self._extract_party_rewards(self.quest)
         self.current_individual_rewards = {'xp': None, 'items': {}}
 
         self.individual_rewards_button = buttons.IndividualRewardsButton(self)
         self.party_rewards_button = buttons.PartyRewardsButton(self)
         self.party_member_select = selects.PartyMemberSelect(calling_view=self,
                                                              disabled_components=[self.individual_rewards_button])
-        back_button = BackButton(ManageQuestsView)
         self.add_item(self.party_member_select)
         self.add_item(self.party_rewards_button)
         self.add_item(self.individual_rewards_button)
-        self.add_item(back_button)
+        self.add_item(BackButton(ManageQuestsView))
 
     async def setup(self):
         try:
-            # Clear old UI state
             self.party_member_select.options.clear()
             self.embed.clear_fields()
 
-            quest = self.quest
-            self.embed.title = f"Quest Rewards - {quest.get('title', 'Unknown Quest')}"
+            self.embed.title = f"Quest Rewards - {self.quest.get('title', 'Unknown Quest')}"
 
-            # 1) Build the select options from quest['party']
-            options = self._build_party_member_options(quest)
+            options = self._build_party_member_options(self.quest)
             if options:
                 self.party_member_select.placeholder = 'Select a party member'
                 self.party_member_select.disabled = False
@@ -276,79 +278,27 @@ class RewardsMenuView(View):
                     discord.SelectOption(label='None', value='None')
                 ]
 
-            # 2) Extract and store PARTY rewards (for modal prefill)
-            party_rewards = self._extract_party_rewards(quest)
-            self.current_party_rewards = party_rewards  # <- modal can read this
+            party_rewards = self._extract_party_rewards(self.quest)
+            self.current_party_rewards = party_rewards
             self.embed.add_field(
                 name='Party Rewards',
                 value=self._format_rewards_field(party_rewards),
                 inline=False
             )
 
-            # 3) If a character is selected, extract & store INDIVIDUAL rewards
             if self.selected_character and self.selected_character_id:
-                indiv = self._extract_individual_rewards(quest, self.selected_character_id)
-                self.current_individual_rewards = indiv  # <- modal can read this
+                individual_rewards = self._extract_individual_rewards(self.quest, self.selected_character_id)
+                self.current_individual_rewards = individual_rewards
 
                 char_name = self.selected_character.get('name', 'Selected Character')
                 self.embed.add_field(
                     name=f'Additional rewards for {char_name}',
-                    value=self._format_rewards_field(indiv),
+                    value=self._format_rewards_field(individual_rewards),
                     inline=False
                 )
             else:
-                # Reset when none selected
                 self.current_individual_rewards = {"xp": None, "items": {}}
 
-            # self.party_member_select.options.clear()
-            # self.embed.clear_fields()
-            #
-            # quest = self.quest
-            # party = quest['party']
-            # options = []
-            #
-            # if len(party) > 0:
-            #     for player in party:
-            #         for member_id in player:
-            #             for character_id in player[str(member_id)]:
-            #                 character = player[str(member_id)][str(character_id)]
-            #                 options.append(discord.SelectOption(label=character['name'], value=character_id))
-            #     self.party_member_select.placeholder = 'Select a party member'
-            #     self.party_member_select.disabled = False
-            # else:
-            #     options.append(discord.SelectOption(label='None', value='None'))
-            #     self.party_member_select.placeholder = 'No party members'
-            #     self.party_member_select.disabled = True
-            #
-            # self.party_member_select.options = options
-            #
-            # self.embed.title = f'Quest Rewards - {quest['title']}'
-            # if 'party' in quest['rewards']:
-            #     party_rewards = quest['rewards']['party']
-            #     party_rewards_list = []
-            #     if 'xp' in party_rewards and party_rewards['xp']:
-            #         party_rewards_list.append(f'Experience: {party_rewards['xp']}')
-            #     if 'items' in party_rewards and party_rewards['items']:
-            #         for item, quantity in party_rewards['items'].items():
-            #             party_rewards_list.append(f'{item.capitalize()}: {quantity}')
-            #     party_rewards_string = '\n'.join(party_rewards_list)
-            #     self.embed.add_field(name='Party Rewards',
-            #                          value=party_rewards_string if party_rewards_string else 'None')
-            #
-            # if self.selected_character:
-            #     character_id = self.selected_character_id
-            #     individual_rewards_list = []
-            #     for key in quest['rewards']:
-            #         if key == character_id:
-            #             individual_rewards = quest['rewards'][character_id]
-            #             if 'xp' in individual_rewards and individual_rewards['xp']:
-            #                 individual_rewards_list.append(f'Experience: {quest['rewards'][character_id]['xp']}')
-            #             for item, quantity in individual_rewards['items'].items():
-            #                 individual_rewards_list.append(f'{item.capitalize()}: {quantity}')
-            #     rewards_string = '\n'.join(individual_rewards_list)
-            #     self.embed.add_field(name=f'Additional rewards for {self.selected_character['name']}',
-            #                          value=rewards_string if rewards_string else 'None',
-            #                          inline=False)
         except Exception as e:
             await log_exception(e)
 
@@ -368,11 +318,6 @@ class RewardsMenuView(View):
 
     @staticmethod
     def _iter_party_members(party: Any) -> Iterator[Tuple[str, str, Dict[str, Any]]]:
-        """
-        Yields (member_id, character_id, character) from your nested party layout.
-        Tolerant to odd shapes; won’t explode if something’s missing.
-        """
-        # Expected: party is a list[dict[str -> dict[str -> character_dict]]]
         for player in party if isinstance(party, list) else []:
             if not isinstance(player, dict):
                 continue
@@ -389,7 +334,6 @@ class RewardsMenuView(View):
         xp = rewards.get('xp')
         items = rewards.get('items') or {}
 
-        # normalize types
         xp_val = int(xp) if isinstance(xp, (int, float, str)) and str(xp).isdigit() else (
             xp if isinstance(xp, int) else None)
         items_val = dict(items) if isinstance(items, dict) else {}
@@ -422,7 +366,6 @@ class RewardsMenuView(View):
         items = rewards.get('items') or {}
         if isinstance(items, dict) and items:
             for item_name, qty in items.items():
-                # display-friendly: Titleize key, print raw qty
                 pretty = str(item_name).capitalize()
                 lines.append(f'{pretty}: {qty}')
 
@@ -563,8 +506,11 @@ class RemovePlayerView(View):
 
                             for key in new_player:
                                 new_member = guild.get_member(int(key))
-                                await new_member.send(f'You have been added to the party for **{quest["title"]}**, '
-                                                      f'due to a player dropping!')
+                                try:
+                                    await new_member.send(f'You have been added to the party for **{quest["title"]}**, '
+                                                          f'due to a player dropping!')
+                                except discord.errors.Forbidden as e:
+                                    logger.warning(f'Could not DM {new_member.id} about party promotion: {e}')
 
                                 # If a role is set, assign it to the player
                                 if role and lock_state:
@@ -592,7 +538,10 @@ class RemovePlayerView(View):
             await interaction.response.edit_message(embed=refreshed_view.embed, view=refreshed_view)
 
             # Notify the player they have been removed.
-            await member.send(removal_message)
+            try:
+                await member.send(removal_message)
+            except discord.errors.Forbidden as e:
+                logger.warning(f'Could not DM {member.id} about removal from quest: {e}')
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -728,8 +677,11 @@ class QuestPostView(View):
                         new_member = guild.get_member(int(key))
 
                     # Notify the member they have been moved into the main party
-                    await new_member.send(f'You have been added to the party for '
-                                          f'**{quest["title"]}**, due to a player dropping!')
+                    try:
+                        await new_member.send(f'You have been added to the party for '
+                                              f'**{quest["title"]}**, due to a player dropping!')
+                    except discord.errors.Forbidden as e:
+                        logger.warning(f'Could not DM {new_member.id} about party promotion: {e}')
 
                 # If the quest list is locked and a party role exists, fetch the role.
                 party_role_id = quest['partyRoleId']
@@ -899,7 +851,10 @@ class CompleteQuestsView(View):
                     )
                     if reward_strings:
                         dm_embed.add_field(name='Rewards', value='\n'.join(reward_strings))
-                    await member.send(embed=dm_embed)
+                    try:
+                        await member.send(embed=dm_embed)
+                    except discord.errors.Forbidden as e:
+                        logger.warning(f'Could not DM {member.id} about quest completion rewards: {e}')
 
             # Build an embed for feedback
             quest_embed = discord.Embed(
@@ -997,7 +952,10 @@ class CompleteQuestsView(View):
                         item_strings.append(f'{item_name.capitalize()}: {quantity}')
                     gm_rewards_embed.add_field(name='Items', value='\n'.join(item_strings))
 
-                await interaction.user.send(embed=gm_rewards_embed)
+                try:
+                    await interaction.user.send(embed=gm_rewards_embed)
+                except discord.errors.Forbidden as e:
+                    logger.warning(f'Could not DM {interaction.user.id} about GM rewards: {e}')
 
             # Reset the view and handle the interaction response
             self.selected_quest = None
@@ -1050,7 +1008,10 @@ class CancelQuestView(View):
                     for member_id in player:
                         # Message the player that the quest was canceled.
                         member = await guild.fetch_member(int(member_id))
-                        await member.send(f'Quest **{title}** was cancelled by the GM.')
+                        try:
+                            await member.send(f'Quest **{title}** was cancelled by the GM.')
+                        except discord.errors.Forbidden as e:
+                            logger.warning(f'Could not DM {member.id} about quest cancellation: {e}')
 
             # Remove the party role, if applicable
             party_role_id = quest['partyRoleId']

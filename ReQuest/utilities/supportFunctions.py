@@ -152,7 +152,7 @@ async def trade_item(mdb, item_name, quantity, sending_member_id, receiving_memb
     receiver_character_id = receiver_data['activeCharacters'][str(guild_id)]
     receiver_character = receiver_data['characters'][receiver_character_id]
 
-    # Check if sender has enough items (case-insensitive comparison)
+    # Check if sender has enough items
     sender_inventory = {k.lower(): v for k, v in sender_character['attributes']['inventory'].items()}
     if sender_inventory.get(normalized_item_name.lower(), 0) < quantity:
         raise Exception('Insufficient items')
@@ -165,11 +165,10 @@ async def trade_item(mdb, item_name, quantity, sending_member_id, receiving_memb
     receiver_inventory[normalized_item_name.lower()] = receiver_inventory.get(normalized_item_name.lower(),
                                                                               0) + quantity
 
-    # Normalize the inventories for MongoDB update
+    # Normalize the inventories for db update
     sender_character['attributes']['inventory'] = {k.capitalize(): v for k, v in sender_inventory.items()}
     receiver_character['attributes']['inventory'] = {k.capitalize(): v for k, v in receiver_inventory.items()}
 
-    # Update MongoDB
     await collection.update_one(
         {'_id': sending_member_id, f'characters.{sender_character_id}.attributes.inventory': {'$exists': True}},
         {'$set': {
@@ -220,7 +219,7 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
                 raise Exception(f"Insufficient funds to cover this transaction.")
 
             if total_in_lowest_denom < 0:
-                total_in_lowest_denom = 0  # Set to 0 if it's a tiny negative float
+                total_in_lowest_denom = 0
 
             new_character_currency = {}
             for denom, value in sorted(denomination_map.items(), key=lambda x: -x[1]):
@@ -236,7 +235,7 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
                 if denom_name in new_character_currency:
                     final_wallet[denom_name] = new_character_currency[denom_name]
                 elif denom_name in final_wallet:
-                    del final_wallet[denom_name]  # Remove if new qty is 0
+                    del final_wallet[denom_name]
 
             character_currency_db = {k.capitalize(): v for k, v in final_wallet.items() if v > 0}
 
@@ -468,7 +467,7 @@ def check_sufficient_funds(player_currency: dict, currency_config: dict, cost_cu
                            cost_amount: float) -> (bool, str):
     try:
         if cost_amount <= 0:
-            return True, "OK"  # No cost
+            return True, "OK"
 
         denomination_map, _ = get_denomination_map(currency_config, cost_currency_name)
 
@@ -518,7 +517,7 @@ def apply_item_change_local(character_data: dict, item_name: str, quantity: int)
     if found_key:
         inventory[found_key] += int(quantity)
         if inventory[found_key] <= 0:
-            del inventory[found_key]  # Remove if zero or less
+            del inventory[found_key]
     elif quantity > 0:
         inventory[item_name.capitalize()] = int(quantity)
     elif quantity < 0:
@@ -571,7 +570,7 @@ def apply_currency_change_local(character_data: dict, currency_config: dict, ite
         if denom_name in new_character_currency:
             final_wallet[denom_name] = new_character_currency[denom_name]
         elif denom_name in final_wallet:
-            del final_wallet[denom_name]  # Remove if new qty is 0
+            del final_wallet[denom_name]
 
     character_data['attributes']['currency'] = {k.capitalize(): v for k, v in final_wallet.items() if v > 0}
     return character_data
