@@ -3,7 +3,7 @@ import logging
 from typing import Any, Dict, Iterator, Optional, Tuple
 
 import discord
-from discord.ui import View
+from discord.ui import View, LayoutView, Container, TextDisplay, Separator, ActionRow
 
 from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton, ConfirmButton
 from ReQuest.ui.gm import buttons, selects
@@ -1034,3 +1034,36 @@ class CancelQuestView(View):
                                                     ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)
+
+
+class ViewCharacterView(LayoutView):
+    def __init__(self, member_id, character_data):
+        super().__init__(timeout=None)
+        container = Container()
+
+        name = character_data.get('name', 'Unknown')
+        xp = character_data['attributes'].get('experience', None)
+        inventory = character_data['attributes'].get('inventory', {})
+        currency = character_data['attributes'].get('currency', {})
+
+        container.add_item(TextDisplay(content=f'**Character Sheet for {name} (<@{member_id}>)**'))
+        container.add_item(Separator())
+        if xp:
+            container.add_item(TextDisplay(f'__**Experience Points:**__\n{xp}'))
+        inventory_display = TextDisplay(
+            '__**Possessions**__\n\n' + ('\n'.join([f'{item}: **{quantity}**' for item, quantity in inventory.items()])
+                                         if inventory else 'No items in inventory.')
+        )
+        currency_display = TextDisplay(
+            '__**Currency**__\n\n' + ('\n'.join([f'{currency_type}: **{amount}**' for
+                                                 currency_type, amount in currency.items()])
+                                      if currency else 'No currency.'))
+
+        container.add_item(inventory_display)
+        container.add_item(currency_display)
+
+        self.add_item(container)
+
+        nav_row = ActionRow()
+        nav_row.add_item(MenuDoneButton())
+        self.add_item(nav_row)
