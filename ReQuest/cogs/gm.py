@@ -25,7 +25,6 @@ class GameMaster(Cog):
 
     async def cog_unload(self) -> None:
         self.bot.tree.remove_command(self.mod_player_menu.name, type=self.mod_player_menu.type)
-        self.bot.tree.remove_command(self.view_player.name, type=self.view_player.type)
         self.bot.tree.remove_command(self.view_player_menu.name, type=self.view_player_menu.type)
 
     @has_gm_or_mod()
