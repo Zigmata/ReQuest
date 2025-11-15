@@ -199,9 +199,21 @@ class IndividualRewardsButton(Button):
             rewards = quest.setdefault('rewards', {})
             char_rewards = rewards.setdefault(character_id, {})
 
-            xp_val = int(xp) if xp is not None and int(xp) >= 0 else None
-            items_val = items if isinstance(items, dict) else {}
+            xp_val = None
+            if xp is not None:
+                try:
+                    xp_int = int(xp)
+                    xp_val = xp_int if xp_int >= 0 else None
+                except (ValueError, TypeError):
+                    xp_val = None
 
+            if items and isinstance(items, dict):
+                invalid = [n for n, q in items.items() if not isinstance(q, (int, float)) or q <= 0]
+                if invalid:
+                    raise ValueError(f"Invalid item quantities: {', '.join(invalid)}")
+                items_val = items
+            else:
+                items_val = {}
             updates = {
                 f'rewards.{character_id}.xp': xp_val,
                 f'rewards.{character_id}.items': items_val
