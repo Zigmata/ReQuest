@@ -375,6 +375,9 @@ class PlayerBoardView(View):
 
             self.posts.append(post)
 
+            # Remove placeholder if present before adding the first real post
+            if self.manageable_post_select.disabled:
+                self.manageable_post_select.options.clear()
             self.manageable_post_select.options.append(discord.SelectOption(
                 label=title,
                 value=post_id
