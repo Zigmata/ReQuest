@@ -41,12 +41,9 @@ class AdminAllowlistView(View):
                          'Removes the selected Discord Server from the allowlist.\n\n'),
             type='rich'
         )
-        self.selected_guild = None
         self.remove_guild_allowlist_select = selects.RemoveGuildAllowlistSelect(self)
-        self.confirm_allowlist_remove_button = buttons.ConfirmAllowlistRemoveButton(self)
         self.add_item(self.remove_guild_allowlist_select)
         self.add_item(buttons.AllowlistAddServerButton(self))
-        self.add_item(self.confirm_allowlist_remove_button)
         self.add_item(common_buttons.BackButton(AdminBaseView))
 
     async def setup(self, bot):

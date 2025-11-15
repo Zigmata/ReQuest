@@ -4,6 +4,7 @@ import discord
 from discord.ui import Select
 
 from ReQuest.utilities.supportFunctions import log_exception
+from ReQuest.ui.common import modals as common_modals
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -20,15 +21,39 @@ class RemoveGuildAllowlistSelect(Select):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            confirm_modal = common_modals.ConfirmModal(
+                title='Confirm Remove Server from Allowlist',
+                prompt_label='Confirm server removal',
+                prompt_placeholder='Type CONFIRM to proceed',
+                confirm_callback=self.confirm_removal
+            )
+            await interaction.response.send_modal(confirm_modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def confirm_removal(self, interaction: discord.Interaction):
+        try:
             view = self.calling_view
             guild_id = int(self.values[0])
+
             collection = interaction.client.cdb['serverAllowlist']
-            query = await collection.find_one({'servers': {'$exists': True}, 'servers.id': guild_id})
-            server = next((server for server in query['servers'] if server['id'] == guild_id))
-            logger.debug(f'Found server: {server}')
-            view.selected_guild = server['id']
-            view.confirm_allowlist_remove_button.disabled = False
-            view.confirm_allowlist_remove_button.label = f'Confirm removal of {server['name']}'
+            await collection.update_one({'servers': {'$exists': True}},
+                                        {'$pull': {'servers': {'id': guild_id}}})
+
+            if guild_id in interaction.client.allow_list:
+                interaction.client.allow_list.remove(guild_id)
+
+            view.remove_guild_allowlist_select.options = [
+                option for option in view.remove_guild_allowlist_select.options if int(option.value) != guild_id
+            ]
+
+            if not view.remove_guild_allowlist_select.options:
+                view.remove_guild_allowlist_select.disabled = True
+                view.remove_guild_allowlist_select.placeholder = 'There are no servers in the allowlist'
+                view.remove_guild_allowlist_select.options.append(
+                    discord.SelectOption(label='There are no servers in the allowlist', value='None')
+                )
+            await view.setup(interaction.client)
             await interaction.response.edit_message(embed=view.embed, view=view)
         except Exception as e:
             await log_exception(e, interaction)

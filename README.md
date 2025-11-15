@@ -138,9 +138,9 @@ services:
 #      GUILD_DB: guilds
 #      MEMBER_DB: members
 #      CONFIG_DB: config
-#      VERSION: 1.0.1
+#      VERSION: 1.1.0
 #      LOAD_EXTENSIONS: admin, config, gm, info, player, shop
-#      ALLOWLIST: False
+#      ALLOWLIST: True
 #    depends_on:
 #      - mongodb
 #    restart: unless-stopped
