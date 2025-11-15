@@ -220,27 +220,3 @@ class ConfigShopSelect(Select):
             await interaction.response.edit_message(embed=view.embed, view=view)
         except Exception as e:
             await log_exception(e, interaction)
-
-
-class ConfigShopItemSelect(Select):
-    def __init__(self, calling_view):
-        super().__init__(
-            placeholder='Select an item to manage',
-            options=[discord.SelectOption(label='No items in stock', value='None')],
-            custom_id='config_shop_item_select',
-            disabled=True
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            view = self.calling_view
-            view.selected_item_name = self.values[0]
-
-            view.edit_item_button.disabled = False
-            view.remove_item_button.disabled = False
-
-            await view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=view.embed, view=view)
-        except Exception as e:
-            await log_exception(e, interaction)

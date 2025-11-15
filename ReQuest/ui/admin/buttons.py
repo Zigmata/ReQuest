@@ -51,30 +51,6 @@ class AllowlistAddServerButton(Button):
             await log_exception(e, interaction)
 
 
-class ConfirmAllowlistRemoveButton(Button):
-    def __init__(self, calling_view):
-        super().__init__(
-            label='Confirm',
-            style=ButtonStyle.danger,
-            custom_id='confirm_allowlist_remove_button',
-            disabled=True
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            view = self.calling_view
-            collection = interaction.client.cdb['serverAllowlist']
-            await collection.update_one({'servers': {'$exists': True}},
-                                        {'$pull': {'servers': {'id': view.selected_guild}}})
-            await view.setup(bot=interaction.client)
-            view.confirm_allowlist_remove_button.disabled = True
-            view.confirm_allowlist_remove_button.label = 'Confirm'
-            await interaction.response.edit_message(embed=view.embed, view=view)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-
 class AdminLoadCogButton(Button):
     def __init__(self):
         super().__init__(

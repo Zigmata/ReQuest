@@ -11,8 +11,8 @@ from ReQuest.utilities.supportFunctions import (
     log_exception,
     trade_currency,
     trade_item,
-    normalize_currency_keys,
-    consolidate_currency, check_sufficient_funds, update_character_inventory
+    check_sufficient_funds,
+    update_character_inventory
 )
 
 logging.basicConfig(level=logging.INFO)

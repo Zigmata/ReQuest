@@ -668,24 +668,6 @@ class EditShopView(LayoutView):
         self.current_page = 0
         self.total_pages = math.ceil(len(self.all_stock) / self.items_per_page)
 
-    async def refresh(self, interaction: discord.Interaction):
-        try:
-            collection = interaction.client.gdb['shops']
-            query = await collection.find_one({'_id': interaction.guild_id})
-            self.shop_data = query.get('shopChannels', {}).get(self.channel_id, {})
-            self.all_stock = self.shop_data.get('shopStock', [])
-
-            self.total_pages = math.ceil(len(self.all_stock) / self.items_per_page)
-            if self.current_page >= self.total_pages:
-                self.current_page = max(0, self.total_pages - 1)
-
-            self.build_view()
-
-            await interaction.response.edit_message(view=self)
-
-        except Exception as e:
-            logger.error(f"Failed to refresh EditShopView: {e}")
-
     def build_view(self):
         self.clear_items()
         container = Container()
@@ -797,3 +779,15 @@ class EditShopView(LayoutView):
         except Exception as e:
             logging.error(f'Failed to send PageJumpModal: {e}')
             await interaction.response.send_message('Could not open page selector', ephemeral=True)
+
+    def update_stock(self, new_stock: list):
+        self.all_stock = new_stock
+        self.shop_data['shopStock'] = new_stock
+
+        self.total_pages = math.ceil(len(self.all_stock) / self.items_per_page)
+        if self.current_page >= self.total_pages:
+            self.current_page = max(0, self.total_pages - 1)
+
+    def update_details(self, new_shop_data: dict):
+        new_shop_data['shopStock'] = self.all_stock
+        self.shop_data = new_shop_data

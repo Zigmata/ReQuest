@@ -349,8 +349,10 @@ class ConfigShopDetailsModal(Modal):
                 upsert=True
             )
 
-            if hasattr(self.calling_view, 'refresh'):
-                await self.calling_view.refresh(interaction)
+            if hasattr(self.calling_view, 'update_details'):
+                self.calling_view.update_details(shop_data)
+                self.calling_view.build_view()
+                await interaction.response.edit_message(view=self.calling_view)
             elif hasattr(self.calling_view, 'setup'):
                 await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
                 await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
@@ -521,8 +523,9 @@ class ShopItemModal(Modal):
                 upsert=True
             )
 
-            await view.refresh(interaction)
-
+            self.calling_view.update_stock(shop_data['shopStock'])
+            self.calling_view.build_view()
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -578,8 +581,12 @@ class ConfigUpdateShopJSONModal(Modal):
                 upsert=False
             )
 
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
-
+            if hasattr(self.calling_view, 'update_details'):
+                self.calling_view.update_details(shop_data)
+                self.calling_view.build_view()
+                await interaction.response.edit_message(view=self.calling_view)
+            elif hasattr(self.calling_view, 'setup'):
+                await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
+                await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)

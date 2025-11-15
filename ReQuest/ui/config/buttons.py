@@ -439,59 +439,6 @@ class RemoveShopButton(Button):
             await log_exception(e, interaction)
 
 
-class EditItemButton(Button):
-    def __init__(self, calling_view):
-        super().__init__(
-            label='Edit Item',
-            style=ButtonStyle.primary,
-            custom_id='edit_shop_item_button',
-            disabled=True
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            selected_item = next(
-                (item for item in self.calling_view.shop_stock if item['name'] == self.calling_view.selected_item_name),
-                None
-            )
-            if not selected_item:
-                raise Exception("Selected item not found.")
-
-            await interaction.response.send_modal(modals.ShopItemModal(self.calling_view, existing_item=selected_item))
-        except Exception as e:
-            await log_exception(e, interaction)
-
-
-class RemoveItemButton(Button):
-    def __init__(self, calling_view):
-        super().__init__(
-            label='Remove Item',
-            style=ButtonStyle.danger,
-            custom_id='remove_shop_item_button',
-            disabled=True
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            guild_id = interaction.guild_id
-            collection = interaction.client.gdb['shops']
-            channel_id = self.calling_view.channel_id
-            item_name = self.calling_view.selected_item_name
-
-            await collection.update_one(
-                {'_id': guild_id},
-                {'$pull': {f'shopChannels.{channel_id}.shopStock': {'name': item_name}}}
-            )
-
-            self.calling_view.selected_item_name = None
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-
 class EditShopItemButton(Button):
     def __init__(self, item: dict, calling_view):
         super().__init__(
@@ -535,8 +482,11 @@ class DeleteShopItemButton(Button):
                 {'$pull': {f'shopChannels.{channel_id}.shopStock': {'name': item_name}}}
             )
 
-            await self.calling_view.refresh(interaction)
+            new_stock = [item for item in self.calling_view.all_stock if item['name'] != item_name]
+            self.calling_view.update_stock(new_stock)
 
+            self.calling_view.build_view()
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 

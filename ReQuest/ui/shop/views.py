@@ -26,7 +26,6 @@ class ShopBaseView(LayoutView):
         self.current_page = 0
         self.total_pages = math.ceil(len(self.all_stock) / self.items_per_page)
 
-        # Initialize the first view
         self.build_view()
 
     def build_view(self):

@@ -22,17 +22,6 @@ to trade amongst each other without needing to ping staff and hope someone is in
 
 ## Features
 
-### System-Agnostic
-
-ReQuest is designed to work for any system. Let your players, or your choice of specialty bot, handle the mechanics and
-dice rolling. Let ReQuest handle all the boring busy work.
-
-### Hands-off Inventory Validation
-
-With ReQuest, character inventories and experience are awarded from game masters only. Players cannot simply add things
-to their characters; they must be received from another player's inventory or awarded directly from a Game Master or
-quest. Players can freely trade without the need of GM oversight.
-
 ### Automated Quest Lifecycle Management
 
 Game Masters can create quests, modify details, assign party roles, and even award shared or individual loot, all
@@ -45,10 +34,25 @@ configure wait lists for quests, and an optional archive channel to view past ad
 Define your currency, be it anything from credits and reputation, to gold or the U.S. Dollar. ReQuest keeps transactions
 simple and makes change for you so you can get back to your adventures.
 
+### Hands-off Inventory Validation
+
+With ReQuest, you can trust that everything in your players' inventories is legitimate. Game Masters can create rewards
+as needed, and players can freely trade without the need of GM oversight.
+
+### Customizable Shop System
+
+Create automated shops in any channel you like. No more GMs being spammed with "buy" and "sell" requests. Players can
+browse shop inventories, and make purchases directly using any of the server's defined currencies.
+
 ### Easy User Interface
 
 Forget typing lengthy commands just to miss a letter and have to start over. Every single function a game master,
-player, or server admin needs, is under one command with easily-navigated menus.
+player, or server admin needs, is accessed via easily-navigated menus.
+
+### System-Agnostic
+
+ReQuest is designed to work for any system. Let your players, or your choice of specialty bot, handle the mechanics and
+dice rolling. Let ReQuest handle all the boring busy work.
 
 ### Streamlined Help
 
@@ -110,7 +114,7 @@ Use the following docker compose to grab containers for [ReQuest](https://hub.do
 
 > Note: You may want to specify a version tag for MongoDB rather than `latest`, depending on how frequently you pull 
 > containers. MongoDB major versions require incremental updates with some manual configuration changes, so 
-> inadvertently skipping a x.0 release may result in your database becoming inaccessible until you perform the necessary
+> inadvertently skipping an x.0 release may result in your database becoming inaccessible until you perform the necessary
 > migration steps.
 
 **docker-compose.yml**
@@ -138,9 +142,9 @@ services:
 #      GUILD_DB: guilds
 #      MEMBER_DB: members
 #      CONFIG_DB: config
-#      VERSION: 1.0.1
+#      VERSION: 1.1.0
 #      LOAD_EXTENSIONS: admin, config, gm, info, player, shop
-#      ALLOWLIST: False
+#      ALLOWLIST: True
 #    depends_on:
 #      - mongodb
 #    restart: unless-stopped

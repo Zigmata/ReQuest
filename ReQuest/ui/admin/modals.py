@@ -35,12 +35,25 @@ class AllowServerModal(Modal):
             input_name = self.allow_server_name_input.value
             guild_id = int(self.allow_server_id_input.value)
             collection = interaction.client.cdb['serverAllowlist']
-            interaction.client.allow_list.append(guild_id)
+
             await collection.update_one({'servers': {'$exists': True}},
                                         {'$push': {'servers': {'name': input_name, 'id': guild_id}}},
                                         upsert=True)
-            await self.calling_view.setup(bot=interaction.client)
-            await self.calling_view.embed.add_field(name=f'{input_name} added to allowlist', value=f'ID: `{guild_id}`')
+
+            interaction.client.allow_list.append(guild_id)
+
+            view = self.calling_view
+            view.embed.add_field(name=f'{input_name} added to allowlist', value=f'ID: `{guild_id}`')
+
+            if view.remove_guild_allowlist_select.disabled:
+                view.remove_guild_allowlist_select.disabled = False
+                view.remove_guild_allowlist_select.placeholder = 'Select a server to remove'
+                view.remove_guild_allowlist_select.options.clear()
+
+            view.remove_guild_allowlist_select.options.append(
+                discord.SelectOption(label=input_name, value=str(guild_id))
+            )
+
             await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
