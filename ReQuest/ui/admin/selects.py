@@ -18,9 +18,11 @@ class RemoveGuildAllowlistSelect(Select):
             custom_id='remove_guild_allowlist_select'
         )
         self.calling_view = calling_view
+        self.guild_id = None
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            self.guild_id = self.values[0]
             confirm_modal = common_modals.ConfirmModal(
                 title='Confirm Remove Server from Allowlist',
                 prompt_label='Confirm server removal',
@@ -34,7 +36,7 @@ class RemoveGuildAllowlistSelect(Select):
     async def confirm_removal(self, interaction: discord.Interaction):
         try:
             view = self.calling_view
-            guild_id = int(self.values[0])
+            guild_id = int(self.guild_id)
 
             collection = interaction.client.cdb['serverAllowlist']
             await collection.update_one({'servers': {'$exists': True}},

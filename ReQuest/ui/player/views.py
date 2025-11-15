@@ -334,6 +334,7 @@ class PlayerBoardView(View):
                     value='None'
                 ))
                 self.manageable_post_select.disabled = True
+            self.manageable_post_select.options.clear()
             self.manageable_post_select.options = options
         except Exception as e:
             await log_exception(e)
