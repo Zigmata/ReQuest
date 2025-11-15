@@ -16,15 +16,16 @@ class GameMaster(Cog):
             name='Modify Player',
             callback=self.mod_player_menu
         )
-        self.view_player = app_commands.ContextMenu(
+        self.view_player_menu = app_commands.ContextMenu(
             name='View Player',
             callback=self.view_player
         )
         self.bot.tree.add_command(self.mod_player_menu)
-        self.bot.tree.add_command(self.view_player)
+        self.bot.tree.add_command(self.view_player_menu)
 
     async def cog_unload(self) -> None:
         self.bot.tree.remove_command(self.mod_player_menu.name, type=self.mod_player_menu.type)
+        self.bot.tree.remove_command(self.view_player_menu.name, type=self.view_player_menu.type)
 
     @has_gm_or_mod()
     @app_commands.command(name='gm')
