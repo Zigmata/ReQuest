@@ -54,7 +54,6 @@ class AllowServerModal(Modal):
                 discord.SelectOption(label=input_name, value=str(guild_id))
             )
 
-            await self.calling_view.setup(interaction.client)
             await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)

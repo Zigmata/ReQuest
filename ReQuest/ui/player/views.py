@@ -371,7 +371,15 @@ class PlayerBoardView(View):
             }
 
             await post_collection.insert_one(post)
-            await self.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
+
+            self.posts.append(post)
+
+            self.manageable_post_select.options.append(discord.SelectOption(
+                label=title,
+                value=post_id
+            ))
+            self.manageable_post_select.disabled = False
+
             self.embed.add_field(name='Post Created!', value=f'`{post_id}`: **{title}**')
 
             await interaction.response.edit_message(embed=self.embed, view=self)

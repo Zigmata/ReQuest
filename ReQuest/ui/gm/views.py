@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import Any, Dict, Iterator, Optional, Tuple
+from typing import Any, Dict, Iterator, Tuple
 
 import discord
 from discord.ui import View, LayoutView, Container, TextDisplay, Separator, ActionRow
@@ -173,7 +173,7 @@ class ManageQuestsView(View):
                 await quest_collection.update_one({'questId': quest_id}, {'$set': {'lockState': True}})
 
                 # Fetch the updated quest
-                updated_quest = await quest_collection.find_one({'questId': quest_id})
+                quest['lockState'] = True
 
                 # Notify each party member that the quest is ready
                 for player in party:
@@ -199,7 +199,7 @@ class ManageQuestsView(View):
                 await quest_collection.update_one({'questId': quest_id}, {'$set': {'lockState': False}})
 
                 # Fetch the updated quest
-                updated_quest = await quest_collection.find_one({'questId': quest_id})
+                quest['lockState'] = False
 
                 await interaction.user.send('Quest roster has been unlocked.')
 
@@ -211,10 +211,10 @@ class ManageQuestsView(View):
                     elif isinstance(result, Exception):
                         await log_exception(result)
 
-            self.selected_quest = updated_quest
+            self.selected_quest = quest
 
             # Create a fresh quest view, and update the original post message
-            quest_view = QuestPostView(updated_quest)
+            quest_view = QuestPostView(quest)
             await quest_view.setup()
             await message.edit(embed=quest_view.embed, view=quest_view)
 
@@ -597,20 +597,23 @@ class QuestPostView(View):
                 raise Exception(f'Error joining quest **{quest["title"]}**: The quest is locked and not accepting new '
                                 f'players.')
             else:
+                new_player_entry = {f'{user_id}': {f'{active_character_id}': active_character}}
                 # If the wait list is enabled, this section formats the embed to include the wait list
                 if max_wait_list_size > 0:
                     # If there is room in the party, add the user.
                     if len(current_party) < max_party_size:
                         await quest_collection.update_one(
                             {'guildId': guild_id, 'questId': quest_id},
-                            {'$push': {'party': {f'{user_id}': {f'{active_character_id}': active_character}}}}
+                            {'$push': {'party': new_player_entry}}
                         )
+                        self.quest['party'].append(new_player_entry)
                     # If the party is full but the wait list is not, add the user to wait list.
                     elif len(current_party) >= max_party_size and len(current_wait_list) < max_wait_list_size:
                         await quest_collection.update_one(
                             {'guildId': guild_id, 'questId': quest_id},
-                            {'$push': {'waitList': {f'{user_id}': {f'{active_character_id}': active_character}}}}
+                            {'$push': {'waitList': new_player_entry}}
                         )
+                        self.quest['waitList'].append(new_player_entry)
 
                     # Otherwise, inform the user that the party/wait list is full
                     else:
@@ -621,13 +624,12 @@ class QuestPostView(View):
                     if len(current_party) < max_party_size:
                         await quest_collection.update_one(
                             {'guildId': guild_id, 'questId': quest_id},
-                            {'$push': {'party': {f'{user_id}': {f'{active_character_id}': active_character}}}}
+                            {'$push': {'party': new_player_entry}}
                         )
+                        self.quest['party'].append(new_player_entry)
                     else:
                         raise Exception(f'Error joining quest **{quest["title"]}**: The quest roster is full!')
 
-                # The document is queried again to build the updated post
-                self.quest = await quest_collection.find_one({'guildId': guild_id, 'questId': quest_id})
                 await self.setup()
                 await interaction.response.edit_message(embed=self.embed, view=self)
         except Exception as e:

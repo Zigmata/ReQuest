@@ -218,15 +218,17 @@ class EditQuestModal(Modal):
             gdb = interaction.client.gdb
             guild_id = interaction.guild_id
             quest_collection = gdb['quests']
+            updates = {
+                'title': self.title_text_input.value,
+                'restrictions': self.restrictions_text_input.value,
+                'maxPartySize': int(self.max_party_size_text_input.value),
+                'description': self.description_text_input.value
+            }
             await quest_collection.update_one({'guildId': interaction.guild_id, 'questId': self.quest['questId']},
-                                              {'$set': {'title': self.title_text_input.value,
-                                                        'restrictions': self.restrictions_text_input.value,
-                                                        'maxPartySize': int(self.max_party_size_text_input.value),
-                                                        'description': self.description_text_input.value}})
+                                              {'$set': updates})
 
             # Get the updated quest
-            updated_quest = await quest_collection.find_one({'guildId': interaction.guild_id,
-                                                             'questId': self.quest['questId']})
+            self.quest.update(updates)
 
             # Get the quest board channel
             quest_channel_collection = gdb['questChannel']
@@ -239,7 +241,7 @@ class EditQuestModal(Modal):
             message = quest_channel.get_partial_message(self.quest['messageId'])
 
             # Create a fresh quest view, and update the original post message
-            quest_view = self.quest_post_view_class(updated_quest)
+            quest_view = self.quest_post_view_class(self.quest)
             await quest_view.setup()
             await message.edit(embed=quest_view.embed, view=quest_view)
 
