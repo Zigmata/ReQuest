@@ -65,10 +65,12 @@ class ShopBaseView(LayoutView):
 
                 item_name = item.get('name', 'Unknown Item')
                 item_description = item.get('description', None)
+                item_quantity = item.get('quantity', 1)
+                item_display_name = f'{item_name} x{item_quantity}' if item_quantity > 1 else item_name
                 if item_description:
-                    section.add_item(TextDisplay(f'**{item_name}**\n*{item_description}*'))
+                    section.add_item(TextDisplay(f'**{item_display_name}**\n*{item_description}*'))
                 else:
-                    section.add_item(TextDisplay(f'**{item_name}**'))
+                    section.add_item(TextDisplay(f'**{item_display_name}**'))
                 container.add_item(section)
 
             self.add_item(container)

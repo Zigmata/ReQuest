@@ -704,14 +704,15 @@ class EditShopView(LayoutView):
             item_desc = item.get('description', None)
             item_price = item.get('price')
             item_currency = item.get('currency')
+            item_quantity = item.get('quantity', 1)
             if item_desc:
                 item_text = TextDisplay(
-                    f'**{item_name}**: {item_price} {item_currency}\n'
+                    f'**{item_name} x{item_quantity}**: {item_price} {item_currency}\n'
                     f'*{item_desc}*'
                 )
             else:
                 item_text = TextDisplay(
-                    f'**{item_name}**: {item_price} {item_currency}'
+                    f'**{item_name} x{item_quantity}**: {item_price} {item_currency}'
                 )
 
             container.add_item(item_text)

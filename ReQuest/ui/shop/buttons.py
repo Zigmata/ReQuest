@@ -3,8 +3,8 @@ import shortuuid
 from discord import ButtonStyle
 from discord.ui import Button
 
-from ReQuest.utilities.supportFunctions import log_exception, check_sufficient_funds, update_character_inventory, \
-    apply_item_change_local, apply_currency_change_local
+from ReQuest.utilities.supportFunctions import log_exception, check_sufficient_funds, apply_item_change_local, \
+    apply_currency_change_local
 
 
 class ShopItemButton(Button):
@@ -38,6 +38,7 @@ class ShopItemButton(Button):
 
             item_cost = float(self.item['price'])
             item_currency = self.item['currency']
+            item_quantity = int(self.item.get('quantity', 1))
 
             can_afford, message = check_sufficient_funds(
                 character_data['attributes'].get('currency', {}),
@@ -50,7 +51,7 @@ class ShopItemButton(Button):
                 await interaction.response.send_message(f"You cannot afford this: {message}", ephemeral=True)
                 return
 
-            character_data = apply_item_change_local(character_data, self.item['name'], 1)
+            character_data = apply_item_change_local(character_data, self.item['name'], item_quantity)
             character_data = apply_currency_change_local(character_data, currency_config, item_currency, -item_cost)
 
             await mdb['characters'].update_one(
@@ -59,8 +60,10 @@ class ShopItemButton(Button):
             )
 
             character_name = character_data['name']
+            item_display_name = f'{item_quantity}x {self.item["name"]}' if item_quantity > 1 else self.item['name']
             embed = discord.Embed(
-                title=f"{character_name} purchased {self.item['name']} for {self.item['price']} {self.item['currency']}",
+                title=f"{character_name} purchased {item_display_name} for {self.item['price']} "
+                      f"{self.item['currency']}",
                 type='rich'
             )
 

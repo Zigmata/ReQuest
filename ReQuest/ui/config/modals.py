@@ -445,14 +445,14 @@ class ShopItemModal(Modal):
         name_default = existing_item.get('name', '') if existing_item else ''
         description_default = existing_item.get('description', '') if existing_item else ''
         price_default = str(existing_item.get('price', '')) if existing_item else ''
+        quantity_default = str(existing_item.get('quantity', '1')) if existing_item else '1'
         currency_default = existing_item.get('currency', '') if existing_item else ''
 
         self.item_name_text_input = discord.ui.TextInput(
             label='Item Name',
             custom_id='item_name_text_input',
             placeholder='Enter the name of the item',
-            default=name_default,
-            required=True
+            default=name_default
         )
         self.item_description_text_input = discord.ui.TextInput(
             label='Item Description',
@@ -466,15 +466,20 @@ class ShopItemModal(Modal):
             label='Item Price',
             custom_id='item_price_text_input',
             placeholder='Enter the price of the item',
-            default=price_default,
-            required=True
+            default=price_default
+        )
+        self.item_quantity_text_input = discord.ui.TextInput(
+            label='Item Quantity',
+            custom_id='item_quantity_text_input',
+            placeholder='Enter teh quantity sold per purchase',
+            default=quantity_default,
+            required=False
         )
         self.item_currency_text_input = discord.ui.TextInput(
             label='Currency',
             custom_id='item_currency_text_input',
             placeholder='Enter the currency for the item price',
-            default=currency_default,
-            required=True
+            default=currency_default
         )
         self.add_item(self.item_name_text_input)
         self.add_item(self.item_description_text_input)
@@ -488,10 +493,19 @@ class ShopItemModal(Modal):
             collection = interaction.client.gdb['shops']
             channel_id = view.channel_id
 
+            quantity_str = self.item_quantity_text_input.value
+            if not quantity_str.isdigit() or int(quantity_str) < 1:
+                raise Exception('Item quantity must be a positive integer.')
+
+            price_str = self.item_price_text_input.value
+            if not price_str.isdigit() or int(price_str) < 0:
+                raise Exception('Item price must be a non-negative integer.')
+
             new_item = {
                 'name': self.item_name_text_input.value,
                 'description': self.item_description_text_input.value,
                 'price': int(self.item_price_text_input.value),
+                'quantity': int(self.item_quantity_text_input.value),
                 'currency': self.item_currency_text_input.value
             }
 
