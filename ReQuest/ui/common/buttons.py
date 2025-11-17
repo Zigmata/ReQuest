@@ -1,4 +1,3 @@
-import inspect
 import logging
 
 import discord
@@ -26,7 +25,7 @@ class BaseViewButton(Button):
             view = self.target_view_class()
             if hasattr(view, 'setup'):
                 await setup_view(view, interaction)
-            await interaction.response.edit_message(embed=view.embed, view=view)
+            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 

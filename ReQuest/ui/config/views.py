@@ -6,7 +6,7 @@ from discord import ButtonStyle
 from discord.ui import View, LayoutView, Container, Section, Separator, ActionRow, Button, TextDisplay, Thumbnail
 
 from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
-from ReQuest.ui.common import modals as common_modals
+from ReQuest.ui.common import modals as common_modals, views as common_views
 from ReQuest.ui.config import buttons, selects
 from ReQuest.utilities.supportFunctions import log_exception, query_config
 
@@ -14,63 +14,202 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class ConfigBaseView(View):
+# class ConfigBaseView(View):
+#     def __init__(self):
+#         super().__init__(timeout=None)
+#         self.embed = discord.Embed(
+#             title='Server Configuration - Main Menu',
+#             description=(
+#                 '__**Roles**__\n'
+#                 'Configuration options for pingable or privileged roles.\n\n'
+#                 '__**Channels**__\n'
+#                 'Set designated channels for ReQuest posts.\n\n'
+#                 '__**Quests**__\n'
+#                 'Global quest settings, such as wait lists.\n\n'
+#                 '__**Players**__\n'
+#                 'Global player settings, such as experience point tracking.\n\n'
+#                 '__**Currency**__\n'
+#                 'Global currency settings.\n\n'
+#                 '__**Shops**__\n'
+#                 'Configure custom shops.\n\n'
+#             ),
+#             type='rich'
+#         )
+#         self.add_item(MenuViewButton(ConfigRolesView, 'Roles'))
+#         self.add_item(MenuViewButton(ConfigChannelsView, 'Channels'))
+#         self.add_item(MenuViewButton(ConfigQuestsView, 'Quests'))
+#         self.add_item(MenuViewButton(ConfigPlayersView, 'Players'))
+#         self.add_item(MenuViewButton(ConfigCurrencyView, 'Currency'))
+#         self.add_item(MenuViewButton(ConfigShopsView, 'Shops'))
+#         self.add_item(MenuDoneButton(row=None))
+
+class ConfigBaseView(common_views.MenuBaseView):
     def __init__(self):
-        super().__init__(timeout=None)
-        self.embed = discord.Embed(
+        super().__init__(
             title='Server Configuration - Main Menu',
-            description=(
-                '__**Roles**__\n'
-                'Configuration options for pingable or privileged roles.\n\n'
-                '__**Channels**__\n'
-                'Set designated channels for ReQuest posts.\n\n'
-                '__**Quests**__\n'
-                'Global quest settings, such as wait lists.\n\n'
-                '__**Players**__\n'
-                'Global player settings, such as experience point tracking.\n\n'
-                '__**Currency**__\n'
-                'Global currency settings.\n\n'
-                '__**Shops**__\n'
-                'Configure custom shops.\n\n'
-            ),
-            type='rich'
+            menu_items=[
+                {
+                    'name': 'Roles',
+                    'description': 'Configuration options for pingable or privileged roles.',
+                    'view_class': ConfigRolesView
+                },
+                {
+                    'name': 'Channels',
+                    'description': 'Set designated channels for ReQuest posts.',
+                    'view_class': ConfigChannelsView
+                },
+                {
+                    'name': 'Quests',
+                    'description': 'Global quest settings, such as wait lists.',
+                    'view_class': ConfigQuestsView
+                },
+                {
+                    'name': 'Players',
+                    'description': 'Global player settings, such as experience point tracking.',
+                    'view_class': ConfigPlayersView
+                },
+                {
+                    'name': 'Currency',
+                    'description': 'Global currency settings.',
+                    'view_class': ConfigCurrencyView
+                },
+                {
+                    'name': 'Shops',
+                    'description': 'Configure custom shops.',
+                    'view_class': ConfigShopsView
+                }
+            ],
+            menu_level=0
         )
-        self.add_item(MenuViewButton(ConfigRolesView, 'Roles'))
-        self.add_item(MenuViewButton(ConfigChannelsView, 'Channels'))
-        self.add_item(MenuViewButton(ConfigQuestsView, 'Quests'))
-        self.add_item(MenuViewButton(ConfigPlayersView, 'Players'))
-        self.add_item(MenuViewButton(ConfigCurrencyView, 'Currency'))
-        self.add_item(MenuViewButton(ConfigShopsView, 'Shops'))
-        self.add_item(MenuDoneButton(row=None))
 
 
-class ConfigRolesView(View):
+# class ConfigRolesView(View):
+#     def __init__(self):
+#         super().__init__(timeout=None)
+#         self.embed = discord.Embed(
+#             title='Server Configuration - Roles',
+#             description=(
+#                 '__**Announcement Role**__\n'
+#                 'This role is mentioned when a quest is posted.\n\n'
+#                 '__**GM Role**__\n'
+#                 'A role designated as GM will gain access to extended Game Master commands and functionality.\n\n'
+#                 '__**Forbidden Roles**__\n'
+#                 'Configures a list of role names that cannot be used by Game Masters for their party roles. By '
+#                 'default, `everyone`, `administrator`, `gm`, and `game master` cannot be used. This configuration '
+#                 'extends that list.\n\n'
+#                 '-----'
+#             ),
+#             type='rich'
+#         )
+#         self.quest_announce_role_remove_button = buttons.QuestAnnounceRoleRemoveButton(self)
+#         self.gm_role_remove_view_button = buttons.GMRoleRemoveViewButton(ConfigGMRoleRemoveView)
+#         self.forbidden_roles_button = buttons.ForbiddenRolesButton(self)
+#         self.add_item(selects.QuestAnnounceRoleSelect(self))
+#         self.add_item(selects.AddGMRoleSelect(self))
+#         self.add_item(self.quest_announce_role_remove_button)
+#         self.add_item(self.gm_role_remove_view_button)
+#         self.add_item(self.forbidden_roles_button)
+#         self.add_item(BackButton(ConfigBaseView))
+#
+#     @staticmethod
+#     async def query_role(role_type, bot, guild):
+#         try:
+#             collection = bot.gdb[role_type]
+#
+#             query = await collection.find_one({'_id': guild.id})
+#             if not query:
+#                 return None
+#             else:
+#                 return query[role_type]
+#         except Exception as e:
+#             await log_exception(e)
+#
+#     async def setup(self, bot, guild):
+#         try:
+#             self.embed.clear_fields()
+#             announcement_role = await self.query_role('announceRole', bot, guild)
+#             gm_roles = await self.query_role('gmRoles', bot, guild)
+#
+#             if not announcement_role:
+#                 announcement_role_string = 'Not Configured'
+#                 self.quest_announce_role_remove_button.disabled = True
+#             else:
+#                 announcement_role_string = f'{announcement_role}'
+#                 self.quest_announce_role_remove_button.disabled = False
+#
+#             if not gm_roles:
+#                 gm_roles_string = 'Not Configured'
+#                 self.gm_role_remove_view_button.disabled = True
+#             else:
+#                 role_mentions = []
+#                 for role in gm_roles:
+#                     role_mentions.append(role['mention'])
+#
+#                 gm_roles_string = f'- {'\n- '.join(role_mentions)}'
+#                 self.gm_role_remove_view_button.disabled = False
+#
+#             self.embed.add_field(name='Announcement Role', value=announcement_role_string)
+#             self.embed.add_field(name='GM Roles', value=gm_roles_string)
+#         except Exception as e:
+#             await log_exception(e)
+
+class ConfigRolesView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
-        self.embed = discord.Embed(
-            title='Server Configuration - Roles',
-            description=(
-                '__**Announcement Role**__\n'
-                'This role is mentioned when a quest is posted.\n\n'
-                '__**GM Role**__\n'
-                'A role designated as GM will gain access to extended Game Master commands and functionality.\n\n'
-                '__**Forbidden Roles**__\n'
-                'Configures a list of role names that cannot be used by Game Masters for their party roles. By '
-                'default, `everyone`, `administrator`, `gm`, and `game master` cannot be used. This configuration '
-                'extends that list.\n\n'
-                '-----'
-            ),
-            type='rich'
-        )
+
+        self.announcement_role_status = 'Not Configured'
+        self.gm_roles_status = 'Not Configured'
+
+        self.quest_announce_role_select = selects.QuestAnnounceRoleSelect(self)
         self.quest_announce_role_remove_button = buttons.QuestAnnounceRoleRemoveButton(self)
+        self.add_gm_role_select = selects.AddGMRoleSelect(self)
         self.gm_role_remove_view_button = buttons.GMRoleRemoveViewButton(ConfigGMRoleRemoveView)
         self.forbidden_roles_button = buttons.ForbiddenRolesButton(self)
-        self.add_item(selects.QuestAnnounceRoleSelect(self))
-        self.add_item(selects.AddGMRoleSelect(self))
-        self.add_item(self.quest_announce_role_remove_button)
-        self.add_item(self.gm_role_remove_view_button)
-        self.add_item(self.forbidden_roles_button)
-        self.add_item(BackButton(ConfigBaseView))
+
+        self.build_view()
+
+    def build_view(self):
+        container = Container()
+        header_section = Section(accessory=BackButton(ConfigBaseView))
+        header_section.add_item(TextDisplay('**Server Configuration - Roles**'))
+
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        container.add_item(TextDisplay(
+            '__**Announcement Role**__\n'
+            'This role is mentioned when a quest is posted.\n'
+            'Current Configuration:\n'
+            f'{self.announcement_role_status}'
+        ))
+
+        role_row_1 = ActionRow(self.quest_announce_role_select)
+        role_row_2 = ActionRow(self.quest_announce_role_remove_button)
+        container.add_item(role_row_1)
+        container.add_item(role_row_2)
+
+        container.add_item(TextDisplay(
+            '__**GM Role**__\n'
+            'A role designated as GM will gain access to extended Game Master commands and functionality.\n'
+            'Current Configuration:\n'
+            f'{self.gm_roles_status}'
+        ))
+
+        role_row_3 = ActionRow(self.add_gm_role_select)
+        role_row_4 = ActionRow(self.gm_role_remove_view_button)
+        container.add_item(role_row_3)
+        container.add_item(role_row_4)
+
+        container.add_item(TextDisplay(
+            '__**Forbidden Roles**__\n'
+            'Configures a list of role names that cannot be used by Game Masters for their party roles. '
+            'By default, `everyone`, `administrator`, `gm`, and `game master` cannot be used. This configuration '
+            'extends that list.\n'
+        ))
+        role_row_5 = ActionRow(self.forbidden_roles_button)
+        container.add_item(role_row_5)
+
+        self.add_item(container)
 
     @staticmethod
     async def query_role(role_type, bot, guild):
@@ -87,9 +226,10 @@ class ConfigRolesView(View):
 
     async def setup(self, bot, guild):
         try:
-            self.embed.clear_fields()
             announcement_role = await self.query_role('announceRole', bot, guild)
             gm_roles = await self.query_role('gmRoles', bot, guild)
+            logger.info(f'Announcement Role: {announcement_role}')
+            logger.info(f'GM Roles: {gm_roles}')
 
             if not announcement_role:
                 announcement_role_string = 'Not Configured'
@@ -109,8 +249,9 @@ class ConfigRolesView(View):
                 gm_roles_string = f'- {'\n- '.join(role_mentions)}'
                 self.gm_role_remove_view_button.disabled = False
 
-            self.embed.add_field(name='Announcement Role', value=announcement_role_string)
-            self.embed.add_field(name='GM Roles', value=gm_roles_string)
+            self.announcement_role_status = announcement_role_string
+            self.gm_roles_status = gm_roles_string
+
         except Exception as e:
             await log_exception(e)
 

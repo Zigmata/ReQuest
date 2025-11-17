@@ -15,7 +15,7 @@ class Shop(Cog):
     @app_commands.guild_only()
     async def shop(self, interaction):
         """
-        Shopping Menus
+        Opens a shop in the current channel if one is configured.
         """
         try:
             collection = interaction.client.gdb['shops']

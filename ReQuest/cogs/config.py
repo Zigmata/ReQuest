@@ -21,7 +21,7 @@ class Config(Cog):
         """
         try:
             view = views.ConfigBaseView()
-            await interaction.response.send_message(embed=view.embed, view=view, ephemeral=True)
+            await interaction.response.send_message(view=view, ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)
 
