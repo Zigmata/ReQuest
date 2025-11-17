@@ -8,7 +8,7 @@ import discord
 import discord.ui
 from discord.ui import Modal, Label
 
-from ReQuest.utilities.supportFunctions import log_exception, purge_player_board
+from ReQuest.utilities.supportFunctions import log_exception, purge_player_board, setup_view
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -236,8 +236,8 @@ class GMRewardsModal(Modal):
             await gm_rewards_collection.update_one({'_id': interaction.guild_id},
                                                    {'$set': {'experience': experience, 'items': items}},
                                                    upsert=True)
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 

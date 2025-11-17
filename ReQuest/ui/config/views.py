@@ -7,41 +7,12 @@ from discord.ui import View, LayoutView, Container, Section, Separator, ActionRo
 
 from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
 from ReQuest.ui.common import modals as common_modals, views as common_views
-from ReQuest.ui.config import buttons, selects
+from ReQuest.ui.config import buttons, selects, enums
 from ReQuest.utilities.supportFunctions import log_exception, query_config
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-# class ConfigBaseView(View):
-#     def __init__(self):
-#         super().__init__(timeout=None)
-#         self.embed = discord.Embed(
-#             title='Server Configuration - Main Menu',
-#             description=(
-#                 '__**Roles**__\n'
-#                 'Configuration options for pingable or privileged roles.\n\n'
-#                 '__**Channels**__\n'
-#                 'Set designated channels for ReQuest posts.\n\n'
-#                 '__**Quests**__\n'
-#                 'Global quest settings, such as wait lists.\n\n'
-#                 '__**Players**__\n'
-#                 'Global player settings, such as experience point tracking.\n\n'
-#                 '__**Currency**__\n'
-#                 'Global currency settings.\n\n'
-#                 '__**Shops**__\n'
-#                 'Configure custom shops.\n\n'
-#             ),
-#             type='rich'
-#         )
-#         self.add_item(MenuViewButton(ConfigRolesView, 'Roles'))
-#         self.add_item(MenuViewButton(ConfigChannelsView, 'Channels'))
-#         self.add_item(MenuViewButton(ConfigQuestsView, 'Quests'))
-#         self.add_item(MenuViewButton(ConfigPlayersView, 'Players'))
-#         self.add_item(MenuViewButton(ConfigCurrencyView, 'Currency'))
-#         self.add_item(MenuViewButton(ConfigShopsView, 'Shops'))
-#         self.add_item(MenuDoneButton(row=None))
 
 class ConfigBaseView(common_views.MenuBaseView):
     def __init__(self):
@@ -83,75 +54,8 @@ class ConfigBaseView(common_views.MenuBaseView):
         )
 
 
-# class ConfigRolesView(View):
-#     def __init__(self):
-#         super().__init__(timeout=None)
-#         self.embed = discord.Embed(
-#             title='Server Configuration - Roles',
-#             description=(
-#                 '__**Announcement Role**__\n'
-#                 'This role is mentioned when a quest is posted.\n\n'
-#                 '__**GM Role**__\n'
-#                 'A role designated as GM will gain access to extended Game Master commands and functionality.\n\n'
-#                 '__**Forbidden Roles**__\n'
-#                 'Configures a list of role names that cannot be used by Game Masters for their party roles. By '
-#                 'default, `everyone`, `administrator`, `gm`, and `game master` cannot be used. This configuration '
-#                 'extends that list.\n\n'
-#                 '-----'
-#             ),
-#             type='rich'
-#         )
-#         self.quest_announce_role_remove_button = buttons.QuestAnnounceRoleRemoveButton(self)
-#         self.gm_role_remove_view_button = buttons.GMRoleRemoveViewButton(ConfigGMRoleRemoveView)
-#         self.forbidden_roles_button = buttons.ForbiddenRolesButton(self)
-#         self.add_item(selects.QuestAnnounceRoleSelect(self))
-#         self.add_item(selects.AddGMRoleSelect(self))
-#         self.add_item(self.quest_announce_role_remove_button)
-#         self.add_item(self.gm_role_remove_view_button)
-#         self.add_item(self.forbidden_roles_button)
-#         self.add_item(BackButton(ConfigBaseView))
-#
-#     @staticmethod
-#     async def query_role(role_type, bot, guild):
-#         try:
-#             collection = bot.gdb[role_type]
-#
-#             query = await collection.find_one({'_id': guild.id})
-#             if not query:
-#                 return None
-#             else:
-#                 return query[role_type]
-#         except Exception as e:
-#             await log_exception(e)
-#
-#     async def setup(self, bot, guild):
-#         try:
-#             self.embed.clear_fields()
-#             announcement_role = await self.query_role('announceRole', bot, guild)
-#             gm_roles = await self.query_role('gmRoles', bot, guild)
-#
-#             if not announcement_role:
-#                 announcement_role_string = 'Not Configured'
-#                 self.quest_announce_role_remove_button.disabled = True
-#             else:
-#                 announcement_role_string = f'{announcement_role}'
-#                 self.quest_announce_role_remove_button.disabled = False
-#
-#             if not gm_roles:
-#                 gm_roles_string = 'Not Configured'
-#                 self.gm_role_remove_view_button.disabled = True
-#             else:
-#                 role_mentions = []
-#                 for role in gm_roles:
-#                     role_mentions.append(role['mention'])
-#
-#                 gm_roles_string = f'- {'\n- '.join(role_mentions)}'
-#                 self.gm_role_remove_view_button.disabled = False
-#
-#             self.embed.add_field(name='Announcement Role', value=announcement_role_string)
-#             self.embed.add_field(name='GM Roles', value=gm_roles_string)
-#         except Exception as e:
-#             await log_exception(e)
+# ------ ROLES ------
+
 
 class ConfigRolesView(LayoutView):
     def __init__(self):
@@ -308,21 +212,22 @@ class ConfigGMRoleRemoveView(LayoutView):
             await log_exception(e)
 
 
-class ConfigChannelsView(View):
+# ------ CHANNELS ------
+
+class ConfigChannelsView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
-        self.embed = discord.Embed(
-            title='Server Configuration - Channels',
-            description=(
-                '__**Quest Board**__\n'
-                'The channel where new/active quests will be posted.\n\n'
-                '__**Player Board**__\n'
-                'An optional announcement/message board for use by players.\n\n'
-                '__**Quest Archive**__\n'
-                'An optional channel where completed quests will move to, with summary information.\n\n'
-                '-----'
-            ),
-            type='rich'
+        self.quest_board_info = TextDisplay(
+            '**Quest Board:** Not Configured\n'
+            'The channel where new/active quests will be posted.'
+        )
+        self.player_board_info = TextDisplay(
+            '**Player Board:** Not Configured\n'
+            'An optional announcement/message board for use by players.'
+        )
+        self.quest_archive_info = TextDisplay(
+            '**Quest Archive:** Not Configured\n'
+            'An optional channel where completed quests will move to, with summary information.'
         )
         self.quest_channel_select = selects.SingleChannelConfigSelect(
             calling_view=self,
@@ -339,12 +244,40 @@ class ConfigChannelsView(View):
             config_type='archiveChannel',
             config_name='Quest Archive'
         )
-        self.clear_channels_button = buttons.ClearChannelsButton(self)
-        self.add_item(self.quest_channel_select)
-        self.add_item(self.player_board_channel_select)
-        self.add_item(self.archive_channel_select)
-        self.add_item(self.clear_channels_button)
-        self.add_item(BackButton(ConfigBaseView))
+
+        self.build_view()
+
+    def build_view(self):
+        container = Container()
+
+        header_section = Section(accessory=BackButton(ConfigBaseView))
+        header_section.add_item(TextDisplay('**Server Configuration - Channels**'))
+
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        quest_board_section = Section(accessory=buttons.ClearChannelButton(self, enums.ChannelType.QUEST_BOARD))
+        quest_board_section.add_item(self.quest_board_info)
+        container.add_item(quest_board_section)
+        quest_board_select_row = ActionRow(self.quest_channel_select)
+        container.add_item(quest_board_select_row)
+        container.add_item(Separator())
+
+        player_board_section = Section(accessory=buttons.ClearChannelButton(self, enums.ChannelType.PLAYER_BOARD))
+        player_board_section.add_item(self.player_board_info)
+        container.add_item(player_board_section)
+        player_board_select_row = ActionRow(self.player_board_channel_select)
+        container.add_item(player_board_select_row)
+        container.add_item(Separator())
+
+        quest_archive_section = Section(accessory=buttons.ClearChannelButton(self, enums.ChannelType.QUEST_ARCHIVE))
+        quest_archive_section.add_item(self.quest_archive_info)
+        container.add_item(quest_archive_section)
+        quest_archive_select_row = ActionRow(self.archive_channel_select)
+        container.add_item(quest_archive_select_row)
+        container.add_item(Separator())
+
+        self.add_item(container)
 
     @staticmethod
     async def query_channel(channel_type, database, guild_id):
@@ -368,34 +301,118 @@ class ConfigChannelsView(View):
             quest_board = await self.query_channel('questChannel', database, guild_id)
             quest_archive = await self.query_channel('archiveChannel', database, guild_id)
 
-            self.embed.clear_fields()
-            self.embed.add_field(name='Quest Board', value=quest_board, inline=False)
-            self.embed.add_field(name='Player Board', value=player_board, inline=False)
-            self.embed.add_field(name='Quest Archive', value=quest_archive, inline=False)
+            self.quest_board_info.content = (f'**Quest Board:** {quest_board}\n'
+                                             f'The channel where new/active quests will be posted.')
+            self.player_board_info.content = (f'**Player Board:** {player_board}\n'
+                                              f'An optional announcement/message board for use by players.')
+            self.quest_archive_info.content = (f'**Quest Archive:** {quest_archive}\n'
+                                               f'An optional channel where completed quests will move to, with summary '
+                                               f'information.')
         except Exception as e:
             await log_exception(e)
 
 
-class GMRewardsView(View):
+# ------ QUESTS ------
+
+
+class ConfigQuestsView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
-        self.embed = discord.Embed(
-            title='Server Configuration - GM Rewards',
-            description=(
-                '__**Add/Modify Rewards**__\n'
-                'Opens an input modal to add, modify, or remove GM rewards.\n\n'
-                '> Rewards configured are on a per-quest basis. Every time a Game Master completes a quest, they will '
-                'receive the rewards configured here on their active character.\n\n'
-                '------'
-            )
+        self.wait_list_info = TextDisplay(
+            '**Quest Wait List Size:** Disabled\n'
+            'A wait list allows the specified number of players to queue for a quest that is full, '
+            'in case a player drops.'
         )
-        self.current_rewards = None
-        self.add_item(buttons.GMRewardsButton(self))
-        self.add_item(BackButton(ConfigQuestsView))
+        self.quest_summary_info = TextDisplay(
+            '**Quest Summary:** Disabled\n'
+            'This option enables GMs to provide a short summary when closing out quests.'
+        )
+        self.wait_list_select = selects.ConfigWaitListSelect(self)
+        self.quest_summary_toggle_button = buttons.QuestSummaryToggleButton(self)
+
+        self.build_view()
+
+    def build_view(self):
+        container = Container()
+
+        header_section = Section(accessory=BackButton(ConfigBaseView))
+        header_section.add_item(TextDisplay('**Server Configuration - Quests**'))
+
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        container.add_item(self.wait_list_info)
+        wait_list_select_row = ActionRow(self.wait_list_select)
+        container.add_item(wait_list_select_row)
+        container.add_item(Separator())
+
+        quest_summary_section = Section(accessory=self.quest_summary_toggle_button)
+        quest_summary_section.add_item(self.quest_summary_info)
+        container.add_item(quest_summary_section)
+        container.add_item(Separator())
+
+        gm_rewards_section = Section(accessory=MenuViewButton(GMRewardsView, 'GM Rewards'))
+        gm_rewards_section.add_item(TextDisplay(
+            '**GM Rewards**\n'
+            'Configure rewards for GMs to receive upon completing quests.'
+        ))
+        container.add_item(gm_rewards_section)
+
+        self.add_item(container)
 
     async def setup(self, bot, guild):
         try:
-            self.embed.clear_fields()
+            quest_summary = await query_config('questSummary', bot, guild)
+            wait_list = await query_config('questWaitList', bot, guild)
+
+            self.wait_list_info.content = (
+                f'**Quest Wait List Size:** {wait_list if wait_list > 0 else 'Disabled'}\n'
+                f'A wait list allows the specified number of players to queue for a quest that is full, in case a '
+                f'player drops.'
+            )
+            self.quest_summary_info.content = (
+                f'**Quest Summary:** {"Enabled" if quest_summary else "Disabled"}\n'
+                f'This option enables GMs to provide a short summary when closing out quests.'
+            )
+        except Exception as e:
+            await log_exception(e)
+
+
+class GMRewardsView(LayoutView):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.gm_rewards_info = TextDisplay(
+            'No rewards configured.'
+        )
+        self.current_rewards = None
+
+        self.build_view()
+
+    def build_view(self):
+        container = Container()
+
+        header_section = Section(accessory=BackButton(ConfigQuestsView))
+        header_section.add_item(TextDisplay('**Server Configuration - GM Rewards**'))
+
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        gm_rewards_section = Section(accessory=buttons.GMRewardsButton(self))
+        gm_rewards_section.add_item(TextDisplay(
+            '**Add/Modify Rewards**\n'
+            'Opens an input modal to add, modify, or remove GM rewards.\n\n'
+            '> Rewards configured are on a per-quest basis. Every time a Game Master completes a quest, they will '
+            'receive the rewards configured below on their active character.'
+        ))
+        container.add_item(gm_rewards_section)
+        container.add_item(Separator())
+
+        container.add_item(self.gm_rewards_info)
+
+        self.add_item(container)
+
+    async def setup(self, bot, guild):
+        try:
             gm_rewards_collection = bot.gdb['gmRewards']
             gm_rewards_query = await gm_rewards_collection.find_one({'_id': guild.id})
             experience = None
@@ -405,48 +422,20 @@ class GMRewardsView(View):
                 experience = gm_rewards_query['experience']
                 items = gm_rewards_query['items']
 
+            xp_info = ''
+            item_info = ''
             if experience:
-                self.embed.add_field(name='Experience', value=experience)
+                xp_info = f'**Experience:** {experience}'
 
             if items:
                 rewards_list = []
                 for item, quantity in items.items():
                     rewards_list.append(f'{item.capitalize()}: {quantity}')
                 rewards_string = '\n'.join(rewards_list)
-                self.embed.add_field(name='Items', value=rewards_string, inline=False)
-        except Exception as e:
-            await log_exception(e)
+                item_info = f'**Items:**\n{rewards_string}'
 
-
-class ConfigQuestsView(View):
-    def __init__(self):
-        super().__init__(timeout=None)
-        self.embed = discord.Embed(
-            title='Server Configuration - Quests',
-            description=(
-                '__**Quest Summary**__\n'
-                'This option enables GMs to provide a short summary block when closing out quests.\n\n'
-                '__**Quest Wait List**__\n'
-                'This option enables the specified number of players to queue for a quest, in case a player drops.\n\n'
-                '__**GM Rewards**__\n'
-                'Configure rewards for GMs to receive upon completing quests.\n\n'
-                '-----'
-            ),
-            type='rich'
-        )
-        self.add_item(selects.ConfigWaitListSelect(self))
-        self.add_item(buttons.QuestSummaryToggleButton(self))
-        self.add_item(MenuViewButton(GMRewardsView, 'GM Rewards'))
-        self.add_item(BackButton(ConfigBaseView))
-
-    async def setup(self, bot, guild):
-        try:
-            self.embed.clear_fields()
-            quest_summary = await query_config('questSummary', bot, guild)
-            wait_list = await query_config('questWaitList', bot, guild)
-
-            self.embed.add_field(name='Quest Summary Enabled', value=quest_summary, inline=False)
-            self.embed.add_field(name='Quest Wait List', value=wait_list, inline=False)
+            if xp_info or item_info:
+                self.gm_rewards_info.content = f'{xp_info}\n\n{item_info}'
         except Exception as e:
             await log_exception(e)
 

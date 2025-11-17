@@ -6,7 +6,7 @@ import discord
 from discord import ButtonStyle
 from discord.ui import Button
 
-from ReQuest.ui.config import modals
+from ReQuest.ui.config import modals, enums
 from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.common.buttons import BaseViewButton
 from ReQuest.utilities.supportFunctions import log_exception, setup_view
@@ -69,8 +69,8 @@ class QuestSummaryToggleButton(Button):
                 else:
                     await collection.update_one({'_id': guild_id}, {'$set': {'questSummary': True}})
 
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.calling_view.embed)
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -250,23 +250,27 @@ class RemoveCurrencyConfirmButton(Button):
             await log_exception(e)
 
 
-class ClearChannelsButton(Button):
-    def __init__(self, calling_view):
+class ClearChannelButton(Button):
+    def __init__(self, calling_view, channel_type: enums.ChannelType):
         super().__init__(
-            label='Clear Channels',
+            label='Clear',
             style=ButtonStyle.danger,
-            custom_id='clear_channels_button'
+            custom_id=f'clear_{channel_type.value}_channel_button'
         )
         self.calling_view = calling_view
+        self.channel_type = channel_type
 
     async def callback(self, interaction: discord.Interaction):
         try:
             view = self.calling_view
-            await interaction.client.gdb['questChannel'].delete_one({'_id': interaction.guild_id})
-            await interaction.client.gdb['playerBoardChannel'].delete_one({'_id': interaction.guild_id})
-            await interaction.client.gdb['archiveChannel'].delete_one({'_id': interaction.guild_id})
-            await view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=view.embed, view=view)
+            if self.channel_type == enums.ChannelType.QUEST_BOARD:
+                await interaction.client.gdb['questChannel'].delete_one({'_id': interaction.guild_id})
+            elif self.channel_type == enums.ChannelType.PLAYER_BOARD:
+                await interaction.client.gdb['playerBoardChannel'].delete_one({'_id': interaction.guild_id})
+            elif self.channel_type == enums.ChannelType.QUEST_ARCHIVE:
+                await interaction.client.gdb['archiveChannel'].delete_one({'_id': interaction.guild_id})
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 

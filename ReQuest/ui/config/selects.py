@@ -3,7 +3,7 @@ import logging
 import discord
 from discord.ui import Select, RoleSelect, ChannelSelect
 
-from ReQuest.utilities.supportFunctions import log_exception
+from ReQuest.utilities.supportFunctions import log_exception, setup_view
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -44,7 +44,7 @@ class SingleChannelConfigSelect(ChannelSelect):
             await collection.update_one({'_id': interaction.guild_id},
                                         {'$set': {self.config_type: self.values[0].mention}},
                                         upsert=True)
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
+            await setup_view(self.calling_view, interaction)
             return await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
@@ -129,8 +129,8 @@ class ConfigWaitListSelect(Select):
             await collection.update_one({'_id': interaction.guild_id},
                                         {'$set': {'questWaitList': int(self.values[0])}},
                                         upsert=True)
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.calling_view.embed)
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
