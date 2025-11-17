@@ -4,7 +4,7 @@ from discord import ButtonStyle
 from discord.ui import Button
 
 from ReQuest.utilities.supportFunctions import log_exception, check_sufficient_funds, apply_item_change_local, \
-    apply_currency_change_local
+    apply_currency_change_local, format_currency_display
 
 
 class ShopItemButton(Button):
@@ -71,7 +71,7 @@ class ShopItemButton(Button):
             player_currencies = character_data['attributes'].get('currency', {})
 
             items = [f"{k}: **{v}**" for k, v in inventory.items()] or ['None']
-            currencies = [f"{k}: **{v}**" for k, v in player_currencies.items()] or ['None']
+            currencies = format_currency_display(player_currencies, currency_config) or ['None']
 
             embed.add_field(name='Current Possessions', value='\n'.join(items))
             embed.add_field(name='Remaining Currency', value='\n'.join(currencies))

@@ -81,7 +81,9 @@ class GameMaster(Cog):
 
             active_character_id = player_query['activeCharacters'][guild_id]
             character_data = player_query['characters'][active_character_id]
-            view = views.ViewCharacterView(member.id, character_data)
+
+            currency_config = await interaction.client.gdb['currency'].find_one({'_id': interaction.guild_id})
+            view = views.ViewCharacterView(member.id, character_data, currency_config)
             await interaction.response.send_message(view=view, ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)

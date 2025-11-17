@@ -14,7 +14,7 @@ from ReQuest.utilities.supportFunctions import (
     update_character_experience,
     attempt_delete,
     update_quest_embed,
-    find_character_in_lists
+    find_character_in_lists, format_currency_display
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -1039,7 +1039,7 @@ class CancelQuestView(View):
 
 
 class ViewCharacterView(LayoutView):
-    def __init__(self, member_id, character_data):
+    def __init__(self, member_id, character_data, currency_config):
         super().__init__(timeout=None)
         container = Container()
 
@@ -1056,10 +1056,10 @@ class ViewCharacterView(LayoutView):
             '__**Possessions**__\n\n' + ('\n'.join([f'{item}: **{quantity}**' for item, quantity in inventory.items()])
                                          if inventory else 'No items in inventory.')
         )
+        currency_lines = format_currency_display(currency, currency_config)
         currency_display = TextDisplay(
-            '__**Currency**__\n\n' + ('\n'.join([f'{currency_type}: **{amount}**' for
-                                                 currency_type, amount in currency.items()])
-                                      if currency else 'No currency.'))
+            '__**Currency**__\n\n' + ('\n'.join(currency_lines)
+                                      if currency_lines else 'No currency.'))
 
         container.add_item(inventory_display)
         container.add_item(currency_display)

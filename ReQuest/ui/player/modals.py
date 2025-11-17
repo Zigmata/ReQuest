@@ -12,7 +12,7 @@ from ReQuest.utilities.supportFunctions import (
     trade_currency,
     trade_item,
     check_sufficient_funds,
-    update_character_inventory
+    update_character_inventory, format_currency_display
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -77,8 +77,8 @@ class TradeModal(Modal):
             if is_currency:
                 sender_currency, receiver_currency = await trade_currency(mdb, gdb, item_name, quantity, member_id,
                                                                           target_id, guild_id)
-                sender_balance_str = self.format_currency_string(sender_currency)
-                receiver_currency_str = self.format_currency_string(receiver_currency)
+                sender_balance_str = '\n'.join(format_currency_display(sender_currency, currency_query)) or "None"
+                receiver_currency_str = '\n'.join(format_currency_display(receiver_currency, currency_query)) or "None"
                 trade_embed.add_field(name='Currency', value=item_name.lower().capitalize())
                 trade_embed.add_field(name='Amount', value=quantity)
                 trade_embed.add_field(name=f'{member_active_character['name']}\'s Balance', value=sender_balance_str,
@@ -97,12 +97,6 @@ class TradeModal(Modal):
 
         except Exception as e:
             await log_exception(e, interaction)
-
-    @staticmethod
-    def format_currency_string(currency_dict):
-        if not currency_dict:
-            return "No currency"
-        return ", ".join([f"{amount} {name}" for name, amount in currency_dict.items()])
 
 
 class CharacterRegisterModal(Modal):

@@ -6,7 +6,7 @@ from discord.ui import View
 
 from ReQuest.ui.player import buttons, selects
 from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton, ConfirmButton
-from ReQuest.utilities.supportFunctions import log_exception, strip_id, attempt_delete
+from ReQuest.utilities.supportFunctions import log_exception, strip_id, attempt_delete, format_currency_display
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -234,6 +234,8 @@ class InventoryBaseView(View):
         self.embed.clear_fields()
         collection = bot.mdb['characters']
         query = await collection.find_one({'_id': user.id})
+
+        currency_config = await bot.gdb['currency'].find_one({'_id': guild.id})
         if not query:
             self.spend_currency_button.disabled = True
             self.embed.add_field(name='No Characters', value='Register a character to use these menus.')
@@ -248,7 +250,7 @@ class InventoryBaseView(View):
             inventory = self.active_character['attributes']['inventory']
             player_currencies = self.active_character['attributes']['currency']
             items = []
-            currencies = []
+            currencies = format_currency_display(player_currencies, currency_config)
 
             for item in inventory:
                 pair = (str(item), f'**{inventory[item]}**')
@@ -261,9 +263,9 @@ class InventoryBaseView(View):
                 currencies.append(value)
 
             self.embed.add_field(name='Possessions',
-                                 value='\n'.join(items))
+                                 value='\n'.join(items) or 'None')
             self.embed.add_field(name='Currency',
-                                 value='\n'.join(currencies))
+                                 value='\n'.join(currencies) or 'None')
 
 
 class PlayerBoardView(View):
