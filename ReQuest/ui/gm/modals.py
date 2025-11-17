@@ -10,7 +10,7 @@ from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
     update_character_inventory,
-    update_character_experience, find_currency_or_denomination, get_denomination_map
+    update_character_experience, find_currency_or_denomination, get_denomination_map, setup_view
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -157,7 +157,9 @@ class CreateQuestModal(Modal):
             quest['messageId'] = msg.id
 
             await quest_collection.insert_one(quest)
-            await interaction.response.send_message(f'Quest `{quest_id}`: **{title}** posted!', ephemeral=True)
+            await interaction.response.send_message(f'Quest `{quest_id}`: **{title}** posted!',
+                                                    ephemeral=True,
+                                                    delete_after=10)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -247,8 +249,8 @@ class EditQuestModal(Modal):
 
             # Reload the UI view
             view = self.calling_view
-            await view.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
-            await interaction.response.edit_message(embed=view.embed, view=view)
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -313,7 +315,6 @@ class RewardsModal(Modal):
                         item_name, quantity = item.split(':', 1)
                         items[item_name.strip().capitalize()] = int(quantity.strip())
 
-            logger.debug(f'xp: {xp}, items: {items}')
             await self.caller.modal_callback(interaction, xp, items)
         except Exception as e:
             await log_exception(e, interaction)

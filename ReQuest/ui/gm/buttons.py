@@ -6,7 +6,7 @@ from discord.ui import Button
 
 from ReQuest.ui.gm import modals
 from ReQuest.ui.common.enums import RewardType
-from ReQuest.utilities.supportFunctions import log_exception
+from ReQuest.utilities.supportFunctions import log_exception, setup_view
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -80,8 +80,8 @@ class RewardsMenuButton(Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             new_view = self.rewards_view_class(self.calling_view)
-            await new_view.setup()
-            await interaction.response.edit_message(embed=new_view.embed, view=new_view)
+            await setup_view(new_view, interaction)
+            await interaction.response.edit_message(view=new_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -101,8 +101,8 @@ class RemovePlayerButton(Button):
         try:
             quest = self.calling_view.selected_quest
             new_view = self.target_view_class(quest)
-            await new_view.setup()
-            await interaction.response.edit_message(embed=new_view.embed, view=new_view)
+            await setup_view(new_view, interaction)
+            await interaction.response.edit_message(view=new_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -129,7 +129,7 @@ class CancelQuestButton(Button):
 class PartyRewardsButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Party Rewards',
+            label='Manage Party Rewards',
             style=ButtonStyle.secondary,
             custom_id='party_rewards_button'
         )
@@ -179,8 +179,8 @@ class PartyRewardsButton(Button):
             party_rewards['xp'] = xp_val
             party_rewards['items'] = items_val
 
-            await view.setup()
-            await interaction.response.edit_message(embed=view.embed, view=view)
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -188,7 +188,7 @@ class PartyRewardsButton(Button):
 class IndividualRewardsButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Individual Rewards',
+            label='Manage Individual Rewards',
             style=ButtonStyle.secondary,
             custom_id='individual_rewards_button',
             disabled=True
@@ -240,8 +240,8 @@ class IndividualRewardsButton(Button):
             char_rewards['xp'] = xp_val
             char_rewards['items'] = items_val
 
-            await view.setup()
-            await interaction.response.edit_message(embed=view.embed, view=view)
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
