@@ -23,7 +23,7 @@ class GMRoleRemoveSelect(Select):
             for value in self.values:
                 await collection.update_one({'_id': interaction.guild_id}, {'$pull': {'gmRoles': {'name': value}}})
             await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -45,7 +45,7 @@ class SingleChannelConfigSelect(ChannelSelect):
                                         {'$set': {self.config_type: self.values[0].mention}},
                                         upsert=True)
             await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            return await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+            return await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -53,7 +53,7 @@ class SingleChannelConfigSelect(ChannelSelect):
 class QuestAnnounceRoleSelect(RoleSelect):
     def __init__(self, calling_view):
         super().__init__(
-            placeholder='Search for your Quest Announcement Role',
+            placeholder='Choose your Quest Announcement Role',
             custom_id='quest_announce_role_select'
         )
         self.calling_view = calling_view
@@ -65,7 +65,7 @@ class QuestAnnounceRoleSelect(RoleSelect):
                                         {'$set': {'announceRole': self.values[0].mention}},
                                         upsert=True)
             await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -73,7 +73,7 @@ class QuestAnnounceRoleSelect(RoleSelect):
 class AddGMRoleSelect(RoleSelect):
     def __init__(self, calling_view):
         super().__init__(
-            placeholder='Search for your GM Role(s)',
+            placeholder='Choose your GM Role(s)',
             custom_id='add_gm_role_select',
             max_values=25
         )
@@ -102,7 +102,7 @@ class AddGMRoleSelect(RoleSelect):
                                                     upsert=True)
 
             await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 

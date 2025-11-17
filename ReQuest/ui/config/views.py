@@ -157,8 +157,14 @@ class ConfigRolesView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
 
-        self.announcement_role_status = 'Not Configured'
-        self.gm_roles_status = 'Not Configured'
+        self.announcement_role_status = TextDisplay(
+            '**Announcement Role:** Not Configured\n'
+            'This role is mentioned when a quest is posted.'
+        )
+        self.gm_roles_status = TextDisplay(
+            '**GM Role(s):** Not Configured\n'
+            'These roles will grant access to Game Master commands and features.'
+        )
 
         self.quest_announce_role_select = selects.QuestAnnounceRoleSelect(self)
         self.quest_announce_role_remove_button = buttons.QuestAnnounceRoleRemoveButton(self)
@@ -170,35 +176,26 @@ class ConfigRolesView(LayoutView):
 
     def build_view(self):
         container = Container()
+
         header_section = Section(accessory=BackButton(ConfigBaseView))
         header_section.add_item(TextDisplay('**Server Configuration - Roles**'))
 
         container.add_item(header_section)
         container.add_item(Separator())
 
-        container.add_item(TextDisplay(
-            '__**Announcement Role**__\n'
-            'This role is mentioned when a quest is posted.\n'
-            'Current Configuration:\n'
-            f'{self.announcement_role_status}'
-        ))
+        announcement_role_section = Section(accessory=self.quest_announce_role_remove_button)
+        announcement_role_section.add_item(self.announcement_role_status)
+        container.add_item(announcement_role_section)
+        announce_role_select_row = ActionRow(self.quest_announce_role_select)
+        container.add_item(announce_role_select_row)
+        container.add_item(Separator())
 
-        role_row_1 = ActionRow(self.quest_announce_role_select)
-        role_row_2 = ActionRow(self.quest_announce_role_remove_button)
-        container.add_item(role_row_1)
-        container.add_item(role_row_2)
-
-        container.add_item(TextDisplay(
-            '__**GM Role**__\n'
-            'A role designated as GM will gain access to extended Game Master commands and functionality.\n'
-            'Current Configuration:\n'
-            f'{self.gm_roles_status}'
-        ))
-
-        role_row_3 = ActionRow(self.add_gm_role_select)
-        role_row_4 = ActionRow(self.gm_role_remove_view_button)
-        container.add_item(role_row_3)
-        container.add_item(role_row_4)
+        gm_role_section = Section(accessory=self.gm_role_remove_view_button)
+        gm_role_section.add_item(self.gm_roles_status)
+        container.add_item(gm_role_section)
+        gm_role_select_row = ActionRow(self.add_gm_role_select)
+        container.add_item(gm_role_select_row)
+        container.add_item(Separator())
 
         container.add_item(TextDisplay(
             '__**Forbidden Roles**__\n'
@@ -228,51 +225,65 @@ class ConfigRolesView(LayoutView):
         try:
             announcement_role = await self.query_role('announceRole', bot, guild)
             gm_roles = await self.query_role('gmRoles', bot, guild)
-            logger.info(f'Announcement Role: {announcement_role}')
-            logger.info(f'GM Roles: {gm_roles}')
 
             if not announcement_role:
-                announcement_role_string = 'Not Configured'
+                announcement_role_string = (
+                    '**Announcement Role:** Not Configured\n'
+                    'This role is mentioned when a quest is posted.'
+                )
                 self.quest_announce_role_remove_button.disabled = True
             else:
-                announcement_role_string = f'{announcement_role}'
+                announcement_role_string = (
+                    f'**Announcement Role:** {announcement_role}\n'
+                    'This role is mentioned when a quest is posted.'
+                )
                 self.quest_announce_role_remove_button.disabled = False
 
             if not gm_roles:
-                gm_roles_string = 'Not Configured'
+                gm_roles_string = ('**GM Role(s):** Not Configured\n'
+                                   'These roles will grant access to Game Master commands and features.')
                 self.gm_role_remove_view_button.disabled = True
             else:
                 role_mentions = []
                 for role in gm_roles:
                     role_mentions.append(role['mention'])
 
-                gm_roles_string = f'- {'\n- '.join(role_mentions)}'
+                gm_roles_string = (f'**GM Role(s):** {','.join(role_mentions)}\n'
+                                   f'These roles will grant access to Game Master commands and features.')
                 self.gm_role_remove_view_button.disabled = False
 
-            self.announcement_role_status = announcement_role_string
-            self.gm_roles_status = gm_roles_string
+            self.announcement_role_status.content = announcement_role_string
+            self.gm_roles_status.content = gm_roles_string
 
         except Exception as e:
             await log_exception(e)
 
 
-class ConfigGMRoleRemoveView(View):
+class ConfigGMRoleRemoveView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
-        self.embed = discord.Embed(
-            title='Server Configuration - Remove GM Role(s)',
-            description='Select roles from the dropdown below to remove from GM status.\n\n'
-                        '-----',
-            type='rich'
-        )
         self.gm_role_remove_select = selects.GMRoleRemoveSelect(self)
-        self.add_item(self.gm_role_remove_select)
-        self.add_item(BackButton(ConfigRolesView))
+
+        self.build_view()
+
+    def build_view(self):
+        container = Container()
+
+        header_section = Section(accessory=BackButton(ConfigRolesView))
+        header_section.add_item(TextDisplay('**Server Configuration - Remove GM Role(s)**'))
+
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        container.add_item(TextDisplay('Choose roles from the dropdown below to remove from GM status.'))
+        gm_role_remove_select_row = ActionRow(self.gm_role_remove_select)
+        container.add_item(gm_role_remove_select_row)
+
+        self.add_item(container)
 
     async def setup(self, bot, guild):
         try:
             # Clear any embed fields or select options
-            self.embed.clear_fields()
             self.gm_role_remove_select.options.clear()
 
             # Query the db for configured GM roles
@@ -288,7 +299,6 @@ class ConfigGMRoleRemoveView(View):
                     name = role['name']
                     role_mentions.append(role['mention'])
                     options.append(discord.SelectOption(label=name, value=name))
-                self.embed.add_field(name='Current GM Roles', value=f'- {'\n- '.join(role_mentions)}')
                 self.gm_role_remove_select.disabled = False
             else:
                 options.append(discord.SelectOption(label='None', value='None'))

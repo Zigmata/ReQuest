@@ -9,7 +9,7 @@ from discord.ui import Button
 from ReQuest.ui.config import modals
 from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.common.buttons import BaseViewButton
-from ReQuest.utilities.supportFunctions import log_exception
+from ReQuest.utilities.supportFunctions import log_exception, setup_view
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class QuestAnnounceRoleRemoveButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Remove Quest Announcement Role',
+            label='Clear',
             style=ButtonStyle.danger,
             custom_id='quest_announce_role_remove_button'
         )
@@ -31,8 +31,8 @@ class QuestAnnounceRoleRemoveButton(Button):
             if query:
                 await collection.delete_one({'_id': interaction.guild_id})
 
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 

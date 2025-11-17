@@ -11,12 +11,11 @@ logger = logging.getLogger(__name__)
 
 
 class BaseViewButton(Button):
-    def __init__(self, target_view_class, label, style, custom_id, row=None):
+    def __init__(self, target_view_class, label, style, custom_id):
         super().__init__(
             label=label,
             style=style,
-            custom_id=custom_id,
-            row=row
+            custom_id=custom_id
         )
         self.target_view_class = target_view_class
 
@@ -46,8 +45,7 @@ class BackButton(BaseViewButton):
             target_view_class=target_view_class,
             label='Back',
             style=ButtonStyle.secondary,
-            custom_id='menu_back_button',
-            row=4
+            custom_id='menu_back_button'
         )
 
 
@@ -56,8 +54,7 @@ class MenuDoneButton(Button):
         super().__init__(
             label='Done',
             style=ButtonStyle.secondary,
-            custom_id='done_button',
-            row=row
+            custom_id='done_button'
         )
 
     async def callback(self, interaction: discord.Interaction):
