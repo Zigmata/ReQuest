@@ -171,8 +171,8 @@ class EditCurrencySelect(Select):
             view = self.calling_view
             view.selected_currency_name = self.values[0]
 
-            await view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=view.embed, view=view)
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e)
 
@@ -218,5 +218,26 @@ class ConfigShopSelect(Select):
 
             await view.setup(bot=interaction.client, guild=interaction.guild)
             await interaction.response.edit_message(embed=view.embed, view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class DenominationSelect(Select):
+    def __init__(self, calling_view):
+        super().__init__(
+            placeholder='Select a denomination',
+            options=[discord.SelectOption(label='No denominations configured', value='None')],
+            custom_id='denomination_select',
+            disabled=True
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            view = self.calling_view
+            view.selected_denomination_name = self.values[0]
+
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)

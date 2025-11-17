@@ -76,8 +76,8 @@ class AddCurrencyTextModal(Modal):
                                             {'$push': {'currencies': {'name': self.text_input.value,
                                                                       'isDouble': False, 'denominations': []}}},
                                             upsert=True)
-                await view.setup(bot=interaction.client, guild=interaction.guild)
-                await interaction.response.edit_message(embed=view.embed, view=view)
+                await setup_view(view, interaction)
+                await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -133,8 +133,8 @@ class AddCurrencyDenominationTextModal(Modal):
                                                 'name': new_name,
                                                 'value': float(self.denomination_value_text_input.value)}}},
                                             upsert=True)
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 

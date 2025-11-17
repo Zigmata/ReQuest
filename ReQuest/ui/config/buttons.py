@@ -102,34 +102,11 @@ class PlayerExperienceToggleButton(Button):
             await log_exception(e, interaction)
 
 
-class RemoveDenominationConfirmButton(Button):
-    def __init__(self, calling_view):
-        super().__init__(
-            label='Confirm',
-            style=ButtonStyle.danger,
-            custom_id='remove_denomination_confirm_button',
-            disabled=True
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            await self.calling_view.remove_currency_denomination(self.calling_view.selected_denomination_name,
-                                                                 interaction.client, interaction.guild)
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            self.disabled = True
-            self.label = 'Confirm'
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
-        except Exception as e:
-            await log_exception(e)
-
-
 class ToggleDoubleButton(Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Select a currency',
-            custom_id='toggle_double_button',
-            disabled=True
+            custom_id='toggle_double_button'
         )
         self.calling_view = calling_view
 
@@ -146,8 +123,8 @@ class ToggleDoubleButton(Button):
                 value = True
             await collection.update_one({'_id': interaction.guild_id, 'currencies.name': currency_name},
                                         {'$set': {'currencies.$.isDouble': value}})
-            await view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=view.embed, view=view)
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e)
 
@@ -157,8 +134,7 @@ class AddDenominationButton(Button):
         super().__init__(
             label='Select a currency',
             style=ButtonStyle.success,
-            custom_id='add_denomination_button',
-            disabled=True
+            custom_id='add_denomination_button'
         )
         self.calling_view = calling_view
 
@@ -174,20 +150,24 @@ class AddDenominationButton(Button):
 
 
 class RemoveDenominationButton(Button):
-    def __init__(self, target_view_class, calling_view):
+    def __init__(self, calling_view):
         super().__init__(
-            label='Select a currency',
+            label='Remove Denomination',
             style=ButtonStyle.danger,
-            custom_id='remove_denomination_button'
+            custom_id='remove_denomination_button',
+            disabled=True
         )
-        self.target_view_class = target_view_class
         self.calling_view = calling_view
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            view = self.target_view_class(self.calling_view)
-            await view.setup(interaction.client, interaction.guild)
-            await interaction.response.edit_message(embed=view.embed, view=view)
+            confirm_modal = common_modals.ConfirmModal(
+                title='Confirm Denomination Removal',
+                prompt_label='WARNING: This action is irreversible!',
+                prompt_placeholder='Type CONFIRM to proceed',
+                confirm_callback=self.calling_view.remove_denomination_confirm_callback
+            )
+            await interaction.response.send_modal(confirm_modal)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -208,46 +188,45 @@ class AddCurrencyButton(Button):
             await log_exception(e)
 
 
-class EditCurrencyButton(BaseViewButton):
-    def __init__(self, target_view_class):
+class EditCurrencyButton(Button):
+    def __init__(self, target_view_class, calling_view):
         super().__init__(
-            target_view_class=target_view_class,
             label='Edit Currency',
             style=ButtonStyle.secondary,
             custom_id='edit_currency_button'
         )
+        self.target_view_class = target_view_class
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            view = self.target_view_class(self.calling_view)
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
 
 
-class RemoveCurrencyButton(BaseViewButton):
-    def __init__(self, target_view_class):
+class RemoveCurrencyButton(Button):
+    def __init__(self, calling_view):
         super().__init__(
-            target_view_class=target_view_class,
             label='Remove Currency',
             style=ButtonStyle.danger,
             custom_id='remove_currency_button'
-        )
-
-
-class RemoveCurrencyConfirmButton(Button):
-    def __init__(self, calling_view):
-        super().__init__(
-            label='Confirm',
-            style=ButtonStyle.danger,
-            custom_id='remove_currency_confirm_button',
-            disabled=True
         )
         self.calling_view = calling_view
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            view = self.calling_view
-            await view.remove_currency(bot=interaction.client, guild=interaction.guild)
-            await view.setup(bot=interaction.client, guild=interaction.guild)
-            view.remove_currency_confirm_button.disabled = True
-            view.remove_currency_confirm_button.label = 'Confirm'
-            await interaction.response.edit_message(embed=view.embed, view=view)
+            modal = common_modals.ConfirmModal(
+                title='Confirm Currency Removal',
+                prompt_label='WARNING: This action is irreversible!',
+                prompt_placeholder='Type CONFIRM to proceed',
+                confirm_callback=self.calling_view.remove_currency_confirm_callback
+            )
+            await interaction.response.send_modal(modal)
         except Exception as e:
-            await log_exception(e)
+            await log_exception(e, interaction)
 
 
 class ClearChannelButton(Button):

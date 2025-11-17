@@ -8,7 +8,7 @@ from discord.ui import View, LayoutView, Container, Section, Separator, ActionRo
 from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
 from ReQuest.ui.common import modals as common_modals, views as common_views
 from ReQuest.ui.config import buttons, selects, enums
-from ReQuest.utilities.supportFunctions import log_exception, query_config
+from ReQuest.utilities.supportFunctions import log_exception, query_config, setup_view
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -487,248 +487,244 @@ class ConfigPlayersView(LayoutView):
             await log_exception(e)
 
 
-class ConfigRemoveDenominationView(View):
-    def __init__(self, calling_view):
-        super().__init__(timeout=None)
-        self.embed = discord.Embed(
-            title=f'Server Configuration - Remove Denomination',
-            description='Select a denomination to remove.',
-            type='rich'
-        )
-        self.calling_view = calling_view
-        self.selected_denomination_name = None
-        self.remove_denomination_select = selects.RemoveDenominationSelect(self)
-        self.remove_denomination_confirm_button = buttons.RemoveDenominationConfirmButton(self)
-        self.add_item(self.remove_denomination_select)
-        self.add_item(self.remove_denomination_confirm_button)
-        self.add_item(BackButton(ConfigEditCurrencyView))
-
-    async def setup(self, bot, guild):
-        try:
-            self.embed.clear_fields()
-            self.remove_denomination_select.options.clear()
-
-            currency_name = self.calling_view.selected_currency_name
-            collection = bot.gdb['currency']
-            query = await collection.find_one({'_id': guild.id, 'currencies.name': currency_name})
-            currency = next((item for item in query['currencies'] if item['name'] == currency_name), None)
-            denominations = currency['denominations']
-            if len(denominations) > 0:
-                for denomination in denominations:
-                    denomination_name = denomination['name']
-                    self.remove_denomination_select.options.append(discord.SelectOption(label=denomination_name,
-                                                                                        value=denomination_name))
-            else:
-                self.remove_denomination_select.options.append(discord.SelectOption(label='None available',
-                                                                                    value='None'))
-                self.remove_denomination_select.placeholder = (f'There are no remaining denominations for '
-                                                               f'{currency_name}.')
-                self.remove_denomination_select.disabled = True
-
-            if self.selected_denomination_name:
-                self.embed.add_field(name=f'Deleting {self.selected_denomination_name}', value='Confirm?')
-        except Exception as e:
-            await log_exception(e)
-
-    async def remove_currency_denomination(self, denomination_name, bot, guild):
-        try:
-            collection = bot.gdb['currency']
-            currency_name = self.calling_view.selected_currency_name
-            await collection.update_one({'_id': guild.id, 'currencies.name': currency_name},
-                                        {'$pull': {'currencies.$.denominations': {'name': denomination_name}}})
-        except Exception as e:
-            await log_exception(e)
+# ------ CURRENCY ------
 
 
-class ConfigEditCurrencyView(View):
+class ConfigCurrencyView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
-        self.embed = discord.Embed(
-            title='Server Configuration - Edit Currency',
-            description=(
-                '__**Toggle View**__\n'
-                'Toggles between integer (10) and double (10.00) display views.\n\n'
-                '__**Add Denomination**__\n'
-                'Add one or more denomination(s) to the selected currency.\n\n'
-                '__**Edit Denomination**__\n'
-                'Edit the value of an existing denomination.\n\n'
-                '__**Remove Denomination**__\n'
-                'Remove one or more denomination(s) from the selected currency.\n\n'
-                '-----'
-            ),
-            type='rich'
-        )
+
         self.selected_currency_name = None
-        self.edit_currency_select = selects.EditCurrencySelect(self)
-        self.toggle_double_button = buttons.ToggleDoubleButton(self)
-        self.add_denomination_button = buttons.AddDenominationButton(self)
-        self.remove_denomination_button = buttons.RemoveDenominationButton(ConfigRemoveDenominationView, self)
-        self.add_item(self.edit_currency_select)
-        self.add_item(self.toggle_double_button)
-        self.add_item(self.add_denomination_button)
-        self.add_item(self.remove_denomination_button)
-        self.add_item(BackButton(ConfigCurrencyView))
-
-    async def setup(self, bot, guild):
-        try:
-            self.embed.clear_fields()
-            self.edit_currency_select.options.clear()
-
-            collection = bot.gdb['currency']
-            query = await collection.find_one({'_id': guild.id})
-
-            if self.selected_currency_name:
-                currency_name = self.selected_currency_name
-                self.toggle_double_button.disabled = False
-                self.toggle_double_button.label = f'Toggle Display for {currency_name}'
-                self.add_denomination_button.disabled = False
-                self.add_denomination_button.label = f'Add Denomination to {currency_name}'
-                self.remove_denomination_button.label = f'Remove Denomination from {currency_name}'
-
-                currency = next((item for item in query['currencies'] if item['name'] == currency_name),
-                                None)
-                if currency['isDouble']:
-                    display = 'Double (10.00)'
-                else:
-                    display = 'Integer (10)'
-
-                denominations = currency['denominations']
-                if len(denominations) > 0:
-                    values = []
-                    for denomination in denominations:
-                        denomination_name = denomination['name']
-                        value = denomination['value']
-                        values.append(f'{denomination_name}: {value}')
-                    denominations_string = '\n- '.join(values)
-                    self.remove_denomination_button.disabled = False
-                else:
-                    self.remove_denomination_button.disabled = True
-                    denominations_string = 'None'
-
-                self.embed.add_field(name=f'{self.selected_currency_name}',
-                                     value=f'__Display:__ {display}\n'
-                                           f'__Denominations__:\n- {denominations_string}',
-                                     inline=True)
-            else:
-                self.toggle_double_button.disabled = True
-                self.add_denomination_button.disabled = True
-
-            for currency in query['currencies']:
-                name = currency['name']
-                self.edit_currency_select.options.append(discord.SelectOption(label=name, value=name))
-        except Exception as e:
-            await log_exception(e)
-
-
-class ConfigCurrencyView(View):
-    def __init__(self):
-        super().__init__(timeout=None)
-        self.embed = discord.Embed(
-            title='Server Configuration - Currency',
-            description=(
-                '__**Add New Currency**__\n'
-                'Creates a new currency.\n\n'
-                '__**Edit Currency**__\n'
-                'Update options for an existing currency, such as the double representation and optional denominations.'
-                '\n\n'
-                '__**Remove Currency**__\n'
-                'Remove a currency entirely.\n\n'
-                '__** Key Definitions **__\n'
-                '- **Name:** The name of the currency. Always has a base value of 1. Example: Gold\n'
-                ' ```Note: ReQuest does not care about letter case from a functional standpoint, but any presentations '
-                'of your currency in menus will use the case you input when the currency is created, I.E. "Gold" vs. '
-                '"gold".```\n'
-                '- **Double:** This optional value specifies whether or not currency is displayed as whole integers '
-                '(10) or as a double (10.00). Default is `False`\n'
-                '- **Denominations:** This optional configuration adds denominations under the base currency. '
-                'Following the gold example, this would be Silver (at a value of 0.1), and Platinum (at a value of '
-                '10).\n'
-                '-----'
-            ),
-            type='rich'
+        self.edit_currency_info = TextDisplay(
+            '**Edit Currency**\n'
+            'Manage the selected currency\'s denominations and display options.'
         )
-        self.edit_currency_button = buttons.EditCurrencyButton(ConfigEditCurrencyView)
-        self.remove_currency_button = buttons.RemoveCurrencyButton(RemoveCurrencyView)
-        self.add_item(buttons.AddCurrencyButton(self))
-        self.add_item(self.edit_currency_button)
-        self.add_item(self.remove_currency_button)
-        self.add_item(BackButton(ConfigBaseView))
+        self.remove_currency_info = TextDisplay(
+            '**Remove Currency**\n'
+            'Remove the selected currency from the server.'
+        )
+        self.edit_currency_button = buttons.EditCurrencyButton(ConfigEditCurrencyView, self)
+        self.edit_currency_select = selects.EditCurrencySelect(self)
+        self.remove_currency_button = buttons.RemoveCurrencyButton(self)
+
+        self.build_view()
+
+    def build_view(self):
+        container = Container()
+
+        header_section = Section(accessory=BackButton(ConfigBaseView))
+        header_section.add_item(TextDisplay('**Server Configuration - Currency**'))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        add_currency_section = Section(accessory=buttons.AddCurrencyButton(self))
+        add_currency_section.add_item(TextDisplay(
+            'Create a new currency.'
+        ))
+        container.add_item(add_currency_section)
+        container.add_item(Separator())
+
+        currency_select_row = ActionRow(self.edit_currency_select)
+        container.add_item(currency_select_row)
+
+        edit_currency_section = Section(accessory=self.edit_currency_button)
+        edit_currency_section.add_item(self.edit_currency_info)
+        container.add_item(edit_currency_section)
+        container.add_item(Separator())
+
+        remove_currency_section = Section(accessory=self.remove_currency_button)
+        remove_currency_section.add_item(self.remove_currency_info)
+        container.add_item(remove_currency_section)
+        container.add_item(Separator())
+
+        self.add_item(container)
 
     async def setup(self, bot, guild):
+        """
+        Populate the currency select if any currencies are configured
+        """
         try:
-            self.embed.clear_fields()
             collection = bot.gdb['currency']
             query = await collection.find_one({'_id': guild.id})
+
+            # Disable everything by default
             self.edit_currency_button.disabled = True
             self.remove_currency_button.disabled = True
+            self.edit_currency_select.disabled = True
+            self.edit_currency_select.options.clear()
+            self.edit_currency_select.placeholder = 'No currencies configured.'
 
+            # Populate the select with options if currencies exist
             if query and len(query['currencies']) > 0:
-                self.edit_currency_button.disabled = False
-                self.remove_currency_button.disabled = False
+                self.edit_currency_select.disabled = False
+                self.edit_currency_select.placeholder = 'Select a currency to edit.'
 
-                currency_names = []
                 for currency in query['currencies']:
-                    currency_names.append(currency['name'])
+                    self.edit_currency_select.options.append(
+                        discord.SelectOption(label=currency['name'], value=currency['name'])
+                    )
 
-                self.embed.add_field(name='Active Currencies', value=', '.join(currency_names))
+            # If a currency is selected, enable the edit and remove buttons and update their sections
+            if self.selected_currency_name:
+                self.edit_currency_button.disabled = False
+                self.edit_currency_button.label = f'Edit {self.selected_currency_name}'
+                self.edit_currency_info.content = (
+                    f'**Edit Currency:** {self.selected_currency_name}\n'
+                    f'Manage denominations and display options for {self.selected_currency_name}.'
+                )
+
+                self.remove_currency_button.disabled = False
+                self.remove_currency_button.label = f'Remove {self.selected_currency_name}'
+                self.remove_currency_info.content = (
+                    f'**Remove Currency:** {self.selected_currency_name}\n'
+                    f'Remove {self.selected_currency_name} from the server.'
+                )
         except Exception as e:
             await log_exception(e)
 
+    async def remove_currency_confirm_callback(self, interaction):
+        try:
+            currency_name = self.selected_currency_name
+            collection = interaction.client.gdb['currency']
+            await collection.update_one({'_id': interaction.guild_id, 'currencies.name': currency_name},
+                                        {'$pull': {'currencies': {'name': currency_name}}}, upsert=True)
+            await setup_view(self, interaction)
+            await interaction.response.edit_message(view=self)
+        except Exception as e:
+            await log_exception(e, interaction)
 
-class RemoveCurrencyView(View):
-    def __init__(self):
+
+class ConfigEditCurrencyView(LayoutView):
+    def __init__(self, calling_view):
         super().__init__(timeout=None)
-        self.embed = discord.Embed(
-            title='Server Configuration - Remove Currency',
-            description='Select a currency to remove',
-            type='rich'
+        self.calling_view = calling_view
+        self.selected_currency_name = calling_view.selected_currency_name
+        self.selected_denomination_name = None
+
+        self.denomination_select = selects.DenominationSelect(self)
+        self.toggle_double_button = buttons.ToggleDoubleButton(self)
+        self.add_denomination_button = buttons.AddDenominationButton(self)
+        self.remove_denomination_button = buttons.RemoveDenominationButton(self)
+
+        self.double_display_info = TextDisplay(
+            '**Display Type:** Integer\n'
+            'Toggles between integer (e.g. 10) and double (e.g. 10.00) display views.'
         )
-        self.selected_currency_name = None
-        self.remove_currency_select = selects.RemoveCurrencySelect(self)
-        self.remove_currency_confirm_button = buttons.RemoveCurrencyConfirmButton(self)
-        self.add_item(self.remove_currency_select)
-        self.add_item(self.remove_currency_confirm_button)
-        self.add_item(BackButton(ConfigCurrencyView))
+
+        self.build_view()
+
+    def build_view(self):
+        container = Container()
+
+        header_section = Section(accessory=BackButton(ConfigCurrencyView))
+        header_section.add_item(TextDisplay(f'**Server Configuration - Editing {self.selected_currency_name}**'))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        container.add_item(TextDisplay(
+            '__**Currency and Denominations**__\n'
+            '- The given name of your currency is considered the base currency and has a value of 1.'
+            '```Example: "gold" is configured as a currency.```\n'
+            '- Adding a denomination requires specifying a name and a value relative to the base currency.'
+            '```Example: Gold is given two denominations: silver (value of 0.1), and copper (value of 0.01).```\n'
+            '- Any transactions involving a base currency or its denominations will automatically convert them.'
+            '```Example: A player has 10 gold and spends 3 copper. Their new balance will automatically display '
+            '9 gold, 9 silver, and 7 copper.```\n'
+            '- Currencies displayed as an integer will show each denomination, whil currencies displayed as a double '
+            'will show only as the base currency.'
+            '```Example: The player above with double display enabled will show as 9.97 gold.```\n'
+        ))
+        container.add_item(Separator())
+
+        toggle_double_section = Section(accessory=self.toggle_double_button)
+        toggle_double_section.add_item(self.double_display_info)
+        container.add_item(toggle_double_section)
+        container.add_item(Separator())
+
+        add_denomination_section = Section(accessory=self.add_denomination_button)
+        add_denomination_section.add_item(TextDisplay(
+            '**Add Denomination**\n'
+            'Add one or more denomination(s) to the selected currency.'
+        ))
+        container.add_item(add_denomination_section)
+        container.add_item(Separator())
+
+        container.add_item(ActionRow(self.denomination_select))
+        container.add_item(Separator())
+
+        remove_denomination_section = Section(accessory=self.remove_denomination_button)
+        remove_denomination_section.add_item(TextDisplay(
+            '**Remove Denomination**\n'
+            'Remove one or more denomination(s) from the selected currency.'
+        ))
+        container.add_item(remove_denomination_section)
+        container.add_item(Separator())
+
+        self.add_item(container)
 
     async def setup(self, bot, guild):
         try:
-            self.embed.clear_fields()
-            self.remove_currency_select.options.clear()
-
-            if self.selected_currency_name:
-                self.embed.add_field(name=f'Deleting {self.selected_currency_name}',
-                                     value='Confirm?')
-
+            self.denomination_select.options.clear()
             collection = bot.gdb['currency']
             query = await collection.find_one({'_id': guild.id})
-            currencies = query['currencies']
-            options = []
-            if len(currencies) > 0:
-                for currency in currencies:
-                    name = currency['name']
-                    option = discord.SelectOption(label=name, value=name)
-                    options.append(option)
-                    self.remove_currency_select.disabled = False
-            else:
-                options.append(discord.SelectOption(label='None', value='None'))
-                self.remove_currency_select.placeholder = 'There are no remaining currencies on this server!'
-                self.remove_currency_select.disabled = True
 
-            self.remove_currency_select.options = options
+            currency_name = self.selected_currency_name
+            self.toggle_double_button.label = f'Toggle Display for {currency_name}'
+            self.add_denomination_button.label = f'Add Denomination to {currency_name}'
+
+            if self.selected_denomination_name:
+                self.remove_denomination_button.disabled = False
+                self.remove_denomination_button.label = f'Remove {self.selected_denomination_name} from {currency_name}'
+
+            currency = next((item for item in query['currencies'] if item['name'] == currency_name),
+                            None)
+            if currency['isDouble']:
+                display = 'Double'
+            else:
+                display = 'Integer'
+
+            if currency['denominations']:
+                self.denomination_select.disabled = False
+                for denomination in currency['denominations']:
+                    denomination_name = denomination['name']
+                    self.denomination_select.options.append(
+                        discord.SelectOption(label=denomination_name, value=denomination_name)
+                    )
+            else:
+                self.denomination_select.disabled = True
+                self.denomination_select.options.append(
+                    discord.SelectOption(label='No denominations configured', value='None')
+                )
+
+            self.double_display_info.content = (
+                f'**Display Type:** {display}\n'
+                f'Toggles between integer (e.g. 10) and double (e.g. 10.00) display views.'
+            )
         except Exception as e:
             await log_exception(e)
 
-    async def remove_currency(self, bot, guild):
+    async def remove_denomination_confirm_callback(self, interaction):
         try:
+            denomination_name = self.selected_denomination_name
+            collection = interaction.client.gdb['currency']
+            guild_id = interaction.guild_id
             currency_name = self.selected_currency_name
-            collection = bot.gdb['currency']
-            await collection.update_one({'_id': guild.id, 'currencies.name': currency_name},
-                                        {'$pull': {'currencies': {'name': currency_name}}}, upsert=True)
+            await collection.update_one({'_id': guild_id, 'currencies.name': currency_name},
+                                        {'$pull': {'currencies.$.denominations': {'name': denomination_name}}})
+
+            self.selected_denomination_name = None
+            self.remove_denomination_button.label = 'Remove Denomination'
+            self.remove_denomination_button.disabled = True
+
+            await setup_view(self, interaction)
+            await interaction.response.edit_message(view=self)
         except Exception as e:
             await log_exception(e)
 
 
 # ------ SHOPS ------
+
+
 class ConfigShopsView(View):
     def __init__(self):
         super().__init__(timeout=None)
