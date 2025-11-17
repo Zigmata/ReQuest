@@ -285,7 +285,6 @@ class ConfigChannelsView(LayoutView):
             collection = database[channel_type]
 
             query = await collection.find_one({'_id': guild_id})
-            logger.debug(f'{channel_type} query: {query}')
             if not query:
                 return 'Not Configured'
             else:
@@ -440,31 +439,50 @@ class GMRewardsView(LayoutView):
             await log_exception(e)
 
 
-class ConfigPlayersView(View):
+# ------ PLAYERS ------
+
+
+class ConfigPlayersView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
-        self.embed = discord.Embed(
-            title='Server Configuration - Players',
-            description=(
-                '__**Experience**__\n'
-                'Enables/Disables the use of experience points (or similar value-based character progression).\n\n'
-                '__**Player Board Purge**__\n'
-                'Purges posts from the player board (if enabled).\n\n'
-                '-----'
-            ),
-            type='rich'
+        self.player_experience_info = TextDisplay(
+            '**Player Experience:** Disabled\n'
+            'Enables/Disables the use of experience points (or similar value-based character progression.'
         )
-        self.player_board_purge_button = buttons.PlayerBoardPurgeButton(self)
-        self.add_item(buttons.PlayerExperienceToggleButton(self))
-        self.add_item(self.player_board_purge_button)
-        self.add_item(BackButton(ConfigBaseView))
+        self.player_experience = True
+
+        self.build_view()
+
+    def build_view(self):
+        container = Container()
+
+        header_section = Section(accessory=BackButton(ConfigBaseView))
+        header_section.add_item(TextDisplay('**Server Configuration - Players**'))
+
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        experience_section = Section(accessory=buttons.PlayerExperienceToggleButton(self))
+        experience_section.add_item(self.player_experience_info)
+        container.add_item(experience_section)
+        container.add_item(Separator())
+
+        player_board_section = Section(accessory=buttons.PlayerBoardPurgeButton(self))
+        player_board_section.add_item(TextDisplay(
+            '**Player Board Purge**\n'
+            'Purges posts from the player board (if enabled).\n\n'
+        ))
+        container.add_item(player_board_section)
+
+        self.add_item(container)
 
     async def setup(self, bot, guild):
         try:
-            self.embed.clear_fields()
-
-            player_experience = await query_config('playerExperience', bot, guild)
-            self.embed.add_field(name='Player Experience Enabled', value=player_experience, inline=False)
+            self.player_experience = await query_config('playerExperience', bot, guild)
+            self.player_experience_info.content = (
+                f'**Player Experience:** {'Enabled' if self.player_experience else 'Disabled'}\n'
+                f'Enables/Disables the use of experience points (or similar value-based character progression.'
+            )
         except Exception as e:
             await log_exception(e)
 

@@ -346,8 +346,8 @@ async def purge_player_board(age, interaction):
 
         # Delete all records in the db matching this guild that are older than the cutoff
         player_board_collection = interaction.client.gdb['playerBoard']
-        player_board_collection.delete_many({'guildId': interaction.guild_id,
-                                             'timestamp': {'$lt': cutoff_date}})
+        await player_board_collection.delete_many({'guildId': interaction.guild_id,
+                                                  'timestamp': {'$lt': cutoff_date}})
 
         # Get the channel object and purge all messages older than the cutoff
         config_collection = interaction.client.gdb['playerBoardChannel']
@@ -356,7 +356,9 @@ async def purge_player_board(age, interaction):
         channel = interaction.guild.get_channel(channel_id)
         await channel.purge(before=cutoff_date)
 
-        await interaction.response.send_message(f'Posts older than {age} days have been purged!', ephemeral=True)
+        await interaction.response.send_message(f'Posts older than {age} days have been purged!',
+                                                ephemeral=True,
+                                                delete_after=10)
     except Exception as e:
         await log_exception(e, interaction)
 

@@ -86,18 +86,18 @@ class PlayerExperienceToggleButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            xp_state = self.calling_view.player_experience
             guild_id = interaction.guild_id
             collection = interaction.client.gdb['playerExperience']
-            query = await collection.find_one({'_id': guild_id})
-            if query and query['playerExperience']:
+            if xp_state:
                 await collection.update_one({'_id': guild_id}, {'$set': {'playerExperience': False}},
                                             upsert=True)
             else:
                 await collection.update_one({'_id': guild_id}, {'$set': {'playerExperience': True}},
                                             upsert=True)
 
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.calling_view.embed)
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
