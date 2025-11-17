@@ -353,9 +353,6 @@ class ConfigShopDetailsModal(Modal):
                 self.calling_view.update_details(shop_data)
                 self.calling_view.build_view()
                 await interaction.response.edit_message(view=self.calling_view)
-            elif hasattr(self.calling_view, 'setup'):
-                await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-                await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
             else:
                 await interaction.response.defer()
         except Exception as e:
@@ -427,8 +424,8 @@ class ConfigShopJSONModal(Modal):
                 upsert=True
             )
 
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -484,6 +481,7 @@ class ShopItemModal(Modal):
         self.add_item(self.item_name_text_input)
         self.add_item(self.item_description_text_input)
         self.add_item(self.item_price_text_input)
+        self.add_item(self.item_quantity_text_input)
         self.add_item(self.item_currency_text_input)
 
     async def on_submit(self, interaction: discord.Interaction):
@@ -599,8 +597,5 @@ class ConfigUpdateShopJSONModal(Modal):
                 self.calling_view.update_details(shop_data)
                 self.calling_view.build_view()
                 await interaction.response.edit_message(view=self.calling_view)
-            elif hasattr(self.calling_view, 'setup'):
-                await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-                await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)

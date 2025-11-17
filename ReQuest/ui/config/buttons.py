@@ -346,7 +346,7 @@ class EditShopButton(Button):
         super().__init__(
             label='Edit Shop (Wizard)',
             style=ButtonStyle.primary,
-            custom_id='edit_shop_button',
+            custom_id='edit_shop_wizard_button',
             disabled=True
         )
         self.target_view_class = target_view_class
@@ -368,7 +368,7 @@ class EditShopButton(Button):
             )
             view.build_view()
 
-            await interaction.response.send_message(view=view, ephemeral=True)
+            await interaction.response.edit_message(view=view)
 
         except Exception as e:
             await log_exception(e, interaction)
@@ -402,22 +402,23 @@ class RemoveShopButton(Button):
 
     async def _confirm_delete_callback(self, interaction: discord.Interaction):
         try:
-            if not self.calling_view.selected_channel_id:
+            view = self.calling_view
+            if not view.selected_channel_id:
                 raise Exception('No shop was selected for removal')
 
             guild_id = interaction.guild_id
             collection = interaction.client.gdb['shops']
-            channel_id = self.calling_view.selected_channel_id
+            channel_id = view.selected_channel_id
 
             await collection.update_one(
                 {'_id': guild_id},
                 {'$unset': {f'shopChannels.{channel_id}': ''}}
             )
 
-            self.calling_view.selected_channel_id = None
+            view.selected_channel_id = None
 
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -559,7 +560,7 @@ class UpdateShopJSONButton(Button):
         super().__init__(
             label='Edit Shop (JSON)',
             style=ButtonStyle.primary,
-            custom_id='update_shop_json_button',
+            custom_id='edit_shop_json_button',
             row=2,
             disabled=True
         )

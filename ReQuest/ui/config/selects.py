@@ -213,11 +213,11 @@ class ConfigShopSelect(Select):
             view = self.calling_view
             view.selected_channel_id = self.values[0]
 
-            view.edit_shop_button.disabled = False
+            view.edit_shop_wizard_button.disabled = False
             view.remove_shop_button.disabled = False
 
-            await view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=view.embed, view=view)
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
