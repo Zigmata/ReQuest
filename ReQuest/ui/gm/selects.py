@@ -105,6 +105,7 @@ class ManageableQuestSelect(Select):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            await self.calling_view.select_callback(interaction)
+            quest_id = self.values[0]
+            await self.calling_view.select_callback(interaction, quest_id)
         except Exception as e:
             await log_exception(e, interaction)

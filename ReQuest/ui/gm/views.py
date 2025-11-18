@@ -883,20 +883,11 @@ class CompleteQuestsView(LayoutView):
         except Exception as e:
             await log_exception(e)
 
-    async def select_callback(self, interaction: discord.Interaction):
+    async def select_callback(self, interaction: discord.Interaction, quest_id):
         try:
-            confirm_modal = ConfirmModal(
-                title='Confirm Quest Completion',
-                prompt_label='Type "CONFIRM" to complete the quest:',
-                prompt_placeholder='Type "CONFIRM" to proceed.',
-                confirm_callback=self.confirm_callback
-            )
-            await interaction.response.send_modal(confirm_modal)
-        except Exception as e:
-            await log_exception(e, interaction)
+            collection = interaction.client.gdb['quests']
+            self.selected_quest = await collection.find_one({'guildId': interaction.guild_id, 'questId': quest_id})
 
-    async def confirm_callback(self, interaction: discord.Interaction):
-        try:
             quest_summary_modal = modals.QuestSummaryModal(self)
 
             quest_summary_collection = interaction.client.gdb['questSummary']
