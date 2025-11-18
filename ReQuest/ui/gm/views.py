@@ -5,9 +5,8 @@ from typing import Any, Dict, Iterator, Tuple
 import discord
 from discord.ui import View, LayoutView, Container, TextDisplay, Separator, ActionRow, Section
 
-from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton, ConfirmButton
+from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
 from ReQuest.ui.common.views import MenuBaseView
-from ReQuest.ui.common.modals import ConfirmModal
 from ReQuest.ui.gm import buttons, selects, modals
 from ReQuest.utilities.supportFunctions import (
     log_exception,
@@ -16,7 +15,7 @@ from ReQuest.utilities.supportFunctions import (
     update_character_experience,
     attempt_delete,
     update_quest_embed,
-    find_character_in_lists, format_currency_display, setup_view
+    format_currency_display, setup_view
 )
 
 logging.basicConfig(level=logging.INFO)

@@ -61,8 +61,8 @@ def normalize_currency_keys(currency_dict):
 
 def format_currency_display(player_currency: dict, currency_config: dict) -> list[str]:
     """
-        Formats currency into a list of strings based on the server's currency configuration
-        (double vs integer).
+    Formats currency into a list of strings based on the server's currency configuration
+    (double vs integer).
     """
     if not player_currency or not currency_config or 'currencies' not in currency_config:
         return []
@@ -92,7 +92,7 @@ def format_currency_display(player_currency: dict, currency_config: dict) -> lis
                 processed_denominations.add(denom_name_lower)
 
             if total_value > 0:
-                output_lines.append(f"{base_name.capitalize()}: {total_value:.2f}")
+                output_lines.append(f"{base_name.capitalize()}: **{total_value:.2f}**")
 
         # Display as separate integers
         else:
@@ -103,13 +103,8 @@ def format_currency_display(player_currency: dict, currency_config: dict) -> lis
                 if quantity > 0:
                     denom_display_name, _ = find_currency_or_denomination(currency_config, denom_name_lower)
                     if denom_display_name:
-                        output_lines.append(f"{denom_display_name.capitalize()}: {quantity}")
+                        output_lines.append(f"{denom_display_name.capitalize()}: **{quantity}**")
                     processed_denominations.add(denom_name_lower)
-
-    # Add any currencies in the wallet that weren't in the config at all
-    for denom_name_lower, quantity in norm_player_wallet.items():
-        if denom_name_lower not in processed_denominations and quantity > 0:
-            output_lines.append(f"{denom_name_lower.capitalize()}: {quantity}")
 
     return output_lines
 

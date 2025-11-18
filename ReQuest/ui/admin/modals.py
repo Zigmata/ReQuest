@@ -43,7 +43,6 @@ class AllowServerModal(Modal):
             interaction.client.allow_list.append(guild_id)
 
             view = self.calling_view
-            view.embed.add_field(name=f'{input_name} added to allowlist', value=f'ID: `{guild_id}`')
 
             if view.remove_guild_allowlist_select.disabled:
                 view.remove_guild_allowlist_select.disabled = False
@@ -54,7 +53,7 @@ class AllowServerModal(Modal):
                 discord.SelectOption(label=input_name, value=str(guild_id))
             )
 
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 

@@ -3,10 +3,10 @@ import math
 
 import discord
 from discord import ButtonStyle
-from discord.ui import View, LayoutView, Container, Section, Separator, ActionRow, Button, TextDisplay, Thumbnail
+from discord.ui import LayoutView, Container, Section, Separator, ActionRow, Button, TextDisplay, Thumbnail
 
-from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
 from ReQuest.ui.common import modals as common_modals, views as common_views
+from ReQuest.ui.common.buttons import MenuViewButton, BackButton
 from ReQuest.ui.config import buttons, selects, enums
 from ReQuest.utilities.supportFunctions import log_exception, query_config, setup_view
 
@@ -630,7 +630,7 @@ class ConfigEditCurrencyView(LayoutView):
             '- Any transactions involving a base currency or its denominations will automatically convert them.'
             '```Example: A player has 10 gold and spends 3 copper. Their new balance will automatically display '
             '9 gold, 9 silver, and 7 copper.```\n'
-            '- Currencies displayed as an integer will show each denomination, whil currencies displayed as a double '
+            '- Currencies displayed as an integer will show each denomination, while currencies displayed as a double '
             'will show only as the base currency.'
             '```Example: The player above with double display enabled will show as 9.97 gold.```\n'
         ))

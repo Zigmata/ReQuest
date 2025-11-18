@@ -3,7 +3,7 @@ import logging
 import discord
 from discord.ui import Select
 
-from ReQuest.utilities.supportFunctions import log_exception
+from ReQuest.utilities.supportFunctions import log_exception, setup_view
 from ReQuest.ui.common import modals as common_modals
 
 logging.basicConfig(level=logging.INFO)
@@ -55,7 +55,7 @@ class RemoveGuildAllowlistSelect(Select):
                 view.remove_guild_allowlist_select.options.append(
                     discord.SelectOption(label='There are no servers in the allowlist', value='None')
                 )
-            await view.setup(interaction.client)
-            await interaction.response.edit_message(embed=view.embed, view=view)
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)

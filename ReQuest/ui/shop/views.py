@@ -1,6 +1,5 @@
 import logging
 import math
-import shortuuid
 
 import discord
 from discord.ui import (
@@ -13,8 +12,9 @@ from discord.ui import (
     Thumbnail,
     Button
 )
-from ReQuest.ui.shop import buttons
+
 from ReQuest.ui.common import modals as common_modals
+from ReQuest.ui.shop import buttons
 
 
 class ShopBaseView(LayoutView):

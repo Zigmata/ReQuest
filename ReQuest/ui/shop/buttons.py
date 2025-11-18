@@ -3,8 +3,13 @@ import shortuuid
 from discord import ButtonStyle
 from discord.ui import Button
 
-from ReQuest.utilities.supportFunctions import log_exception, check_sufficient_funds, apply_item_change_local, \
-    apply_currency_change_local, format_currency_display
+from ReQuest.utilities.supportFunctions import (
+    log_exception,
+    check_sufficient_funds,
+    apply_item_change_local,
+    apply_currency_change_local,
+    format_currency_display
+)
 
 
 class ShopItemButton(Button):

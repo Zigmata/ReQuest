@@ -3,7 +3,6 @@ from discord.ui import LayoutView, Container, Section, Separator, TextDisplay
 from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton
 
 
-# Experimental V2 menu base
 class MenuBaseView(LayoutView):
     def __init__(self, title, menu_items, menu_level):
         super().__init__(timeout=None)

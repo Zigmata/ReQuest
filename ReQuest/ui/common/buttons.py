@@ -50,7 +50,7 @@ class BackButton(BaseViewButton):
 
 
 class MenuDoneButton(Button):
-    def __init__(self, row=4):
+    def __init__(self):
         super().__init__(
             label='Done',
             style=ButtonStyle.secondary,

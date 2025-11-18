@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord.ext.commands import Cog
 
 from ReQuest.ui.shop import views
-from ReQuest.utilities.supportFunctions import log_exception, setup_view
+from ReQuest.utilities.supportFunctions import log_exception
 
 
 class Shop(Cog):
