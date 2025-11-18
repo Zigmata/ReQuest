@@ -66,16 +66,20 @@ class ConfigBaseView(common_views.MenuBaseView):
 class ConfigWizardView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
-        self.roles_report_display = TextDisplay(
-            'This wizard provides an overview of your current server configuration and highlights any recommended '
-            'or missing settings to consider. Launch a scan with the button below.'
+        self.pages = []
+        self.current_page = 0
+        self.intro_text = (
+            '**Welcome to the ReQuest Configuration Wizard!**\n\n'
+            'This wizard will help you ensure that your server is properly configured to use ReQuest\'s features. '
+            'It will scan your current settings and provide recommendations for any adjustments needed.\n\n'
+            'Use the "Launch Scan" button below to begin the validation process. Once the scan is complete, '
+            'you will receive a detailed report of your server\'s configuration along with any recommended changes.'
         )
-        self.configure_roles_shortcut = MenuViewButton(ConfigRolesView, 'Configure Roles')
-        self.configure_roles_shortcut.disabled = True
 
         self.build_view()
 
     def build_view(self):
+        self.clear_items()
         container = Container()
 
         header_section = Section(accessory=BackButton(ConfigBaseView))
@@ -84,14 +88,150 @@ class ConfigWizardView(LayoutView):
         container.add_item(header_section)
         container.add_item(Separator())
 
-        roles_section = Section(accessory=self.configure_roles_shortcut)
-        roles_section.add_item(self.roles_report_display)
-        container.add_item(roles_section)
-        container.add_item(Separator())
+        if not self.pages:
+            container.add_item(TextDisplay(self.intro_text))
+            container.add_item(Separator())
 
-        container.add_item(ActionRow(buttons.ScanServerButton(self)))
+            container.add_item(ActionRow(buttons.ScanServerButton(self)))
+        else:
+            page_data = self.pages[self.current_page]
+
+            content_text = page_data['content']
+            shortcut_button = page_data.get('shortcut_button')
+
+            if shortcut_button:
+                section = Section(accessory=shortcut_button)
+                section.add_item(TextDisplay(content_text))
+                container.add_item(section)
+                container.add_item(Separator())
+            else:
+                container.add_item(TextDisplay(content_text))
+                container.add_item(Separator())
+
+            # Navigation
+            nav_row = ActionRow()
+
+            prev_button = Button(
+                label='Previous',
+                style=ButtonStyle.secondary,
+                custom_id='wizard_prev_page',
+                disabled=(self.current_page == 0)
+            )
+            prev_button.callback = self.prev_page_callback
+            nav_row.add_item(prev_button)
+
+            page_button = Button(
+                label=f'Page {self.current_page + 1} of {len(self.pages)}',
+                style=ButtonStyle.secondary,
+                custom_id='wizard_page_indicator'
+            )
+            page_button.callback = self.show_page_jump_modal
+            nav_row.add_item(page_button)
+
+            next_button = Button(
+                label='Next',
+                style=ButtonStyle.secondary,
+                custom_id='wizard_next_page',
+                disabled=(self.current_page == len(self.pages) - 1)
+            )
+            next_button.callback = self.next_page_callback
+            nav_row.add_item(next_button)
+
+            scan_button = buttons.ScanServerButton(self)
+            scan_button.label = 'Re-Scan'
+            nav_row.add_item(scan_button)
+
+            container.add_item(nav_row)
 
         self.add_item(container)
+
+    async def prev_page_callback(self, interaction: discord.Interaction):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def show_page_jump_modal(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.send_modal(common_modals.PageJumpModal(self))
+        except Exception as e:
+            logging.error(f'Failed to send PageJumpModal: {e}')
+            await interaction.response.send_message('Could not open page selector', ephemeral=True)
+
+    async def next_page_callback(self, interaction: discord.Interaction):
+        if self.current_page < len(self.pages) - 1:
+            self.current_page += 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    @staticmethod
+    def validate_bot_permission(guild):
+        """
+        Validate the bot's global permissions.
+        Returns (report_string, has_warnings_boolean)
+        """
+        try:
+            bot_member = guild.me
+            bot_perms = bot_member.guild_permissions
+
+            # Use a dictionary to map permission attribute names to readable names
+            required_permissions = {
+                'view_channel': 'View Channels',
+                'manage_roles': 'Manage Roles',
+                'send_messages': 'Send Messages',
+                'attach_files': 'Attach Files',
+                'add_reactions': 'Add Reactions',
+                'use_external_emojis': 'Use External Emoji',
+                'manage_messages': 'Manage Messages',
+                'read_message_history': 'Read Message History'
+            }
+
+            missing_perms = []
+
+            for attr, name in required_permissions.items():
+                if not getattr(bot_perms, attr):
+                    missing_perms.append(f'- ⚠️ Missing: `{name}`')
+
+            report_lines = [
+                '__**Bot Global Permissions**__',
+                'This section verifies that ReQuest has the correct permissions to function correctly.\n',
+                f'Bot Role: {bot_member.top_role.mention}'
+            ]
+
+            if missing_perms:
+                report_lines.append('**Status: ⚠️ WARNINGS FOUND**')
+                report_lines.extend(missing_perms)
+                report_lines.append('')
+                report_lines.append('Please ensure the bot\'s highest role has these permissions granted globally.')
+                return '\n'.join(report_lines), True
+            else:
+                report_lines.append('**Status: ✅ OK**')
+                report_lines.append('The bot has all required global permissions.')
+                return '\n'.join(report_lines), False
+
+        except Exception as e:
+            required_perms_list = [
+                'View Channels',
+                'Manage Roles',
+                'Send Messages',
+                'Attach Files',
+                'Add Reactions',
+                'Use External Emoji',
+                'Manage Messages',
+                'Read Message History'
+            ]
+
+            report_lines = [
+                '__**Bot Global Permissions**__',
+                '**Status: ❌ SCAN FAILED**',
+                'An unexpected error occurred while checking bot permissions.',
+                f'Error: {type(e).__name__}',
+                '',
+                '**Required Permissions for the Bot\'s Role:**',
+                '\n'.join([f'- {p}' for p in required_perms_list])
+            ]
+
+            return '\n'.join(report_lines), True
 
     def validate_roles(self, guild, gm_roles_config, announcement_role_config):
         """
@@ -170,25 +310,11 @@ class ConfigWizardView(LayoutView):
                                             f'from Server')
                         continue
 
-                    escalations = []
-                    for permission_name, value in role.permissions:
-                        if value and not getattr(default_role.permissions, permission_name):
-                            # Format names to be readable
-                            formatted_name = permission_name.replace('_', ' ').title()
-                            escalations.append(formatted_name)
+                    escalation_report = self._has_escalations(role, default_role)
 
-                    if escalations:
+                    if escalation_report.has_escalations:
                         has_warnings = True
-                        if 'Administrator' in escalations:
-                            escalations_str = 'Administrator'
-                        else:
-                            escalations_str = ', '.join(escalations[:3])
-                            if len(escalations) > 3:
-                                escalations_str += f', and {len(escalations) - 3} more...'
-
-                        report_lines.append(
-                            f'- ⚠️ {role.mention}: Permission Escalations Detected - {escalations_str}'
-                        )
+                        report_lines.extend(escalation_report.report_lines)
                     else:
                         report_lines.append(f'- ✅ {role.mention}: OK')
                 except Exception as e:
@@ -223,13 +349,83 @@ class ConfigWizardView(LayoutView):
                 report_lines.append('- Error validating Announcement Role')
 
         if has_warnings:
-            self.configure_roles_shortcut.disabled = False
-            return '\n'.join(report_lines)
+            return '\n'.join(report_lines), True
         else:
-            self.configure_roles_shortcut.disabled = True
-            return (
-                '__**Role Configurations**__\n'
-                '- ✅ No issues detected!')
+            return '\n'.join(report_lines), False
+
+    @staticmethod
+    def validate_channels(guild, quest_channel_id, player_channel_id, archive_channel_id):
+        """
+        Validate configured channels and their permissions.
+        """
+        report_lines = [
+            '__**Channel Configurations**__',
+            'This section verifies the following:\n'
+            '- Configured channels exist.\n'
+            '- The bot has permission to view and send messages in the configured channels.\n'
+            '- The default (@everyone) role does not have `Send Messages` permissions.\n'
+        ]
+
+        has_warnings = False
+
+        channels_to_check = [
+            ('Quest Board', quest_channel_id, True),  # Name, ID, is_required
+            ('Player Board', player_channel_id, False),
+            ('Quest Archive', archive_channel_id, False)
+        ]
+
+        bot_member = guild.me
+
+        for name, channel_id_str, required in channels_to_check:
+            if not channel_id_str:
+                if required:
+                    has_warnings = True
+                    report_lines.append(f'\n**{name}:**\n- ⚠️ No Channel Configured')
+                else:
+                    report_lines.append(f'\n**{name}:**\n- ℹ️ Not Configured (Optional)')
+                continue
+
+            try:
+                channel_id = strip_id(channel_id_str)
+                channel = guild.get_channel(channel_id)
+
+                if not channel:
+                    has_warnings = True
+                    report_lines.append(f'\n**{name}:**\n- ⚠️ Configured Channel Not Found/Deleted from Server')
+                    continue
+
+                # Check bot permissions
+                bot_permissions = channel.permissions_for(bot_member)
+                channel_issues = []
+
+                bot_mention = bot_member.mention
+
+                if not bot_permissions.view_channel:
+                    channel_issues.append(f'- ⚠️ {bot_mention} cannot view this channel.')
+                if not bot_permissions.send_messages:
+                    channel_issues.append(f'- ⚠️ {bot_mention} cannot send messages in this channel.')
+
+                # Check default role permissions
+                default_role = guild.default_role
+                default_permissions = channel.permissions_for(default_role)
+                if default_permissions.send_messages:
+                    channel_issues.append('- ⚠️ @everyone can send messages in this channel.')
+
+                if channel_issues:
+                    has_warnings = True
+                    report_lines.append(f'\n**{name} ({channel.mention}):**')
+                    report_lines.extend(channel_issues)
+                else:
+                    report_lines.append(f'\n**{name} ({channel.mention}):**\n- ✅ OK')
+            except Exception as e:
+                logger.error(f'Error validating channel {name}: {e}')
+                report_lines.append(f'- Error validating {name} channel')
+                has_warnings = True
+
+        button = MenuViewButton(ConfigChannelsView, 'Configure Channels')
+        button.disabled = not has_warnings
+
+        return '\n'.join(report_lines), button
 
     @staticmethod
     def _has_escalations(role, default_role):
@@ -261,11 +457,51 @@ class ConfigWizardView(LayoutView):
         try:
             guild = interaction.guild
             gdb = interaction.client.gdb
+
+            # Bot permissions
+            bot_perm_text, bot_perm_warnings = self.validate_bot_permission(guild)
+
+
+            # Role configs
             announcement_role_query = await gdb['announceRole'].find_one({'_id': guild.id})
             gm_roles_query = await gdb['gmRoles'].find_one({'_id': guild.id})
 
-            role_validation_report = self.validate_roles(guild, gm_roles_query, announcement_role_query)
-            self.roles_report_display.content = role_validation_report
+            # Channel configs
+            quest_channel_query = await gdb['questChannel'].find_one({'_id': guild.id})
+            quest_channel = quest_channel_query['questChannel'] if quest_channel_query else None
+
+            player_channel_query = await gdb['playerBoardChannel'].find_one({'_id': guild.id})
+            player_channel = player_channel_query['playerBoardChannel'] if player_channel_query else None
+
+            archive_channel_query = await gdb['archiveChannel'].find_one({'_id': guild.id})
+            archive_channel = archive_channel_query['archiveChannel'] if archive_channel_query else None
+
+            # Role validation report
+            role_text, role_has_warnings = self.validate_roles(guild, gm_roles_query, announcement_role_query)
+            role_button = MenuViewButton(ConfigRolesView, 'Configure Roles')
+            role_button.disabled = not role_has_warnings
+
+            # Channel validation report
+            channel_text, channel_button = self.validate_channels(guild, quest_channel, player_channel, archive_channel)
+
+            # Compile pages
+            self.pages = [
+                {
+                    'content': bot_perm_text,
+                    'shortcut_button': None
+                },
+                {
+                    'content': role_text,
+                    'shortcut_button': role_button
+                },
+                {
+                    'content': channel_text,
+                    'shortcut_button': channel_button
+                }
+            ]
+
+            self.current_page = 0
+            self.build_view()
 
             await interaction.edit_original_response(view=self)
         except Exception as e:
@@ -1166,7 +1402,7 @@ class EditShopView(LayoutView):
             prev_button.callback = self.prev_page
 
             page_display = Button(
-                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                label=f'Page {self.current_page + 1} of {self.total_pages}',
                 style=ButtonStyle.secondary,
                 custom_id='shop_edit_page'
             )
