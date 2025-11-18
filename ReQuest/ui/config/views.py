@@ -959,7 +959,7 @@ class ConfigQuestsView(LayoutView):
             wait_list = await query_config('questWaitList', bot, guild)
 
             self.wait_list_info.content = (
-                f'**Quest Wait List Size:** {wait_list if wait_list > 0 else 'Disabled'}\n'
+                f'**Quest Wait List Size:** {wait_list if wait_list > 0 else "Disabled"}\n'
                 f'A wait list allows the specified number of players to queue for a quest that is full, in case a '
                 f'player drops.'
             )
@@ -1074,7 +1074,7 @@ class ConfigPlayersView(LayoutView):
         try:
             self.player_experience = await query_config('playerExperience', bot, guild)
             self.player_experience_info.content = (
-                f'**Player Experience:** {'Enabled' if self.player_experience else 'Disabled'}\n'
+                f'**Player Experience:** {"Enabled" if self.player_experience else "Disabled"}\n'
                 f'Enables/Disables the use of experience points (or similar value-based character progression.'
             )
         except Exception as e:

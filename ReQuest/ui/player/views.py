@@ -153,7 +153,7 @@ class ListCharactersView(LayoutView):
                             f'**{character['name']}: {character['attributes']['experience']} XP**\n'
                             f'{character['note']}'
                         )
-                    self.character_list_info.content = ('\n\n'.join(character_info))
+                self.character_list_info.content = ('\n\n'.join(character_info))
 
             self.active_character_select.options.clear()
             options = []
