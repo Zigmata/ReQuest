@@ -1,5 +1,6 @@
 import logging
 import math
+from collections import namedtuple
 
 import discord
 from discord import ButtonStyle
@@ -8,7 +9,7 @@ from discord.ui import LayoutView, Container, Section, Separator, ActionRow, But
 from ReQuest.ui.common import modals as common_modals, views as common_views
 from ReQuest.ui.common.buttons import MenuViewButton, BackButton
 from ReQuest.ui.config import buttons, selects, enums
-from ReQuest.utilities.supportFunctions import log_exception, query_config, setup_view
+from ReQuest.utilities.supportFunctions import log_exception, query_config, setup_view, strip_id
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -19,6 +20,11 @@ class ConfigBaseView(common_views.MenuBaseView):
         super().__init__(
             title='Server Configuration - Main Menu',
             menu_items=[
+                {
+                    'name': 'Config Wizard',
+                    'description': 'Validate your server is ready to use ReQuest with a quick scan.',
+                    'view_class': ConfigWizardView
+                },
                 {
                     'name': 'Roles',
                     'description': 'Configuration options for pingable or privileged roles.',
@@ -52,6 +58,218 @@ class ConfigBaseView(common_views.MenuBaseView):
             ],
             menu_level=0
         )
+
+
+# ------ WIZARD ------
+
+
+class ConfigWizardView(LayoutView):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.roles_report_display = TextDisplay(
+            'This wizard provides an overview of your current server configuration and highlights any recommended '
+            'or missing settings to consider. Launch a scan with the button below.'
+        )
+        self.configure_roles_shortcut = MenuViewButton(ConfigRolesView, 'Configure Roles')
+        self.configure_roles_shortcut.disabled = True
+
+        self.build_view()
+
+    def build_view(self):
+        container = Container()
+
+        header_section = Section(accessory=BackButton(ConfigBaseView))
+        header_section.accessory.label = 'Quit'  # Overriding button label to avoid confusion w/ pagination
+        header_section.add_item(TextDisplay('**Server Configuration - Wizard**'))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        roles_section = Section(accessory=self.configure_roles_shortcut)
+        roles_section.add_item(self.roles_report_display)
+        container.add_item(roles_section)
+        container.add_item(Separator())
+
+        container.add_item(ActionRow(buttons.ScanServerButton(self)))
+
+        self.add_item(container)
+
+    def validate_roles(self, guild, gm_roles_config, announcement_role_config):
+        """
+        Validate the permissions for default and GM roles.
+        """
+        has_warnings = False
+        report_lines = [
+            '__**Role Configurations**__',
+            'This section verifies the following:\n'
+            '- GM roles (required) and Announcement role (optional) are configured.\n'
+            '- The default (@everyone) role has required permissions for users to access bot features.\n'
+            '- The default (@everyone) role does not have dangerous permissions.\n'
+            '- GM roles are checked to see if they have any permission escalations beyond the default role.\n',
+            'Any warnings here are solely recommendations based on a default setup. Depending on your server\'s '
+            'needs, you may have reason to disregard some of these recommendations.\n'
+        ]
+
+        # Validate default (@everyone) role
+        default_role = guild.default_role
+        default_issues = []
+
+        # These are needed for users to access the bot's features
+        required_default_permissions = {
+            'view_channel': 'View Channels',
+            'read_message_history': 'Read Message History',
+            'send_messages': 'Send Messages',
+            'send_messages_in_threads': 'Send Messages in Threads',
+            'use_application_commands': 'Use Application Commands'
+        }
+
+        for permission, name in required_default_permissions.items():
+            if not getattr(default_role.permissions, permission):
+                default_issues.append(f'- Missing Permission: `{name}`')
+
+        # These are generally a bad idea, or may enable users to circumvent bot features
+        dangerous_permissions = {
+            'manage_channels': 'Manage Channels',
+            'manage_roles': 'Manage Roles',
+            'manage_webhooks': 'Manage Webhooks',
+            'manage_guild': 'Manage Server',
+            'manage_nicknames': 'Manage Nicknames',
+            'kick_members': 'Kick Members',
+            'ban_members': 'Ban Members',
+            'moderate_members': 'Timeout Members',
+            'mention_everyone': 'Mention @everyone',
+            'manage_messages': 'Manage Messages',
+            'manage_threads': 'Manage Threads',
+            'administrator': 'Administrator'
+        }
+
+        for permission, name in dangerous_permissions.items():
+            if getattr(default_role.permissions, permission):
+                default_issues.append(f'- `{name}`')
+
+        if default_issues:
+            has_warnings = True
+            report_lines.append('**Default Role:**\n⚠️ @everyone: Dangerous Permissions Found:')
+            report_lines.extend(default_issues)
+        else:
+            report_lines.append('**Default Role:**\n- ✅ @everyone: OK')
+
+        # Validate at least one GM role is configured, and does not extend permissions of the default role
+        if not gm_roles_config or not gm_roles_config.get('gmRoles'):
+            has_warnings = True
+            report_lines.append('\n**GM Roles:**\n- ⚠️ No GM Roles Configured')
+        else:
+            report_lines.append('\n**GM Roles:**')
+            for role_data in gm_roles_config['gmRoles']:
+                try:
+                    role_id = strip_id(role_data['mention'])
+                    role = guild.get_role(role_id)
+
+                    if not role:
+                        has_warnings = True
+                        report_lines.append(f'- ⚠️ **{role_data["name"]}:** Configured Role Not Found/Deleted '
+                                            f'from Server')
+                        continue
+
+                    escalations = []
+                    for permission_name, value in role.permissions:
+                        if value and not getattr(default_role.permissions, permission_name):
+                            # Format names to be readable
+                            formatted_name = permission_name.replace('_', ' ').title()
+                            escalations.append(formatted_name)
+
+                    if escalations:
+                        has_warnings = True
+                        if 'Administrator' in escalations:
+                            escalations_str = 'Administrator'
+                        else:
+                            escalations_str = ', '.join(escalations[:3])
+                            if len(escalations) > 3:
+                                escalations_str += f', and {len(escalations) - 3} more...'
+
+                        report_lines.append(
+                            f'- ⚠️ {role.mention}: Permission Escalations Detected - {escalations_str}'
+                        )
+                    else:
+                        report_lines.append(f'- ✅ {role.mention}: OK')
+                except Exception as e:
+                    logger.error(f'Error validating role {role_data}: {e}')
+                    report_lines.append(f'- Error validating {role_data["name"]}')
+
+        # Validate announcement role
+        if not announcement_role_config or not announcement_role_config.get('announceRole'):
+            has_warnings = True
+            report_lines.append('\n**Announcement Role:**\n- ⚠️ No Announcement Role Configured')
+        else:
+            try:
+                role_id = strip_id(announcement_role_config['announceRole'])
+                role = guild.get_role(role_id)
+
+                if not role:
+                    has_warnings = True
+                    report_lines.append(
+                        '\n**Announcement Role:**\n- ⚠️ Configured Role Not Found/Deleted from Server'
+                    )
+                else:
+                    escalation_report = self._has_escalations(role, default_role)
+
+                    if escalation_report.has_escalations:
+                        has_warnings = True
+                        report_lines.append('\n**Announcement Role:**')
+                        report_lines.extend(escalation_report.report_lines)
+                    else:
+                        report_lines.append(f'\n**Announcement Role:**\n- ✅ {role.mention}: OK')
+            except Exception as e:
+                logger.error(f'Error validating announcement role: {e}')
+                report_lines.append('- Error validating Announcement Role')
+
+        if has_warnings:
+            self.configure_roles_shortcut.disabled = False
+            return '\n'.join(report_lines)
+        else:
+            self.configure_roles_shortcut.disabled = True
+            return (
+                '__**Role Configurations**__\n'
+                '- ✅ No issues detected!')
+
+    @staticmethod
+    def _has_escalations(role, default_role):
+        report_lines = []
+        escalations = []
+        for permission_name, value in role.permissions:
+            if value and not getattr(default_role.permissions, permission_name):
+                # Format names to be readable
+                formatted_name = permission_name.replace('_', ' ').title()
+                escalations.append(formatted_name)
+
+        result = namedtuple('EscalationResult', ['has_escalations', 'report_lines'])
+        if escalations:
+            if 'Administrator' in escalations:
+                escalations_str = 'Administrator'
+            else:
+                escalations_str = ', '.join(escalations[:3])
+                if len(escalations) > 3:
+                    escalations_str += f', and {len(escalations) - 3} more...'
+
+            report_lines.append(
+                f'- ⚠️ {role.mention}: Permission Escalations Detected - {escalations_str}'
+            )
+            return result(True, report_lines)
+        else:
+            return result(False, report_lines)
+
+    async def run_scan(self, interaction):
+        try:
+            guild = interaction.guild
+            gdb = interaction.client.gdb
+            announcement_role_query = await gdb['announceRole'].find_one({'_id': guild.id})
+            gm_roles_query = await gdb['gmRoles'].find_one({'_id': guild.id})
+
+            role_validation_report = self.validate_roles(guild, gm_roles_query, announcement_role_query)
+            self.roles_report_display.content = role_validation_report
+
+            await interaction.edit_original_response(view=self)
+        except Exception as e:
+            await log_exception(e, interaction)
 
 
 # ------ ROLES ------

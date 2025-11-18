@@ -576,3 +576,20 @@ class UpdateShopJSONButton(Button):
             )
         except Exception as e:
             await log_exception(e, interaction)
+
+
+class ScanServerButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Scan Server Configs',
+            style=ButtonStyle.success,
+            custom_id='scan_server_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.defer()
+            await self.calling_view.run_scan(interaction)
+        except Exception as e:
+            await log_exception(e, interaction)
