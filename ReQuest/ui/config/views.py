@@ -746,7 +746,7 @@ class ConfigRolesView(LayoutView):
                 for role in gm_roles:
                     role_mentions.append(role['mention'])
 
-                gm_roles_string = (f'**GM Role(s):** {','.join(role_mentions)}\n'
+                gm_roles_string = (f'**GM Role(s):** {', '.join(role_mentions)}\n'
                                    f'These roles will grant access to Game Master commands and features.')
                 self.gm_role_remove_view_button.disabled = False
 
@@ -1469,6 +1469,8 @@ class EditShopView(LayoutView):
         self.items_per_page = 6
         self.current_page = 0
         self.total_pages = math.ceil(len(self.all_stock) / self.items_per_page)
+        self.done_editing_button = BackButton(ConfigShopsView)
+        self.done_editing_button.label = 'Done Editing'  # Override the label for this button to avoid confusion
 
     def build_view(self):
         self.clear_items()
@@ -1559,14 +1561,12 @@ class EditShopView(LayoutView):
             pagination_row.add_item(prev_button)
             pagination_row.add_item(page_display)
             pagination_row.add_item(next_button)
-            pagination_row.add_item(BackButton(ConfigShopsView))
-            pagination_row.children[3].label = 'Done Editing'  # Override the label for this button to avoid confusion
+            pagination_row.add_item(self.done_editing_button)
 
             self.add_item(pagination_row)
         else:
             button_row = ActionRow()
-            button_row.add_item(BackButton(ConfigShopsView))
-            button_row.children[0].label = 'Done Editing'  # Override the label for this button to avoid confusion
+            button_row.add_item(self.done_editing_button)
             self.add_item(button_row)
 
     async def prev_page(self, interaction: discord.Interaction):

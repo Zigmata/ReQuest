@@ -468,7 +468,7 @@ class ShopItemModal(Modal):
         self.item_quantity_text_input = discord.ui.TextInput(
             label='Item Quantity',
             custom_id='item_quantity_text_input',
-            placeholder='Enter teh quantity sold per purchase',
+            placeholder='Enter the quantity sold per purchase',
             default=quantity_default,
             required=False
         )
