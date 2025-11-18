@@ -68,6 +68,7 @@ class ConfigWizardView(LayoutView):
         super().__init__(timeout=None)
         self.pages = []
         self.current_page = 0
+        self.total_pages = 4
         self.intro_text = (
             '**Welcome to the ReQuest Configuration Wizard!**\n\n'
             'This wizard will help you ensure that your server is properly configured to use ReQuest\'s features. '
@@ -96,17 +97,36 @@ class ConfigWizardView(LayoutView):
         else:
             page_data = self.pages[self.current_page]
 
-            content_text = page_data['content']
-            shortcut_button = page_data.get('shortcut_button')
+            if 'custom_sections' in page_data:
+                if page_data.get('content'):
+                    container.add_item(TextDisplay(page_data['content']))
+                    container.add_item(Separator())
 
-            if shortcut_button:
-                section = Section(accessory=shortcut_button)
-                section.add_item(TextDisplay(content_text))
-                container.add_item(section)
-                container.add_item(Separator())
+                # Build custom sections
+                for section_data in page_data['custom_sections']:
+                    content = section_data.get('content')
+                    button = section_data.get('shortcut_button')
+
+                    if content and button:
+                        section = Section(accessory=button)
+                        section.add_item(TextDisplay(content))
+                        container.add_item(section)
+                        container.add_item(Separator())
+                    elif content:
+                        container.add_item(TextDisplay(content))
+                        container.add_item(Separator())
             else:
-                container.add_item(TextDisplay(content_text))
-                container.add_item(Separator())
+                content_text = page_data['content']
+                shortcut_button = page_data.get('shortcut_button')
+
+                if shortcut_button:
+                    section = Section(accessory=shortcut_button)
+                    section.add_item(TextDisplay(content_text))
+                    container.add_item(section)
+                    container.add_item(Separator())
+                else:
+                    container.add_item(TextDisplay(content_text))
+                    container.add_item(Separator())
 
             # Navigation
             nav_row = ActionRow()
@@ -244,7 +264,8 @@ class ConfigWizardView(LayoutView):
             '- GM roles (required) and Announcement role (optional) are configured.\n'
             '- The default (@everyone) role has required permissions for users to access bot features.\n'
             '- The default (@everyone) role does not have dangerous permissions.\n'
-            '- GM roles are checked to see if they have any permission escalations beyond the default role.\n',
+            '- GM and Announcement roles are checked to see if they have any permission escalations '
+            'beyond the default role.\n',
             'Any warnings here are solely recommendations based on a default setup. Depending on your server\'s '
             'needs, you may have reason to disregard some of these recommendations.\n'
         ]
@@ -324,7 +345,7 @@ class ConfigWizardView(LayoutView):
         # Validate announcement role
         if not announcement_role_config or not announcement_role_config.get('announceRole'):
             has_warnings = True
-            report_lines.append('\n**Announcement Role:**\n- ⚠️ No Announcement Role Configured')
+            report_lines.append('\n**Announcement Role:**\n- ℹ️ No Announcement Role Configured')
         else:
             try:
                 role_id = strip_id(announcement_role_config['announceRole'])
@@ -453,6 +474,110 @@ class ConfigWizardView(LayoutView):
         else:
             return result(False, report_lines)
 
+    @staticmethod
+    def _format_currency_report(currency_config):
+        report_lines = []
+        if not currency_config or not currency_config.get('currencies'):
+            report_lines.append('- ℹ️ No Currencies Configured')
+            return '\n'.join(report_lines)
+
+        report_lines.append('**Configured Currencies:**')
+        for currency in currency_config['currencies']:
+            name = currency['name']
+            denominations = currency.get('denominations', {})
+
+            lines = [f'- **{name}**']
+
+            if denominations:
+                denomination_list = []
+                for denomination in denominations:
+                    denom_name = denomination['name']
+                    denom_value = denomination['value']
+                    denomination_list.append(f'  - {denom_name}: {denom_value}')
+                lines.extend(denomination_list)
+            else:
+                lines.append('  - No Denominations Configured')
+
+            report_lines.extend(lines)
+
+        return '\n'.join(report_lines)
+
+    @staticmethod
+    def _format_gm_rewards_report(gm_rewards_query):
+        report_lines = []
+        if not gm_rewards_query or (not gm_rewards_query.get('experience') and not gm_rewards_query.get('items')):
+            report_lines.append('**Status:** Disabled')
+            return '\n'.join(report_lines)
+
+        report_lines.append('**Status:** Enabled')
+        experience = gm_rewards_query.get('experience')
+        items = gm_rewards_query.get('items')
+
+        if experience and experience > 0:
+            report_lines.append(f'- Experience: {experience}')
+
+        if items:
+            report_lines.append('- Items:')
+            for item_name, quantity in items.items():
+                report_lines.append(f'  - {item_name.capitalize()}: {quantity}')
+
+        return '\n'.join(report_lines)
+
+    def validate_dashboard_settings(self, wait_list_query, quest_summary_query, gm_rewards_query,
+                                    player_xp_query, currency_config):
+
+        # Fetch data
+        wait_list_size = wait_list_query.get('questWaitList', 0) if wait_list_query else 0
+        summary_enabled = quest_summary_query.get('questSummary', False) if quest_summary_query else False
+        xp_enabled = player_xp_query.get('playerExperience', False) if player_xp_query else False
+
+        # Define different sections/components
+        components = []
+
+        # Quest Settings
+        quest_section_content = [
+            '**Quest Settings**',
+            f'- Quest Wait List Size: {wait_list_size if wait_list_size > 0 else "Disabled"}',
+            f'- Quest Summary: {"Enabled" if summary_enabled else "Disabled"}',
+            f'\n**GM Rewards (Per Quest)**',
+            self._format_gm_rewards_report(gm_rewards_query)
+        ]
+        components.append({
+            'content': '\n'.join(quest_section_content),
+            'shortcut_button': MenuViewButton(ConfigQuestsView, 'Configure Quests')
+        })
+
+        # Player Settings
+        player_section_content = [
+            '**Player Settings**',
+            f'- Player Experience: {"Enabled" if xp_enabled else "Disabled"}'
+        ]
+        components.append({
+            'content': '\n'.join(player_section_content),
+            'shortcut_button': MenuViewButton(ConfigPlayersView, 'Configure Players')
+        })
+
+        # Currency Settings
+        currency_section_content = [
+            '**Currency Settings**',
+            self._format_currency_report(currency_config)
+        ]
+        components.append({
+            'content': '\n'.join(currency_section_content),
+            'shortcut_button': MenuViewButton(ConfigCurrencyView, 'Configure Currency')
+        })
+
+        # Header
+        intro_content = [
+            '__**Settings Dashboard**__',
+            'This section provides an overview of non-essential configurations for quick reference.\n'
+        ]
+
+        return {
+            'intro': '\n'.join(intro_content),
+            'sections': components
+        }
+
     async def run_scan(self, interaction):
         try:
             guild = interaction.guild
@@ -460,7 +585,6 @@ class ConfigWizardView(LayoutView):
 
             # Bot permissions
             bot_perm_text, bot_perm_warnings = self.validate_bot_permission(guild)
-
 
             # Role configs
             announcement_role_query = await gdb['announceRole'].find_one({'_id': guild.id})
@@ -476,6 +600,13 @@ class ConfigWizardView(LayoutView):
             archive_channel_query = await gdb['archiveChannel'].find_one({'_id': guild.id})
             archive_channel = archive_channel_query['archiveChannel'] if archive_channel_query else None
 
+            # Dashboard configs
+            wait_list_query = await gdb['questWaitList'].find_one({'_id': guild.id})
+            quest_summary_query = await gdb['questSummary'].find_one({'_id': guild.id})
+            gm_rewards_query = await gdb['gmRewards'].find_one({'_id': guild.id})
+            player_xp_query = await gdb['playerExperience'].find_one({'_id': guild.id})
+            currency_config_query = await gdb['currency'].find_one({'_id': guild.id})
+
             # Role validation report
             role_text, role_has_warnings = self.validate_roles(guild, gm_roles_query, announcement_role_query)
             role_button = MenuViewButton(ConfigRolesView, 'Configure Roles')
@@ -483,6 +614,11 @@ class ConfigWizardView(LayoutView):
 
             # Channel validation report
             channel_text, channel_button = self.validate_channels(guild, quest_channel, player_channel, archive_channel)
+
+            # Dashboard settings report
+            dashboard_data = self.validate_dashboard_settings(
+                wait_list_query, quest_summary_query, gm_rewards_query, player_xp_query, currency_config_query
+            )
 
             # Compile pages
             self.pages = [
@@ -497,6 +633,10 @@ class ConfigWizardView(LayoutView):
                 {
                     'content': channel_text,
                     'shortcut_button': channel_button
+                },
+                {
+                    'content': dashboard_data.get('intro'),
+                    'custom_sections': dashboard_data.get('sections', [])
                 }
             ]
 
