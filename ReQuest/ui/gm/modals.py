@@ -321,12 +321,12 @@ class RewardsModal(Modal):
 
 
 class QuestSummaryModal(Modal):
-    def __init__(self, calling_button):
+    def __init__(self, calling_view):
         super().__init__(
             title='Add Quest Summary',
             timeout=None
         )
-        self.calling_button = calling_button
+        self.calling_view = calling_view
         self.summary_input = discord.ui.TextInput(
             label='Summary',
             style=discord.TextStyle.paragraph,
@@ -337,7 +337,7 @@ class QuestSummaryModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            await self.calling_button.modal_callback(interaction)
+            await self.calling_view.complete_quest(interaction, self.summary_input.value)
         except Exception as e:
             await log_exception(e, interaction)
 

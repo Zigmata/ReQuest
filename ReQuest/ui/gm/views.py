@@ -7,7 +7,8 @@ from discord.ui import View, LayoutView, Container, TextDisplay, Separator, Acti
 
 from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton, ConfirmButton
 from ReQuest.ui.common.views import MenuBaseView
-from ReQuest.ui.gm import buttons, selects
+from ReQuest.ui.common.modals import ConfirmModal
+from ReQuest.ui.gm import buttons, selects, modals
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
@@ -104,7 +105,7 @@ class ManageQuestsView(LayoutView):
             'Remove a player from the selected quest.'
         )
 
-        self.cancel_quest_button = buttons.CancelQuestButton(self, CancelQuestView)
+        self.cancel_quest_button = buttons.CancelQuestButton(self)
         self.cancel_quest_info = TextDisplay(
             'Cancel the selected quest and delete it from the quest board.'
         )
@@ -452,7 +453,7 @@ class RewardsMenuView(LayoutView):
         return '\n'.join(lines) if lines else 'None'
 
 
-class GMPlayerMenuView(View):
+class GMPlayerMenuView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
@@ -468,33 +469,60 @@ class GMPlayerMenuView(View):
             ),
             type='rich'
         )
-        self.add_item(BackButton(GMBaseView))
+        self.build_view()
+
+    def build_view(self):
+        container = Container()
+
+        header_section = Section(accessory=BackButton(GMBaseView))
+        header_section.add_item(TextDisplay('**Game Master - Player Management**'))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        container.add_item(TextDisplay(
+            'These commands have migrated to context menus. Right-click (desktop) or long-press (mobile) a player\'s '
+            'profile for the following menu options:\n\n'
+            '- **Modify Player**: Add or remove items and experience from a player.\n'
+            '- **View Player**: View a player\'s active character details.'
+        ))
+
+        self.add_item(container)
 
 
-class RemovePlayerView(View):
+class RemovePlayerView(LayoutView):
     def __init__(self, quest):
         super().__init__(timeout=None)
-        self.embed = discord.Embed(
-            title='',
-            description=(
-                'This action will remove the selected player, and fill the vacancy from a wait list, if '
-                'applicable.\n\n'
-                'Any individual rewards configured for the removed player will be removed from this quest. If you '
-                'still want to reward the player for any contributions prior to removal, use the `Modify Player` '
-                'context menus to directly issue rewards.'
-            ),
-            type='rich'
-        )
         self.quest = quest
         self.selected_member_id = None
         self.selected_character_id = None
         self.remove_player_select = selects.RemovePlayerSelect(self)
-        self.add_item(self.remove_player_select)
-        self.add_item(BackButton(ManageQuestsView))
+
+        self.build_view()
+
+    def build_view(self):
+        container = Container()
+
+        header_section = Section(accessory=BackButton(ManageQuestsView))
+        header_section.add_item(TextDisplay(f'**Remove Player from Quest - {self.quest['title']}**'))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        container.add_item(TextDisplay(
+            '__**Player Removal Notes**__\n\n'
+            '- Choose a player from the dropdown above to remove them from the quest roster.\n'
+            '- If any players are on a wait list, the first player on the list will be promoted to the party.\n'
+            '- Individual rewards for the removed player will be deleted from the quest.\n'
+            '- If you wish to reward the player for prior contributions, use the `Modify Player` context menu to issue '
+            'them rewards directly.'
+        ))
+
+        remove_player_select_row = ActionRow(self.remove_player_select)
+        container.add_item(remove_player_select_row)
+
+        self.add_item(container)
 
     async def setup(self):
         try:
-            self.embed.clear_fields()
             self.remove_player_select.options.clear()
 
             options = []
@@ -516,16 +544,8 @@ class RemovePlayerView(View):
                 options.append(discord.SelectOption(label='No players in quest roster', value='None'))
                 self.remove_player_select.placeholder = 'No players in quest roster'
                 self.remove_player_select.disabled = True
+
             self.remove_player_select.options = options
-
-            if self.selected_character_id:
-                character = find_character_in_lists([self.quest['party'], self.quest['waitList']],
-                                                    self.selected_member_id,
-                                                    self.selected_character_id)
-
-                self.embed.add_field(name='Selected Character', value=character['name'])
-            else:
-                self.embed.title = f'Select a player to remove from \"{self.quest['title']}\"'
         except Exception as e:
             await log_exception(e)
 
@@ -608,14 +628,13 @@ class RemovePlayerView(View):
             await gm_member.send(f'Player removed and quest roster updated!')
 
             # Refresh the views with the updated local quest object
-            refreshed_view = RemovePlayerView(self.quest)
-            await refreshed_view.setup()
             quest_view = QuestPostView(self.quest)
-            await quest_view.setup()
+            await setup_view(quest_view, interaction)
 
             # Update the menu view and the quest post
             await message.edit(embed=quest_view.embed, view=quest_view)
-            await interaction.response.edit_message(embed=refreshed_view.embed, view=refreshed_view)
+            await setup_view(self, interaction)
+            await interaction.response.edit_message(view=self)
 
             # Notify the player they have been removed.
             try:
@@ -786,13 +805,13 @@ class QuestPostView(View):
             await log_exception(e, interaction)
 
 
-class CompleteQuestsView(View):
+class CompleteQuestsView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         self.embed = discord.Embed(
             title='Game Master - Quest Completion',
             description=(
-                'Select a quest to complete. **This action is irreversible!**\n\n'
+                'Choose a quest to complete. **This action is irreversible!**\n\n'
                 'Completing a quest does the following:\n'
                 '- Removes the quest post from the Quest Board channel.\n'
                 '- Issues rewards (if any) to party members.\n'
@@ -806,15 +825,36 @@ class CompleteQuestsView(View):
         self.quests = None
         self.selected_quest = None
         self.quest_select = selects.ManageableQuestSelect(self)
-        self.complete_quest_button = buttons.CompleteQuestButton(self)
-        self.add_item(self.quest_select)
-        self.add_item(self.complete_quest_button)
-        self.add_item(BackButton(GMQuestMenuView))
+
+        self.build_view()
+
+    def build_view(self):
+        container = Container()
+
+        header_section = Section(accessory=BackButton(GMQuestMenuView))
+        header_section.add_item(TextDisplay('**Game Master - Quest Completion**'))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        container.add_item(TextDisplay(
+                'Choose a quest to complete. **This action is irreversible!**\n\n'
+                'Completing a quest does the following:\n'
+                '- Removes the quest post from the Quest Board channel.\n'
+                '- Issues rewards (if any) to party members.\n'
+                '- Removes GM roles (if any) from party members.\n'
+                '- Messages party members with a summary of their individual rewards.\n'
+                '- If configured in the server, prompts the GM to summarize the results of the quest/story, and posts '
+                'the quest results to a designated Archive Channel.'
+            ))
+        container.add_item(Separator())
+
+        quest_select_row = ActionRow(self.quest_select)
+        container.add_item(quest_select_row)
+
+        self.add_item(container)
 
     async def setup(self, bot, user, guild):
         try:
-            self.embed.clear_fields()
-
             quest_collection = bot.gdb['quests']
             options = []
             quests = []
@@ -833,33 +873,38 @@ class CompleteQuestsView(View):
                     options.append(discord.SelectOption(label=f'{quest['questId']}: {quest['title']}',
                                                         value=quest['questId']))
                 self.quests = quests
-                logger.debug(f'Found {len(quests)} quests.')
                 self.quest_select.disabled = False
             else:
                 options.append(discord.SelectOption(label='No quests were found, or you do not have permissions to edit'
                                                           ' them.', value='None'))
                 self.quest_select.disabled = True
-                self.embed.add_field(name='No Quests Available', value='No quests were found, or you do not have '
-                                                                       'permissions to edit them.')
-            self.quest_select.options = options
 
-            quest = self.selected_quest
-            if quest:
-                self.embed.add_field(name='Selected Quest', value=f'`{quest['questId']}`: {quest['title']}')
+            self.quest_select.options = options
         except Exception as e:
             await log_exception(e)
 
     async def select_callback(self, interaction: discord.Interaction):
         try:
-            quests = self.quests
-            for quest in quests:
-                if self.quest_select.values[0] == quest['questId']:
-                    self.selected_quest = quest
+            confirm_modal = ConfirmModal(
+                title='Confirm Quest Completion',
+                prompt_label='Type "CONFIRM" to complete the quest:',
+                prompt_placeholder='Type "CONFIRM" to proceed.',
+                confirm_callback=self.confirm_callback
+            )
+            await interaction.response.send_modal(confirm_modal)
+        except Exception as e:
+            await log_exception(e, interaction)
 
-            await self.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
-            self.complete_quest_button.label = f'Confirm completion of {self.selected_quest['title']}?'
-            self.complete_quest_button.disabled = False
-            await interaction.response.edit_message(embed=self.embed, view=self)
+    async def confirm_callback(self, interaction: discord.Interaction):
+        try:
+            quest_summary_modal = modals.QuestSummaryModal(self)
+
+            quest_summary_collection = interaction.client.gdb['questSummary']
+            quest_summary_config_query = await quest_summary_collection.find_one({'_id': interaction.guild_id})
+            if quest_summary_config_query and quest_summary_config_query['questSummary']:
+                await interaction.response.send_modal(quest_summary_modal)
+            else:
+                await self.complete_quest(interaction)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -1041,10 +1086,8 @@ class CompleteQuestsView(View):
 
             # Reset the view and handle the interaction response
             self.selected_quest = None
-            self.complete_quest_button.label = 'Confirm?'
-            self.complete_quest_button.disabled = True
-            await self.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.embed, view=self)
+            await setup_view(self, interaction)
+            await interaction.response.edit_message(view=self)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -1057,65 +1100,6 @@ class CompleteQuestsView(View):
             for item, quantity in items.items():
                 reward_strings.append(f'- {item}: {quantity}')
         return reward_strings
-
-
-class CancelQuestView(View):
-    def __init__(self, selected_quest):
-        super().__init__(timeout=None)
-        self.embed = discord.Embed(
-            title=f'Cancel Quest: {selected_quest['title']}',
-            description=(
-                'This action cannot be undone!'
-            ),
-            type='rich'
-        )
-        self.selected_quest = selected_quest
-        self.confirm_button = ConfirmButton(self)
-        self.confirm_button.disabled = False
-        self.add_item(self.confirm_button)
-        self.add_item(BackButton(ManageQuestsView))
-
-    async def confirm_callback(self, interaction: discord.Interaction):
-        try:
-            quest = self.selected_quest
-            guild_id = interaction.guild_id
-            guild = interaction.client.get_guild(guild_id)
-
-            # If a party exists
-            party = quest['party']
-            title = quest['title']
-            if party:
-                # Get party members and message them with results
-                for player in party:
-                    for member_id in player:
-                        # Message the player that the quest was canceled.
-                        member = await guild.fetch_member(int(member_id))
-                        try:
-                            await member.send(f'Quest **{title}** was cancelled by the GM.')
-                        except discord.errors.Forbidden as e:
-                            logger.warning(f'Could not DM {member.id} about quest cancellation: {e}')
-
-            # Remove the party role, if applicable
-            party_role_id = quest['partyRoleId']
-            if party_role_id:
-                party_role = guild.get_role(party_role_id)
-                await party_role.delete(reason=f'Quest {quest['questId']} cancelled by {interaction.user.mention}.')
-
-            # Delete the quest from the database
-            await interaction.client.gdb['quests'].delete_one({'guildId': guild_id, 'questId': quest['questId']})
-
-            # Delete the quest from the quest channel
-            channel_query = await interaction.client.gdb['questChannel'].find_one({'_id': guild_id})
-            channel_id = strip_id(channel_query['questChannel'])
-            quest_channel = guild.get_channel(channel_id)
-            message_id = quest['messageId']
-            message = quest_channel.get_partial_message(message_id)
-            await attempt_delete(message)
-
-            await interaction.response.send_message(f'Quest `{quest['questId']}`: **{title}** cancelled!',
-                                                    ephemeral=True)
-        except Exception as e:
-            await log_exception(e, interaction)
 
 
 class ViewCharacterView(LayoutView):
