@@ -59,6 +59,11 @@ dice rolling. Let ReQuest handle all the boring busy work.
 Sick of typing `/help` every time you need to do something? Each menu page clearly outlines its functions so you don't
 have to memorize the bot, or re-learn it when features are added.
 
+### Server Configuration Wizard
+
+New to ReQuest? No problem! The configuration wizard walks server admins through setting up the bot for their server,
+step-by-step, while validating current settings to prevent misconfiguration.
+
 ### Optional Player Message Board
 
 Want your player characters to advertise their crafting? Looking to form an ad-hoc party for some role play? The message

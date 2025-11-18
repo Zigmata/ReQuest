@@ -3,6 +3,7 @@ import inspect
 import logging
 import re
 import traceback
+from typing import Tuple
 
 import discord
 
@@ -445,7 +446,7 @@ async def setup_view(view, interaction):
     await setup_function(**kwargs)
 
 
-def get_denomination_map(currency_config: dict, currency_name: str) -> (dict | None, str | None):
+def get_denomination_map(currency_config: dict, currency_name: str) -> Tuple[dict | None, str | None]:
     if not currency_config or 'currencies' not in currency_config:
         return None, None
 
@@ -468,7 +469,7 @@ def get_denomination_map(currency_config: dict, currency_name: str) -> (dict | N
 
 
 def check_sufficient_funds(player_currency: dict, currency_config: dict, cost_currency_name: str,
-                           cost_amount: float) -> (bool, str):
+                           cost_amount: float) -> Tuple[bool, str]:
     try:
         if cost_amount <= 0:
             return True, "OK"
