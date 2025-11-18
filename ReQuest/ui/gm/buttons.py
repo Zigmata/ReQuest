@@ -4,9 +4,10 @@ import discord
 from discord import ButtonStyle
 from discord.ui import Button
 
+from ReQuest.ui.common.modals import ConfirmModal
 from ReQuest.ui.gm import modals
 from ReQuest.ui.common.enums import RewardType
-from ReQuest.utilities.supportFunctions import log_exception
+from ReQuest.utilities.supportFunctions import log_exception, setup_view, strip_id, attempt_delete
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -80,8 +81,8 @@ class RewardsMenuButton(Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             new_view = self.rewards_view_class(self.calling_view)
-            await new_view.setup()
-            await interaction.response.edit_message(embed=new_view.embed, view=new_view)
+            await setup_view(new_view, interaction)
+            await interaction.response.edit_message(view=new_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -101,14 +102,14 @@ class RemovePlayerButton(Button):
         try:
             quest = self.calling_view.selected_quest
             new_view = self.target_view_class(quest)
-            await new_view.setup()
-            await interaction.response.edit_message(embed=new_view.embed, view=new_view)
+            await setup_view(new_view, interaction)
+            await interaction.response.edit_message(view=new_view)
         except Exception as e:
             await log_exception(e, interaction)
 
 
 class CancelQuestButton(Button):
-    def __init__(self, calling_view, target_view_class):
+    def __init__(self, calling_view):
         super().__init__(
             label='Cancel Quest',
             style=ButtonStyle.danger,
@@ -116,12 +117,59 @@ class CancelQuestButton(Button):
             disabled=True
         )
         self.calling_view = calling_view
-        self.target_view_class = target_view_class
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            view = self.target_view_class(self.calling_view.selected_quest)
-            await interaction.response.edit_message(embed=view.embed, view=view)
+            confirm_modal = ConfirmModal(
+                title='Cancel Quest',
+                prompt_label='Type CONFIRM to cancel the quest.',
+                prompt_placeholder='Type "CONFIRM" to proceed.',
+                confirm_callback=self.confirm_callback
+            )
+            await interaction.response.send_modal(confirm_modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def confirm_callback(self, interaction: discord.Interaction):
+        try:
+            quest = self.calling_view.selected_quest
+            guild_id = interaction.guild_id
+            guild = interaction.guild
+
+            # If a party exists
+            party = quest['party']
+            title = quest['title']
+            if party:
+                # Get party members and message them with results
+                for player in party:
+                    for member_id in player:
+                        # Message the player that the quest was canceled.
+                        member = await guild.fetch_member(int(member_id))
+                        try:
+                            await member.send(f'Quest **{title}** was cancelled by the GM.')
+                        except discord.errors.Forbidden as e:
+                            logger.warning(f'Could not DM {member.id} about quest cancellation: {e}')
+
+            # Remove the party role, if applicable
+            party_role_id = quest['partyRoleId']
+            if party_role_id:
+                party_role = guild.get_role(party_role_id)
+                await party_role.delete(reason=f'Quest {quest['questId']} cancelled by {interaction.user.mention}.')
+
+            # Delete the quest from the database
+            await interaction.client.gdb['quests'].delete_one({'guildId': guild_id, 'questId': quest['questId']})
+
+            # Delete the quest from the quest channel
+            channel_query = await interaction.client.gdb['questChannel'].find_one({'_id': guild_id})
+            channel_id = strip_id(channel_query['questChannel'])
+            quest_channel = guild.get_channel(channel_id)
+            message_id = quest['messageId']
+            message = quest_channel.get_partial_message(message_id)
+            await attempt_delete(message)
+
+            await interaction.response.send_message(f'Quest `{quest['questId']}`: **{title}** cancelled!',
+                                                    ephemeral=True,
+                                                    delete_after=10)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -129,7 +177,7 @@ class CancelQuestButton(Button):
 class PartyRewardsButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Party Rewards',
+            label='Manage Party Rewards',
             style=ButtonStyle.secondary,
             custom_id='party_rewards_button'
         )
@@ -179,8 +227,8 @@ class PartyRewardsButton(Button):
             party_rewards['xp'] = xp_val
             party_rewards['items'] = items_val
 
-            await view.setup()
-            await interaction.response.edit_message(embed=view.embed, view=view)
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -188,7 +236,7 @@ class PartyRewardsButton(Button):
 class IndividualRewardsButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Individual Rewards',
+            label='Manage Individual Rewards',
             style=ButtonStyle.secondary,
             custom_id='individual_rewards_button',
             disabled=True
@@ -240,8 +288,8 @@ class IndividualRewardsButton(Button):
             char_rewards['xp'] = xp_val
             char_rewards['items'] = items_val
 
-            await view.setup()
-            await interaction.response.edit_message(embed=view.embed, view=view)
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 

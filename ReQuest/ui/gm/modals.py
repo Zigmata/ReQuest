@@ -10,7 +10,7 @@ from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
     update_character_inventory,
-    update_character_experience
+    update_character_experience, find_currency_or_denomination, get_denomination_map, setup_view
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -157,7 +157,9 @@ class CreateQuestModal(Modal):
             quest['messageId'] = msg.id
 
             await quest_collection.insert_one(quest)
-            await interaction.response.send_message(f'Quest `{quest_id}`: **{title}** posted!', ephemeral=True)
+            await interaction.response.send_message(f'Quest `{quest_id}`: **{title}** posted!',
+                                                    ephemeral=True,
+                                                    delete_after=10)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -247,8 +249,8 @@ class EditQuestModal(Modal):
 
             # Reload the UI view
             view = self.calling_view
-            await view.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
-            await interaction.response.edit_message(embed=view.embed, view=view)
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -313,19 +315,18 @@ class RewardsModal(Modal):
                         item_name, quantity = item.split(':', 1)
                         items[item_name.strip().capitalize()] = int(quantity.strip())
 
-            logger.debug(f'xp: {xp}, items: {items}')
             await self.caller.modal_callback(interaction, xp, items)
         except Exception as e:
             await log_exception(e, interaction)
 
 
 class QuestSummaryModal(Modal):
-    def __init__(self, calling_button):
+    def __init__(self, calling_view):
         super().__init__(
             title='Add Quest Summary',
             timeout=None
         )
-        self.calling_button = calling_button
+        self.calling_view = calling_view
         self.summary_input = discord.ui.TextInput(
             label='Summary',
             style=discord.TextStyle.paragraph,
@@ -336,7 +337,7 @@ class QuestSummaryModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            await self.calling_button.modal_callback(interaction)
+            await self.calling_view.complete_quest(interaction, self.summary_input.value)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -371,16 +372,44 @@ class ModPlayerModal(Modal):
     async def on_submit(self, interaction: discord.Interaction):
         try:
             xp = None
-            items = None
+            gdb = interaction.client.gdb
+            guild_id = interaction.guild_id
+            currency_config = await gdb['currency'].find_one({'_id': guild_id})
+
+            item_changes = {}
+            currency_changes = {}
+
             if self.experience_text_input.value:
                 xp = int(self.experience_text_input.value)
-            if self.inventory_text_input.value:
-                items = {}
-                for item in self.inventory_text_input.value.strip().split('\n'):
-                    item_name, quantity = item.split(':', 1)
-                    items[item_name.strip().capitalize()] = int(quantity.strip())
 
-            logger.debug(f'xp: {xp}, items: {items}')
+            if self.inventory_text_input.value:
+                for item_line in self.inventory_text_input.value.strip().split('\n'):
+                    try:
+                        item_name_str, quantity_str = item_line.split(':', 1)
+                        item_name = item_name_str.strip()
+                        quantity = float(quantity_str.strip())
+                    except ValueError:
+                        continue
+
+                    is_currency, parent_name = None, None
+                    if currency_config:
+                        is_currency, parent_name = find_currency_or_denomination(currency_config, item_name)
+
+                    if is_currency:
+                        denomination_map, _ = get_denomination_map(currency_config, item_name)
+                        if not denomination_map:
+                            item_changes[item_name.capitalize()] = item_changes.get(item_name.capitalize(), 0) + int(
+                                quantity)
+                            continue
+
+                        item_value_in_base = denomination_map[item_name.lower()]
+                        total_value_to_add = quantity * item_value_in_base
+
+                        currency_changes[parent_name] = currency_changes.get(parent_name, 0.0) + total_value_to_add
+
+                    else:
+                        item_changes[item_name.capitalize()] = item_changes.get(item_name.capitalize(), 0) + int(
+                            quantity)
 
             mod_summary_embed = discord.Embed(
                 title=f'GM Player Modification Report',
@@ -394,11 +423,23 @@ class ModPlayerModal(Modal):
             if xp:
                 await update_character_experience(interaction, self.member.id, self.character_id, xp)
                 mod_summary_embed.add_field(name='Experience', value=xp)
-            if items:
-                for item_name, quantity in items.items():
-                    await update_character_inventory(interaction, self.member.id, self.character_id,
-                                                     item_name, quantity)
-                    mod_summary_embed.add_field(name=item_name.lower().capitalize(), value=quantity)
+
+            for base_currency_name, total_value in currency_changes.items():
+                if total_value == 0:
+                    continue
+                await update_character_inventory(interaction, self.member.id, self.character_id,
+                                                 base_currency_name, total_value)
+
+                display_value = f"{total_value:.2f}" if isinstance(total_value,
+                                                                   float) and total_value % 1 != 0 else str(total_value)
+                mod_summary_embed.add_field(name=base_currency_name.capitalize(), value=display_value)
+
+            for item_name, quantity in item_changes.items():
+                if quantity == 0:
+                    continue
+                await update_character_inventory(interaction, self.member.id, self.character_id,
+                                                 item_name, int(quantity))
+                mod_summary_embed.add_field(name=item_name.capitalize(), value=int(quantity))
 
             transaction_id = shortuuid.uuid()[:12]
             mod_summary_embed.set_footer(text=f'Transaction ID: {transaction_id}')

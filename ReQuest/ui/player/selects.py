@@ -3,7 +3,7 @@ import logging
 import discord
 from discord.ui import Select
 
-from ReQuest.utilities.supportFunctions import log_exception
+from ReQuest.utilities.supportFunctions import log_exception, setup_view
 from ReQuest.ui.common import modals
 
 logging.basicConfig(level=logging.INFO)
@@ -27,8 +27,8 @@ class ActiveCharacterSelect(Select):
             await collection.update_one({'_id': interaction.user.id},
                                         {'$set': {f'activeCharacters.{interaction.guild_id}': selected_character_id}},
                                         upsert=True)
-            await self.calling_view.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 

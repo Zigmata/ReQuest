@@ -12,7 +12,7 @@ from ReQuest.utilities.supportFunctions import (
     trade_currency,
     trade_item,
     check_sufficient_funds,
-    update_character_inventory
+    update_character_inventory, format_currency_display, setup_view
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -77,8 +77,8 @@ class TradeModal(Modal):
             if is_currency:
                 sender_currency, receiver_currency = await trade_currency(mdb, gdb, item_name, quantity, member_id,
                                                                           target_id, guild_id)
-                sender_balance_str = self.format_currency_string(sender_currency)
-                receiver_currency_str = self.format_currency_string(receiver_currency)
+                sender_balance_str = '\n'.join(format_currency_display(sender_currency, currency_query)) or "None"
+                receiver_currency_str = '\n'.join(format_currency_display(receiver_currency, currency_query)) or "None"
                 trade_embed.add_field(name='Currency', value=item_name.lower().capitalize())
                 trade_embed.add_field(name='Amount', value=quantity)
                 trade_embed.add_field(name=f'{member_active_character['name']}\'s Balance', value=sender_balance_str,
@@ -98,15 +98,9 @@ class TradeModal(Modal):
         except Exception as e:
             await log_exception(e, interaction)
 
-    @staticmethod
-    def format_currency_string(currency_dict):
-        if not currency_dict:
-            return "No currency"
-        return ", ".join([f"{amount} {name}" for name, amount in currency_dict.items()])
-
 
 class CharacterRegisterModal(Modal):
-    def __init__(self, calling_view, mdb, member_id, guild_id):
+    def __init__(self):
         super().__init__(
             title='Register New Character',
             timeout=180
@@ -123,23 +117,21 @@ class CharacterRegisterModal(Modal):
             placeholder='Enter a note to identify your character',
             max_length=80
         )
-        self.calling_view = calling_view
-        self.mdb = mdb
-        self.member_id = member_id
-        self.guild_id = guild_id
         self.add_item(self.name_text_input)
         self.add_item(self.note_text_input)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
             character_id = str(shortuuid.uuid())
-            collection = self.mdb['characters']
+            collection = interaction.client.mdb['characters']
+            member_id = interaction.user.id
+            guild_id = interaction.guild_id
             date = datetime.now(timezone.utc)
             character_name = self.name_text_input.value
             character_note = self.note_text_input.value
 
-            await collection.update_one({'_id': self.member_id},
-                                        {'$set': {f'activeCharacters.{self.guild_id}': character_id,
+            await collection.update_one({'_id': member_id},
+                                        {'$set': {f'activeCharacters.{guild_id}': character_id,
                                                   f'characters.{character_id}': {
                                                       'name': character_name,
                                                       'note': character_note,
@@ -152,7 +144,7 @@ class CharacterRegisterModal(Modal):
                                                       }}}},
                                         upsert=True)
 
-            await interaction.response.send_message(f'{character_name} was born!', ephemeral=True, delete_after=5)
+            await interaction.response.send_message(f'{character_name} was born!', ephemeral=True, delete_after=10)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -209,12 +201,9 @@ class SpendCurrencyModal(Modal):
 
             await update_character_inventory(interaction, member_id, active_character_id, currency_name, -amount)
 
-            await self.calling_view.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
-            self.calling_view.embed.add_field(name='Spent',
-                                              value=f'{amount} {currency_name.capitalize()}',
-                                              inline=False)
+            await setup_view(self.calling_view, interaction)
 
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 

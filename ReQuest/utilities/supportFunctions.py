@@ -3,6 +3,7 @@ import inspect
 import logging
 import re
 import traceback
+from typing import Tuple
 
 import discord
 
@@ -57,6 +58,56 @@ def find_currency_or_denomination(currency_def_query, search_name):
 
 def normalize_currency_keys(currency_dict):
     return {k.lower(): v for k, v in currency_dict.items()}
+
+
+def format_currency_display(player_currency: dict, currency_config: dict) -> list[str]:
+    """
+    Formats currency into a list of strings based on the server's currency configuration
+    (double vs integer).
+    """
+    if not player_currency or not currency_config or 'currencies' not in currency_config:
+        return []
+
+    output_lines = []
+    processed_denominations = set()
+    norm_player_wallet = normalize_currency_keys(player_currency)
+
+    for currency in currency_config['currencies']:
+        base_name = currency['name']
+        denomination_map, _ = get_denomination_map(currency_config, base_name)
+
+        if not denomination_map:
+            continue
+
+        denominations_in_wallet = {k for k in norm_player_wallet if k in denomination_map}
+        if not denominations_in_wallet:
+            continue
+
+        # Display as double
+        if currency.get('isDouble', False):
+            total_value = 0.0
+            for denom_name_lower in denominations_in_wallet:
+                quantity = norm_player_wallet.get(denom_name_lower, 0)
+                denom_value_in_base = denomination_map[denom_name_lower]
+                total_value += quantity * denom_value_in_base
+                processed_denominations.add(denom_name_lower)
+
+            if total_value > 0:
+                output_lines.append(f"{base_name.capitalize()}: **{total_value:.2f}**")
+
+        # Display as separate integers
+        else:
+            # Sort by value descending
+            sorted_denoms = sorted(denominations_in_wallet, key=lambda d: denomination_map[d], reverse=True)
+            for denom_name_lower in sorted_denoms:
+                quantity = norm_player_wallet.get(denom_name_lower, 0)
+                if quantity > 0:
+                    denom_display_name, _ = find_currency_or_denomination(currency_config, denom_name_lower)
+                    if denom_display_name:
+                        output_lines.append(f"{denom_display_name.capitalize()}: **{quantity}**")
+                    processed_denominations.add(denom_name_lower)
+
+    return output_lines
 
 
 async def trade_currency(mdb, gdb, currency_name, amount, sending_member_id, receiving_member_id, guild_id):
@@ -346,8 +397,8 @@ async def purge_player_board(age, interaction):
 
         # Delete all records in the db matching this guild that are older than the cutoff
         player_board_collection = interaction.client.gdb['playerBoard']
-        player_board_collection.delete_many({'guildId': interaction.guild_id,
-                                             'timestamp': {'$lt': cutoff_date}})
+        await player_board_collection.delete_many({'guildId': interaction.guild_id,
+                                                  'timestamp': {'$lt': cutoff_date}})
 
         # Get the channel object and purge all messages older than the cutoff
         config_collection = interaction.client.gdb['playerBoardChannel']
@@ -356,7 +407,9 @@ async def purge_player_board(age, interaction):
         channel = interaction.guild.get_channel(channel_id)
         await channel.purge(before=cutoff_date)
 
-        await interaction.response.send_message(f'Posts older than {age} days have been purged!', ephemeral=True)
+        await interaction.response.send_message(f'Posts older than {age} days have been purged!',
+                                                ephemeral=True,
+                                                delete_after=10)
     except Exception as e:
         await log_exception(e, interaction)
 
@@ -393,7 +446,7 @@ async def setup_view(view, interaction):
     await setup_function(**kwargs)
 
 
-def get_denomination_map(currency_config: dict, currency_name: str) -> (dict | None, str | None):
+def get_denomination_map(currency_config: dict, currency_name: str) -> Tuple[dict | None, str | None]:
     if not currency_config or 'currencies' not in currency_config:
         return None, None
 
@@ -416,7 +469,7 @@ def get_denomination_map(currency_config: dict, currency_name: str) -> (dict | N
 
 
 def check_sufficient_funds(player_currency: dict, currency_config: dict, cost_currency_name: str,
-                           cost_amount: float) -> (bool, str):
+                           cost_amount: float) -> Tuple[bool, str]:
     try:
         if cost_amount <= 0:
             return True, "OK"

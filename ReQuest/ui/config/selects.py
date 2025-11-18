@@ -3,7 +3,7 @@ import logging
 import discord
 from discord.ui import Select, RoleSelect, ChannelSelect
 
-from ReQuest.utilities.supportFunctions import log_exception
+from ReQuest.utilities.supportFunctions import log_exception, setup_view
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ class GMRoleRemoveSelect(Select):
             for value in self.values:
                 await collection.update_one({'_id': interaction.guild_id}, {'$pull': {'gmRoles': {'name': value}}})
             await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -44,8 +44,8 @@ class SingleChannelConfigSelect(ChannelSelect):
             await collection.update_one({'_id': interaction.guild_id},
                                         {'$set': {self.config_type: self.values[0].mention}},
                                         upsert=True)
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            return await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+            await setup_view(self.calling_view, interaction)
+            return await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -53,7 +53,7 @@ class SingleChannelConfigSelect(ChannelSelect):
 class QuestAnnounceRoleSelect(RoleSelect):
     def __init__(self, calling_view):
         super().__init__(
-            placeholder='Search for your Quest Announcement Role',
+            placeholder='Choose your Quest Announcement Role',
             custom_id='quest_announce_role_select'
         )
         self.calling_view = calling_view
@@ -65,7 +65,7 @@ class QuestAnnounceRoleSelect(RoleSelect):
                                         {'$set': {'announceRole': self.values[0].mention}},
                                         upsert=True)
             await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -73,7 +73,7 @@ class QuestAnnounceRoleSelect(RoleSelect):
 class AddGMRoleSelect(RoleSelect):
     def __init__(self, calling_view):
         super().__init__(
-            placeholder='Search for your GM Role(s)',
+            placeholder='Choose your GM Role(s)',
             custom_id='add_gm_role_select',
             max_values=25
         )
@@ -102,7 +102,7 @@ class AddGMRoleSelect(RoleSelect):
                                                     upsert=True)
 
             await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -129,8 +129,8 @@ class ConfigWaitListSelect(Select):
             await collection.update_one({'_id': interaction.guild_id},
                                         {'$set': {'questWaitList': int(self.values[0])}},
                                         upsert=True)
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.calling_view.embed)
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -171,8 +171,8 @@ class EditCurrencySelect(Select):
             view = self.calling_view
             view.selected_currency_name = self.values[0]
 
-            await view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=view.embed, view=view)
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e)
 
@@ -213,10 +213,31 @@ class ConfigShopSelect(Select):
             view = self.calling_view
             view.selected_channel_id = self.values[0]
 
-            view.edit_shop_button.disabled = False
+            view.edit_shop_wizard_button.disabled = False
             view.remove_shop_button.disabled = False
 
-            await view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=view.embed, view=view)
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class DenominationSelect(Select):
+    def __init__(self, calling_view):
+        super().__init__(
+            placeholder='Select a denomination',
+            options=[discord.SelectOption(label='No denominations configured', value='None')],
+            custom_id='denomination_select',
+            disabled=True
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            view = self.calling_view
+            view.selected_denomination_name = self.values[0]
+
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
