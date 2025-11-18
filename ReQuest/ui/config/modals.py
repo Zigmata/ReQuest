@@ -8,7 +8,7 @@ import discord
 import discord.ui
 from discord.ui import Modal, Label
 
-from ReQuest.utilities.supportFunctions import log_exception, purge_player_board
+from ReQuest.utilities.supportFunctions import log_exception, purge_player_board, setup_view
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -76,8 +76,8 @@ class AddCurrencyTextModal(Modal):
                                             {'$push': {'currencies': {'name': self.text_input.value,
                                                                       'isDouble': False, 'denominations': []}}},
                                             upsert=True)
-                await view.setup(bot=interaction.client, guild=interaction.guild)
-                await interaction.response.edit_message(embed=view.embed, view=view)
+                await setup_view(view, interaction)
+                await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -133,8 +133,8 @@ class AddCurrencyDenominationTextModal(Modal):
                                                 'name': new_name,
                                                 'value': float(self.denomination_value_text_input.value)}}},
                                             upsert=True)
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -236,8 +236,8 @@ class GMRewardsModal(Modal):
             await gm_rewards_collection.update_one({'_id': interaction.guild_id},
                                                    {'$set': {'experience': experience, 'items': items}},
                                                    upsert=True)
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -349,11 +349,10 @@ class ConfigShopDetailsModal(Modal):
                 upsert=True
             )
 
-            if hasattr(self.calling_view, 'refresh'):
-                await self.calling_view.refresh(interaction)
-            elif hasattr(self.calling_view, 'setup'):
-                await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-                await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+            if hasattr(self.calling_view, 'update_details'):
+                self.calling_view.update_details(shop_data)
+                self.calling_view.build_view()
+                await interaction.response.edit_message(view=self.calling_view)
             else:
                 await interaction.response.defer()
         except Exception as e:
@@ -425,8 +424,8 @@ class ConfigShopJSONModal(Modal):
                 upsert=True
             )
 
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -443,14 +442,14 @@ class ShopItemModal(Modal):
         name_default = existing_item.get('name', '') if existing_item else ''
         description_default = existing_item.get('description', '') if existing_item else ''
         price_default = str(existing_item.get('price', '')) if existing_item else ''
+        quantity_default = str(existing_item.get('quantity', '1')) if existing_item else '1'
         currency_default = existing_item.get('currency', '') if existing_item else ''
 
         self.item_name_text_input = discord.ui.TextInput(
             label='Item Name',
             custom_id='item_name_text_input',
             placeholder='Enter the name of the item',
-            default=name_default,
-            required=True
+            default=name_default
         )
         self.item_description_text_input = discord.ui.TextInput(
             label='Item Description',
@@ -464,19 +463,25 @@ class ShopItemModal(Modal):
             label='Item Price',
             custom_id='item_price_text_input',
             placeholder='Enter the price of the item',
-            default=price_default,
-            required=True
+            default=price_default
+        )
+        self.item_quantity_text_input = discord.ui.TextInput(
+            label='Item Quantity',
+            custom_id='item_quantity_text_input',
+            placeholder='Enter the quantity sold per purchase',
+            default=quantity_default,
+            required=False
         )
         self.item_currency_text_input = discord.ui.TextInput(
             label='Currency',
             custom_id='item_currency_text_input',
             placeholder='Enter the currency for the item price',
-            default=currency_default,
-            required=True
+            default=currency_default
         )
         self.add_item(self.item_name_text_input)
         self.add_item(self.item_description_text_input)
         self.add_item(self.item_price_text_input)
+        self.add_item(self.item_quantity_text_input)
         self.add_item(self.item_currency_text_input)
 
     async def on_submit(self, interaction: discord.Interaction):
@@ -486,10 +491,19 @@ class ShopItemModal(Modal):
             collection = interaction.client.gdb['shops']
             channel_id = view.channel_id
 
+            quantity_str = self.item_quantity_text_input.value
+            if not quantity_str.isdigit() or int(quantity_str) < 1:
+                raise Exception('Item quantity must be a positive integer.')
+
+            price_str = self.item_price_text_input.value
+            if not price_str.isdigit() or int(price_str) < 0:
+                raise Exception('Item price must be a non-negative integer.')
+
             new_item = {
                 'name': self.item_name_text_input.value,
                 'description': self.item_description_text_input.value,
                 'price': int(self.item_price_text_input.value),
+                'quantity': int(self.item_quantity_text_input.value),
                 'currency': self.item_currency_text_input.value
             }
 
@@ -521,8 +535,9 @@ class ShopItemModal(Modal):
                 upsert=True
             )
 
-            await view.refresh(interaction)
-
+            self.calling_view.update_stock(shop_data['shopStock'])
+            self.calling_view.build_view()
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -578,8 +593,9 @@ class ConfigUpdateShopJSONModal(Modal):
                 upsert=False
             )
 
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
-
+            if hasattr(self.calling_view, 'update_details'):
+                self.calling_view.update_details(shop_data)
+                self.calling_view.build_view()
+                await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)

@@ -2,36 +2,52 @@ import logging
 
 import discord
 import shortuuid
-from discord.ui import View
+from discord.ui import Container, Section, TextDisplay, Separator, LayoutView, ActionRow
 
+from ReQuest.ui.common import modals as common_modals
+from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
 from ReQuest.ui.player import buttons, selects
-from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton, ConfirmButton
-from ReQuest.utilities.supportFunctions import log_exception, strip_id, attempt_delete
+from ReQuest.utilities.supportFunctions import log_exception, strip_id, attempt_delete, format_currency_display, \
+    setup_view
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class PlayerBaseView(View):
+class PlayerBaseView(LayoutView):
     def __init__(self):
         super().__init__()
-        self.embed = discord.Embed(
-            title='Player Commands - Main Menu',
-            description=(
-                '__**Characters**__\n'
-                'Register, view, and activate player characters.\n\n'
-                '__**Inventory**__\n'
-                'View your active character\'s inventory and spend currency.\n\n'
-                '__**Player Board**__\n'
-                'Create a post for the Player Board, if configured on your server.\n\n'
-            ),
-            type='rich'
-        )
         self.player_board_button = MenuViewButton(PlayerBoardView, 'Player Board')
-        self.add_item(MenuViewButton(CharacterBaseView, 'Characters'))
-        self.add_item(MenuViewButton(InventoryBaseView, 'Inventory'))
-        self.add_item(self.player_board_button)
-        self.add_item(MenuDoneButton())
+
+        self.build_view()
+
+    def build_view(self):
+        container = Container()
+
+        header_section = Section(accessory=MenuDoneButton())
+        header_section.add_item(TextDisplay('**Player Commands - Main Menu**'))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        character_section = Section(accessory=MenuViewButton(CharacterBaseView, 'Characters'))
+        character_section.add_item(TextDisplay(
+            'Register, view, and activate player characters.'
+        ))
+        container.add_item(character_section)
+
+        inventory_section = Section(accessory=MenuViewButton(InventoryBaseView, 'Inventory'))
+        inventory_section.add_item(TextDisplay(
+            'View your active character\'s inventory and spend currency.'
+        ))
+        container.add_item(inventory_section)
+
+        player_board_section = Section(accessory=self.player_board_button)
+        player_board_section.add_item(TextDisplay(
+            'Create a post for the Player Board'
+        ))
+        container.add_item(player_board_section)
+
+        self.add_item(container)
 
     async def setup(self, bot, guild):
         try:
@@ -46,60 +62,98 @@ class PlayerBaseView(View):
             await log_exception(e)
 
 
-class CharacterBaseView(View):
+class CharacterBaseView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
-        self.embed = discord.Embed(
-            title='Player Commands - Characters',
-            description=(
-                '__**Register**__\n'
-                'Registers a new character, and activates that character on the current server.\n\n'
-                '__**List/Activate**__\n'
-                'Show all registered characters, and change the active character for this server.\n\n'
-                '__**Remove**__\n'
-                'Removes a character permanently.\n\n'
-            ),
-            type='rich'
-        )
-        self.add_item(buttons.RegisterCharacterButton())
-        self.add_item(MenuViewButton(ListCharactersView, 'List/Activate'))
-        self.add_item(MenuViewButton(RemoveCharacterView, 'Remove'))
-        self.add_item(BackButton(PlayerBaseView))
+        self.build_view()
+
+    def build_view(self):
+        container = Container()
+
+        header_section = Section(accessory=BackButton(PlayerBaseView))
+        header_section.add_item(TextDisplay('**Player Commands - Characters**'))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        register_section = Section(accessory=buttons.RegisterCharacterButton())
+        register_section.add_item(TextDisplay(
+            'Registers a new character, and activates that character on the current server.'
+        ))
+        container.add_item(register_section)
+
+        list_activate_section = Section(accessory=MenuViewButton(ListCharactersView, 'List/Activate'))
+        list_activate_section.add_item(TextDisplay(
+            'Show all registered characters, and change the active character for this server.'
+        ))
+        container.add_item(list_activate_section)
+
+        remove_section = Section(accessory=MenuViewButton(RemoveCharacterView, 'Remove'))
+        remove_section.add_item(TextDisplay(
+            'Removes a character permanently.'
+        ))
+        container.add_item(remove_section)
+
+        self.add_item(container)
 
 
-class ListCharactersView(View):
+class ListCharactersView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
-        self.embed = discord.Embed(
-            title='Player Commands - List Characters',
-            description='Registered Characters are listed below. Select a character from the dropdown to activate '
-                        'that character for this server.',
-            type='rich'
-        )
         self.active_character_select = selects.ActiveCharacterSelect(self)
-        self.add_item(self.active_character_select)
-        self.add_item(BackButton(CharacterBaseView))
+        self.character_list_info = TextDisplay(
+            'No Characters Registered.'
+        )
+
+        self.build_view()
+
+    def build_view(self):
+        container = Container()
+
+        header_section = Section(accessory=BackButton(CharacterBaseView))
+        header_section.add_item(TextDisplay('**Player Commands - List Characters**'))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        container.add_item(TextDisplay(
+            'Registered Characters are listed below. Select a character from the dropdown to activate that character '
+            'for this server.'
+        ))
+        container.add_item(Separator())
+
+        container.add_item(self.character_list_info)
+        container.add_item(Separator())
+
+        character_select_row = ActionRow(self.active_character_select)
+        container.add_item(character_select_row)
+
+        self.add_item(container)
 
     async def setup(self, bot, user, guild):
         try:
-            self.embed.clear_fields()
             collection = bot.mdb['characters']
             query = await collection.find_one({'_id': user.id})
             if not query or not query['characters']:
-                self.embed.description = 'You have no registered characters!'
+                self.character_list_info = 'You have no registered characters!'
             else:
                 ids = []
                 for character_id in query['characters']:
                     ids.append(character_id)
+
+                character_info = []
                 for character_id in ids:
                     character = query['characters'][character_id]
                     if (str(guild.id) in query['activeCharacters']
                             and character_id == query['activeCharacters'][str(guild.id)]):
-                        character_info = (f'{character['name']}: {character['attributes']['experience']} XP '
-                                          f'(Active Character)')
+                        character_info.append(
+                            f'**{character['name']}: {character['attributes']['experience']} XP (Active Character)**\n'
+                            f'{character['note']}'
+                        )
                     else:
-                        character_info = f'{character['name']}: {character['attributes']['experience']} XP'
-                    self.embed.add_field(name=character_info, value=character['note'], inline=False)
+                        character_info.append(
+                            f'**{character['name']}: {character['attributes']['experience']} XP**\n'
+                            f'{character['note']}'
+                        )
+                self.character_list_info.content = ('\n\n'.join(character_info))
 
             self.active_character_select.options.clear()
             options = []
@@ -121,149 +175,221 @@ class ListCharactersView(View):
             await log_exception(e)
 
 
-class RemoveCharacterView(View):
+class RemoveCharacterView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
-        self.embed = discord.Embed(
-            title='Player Commands - Remove Character',
-            description='Select a character from the dropdown. Confirm to permanently remove that character.',
-            type='rich'
-        )
         self.selected_character_id = None
+        self.all_characters = {}
+        self.active_characters = {}
         self.remove_character_select = selects.RemoveCharacterSelect(self)
-        self.add_item(self.remove_character_select)
-        self.add_item(BackButton(CharacterBaseView))
+
+        self.build_view()
+
+    def build_view(self):
+        container = Container()
+
+        header_section = Section(accessory=BackButton(CharacterBaseView))
+        header_section.add_item(TextDisplay('**Player Commands - Remove Character**'))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        container.add_item(TextDisplay(
+            'Choose a character from the dropdown below. Confirm to permanently remove that character.'
+        ))
+        container.add_item(Separator())
+
+        character_select_row = ActionRow(self.remove_character_select)
+        container.add_item(character_select_row)
+
+        self.add_item(container)
 
     async def setup(self, bot, user):
         try:
-            self.embed.clear_fields()
-            self.remove_character_select.options.clear()
-            options = []
             collection = bot.mdb['characters']
             query = await collection.find_one({'_id': user.id})
-            if not query or not query['characters'] or len(query['characters']) == 0:
-                self.remove_character_select.placeholder = "You have no registered characters!"
-                options.append(discord.SelectOption(label='No characters', value='None'))
-                self.remove_character_select.disabled = True
+            if not query or not query.get('characters'):
+                self.all_characters = {}
+                self.active_characters = {}
             else:
-                for character_id in query['characters']:
-                    character = query['characters'][character_id]
-                    character_name = character['name']
-                    option = discord.SelectOption(label=character_name, value=character_id)
-                    options.append(option)
-                self.remove_character_select.disabled = False
+                self.all_characters = query.get('characters', {})
+                self.active_characters = query.get('activeCharacters', {})
 
-            self.remove_character_select.options = options
+            self._build_ui()
+
         except Exception as e:
             await log_exception(e)
+
+    def _build_ui(self):
+        self.remove_character_select.options.clear()
+        options = []
+
+        if not self.all_characters:
+            self.remove_character_select.placeholder = "You have no registered characters!"
+            options.append(discord.SelectOption(label='No characters to remove', value='None'))
+            self.remove_character_select.disabled = True
+        else:
+            for character_id, character in self.all_characters.items():
+                character_name = character['name']
+                if character_id in self.active_characters.values():
+                    option_label = f'{character_name} (Active)'
+                else:
+                    option_label = character_name
+                option = discord.SelectOption(label=option_label, value=character_id)
+                options.append(option)
+            self.remove_character_select.disabled = False
+            self.remove_character_select.placeholder = 'Select a character to remove'
+
+        self.remove_character_select.options = options
 
     async def confirm_callback(self, interaction: discord.Interaction):
         try:
             selected_character_id = self.selected_character_id
             collection = interaction.client.mdb['characters']
             member_id = interaction.user.id
-            query = await collection.find_one({'_id': member_id})
-            character_name = query['characters'][selected_character_id]['name']
+
             await collection.update_one({'_id': member_id},
-                                        {'$unset': {f'characters.{selected_character_id}': ''}}, upsert=True)
-            for guild in query['activeCharacters']:
-                if query['activeCharacters'][guild] == selected_character_id:
-                    await collection.update_one({'_id': member_id},
-                                                {'$unset': {f'activeCharacters.{interaction.guild_id}': ''}},
-                                                upsert=True)
+                                        {'$unset': {f'characters.{selected_character_id}': ''}})
+
+            active_guild_id = None
+            for guild_id, character_id in self.active_characters.items():
+                if character_id == selected_character_id:
+                    active_guild_id = guild_id
+                    break
+
+            if active_guild_id:
+                await collection.update_one({'_id': member_id},
+                                            {'$unset': {f'activeCharacters.{active_guild_id}': ''}})
+
+            if selected_character_id in self.all_characters:
+                del self.all_characters[selected_character_id]
+            if active_guild_id and active_guild_id in self.active_characters:
+                del self.active_characters[active_guild_id]
+
             self.selected_character_id = None
-            await self.setup(bot=interaction.client, user=interaction.user)
-            self.embed.add_field(name='Success!', value=f'Character {character_name} has been removed.')
-            await interaction.response.edit_message(embed=self.embed, view=self)
+
+            self._build_ui()
+            await interaction.response.edit_message(view=self)
         except Exception as e:
             await log_exception(e, interaction)
 
 
-class InventoryBaseView(View):
+class InventoryBaseView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
-        self.embed = discord.Embed(
-            title='Player Commands - Inventory',
-            description=(
-                '__**Spend Currency**__\n'
-                'Spend some currency.\n\n'
-                '__**Trade**__\n'
-                'Trading is now handled as a User Context command.\n'
-                'Right-click or long-press another user and select Apps -> Trade\n\n'
-                '------\n\n'
-            ),
-            type='rich'
-        )
         self.active_character = None
         self.spend_currency_button = buttons.SpendCurrencyButton(self)
-        self.add_item(self.spend_currency_button)
-        self.add_item(BackButton(PlayerBaseView))
+        self.current_inventory_info = TextDisplay(
+            'No Inventory Available.'
+        )
+        self.header_info = TextDisplay(
+            '**Player Commands - Inventory**'
+        )
+
+        self.build_view()
+
+    def build_view(self):
+        container = Container()
+
+        header_section = Section(accessory=BackButton(PlayerBaseView))
+        header_section.add_item(self.header_info)
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        container.add_item(self.current_inventory_info)
+        container.add_item(Separator())
+
+        spend_currency_section = Section(accessory=self.spend_currency_button)
+        spend_currency_section.add_item(TextDisplay(
+            'Spend some currency.'
+        ))
+        container.add_item(spend_currency_section)
+
+        self.add_item(container)
 
     async def setup(self, bot, user, guild):
-        self.embed.clear_fields()
         collection = bot.mdb['characters']
         query = await collection.find_one({'_id': user.id})
+
+        currency_config = await bot.gdb['currency'].find_one({'_id': guild.id})
         if not query:
             self.spend_currency_button.disabled = True
-            self.embed.add_field(name='No Characters', value='Register a character to use these menus.')
+            self.current_inventory_info.content = 'No Characters: Register a character to use these menus.'
         elif str(guild.id) not in query['activeCharacters']:
             self.spend_currency_button.disabled = True
-            self.embed.add_field(name='No Active Character', value='Activate a character for this server to use these'
-                                                                   'menus.')
+            self.current_inventory_info.content = (
+                'No Active Character: Activate a character for this server to use these menus.'
+            )
         else:
             active_character_id = query['activeCharacters'][str(guild.id)]
             self.active_character = query['characters'][active_character_id]
-            self.embed.title = f'Player Commands - {self.active_character['name']}\'s Inventory'
+            self.header_info.content = f'**Player Commands - {self.active_character['name']}\'s Inventory**'
             inventory = self.active_character['attributes']['inventory']
             player_currencies = self.active_character['attributes']['currency']
             items = []
-            currencies = []
+            currencies = format_currency_display(player_currencies, currency_config)
 
             for item in inventory:
                 pair = (str(item), f'**{inventory[item]}**')
                 value = ': '.join(pair)
                 items.append(value)
 
-            for currency in player_currencies:
-                pair = (str(currency), f'**{player_currencies[currency]}**')
-                value = ': '.join(pair)
-                currencies.append(value)
-
-            self.embed.add_field(name='Possessions',
-                                 value='\n'.join(items))
-            self.embed.add_field(name='Currency',
-                                 value='\n'.join(currencies))
+            self.current_inventory_info.content = (
+                f'**Possessions**\n'
+                f'{('\n'.join(items) or 'None')}\n\n'
+                f'**Currency**\n'
+                f'{('\n'.join(currencies) or 'None')}'
+            )
 
 
-class PlayerBoardView(View):
+class PlayerBoardView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
-        self.embed = discord.Embed(
-            title='Player Commands - Player Board',
-            description=(
-                '__**Create Post**__\n'
-                'Creates a new post for the Player Board.\n\n'
-                '__**Edit Post**__\n'
-                'Edits the selected post.\n\n'
-                '__**Remove Post**__\n'
-                'Removes the selected post from the Player Board.\n\n'
-                '------'
-            ),
-            type='rich'
-        )
         self.player_board_channel_id = None
         self.selected_post_id = None
         self.posts = []
         self.selected_post = None
+
         self.manageable_post_select = selects.ManageablePostSelect(self)
-        self.create_player_post_button = buttons.CreatePlayerPostButton(self)
+
         self.edit_player_post_button = buttons.EditPlayerPostButton(self)
+        self.edit_player_post_info = TextDisplay(
+            'Edit the selected post.'
+        )
+
         self.remove_player_post_button = buttons.RemovePlayerPostButton(self)
-        self.add_item(self.manageable_post_select)
-        self.add_item(self.create_player_post_button)
-        self.add_item(self.edit_player_post_button)
-        self.add_item(self.remove_player_post_button)
-        self.add_item(BackButton(PlayerBaseView))
+        self.remove_player_post_info = TextDisplay(
+            'Remove the selected post.'
+        )
+
+        self.build_view()
+
+    def build_view(self):
+        container = Container()
+
+        header_section = Section(accessory=BackButton(PlayerBaseView))
+        header_section.add_item(TextDisplay('**Player Commands - Player Board**'))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        create_post_section = Section(accessory=buttons.CreatePlayerPostButton(self))
+        create_post_section.add_item(TextDisplay(
+            'Create a new post for the Player Board.'
+        ))
+        container.add_item(create_post_section)
+        container.add_item(Separator())
+
+        post_select_row = ActionRow(self.manageable_post_select)
+        container.add_item(post_select_row)
+
+        edit_post_section = Section(accessory=self.edit_player_post_button)
+        edit_post_section.add_item(self.edit_player_post_info)
+        container.add_item(edit_post_section)
+
+        remove_post_section = Section(accessory=self.remove_player_post_button)
+        remove_post_section.add_item(self.remove_player_post_info)
+        container.add_item(remove_post_section)
+
+        self.add_item(container)
 
     async def setup(self, bot, user, guild):
         try:
@@ -272,19 +398,24 @@ class PlayerBoardView(View):
             self.player_board_channel_id = strip_id(channel_query['playerBoardChannel'])
 
             self.posts.clear()
-            self.embed.clear_fields()
             post_collection = bot.gdb['playerBoard']
             post_cursor = post_collection.find({'guildId': guild.id, 'playerId': user.id})
             async for post in post_cursor:
                 self.posts.append(dict(post))
 
             if self.selected_post_id:
-                self.edit_player_post_button.disabled = False
-                self.remove_player_post_button.disabled = False
                 self.selected_post = next((post for post in self.posts if post['postId'] == self.selected_post_id),
                                           None)
-                self.embed.add_field(name='Selected Post',
-                                     value=f'`{self.selected_post['postId']}`: {self.selected_post['title']}')
+
+                self.edit_player_post_button.disabled = False
+                self.edit_player_post_info.content = (
+                    f'Edit `{self.selected_post['postId']}`: {self.selected_post['title']}'
+                )
+
+                self.remove_player_post_button.disabled = False
+                self.remove_player_post_info.content = (
+                    f'Remove `{self.selected_post['postId']}`: {self.selected_post['title']}'
+                )
             else:
                 self.edit_player_post_button.disabled = True
                 self.remove_player_post_button.disabled = True
@@ -303,6 +434,7 @@ class PlayerBoardView(View):
                     value='None'
                 ))
                 self.manageable_post_select.disabled = True
+            self.manageable_post_select.options.clear()
             self.manageable_post_select.options = options
         except Exception as e:
             await log_exception(e)
@@ -310,8 +442,8 @@ class PlayerBoardView(View):
     async def select_callback(self, interaction: discord.Interaction):
         try:
             self.selected_post_id = self.manageable_post_select.values[0]
-            await self.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.embed, view=self)
+            await setup_view(self, interaction)
+            await interaction.response.edit_message(view=self)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -340,10 +472,19 @@ class PlayerBoardView(View):
             }
 
             await post_collection.insert_one(post)
-            await self.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
-            self.embed.add_field(name='Post Created!', value=f'`{post_id}`: **{title}**')
 
-            await interaction.response.edit_message(embed=self.embed, view=self)
+            self.posts.append(post)
+
+            # Remove placeholder if present before adding the first real post
+            if self.manageable_post_select.disabled:
+                self.manageable_post_select.options.clear()
+            self.manageable_post_select.options.append(discord.SelectOption(
+                label=title,
+                value=post_id
+            ))
+            self.manageable_post_select.disabled = False
+
+            await interaction.response.edit_message(view=self)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -375,6 +516,18 @@ class PlayerBoardView(View):
 
     async def remove_post(self, interaction: discord.Interaction):
         try:
+            confirm_modal = common_modals.ConfirmModal(
+                title='Confirm Post Removal',
+                prompt_label='WARNING: This action is irreversible!',
+                prompt_placeholder='Type CONFIRM to proceed',
+                confirm_callback=self.confirm_post_removal
+            )
+            await interaction.response.send_modal(confirm_modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def confirm_post_removal(self, interaction):
+        try:
             post = self.selected_post
             post_collection = interaction.client.gdb['playerBoard']
             await post_collection.delete_one({'guildId': interaction.guild.id, 'postId': self.selected_post_id})
@@ -384,8 +537,9 @@ class PlayerBoardView(View):
             message = channel.get_partial_message(message_id)
             await attempt_delete(message)
             self.selected_post = None
-            await interaction.response.send_message(f'Post `{post['postId']}`: **{post['title']}** deleted!',
-                                                    ephemeral=True)
-            await self.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
+            self.selected_post_id = None
+
+            await setup_view(self, interaction)
+            await interaction.response.edit_message(view=self)
         except Exception as e:
             await log_exception(e, interaction)

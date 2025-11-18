@@ -5,7 +5,7 @@ from discord.ext.commands import Cog
 
 from ReQuest.ui.player import modals, views
 from ReQuest.utilities.checks import has_active_character
-from ReQuest.utilities.supportFunctions import log_exception
+from ReQuest.utilities.supportFunctions import log_exception, setup_view
 
 
 class Player(Cog):
@@ -29,8 +29,8 @@ class Player(Cog):
         """
         try:
             new_view = views.PlayerBaseView()
-            await new_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.send_message(embed=new_view.embed, view=new_view, ephemeral=True)
+            await setup_view(new_view, interaction)
+            await interaction.response.send_message(view=new_view, ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)
 

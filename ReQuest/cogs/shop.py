@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord.ext.commands import Cog
 
 from ReQuest.ui.shop import views
-from ReQuest.utilities.supportFunctions import log_exception, setup_view
+from ReQuest.utilities.supportFunctions import log_exception
 
 
 class Shop(Cog):
@@ -15,7 +15,7 @@ class Shop(Cog):
     @app_commands.guild_only()
     async def shop(self, interaction):
         """
-        Shopping Menus
+        Opens a shop in the current channel if one is configured.
         """
         try:
             collection = interaction.client.gdb['shops']

@@ -6,10 +6,10 @@ import discord
 from discord import ButtonStyle
 from discord.ui import Button
 
-from ReQuest.ui.config import modals
+from ReQuest.ui.config import modals, enums
 from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.common.buttons import BaseViewButton
-from ReQuest.utilities.supportFunctions import log_exception
+from ReQuest.utilities.supportFunctions import log_exception, setup_view
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class QuestAnnounceRoleRemoveButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Remove Quest Announcement Role',
+            label='Clear',
             style=ButtonStyle.danger,
             custom_id='quest_announce_role_remove_button'
         )
@@ -31,8 +31,8 @@ class QuestAnnounceRoleRemoveButton(Button):
             if query:
                 await collection.delete_one({'_id': interaction.guild_id})
 
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -69,8 +69,8 @@ class QuestSummaryToggleButton(Button):
                 else:
                     await collection.update_one({'_id': guild_id}, {'$set': {'questSummary': True}})
 
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.calling_view.embed)
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -86,50 +86,27 @@ class PlayerExperienceToggleButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            xp_state = self.calling_view.player_experience
             guild_id = interaction.guild_id
             collection = interaction.client.gdb['playerExperience']
-            query = await collection.find_one({'_id': guild_id})
-            if query and query['playerExperience']:
+            if xp_state:
                 await collection.update_one({'_id': guild_id}, {'$set': {'playerExperience': False}},
                                             upsert=True)
             else:
                 await collection.update_one({'_id': guild_id}, {'$set': {'playerExperience': True}},
                                             upsert=True)
 
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.calling_view.embed)
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
-
-
-class RemoveDenominationConfirmButton(Button):
-    def __init__(self, calling_view):
-        super().__init__(
-            label='Confirm',
-            style=ButtonStyle.danger,
-            custom_id='remove_denomination_confirm_button',
-            disabled=True
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            await self.calling_view.remove_currency_denomination(self.calling_view.selected_denomination_name,
-                                                                 interaction.client, interaction.guild)
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            self.disabled = True
-            self.label = 'Confirm'
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
-        except Exception as e:
-            await log_exception(e)
 
 
 class ToggleDoubleButton(Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Select a currency',
-            custom_id='toggle_double_button',
-            disabled=True
+            custom_id='toggle_double_button'
         )
         self.calling_view = calling_view
 
@@ -146,8 +123,8 @@ class ToggleDoubleButton(Button):
                 value = True
             await collection.update_one({'_id': interaction.guild_id, 'currencies.name': currency_name},
                                         {'$set': {'currencies.$.isDouble': value}})
-            await view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=view.embed, view=view)
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e)
 
@@ -157,8 +134,7 @@ class AddDenominationButton(Button):
         super().__init__(
             label='Select a currency',
             style=ButtonStyle.success,
-            custom_id='add_denomination_button',
-            disabled=True
+            custom_id='add_denomination_button'
         )
         self.calling_view = calling_view
 
@@ -174,20 +150,24 @@ class AddDenominationButton(Button):
 
 
 class RemoveDenominationButton(Button):
-    def __init__(self, target_view_class, calling_view):
+    def __init__(self, calling_view):
         super().__init__(
-            label='Select a currency',
+            label='Remove Denomination',
             style=ButtonStyle.danger,
-            custom_id='remove_denomination_button'
+            custom_id='remove_denomination_button',
+            disabled=True
         )
-        self.target_view_class = target_view_class
         self.calling_view = calling_view
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            view = self.target_view_class(self.calling_view)
-            await view.setup(interaction.client, interaction.guild)
-            await interaction.response.edit_message(embed=view.embed, view=view)
+            confirm_modal = common_modals.ConfirmModal(
+                title='Confirm Denomination Removal',
+                prompt_label='WARNING: This action is irreversible!',
+                prompt_placeholder='Type CONFIRM to proceed',
+                confirm_callback=self.calling_view.remove_denomination_confirm_callback
+            )
+            await interaction.response.send_modal(confirm_modal)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -208,65 +188,68 @@ class AddCurrencyButton(Button):
             await log_exception(e)
 
 
-class EditCurrencyButton(BaseViewButton):
-    def __init__(self, target_view_class):
+class EditCurrencyButton(Button):
+    def __init__(self, target_view_class, calling_view):
         super().__init__(
-            target_view_class=target_view_class,
             label='Edit Currency',
             style=ButtonStyle.secondary,
             custom_id='edit_currency_button'
         )
+        self.target_view_class = target_view_class
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            view = self.target_view_class(self.calling_view)
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
 
 
-class RemoveCurrencyButton(BaseViewButton):
-    def __init__(self, target_view_class):
+class RemoveCurrencyButton(Button):
+    def __init__(self, calling_view):
         super().__init__(
-            target_view_class=target_view_class,
             label='Remove Currency',
             style=ButtonStyle.danger,
             custom_id='remove_currency_button'
         )
-
-
-class RemoveCurrencyConfirmButton(Button):
-    def __init__(self, calling_view):
-        super().__init__(
-            label='Confirm',
-            style=ButtonStyle.danger,
-            custom_id='remove_currency_confirm_button',
-            disabled=True
-        )
         self.calling_view = calling_view
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            view = self.calling_view
-            await view.remove_currency(bot=interaction.client, guild=interaction.guild)
-            await view.setup(bot=interaction.client, guild=interaction.guild)
-            view.remove_currency_confirm_button.disabled = True
-            view.remove_currency_confirm_button.label = 'Confirm'
-            await interaction.response.edit_message(embed=view.embed, view=view)
+            modal = common_modals.ConfirmModal(
+                title='Confirm Currency Removal',
+                prompt_label='WARNING: This action is irreversible!',
+                prompt_placeholder='Type CONFIRM to proceed',
+                confirm_callback=self.calling_view.remove_currency_confirm_callback
+            )
+            await interaction.response.send_modal(modal)
         except Exception as e:
-            await log_exception(e)
+            await log_exception(e, interaction)
 
 
-class ClearChannelsButton(Button):
-    def __init__(self, calling_view):
+class ClearChannelButton(Button):
+    def __init__(self, calling_view, channel_type: enums.ChannelType):
         super().__init__(
-            label='Clear Channels',
+            label='Clear',
             style=ButtonStyle.danger,
-            custom_id='clear_channels_button'
+            custom_id=f'clear_{channel_type.value}_channel_button'
         )
         self.calling_view = calling_view
+        self.channel_type = channel_type
 
     async def callback(self, interaction: discord.Interaction):
         try:
             view = self.calling_view
-            await interaction.client.gdb['questChannel'].delete_one({'_id': interaction.guild_id})
-            await interaction.client.gdb['playerBoardChannel'].delete_one({'_id': interaction.guild_id})
-            await interaction.client.gdb['archiveChannel'].delete_one({'_id': interaction.guild_id})
-            await view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=view.embed, view=view)
+            if self.channel_type == enums.ChannelType.QUEST_BOARD:
+                await interaction.client.gdb['questChannel'].delete_one({'_id': interaction.guild_id})
+            elif self.channel_type == enums.ChannelType.PLAYER_BOARD:
+                await interaction.client.gdb['playerBoardChannel'].delete_one({'_id': interaction.guild_id})
+            elif self.channel_type == enums.ChannelType.QUEST_ARCHIVE:
+                await interaction.client.gdb['archiveChannel'].delete_one({'_id': interaction.guild_id})
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -363,7 +346,7 @@ class EditShopButton(Button):
         super().__init__(
             label='Edit Shop (Wizard)',
             style=ButtonStyle.primary,
-            custom_id='edit_shop_button',
+            custom_id='edit_shop_wizard_button',
             disabled=True
         )
         self.target_view_class = target_view_class
@@ -385,7 +368,7 @@ class EditShopButton(Button):
             )
             view.build_view()
 
-            await interaction.response.send_message(view=view, ephemeral=True)
+            await interaction.response.edit_message(view=view)
 
         except Exception as e:
             await log_exception(e, interaction)
@@ -419,75 +402,23 @@ class RemoveShopButton(Button):
 
     async def _confirm_delete_callback(self, interaction: discord.Interaction):
         try:
-            if not self.calling_view.selected_channel_id:
+            view = self.calling_view
+            if not view.selected_channel_id:
                 raise Exception('No shop was selected for removal')
 
             guild_id = interaction.guild_id
             collection = interaction.client.gdb['shops']
-            channel_id = self.calling_view.selected_channel_id
+            channel_id = view.selected_channel_id
 
             await collection.update_one(
                 {'_id': guild_id},
                 {'$unset': {f'shopChannels.{channel_id}': ''}}
             )
 
-            self.calling_view.selected_channel_id = None
+            view.selected_channel_id = None
 
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-
-class EditItemButton(Button):
-    def __init__(self, calling_view):
-        super().__init__(
-            label='Edit Item',
-            style=ButtonStyle.primary,
-            custom_id='edit_shop_item_button',
-            disabled=True
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            selected_item = next(
-                (item for item in self.calling_view.shop_stock if item['name'] == self.calling_view.selected_item_name),
-                None
-            )
-            if not selected_item:
-                raise Exception("Selected item not found.")
-
-            await interaction.response.send_modal(modals.ShopItemModal(self.calling_view, existing_item=selected_item))
-        except Exception as e:
-            await log_exception(e, interaction)
-
-
-class RemoveItemButton(Button):
-    def __init__(self, calling_view):
-        super().__init__(
-            label='Remove Item',
-            style=ButtonStyle.danger,
-            custom_id='remove_shop_item_button',
-            disabled=True
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            guild_id = interaction.guild_id
-            collection = interaction.client.gdb['shops']
-            channel_id = self.calling_view.channel_id
-            item_name = self.calling_view.selected_item_name
-
-            await collection.update_one(
-                {'_id': guild_id},
-                {'$pull': {f'shopChannels.{channel_id}.shopStock': {'name': item_name}}}
-            )
-
-            self.calling_view.selected_item_name = None
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -535,8 +466,11 @@ class DeleteShopItemButton(Button):
                 {'$pull': {f'shopChannels.{channel_id}.shopStock': {'name': item_name}}}
             )
 
-            await self.calling_view.refresh(interaction)
+            new_stock = [item for item in self.calling_view.all_stock if item['name'] != item_name]
+            self.calling_view.update_stock(new_stock)
 
+            self.calling_view.build_view()
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -626,7 +560,7 @@ class UpdateShopJSONButton(Button):
         super().__init__(
             label='Edit Shop (JSON)',
             style=ButtonStyle.primary,
-            custom_id='update_shop_json_button',
+            custom_id='edit_shop_json_button',
             row=2,
             disabled=True
         )
@@ -640,5 +574,22 @@ class UpdateShopJSONButton(Button):
             await interaction.response.send_modal(
                 modals.ConfigUpdateShopJSONModal(self.calling_view)
             )
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ScanServerButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Scan Server Configs',
+            style=ButtonStyle.success,
+            custom_id='scan_server_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.defer()
+            await self.calling_view.run_scan(interaction)
         except Exception as e:
             await log_exception(e, interaction)

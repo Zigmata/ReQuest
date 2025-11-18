@@ -1,57 +1,70 @@
 import logging
 
 import discord
-from discord.ui import View
+from discord.ui import LayoutView, ActionRow, Container, Section, Separator, TextDisplay
 
 from ReQuest.ui.admin import buttons, selects
 from ReQuest.ui.common import buttons as common_buttons
+from ReQuest.ui.common.views import MenuBaseView
 from ReQuest.utilities.supportFunctions import log_exception
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class AdminBaseView(View):
+class AdminBaseView(MenuBaseView):
     def __init__(self):
-        super().__init__(timeout=None)
-        self.embed = discord.Embed(
-            title='Administrative - Main Menu',
-            description=(
-                '__**Allowlist**__\n'
-                'Configures the server allowlist for invite restrictions.'
-            ),
-            type='rich'
+        super().__init__(
+            title='**Administrative - Main Menu**',
+            menu_items=[
+                {
+                    'name': 'Allowlist',
+                    'description': 'Configures the server allowlist for invite restrictions.',
+                    'view_class': AdminAllowlistView
+                },
+                {
+                    'name': 'Cogs',
+                    'description': 'Load or reload bot cogs.',
+                    'view_class': AdminCogView
+                }
+            ],
+            menu_level=0
         )
-        self.add_item(common_buttons.MenuViewButton(AdminAllowlistView, 'Allowlist'))
-        self.add_item(common_buttons.MenuViewButton(AdminCogView, 'Cogs'))
-        self.add_item(buttons.AdminShutdownButton(self))
-        self.add_item(common_buttons.MenuDoneButton())
+        self.children[0].add_item(ActionRow(buttons.AdminShutdownButton(self)))
 
 
-class AdminAllowlistView(View):
+class AdminAllowlistView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
-        self.embed = discord.Embed(
-            title='Administration - Server Allowlist',
-            description=('__**Add New Server**__\n'
-                         'Adds a new Discord Server ID to the allowlist.\n'
-                         '**WARNING: There is no way to verify the server ID provided is valid without the bot being a '
-                         'server member. Double-check your inputs!**\n\n'
-                         '__**Remove**__\n'
-                         'Removes the selected Discord Server from the allowlist.\n\n'),
-            type='rich'
-        )
-        self.selected_guild = None
         self.remove_guild_allowlist_select = selects.RemoveGuildAllowlistSelect(self)
-        self.confirm_allowlist_remove_button = buttons.ConfirmAllowlistRemoveButton(self)
-        self.add_item(self.remove_guild_allowlist_select)
-        self.add_item(buttons.AllowlistAddServerButton(self))
-        self.add_item(self.confirm_allowlist_remove_button)
-        self.add_item(common_buttons.BackButton(AdminBaseView))
+
+        self.build_view()
+
+    def build_view(self):
+        container = Container()
+
+        header_section = Section(accessory=common_buttons.BackButton(AdminBaseView))
+        header_section.add_item(TextDisplay('**Administration - Server Allowlist**'))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        add_server_section = Section(accessory=buttons.AllowlistAddServerButton(self))
+        add_server_section.add_item(TextDisplay(
+            'Add a new Discord Server ID to the allowlist.\n'
+            '**WARNING: There is no way to verify the server ID provided is valid without the bot being a '
+            'server member. Double-check your inputs!**'
+        ))
+        container.add_item(add_server_section)
+        container.add_item(Separator())
+
+        container.add_item(TextDisplay('Choose a server to remove from the allowlist'))
+        server_select_row = ActionRow(self.remove_guild_allowlist_select)
+        container.add_item(server_select_row)
+
+        self.add_item(container)
 
     async def setup(self, bot):
         try:
-            self.embed.clear_fields()
             self.remove_guild_allowlist_select.options.clear()
             collection = bot.cdb['serverAllowlist']
             query = await collection.find_one()
@@ -69,19 +82,29 @@ class AdminAllowlistView(View):
             await log_exception(e)
 
 
-class AdminCogView(View):
+class AdminCogView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
-        self.embed = discord.Embed(
-            title='Administration - Cogs',
-            description=(
-                '__**Load**__\n'
-                'Loads a cog by name. File must be named `<name>.py` and stored in ReQuest\\cogs\\\n\n'
-                '__**Reload**__\n'
-                'Reloads a loaded cog by name. Same naming and file path restrictions apply.'
-            ),
-            type='rich'
-        )
-        self.add_item(buttons.AdminLoadCogButton())
-        self.add_item(buttons.AdminReloadCogButton())
-        self.add_item(common_buttons.BackButton(AdminBaseView))
+        self.build_view()
+
+    def build_view(self):
+        container = Container()
+
+        header_section = Section(accessory=common_buttons.BackButton(AdminBaseView))
+        header_section.add_item(TextDisplay('**Administration - Cogs**'))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        load_cog_section = Section(accessory=buttons.AdminLoadCogButton())
+        load_cog_section.add_item(TextDisplay(
+            'Load a bot cog by name. File must be named `<name>.py` and stored in ReQuest\\cogs\\.'
+        ))
+        container.add_item(load_cog_section)
+
+        reload_cog_section = Section(accessory=buttons.AdminReloadCogButton())
+        reload_cog_section.add_item(TextDisplay(
+            'Reload a loaded cog by name. Same naming and file path restrictions apply.'
+        ))
+        container.add_item(reload_cog_section)
+
+        self.add_item(container)

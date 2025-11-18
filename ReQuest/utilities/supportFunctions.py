@@ -3,6 +3,7 @@ import inspect
 import logging
 import re
 import traceback
+from typing import Tuple
 
 import discord
 
@@ -22,12 +23,6 @@ def strip_id(mention) -> int:
     stripped_mention = re.sub(r'[<>#!@&]', '', mention)
     parsed_id = int(stripped_mention)
     return parsed_id
-
-
-def parse_list(mentions) -> list[int]:
-    stripped_list = [re.sub(r'[<>#!@&]', '', item) for item in mentions]
-    mapped_list = list(map(int, stripped_list))
-    return mapped_list
 
 
 async def log_exception(exception, interaction=None):
@@ -65,46 +60,54 @@ def normalize_currency_keys(currency_dict):
     return {k.lower(): v for k, v in currency_dict.items()}
 
 
-def consolidate_currency(currency_dict, denominations):
-    consolidated = {}
-    sorted_denoms = sorted(denominations.items(), key=lambda x: -x[1])
-    remaining_amount = sum(currency_dict.get(denom.lower(), 0) * value for denom, value in denominations.items())
-    for denom, value in sorted_denoms:
-        if remaining_amount >= value:
-            consolidated[denom] = int(remaining_amount // value)
-            remaining_amount %= value
-    return consolidated
+def format_currency_display(player_currency: dict, currency_config: dict) -> list[str]:
+    """
+    Formats currency into a list of strings based on the server's currency configuration
+    (double vs integer).
+    """
+    if not player_currency or not currency_config or 'currencies' not in currency_config:
+        return []
 
+    output_lines = []
+    processed_denominations = set()
+    norm_player_wallet = normalize_currency_keys(player_currency)
 
-def make_change(sender_currency, remaining_amount, denom_value, denominations):
-    higher_denoms = sorted([(denom, value) for denom, value in denominations.items() if value > denom_value],
-                           key=lambda x: -x[1])
+    for currency in currency_config['currencies']:
+        base_name = currency['name']
+        denomination_map, _ = get_denomination_map(currency_config, base_name)
 
-    for higher_denom, higher_value in higher_denoms:
-        qty = sender_currency.get(higher_denom.lower(), 0)
+        if not denomination_map:
+            continue
 
-        if qty > 0:
-            total_value = qty * higher_value
+        denominations_in_wallet = {k for k in norm_player_wallet if k in denomination_map}
+        if not denominations_in_wallet:
+            continue
 
-            if total_value >= remaining_amount:
-                needed_qty = (remaining_amount + higher_value - 1) // higher_value
-                sender_currency[higher_denom.lower()] -= needed_qty
-                change_amount = needed_qty * higher_value - remaining_amount
-                lower_denom_qty = change_amount / denom_value
-                if denom_value not in sender_currency:
-                    sender_currency[denom_value] = 0
-                sender_currency[denom_value] += lower_denom_qty
-                remaining_amount = 0
-                break
-            else:
-                sender_currency[higher_denom.lower()] = 0
-                remaining_amount -= total_value
-                lower_denom_qty = total_value / denom_value
-                if denom_value not in sender_currency:
-                    sender_currency[denom_value] = 0
-                sender_currency[denom_value] += lower_denom_qty
+        # Display as double
+        if currency.get('isDouble', False):
+            total_value = 0.0
+            for denom_name_lower in denominations_in_wallet:
+                quantity = norm_player_wallet.get(denom_name_lower, 0)
+                denom_value_in_base = denomination_map[denom_name_lower]
+                total_value += quantity * denom_value_in_base
+                processed_denominations.add(denom_name_lower)
 
-    return remaining_amount
+            if total_value > 0:
+                output_lines.append(f"{base_name.capitalize()}: **{total_value:.2f}**")
+
+        # Display as separate integers
+        else:
+            # Sort by value descending
+            sorted_denoms = sorted(denominations_in_wallet, key=lambda d: denomination_map[d], reverse=True)
+            for denom_name_lower in sorted_denoms:
+                quantity = norm_player_wallet.get(denom_name_lower, 0)
+                if quantity > 0:
+                    denom_display_name, _ = find_currency_or_denomination(currency_config, denom_name_lower)
+                    if denom_display_name:
+                        output_lines.append(f"{denom_display_name.capitalize()}: **{quantity}**")
+                    processed_denominations.add(denom_name_lower)
+
+    return output_lines
 
 
 async def trade_currency(mdb, gdb, currency_name, amount, sending_member_id, receiving_member_id, guild_id):
@@ -152,7 +155,7 @@ async def trade_item(mdb, item_name, quantity, sending_member_id, receiving_memb
     receiver_character_id = receiver_data['activeCharacters'][str(guild_id)]
     receiver_character = receiver_data['characters'][receiver_character_id]
 
-    # Check if sender has enough items (case-insensitive comparison)
+    # Check if sender has enough items
     sender_inventory = {k.lower(): v for k, v in sender_character['attributes']['inventory'].items()}
     if sender_inventory.get(normalized_item_name.lower(), 0) < quantity:
         raise Exception('Insufficient items')
@@ -165,11 +168,10 @@ async def trade_item(mdb, item_name, quantity, sending_member_id, receiving_memb
     receiver_inventory[normalized_item_name.lower()] = receiver_inventory.get(normalized_item_name.lower(),
                                                                               0) + quantity
 
-    # Normalize the inventories for MongoDB update
+    # Normalize the inventories for db update
     sender_character['attributes']['inventory'] = {k.capitalize(): v for k, v in sender_inventory.items()}
     receiver_character['attributes']['inventory'] = {k.capitalize(): v for k, v in receiver_inventory.items()}
 
-    # Update MongoDB
     await collection.update_one(
         {'_id': sending_member_id, f'characters.{sender_character_id}.attributes.inventory': {'$exists': True}},
         {'$set': {
@@ -220,7 +222,7 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
                 raise Exception(f"Insufficient funds to cover this transaction.")
 
             if total_in_lowest_denom < 0:
-                total_in_lowest_denom = 0  # Set to 0 if it's a tiny negative float
+                total_in_lowest_denom = 0
 
             new_character_currency = {}
             for denom, value in sorted(denomination_map.items(), key=lambda x: -x[1]):
@@ -236,7 +238,7 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
                 if denom_name in new_character_currency:
                     final_wallet[denom_name] = new_character_currency[denom_name]
                 elif denom_name in final_wallet:
-                    del final_wallet[denom_name]  # Remove if new qty is 0
+                    del final_wallet[denom_name]
 
             character_currency_db = {k.capitalize(): v for k, v in final_wallet.items() if v > 0}
 
@@ -395,8 +397,8 @@ async def purge_player_board(age, interaction):
 
         # Delete all records in the db matching this guild that are older than the cutoff
         player_board_collection = interaction.client.gdb['playerBoard']
-        player_board_collection.delete_many({'guildId': interaction.guild_id,
-                                             'timestamp': {'$lt': cutoff_date}})
+        await player_board_collection.delete_many({'guildId': interaction.guild_id,
+                                                  'timestamp': {'$lt': cutoff_date}})
 
         # Get the channel object and purge all messages older than the cutoff
         config_collection = interaction.client.gdb['playerBoardChannel']
@@ -405,7 +407,9 @@ async def purge_player_board(age, interaction):
         channel = interaction.guild.get_channel(channel_id)
         await channel.purge(before=cutoff_date)
 
-        await interaction.response.send_message(f'Posts older than {age} days have been purged!', ephemeral=True)
+        await interaction.response.send_message(f'Posts older than {age} days have been purged!',
+                                                ephemeral=True,
+                                                delete_after=10)
     except Exception as e:
         await log_exception(e, interaction)
 
@@ -442,7 +446,7 @@ async def setup_view(view, interaction):
     await setup_function(**kwargs)
 
 
-def get_denomination_map(currency_config: dict, currency_name: str) -> (dict | None, str | None):
+def get_denomination_map(currency_config: dict, currency_name: str) -> Tuple[dict | None, str | None]:
     if not currency_config or 'currencies' not in currency_config:
         return None, None
 
@@ -465,10 +469,10 @@ def get_denomination_map(currency_config: dict, currency_name: str) -> (dict | N
 
 
 def check_sufficient_funds(player_currency: dict, currency_config: dict, cost_currency_name: str,
-                           cost_amount: float) -> (bool, str):
+                           cost_amount: float) -> Tuple[bool, str]:
     try:
         if cost_amount <= 0:
-            return True, "OK"  # No cost
+            return True, "OK"
 
         denomination_map, _ = get_denomination_map(currency_config, cost_currency_name)
 
@@ -518,7 +522,7 @@ def apply_item_change_local(character_data: dict, item_name: str, quantity: int)
     if found_key:
         inventory[found_key] += int(quantity)
         if inventory[found_key] <= 0:
-            del inventory[found_key]  # Remove if zero or less
+            del inventory[found_key]
     elif quantity > 0:
         inventory[item_name.capitalize()] = int(quantity)
     elif quantity < 0:
@@ -571,7 +575,7 @@ def apply_currency_change_local(character_data: dict, currency_config: dict, ite
         if denom_name in new_character_currency:
             final_wallet[denom_name] = new_character_currency[denom_name]
         elif denom_name in final_wallet:
-            del final_wallet[denom_name]  # Remove if new qty is 0
+            del final_wallet[denom_name]
 
     character_data['attributes']['currency'] = {k.capitalize(): v for k, v in final_wallet.items() if v > 0}
     return character_data

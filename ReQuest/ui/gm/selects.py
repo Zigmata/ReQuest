@@ -3,7 +3,7 @@ import logging
 import discord
 from discord.ui import Select
 
-from ReQuest.utilities.supportFunctions import log_exception, find_member_and_character_id_in_lists
+from ReQuest.utilities.supportFunctions import log_exception, find_member_and_character_id_in_lists, setup_view
 from ReQuest.ui.common import modals as common_modals
 
 logging.basicConfig(level=logging.INFO)
@@ -15,7 +15,7 @@ class ManageQuestSelect(Select):
         super().__init__(
             placeholder='Select a quest to manage',
             options=[],
-            custom_id='manage_quest_select',
+            custom_id='quest_select',
             disabled=True
         )
         self.calling_view = calling_view
@@ -27,15 +27,9 @@ class ManageQuestSelect(Select):
             quest_collection = interaction.client.gdb['quests']
             quest = await quest_collection.find_one({'guildId': interaction.guild_id, 'questId': quest_id})
             view.selected_quest = quest
-            view.edit_quest_button.disabled = False
-            view.toggle_ready_button.disabled = False
-            view.rewards_menu_button.disabled = False
-            view.remove_player_button.disabled = False
-            view.cancel_quest_button.disabled = False
-            await view.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
 
-            view.embed.add_field(name='Selected Quest', value=f'`{quest_id}`: **{quest['title']}**')
-            await interaction.response.edit_message(embed=view.embed, view=view)
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -67,7 +61,7 @@ class PartyMemberSelect(Select):
             if self.disabled_components:
                 for component in self.disabled_components:
                     component.disabled = False
-            await interaction.response.edit_message(embed=view.embed, view=view)
+            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -111,6 +105,7 @@ class ManageableQuestSelect(Select):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            await self.calling_view.select_callback(interaction)
+            quest_id = self.values[0]
+            await self.calling_view.select_callback(interaction, quest_id)
         except Exception as e:
             await log_exception(e, interaction)

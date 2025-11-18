@@ -1,6 +1,5 @@
 import logging
 import math
-import shortuuid
 
 import discord
 from discord.ui import (
@@ -13,8 +12,9 @@ from discord.ui import (
     Thumbnail,
     Button
 )
-from ReQuest.ui.shop import buttons
+
 from ReQuest.ui.common import modals as common_modals
+from ReQuest.ui.shop import buttons
 
 
 class ShopBaseView(LayoutView):
@@ -26,7 +26,6 @@ class ShopBaseView(LayoutView):
         self.current_page = 0
         self.total_pages = math.ceil(len(self.all_stock) / self.items_per_page)
 
-        # Initialize the first view
         self.build_view()
 
     def build_view(self):
@@ -66,10 +65,12 @@ class ShopBaseView(LayoutView):
 
                 item_name = item.get('name', 'Unknown Item')
                 item_description = item.get('description', None)
+                item_quantity = item.get('quantity', 1)
+                item_display_name = f'{item_name} x{item_quantity}' if item_quantity > 1 else item_name
                 if item_description:
-                    section.add_item(TextDisplay(f'**{item_name}**\n*{item_description}*'))
+                    section.add_item(TextDisplay(f'**{item_display_name}**\n*{item_description}*'))
                 else:
-                    section.add_item(TextDisplay(f'**{item_name}**'))
+                    section.add_item(TextDisplay(f'**{item_display_name}**'))
                 container.add_item(section)
 
             self.add_item(container)

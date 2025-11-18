@@ -1,12 +1,10 @@
 import logging
 
-from typing import Callable
-
 import discord
 import discord.ui
 from discord.ui import Modal
 
-from ReQuest.utilities.supportFunctions import log_exception, setup_view
+from ReQuest.utilities.supportFunctions import log_exception
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

@@ -4,9 +4,10 @@ import discord
 from discord import ButtonStyle
 from discord.ui import Button
 
+from ReQuest.ui.common.modals import ConfirmModal
 from ReQuest.ui.gm import modals
 from ReQuest.ui.common.enums import RewardType
-from ReQuest.utilities.supportFunctions import log_exception
+from ReQuest.utilities.supportFunctions import log_exception, setup_view, strip_id, attempt_delete
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -80,8 +81,8 @@ class RewardsMenuButton(Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             new_view = self.rewards_view_class(self.calling_view)
-            await new_view.setup()
-            await interaction.response.edit_message(embed=new_view.embed, view=new_view)
+            await setup_view(new_view, interaction)
+            await interaction.response.edit_message(view=new_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -101,14 +102,14 @@ class RemovePlayerButton(Button):
         try:
             quest = self.calling_view.selected_quest
             new_view = self.target_view_class(quest)
-            await new_view.setup()
-            await interaction.response.edit_message(embed=new_view.embed, view=new_view)
+            await setup_view(new_view, interaction)
+            await interaction.response.edit_message(view=new_view)
         except Exception as e:
             await log_exception(e, interaction)
 
 
 class CancelQuestButton(Button):
-    def __init__(self, calling_view, target_view_class):
+    def __init__(self, calling_view):
         super().__init__(
             label='Cancel Quest',
             style=ButtonStyle.danger,
@@ -116,12 +117,59 @@ class CancelQuestButton(Button):
             disabled=True
         )
         self.calling_view = calling_view
-        self.target_view_class = target_view_class
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            view = self.target_view_class(self.calling_view.selected_quest)
-            await interaction.response.edit_message(embed=view.embed, view=view)
+            confirm_modal = ConfirmModal(
+                title='Cancel Quest',
+                prompt_label='Type CONFIRM to cancel the quest.',
+                prompt_placeholder='Type "CONFIRM" to proceed.',
+                confirm_callback=self.confirm_callback
+            )
+            await interaction.response.send_modal(confirm_modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def confirm_callback(self, interaction: discord.Interaction):
+        try:
+            quest = self.calling_view.selected_quest
+            guild_id = interaction.guild_id
+            guild = interaction.guild
+
+            # If a party exists
+            party = quest['party']
+            title = quest['title']
+            if party:
+                # Get party members and message them with results
+                for player in party:
+                    for member_id in player:
+                        # Message the player that the quest was canceled.
+                        member = await guild.fetch_member(int(member_id))
+                        try:
+                            await member.send(f'Quest **{title}** was cancelled by the GM.')
+                        except discord.errors.Forbidden as e:
+                            logger.warning(f'Could not DM {member.id} about quest cancellation: {e}')
+
+            # Remove the party role, if applicable
+            party_role_id = quest['partyRoleId']
+            if party_role_id:
+                party_role = guild.get_role(party_role_id)
+                await party_role.delete(reason=f'Quest {quest['questId']} cancelled by {interaction.user.mention}.')
+
+            # Delete the quest from the database
+            await interaction.client.gdb['quests'].delete_one({'guildId': guild_id, 'questId': quest['questId']})
+
+            # Delete the quest from the quest channel
+            channel_query = await interaction.client.gdb['questChannel'].find_one({'_id': guild_id})
+            channel_id = strip_id(channel_query['questChannel'])
+            quest_channel = guild.get_channel(channel_id)
+            message_id = quest['messageId']
+            message = quest_channel.get_partial_message(message_id)
+            await attempt_delete(message)
+
+            await interaction.response.send_message(f'Quest `{quest['questId']}`: **{title}** cancelled!',
+                                                    ephemeral=True,
+                                                    delete_after=10)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -129,7 +177,7 @@ class CancelQuestButton(Button):
 class PartyRewardsButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Party Rewards',
+            label='Manage Party Rewards',
             style=ButtonStyle.secondary,
             custom_id='party_rewards_button'
         )
@@ -146,50 +194,41 @@ class PartyRewardsButton(Button):
         try:
             view = self.calling_view
             quest = view.quest
+
             rewards = quest.setdefault('rewards', {})
             party_rewards = rewards.setdefault('party', {})
 
-            updates = {}
-
-            # Check XP value
+            xp_val = None
             if xp is not None:
-                xp_val = int(xp)
-                if xp_val < 0:
-                    raise ValueError("XP value cannot be negative.")
+                try:
+                    xp_int = int(xp)
+                    xp_val = xp_int if xp_int >= 0 else None
+                except (ValueError, TypeError):
+                    xp_val = None
+
+            if items and isinstance(items, dict):
+                invalid = [n for n, q in items.items() if not isinstance(q, (int, float)) or q <= 0]
+                if invalid:
+                    raise ValueError(f"Invalid item quantities: {', '.join(map(str, invalid))}")
+                items_val = items
             else:
-                xp_val = None
+                items_val = {}
+            updates = {
+                'rewards.party.xp': xp_val,
+                'rewards.party.items': items_val
+            }
 
-            if items is not None:
-                if isinstance(items, dict):
-                    negative = [name for name, quantity in items.items() if quantity <= 0]
-                    if negative:
-                        raise ValueError(f"Item quantities must be a positive integer: {', '.join(negative)}")
-                    party_items = dict(items)
-                else:
-                    raise ValueError("Items must be provided as a dictionary.")
-            else:
-                party_items = {}
-                updates['rewards.party.items'] = party_items
+            quest_collection = interaction.client.gdb['quests']
+            await quest_collection.update_one(
+                {'guildId': quest['guildId'], 'questId': quest['questId']},
+                {'$set': updates}
+            )
 
-            if party_rewards.get('xp') != xp_val:
-                updates['rewards.party.xp'] = xp_val
-            if party_items != party_rewards.get('items', {}):
-                updates['rewards.party.items'] = party_items
+            party_rewards['xp'] = xp_val
+            party_rewards['items'] = items_val
 
-            if updates:
-                quest_collection = interaction.client.gdb['quests']
-                await quest_collection.update_one(
-                    {'guildId': quest['guildId'], 'questId': quest['questId']},
-                    {'$set': updates}
-                )
-
-                if 'rewards.party.xp' in updates:
-                    party_rewards['xp'] = updates['rewards.party.xp']
-                if 'rewards.party.items' in updates:
-                    party_rewards['items'] = updates['rewards.party.items']
-
-            await view.setup()
-            await interaction.response.edit_message(embed=view.embed, view=view)
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -197,7 +236,7 @@ class PartyRewardsButton(Button):
 class IndividualRewardsButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Individual Rewards',
+            label='Manage Individual Rewards',
             style=ButtonStyle.secondary,
             custom_id='individual_rewards_button',
             disabled=True
@@ -217,84 +256,40 @@ class IndividualRewardsButton(Button):
             quest = view.quest
             character_id = view.selected_character_id
 
-            # Make sure rewards structure exists
             rewards = quest.setdefault('rewards', {})
             char_rewards = rewards.setdefault(character_id, {})
-            items_block = char_rewards.setdefault('items', {})
 
-            updates = {}
-
-            # ---------- XP ----------
+            xp_val = None
             if xp is not None:
-                xp_val = int(xp)
-                if xp_val < 0:
-                    raise ValueError("XP value cannot be negative.")
+                try:
+                    xp_int = int(xp)
+                    xp_val = xp_int if xp_int >= 0 else None
+                except (ValueError, TypeError):
+                    xp_val = None
+
+            if items and isinstance(items, dict):
+                invalid = [n for n, q in items.items() if not isinstance(q, (int, float)) or q <= 0]
+                if invalid:
+                    raise ValueError(f"Invalid item quantities: {', '.join(invalid)}")
+                items_val = items
             else:
-                xp_val = None
+                items_val = {}
+            updates = {
+                f'rewards.{character_id}.xp': xp_val,
+                f'rewards.{character_id}.items': items_val
+            }
 
-            if char_rewards.get('xp') != xp_val:
-                updates[f'rewards.{character_id}.xp'] = xp_val
+            quest_collection = interaction.client.gdb['quests']
+            await quest_collection.update_one(
+                {'guildId': quest['guildId'], 'questId': quest['questId']},
+                {'$set': updates}
+            )
 
-            # ---------- Items (authoritative replace) ----------
-            if items is not None:
-                if not isinstance(items, dict):
-                    raise ValueError("Items must be provided as a dictionary.")
-                negative = [name for name, qty in items.items() if qty <= 0]
-                if negative:
-                    raise ValueError(f"Item quantities must be positive integers: {', '.join(negative)}")
-                if items_block != items:
-                    updates[f'rewards.{character_id}.items'] = dict(items)
-            else:
-                # Empty box = clear
-                updates[f'rewards.{character_id}.items'] = {}
+            char_rewards['xp'] = xp_val
+            char_rewards['items'] = items_val
 
-            # ---------- Persist ----------
-            if updates:
-                quest_collection = interaction.client.gdb['quests']
-                await quest_collection.update_one(
-                    {'guildId': quest['guildId'], 'questId': quest['questId']},
-                    {'$set': updates}
-                )
-
-                # Local sync
-                if f'rewards.{character_id}.xp' in updates:
-                    char_rewards['xp'] = updates[f'rewards.{character_id}.xp']
-                if f'rewards.{character_id}.items' in updates:
-                    char_rewards['items'] = updates[f'rewards.{character_id}.items']
-
-            # Refresh UI
-            await view.setup()
-            await interaction.response.edit_message(embed=view.embed, view=view)
-
-            # ---------- Old Code (for reference) ----------
-            # if character_id not in quest['rewards']:
-            #     quest['rewards'][character_id] = {}
-            # if 'items' not in quest['rewards'][character_id]:
-            #     quest['rewards'][character_id]['items'] = {}
-            # if 'xp' not in quest['rewards'][character_id]:
-            #     quest['rewards'][character_id]['xp'] = 0
-            #
-            # if xp and xp > 0:
-            #     quest['rewards'][character_id]['xp'] = xp
-            # elif xp is not None and xp == 0:
-            #     quest['rewards'][character_id]['xp'] = 0
-            #
-            # if items == 'none':
-            #     quest['rewards'][character_id]['items'] = {}
-            # elif items:
-            #     if len(quest['rewards'][character_id]['items']) == 0:
-            #         quest['rewards'][character_id]['items'] = items
-            #     else:
-            #         merged_items: dict = quest['rewards'][character_id]['items']
-            #         merged_items.update(items)
-            #         quest['rewards'][character_id]['items'] = merged_items
-            #
-            # quest_collection = interaction.client.gdb['quests']
-            # await quest_collection.update_one({'guildId': quest['guildId'], 'questId': quest['questId']},
-            #                                   {'$set': quest})
-            # view.quest = quest
-            # await view.setup()
-            # await interaction.response.edit_message(embed=view.embed, view=view)
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 

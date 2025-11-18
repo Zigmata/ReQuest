@@ -15,53 +15,14 @@ class RegisterCharacterButton(Button):
     def __init__(self):
         super().__init__(
             label='Register',
-            style=ButtonStyle.primary,
+            style=ButtonStyle.success,
             custom_id='register_character_button'
         )
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            modal = modals.CharacterRegisterModal(self, interaction.client.mdb, interaction.user.id,
-                                                  interaction.guild_id)
+            modal = modals.CharacterRegisterModal()
             await interaction.response.send_modal(modal)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-
-class ViewInventoryButton(Button):
-    def __init__(self, calling_view):
-        super().__init__(
-            label='View',
-            custom_id='view_inventory_button'
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            view = self.calling_view
-            character = view.active_character
-            inventory = character['attributes']['inventory']
-            player_currencies = character['attributes']['currency']
-            items = []
-            currencies = []
-
-            for item in inventory:
-                pair = (str(item), f'**{inventory[item]}**')
-                value = ': '.join(pair)
-                items.append(value)
-
-            for currency in player_currencies:
-                pair = (str(currency), f'**{player_currencies[currency]}**')
-                value = ': '.join(pair)
-                currencies.append(value)
-
-            await view.setup(bot=interaction.client, user=interaction.user, guild=interaction.guild)
-            view.embed.add_field(name='Possessions',
-                                 value='\n'.join(items))
-            view.embed.add_field(name='Currency',
-                                 value='\n'.join(currencies))
-
-            await interaction.response.edit_message(embed=view.embed, view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -70,6 +31,7 @@ class SpendCurrencyButton(Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Spend Currency',
+            style=ButtonStyle.primary,
             custom_id='spend_currency_button'
         )
         self.calling_view = calling_view
