@@ -1146,6 +1146,8 @@ class ConfigCurrencyView(LayoutView):
             self.remove_currency_button.disabled = True
             self.edit_currency_select.disabled = True
             self.edit_currency_select.options.clear()
+            self.edit_currency_select.options = [discord.SelectOption(label='No currencies configured', value='None')]
+
             self.edit_currency_select.placeholder = 'No currencies configured.'
 
             # Populate the select with options if currencies exist
@@ -1153,10 +1155,12 @@ class ConfigCurrencyView(LayoutView):
                 self.edit_currency_select.disabled = False
                 self.edit_currency_select.placeholder = 'Select a currency to edit.'
 
+                options = []
                 for currency in query['currencies']:
-                    self.edit_currency_select.options.append(
+                    options.append(
                         discord.SelectOption(label=currency['name'], value=currency['name'])
                     )
+                self.edit_currency_select.options = options
 
             # If a currency is selected, enable the edit and remove buttons and update their sections
             if self.selected_currency_name:
