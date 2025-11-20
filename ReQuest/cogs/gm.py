@@ -42,7 +42,7 @@ class GameMaster(Cog):
 
     @has_gm_or_mod()
     @app_commands.guild_only()
-    async def mod_player_menu(self, interaction, member: discord.Member):
+    async def mod_player_menu(self, interaction: discord.Interaction, member: discord.Member):
         """
         Add or remove items or experience from a player.
         """
@@ -65,7 +65,7 @@ class GameMaster(Cog):
 
     @has_gm_or_mod()
     @app_commands.guild_only()
-    async def view_player(self, interaction, member: discord.Member):
+    async def view_player(self, interaction: discord.Interaction, member: discord.Member):
         """
         View a player's active character.
         """

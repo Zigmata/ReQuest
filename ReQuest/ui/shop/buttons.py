@@ -8,15 +8,15 @@ from ReQuest.utilities.supportFunctions import (
     check_sufficient_funds,
     apply_item_change_local,
     apply_currency_change_local,
-    format_currency_display
+    format_currency_display, smart_title_case, strip_id
 )
 
 
 class ShopItemButton(Button):
     def __init__(self, item):
         super().__init__(
-            label=f'Buy for {item["price"]} {item["currency"]}',
-            style=ButtonStyle.primary,
+            label=f'Buy for {item["price"]} {smart_title_case(item["currency"])}',
+            style=ButtonStyle.success,
             custom_id=f'shop_item_button_{item["name"]}'
         )
         self.item = item
@@ -33,6 +33,12 @@ class ShopItemButton(Button):
                 raise Exception("You do not have any characters.")
             if str(guild_id) not in character_query['activeCharacters']:
                 raise Exception("You do not have an active character on this server.")
+
+            log_channel = None
+            log_channel_query = await gdb['shopLogChannel'].find_one({'_id': guild_id})
+            log_channel_id = strip_id(log_channel_query['shopLogChannel'])
+            if log_channel_query:
+                log_channel = interaction.guild.get_channel(log_channel_id)
 
             active_character_id = character_query['activeCharacters'][str(guild_id)]
             character_data = character_query['characters'][active_character_id]
@@ -65,10 +71,11 @@ class ShopItemButton(Button):
             )
 
             character_name = character_data['name']
-            item_display_name = f'{item_quantity}x {self.item["name"]}' if item_quantity > 1 else self.item['name']
+            item_display_name = f'{item_quantity}x {smart_title_case(self.item["name"])}' if item_quantity > 1 \
+                else smart_title_case(self.item['name'])
             embed = discord.Embed(
                 title=f"{character_name} purchased {item_display_name} for {self.item['price']} "
-                      f"{self.item['currency']}",
+                      f"{smart_title_case(self.item['currency'])}",
                 type='rich'
             )
 
@@ -83,6 +90,9 @@ class ShopItemButton(Button):
 
             transaction_id = shortuuid.uuid()[:12]
             embed.set_footer(text=f'Transaction ID: {transaction_id}')
+
+            if log_channel:
+                await log_channel.send(embed=embed)
             await interaction.response.send_message(embed=embed, ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)

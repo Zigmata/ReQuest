@@ -1,6 +1,7 @@
 import logging
 import math
 from collections import namedtuple
+from typing import List
 
 import discord
 from discord import ButtonStyle
@@ -9,7 +10,7 @@ from discord.ui import LayoutView, Container, Section, Separator, ActionRow, But
 from ReQuest.ui.common import modals as common_modals, views as common_views
 from ReQuest.ui.common.buttons import MenuViewButton, BackButton
 from ReQuest.ui.config import buttons, selects, enums
-from ReQuest.utilities.supportFunctions import log_exception, query_config, setup_view, strip_id
+from ReQuest.utilities.supportFunctions import log_exception, query_config, setup_view, strip_id, smart_title_case
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -375,7 +376,7 @@ class ConfigWizardView(LayoutView):
             return '\n'.join(report_lines), False
 
     @staticmethod
-    def validate_channels(guild, quest_channel_id, player_channel_id, archive_channel_id):
+    def validate_channels(guild, channels: List[dict]):
         """
         Validate configured channels and their permissions.
         """
@@ -389,16 +390,14 @@ class ConfigWizardView(LayoutView):
 
         has_warnings = False
 
-        channels_to_check = [
-            ('Quest Board', quest_channel_id, True),  # Name, ID, is_required
-            ('Player Board', player_channel_id, False),
-            ('Quest Archive', archive_channel_id, False)
-        ]
-
         bot_member = guild.me
 
-        for name, channel_id_str, required in channels_to_check:
-            if not channel_id_str:
+        for channel in channels:
+            name = channel['name']
+            mention = channel['mention']
+            required = channel['required']
+
+            if not mention:
                 if required:
                     has_warnings = True
                     report_lines.append(f'\n**{name}:**\n- ⚠️ No Channel Configured')
@@ -407,12 +406,13 @@ class ConfigWizardView(LayoutView):
                 continue
 
             try:
-                channel_id = strip_id(channel_id_str)
+                channel_id = strip_id(mention)
                 channel = guild.get_channel(channel_id)
 
                 if not channel:
                     has_warnings = True
-                    report_lines.append(f'\n**{name}:**\n- ⚠️ Configured Channel Not Found/Deleted from Server')
+                    report_lines.append(f'\n**{name}:**\n'
+                                        f'- ⚠️ Configured Channel Not Found/Deleted from Server')
                     continue
 
                 # Check bot permissions
@@ -519,7 +519,7 @@ class ConfigWizardView(LayoutView):
         if items:
             report_lines.append('- Items:')
             for item_name, quantity in items.items():
-                report_lines.append(f'  - {item_name.capitalize()}: {quantity}')
+                report_lines.append(f'  - {smart_title_case(item_name)}: {quantity}')
 
         return '\n'.join(report_lines)
 
@@ -591,14 +591,57 @@ class ConfigWizardView(LayoutView):
             gm_roles_query = await gdb['gmRoles'].find_one({'_id': guild.id})
 
             # Channel configs
+            channels = []
             quest_channel_query = await gdb['questChannel'].find_one({'_id': guild.id})
-            quest_channel = quest_channel_query['questChannel'] if quest_channel_query else None
-
+            channels.append(
+                {
+                    'name': 'Quest Board',
+                    'mention': quest_channel_query['questChannel'] if quest_channel_query else None,
+                    'required': True}
+            )
             player_channel_query = await gdb['playerBoardChannel'].find_one({'_id': guild.id})
-            player_channel = player_channel_query['playerBoardChannel'] if player_channel_query else None
+            channels.append(
+                {
+                    'name': 'Player Board',
+                    'mention': player_channel_query['playerBoardChannel'] if player_channel_query else None,
+                    'required': False}
+            )
 
             archive_channel_query = await gdb['archiveChannel'].find_one({'_id': guild.id})
-            archive_channel = archive_channel_query['archiveChannel'] if archive_channel_query else None
+            channels.append(
+                {
+                    'name': 'Quest Archive',
+                    'mention': archive_channel_query['archiveChannel'] if archive_channel_query else None,
+                    'required': False
+                }
+            )
+
+            gm_log_query = await gdb['gmTransactionLogChannel'].find_one({'_id': guild.id})
+            channels.append(
+                {
+                    'name': 'GM Transaction Log',
+                    'mention': gm_log_query['gmTransactionLogChannel'] if gm_log_query else None,
+                    'required': False
+                }
+            )
+
+            player_trade_log_query = await gdb['playerTradingLogChannel'].find_one({'_id': guild.id})
+            channels.append(
+                {
+                    'name': 'Player Trading Log',
+                    'mention': player_trade_log_query['playerTradingLogChannel'] if player_trade_log_query else None,
+                    'required': False
+                }
+            )
+
+            shop_log_query = await gdb['shopLogChannel'].find_one({'_id': guild.id})
+            channels.append(
+                {
+                    'name': 'Shop Log',
+                    'mention': shop_log_query['shopLogChannel'] if shop_log_query else None,
+                    'required': False
+                }
+            )
 
             # Dashboard configs
             wait_list_query = await gdb['questWaitList'].find_one({'_id': guild.id})
@@ -613,7 +656,7 @@ class ConfigWizardView(LayoutView):
             role_button.disabled = not role_has_warnings
 
             # Channel validation report
-            channel_text, channel_button = self.validate_channels(guild, quest_channel, player_channel, archive_channel)
+            channel_text, channel_button = self.validate_channels(guild, channels)
 
             # Dashboard settings report
             dashboard_data = self.validate_dashboard_settings(
@@ -823,6 +866,18 @@ class ConfigChannelsView(LayoutView):
             '**Quest Archive:** Not Configured\n'
             'An optional channel where completed quests will move to, with summary information.'
         )
+        self.gm_transaction_log_info = TextDisplay(
+            '**GM Transaction Log:** Not Configured\n'
+            'An optional channel where GM transactions (I.E. Modify Player commands) are logged.'
+        )
+        self.player_trading_log_info = TextDisplay(
+            '**Player Trading Log:** Not Configured\n'
+            'An optional channel where player-to-player trade transactions are logged.'
+        )
+        self.shop_log_info = TextDisplay(
+            '**Shop Log:** Not Configured\n'
+            'An optional channel where shop transactions are logged.'
+        )
         self.quest_channel_select = selects.SingleChannelConfigSelect(
             calling_view=self,
             config_type='questChannel',
@@ -837,6 +892,21 @@ class ConfigChannelsView(LayoutView):
             calling_view=self,
             config_type='archiveChannel',
             config_name='Quest Archive'
+        )
+        self.gm_transaction_log_channel_select = selects.SingleChannelConfigSelect(
+            calling_view=self,
+            config_type='gmTransactionLogChannel',
+            config_name='GM Transaction Log'
+        )
+        self.player_trading_log_channel_select = selects.SingleChannelConfigSelect(
+            calling_view=self,
+            config_type='playerTradingLogChannel',
+            config_name='Player Trading Log'
+        )
+        self.shop_log_channel_select = selects.SingleChannelConfigSelect(
+            calling_view=self,
+            config_type='shopLogChannel',
+            config_name='Shop Log'
         )
 
         self.build_view()
@@ -871,6 +941,28 @@ class ConfigChannelsView(LayoutView):
         container.add_item(quest_archive_select_row)
         container.add_item(Separator())
 
+        gm_transaction_log_section = Section(accessory=buttons.ClearChannelButton(self,
+                                                                                  enums.ChannelType.GM_TRANSACTION_LOG))
+        gm_transaction_log_section.add_item(self.gm_transaction_log_info)
+        container.add_item(gm_transaction_log_section)
+        gm_transaction_log_select_row = ActionRow(self.gm_transaction_log_channel_select)
+        container.add_item(gm_transaction_log_select_row)
+        container.add_item(Separator())
+
+        player_trading_log_section = Section(accessory=buttons.ClearChannelButton(self,
+                                                                                  enums.ChannelType.PLAYER_TRADING_LOG))
+        player_trading_log_section.add_item(self.player_trading_log_info)
+        container.add_item(player_trading_log_section)
+        player_trading_log_select_row = ActionRow(self.player_trading_log_channel_select)
+        container.add_item(player_trading_log_select_row)
+        container.add_item(Separator())
+
+        shop_log_section = Section(accessory=buttons.ClearChannelButton(self, enums.ChannelType.SHOP_LOG))
+        shop_log_section.add_item(self.shop_log_info)
+        container.add_item(shop_log_section)
+        shop_log_select_row = ActionRow(self.shop_log_channel_select)
+        container.add_item(shop_log_select_row)
+
         self.add_item(container)
 
     @staticmethod
@@ -893,6 +985,9 @@ class ConfigChannelsView(LayoutView):
             player_board = await self.query_channel('playerBoardChannel', database, guild_id)
             quest_board = await self.query_channel('questChannel', database, guild_id)
             quest_archive = await self.query_channel('archiveChannel', database, guild_id)
+            gm_transaction_log = await self.query_channel('gmTransactionLogChannel', database, guild_id)
+            player_trading_log = await self.query_channel('playerTradingLogChannel', database, guild_id)
+            shop_log = await self.query_channel('shopLogChannel', database, guild_id)
 
             self.quest_board_info.content = (f'**Quest Board:** {quest_board}\n'
                                              f'The channel where new/active quests will be posted.')
@@ -901,6 +996,15 @@ class ConfigChannelsView(LayoutView):
             self.quest_archive_info.content = (f'**Quest Archive:** {quest_archive}\n'
                                                f'An optional channel where completed quests will move to, with summary '
                                                f'information.')
+            self.gm_transaction_log_info.content = (f'**GM Transaction Log:** {gm_transaction_log}\n'
+                                                    f'An optional channel where GM transactions (I.E. Modify Player '
+                                                    f'commands) are logged.')
+            self.player_trading_log_info.content = (f'**Player Trading Log:** {player_trading_log}\n'
+                                                    f'An optional channel where player-to-player trade transactions '
+                                                    f'are logged.')
+            self.shop_log_info.content = (f'**Shop Log:** {shop_log}\n'
+                                          f'An optional channel where shop transactions are logged.')
+
         except Exception as e:
             await log_exception(e)
 
