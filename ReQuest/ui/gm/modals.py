@@ -411,8 +411,8 @@ class ModPlayerModal(Modal):
                     if is_currency:
                         denomination_map, _ = get_denomination_map(currency_config, item_name)
                         if not denomination_map:
-                            item_changes[item_name.lower()] = item_changes.get(item_name.lower(), 0) + int(
-                                quantity)
+                            item_changes[item_name.lower()] = (item_changes.get(item_name.lower(), 0) +
+                                                               int(quantity))
                             continue
 
                         item_value_in_base = denomination_map[item_name.lower()]
@@ -421,8 +421,8 @@ class ModPlayerModal(Modal):
                         currency_changes[parent_name] = currency_changes.get(parent_name, 0.0) + total_value_to_add
 
                     else:
-                        item_changes[item_name.lower()] = item_changes.get(item_name.lower(), 0) + int(
-                            quantity)
+                        item_changes[item_name.lower()] = (item_changes.get(item_name.lower(), 0) +
+                                                           int(quantity))
 
             mod_summary_embed = discord.Embed(
                 title=f'GM Player Modification Report',

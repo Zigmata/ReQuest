@@ -36,8 +36,8 @@ class ShopItemButton(Button):
 
             log_channel = None
             log_channel_query = await gdb['shopLogChannel'].find_one({'_id': guild_id})
-            log_channel_id = strip_id(log_channel_query['shopLogChannel'])
-            if log_channel_query:
+            if log_channel_query and log_channel_query['shopLogChannel']:
+                log_channel_id = strip_id(log_channel_query['shopLogChannel'])
                 log_channel = interaction.guild.get_channel(log_channel_id)
 
             active_character_id = character_query['activeCharacters'][str(guild_id)]

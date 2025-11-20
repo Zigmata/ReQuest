@@ -868,7 +868,7 @@ class ConfigChannelsView(LayoutView):
         )
         self.gm_transaction_log_info = TextDisplay(
             '**GM Transaction Log:** Not Configured\n'
-            'An optional channel where GM transactions (I.E. Modify Player commands) are logged.'
+            'An optional channel where GM transactions (i.e. Modify Player commands) are logged.'
         )
         self.player_trading_log_info = TextDisplay(
             '**Player Trading Log:** Not Configured\n'
@@ -997,7 +997,7 @@ class ConfigChannelsView(LayoutView):
                                                f'An optional channel where completed quests will move to, with summary '
                                                f'information.')
             self.gm_transaction_log_info.content = (f'**GM Transaction Log:** {gm_transaction_log}\n'
-                                                    f'An optional channel where GM transactions (I.E. Modify Player '
+                                                    f'An optional channel where GM transactions (i.e. Modify Player '
                                                     f'commands) are logged.')
             self.player_trading_log_info.content = (f'**Player Trading Log:** {player_trading_log}\n'
                                                     f'An optional channel where player-to-player trade transactions '
