@@ -20,7 +20,7 @@ class Admin(Cog):
     @commands.Cog.listener()
     async def on_guild_join(self, guild):
         try:
-            if not self.bot.config['allowList'] or guild.id in self.bot.allow_list:
+            if not self.bot.allow_list or guild.id in self.bot.allow_list:
                 return None
             else:
                 await guild.owner.send(

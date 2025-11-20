@@ -1,3 +1,4 @@
+import io
 import logging
 
 import discord
@@ -89,5 +90,28 @@ class AdminReloadCogButton(Button):
 
             modal = modals.AdminCogTextModal('reload', modal_callback)
             await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class PrintGuildsButton(Button):
+    def __init__(self):
+        super().__init__(
+            label='Output Guild List',
+            style=ButtonStyle.primary,
+            custom_id='print_guilds_button'
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            guilds = interaction.client.guilds
+            guild_list = [f'{guild.name} (ID: {guild.id})' for guild in guilds]
+            guilds_message = 'Connected Guilds:\n' + '\n'.join(guild_list)
+            file_name = f'guilds_list.txt'
+            guilds_file = discord.File(fp=io.BytesIO(guilds_message.encode()), filename=file_name)
+            await interaction.response.send_message(
+                f'Connected Guilds:',
+                file=guilds_file,
+                ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)
