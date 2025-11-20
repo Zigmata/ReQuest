@@ -29,7 +29,7 @@ class ReQuest(commands.Bot):
             activity=discord.Game(name=f'by Post'),
             allowed_mentions=allowed_mentions,
             case_insensitive=True,
-            command_prefix='!',
+            command_prefix='rq!',
             intents=intents)
 
         # Open the config file and load it to the bot
