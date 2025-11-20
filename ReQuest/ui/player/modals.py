@@ -12,7 +12,7 @@ from ReQuest.utilities.supportFunctions import (
     trade_currency,
     trade_item,
     check_sufficient_funds,
-    update_character_inventory, format_currency_display, setup_view
+    update_character_inventory, format_currency_display, setup_view, strip_id, smart_title_case
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -51,6 +51,12 @@ class TradeModal(Modal):
             member_active_character_id = member_query['activeCharacters'][str(guild_id)]
             member_active_character = member_query['characters'][member_active_character_id]
 
+            log_channel = None
+            log_channel_query = await gdb['playerTradingLogChannel'].find_one({'_id': guild_id})
+            if log_channel_query:
+                log_channel_id = strip_id(log_channel_query['playerTradingLogChannel'])
+                log_channel = interaction.guild.get_channel(log_channel_id)
+
             target_query = await collection.find_one({'_id': target_id})
             if not target_query:
                 raise Exception('The player you are attempting to trade with has no characters!')
@@ -75,11 +81,11 @@ class TradeModal(Modal):
             )
 
             if is_currency:
-                sender_currency, receiver_currency = await trade_currency(mdb, gdb, item_name, quantity, member_id,
-                                                                          target_id, guild_id)
+                sender_currency, receiver_currency = await trade_currency(interaction, gdb, item_name, quantity,
+                                                                          member_id, target_id, guild_id)
                 sender_balance_str = '\n'.join(format_currency_display(sender_currency, currency_query)) or "None"
                 receiver_currency_str = '\n'.join(format_currency_display(receiver_currency, currency_query)) or "None"
-                trade_embed.add_field(name='Currency', value=item_name.lower().capitalize())
+                trade_embed.add_field(name='Currency', value=smart_title_case(item_name))
                 trade_embed.add_field(name='Amount', value=quantity)
                 trade_embed.add_field(name=f'{member_active_character['name']}\'s Balance', value=sender_balance_str,
                                       inline=False)
@@ -88,12 +94,18 @@ class TradeModal(Modal):
             else:
                 quantity = int(quantity)
                 await trade_item(mdb, item_name, quantity, member_id, target_id, guild_id)
-                trade_embed.add_field(name='Item', value=item_name.lower().capitalize())
+                trade_embed.add_field(name='Item', value=smart_title_case(item_name))
                 trade_embed.add_field(name='Quantity', value=quantity)
 
             trade_embed.set_footer(text=f'Transaction ID: {transaction_id}')
 
-            await interaction.response.send_message(embed=trade_embed)
+            await interaction.response.send_message(embed=trade_embed, ephemeral=True)
+            try:
+                await self.target.send(embed=trade_embed)
+            except discord.errors.Forbidden as e:
+                logger.warning(f'Could not send trade DM to {self.target}. They might have DMs disabled. {e}')
+            if log_channel:
+                await log_channel.send(embed=trade_embed)
 
         except Exception as e:
             await log_exception(e, interaction)

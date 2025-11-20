@@ -4,6 +4,7 @@ import logging
 import re
 import traceback
 from typing import Tuple
+from titlecase import titlecase
 
 import discord
 
@@ -42,6 +43,10 @@ async def log_exception(exception, interaction=None):
                 logger.error(f'Failed to send followup error message: {e}')
         except Exception as e:
             logger.error(f'Failed to handle exception in log_exception: {e}')
+
+
+def smart_title_case(input_string: str) -> str:
+    return titlecase(input_string)
 
 
 def find_currency_or_denomination(currency_def_query, search_name):
@@ -93,7 +98,7 @@ def format_currency_display(player_currency: dict, currency_config: dict) -> lis
                 processed_denominations.add(denom_name_lower)
 
             if total_value > 0:
-                output_lines.append(f"{base_name.capitalize()}: **{total_value:.2f}**")
+                output_lines.append(f"{smart_title_case(base_name)}: **{total_value:.2f}**")
 
         # Display as separate integers
         else:
@@ -104,14 +109,16 @@ def format_currency_display(player_currency: dict, currency_config: dict) -> lis
                 if quantity > 0:
                     denom_display_name, _ = find_currency_or_denomination(currency_config, denom_name_lower)
                     if denom_display_name:
-                        output_lines.append(f"{denom_display_name.capitalize()}: **{quantity}**")
+                        output_lines.append(f"{smart_title_case(denom_display_name)}: **{quantity}**")
                     processed_denominations.add(denom_name_lower)
 
     return output_lines
 
 
-async def trade_currency(mdb, gdb, currency_name, amount, sending_member_id, receiving_member_id, guild_id):
-    collection = mdb['characters']
+async def trade_currency(interaction, gdb, currency_name, amount, sending_member_id, receiving_member_id,
+                         guild_id):
+    currency_name = currency_name.lower()
+    collection = interaction.client.mdb['characters']
     sender_data = await collection.find_one({'_id': sending_member_id})
     sender_character_id = sender_data['activeCharacters'][str(guild_id)]
     sender_currency = sender_data['characters'][sender_character_id]['attributes'].get('currency', {})
@@ -125,10 +132,10 @@ async def trade_currency(mdb, gdb, currency_name, amount, sending_member_id, rec
     if not can_afford:
         raise Exception(f"Sender has insufficient funds: {message}")
 
-    await update_character_inventory(None, sending_member_id, sender_character_id, currency_name, -amount)
+    await update_character_inventory(interaction, sending_member_id, sender_character_id, currency_name, -amount)
     receiver_data = await collection.find_one({'_id': receiving_member_id})
     receiver_character_id = receiver_data['activeCharacters'][str(guild_id)]
-    await update_character_inventory(None, receiving_member_id, receiver_character_id, currency_name, amount)
+    await update_character_inventory(interaction, receiving_member_id, receiver_character_id, currency_name, amount)
 
     sender_data = await collection.find_one({'_id': sending_member_id})
     sender_currency_db = sender_data['characters'][sender_character_id]['attributes'].get('currency', {})
@@ -143,7 +150,7 @@ async def trade_item(mdb, item_name, quantity, sending_member_id, receiving_memb
     collection = mdb['characters']
 
     # Normalize the item name for consistent storage and comparison
-    normalized_item_name = ' '.join(word.capitalize() for word in item_name.split())
+    normalized_item_name = item_name.lower()
 
     # Fetch sending character
     sender_data = await collection.find_one({'_id': sending_member_id})
@@ -157,20 +164,20 @@ async def trade_item(mdb, item_name, quantity, sending_member_id, receiving_memb
 
     # Check if sender has enough items
     sender_inventory = {k.lower(): v for k, v in sender_character['attributes']['inventory'].items()}
-    if sender_inventory.get(normalized_item_name.lower(), 0) < quantity:
+    if sender_inventory.get(normalized_item_name, 0) < quantity:
         raise Exception('Insufficient items')
 
     # Perform the trade operation
-    sender_inventory[normalized_item_name.lower()] -= quantity
-    if sender_inventory[normalized_item_name.lower()] == 0:
-        del sender_inventory[normalized_item_name.lower()]
+    sender_inventory[normalized_item_name] -= quantity
+    if sender_inventory[normalized_item_name] == 0:
+        del sender_inventory[normalized_item_name]
+
     receiver_inventory = {k.lower(): v for k, v in receiver_character['attributes']['inventory'].items()}
-    receiver_inventory[normalized_item_name.lower()] = receiver_inventory.get(normalized_item_name.lower(),
-                                                                              0) + quantity
+    receiver_inventory[normalized_item_name] = receiver_inventory.get(normalized_item_name, 0) + quantity
 
     # Normalize the inventories for db update
-    sender_character['attributes']['inventory'] = {k.capitalize(): v for k, v in sender_inventory.items()}
-    receiver_character['attributes']['inventory'] = {k.capitalize(): v for k, v in receiver_inventory.items()}
+    sender_character['attributes']['inventory'] = {smart_title_case(k): v for k, v in sender_inventory.items()}
+    receiver_character['attributes']['inventory'] = {smart_title_case(k): v for k, v in receiver_inventory.items()}
 
     await collection.update_one(
         {'_id': sending_member_id, f'characters.{sender_character_id}.attributes.inventory': {'$exists': True}},
@@ -187,6 +194,8 @@ async def trade_item(mdb, item_name, quantity, sending_member_id, receiving_memb
 async def update_character_inventory(interaction: discord.Interaction, player_id: int, character_id: str,
                                      item_name: str, quantity: float):
     try:
+        normalized_item_name = item_name.lower()
+
         character_collection = interaction.client.mdb['characters']
         player_data = await character_collection.find_one({'_id': player_id})
         character_data = player_data['characters'].get(character_id)
@@ -196,10 +205,10 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
 
         is_currency, currency_parent_name = None, None
         if currency_query:
-            is_currency, currency_parent_name = find_currency_or_denomination(currency_query, item_name)
+            is_currency, currency_parent_name = find_currency_or_denomination(currency_query, normalized_item_name)
 
         if is_currency:
-            denomination_map, _ = get_denomination_map(currency_query, item_name)
+            denomination_map, _ = get_denomination_map(currency_query, normalized_item_name)
             if not denomination_map:
                 raise Exception(f"Currency {item_name} could not be processed.")
 
@@ -240,7 +249,7 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
                 elif denom_name in final_wallet:
                     del final_wallet[denom_name]
 
-            character_currency_db = {k.capitalize(): v for k, v in final_wallet.items() if v > 0}
+            character_currency_db = {smart_title_case(k): v for k, v in final_wallet.items() if v > 0}
 
             await character_collection.update_one(
                 {'_id': player_id},
@@ -248,27 +257,23 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
             )
 
         else:
-            character_inventory = character_data['attributes'].get('inventory', {})
-            item_name_lower = item_name.lower()
+            character_inventory = normalize_currency_keys(character_data['attributes'].get('inventory', {}))
+            found_key = normalized_item_name
 
-            found_key = None
-            for key in character_inventory.keys():
-                if key.lower() == item_name_lower:
-                    found_key = key
-                    break
-
-            if found_key:
+            if found_key in character_inventory:
                 character_inventory[found_key] += int(quantity)
                 if character_inventory[found_key] <= 0:
                     del character_inventory[found_key]
             elif quantity > 0:
-                character_inventory[item_name.capitalize()] = int(quantity)
+                character_inventory[normalized_item_name] = int(quantity)
             elif quantity < 0:
-                raise Exception(f"Insufficient item: {item_name.capitalize()}")
+                raise Exception(f"Insufficient item(s): {smart_title_case(item_name)}")
+
+            inventory_for_db = {smart_title_case(k): v for k, v in character_inventory.items()}
 
             await character_collection.update_one(
                 {'_id': player_id},
-                {'$set': {f'characters.{character_id}.attributes.inventory': character_inventory}}
+                {'$set': {f'characters.{character_id}.attributes.inventory': inventory_for_db}}
             )
     except Exception as e:
         await log_exception(e, interaction)
@@ -474,7 +479,7 @@ def check_sufficient_funds(player_currency: dict, currency_config: dict, cost_cu
         if cost_amount <= 0:
             return True, "OK"
 
-        denomination_map, _ = get_denomination_map(currency_config, cost_currency_name)
+        denomination_map, _ = get_denomination_map(currency_config, cost_currency_name.lower())
 
         if not denomination_map:
             return False, f"Currency '{cost_currency_name}' is not configured on this server."
@@ -510,35 +515,32 @@ def check_sufficient_funds(player_currency: dict, currency_config: dict, cost_cu
 
 
 def apply_item_change_local(character_data: dict, item_name: str, quantity: int) -> dict:
-    inventory = character_data['attributes'].get('inventory', {})
+    inventory = normalize_currency_keys(character_data['attributes'].get('inventory', {}))
     item_name_lower = item_name.lower()
 
-    found_key = None
-    for key in inventory.keys():
-        if key.lower() == item_name_lower:
-            found_key = key
-            break
+    found_key = item_name_lower
 
-    if found_key:
+    if found_key in inventory:
         inventory[found_key] += int(quantity)
         if inventory[found_key] <= 0:
             del inventory[found_key]
     elif quantity > 0:
-        inventory[item_name.capitalize()] = int(quantity)
+        inventory[item_name.lower()] = int(quantity)
     elif quantity < 0:
-        raise Exception(f"Insufficient item: {item_name.capitalize()}")
+        raise Exception(f"Insufficient item(s): {smart_title_case(item_name)}")
 
-    character_data['attributes']['inventory'] = inventory
+    character_data['attributes']['inventory'] = {smart_title_case(k): v for k, v in inventory.items()}
     return character_data
 
 
 def apply_currency_change_local(character_data: dict, currency_config: dict, item_name: str, quantity: float) -> dict:
-    is_currency, currency_parent_name = find_currency_or_denomination(currency_config, item_name)
+    normalized_item_name = item_name.lower()
+    is_currency, currency_parent_name = find_currency_or_denomination(currency_config, normalized_item_name)
 
     if not is_currency:
         raise Exception(f"{item_name} is not a valid currency.")
 
-    denomination_map, _ = get_denomination_map(currency_config, item_name)
+    denomination_map, _ = get_denomination_map(currency_config, normalized_item_name)
     if not denomination_map:
         raise Exception(f"Currency {item_name} could not be processed.")
 
@@ -577,5 +579,5 @@ def apply_currency_change_local(character_data: dict, currency_config: dict, ite
         elif denom_name in final_wallet:
             del final_wallet[denom_name]
 
-    character_data['attributes']['currency'] = {k.capitalize(): v for k, v in final_wallet.items() if v > 0}
+    character_data['attributes']['currency'] = {smart_title_case(k): v for k, v in final_wallet.items() if v > 0}
     return character_data

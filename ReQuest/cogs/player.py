@@ -36,7 +36,7 @@ class Player(Cog):
 
     @has_active_character()
     @app_commands.guild_only()
-    async def trade_menu(self, interaction, target: discord.Member):
+    async def trade_menu(self, interaction: discord.Interaction, target: discord.Member):
         try:
             modal = modals.TradeModal(target=target)
             await interaction.response.send_modal(modal)

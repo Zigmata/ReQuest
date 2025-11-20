@@ -9,7 +9,7 @@ from discord.ui import LayoutView, Container, Section, Separator, ActionRow, But
 from ReQuest.ui.common import modals as common_modals, views as common_views
 from ReQuest.ui.common.buttons import MenuViewButton, BackButton
 from ReQuest.ui.config import buttons, selects, enums
-from ReQuest.utilities.supportFunctions import log_exception, query_config, setup_view, strip_id
+from ReQuest.utilities.supportFunctions import log_exception, query_config, setup_view, strip_id, smart_title_case
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -519,7 +519,7 @@ class ConfigWizardView(LayoutView):
         if items:
             report_lines.append('- Items:')
             for item_name, quantity in items.items():
-                report_lines.append(f'  - {item_name.capitalize()}: {quantity}')
+                report_lines.append(f'  - {smart_title_case(item_name)}: {quantity}')
 
         return '\n'.join(report_lines)
 
@@ -823,6 +823,18 @@ class ConfigChannelsView(LayoutView):
             '**Quest Archive:** Not Configured\n'
             'An optional channel where completed quests will move to, with summary information.'
         )
+        self.gm_transaction_log_info = TextDisplay(
+            '**GM Transaction Log:** Not Configured\n'
+            'An optional channel where GM transactions (I.E. Modify Player commands) are logged.'
+        )
+        self.player_trading_log_info = TextDisplay(
+            '**Player Trading Log:** Not Configured\n'
+            'An optional channel where player-to-player trade transactions are logged.'
+        )
+        self.shop_log_info = TextDisplay(
+            '**Shop Log:** Not Configured\n'
+            'An optional channel where shop transactions are logged.'
+        )
         self.quest_channel_select = selects.SingleChannelConfigSelect(
             calling_view=self,
             config_type='questChannel',
@@ -837,6 +849,21 @@ class ConfigChannelsView(LayoutView):
             calling_view=self,
             config_type='archiveChannel',
             config_name='Quest Archive'
+        )
+        self.gm_transaction_log_channel_select = selects.SingleChannelConfigSelect(
+            calling_view=self,
+            config_type='gmTransactionLogChannel',
+            config_name='GM Transaction Log'
+        )
+        self.player_trading_log_channel_select = selects.SingleChannelConfigSelect(
+            calling_view=self,
+            config_type='playerTradingLogChannel',
+            config_name='Player Trading Log'
+        )
+        self.shop_log_channel_select = selects.SingleChannelConfigSelect(
+            calling_view=self,
+            config_type='shopLogChannel',
+            config_name='Shop Log'
         )
 
         self.build_view()
@@ -871,7 +898,30 @@ class ConfigChannelsView(LayoutView):
         container.add_item(quest_archive_select_row)
         container.add_item(Separator())
 
+        gm_transaction_log_section = Section(accessory=buttons.ClearChannelButton(self,
+                                                                                  enums.ChannelType.GM_TRANSACTION_LOG))
+        gm_transaction_log_section.add_item(self.gm_transaction_log_info)
+        container.add_item(gm_transaction_log_section)
+        gm_transaction_log_select_row = ActionRow(self.gm_transaction_log_channel_select)
+        container.add_item(gm_transaction_log_select_row)
+        container.add_item(Separator())
+
+        player_trading_log_section = Section(accessory=buttons.ClearChannelButton(self,
+                                                                                  enums.ChannelType.PLAYER_TRADING_LOG))
+        player_trading_log_section.add_item(self.player_trading_log_info)
+        container.add_item(player_trading_log_section)
+        player_trading_log_select_row = ActionRow(self.player_trading_log_channel_select)
+        container.add_item(player_trading_log_select_row)
+        container.add_item(Separator())
+
+        shop_log_section = Section(accessory=buttons.ClearChannelButton(self, enums.ChannelType.SHOP_LOG))
+        shop_log_section.add_item(self.shop_log_info)
+        container.add_item(shop_log_section)
+        shop_log_select_row = ActionRow(self.shop_log_channel_select)
+        container.add_item(shop_log_select_row)
+
         self.add_item(container)
+        logger.info(f'ConfigChannelsView built successfully: {self.total_children_count} child items')
 
     @staticmethod
     async def query_channel(channel_type, database, guild_id):
@@ -893,6 +943,9 @@ class ConfigChannelsView(LayoutView):
             player_board = await self.query_channel('playerBoardChannel', database, guild_id)
             quest_board = await self.query_channel('questChannel', database, guild_id)
             quest_archive = await self.query_channel('archiveChannel', database, guild_id)
+            gm_transaction_log = await self.query_channel('gmTransactionLogChannel', database, guild_id)
+            player_trading_log = await self.query_channel('playerTradingLogChannel', database, guild_id)
+            shop_log = await self.query_channel('shopLogChannel', database, guild_id)
 
             self.quest_board_info.content = (f'**Quest Board:** {quest_board}\n'
                                              f'The channel where new/active quests will be posted.')
@@ -901,6 +954,15 @@ class ConfigChannelsView(LayoutView):
             self.quest_archive_info.content = (f'**Quest Archive:** {quest_archive}\n'
                                                f'An optional channel where completed quests will move to, with summary '
                                                f'information.')
+            self.gm_transaction_log_info.content = (f'**GM Transaction Log:** {gm_transaction_log}\n'
+                                                    f'An optional channel where GM transactions (I.E. Modify Player '
+                                                    f'commands) are logged.')
+            self.player_trading_log_info.content = (f'**Player Trading Log:** {player_trading_log}\n'
+                                                    f'An optional channel where player-to-player trade transactions '
+                                                    f'are logged.')
+            self.shop_log_info.content = (f'**Shop Log:** {shop_log}\n'
+                                          f'An optional channel where shop transactions are logged.')
+
         except Exception as e:
             await log_exception(e)
 
