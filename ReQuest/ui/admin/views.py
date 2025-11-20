@@ -31,7 +31,7 @@ class AdminBaseView(MenuBaseView):
             menu_level=0
         )
         self.children[0].add_item(ActionRow(buttons.AdminShutdownButton(self)))
-        self.children[0].add_item(ActionRow(buttons.PrintGuildsButton(self)))
+        self.children[0].add_item(ActionRow(buttons.PrintGuildsButton()))
 
 
 class AdminAllowlistView(LayoutView):
