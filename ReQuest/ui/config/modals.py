@@ -504,7 +504,7 @@ class ShopItemModal(Modal):
                 'description': self.item_description_text_input.value,
                 'price': int(self.item_price_text_input.value),
                 'quantity': int(self.item_quantity_text_input.value),
-                'currency': self.item_currency_text_input.value
+                'currency': self.item_currency_text_input.value.lower()
             }
 
             shop_query = await collection.find_one({'_id': guild_id})

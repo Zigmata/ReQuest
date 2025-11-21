@@ -10,7 +10,7 @@ from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
     update_character_inventory,
-    update_character_experience, find_currency_or_denomination, get_denomination_map, setup_view
+    update_character_experience, find_currency_or_denomination, get_denomination_map, setup_view, smart_title_case
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -313,11 +313,19 @@ class RewardsModal(Modal):
                     items = {}
                     for item in self.item_input.value.strip().split('\n'):
                         item_name, quantity = item.split(':', 1)
-                        items[item_name.strip().capitalize()] = int(quantity.strip())
+                        items[smart_title_case(item_name.strip())] = int(quantity.strip())
 
             await self.caller.modal_callback(interaction, xp, items)
         except Exception as e:
             await log_exception(e, interaction)
+
+    @staticmethod
+    def parse_items_to_string(items) -> str:
+        item_list = []
+        for item_name, quantity in items.items():
+            item_list.append(f'{smart_title_case(item_name)}: {quantity}')
+        item_string = '\n'.join(item_list)
+        return item_string
 
 
 class QuestSummaryModal(Modal):
@@ -375,6 +383,11 @@ class ModPlayerModal(Modal):
             gdb = interaction.client.gdb
             guild_id = interaction.guild_id
             currency_config = await gdb['currency'].find_one({'_id': guild_id})
+            log_channel_config = await gdb['gmTransactionLogChannel'].find_one({'_id': guild_id})
+            log_channel = None
+            if log_channel_config:
+                log_channel_id = strip_id(log_channel_config['gmTransactionLogChannel'])
+                log_channel = interaction.client.get_channel(log_channel_id)
 
             item_changes = {}
             currency_changes = {}
@@ -398,8 +411,8 @@ class ModPlayerModal(Modal):
                     if is_currency:
                         denomination_map, _ = get_denomination_map(currency_config, item_name)
                         if not denomination_map:
-                            item_changes[item_name.capitalize()] = item_changes.get(item_name.capitalize(), 0) + int(
-                                quantity)
+                            item_changes[item_name.lower()] = (item_changes.get(item_name.lower(), 0) +
+                                                               int(quantity))
                             continue
 
                         item_value_in_base = denomination_map[item_name.lower()]
@@ -408,8 +421,8 @@ class ModPlayerModal(Modal):
                         currency_changes[parent_name] = currency_changes.get(parent_name, 0.0) + total_value_to_add
 
                     else:
-                        item_changes[item_name.capitalize()] = item_changes.get(item_name.capitalize(), 0) + int(
-                            quantity)
+                        item_changes[item_name.lower()] = (item_changes.get(item_name.lower(), 0) +
+                                                           int(quantity))
 
             mod_summary_embed = discord.Embed(
                 title=f'GM Player Modification Report',
@@ -432,19 +445,25 @@ class ModPlayerModal(Modal):
 
                 display_value = f"{total_value:.2f}" if isinstance(total_value,
                                                                    float) and total_value % 1 != 0 else str(total_value)
-                mod_summary_embed.add_field(name=base_currency_name.capitalize(), value=display_value)
+                mod_summary_embed.add_field(name=smart_title_case(base_currency_name), value=display_value)
 
             for item_name, quantity in item_changes.items():
                 if quantity == 0:
                     continue
                 await update_character_inventory(interaction, self.member.id, self.character_id,
-                                                 item_name, int(quantity))
-                mod_summary_embed.add_field(name=item_name.capitalize(), value=int(quantity))
+                                                 item_name.lower(), int(quantity))
+                mod_summary_embed.add_field(name=smart_title_case(item_name), value=int(quantity))
 
             transaction_id = shortuuid.uuid()[:12]
             mod_summary_embed.set_footer(text=f'Transaction ID: {transaction_id}')
 
+            if log_channel:
+                await log_channel.send(embed=mod_summary_embed)
+
             await interaction.response.send_message(embed=mod_summary_embed, ephemeral=True)
-            await self.member.send(embed=mod_summary_embed)
+            try:
+                await self.member.send(embed=mod_summary_embed)
+            except discord.errors.Forbidden as e:
+                logger.warning(f'Could not send DM to {self.member} regarding GM modification: {e}')
         except Exception as e:
             await log_exception(e, interaction)

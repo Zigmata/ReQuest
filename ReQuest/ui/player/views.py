@@ -8,7 +8,7 @@ from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
 from ReQuest.ui.player import buttons, selects
 from ReQuest.utilities.supportFunctions import log_exception, strip_id, attempt_delete, format_currency_display, \
-    setup_view
+    setup_view, find_currency_or_denomination, update_character_inventory
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -306,23 +306,58 @@ class InventoryBaseView(LayoutView):
 
         self.add_item(container)
 
-    async def setup(self, bot, user, guild):
-        collection = bot.mdb['characters']
-        query = await collection.find_one({'_id': user.id})
+    async def setup(self, interaction: discord.Interaction):
+        collection = interaction.client.mdb['characters']
+        guild_id = interaction.guild_id
+        query = await collection.find_one({'_id': interaction.user.id})
 
-        currency_config = await bot.gdb['currency'].find_one({'_id': guild.id})
+        currency_config = await interaction.client.gdb['currency'].find_one({'_id': guild_id})
         if not query:
             self.spend_currency_button.disabled = True
             self.current_inventory_info.content = 'No Characters: Register a character to use these menus.'
-        elif str(guild.id) not in query['activeCharacters']:
+        elif str(guild_id) not in query['activeCharacters']:
             self.spend_currency_button.disabled = True
             self.current_inventory_info.content = (
                 'No Active Character: Activate a character for this server to use these menus.'
             )
         else:
-            active_character_id = query['activeCharacters'][str(guild.id)]
+            active_character_id = query['activeCharacters'][str(guild_id)]
             self.active_character = query['characters'][active_character_id]
             self.header_info.content = f'**Player Commands - {self.active_character['name']}\'s Inventory**'
+
+            # Validate currencies in inventory and convert based on server config
+            inventory_keys_to_check = list(self.active_character['attributes']['inventory'].keys())
+
+            if inventory_keys_to_check and currency_config:
+                conversion_occurred = False
+
+                for item_name_key in inventory_keys_to_check:
+                    quantity = self.active_character['attributes']['inventory'].get(item_name_key)
+
+                    is_currency, _ = find_currency_or_denomination(currency_config, item_name_key)
+
+                    if is_currency:
+                        await update_character_inventory(
+                            interaction,
+                            interaction.user.id,
+                            active_character_id,
+                            item_name_key,
+                            float(quantity)
+                        )
+
+                        await collection.update_one(
+                            {'_id': interaction.user.id},
+                            {'$unset': {
+                                f'characters.{active_character_id}.attributes.inventory.{item_name_key}': ''
+                            }}
+                        )
+
+                        conversion_occurred = True
+
+                if conversion_occurred:
+                    query = await collection.find_one({'_id': interaction.user.id})
+                    self.active_character = query['characters'][active_character_id]
+
             inventory = self.active_character['attributes']['inventory']
             player_currencies = self.active_character['attributes']['currency']
             items = []
