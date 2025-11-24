@@ -21,7 +21,10 @@ from ReQuest.utilities.supportFunctions import (
     check_sufficient_funds,
     apply_currency_change_local,
     apply_item_change_local,
-    strip_id, format_price_string, format_consolidated_totals, consolidate_currency_totals, attempt_delete
+    strip_id,
+    format_price_string,
+    format_consolidated_totals,
+    consolidate_currency_totals
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -245,7 +248,7 @@ class ShopCartView(LayoutView):
                     edit_button = buttons.EditCartItemButton(item_key, quantity)
                     section = Section(accessory=edit_button)
 
-                    item_line = (f'**{item['name']}** x{quantity} '
+                    item_line = (f'**{item["name"]}** x{quantity} '
                                  f'(Total: {total_item_quantity}) - {price_string}')
                     section.add_item(TextDisplay(item_line))
                     container.add_item(section)
@@ -376,10 +379,10 @@ class ShopCartView(LayoutView):
                 f'Player: {interaction.user.mention} as `{character_data["name"]}`\n'
                 f'Shop: {self.prev_view.shop_data.get("shopName", "Unknown Shop")}'
             )
-            receipt_embed.add_field(name="Purchased", value="\n".join(added_items_summary), inline=False)
+            receipt_embed.add_field(name="Purchased", value="\n".join(added_items_summary) or 'No Items', inline=False)
 
             total_strs = format_consolidated_totals(self.base_totals, self.currency_config)
-            receipt_embed.add_field(name="Total Paid", value="\n".join(total_strs), inline=False)
+            receipt_embed.add_field(name="Total Paid", value="\n".join(total_strs) or '0', inline=False)
 
             receipt_embed.set_footer(text=f"Transaction ID: {shortuuid.uuid()[:12]}")
 

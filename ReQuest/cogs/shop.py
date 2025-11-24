@@ -23,8 +23,11 @@ class Shop(Cog):
 
             channel_id = str(interaction.channel.id)
             if channel_id not in shop_query['shopChannels']:
-                raise Exception('This channel is not registered as a shop channel.\n'
-                                'If you think there is supposed to be a shop here, let your server admin know.')
+                await interaction.response.send_message(
+                    'This channel is not registered as a shop channel.\n'
+                    'If you think there is supposed to be a shop here, let your server admin know.',
+                ephemeral=True)
+                return
 
             shop_data = shop_query['shopChannels'][channel_id]
 

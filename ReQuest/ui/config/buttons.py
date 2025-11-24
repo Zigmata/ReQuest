@@ -599,3 +599,115 @@ class ScanServerButton(Button):
             await self.calling_view.run_scan(interaction)
         except Exception as e:
             await log_exception(e, interaction)
+
+
+class AddStartingShopItemButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Add Item',
+            style=ButtonStyle.success,
+            custom_id='add_starting_shop_item_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.send_modal(modals.StartingShopItemModal(self.calling_view))
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditStartingShopItemButton(Button):
+    def __init__(self, item: dict, calling_view):
+        super().__init__(
+            label='Edit',
+            style=ButtonStyle.primary,
+            custom_id=f"edit_starting_shop_item_{item['name']}"
+        )
+        self.item = item
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.send_modal(modals.StartingShopItemModal(self.calling_view, self.item))
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class DeleteStartingShopItemButton(Button):
+    def __init__(self, item: dict, calling_view):
+        super().__init__(
+            label='Delete',
+            style=ButtonStyle.danger,
+            custom_id=f"delete_starting_shop_item_{item['name']}"
+        )
+        self.item = item
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            guild_id = interaction.guild_id
+            collection = interaction.client.gdb['startingShop']
+            item_name = self.item['name']
+
+            await collection.update_one(
+                {'_id': guild_id},
+                {'$pull': {'shopStock': {'name': item_name}}}
+            )
+
+            new_stock = [item for item in self.calling_view.all_stock if item['name'] != item_name]
+            self.calling_view.update_stock(new_stock)
+            self.calling_view.build_view()
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class StartingShopJSONButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Upload JSON',
+            style=ButtonStyle.success,
+            custom_id='upload_starting_shop_json_button',
+            row=1
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.send_modal(modals.StartingShopJSONModal(self.calling_view))
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class DownloadStartingShopJSONButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Download JSON',
+            style=ButtonStyle.secondary,
+            custom_id='download_starting_shop_json_button',
+            row=1
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            guild_id = interaction.guild_id
+            collection = interaction.client.gdb['startingShop']
+            query = await collection.find_one({'_id': guild_id})
+
+            shop_data = {'shopStock': query.get('shopStock', []) if query else []}
+
+            file_name = f"starting_shop_{guild_id}.json"
+            json_string = json.dumps(shop_data, indent=4)
+            json_bytes = io.BytesIO(json_string.encode('utf-8'))
+
+            shop_file = discord.File(json_bytes, filename=file_name)
+
+            await interaction.response.send_message(
+                "Here is the JSON definition for the Starting Shop.",
+                file=shop_file,
+                ephemeral=True
+            )
+        except Exception as e:
+            await log_exception(e, interaction)

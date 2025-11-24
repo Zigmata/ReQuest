@@ -1147,7 +1147,21 @@ class ConfigPlayersView(LayoutView):
             '**Player Experience:** Disabled\n'
             'Enables/Disables the use of experience points (or similar value-based character progression.'
         )
+        self.inventory_type_info = TextDisplay(
+            '**New Character Inventory Type:** Disabled\n'
+            'Determines how new characters receive starting items.'
+        )
+
+        self.approval_queue_info = TextDisplay(
+            '**Approval Queue:** Disabled\n'
+            'If set, new characters must be approved by a GM in this Forum Channel before they are active.'
+        )
         self.player_experience = True
+        self.inventory_type_select = selects.InventoryTypeSelect(self)
+        self.approval_queue_select = selects.SingleChannelConfigSelect(
+            self, 'approvalQueueChannel', 'Approval Queue'
+        )
+        self.approval_queue_clear_button = buttons.ClearChannelButton(self, enums.ChannelType.APPROVAL_QUEUE)
 
         self.build_view()
 
@@ -1156,13 +1170,27 @@ class ConfigPlayersView(LayoutView):
 
         header_section = Section(accessory=BackButton(ConfigBaseView))
         header_section.add_item(TextDisplay('**Server Configuration - Players**'))
-
         container.add_item(header_section)
         container.add_item(Separator())
 
         experience_section = Section(accessory=buttons.PlayerExperienceToggleButton(self))
         experience_section.add_item(self.player_experience_info)
         container.add_item(experience_section)
+        container.add_item(Separator())
+
+        inventory_type_section = Section()
+        inventory_type_section.add_item(self.inventory_type_info)
+        container.add_item(inventory_type_section)
+        container.add_item(ActionRow(self.inventory_type_select))
+
+        starting_shop_btn = MenuViewButton(ConfigStartingShopView, 'Configure Starting Shop')
+        container.add_item(ActionRow(starting_shop_btn))
+        container.add_item(Separator())
+
+        approval_section = Section(accessory=self.approval_queue_clear_button)
+        approval_section.add_item(self.approval_queue_info)
+        container.add_item(approval_section)
+        container.add_item(ActionRow(self.approval_queue_select))
         container.add_item(Separator())
 
         player_board_section = Section(accessory=buttons.PlayerBoardPurgeButton(self))
@@ -1181,8 +1209,144 @@ class ConfigPlayersView(LayoutView):
                 f'**Player Experience:** {"Enabled" if self.player_experience else "Disabled"}\n'
                 f'Enables/Disables the use of experience points (or similar value-based character progression.'
             )
+
+            inv_config = await bot.gdb['newCharConfig'].find_one({'_id': guild.id})
+            inv_type = inv_config.get('inventoryType', 'disabled') if inv_config else 'disabled'
+
+            type_description = {
+                'disabled': 'Players start with empty inventories.',
+                'selection': 'Players choose items freely from the Starting Shop.',
+                'purchase': 'Players spend starting currency at the Starting Shop.'
+            }
+
+            self.inventory_type_info.content = (
+                f'**New Character Inventory Type:** {inv_type.capitalize()}\n'
+                f'{type_description.get(inv_type, "")}'
+            )
+
+            approval_query = await bot.gdb['approvalQueueChannel'].find_one({'_id': guild.id})
+            approval_channel = approval_query['approvalQueueChannel'] if approval_query else 'Not Configured'
+
+            self.approval_queue_info.content = (
+                f'**Approval Queue:** {approval_channel}\n'
+                f'If set, new characters must be approved by a GM in this Forum Channel before they are active.'
+            )
         except Exception as e:
             await log_exception(e)
+
+
+class ConfigStartingShopView(LayoutView):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.all_stock = []
+        self.items_per_page = 6
+        self.current_page = 0
+        self.total_pages = 1
+
+        self.build_view()
+
+    def build_view(self):
+        self.clear_items()
+        container = Container()
+
+        header_section = Section(accessory=BackButton(ConfigPlayersView))
+        header_section.add_item(TextDisplay('**Server Configuration - Starting Shop**'))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        container.add_item(TextDisplay(
+            "Define the items available for new characters. \n"
+            "- **Selection Mode:** Prices are ignored (or treat as 0).\n"
+            "- **Purchase Mode:** Prices are enforced against starting currency."
+        ))
+
+        action_row = ActionRow()
+        action_row.add_item(buttons.AddStartingShopItemButton(self))
+        action_row.add_item(buttons.StartingShopJSONButton(self))
+        action_row.add_item(buttons.DownloadStartingShopJSONButton(self))
+        container.add_item(action_row)
+        container.add_item(Separator())
+
+        start_index = self.current_page * self.items_per_page
+        end_index = start_index + self.items_per_page
+        current_stock = self.all_stock[start_index:end_index]
+
+        if not current_stock:
+            container.add_item(TextDisplay("No items configured."))
+        else:
+            for item in current_stock:
+                item_name = item.get('name')
+                item_desc = item.get('description')
+                item_price = item.get('price', 0)
+                item_curr = item.get('currency', '')
+                item_qty = item.get('quantity', 1)
+
+                display_str = f"**{item_name}** (x{item_qty})"
+                if item_price > 0:
+                    display_str += f" - {item_price} {item_curr}"
+                else:
+                    display_str += " - Free"
+
+                if item_desc:
+                    display_str += f"\n*{item_desc}*"
+
+                container.add_item(TextDisplay(display_str))
+
+                item_actions = ActionRow()
+                item_actions.add_item(buttons.EditStartingShopItemButton(item, self))
+                item_actions.add_item(buttons.DeleteStartingShopItemButton(item, self))
+                container.add_item(item_actions)
+
+        self.add_item(container)
+
+        # Pagination
+        if self.total_pages > 1:
+            pag_row = ActionRow()
+
+            prev_btn = Button(label='Previous', style=ButtonStyle.secondary, custom_id='ss_prev',
+                              disabled=(self.current_page == 0))
+            prev_btn.callback = self.prev_page
+            pag_row.add_item(prev_btn)
+
+            page_btn = Button(label=f'Page {self.current_page + 1}/{self.total_pages}', style=ButtonStyle.secondary,
+                              disabled=True)
+            pag_row.add_item(page_btn)
+
+            next_btn = Button(label='Next', style=ButtonStyle.primary, custom_id='ss_next',
+                              disabled=(self.current_page >= self.total_pages - 1))
+            next_btn.callback = self.next_page
+            pag_row.add_item(next_btn)
+
+            self.add_item(pag_row)
+
+    async def setup(self, bot, guild):
+        try:
+            collection = bot.gdb['startingShop']
+            query = await collection.find_one({'_id': guild.id})
+            if query and 'shopStock' in query:
+                self.update_stock(query['shopStock'])
+            else:
+                self.update_stock([])
+        except Exception as e:
+            await log_exception(e)
+
+    def update_stock(self, new_stock):
+        self.all_stock = new_stock
+        self.total_pages = math.ceil(len(self.all_stock) / self.items_per_page)
+        if self.current_page >= self.total_pages and self.current_page > 0:
+            self.current_page = max(0, self.total_pages - 1)
+
+    async def prev_page(self, interaction):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction):
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
 
 
 # ------ CURRENCY ------

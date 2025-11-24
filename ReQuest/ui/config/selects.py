@@ -30,8 +30,12 @@ class GMRoleRemoveSelect(Select):
 
 class SingleChannelConfigSelect(ChannelSelect):
     def __init__(self, calling_view, config_type, config_name):
+        channel_types = [discord.ChannelType.text]
+        if config_type == 'approvalQueueChannel':
+            channel_types = [discord.ChannelType.forum]
+
         super().__init__(
-            channel_types=[discord.ChannelType['text']],
+            channel_types=channel_types,
             placeholder=f'Search for your {config_name} Channel',
             custom_id=f'config_{config_type}_channel_select'
         )
@@ -239,5 +243,38 @@ class DenominationSelect(Select):
 
             await setup_view(view, interaction)
             await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class InventoryTypeSelect(Select):
+    def __init__(self, calling_view):
+        super().__init__(
+            placeholder='Select Inventory Mode',
+            options=[
+                discord.SelectOption(label='Disabled', value='disabled',
+                                     description='Players start with empty inventories.'),
+                discord.SelectOption(label='Selection', value='selection',
+                                     description='Players can select items and kits from a New Character Shop.'),
+                discord.SelectOption(label='Purchase', value='purchase',
+                                     description='Players are given a starting currency amount to spend at a New '
+                                                 'Character Shop.'),
+                discord.SelectOption(label='Open', value='open',
+                                     description='Players manually input their own inventories.'),
+                discord.SelectOption(label='Static', value='static',
+                                     description='Players are given a predefined starting inventory.')
+            ],
+            custom_id='inventory_type_select'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            collection = interaction.client.gdb['inventoryConfig']
+            await collection.update_one({'_id': interaction.guild_id},
+                                        {'$set': {'inventoryType': self.values[0]}},
+                                        upsert=True)
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)

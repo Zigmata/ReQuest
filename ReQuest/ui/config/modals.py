@@ -28,6 +28,7 @@ SHOP_SCHEMA = {
                     "name": {"type": "string"},
                     "description": {"type": "string"},
                     "price": {"type": "number"},
+                    "quantity": {"type": "integer", "minimum": 1},
                     "currency": {"type": "string"}
                 },
                 "required": ["name", "price", "currency"]
@@ -597,5 +598,175 @@ class ConfigUpdateShopJSONModal(Modal):
                 self.calling_view.update_details(shop_data)
                 self.calling_view.build_view()
                 await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class StartingShopItemModal(Modal):
+    def __init__(self, calling_view, existing_item = None):
+        super().__init__(
+            title='Add/Edit Starting Gear',
+            timeout=600
+        )
+        self.calling_view = calling_view
+        self.existing_item_name = existing_item.get('name') if existing_item else None
+
+        name_default = existing_item.get('name', '') if existing_item else ''
+        description_default = existing_item.get('description', '') if existing_item else ''
+        price_default = str(existing_item.get('price', '0')) if existing_item else '0'
+        quantity_default = str(existing_item.get('quantity', '1')) if existing_item else '1'
+        currency_default = existing_item.get('currency', '') if existing_item else ''
+
+        self.item_name_text_input = discord.ui.TextInput(
+            label='Item Name',
+            custom_id='item_name_text_input',
+            placeholder='Enter the name of the item',
+            default=name_default
+        )
+        self.item_description_text_input = discord.ui.TextInput(
+            label='Item Description',
+            style=discord.TextStyle.paragraph,
+            custom_id='item_description_text_input',
+            placeholder='Enter a description for the item',
+            default=description_default,
+            required=False
+        )
+        self.item_price_text_input = discord.ui.TextInput(
+            label='Item Price',
+            custom_id='item_price_text_input',
+            placeholder='Enter the price (0 for free/selection)',
+            default=price_default
+        )
+        self.item_quantity_text_input = discord.ui.TextInput(
+            label='Item Quantity',
+            custom_id='item_quantity_text_input',
+            placeholder='Enter the quantity received per selection',
+            default=quantity_default,
+            required=False
+        )
+        self.item_currency_text_input = discord.ui.TextInput(
+            label='Currency (Optional)',
+            custom_id='item_currency_text_input',
+            placeholder='Required if price > 0',
+            default=currency_default,
+            required=False
+        )
+        self.add_item(self.item_name_text_input)
+        self.add_item(self.item_description_text_input)
+        self.add_item(self.item_price_text_input)
+        self.add_item(self.item_quantity_text_input)
+        self.add_item(self.item_currency_text_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            guild_id = interaction.guild_id
+            collection = interaction.client.gdb['startingShop']
+
+            quantity_string = self.item_quantity_text_input.value
+            if not quantity_string.isdigit() or int(quantity_string) < 1:
+                raise Exception('Item quantity must be a positive integer.')
+
+            price_str = self.item_price_text_input.value
+            if not price_str.isdigit() or float(price_str) < 0:
+                raise Exception('Item price must be a non-negative number.')
+
+            currency_val = self.item_currency_text_input.value.lower()
+            if int(price_str) > 0 and not currency_val:
+                raise Exception('Currency is required if price is greater than 0.')
+
+            new_item = {
+                'name': self.item_name_text_input.value,
+                'description': self.item_description_text_input.value,
+                'price': int(self.item_price_text_input.value),
+                'quantity': int(self.item_quantity_text_input.value),
+                'currency': currency_val
+            }
+
+            query = await collection.find_one({'_id': guild_id})
+            shop_stock = query.get('shopStock', []) if query else []
+
+            if self.existing_item_name:
+                new_stock = []
+                found = False
+                for item in shop_stock:
+                    if item.get('name') == self.existing_item_name:
+                        new_stock.append(new_item)
+                        found = True
+                    else:
+                        new_stock.append(item)
+                if not found:
+                    raise Exception('Existing item not found in shop stock.')
+                shop_stock = new_stock
+            else:
+                for item in shop_stock:
+                    if item.get('name').lower() == new_item['name'].lower():
+                        raise Exception(f'An item named {new_item["name"]} already exists in the starting shop.')
+                shop_stock.append(new_item)
+
+            await collection.update_one(
+                {'_id': guild_id},
+                {'$set': {'shopStock': shop_stock}},
+                upsert=True
+            )
+
+            self.calling_view.update_stock(shop_stock)
+            self.calling_view.build_view()
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+class StartingShopJSONModal(Modal):
+    def __init__(self, calling_view):
+        super().__init__(
+            title='Upload Starting Shop (JSON)',
+            timeout=600
+        )
+        self.calling_view = calling_view
+
+        self.shop_json_file_upload = discord.ui.FileUpload(
+            custom_id='shop_json_file_upload'
+        )
+        self.upload_label = Label(
+            text='Upload a .json file containing the shop data',
+            component=self.shop_json_file_upload
+        )
+        self.add_item(self.upload_label)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            guild_id = interaction.guild_id
+            collection = interaction.client.gdb['startingShop']
+
+            if not self.shop_json_file_upload.values:
+                raise Exception('No JSON file uploaded.')
+
+            uploaded_file = self.shop_json_file_upload.values[0]
+            if not uploaded_file.filename.endswith('.json'):
+                raise Exception('Uploaded file must be a JSON file (.json).')
+
+            file_bytes = await uploaded_file.read()
+            file_content = file_bytes.decode('utf-8')
+
+            try:
+                shop_data = json.loads(file_content)
+            except json.JSONDecodeError as jde:
+                raise Exception(f'Invalid JSON format: {str(jde)}')
+
+            if 'shopStock' not in shop_data or not isinstance(shop_data['shopStock'], list):
+                raise Exception("JSON must contain a 'shopStock' array.")
+
+            for item in shop_data['shopStock']:
+                if 'name' not in item or 'price' not in item:
+                    raise Exception("All items must have 'name' and 'price'.")
+
+            await collection.update_one(
+                {'_id': guild_id},
+                {'$set': {'shopStock': shop_data['shopStock']}},
+                upsert=True
+            )
+
+            self.calling_view.update_stock(shop_data['shopStock'])
+            self.calling_view.build_view()
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)

@@ -588,6 +588,17 @@ def apply_currency_change_local(character_data: dict, currency_config: dict, ite
     return character_data
 
 def get_base_currency_info(currency_config: dict, currency_name: str):
+    """
+    Returns base currency info for a given currency name.
+
+    Parameters:
+    - currency_config (dict): The currency configuration dictionary.
+    - currency_name (str): The name of the currency.
+
+    Returns:
+    - Tuple[str | None, float, bool]: A tuple containing the base currency name (or None if not found),
+      the multiplier to convert to base currency, and a boolean indicating if it's a double currency.
+    """
     normalized_name = currency_name.lower()
     is_currency, parent_name = find_currency_or_denomination(currency_config, normalized_name)
 
@@ -664,6 +675,8 @@ def format_consolidated_totals(base_totals: dict, currency_config: dict) -> list
                 output.append(f"{smart_title_case(base_display_name)}: {', '.join(parts)}")
             elif total_val == 0:
                 output.append(f"{smart_title_case(base_display_name)}: 0")
+            elif total_val > 0:
+                output.append(f"{smart_title_case(base_display_name)}: {total_val:.2f}")
 
     return output
 
