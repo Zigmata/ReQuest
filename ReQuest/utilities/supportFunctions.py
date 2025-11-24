@@ -17,7 +17,7 @@ async def attempt_delete(message):
     try:
         await message.delete()
     except discord.HTTPException:
-        pass
+        logger.info('Failed to delete message.')
 
 
 def strip_id(mention) -> int:
@@ -29,16 +29,21 @@ def strip_id(mention) -> int:
 async def log_exception(exception, interaction=None):
     logger.error(f'{type(exception).__name__}: {exception}')
     logger.error(traceback.format_exc())
+    report_string = (
+        f'An exception occurred: {str(exception)}\n'
+        f'Please submit a bug report on the official ReQuest support Discord.\n'
+        f'(`/support` to view invite)'
+    )
     if interaction:
         try:
             if not interaction.response.is_done():
                 await interaction.response.defer(ephemeral=True)
-                await interaction.followup.send(exception, ephemeral=True)
+                await interaction.followup.send(report_string, ephemeral=True)
             else:
-                await interaction.followup.send(exception, ephemeral=True)
+                await interaction.followup.send(report_string, ephemeral=True)
         except discord.errors.InteractionResponded:
             try:
-                await interaction.followup.send(exception, ephemeral=True)
+                await interaction.followup.send(report_string, ephemeral=True)
             except Exception as e:
                 logger.error(f'Failed to send followup error message: {e}')
         except Exception as e:
@@ -581,3 +586,99 @@ def apply_currency_change_local(character_data: dict, currency_config: dict, ite
 
     character_data['attributes']['currency'] = {smart_title_case(k): v for k, v in final_wallet.items() if v > 0}
     return character_data
+
+def get_base_currency_info(currency_config: dict, currency_name: str):
+    normalized_name = currency_name.lower()
+    is_currency, parent_name = find_currency_or_denomination(currency_config, normalized_name)
+
+    if not is_currency:
+        return None, 0, False
+
+    denomination_map, base_name = get_denomination_map(currency_config, normalized_name)
+    multiplier = denomination_map.get(normalized_name, 0)
+
+    is_double = False
+    for currency in currency_config.get('currencies'):
+        if currency['name'].lower() == base_name.lower():
+            is_double = currency.get('isDouble', False)
+            break
+
+    return base_name, multiplier, is_double
+
+def consolidate_currency_totals(raw_totals: dict, currency_config: dict) -> dict:
+    if not currency_config:
+        return raw_totals
+
+    consolidated = {}
+
+    for currency_name, amount in raw_totals.items():
+        base_name, multiplier, _ = get_base_currency_info(currency_config, currency_name)
+
+        if base_name:
+            base_key = base_name.lower()
+            total_value_in_base = amount * multiplier
+            consolidated[base_key] = consolidated.get(base_key, 0.0) + total_value_in_base
+        else:
+            consolidated[currency_name] = consolidated.get(currency_name, 0.0) + amount
+
+    return consolidated
+
+def format_consolidated_totals(base_totals: dict, currency_config: dict) -> list[str]:
+    output = []
+
+    for base_name_lower, total_val in base_totals.items():
+        curr_conf = None
+        if currency_config:
+            for c in currency_config.get('currencies', []):
+                if c['name'].lower() == base_name_lower:
+                    curr_conf = c
+                    break
+
+        if not curr_conf:
+            output.append(f"{smart_title_case(base_name_lower)}: {total_val}")
+            continue
+
+        base_display_name = curr_conf['name']
+
+        if curr_conf.get('isDouble', False):
+            output.append(f"{smart_title_case(base_display_name)}: {total_val:.2f}")
+        else:
+            denoms = curr_conf.get('denominations', [])
+            all_denoms = [{'name': curr_conf['name'], 'value': 1.0}] + denoms
+            all_denoms.sort(key=lambda x: float(x['value']), reverse=True)
+
+            parts = []
+            remaining_val = total_val
+
+            tolerance = 1e-9
+
+            for d in all_denoms:
+                d_val = float(d['value'])
+                if remaining_val + tolerance >= d_val:
+                    count = int(remaining_val / d_val + tolerance)
+                    if count > 0:
+                        parts.append(f"{count} {smart_title_case(d['name'])}")
+                        remaining_val -= count * d_val
+
+            if parts:
+                output.append(f"{smart_title_case(base_display_name)}: {', '.join(parts)}")
+            elif total_val == 0:
+                output.append(f"{smart_title_case(base_display_name)}: 0")
+
+    return output
+
+def format_price_string(amount, currency_name, currency_config):
+    """
+    Formats a single price/cost string.
+    """
+    base_name, _, is_double = get_base_currency_info(currency_config, currency_name)
+
+    display_name = smart_title_case(currency_name)
+
+    if is_double:
+        return f"{amount:.2f} {display_name}"
+    else:
+        if amount % 1 == 0:
+            return f"{int(amount)} {display_name}"
+        else:
+            return f"{amount:.2f} {display_name}"

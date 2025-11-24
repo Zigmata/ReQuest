@@ -1,21 +1,19 @@
 import discord
-import shortuuid
 from discord import ButtonStyle
 from discord.ui import Button
 
 from ReQuest.utilities.supportFunctions import (
     log_exception,
-    check_sufficient_funds,
-    apply_item_change_local,
-    apply_currency_change_local,
-    format_currency_display, smart_title_case, strip_id
+    smart_title_case
 )
+
+from ReQuest.ui.shop import modals
 
 
 class ShopItemButton(Button):
     def __init__(self, item):
         super().__init__(
-            label=f'Buy for {item["price"]} {smart_title_case(item["currency"])}',
+            label=f'Add to Cart ({item["price"]} {smart_title_case(item["currency"])})',
             style=ButtonStyle.success,
             custom_id=f'shop_item_button_{item["name"]}'
         )
@@ -23,76 +21,106 @@ class ShopItemButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            mdb = interaction.client.mdb
-            gdb = interaction.client.gdb
-            member_id = interaction.user.id
+            await self.view.add_to_cart(interaction, self.item)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ViewCartButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='View Cart',
+            style=ButtonStyle.success,
+            custom_id='view_cart_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            from ReQuest.ui.shop.views import ShopCartView
+
+            bot = interaction.client
             guild_id = interaction.guild_id
+            user_id = interaction.user.id
 
-            character_query = await mdb['characters'].find_one({'_id': member_id})
-            if not character_query:
-                raise Exception("You do not have any characters.")
-            if str(guild_id) not in character_query['activeCharacters']:
-                raise Exception("You do not have an active character on this server.")
+            currency_config = await bot.gdb['currency'].find_one({'_id': guild_id})
 
-            log_channel = None
-            log_channel_query = await gdb['shopLogChannel'].find_one({'_id': guild_id})
-            if log_channel_query and log_channel_query['shopLogChannel']:
-                log_channel_id = strip_id(log_channel_query['shopLogChannel'])
-                log_channel = interaction.guild.get_channel(log_channel_id)
+            character_query = await bot.mdb['characters'].find_one({'_id': user_id})
+            active_character = None
+            if character_query and str(guild_id) in character_query.get('activeCharacters', {}):
+                character_id = character_query['activeCharacters'][str(guild_id)]
+                active_character = character_query['characters'].get(character_id)
 
-            active_character_id = character_query['activeCharacters'][str(guild_id)]
-            character_data = character_query['characters'][active_character_id]
+            view = ShopCartView(self.calling_view, currency_config, active_character)
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
 
-            currency_config = await gdb['currency'].find_one({'_id': guild_id})
-            if not currency_config:
-                raise Exception("Currency is not configured on this server.")
 
-            item_cost = float(self.item['price'])
-            item_currency = self.item['currency']
-            item_quantity = int(self.item.get('quantity', 1))
+class CartBackButton(Button):
+    def __init__(self, target_view):
+        super().__init__(
+            label='Back to Shop',
+            style=ButtonStyle.secondary,
+            custom_id='cart_back_button'
+        )
+        self.target_view = target_view
 
-            can_afford, message = check_sufficient_funds(
-                character_data['attributes'].get('currency', {}),
-                currency_config,
-                item_currency,
-                item_cost
-            )
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            self.target_view.build_view()
+            await interaction.response.edit_message(view=self.target_view)
+        except Exception as e:
+            await log_exception(e, interaction)
 
-            if not can_afford:
-                await interaction.response.send_message(f"You cannot afford this: {message}", ephemeral=True)
-                return
 
-            character_data = apply_item_change_local(character_data, self.item['name'], item_quantity)
-            character_data = apply_currency_change_local(character_data, currency_config, item_currency, -item_cost)
+class CartClearButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Clear Cart',
+            style=ButtonStyle.danger,
+            custom_id='cart_clear_button'
+        )
+        self.calling_view = calling_view
 
-            await mdb['characters'].update_one(
-                {'_id': member_id},
-                {'$set': {f'characters.{active_character_id}': character_data}}
-            )
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            self.calling_view.prev_view.cart.clear()
+            self.calling_view.build_view()
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
 
-            character_name = character_data['name']
-            item_display_name = f'{item_quantity}x {smart_title_case(self.item["name"])}' if item_quantity > 1 \
-                else smart_title_case(self.item['name'])
-            embed = discord.Embed(
-                title=f"{character_name} purchased {item_display_name} for {self.item['price']} "
-                      f"{smart_title_case(self.item['currency'])}",
-                type='rich'
-            )
 
-            inventory = character_data['attributes'].get('inventory', {})
-            player_currencies = character_data['attributes'].get('currency', {})
+class CartCheckoutButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Checkout',
+            style=ButtonStyle.success,
+            custom_id='cart_checkout_button'
+        )
+        self.calling_view = calling_view
 
-            items = [f"{k}: **{v}**" for k, v in inventory.items()] or ['None']
-            currencies = format_currency_display(player_currencies, currency_config) or ['None']
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await self.calling_view.checkout(interaction)
+        except Exception as e:
+            await log_exception(e, interaction)
 
-            embed.add_field(name='Current Possessions', value='\n'.join(items))
-            embed.add_field(name='Remaining Currency', value='\n'.join(currencies))
 
-            transaction_id = shortuuid.uuid()[:12]
-            embed.set_footer(text=f'Transaction ID: {transaction_id}')
+class EditCartItemButton(Button):
+    def __init__(self, item_key, quantity):
+        super().__init__(
+            label='Edit Quantity',
+            style=ButtonStyle.secondary,
+            custom_id=f'edit_cart_item_button_{item_key}'
+        )
+        self.item_key = item_key
+        self.quantity = quantity
 
-            if log_channel:
-                await log_channel.send(embed=embed)
-            await interaction.response.send_message(embed=embed, ephemeral=True)
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            edit_modal = modals.EditCartItemModal(self.view, self.item_key, self.quantity)
+            await interaction.response.send_modal(edit_modal)
         except Exception as e:
             await log_exception(e, interaction)
