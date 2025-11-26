@@ -255,10 +255,10 @@ class InventoryTypeSelect(Select):
                 discord.SelectOption(label='Disabled', value='disabled',
                                      description='Players start with empty inventories.'),
                 discord.SelectOption(label='Selection', value='selection',
-                                     description='Players can select items and kits from a New Character Shop.'),
+                                     description='Players choose items freely from the New Character Shop.'),
                 discord.SelectOption(label='Purchase', value='purchase',
-                                     description='Players are given a starting currency amount to spend at a New '
-                                                 'Character Shop.'),
+                                     description='Players purchase items from the New Character Shop with a given '
+                                                 'amount of currency.'),
                 discord.SelectOption(label='Open', value='open',
                                      description='Players manually input their own inventories.'),
                 discord.SelectOption(label='Static', value='static',

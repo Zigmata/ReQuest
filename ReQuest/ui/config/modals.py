@@ -8,7 +8,8 @@ import discord
 import discord.ui
 from discord.ui import Modal, Label
 
-from ReQuest.utilities.supportFunctions import log_exception, purge_player_board, setup_view
+from ReQuest.utilities.supportFunctions import log_exception, purge_player_board, setup_view, \
+    find_currency_or_denomination
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -602,10 +603,10 @@ class ConfigUpdateShopJSONModal(Modal):
             await log_exception(e, interaction)
 
 
-class StartingShopItemModal(Modal):
+class NewCharacterShopItemModal(Modal):
     def __init__(self, calling_view, existing_item = None):
         super().__init__(
-            title='Add/Edit Starting Gear',
+            title='Add/Edit NewCharacter Gear',
             timeout=600
         )
         self.calling_view = calling_view
@@ -660,7 +661,7 @@ class StartingShopItemModal(Modal):
     async def on_submit(self, interaction: discord.Interaction):
         try:
             guild_id = interaction.guild_id
-            collection = interaction.client.gdb['startingShop']
+            collection = interaction.client.gdb['newCharacterShop']
 
             quantity_string = self.item_quantity_text_input.value
             if not quantity_string.isdigit() or int(quantity_string) < 1:
@@ -700,7 +701,7 @@ class StartingShopItemModal(Modal):
             else:
                 for item in shop_stock:
                     if item.get('name').lower() == new_item['name'].lower():
-                        raise Exception(f'An item named {new_item["name"]} already exists in the starting shop.')
+                        raise Exception(f'An item named {new_item["name"]} already exists in the New Character shop.')
                 shop_stock.append(new_item)
 
             await collection.update_one(
@@ -715,10 +716,10 @@ class StartingShopItemModal(Modal):
         except Exception as e:
             await log_exception(e, interaction)
 
-class StartingShopJSONModal(Modal):
+class NewCharacterShopJSONModal(Modal):
     def __init__(self, calling_view):
         super().__init__(
-            title='Upload Starting Shop (JSON)',
+            title='Upload New Character Shop (JSON)',
             timeout=600
         )
         self.calling_view = calling_view
@@ -735,7 +736,7 @@ class StartingShopJSONModal(Modal):
     async def on_submit(self, interaction: discord.Interaction):
         try:
             guild_id = interaction.guild_id
-            collection = interaction.client.gdb['startingShop']
+            collection = interaction.client.gdb['newCharacterShop']
 
             if not self.shop_json_file_upload.values:
                 raise Exception('No JSON file uploaded.')
@@ -767,6 +768,60 @@ class StartingShopJSONModal(Modal):
 
             self.calling_view.update_stock(shop_data['shopStock'])
             self.calling_view.build_view()
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ConfigNewCharacterWealthModal(Modal):
+    def __init__(self, calling_view):
+        super().__init__(
+            title='Set New Character Wealth',
+            timeout=600
+        )
+        self.amount_text_input = discord.ui.TextInput(
+            label='Amount',
+            custom_id='amount_text_input',
+            placeholder='Enter the amount of this currency.'
+        )
+        self.currency_name_text_input = discord.ui.TextInput(
+            label='Currency Name',
+            custom_id='currency_name_text_input',
+            placeholder='Enter the name of a currency defined on this server'
+        )
+        self.calling_view = calling_view
+        self.add_item(self.amount_text_input)
+        self.add_item(self.currency_name_text_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            guild_id = interaction.guild_id
+            currency_input = self.currency_name_text_input.value.strip()
+
+            if not self.amount_text_input.value.replace('.', '', 1).isdigit():
+                raise ValueError('Amount must be a number.')
+            amount = float(self.amount_text_input.value)
+
+            currency_collection = interaction.client.gdb['currency']
+            currency_config = await currency_collection.find_one({'_id': guild_id})
+
+            if not currency_config:
+                raise Exception('No currencies are configured on this server.')
+
+            is_currency, parent_name = find_currency_or_denomination(currency_config, currency_input)
+
+            if not is_currency:
+                raise Exception(f'Currency or denomination named {currency_input} not found. Please use a valid '
+                                f'currency.')
+
+            collection = interaction.client.gdb['inventoryConfig']
+            await collection.update_one(
+                {'_id': interaction.guild_id},
+                {'$set': {'newCharacterWealth': {'currency': parent_name, 'amount': amount}}},
+                upsert=True
+            )
+
+            await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)

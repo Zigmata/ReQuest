@@ -10,7 +10,8 @@ from discord.ui import LayoutView, Container, Section, Separator, ActionRow, But
 from ReQuest.ui.common import modals as common_modals, views as common_views
 from ReQuest.ui.common.buttons import MenuViewButton, BackButton
 from ReQuest.ui.config import buttons, selects, enums
-from ReQuest.utilities.supportFunctions import log_exception, query_config, setup_view, strip_id, smart_title_case
+from ReQuest.utilities.supportFunctions import log_exception, query_config, setup_view, strip_id, smart_title_case, \
+    format_price_string
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -1147,21 +1148,6 @@ class ConfigPlayersView(LayoutView):
             '**Player Experience:** Disabled\n'
             'Enables/Disables the use of experience points (or similar value-based character progression.'
         )
-        self.inventory_type_info = TextDisplay(
-            '**New Character Inventory Type:** Disabled\n'
-            'Determines how new characters receive starting items.'
-        )
-
-        self.approval_queue_info = TextDisplay(
-            '**Approval Queue:** Disabled\n'
-            'If set, new characters must be approved by a GM in this Forum Channel before they are active.'
-        )
-        self.player_experience = True
-        self.inventory_type_select = selects.InventoryTypeSelect(self)
-        self.approval_queue_select = selects.SingleChannelConfigSelect(
-            self, 'approvalQueueChannel', 'Approval Queue'
-        )
-        self.approval_queue_clear_button = buttons.ClearChannelButton(self, enums.ChannelType.APPROVAL_QUEUE)
 
         self.build_view()
 
@@ -1178,19 +1164,12 @@ class ConfigPlayersView(LayoutView):
         container.add_item(experience_section)
         container.add_item(Separator())
 
-        inventory_type_section = Section()
-        inventory_type_section.add_item(self.inventory_type_info)
-        container.add_item(inventory_type_section)
-        container.add_item(ActionRow(self.inventory_type_select))
-
-        starting_shop_btn = MenuViewButton(ConfigStartingShopView, 'Configure Starting Shop')
-        container.add_item(ActionRow(starting_shop_btn))
-        container.add_item(Separator())
-
-        approval_section = Section(accessory=self.approval_queue_clear_button)
-        approval_section.add_item(self.approval_queue_info)
-        container.add_item(approval_section)
-        container.add_item(ActionRow(self.approval_queue_select))
+        new_character_section = Section(accessory=MenuViewButton(ConfigNewCharacterView, 'New Character Settings'))
+        new_character_section.add_item(TextDisplay(
+            '**New Character Settings**\n'
+            'Configure settings related to new player characters and how their initial inventories are set up.'
+        ))
+        container.add_item(new_character_section)
         container.add_item(Separator())
 
         player_board_section = Section(accessory=buttons.PlayerBoardPurgeButton(self))
@@ -1204,26 +1183,118 @@ class ConfigPlayersView(LayoutView):
 
     async def setup(self, bot, guild):
         try:
-            self.player_experience = await query_config('playerExperience', bot, guild)
+            # XP section
+            player_experience = await query_config('playerExperience', bot, guild)
             self.player_experience_info.content = (
-                f'**Player Experience:** {"Enabled" if self.player_experience else "Disabled"}\n'
+                f'**Player Experience:** {"Enabled" if player_experience else "Disabled"}\n'
                 f'Enables/Disables the use of experience points (or similar value-based character progression.'
             )
+        except Exception as e:
+            await log_exception(e)
 
-            inv_config = await bot.gdb['newCharConfig'].find_one({'_id': guild.id})
-            inv_type = inv_config.get('inventoryType', 'disabled') if inv_config else 'disabled'
+
+class ConfigNewCharacterView(LayoutView):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.inventory_type_info = TextDisplay(
+            '**New Character Inventory Type:** Disabled\n'
+            'Determines how newly-registered characters initialize their inventories.'
+        )
+        self.new_character_wealth_info = TextDisplay(
+            '**New Character Wealth:** Disabled\n'
+        )
+        self.approval_queue_info = TextDisplay(
+            '**Approval Queue:** Disabled\n'
+            'If set, new characters must be approved by a GM in this Forum Channel before they are active.'
+        )
+        self.inventory_type_select = selects.InventoryTypeSelect(self)
+        self.approval_queue_select = selects.SingleChannelConfigSelect(
+            self, 'approvalQueueChannel', 'Approval Queue'
+        )
+        self.approval_queue_clear_button = buttons.ClearChannelButton(self, enums.ChannelType.APPROVAL_QUEUE)
+
+        self.new_character_shop_button = MenuViewButton(ConfigNewCharacterShopView, 'Configure New Character Shop')
+        self.new_character_wealth_button = buttons.ConfigNewCharacterWealthButton(self)
+
+        self.build_view()
+
+    def build_view(self):
+        container = Container()
+
+        header_section = Section(accessory=BackButton(ConfigPlayersView))
+        header_section.add_item(TextDisplay('**Server Configuration - New Character Settings**'))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        # Inventory type section
+        container.add_item(self.inventory_type_info)
+        container.add_item(ActionRow(self.inventory_type_select))
+        container.add_item(Separator())
+
+        # New Character wealth section
+        new_character_wealth_row = ActionRow()
+        new_character_wealth_row.add_item(self.new_character_shop_button)
+        new_character_wealth_row.add_item(self.new_character_wealth_button)
+        container.add_item(new_character_wealth_row)
+        container.add_item(self.new_character_wealth_info)
+        container.add_item(Separator())
+
+        # Approval queue section
+        approval_section = Section(accessory=self.approval_queue_clear_button)
+        approval_section.add_item(self.approval_queue_info)
+        container.add_item(approval_section)
+        container.add_item(ActionRow(self.approval_queue_select))
+        container.add_item(Separator())
+
+        self.add_item(container)
+
+    async def setup(self, bot, guild):
+        try:
+            # Inventory section
+            inventory_config = await bot.gdb['inventoryConfig'].find_one({'_id': guild.id})
+            inventory_type = inventory_config.get('inventoryType', 'disabled') if inventory_config else 'disabled'
+            new_character_wealth = inventory_config.get('newCharacterWealth', None) if inventory_config else None
 
             type_description = {
                 'disabled': 'Players start with empty inventories.',
-                'selection': 'Players choose items freely from the Starting Shop.',
-                'purchase': 'Players spend starting currency at the Starting Shop.'
+                'selection': 'Players choose items freely from the New Character Shop.',
+                'purchase': 'Players purchase items from the New Character Shop with a given amount of currency.',
+                'open': 'Players manually input their inventory items.',
+                'static': 'Players are given a predefined starting inventory.'
             }
 
             self.inventory_type_info.content = (
-                f'**New Character Inventory Type:** {inv_type.capitalize()}\n'
-                f'{type_description.get(inv_type, "")}'
+                f'**New Character Inventory Type:** {inventory_type.capitalize()}\n'
+                f'{type_description.get(inventory_type, "")}'
             )
 
+            # New character Shop section
+            if inventory_type in ['selection', 'purchase']:
+                self.new_character_shop_button.disabled = False
+            else:
+                self.new_character_shop_button.disabled = True
+
+            if inventory_type == 'purchase':
+                self.new_character_wealth_button.disabled = False
+            else:
+                self.new_character_wealth_button.disabled = True
+
+            if new_character_wealth:
+                amount = new_character_wealth.get('amount', 0)
+                currency_name = new_character_wealth.get('currency', '')
+
+                currency_config = await bot.gdb['currency'].find_one({'_id': guild.id})
+                formatted_wealth = format_price_string(amount, currency_name, currency_config)
+
+                self.new_character_wealth_info.content = (
+                    f'**New Character Wealth:** {formatted_wealth}'
+                )
+            else:
+                self.new_character_wealth_info.content = (
+                    f'**New Character Wealth:** Disabled'
+                )
+
+            # Approval Queue section
             approval_query = await bot.gdb['approvalQueueChannel'].find_one({'_id': guild.id})
             approval_channel = approval_query['approvalQueueChannel'] if approval_query else 'Not Configured'
 
@@ -1235,13 +1306,14 @@ class ConfigPlayersView(LayoutView):
             await log_exception(e)
 
 
-class ConfigStartingShopView(LayoutView):
+class ConfigNewCharacterShopView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         self.all_stock = []
         self.items_per_page = 6
         self.current_page = 0
         self.total_pages = 1
+        self.mode_description = ''
 
         self.build_view()
 
@@ -1249,21 +1321,17 @@ class ConfigStartingShopView(LayoutView):
         self.clear_items()
         container = Container()
 
-        header_section = Section(accessory=BackButton(ConfigPlayersView))
-        header_section.add_item(TextDisplay('**Server Configuration - Starting Shop**'))
+        header_section = Section(accessory=BackButton(ConfigNewCharacterView))
+        header_section.add_item(TextDisplay('**Server Configuration - New Character Shop**'))
         container.add_item(header_section)
         container.add_item(Separator())
 
-        container.add_item(TextDisplay(
-            "Define the items available for new characters. \n"
-            "- **Selection Mode:** Prices are ignored (or treat as 0).\n"
-            "- **Purchase Mode:** Prices are enforced against starting currency."
-        ))
+        container.add_item(TextDisplay(self.mode_description or 'Define the shop items.'))
 
         action_row = ActionRow()
-        action_row.add_item(buttons.AddStartingShopItemButton(self))
-        action_row.add_item(buttons.StartingShopJSONButton(self))
-        action_row.add_item(buttons.DownloadStartingShopJSONButton(self))
+        action_row.add_item(buttons.AddNewCharacterShopItemButton(self))
+        action_row.add_item(buttons.NewCharacterShopJSONButton(self))
+        action_row.add_item(buttons.DownloadNewCharacterShopJSONButton(self))
         container.add_item(action_row)
         container.add_item(Separator())
 
@@ -1276,57 +1344,89 @@ class ConfigStartingShopView(LayoutView):
         else:
             for item in current_stock:
                 item_name = item.get('name')
-                item_desc = item.get('description')
+                item_description = item.get('description')
                 item_price = item.get('price', 0)
-                item_curr = item.get('currency', '')
-                item_qty = item.get('quantity', 1)
+                item_currency = item.get('currency', '')
+                item_quantity = item.get('quantity', 1)
 
-                display_str = f"**{item_name}** (x{item_qty})"
+                display_string = f"**{item_name}** (x{item_quantity})"
                 if item_price > 0:
-                    display_str += f" - {item_price} {item_curr}"
+                    display_string += f" - {item_price} {item_currency}"
                 else:
-                    display_str += " - Free"
+                    display_string += " - Free"
 
-                if item_desc:
-                    display_str += f"\n*{item_desc}*"
+                if item_description:
+                    display_string += f"\n*{item_description}*"
 
-                container.add_item(TextDisplay(display_str))
+                container.add_item(TextDisplay(display_string))
 
                 item_actions = ActionRow()
-                item_actions.add_item(buttons.EditStartingShopItemButton(item, self))
-                item_actions.add_item(buttons.DeleteStartingShopItemButton(item, self))
+                item_actions.add_item(buttons.EditNewCharacterShopItemButton(item, self))
+                item_actions.add_item(buttons.DeleteNewCharacterShopItemButton(item, self))
                 container.add_item(item_actions)
 
         self.add_item(container)
 
         # Pagination
         if self.total_pages > 1:
-            pag_row = ActionRow()
+            nav_row = ActionRow()
 
-            prev_btn = Button(label='Previous', style=ButtonStyle.secondary, custom_id='ss_prev',
-                              disabled=(self.current_page == 0))
-            prev_btn.callback = self.prev_page
-            pag_row.add_item(prev_btn)
+            prev_button = Button(
+                label='Previous',
+                style=ButtonStyle.secondary,
+                custom_id='ss_prev',
+                disabled=(self.current_page == 0)
+            )
+            prev_button.callback = self.prev_page
+            nav_row.add_item(prev_button)
 
-            page_btn = Button(label=f'Page {self.current_page + 1}/{self.total_pages}', style=ButtonStyle.secondary,
-                              disabled=True)
-            pag_row.add_item(page_btn)
+            page_button = Button(
+                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                style=ButtonStyle.secondary,
+                disabled=True
+            )
+            nav_row.add_item(page_button)
 
-            next_btn = Button(label='Next', style=ButtonStyle.primary, custom_id='ss_next',
-                              disabled=(self.current_page >= self.total_pages - 1))
-            next_btn.callback = self.next_page
-            pag_row.add_item(next_btn)
+            next_button = Button(
+                label='Next',
+                style=ButtonStyle.primary,
+                custom_id='ss_next',
+                disabled=(self.current_page >= self.total_pages - 1)
+            )
+            next_button.callback = self.next_page
+            nav_row.add_item(next_button)
 
-            self.add_item(pag_row)
+            self.add_item(nav_row)
 
     async def setup(self, bot, guild):
         try:
-            collection = bot.gdb['startingShop']
-            query = await collection.find_one({'_id': guild.id})
+            inventory_config = await bot.gdb['inventoryConfig'].find_one({'_id': guild.id})
+            inventory_type = inventory_config.get('inventoryType', 'disabled') if inventory_config else 'disabled'
+
+            if inventory_type == 'selection':
+                self.mode_description = (
+                    '**Inventory Type:** Selection\n'
+                    'Players choose items freely from the New Character Shop.'
+                )
+            elif inventory_type == 'purchase':
+                self.mode_description = (
+                    '**Inventory Type:** Purchase\n'
+                    'Players purchase items from the New Character Shop with a given amount of currency.'
+                )
+            else:
+                self.mode_description = (
+                    f'**Inventory Type:** {smart_title_case(inventory_type)}\n'
+                    f'New Character Shop is not in use.'
+                )
+
+            new_character_shop_collection = bot.gdb['newCharacterShop']
+            query = await new_character_shop_collection.find_one({'_id': guild.id})
             if query and 'shopStock' in query:
                 self.update_stock(query['shopStock'])
             else:
                 self.update_stock([])
+
+            self.build_view()
         except Exception as e:
             await log_exception(e)
 

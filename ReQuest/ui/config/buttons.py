@@ -254,6 +254,8 @@ class ClearChannelButton(Button):
                 await interaction.client.gdb['playerTradingLogChannel'].delete_one({'_id': interaction.guild_id})
             elif self.channel_type == enums.ChannelType.SHOP_LOG:
                 await interaction.client.gdb['shopLogChannel'].delete_one({'_id': interaction.guild_id})
+            elif self.channel_type == enums.ChannelType.APPROVAL_QUEUE:
+                await interaction.client.gdb['approvalQueueChannel'].delete_one({'_id': interaction.guild_id})
             await setup_view(view, interaction)
             await interaction.response.edit_message(view=view)
         except Exception as e:
@@ -601,45 +603,45 @@ class ScanServerButton(Button):
             await log_exception(e, interaction)
 
 
-class AddStartingShopItemButton(Button):
+class AddNewCharacterShopItemButton(Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Add Item',
             style=ButtonStyle.success,
-            custom_id='add_starting_shop_item_button'
+            custom_id='add_new_character_shop_item_button'
         )
         self.calling_view = calling_view
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            await interaction.response.send_modal(modals.StartingShopItemModal(self.calling_view))
+            await interaction.response.send_modal(modals.NewCharacterShopItemModal(self.calling_view))
         except Exception as e:
             await log_exception(e, interaction)
 
 
-class EditStartingShopItemButton(Button):
+class EditNewCharacterShopItemButton(Button):
     def __init__(self, item: dict, calling_view):
         super().__init__(
             label='Edit',
             style=ButtonStyle.primary,
-            custom_id=f"edit_starting_shop_item_{item['name']}"
+            custom_id=f"edit_new_character_shop_item_{item['name']}"
         )
         self.item = item
         self.calling_view = calling_view
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            await interaction.response.send_modal(modals.StartingShopItemModal(self.calling_view, self.item))
+            await interaction.response.send_modal(modals.NewCharacterShopItemModal(self.calling_view, self.item))
         except Exception as e:
             await log_exception(e, interaction)
 
 
-class DeleteStartingShopItemButton(Button):
+class DeleteNewCharacterShopItemButton(Button):
     def __init__(self, item: dict, calling_view):
         super().__init__(
             label='Delete',
             style=ButtonStyle.danger,
-            custom_id=f"delete_starting_shop_item_{item['name']}"
+            custom_id=f"delete_new_character_shop_item_{item['name']}"
         )
         self.item = item
         self.calling_view = calling_view
@@ -647,7 +649,7 @@ class DeleteStartingShopItemButton(Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             guild_id = interaction.guild_id
-            collection = interaction.client.gdb['startingShop']
+            collection = interaction.client.gdb['newCharacterShop']
             item_name = self.item['name']
 
             await collection.update_one(
@@ -663,29 +665,29 @@ class DeleteStartingShopItemButton(Button):
             await log_exception(e, interaction)
 
 
-class StartingShopJSONButton(Button):
+class NewCharacterShopJSONButton(Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Upload JSON',
             style=ButtonStyle.success,
-            custom_id='upload_starting_shop_json_button',
+            custom_id='upload_new_character_shop_json_button',
             row=1
         )
         self.calling_view = calling_view
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            await interaction.response.send_modal(modals.StartingShopJSONModal(self.calling_view))
+            await interaction.response.send_modal(modals.NewCharacterShopJSONModal(self.calling_view))
         except Exception as e:
             await log_exception(e, interaction)
 
 
-class DownloadStartingShopJSONButton(Button):
+class DownloadNewCharacterShopJSONButton(Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Download JSON',
             style=ButtonStyle.secondary,
-            custom_id='download_starting_shop_json_button',
+            custom_id='download_new_character_shop_json_button',
             row=1
         )
         self.calling_view = calling_view
@@ -693,21 +695,38 @@ class DownloadStartingShopJSONButton(Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             guild_id = interaction.guild_id
-            collection = interaction.client.gdb['startingShop']
+            collection = interaction.client.gdb['newCharacterShop']
             query = await collection.find_one({'_id': guild_id})
 
             shop_data = {'shopStock': query.get('shopStock', []) if query else []}
 
-            file_name = f"starting_shop_{guild_id}.json"
+            file_name = f"new_character_shop_{guild_id}.json"
             json_string = json.dumps(shop_data, indent=4)
             json_bytes = io.BytesIO(json_string.encode('utf-8'))
 
             shop_file = discord.File(json_bytes, filename=file_name)
 
             await interaction.response.send_message(
-                "Here is the JSON definition for the Starting Shop.",
+                "Here is the JSON definition for the New Character Shop.",
                 file=shop_file,
                 ephemeral=True
             )
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ConfigNewCharacterWealthButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Configure New Character Wealth',
+            style=ButtonStyle.primary,
+            custom_id='config_new_character_wealth_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            modal = modals.ConfigNewCharacterWealthModal(self.calling_view)
+            await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)

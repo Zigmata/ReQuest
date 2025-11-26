@@ -30,20 +30,27 @@ async def log_exception(exception, interaction=None):
     logger.error(f'{type(exception).__name__}: {exception}')
     logger.error(traceback.format_exc())
     report_string = (
-        f'An exception occurred: {str(exception)}\n'
-        f'Please submit a bug report on the official ReQuest support Discord.\n'
-        f'(`/support` to view invite)'
+        f'An exception occurred:\n\n'
+        f'```{str(exception)}```\n'
+        f'If this error is unexpected, or you suspect the bot is not functioning correctly, please submit a bug report '
+        f'in the [Official ReQuest Support Discord](https://discord.gg/Zq37gj4).'
+    )
+    error_embed = discord.Embed(
+        title='Oops!',
+        description=report_string,
+        color=discord.Color.red(),
+        type='rich'
     )
     if interaction:
         try:
             if not interaction.response.is_done():
                 await interaction.response.defer(ephemeral=True)
-                await interaction.followup.send(report_string, ephemeral=True)
+                await interaction.followup.send(embed=error_embed, ephemeral=True)
             else:
-                await interaction.followup.send(report_string, ephemeral=True)
+                await interaction.followup.send(embed=error_embed, ephemeral=True)
         except discord.errors.InteractionResponded:
             try:
-                await interaction.followup.send(report_string, ephemeral=True)
+                await interaction.followup.send(embed=error_embed, ephemeral=True)
             except Exception as e:
                 logger.error(f'Failed to send followup error message: {e}')
         except Exception as e:
