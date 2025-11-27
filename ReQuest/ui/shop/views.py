@@ -17,7 +17,7 @@ from discord.ui import (
 from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.shop import buttons
 from ReQuest.utilities.supportFunctions import (
-    smart_title_case,
+    titlecase,
     check_sufficient_funds,
     apply_currency_change_local,
     apply_item_change_local,
@@ -226,7 +226,7 @@ class ShopCartView(LayoutView):
                         is_ok, _ = check_sufficient_funds(player_wallet, self.currency_config, base_currency, amount)
                         if not is_ok:
                             can_afford_all = False
-                            warnings.append(f"⚠️ Insufficient funds for {smart_title_case(base_currency)}")
+                            warnings.append(f"⚠️ Insufficient funds for {titlecase(base_currency)}")
 
                 start_index = self.current_page * self.items_per_page
                 end_index = start_index + self.items_per_page
@@ -346,7 +346,7 @@ class ShopCartView(LayoutView):
                                                     self.currency_config, base_currency, amount)
                 if not is_ok:
                     await interaction.response.send_message(
-                        f"Checkout failed: Insufficient {smart_title_case(base_currency)}.", ephemeral=True)
+                        f"Checkout failed: Insufficient {titlecase(base_currency)}.", ephemeral=True)
                     return
 
             for base_currency, amount in self.base_totals.items():
@@ -360,7 +360,7 @@ class ShopCartView(LayoutView):
                 total_qty = quantity * qty_per_item
 
                 character_data = apply_item_change_local(character_data, item['name'], total_qty)
-                summary_string = (f'{total_qty}x ' if total_qty > 1 else '') + smart_title_case(item["name"])
+                summary_string = (f'{total_qty}x ' if total_qty > 1 else '') + titlecase(item["name"])
                 added_items_summary.append(summary_string)
 
             await mdb['characters'].update_one(

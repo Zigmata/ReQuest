@@ -12,7 +12,7 @@ from ReQuest.utilities.supportFunctions import (
     trade_currency,
     trade_item,
     check_sufficient_funds,
-    update_character_inventory, format_currency_display, setup_view, strip_id, smart_title_case
+    update_character_inventory, format_currency_display, setup_view, strip_id, titlecase
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -85,7 +85,7 @@ class TradeModal(Modal):
                                                                           member_id, target_id, guild_id)
                 sender_balance_str = '\n'.join(format_currency_display(sender_currency, currency_query)) or "None"
                 receiver_currency_str = '\n'.join(format_currency_display(receiver_currency, currency_query)) or "None"
-                trade_embed.add_field(name='Currency', value=smart_title_case(item_name))
+                trade_embed.add_field(name='Currency', value=titlecase(item_name))
                 trade_embed.add_field(name='Amount', value=quantity)
                 trade_embed.add_field(name=f'{member_active_character['name']}\'s Balance', value=sender_balance_str,
                                       inline=False)
@@ -94,7 +94,7 @@ class TradeModal(Modal):
             else:
                 quantity = int(quantity)
                 await trade_item(mdb, item_name, quantity, member_id, target_id, guild_id)
-                trade_embed.add_field(name='Item', value=smart_title_case(item_name))
+                trade_embed.add_field(name='Item', value=titlecase(item_name))
                 trade_embed.add_field(name='Quantity', value=quantity)
 
             trade_embed.set_footer(text=f'Transaction ID: {transaction_id}')

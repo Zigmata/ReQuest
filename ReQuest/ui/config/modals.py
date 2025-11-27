@@ -2,6 +2,7 @@ import json
 import logging
 
 import jsonschema
+import shortuuid
 from jsonschema import validate
 
 import discord
@@ -9,7 +10,7 @@ import discord.ui
 from discord.ui import Modal, Label
 
 from ReQuest.utilities.supportFunctions import log_exception, purge_player_board, setup_view, \
-    find_currency_or_denomination
+    find_currency_or_denomination, titlecase
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -822,6 +823,195 @@ class ConfigNewCharacterWealthModal(Modal):
             )
 
             await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+class CreateStaticKitModal(Modal):
+    def __init__(self, calling_view):
+        super().__init__(
+            title='Create New Static Kit',
+            timeout=600
+        )
+        self.calling_view = calling_view
+
+        self.kit_name_text_input = discord.ui.TextInput(
+            label='Kit Name',
+            custom_id='kit_name_text_input',
+            placeholder='e.g., Warrior Starter Kit',
+            max_length=50
+        )
+        self.kit_description_text_input = discord.ui.TextInput(
+            label='Description',
+            style=discord.TextStyle.paragraph,
+            custom_id='kit_description_text_input',
+            placeholder='Optional description for this kit',
+            required=False,
+            max_length=200
+        )
+        self.add_item(self.kit_name_text_input)
+        self.add_item(self.kit_description_text_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            guild_id = interaction.guild_id
+            collection = interaction.client.gdb['staticKits']
+            kit_id = str(shortuuid.uuid()[:8])
+            kit_name = self.kit_name_text_input.value.strip().lower()
+
+            kit_query = await collection.find_one({'_id': guild_id})
+            existing_kits = kit_query.get('kits', {}) if kit_query else None
+            if existing_kits:
+                for kit in existing_kits.items():
+                    if kit_name == kit['name'].lower():
+                        raise Exception(f'A static kit named "{titlecase(kit_name)}" already exists. Please '
+                                        f'choose a different name.')
+
+            kit_data = {
+                'name': kit_name,
+                'description': self.kit_description_text_input.value.strip(),
+                'items': [],
+                'currency': {}
+            }
+
+            await collection.update_one(
+                {'_id': guild_id},
+                {'$set': {f'kits.{kit_id}': kit_data}},
+                upsert=True
+            )
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class StaticKitItemModal(Modal):
+    def __init__(self, calling_view, existing_item=None, index=None):
+        super().__init__(
+            title='Add/Edit Kit Item',
+            timeout=600
+        )
+        self.calling_view = calling_view
+        self.index = index
+
+        name_default = existing_item.get('name', '') if existing_item else ''
+        description_default = existing_item.get('description', '') if existing_item else ''
+        quantity_default = str(existing_item.get('quantity', '1')) if existing_item else '1'
+
+        self.item_name_text_input = discord.ui.TextInput(
+            label='Item Name',
+            custom_id='item_name_text_input',
+            placeholder='Enter the name of the item',
+            default=name_default
+        )
+        self.description_text_input = discord.ui.TextInput(
+            label='Item Description',
+            style=discord.TextStyle.paragraph,
+            custom_id='item_description_text_input',
+            placeholder='Enter a description for the item',
+            default=description_default,
+            required=False
+        )
+        self.item_quantity_text_input = discord.ui.TextInput(
+            label='Item Quantity',
+            custom_id='item_quantity_text_input',
+            placeholder='Enter the quantity of this item to be included in the kit',
+            default=quantity_default
+        )
+        self.add_item(self.item_name_text_input)
+        self.add_item(self.description_text_input)
+        self.add_item(self.item_quantity_text_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            if not self.item_quantity_text_input.value.isdigit() or int(self.item_quantity_text_input.value) < 1:
+                raise ValueError("Quantity must be a positive integer.")
+
+            item_data = {
+                'name': self.item_name_text_input.value,
+                'description': self.description_text_input.value,
+                'quantity': int(self.item_quantity_text_input.value)
+            }
+
+            kit_id = self.calling_view.kit_id
+            collection = interaction.client.gdb['staticKits']
+
+            query = await collection.find_one({'_id': interaction.guild_id})
+            kits = query.get('kits', {})
+            current_kit = kits.get(kit_id)
+
+            if not current_kit:
+                raise Exception("Kit not found.")
+
+            items = current_kit.get('items', [])
+
+            if self.index is not None:
+                items[self.index] = item_data
+            else:
+                items.append(item_data)
+
+            await collection.update_one(
+                {'_id': interaction.guild_id},
+                {'$set': {f'kits.{kit_id}.items': items}}
+            )
+
+            self.calling_view.kit_data['items'] = items
+            self.calling_view.items = items
+            self.calling_view.build_view()
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class StaticKitCurrencyModal(Modal):
+    def __init__(self, calling_view):
+        super().__init__(
+            title='Add Kit Currency',
+            timeout=600
+        )
+        self.calling_view = calling_view
+        self.currency_name_text_input = discord.ui.TextInput(
+            label='Currency Name',
+            custom_id='currency_name_text_input',
+            placeholder='e.g., Gold'
+        )
+        self.amount_text_input = discord.ui.TextInput(
+            label='Amount',
+            custom_id='amount_text_input',
+            placeholder='e.g., 100'
+        )
+        self.add_item(self.currency_name_text_input)
+        self.add_item(self.amount_text_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            currency_input = self.currency_name_text_input.value.strip()
+            if not self.amount_text_input.value.replace('.', '', 1).isdigit():
+                raise ValueError("Amount must be a number.")
+            amount = float(self.amount_text_input.value)
+
+            currency_config = await interaction.client.gdb['currency'].find_one({'_id': interaction.guild_id})
+            if not currency_config:
+                raise Exception("No currencies configured on server.")
+
+            is_valid, parent_name = find_currency_or_denomination(currency_config, currency_input)
+            if not is_valid:
+                raise Exception(f"Currency '{currency_input}' not found.")
+
+            kit_id = self.calling_view.kit_id
+            collection = interaction.client.gdb['staticKits']
+
+            await collection.update_one(
+                {'_id': interaction.guild_id},
+                {'$set': {f'kits.{kit_id}.currency.{parent_name}': amount}}
+            )
+
+            if 'currency' not in self.calling_view.kit_data:
+                self.calling_view.kit_data['currency'] = {}
+            self.calling_view.kit_data['currency'][parent_name] = amount
+
+            self.calling_view.build_view()
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)

@@ -57,10 +57,6 @@ async def log_exception(exception, interaction=None):
             logger.error(f'Failed to handle exception in log_exception: {e}')
 
 
-def smart_title_case(input_string: str) -> str:
-    return titlecase(input_string)
-
-
 def find_currency_or_denomination(currency_def_query, search_name):
     search_name = search_name.lower()
     for currency in currency_def_query['currencies']:
@@ -110,7 +106,7 @@ def format_currency_display(player_currency: dict, currency_config: dict) -> lis
                 processed_denominations.add(denom_name_lower)
 
             if total_value > 0:
-                output_lines.append(f"{smart_title_case(base_name)}: **{total_value:.2f}**")
+                output_lines.append(f"{titlecase(base_name)}: **{total_value:.2f}**")
 
         # Display as separate integers
         else:
@@ -121,7 +117,7 @@ def format_currency_display(player_currency: dict, currency_config: dict) -> lis
                 if quantity > 0:
                     denom_display_name, _ = find_currency_or_denomination(currency_config, denom_name_lower)
                     if denom_display_name:
-                        output_lines.append(f"{smart_title_case(denom_display_name)}: **{quantity}**")
+                        output_lines.append(f"{titlecase(denom_display_name)}: **{quantity}**")
                     processed_denominations.add(denom_name_lower)
 
     return output_lines
@@ -188,8 +184,8 @@ async def trade_item(mdb, item_name, quantity, sending_member_id, receiving_memb
     receiver_inventory[normalized_item_name] = receiver_inventory.get(normalized_item_name, 0) + quantity
 
     # Normalize the inventories for db update
-    sender_character['attributes']['inventory'] = {smart_title_case(k): v for k, v in sender_inventory.items()}
-    receiver_character['attributes']['inventory'] = {smart_title_case(k): v for k, v in receiver_inventory.items()}
+    sender_character['attributes']['inventory'] = {titlecase(k): v for k, v in sender_inventory.items()}
+    receiver_character['attributes']['inventory'] = {titlecase(k): v for k, v in receiver_inventory.items()}
 
     await collection.update_one(
         {'_id': sending_member_id, f'characters.{sender_character_id}.attributes.inventory': {'$exists': True}},
@@ -261,7 +257,7 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
                 elif denom_name in final_wallet:
                     del final_wallet[denom_name]
 
-            character_currency_db = {smart_title_case(k): v for k, v in final_wallet.items() if v > 0}
+            character_currency_db = {titlecase(k): v for k, v in final_wallet.items() if v > 0}
 
             await character_collection.update_one(
                 {'_id': player_id},
@@ -279,9 +275,9 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
             elif quantity > 0:
                 character_inventory[normalized_item_name] = int(quantity)
             elif quantity < 0:
-                raise Exception(f"Insufficient item(s): {smart_title_case(item_name)}")
+                raise Exception(f"Insufficient item(s): {titlecase(item_name)}")
 
-            inventory_for_db = {smart_title_case(k): v for k, v in character_inventory.items()}
+            inventory_for_db = {titlecase(k): v for k, v in character_inventory.items()}
 
             await character_collection.update_one(
                 {'_id': player_id},
@@ -539,9 +535,9 @@ def apply_item_change_local(character_data: dict, item_name: str, quantity: int)
     elif quantity > 0:
         inventory[item_name.lower()] = int(quantity)
     elif quantity < 0:
-        raise Exception(f"Insufficient item(s): {smart_title_case(item_name)}")
+        raise Exception(f"Insufficient item(s): {titlecase(item_name)}")
 
-    character_data['attributes']['inventory'] = {smart_title_case(k): v for k, v in inventory.items()}
+    character_data['attributes']['inventory'] = {titlecase(k): v for k, v in inventory.items()}
     return character_data
 
 
@@ -591,7 +587,7 @@ def apply_currency_change_local(character_data: dict, currency_config: dict, ite
         elif denom_name in final_wallet:
             del final_wallet[denom_name]
 
-    character_data['attributes']['currency'] = {smart_title_case(k): v for k, v in final_wallet.items() if v > 0}
+    character_data['attributes']['currency'] = {titlecase(k): v for k, v in final_wallet.items() if v > 0}
     return character_data
 
 def get_base_currency_info(currency_config: dict, currency_name: str):
@@ -653,13 +649,13 @@ def format_consolidated_totals(base_totals: dict, currency_config: dict) -> list
                     break
 
         if not curr_conf:
-            output.append(f"{smart_title_case(base_name_lower)}: {total_val}")
+            output.append(f"{titlecase(base_name_lower)}: {total_val}")
             continue
 
         base_display_name = curr_conf['name']
 
         if curr_conf.get('isDouble', False):
-            output.append(f"{smart_title_case(base_display_name)}: {total_val:.2f}")
+            output.append(f"{titlecase(base_display_name)}: {total_val:.2f}")
         else:
             denoms = curr_conf.get('denominations', [])
             all_denoms = [{'name': curr_conf['name'], 'value': 1.0}] + denoms
@@ -675,15 +671,15 @@ def format_consolidated_totals(base_totals: dict, currency_config: dict) -> list
                 if remaining_val + tolerance >= d_val:
                     count = int(remaining_val / d_val + tolerance)
                     if count > 0:
-                        parts.append(f"{count} {smart_title_case(d['name'])}")
+                        parts.append(f"{count} {titlecase(d['name'])}")
                         remaining_val -= count * d_val
 
             if parts:
-                output.append(f"{smart_title_case(base_display_name)}: {', '.join(parts)}")
+                output.append(f"{titlecase(base_display_name)}: {', '.join(parts)}")
             elif total_val == 0:
-                output.append(f"{smart_title_case(base_display_name)}: 0")
+                output.append(f"{titlecase(base_display_name)}: 0")
             elif total_val > 0:
-                output.append(f"{smart_title_case(base_display_name)}: {total_val:.2f}")
+                output.append(f"{titlecase(base_display_name)}: {total_val:.2f}")
 
     return output
 
@@ -693,7 +689,7 @@ def format_price_string(amount, currency_name, currency_config):
     """
     base_name, _, is_double = get_base_currency_info(currency_config, currency_name)
 
-    display_name = smart_title_case(currency_name)
+    display_name = titlecase(currency_name)
 
     if is_double:
         return f"{amount:.2f} {display_name}"

@@ -278,3 +278,32 @@ class InventoryTypeSelect(Select):
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
+
+
+class ConfigStaticKitSelect(Select):
+    def __init__(self, calling_view):
+        super().__init__(
+            placeholder='Select a kit to manage',
+            options=[discord.SelectOption(label='No kits configured', value='None')],
+            custom_id='config_static_kit_select',
+            disabled=True
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            view = self.calling_view
+            view.selected_kit_id = self.values[0]
+            kit_name = None
+            for option in self.options:
+                if option.value == self.values[0]:
+                    kit_name = option.label
+                    break
+            view.edit_kit_button.disabled = False
+            view.edit_kit_button.label = f'Edit {kit_name}'
+            view.remove_kit_button.disabled = False
+            view.remove_kit_button.label = f'Remove {kit_name}'
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)

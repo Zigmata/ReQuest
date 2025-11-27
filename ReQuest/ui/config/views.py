@@ -10,7 +10,7 @@ from discord.ui import LayoutView, Container, Section, Separator, ActionRow, But
 from ReQuest.ui.common import modals as common_modals, views as common_views
 from ReQuest.ui.common.buttons import MenuViewButton, BackButton
 from ReQuest.ui.config import buttons, selects, enums
-from ReQuest.utilities.supportFunctions import log_exception, query_config, setup_view, strip_id, smart_title_case, \
+from ReQuest.utilities.supportFunctions import log_exception, query_config, setup_view, strip_id, titlecase, \
     format_price_string
 
 logging.basicConfig(level=logging.INFO)
@@ -520,7 +520,7 @@ class ConfigWizardView(LayoutView):
         if items:
             report_lines.append('- Items:')
             for item_name, quantity in items.items():
-                report_lines.append(f'  - {smart_title_case(item_name)}: {quantity}')
+                report_lines.append(f'  - {titlecase(item_name)}: {quantity}')
 
         return '\n'.join(report_lines)
 
@@ -1215,6 +1215,7 @@ class ConfigNewCharacterView(LayoutView):
 
         self.new_character_shop_button = MenuViewButton(ConfigNewCharacterShopView, 'Configure New Character Shop')
         self.new_character_wealth_button = buttons.ConfigNewCharacterWealthButton(self)
+        self.static_kits_button = MenuViewButton(ConfigStaticKitsView, 'Configure Static Kits')
 
         self.build_view()
 
@@ -1235,6 +1236,7 @@ class ConfigNewCharacterView(LayoutView):
         new_character_wealth_row = ActionRow()
         new_character_wealth_row.add_item(self.new_character_shop_button)
         new_character_wealth_row.add_item(self.new_character_wealth_button)
+        new_character_wealth_row.add_item(self.static_kits_button)
         container.add_item(new_character_wealth_row)
         container.add_item(self.new_character_wealth_info)
         container.add_item(Separator())
@@ -1278,6 +1280,12 @@ class ConfigNewCharacterView(LayoutView):
                 self.new_character_wealth_button.disabled = False
             else:
                 self.new_character_wealth_button.disabled = True
+
+            if inventory_type == 'static':
+                self.static_kits_button.disabled = False
+            else:
+                self.static_kits_button.disabled = True
+
 
             if new_character_wealth:
                 amount = new_character_wealth.get('amount', 0)
@@ -1415,7 +1423,7 @@ class ConfigNewCharacterShopView(LayoutView):
                 )
             else:
                 self.mode_description = (
-                    f'**Inventory Type:** {smart_title_case(inventory_type)}\n'
+                    f'**Inventory Type:** {titlecase(inventory_type)}\n'
                     f'New Character Shop is not in use.'
                 )
 
@@ -1447,6 +1455,180 @@ class ConfigNewCharacterShopView(LayoutView):
             self.current_page += 1
             self.build_view()
             await interaction.response.edit_message(view=self)
+
+
+class ConfigStaticKitsView(LayoutView):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.selected_kit_id = None
+        self.kit_select = selects.ConfigStaticKitSelect(self)
+        self.add_kit_button = buttons.AddStaticKitButton(self)
+        self.edit_kit_button = buttons.EditStaticKitButton(self)
+        self.remove_kit_button = buttons.RemoveStaticKitButton(self)
+
+        self.build_view()
+
+    def build_view(self):
+        container = Container()
+
+        header_section = Section(accessory=BackButton(ConfigNewCharacterView))
+        header_section.add_item(TextDisplay('**Server Configuration - Static Kits**'))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        container.add_item(TextDisplay("Define kits of items and currency to be given to new characters."))
+
+        button_row = ActionRow()
+        button_row.add_item(self.add_kit_button)
+        button_row.add_item(self.edit_kit_button)
+        button_row.add_item(self.remove_kit_button)
+        container.add_item(button_row)
+
+        container.add_item(ActionRow(self.kit_select))
+
+        self.add_item(container)
+
+    async def setup(self, bot, guild):
+        try:
+            self.kit_select.options.clear()
+            collection = bot.gdb['staticKits']
+            query = await collection.find_one({'_id': guild.id})
+
+            options = []
+            if query and 'kits' in query and query['kits']:
+                for kit_id, kit_data in query['kits'].items():
+                    options.append(discord.SelectOption(label=titlecase(kit_data['name']), value=kit_id))
+
+                self.kit_select.options = options
+                self.kit_select.disabled = False
+                self.kit_select.placeholder = "Select a kit to manage"
+            else:
+                self.kit_select.options = [discord.SelectOption(label="No kits configured", value="none")]
+                self.kit_select.disabled = True
+                self.kit_select.placeholder = "No kits configured"
+
+            # Reset buttons if no selection
+            if not self.selected_kit_id:
+                self.edit_kit_button.disabled = True
+                self.remove_kit_button.disabled = True
+
+        except Exception as e:
+            await log_exception(e)
+
+
+class EditStaticKitView(LayoutView):
+    def __init__(self, kit_id, kit_data):
+        super().__init__(timeout=None)
+        self.kit_id = kit_id
+        self.kit_data = kit_data
+        self.items_per_page = 5
+        self.current_page = 0
+        self.items = self.kit_data.get('items', [])
+        self.total_pages = math.ceil(len(self.items) / self.items_per_page)
+
+        self.build_view()
+
+    def build_view(self):
+        self.clear_items()
+        container = Container()
+
+        header_section = Section(accessory=BackButton(ConfigStaticKitsView))
+        header_section.add_item(TextDisplay(f'**Editing Kit: {titlecase(self.kit_data["name"])}**'))
+        container.add_item(header_section)
+
+        if description := self.kit_data.get('description'):
+            container.add_item(TextDisplay(f"*{description}*"))
+        container.add_item(Separator())
+
+        # Currency Section
+        currency_section = Section(accessory=buttons.AddKitCurrencyButton(self))
+        currency_section.add_item(TextDisplay("**Starting Currency**"))
+        container.add_item(currency_section)
+
+        currencies = self.kit_data.get('currency', {})
+        if not currencies:
+            container.add_item(TextDisplay("None"))
+        else:
+            for currency, amount in currencies.items():
+                currency_row = Section(accessory=buttons.DeleteKitCurrencyButton(self, currency))
+                currency_row.add_item(TextDisplay(f"{titlecase(currency)}: {amount}"))
+                container.add_item(currency_row)
+
+        container.add_item(Separator())
+
+        # Items Section
+        item_section = Section(accessory=buttons.AddKitItemButton(self))
+        item_section.add_item(TextDisplay("**Starting Items**"))
+        container.add_item(item_section)
+        if not self.items:
+            container.add_item(TextDisplay("None"))
+        else:
+            start_idx = self.current_page * self.items_per_page
+            end_idx = start_idx + self.items_per_page
+            current_items = self.items[start_idx:end_idx]
+
+            for idx, item in enumerate(current_items):
+                global_index = start_idx + idx
+                item_actions = ActionRow()
+                item_actions.add_item(buttons.EditKitItemButton(self, item, global_index))
+                item_actions.add_item(buttons.DeleteKitItemButton(self, global_index))
+
+                display = f"**{item['name']}** (x{item['quantity']})"
+                if item.get('description'):
+                    display += f"\n*{item['description']}*"
+
+                container.add_item(TextDisplay(display))
+                container.add_item(item_actions)
+
+            # Pagination Controls
+            if self.total_pages > 1:
+                nav_row = ActionRow()
+                prev_button = Button(
+                    label='Previous',
+                    style=ButtonStyle.secondary,
+                    custom_id='kit_prev',
+                    disabled=(self.current_page == 0)
+                )
+                prev_button.callback = self.prev_page
+                nav_row.add_item(prev_button)
+
+                page_button = Button(
+                    label=f'Page {self.current_page + 1}/{self.total_pages}',
+                    style=ButtonStyle.secondary
+                )
+                page_button.callback = self.show_page_jump_modal
+                nav_row.add_item(page_button)
+
+                next_button = Button(
+                    label='Next',
+                    style=ButtonStyle.primary,
+                    custom_id='kit_next',
+                    disabled=(self.current_page >= self.total_pages - 1)
+                )
+                next_button.callback = self.next_page
+                nav_row.add_item(next_button)
+                container.add_item(nav_row)
+
+        self.add_item(container)
+
+    async def prev_page(self, interaction):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction):
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def show_page_jump_modal(self, interaction):
+        try:
+            await interaction.response.send_modal(common_modals.PageJumpModal(self))
+        except Exception as e:
+            logging.error(f'Failed to send PageJumpModal: {e}')
+            await interaction.response.send_message('Could not open page selector', ephemeral=True)
 
 
 # ------ CURRENCY ------
