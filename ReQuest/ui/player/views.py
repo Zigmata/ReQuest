@@ -1,14 +1,17 @@
 import logging
+import math
 
 import discord
 import shortuuid
-from discord.ui import Container, Section, TextDisplay, Separator, LayoutView, ActionRow
+from discord.ui import Container, Section, TextDisplay, Separator, LayoutView, ActionRow, Button
+from titlecase import titlecase
 
 from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
 from ReQuest.ui.player import buttons, selects
 from ReQuest.utilities.supportFunctions import log_exception, strip_id, attempt_delete, format_currency_display, \
-    setup_view, find_currency_or_denomination, update_character_inventory
+    setup_view, find_currency_or_denomination, update_character_inventory, format_price_string, \
+    consolidate_currency_totals, check_sufficient_funds, get_denomination_map
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -578,3 +581,362 @@ class PlayerBoardView(LayoutView):
             await interaction.response.edit_message(view=self)
         except Exception as e:
             await log_exception(e, interaction)
+
+
+class NewCharacterWizardView(LayoutView):
+    def __init__(self, character_id, character_name, inventory_type):
+        super().__init__(timeout=None)
+        self.character_id = character_id
+        self.character_name = character_name
+        self.inventory_type = inventory_type
+
+        self.build_view()
+
+    def build_view(self):
+        container = Container()
+        container.add_item(TextDisplay(f"**Setup Inventory for {self.character_name}**"))
+        container.add_item(Separator())
+
+        description = ""
+        action_row = ActionRow()
+
+        if self.inventory_type in ['selection', 'purchase']:
+            description = "Browse the Starting Shop to equip your character."
+            action_row.add_item(buttons.OpenStartingShopButton(self))
+        elif self.inventory_type == 'static':
+            description = "Select a Starting Kit."
+            action_row.add_item(buttons.SelectStaticKitButton(self))
+        elif self.inventory_type == 'open':
+            description = "Manually input your starting inventory."
+            action_row.add_item(buttons.OpenInventoryInputButton(self))
+
+        container.add_item(TextDisplay(description))
+        container.add_item(action_row)
+
+        self.add_item(container)
+
+    async def submit_open_inventory(self, interaction, items):
+        await _handle_submission(interaction, self.character_id, self.character_name, items, {})
+
+
+class StaticKitSelectView(LayoutView):
+    def __init__(self, character_id, character_name):
+        super().__init__(timeout=None)
+        self.character_id = character_id
+        self.character_name = character_name
+        self.kit_select = selects.Select(
+            placeholder="Select a Kit",
+            options=[],
+            custom_id="static_kit_sel"
+        )
+        self.kits = {}
+
+    async def setup(self, interaction):
+        collection = interaction.client.gdb['staticKits']
+        query = await collection.find_one({'_id': interaction.guild_id})
+        self.kits = query.get('kits', {}) if query else {}
+
+        options = []
+        if self.kits:
+            for kit_id, kit in self.kits.items():
+                options.append(discord.SelectOption(label=titlecase(kit['name']), value=kit_id))
+            self.kit_select.options = options
+            self.kit_select.callback = self.select_callback
+            self.kit_select.disabled = False
+        else:
+            self.kit_select.options = [discord.SelectOption(label="No kits available", value="none")]
+            self.kit_select.disabled = True
+
+        self.build_view()
+
+    def build_view(self):
+        self.clear_items()
+        container = Container()
+        container.add_item(TextDisplay(f"**Select a Kit for {self.character_name}**"))
+        container.add_item(ActionRow(self.kit_select))
+        self.add_item(container)
+
+    async def select_callback(self, interaction):
+        kit_id = self.kit_select.values[0]
+        kit = self.kits.get(kit_id)
+
+        items = {item['name']: item['quantity'] for item in kit.get('items', [])}
+        currency = kit.get('currency', {})
+
+        await _handle_submission(interaction, self.character_id, self.character_name, items, currency)
+
+
+class NewCharacterShopView(LayoutView):
+    def __init__(self, character_id, character_name, inventory_type):
+        super().__init__(timeout=None)
+        self.character_id = character_id
+        self.character_name = character_name
+        self.inventory_type = inventory_type
+        self.shop_stock = []
+        self.cart = {}
+
+        self.items_per_page = 8
+        self.current_page = 0
+        self.total_pages = 1
+
+        self.currency_config = None
+        self.starting_wealth = None
+
+    async def setup(self, interaction):
+        guild_id = interaction.guild_id
+        bot = interaction.client
+
+        shop_query = await bot.gdb['newCharacterShop'].find_one({'_id': guild_id})
+        self.shop_stock = shop_query.get('shopStock', []) if shop_query else []
+        self.total_pages = math.ceil(len(self.shop_stock) / self.items_per_page)
+
+        self.currency_config = await bot.gdb['currency'].find_one({'_id': guild_id})
+
+        if self.inventory_type == 'purchase':
+            inventory_config = await bot.gdb['inventoryConfig'].find_one({'_id': guild_id})
+            self.starting_wealth = inventory_config.get('newCharacterWealth') if inventory_config else None
+
+        self.build_view()
+
+    def build_view(self):
+        self.clear_items()
+        container = Container()
+
+        title = f"**Starting Shop ({self.inventory_type.capitalize()})**"
+        if self.starting_wealth:
+            amount = self.starting_wealth.get('amount', 0)
+            currency = self.starting_wealth.get('currency', '')
+            title += f"\nStarting Wealth: {amount} {titlecase(currency)}"
+
+        container.add_item(TextDisplay(title))
+        container.add_item(Separator())
+
+        start = self.current_page * self.items_per_page
+        end = start + self.items_per_page
+        stock_slice = self.shop_stock[start:end]
+
+        for item in stock_slice:
+            section = Section(accessory=buttons.WizardItemButton(item))
+
+            display = f"**{item['name']}** (x{item.get('quantity', 1)})"
+            if self.inventory_type == 'purchase':
+                price = item.get('price', 0)
+                currency = item.get('currency', '')
+                price_label = format_price_string(price, currency, self.currency_config)
+                display += f" - {price_label}"
+
+            if item_name := item.get('name'):
+                if item_name in self.cart:
+                    display += f" **(In Cart: {self.cart[item_name]['quantity']})**"
+
+            if description := item.get('description'):
+                display += f"\n*{description}*"
+
+            section.add_item(TextDisplay(display))
+            container.add_item(section)
+
+        self.add_item(container)
+
+        nav_row = ActionRow()
+        if self.total_pages > 1:
+            prev_button = Button(
+                label='Prev',
+                style=discord.ButtonStyle.secondary,
+                custom_id='wiz_prev',
+                disabled=(self.current_page == 0)
+            )
+            prev_button.callback = self.prev_page
+
+            next_button = Button(
+                label='Next',
+                style=discord.ButtonStyle.secondary,
+                custom_id='wiz_next',
+                disabled=(self.current_page >= self.total_pages - 1)
+            )
+            next_button.callback = self.next_page
+
+            nav_row.add_item(prev_button)
+            nav_row.add_item(next_button)
+
+        cart_count = sum(x['quantity'] for x in self.cart.values())
+        nav_row.add_item(buttons.WizardViewCartButton(self, cart_count))
+        self.add_item(nav_row)
+
+    async def add_to_cart(self, interaction, item):
+        name = item['name']
+        if name in self.cart:
+            self.cart[name]['quantity'] += 1
+        else:
+            self.cart[name] = {'item': item, 'quantity': 1}
+        self.build_view()
+        await interaction.response.edit_message(view=self)
+
+    async def prev_page(self, interaction):
+        self.current_page -= 1
+        self.build_view()
+        await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction):
+        self.current_page += 1
+        self.build_view()
+        await interaction.response.edit_message(view=self)
+
+
+class NewCharacterCartView(LayoutView):
+    def __init__(self, shop_view: NewCharacterShopView):
+        super().__init__(timeout=None)
+        self.shop_view = shop_view
+        self.can_afford = True
+        self.cart_items = {}
+        self.remaining_wealth = {}
+
+    async def setup(self):
+        self.build_view()
+
+    def build_view(self):
+        self.clear_items()
+        container = Container()
+        container.add_item(TextDisplay("**Review Cart**"))
+        container.add_item(Separator())
+
+        total_cost_raw = {}
+        self.cart_items = {}
+
+        for name, data in self.shop_view.cart.items():
+            item = data['item']
+            quantity = data['quantity']
+            quantity_per_purchase = item.get('quantity', 1)
+            total_quantity = quantity * quantity_per_purchase
+
+            self.cart_items[name] = total_quantity
+
+            display = f"{name} x{quantity} (Total: {total_quantity})"
+
+            if self.shop_view.inventory_type == 'purchase':
+                cost = quantity * item.get('price', 0)
+                currency = item.get('currency')
+                total_cost_raw[currency] = total_cost_raw.get(currency, 0) + cost
+                price_label = format_price_string(cost, currency, self.shop_view.currency_config)
+                display += f" - {price_label}"
+
+            container.add_item(TextDisplay(display))
+
+        container.add_item(Separator())
+
+        self.can_afford = True
+        warnings = []
+
+        if self.shop_view.inventory_type == 'purchase':
+            consolidated_costs = consolidate_currency_totals(total_cost_raw, self.shop_view.currency_config)
+
+            starting_wealth = self.shop_view.starting_wealth or {}
+            wallet = {}
+            if starting_wealth:
+                wallet[starting_wealth.get('currency')] = starting_wealth.get('amount', 0)
+
+            for base_currency, amount in consolidated_costs.items():
+                is_ok, _ = check_sufficient_funds(wallet, self.shop_view.currency_config, base_currency, amount)
+                if not is_ok:
+                    self.can_afford = False
+                    warnings.append(f"Insufficient {titlecase(base_currency)}")
+                else:
+                    pass
+
+            final_currency = {}
+
+            if starting_wealth:
+                starting_currency = starting_wealth.get('currency')
+                starting_amount = starting_wealth.get('amount', 0)
+
+                cost_in_start_curr = consolidated_costs.get(starting_currency, 0)
+
+                denomination_map, base = get_denomination_map(self.shop_view.currency_config, starting_currency)
+                val_in_base = starting_amount * denomination_map.get(starting_currency.lower(), 1)
+
+                total_cost_in_base = consolidated_costs.get(base.lower(), 0)
+
+                remaining_in_base = val_in_base - total_cost_in_base
+
+                final_currency[base] = remaining_in_base
+
+                self.remaining_wealth = final_currency
+
+            if warnings:
+                container.add_item(TextDisplay("\n".join(warnings)))
+
+        action_row = ActionRow()
+        submit = buttons.WizardSubmitButton(self)
+        submit.disabled = not self.can_afford
+        back_button = buttons.CartBackButton(self.shop_view)
+        back_button.label = "Keep Shopping"
+
+        action_row.add_item(submit)
+        action_row.add_item(back_button)
+        self.add_item(container)
+        self.add_item(action_row)
+
+    async def submit(self, interaction):
+        currency_to_give = self.remaining_wealth if self.shop_view.inventory_type == 'purchase' else {}
+
+        await _handle_submission(interaction, self.shop_view.character_id, self.shop_view.character_name,
+                                 self.cart_items, currency_to_give)
+
+
+async def _handle_submission(interaction, character_id, character_name, items, currency):
+    try:
+        guild_id = interaction.guild_id
+        bot = interaction.client
+
+        approval_query = await bot.gdb['approvalQueueChannel'].find_one({'_id': guild_id})
+        channel_id = strip_id(approval_query['approvalQueueChannel']) if approval_query else None
+        forum_channel = bot.get_channel(channel_id) if channel_id else None
+
+        submission_data = {
+            'guild_id': guild_id,
+            'user_id': interaction.user.id,
+            'character_id': character_id,
+            'character_name': character_name,
+            'items': items,
+            'currency': currency,
+            'status': 'pending',
+            'timestamp': discord.utils.utcnow()
+        }
+
+        if forum_channel and isinstance(forum_channel, discord.ForumChannel):
+            # Create Embed for Forum Post
+            embed = discord.Embed(title=f"Inventory Approval: {character_name}", color=discord.Color.blue())
+            embed.set_author(name=interaction.user.name,
+                             icon_url=interaction.user.avatar.url if interaction.user.avatar else None)
+
+            item_labels = [f"{k}: {v}" for k, v in items.items()]
+            embed.add_field(name="Items", value="\n".join(item_labels) or "None", inline=False)
+
+            currency_labels = [f"{titlecase(k)}: {v:.2f}" for k, v in currency.items()]
+            embed.add_field(name="Currency", value="\n".join(currency_labels) or "None", inline=False)
+
+            submission_id = shortuuid.uuid()[:8]
+            embed.set_footer(text=f"Submission ID: {submission_id}")
+
+            # Create Thread
+            thread_name = f"Approval: {character_name}"
+            thread_message = await forum_channel.create_thread(name=thread_name, embed=embed)
+
+            # Store submission in DB (Needed for GM to approve later)
+            submission_data['thread_id'] = thread_message.thread.id
+            submission_data['submission_id'] = submission_id
+
+            await bot.gdb['approvals'].insert_one(submission_data)
+
+            await interaction.response.edit_message(content="Inventory submitted for approval!", view=None, embed=None)
+
+        else:
+            for name, quantity in items.items():
+                await update_character_inventory(interaction, interaction.user.id, character_id, name, quantity)
+
+            for name, quantity in currency.items():
+                await update_character_inventory(interaction, interaction.user.id, character_id, name, quantity)
+
+            await interaction.response.edit_message(content="Inventory applied successfully!", view=None, embed=None)
+
+    except Exception as e:
+        await log_exception(e, interaction)

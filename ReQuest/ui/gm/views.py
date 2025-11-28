@@ -4,6 +4,7 @@ from typing import Any, Dict, Iterator, Tuple
 
 import discord
 from discord.ui import View, LayoutView, Container, TextDisplay, Separator, ActionRow, Section
+from titlecase import titlecase
 
 from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
 from ReQuest.ui.common.views import MenuBaseView
@@ -36,6 +37,11 @@ class GMBaseView(MenuBaseView):
                     'name': 'Players',
                     'description': 'Player management information.',
                     'view_class': GMPlayerMenuView
+                },
+                {
+                    'name': 'Character Approvals',
+                    'description': 'Review pending inventory submissions.',
+                    'view_class': GMApprovalsView
                 }
             ],
             menu_level=0
@@ -1123,3 +1129,93 @@ class ViewCharacterView(LayoutView):
         nav_row = ActionRow()
         nav_row.add_item(MenuDoneButton())
         self.add_item(nav_row)
+
+
+# ----- Approval Queue -----
+
+class GMApprovalsView(LayoutView):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.review_button = buttons.ReviewSubmissionButton(self)
+        self.build_view()
+
+    def build_view(self):
+        container = Container()
+        header = Section(accessory=BackButton(GMBaseView))
+        header.add_item(TextDisplay("**Game Master - Inventory Approvals**"))
+        container.add_item(header)
+        container.add_item(Separator())
+
+        section = Section(accessory=self.review_button)
+        section.add_item(TextDisplay("Enter a Submission ID to review and approve/deny it."))
+        container.add_item(section)
+
+        self.add_item(container)
+
+
+class ReviewSubmissionView(LayoutView):
+    def __init__(self, submission_data):
+        super().__init__(timeout=None)
+        self.data = submission_data
+        self.build_view()
+
+    def build_view(self):
+        container = Container()
+        header = Section(accessory=BackButton(GMApprovalsView))
+        header.add_item(TextDisplay(f"**Reviewing: {self.data['character_name']}**"))
+        container.add_item(header)
+        container.add_item(Separator())
+
+        items = self.data.get('items', {})
+        currency = self.data.get('currency', {})
+
+        description = "**Items:**\n" + ("\n".join([f"{k}: {v}" for k, v in items.items()]) or "None")
+        description += "\n\n**Currency:**\n" + (
+                "\n".join([f"{titlecase(k)}: {v}" for k, v in currency.items()]) or "None")
+
+        container.add_item(TextDisplay(description))
+
+        actions = ActionRow()
+        actions.add_item(buttons.ApproveSubmissionButton(self))
+        actions.add_item(buttons.DenySubmissionButton(self))
+        container.add_item(actions)
+
+        self.add_item(container)
+
+    async def approve(self, interaction):
+        try:
+            character_id = self.data['character_id']
+            user_id = self.data['user_id']
+
+            for name, quantity in self.data.get('items', {}).items():
+                await update_character_inventory(interaction, user_id, character_id, name, quantity)
+            for name, quantity in self.data.get('currency', {}).items():
+                await update_character_inventory(interaction, user_id, character_id, name, quantity)
+
+            await interaction.client.gdb['approvals'].delete_one({'submission_id': self.data['submission_id']})
+
+            # Close Thread if possible
+            if thread_id := self.data.get('thread_id'):
+                thread = interaction.guild.get_thread(thread_id)
+                if thread:
+                    await thread.send("Approved!")
+                    await thread.edit(locked=True, archived=True)
+
+            await interaction.response.edit_message(content="Submission Approved.", view=None)
+
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def deny(self, interaction):
+        try:
+            await interaction.client.gdb['approvals'].delete_one({'submission_id': self.data['submission_id']})
+
+            if thread_id := self.data.get('thread_id'):
+                thread = interaction.guild.get_thread(thread_id)
+                if thread:
+                    await thread.send("Denied.")
+                    await thread.edit(locked=True, archived=True)
+
+            await interaction.response.edit_message(content="Submission Denied.", view=None)
+        except Exception as e:
+            await log_exception(e, interaction)

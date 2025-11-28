@@ -467,3 +467,31 @@ class ModPlayerModal(Modal):
                 logger.warning(f'Could not send DM to {self.member} regarding GM modification: {e}')
         except Exception as e:
             await log_exception(e, interaction)
+
+
+class ReviewSubmissionInputModal(Modal):
+    def __init__(self, calling_view):
+        super().__init__(title="Review Submission", timeout=180)
+        self.calling_view = calling_view
+        self.submission_id_text_input = discord.ui.TextInput(
+            label="Submission ID",
+            placeholder="Enter the 8-char ID",
+            min_length=8,
+            max_length=8
+        )
+        self.add_item(self.submission_id_text_input)
+
+    async def on_submit(self, interaction):
+        try:
+            submission_id = self.submission_id_text_input.value
+            data = await interaction.client.gdb['approvals'].find_one({'submission_id': submission_id})
+
+            if not data:
+                await interaction.response.send_message("Submission not found.", ephemeral=True)
+                return
+
+            from ReQuest.ui.gm.views import ReviewSubmissionView
+            view = ReviewSubmissionView(data)
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)

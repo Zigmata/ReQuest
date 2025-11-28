@@ -754,7 +754,7 @@ class AddStaticKitButton(Button):
 class EditStaticKitButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Edit Selected Kit',
+            label='Edit Kit',
             style=ButtonStyle.primary,
             custom_id='edit_static_kit_button',
             disabled=True
@@ -766,15 +766,20 @@ class EditStaticKitButton(Button):
             from ReQuest.ui.config.views import EditStaticKitView
 
             kit_id = self.calling_view.selected_kit_id
+            guild_id = interaction.guild_id
+
             collection = interaction.client.gdb['staticKits']
-            query = await collection.find_one({'_id': interaction.guild_id})
+            query = await collection.find_one({'_id': guild_id})
             kits = query.get('kits', {})
             kit_data = kits.get(kit_id)
 
             if not kit_data:
                 raise Exception("Kit data not found.")
 
-            view = EditStaticKitView(kit_id, kit_data)
+            currency_collection = interaction.client.gdb['currency']
+            currency_config = await currency_collection.find_one({'_id': guild_id})
+
+            view = EditStaticKitView(kit_id, kit_data, currency_config)
             await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
@@ -804,16 +809,19 @@ class RemoveStaticKitButton(Button):
 
     async def _confirm_delete(self, interaction: discord.Interaction):
         try:
-            kit_id = self.calling_view.selected_kit_id
+            view = self.calling_view
+            kit_id = view.selected_kit_id
             collection = interaction.client.gdb['staticKits']
             await collection.update_one(
                 {'_id': interaction.guild_id},
                 {'$unset': {f'kits.{kit_id}': ''}}
             )
-            self.calling_view.selected_kit_name = None
-            await setup_view(self.calling_view, interaction)
-            self.calling_view.clear_items()
-            self.calling_view.build_view()
+            view.selected_kit_name = None
+            await setup_view(view, interaction)
+            view.edit_kit_button.label = 'Edit Kit'
+            view.remove_kit_button.label = 'Delete Kit'
+            view.clear_items()
+            view.build_view()
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)

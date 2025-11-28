@@ -1517,10 +1517,11 @@ class ConfigStaticKitsView(LayoutView):
 
 
 class EditStaticKitView(LayoutView):
-    def __init__(self, kit_id, kit_data):
+    def __init__(self, kit_id, kit_data, currency_config):
         super().__init__(timeout=None)
         self.kit_id = kit_id
         self.kit_data = kit_data
+        self.currency_config = currency_config
         self.items_per_page = 5
         self.current_page = 0
         self.items = self.kit_data.get('items', [])
@@ -1551,7 +1552,10 @@ class EditStaticKitView(LayoutView):
         else:
             for currency, amount in currencies.items():
                 currency_row = Section(accessory=buttons.DeleteKitCurrencyButton(self, currency))
-                currency_row.add_item(TextDisplay(f"{titlecase(currency)}: {amount}"))
+
+                display_string = format_price_string(amount, currency, self.currency_config)
+
+                currency_row.add_item(TextDisplay(display_string))
                 container.add_item(currency_row)
 
         container.add_item(Separator())
@@ -1573,7 +1577,7 @@ class EditStaticKitView(LayoutView):
                 item_actions.add_item(buttons.EditKitItemButton(self, item, global_index))
                 item_actions.add_item(buttons.DeleteKitItemButton(self, global_index))
 
-                display = f"**{item['name']}** (x{item['quantity']})"
+                display = f"**{titlecase(item['name'])}** (x{item['quantity']})"
                 if item.get('description'):
                     display += f"\n*{item['description']}*"
 

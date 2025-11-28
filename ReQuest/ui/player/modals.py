@@ -156,7 +156,47 @@ class CharacterRegisterModal(Modal):
                                                       }}}},
                                         upsert=True)
 
-            await interaction.response.send_message(f'{character_name} was born!', ephemeral=True, delete_after=10)
+            inventory_config = await interaction.client.gdb['inventoryConfig'].find_one({'_id': guild_id})
+            inventory_type = inventory_config.get('inventoryType', 'disabled') if inventory_config else 'disabled'
+
+            if inventory_type == 'disabled':
+                await interaction.response.send_message(f'{character_name} was born!', ephemeral=True, delete_after=10)
+            else:
+                from ReQuest.ui.player.views import NewCharacterWizardView
+
+                view = NewCharacterWizardView(character_id, character_name, inventory_type)
+                await interaction.response.send_message(view=view, ephemeral=True)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class OpenInventoryInputModal(Modal):
+    def __init__(self, calling_view):
+        super().__init__(
+            title='Starting Inventory Input',
+            timeout=600
+        )
+        self.calling_view = calling_view
+        self.items_input = discord.ui.TextInput(
+            label='Items',
+            placeholder='Item Name: Quantity (e.g. Sword: 1)',
+            style=discord.TextStyle.paragraph,
+            required=False
+        )
+        self.add_item(self.items_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            items = {}
+            if self.items_input.value:
+                for line in self.items_input.value.split('\n'):
+                    if ':' in line:
+                        name, quantity = line.rsplit(':', 1)
+                        if quantity.strip().isdigit():
+                            items[name.strip()] = int(quantity.strip())
+
+            await self.calling_view.submit_open_inventory(interaction, items)
+
         except Exception as e:
             await log_exception(e, interaction)
 
