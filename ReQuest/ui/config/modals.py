@@ -797,30 +797,38 @@ class ConfigNewCharacterWealthModal(Modal):
     async def on_submit(self, interaction: discord.Interaction):
         try:
             guild_id = interaction.guild_id
-            currency_input = self.currency_name_text_input.value.strip()
 
             if not self.amount_text_input.value.replace('.', '', 1).isdigit():
                 raise ValueError('Amount must be a number.')
             amount = float(self.amount_text_input.value)
 
-            currency_collection = interaction.client.gdb['currency']
-            currency_config = await currency_collection.find_one({'_id': guild_id})
+            inventory_config_collection = interaction.client.gdb['inventoryConfig']
 
-            if not currency_config:
-                raise Exception('No currencies are configured on this server.')
+            if amount <= 0:
+                await inventory_config_collection.update_one(
+                    {'_id': interaction.guild_id},
+                    {'$unset': {'newCharacterWealth': ''}},
+                    upsert=True
+                )
+            else:
+                currency_input = self.currency_name_text_input.value.strip()
+                currency_collection = interaction.client.gdb['currency']
+                currency_config = await currency_collection.find_one({'_id': guild_id})
 
-            is_currency, parent_name = find_currency_or_denomination(currency_config, currency_input)
+                if not currency_config:
+                    raise Exception('No currencies are configured on this server.')
 
-            if not is_currency:
-                raise Exception(f'Currency or denomination named {currency_input} not found. Please use a valid '
-                                f'currency.')
+                is_currency, parent_name = find_currency_or_denomination(currency_config, currency_input)
 
-            collection = interaction.client.gdb['inventoryConfig']
-            await collection.update_one(
-                {'_id': interaction.guild_id},
-                {'$set': {'newCharacterWealth': {'currency': parent_name, 'amount': amount}}},
-                upsert=True
-            )
+                if not is_currency:
+                    raise Exception(f'Currency or denomination named {currency_input} not found. Please use a valid '
+                                    f'currency.')
+
+                await inventory_config_collection.update_one(
+                    {'_id': interaction.guild_id},
+                    {'$set': {'newCharacterWealth': {'currency': parent_name, 'amount': amount}}},
+                    upsert=True
+                )
 
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
@@ -860,10 +868,10 @@ class CreateStaticKitModal(Modal):
             kit_name = self.kit_name_text_input.value.strip().lower()
 
             kit_query = await collection.find_one({'_id': guild_id})
-            existing_kits = kit_query.get('kits', {}) if kit_query else None
+            existing_kits = kit_query.get('kits', {}) if kit_query else {}
             if existing_kits:
-                for kit in existing_kits.items():
-                    if kit_name == kit['name'].lower():
+                for kit_data in existing_kits.values():
+                    if kit_name == kit_data['name'].lower():
                         raise Exception(f'A static kit named "{titlecase(kit_name)}" already exists. Please '
                                         f'choose a different name.')
 

@@ -90,7 +90,8 @@ class CharacterBaseView(LayoutView):
         ))
         container.add_item(list_activate_section)
 
-        remove_section = Section(accessory=MenuViewButton(RemoveCharacterView, 'Remove'))
+
+        remove_section = Section(accessory=buttons.RemoveCharacterButton())
         remove_section.add_item(TextDisplay(
             'Removes a character permanently.'
         ))
@@ -706,7 +707,8 @@ class NewCharacterShopView(LayoutView):
         if self.starting_wealth:
             amount = self.starting_wealth.get('amount', 0)
             currency = self.starting_wealth.get('currency', '')
-            title += f"\nStarting Wealth: {amount} {titlecase(currency)}"
+            formatted_currency = format_price_string(amount, currency, self.currency_config)
+            title += f"\nStarting Wealth: {formatted_currency}"
 
         container.add_item(TextDisplay(title))
         container.add_item(Separator())
@@ -716,14 +718,11 @@ class NewCharacterShopView(LayoutView):
         stock_slice = self.shop_stock[start:end]
 
         for item in stock_slice:
-            section = Section(accessory=buttons.WizardItemButton(item))
+            section = Section(accessory=buttons.WizardItemButton(item, self.inventory_type))
 
-            display = f"**{item['name']}** (x{item.get('quantity', 1)})"
-            if self.inventory_type == 'purchase':
-                price = item.get('price', 0)
-                currency = item.get('currency', '')
-                price_label = format_price_string(price, currency, self.currency_config)
-                display += f" - {price_label}"
+            display = f'**{item["name"]}**'
+            if item.get('quantity', 1) > 1:
+                display += f'(x{item.get("quantity", 1)})'
 
             if item_name := item.get('name'):
                 if item_name in self.cart:
@@ -790,9 +789,6 @@ class NewCharacterCartView(LayoutView):
         self.cart_items = {}
         self.remaining_wealth = {}
 
-    async def setup(self):
-        self.build_view()
-
     def build_view(self):
         self.clear_items()
         container = Container()
@@ -807,17 +803,19 @@ class NewCharacterCartView(LayoutView):
             quantity = data['quantity']
             quantity_per_purchase = item.get('quantity', 1)
             total_quantity = quantity * quantity_per_purchase
-
             self.cart_items[name] = total_quantity
 
-            display = f"{name} x{quantity} (Total: {total_quantity})"
+            display = f'{name} x{quantity}'
+            if quantity_per_purchase > 1:
+                display += f' (Total: {total_quantity})'
 
             if self.shop_view.inventory_type == 'purchase':
                 cost = quantity * item.get('price', 0)
-                currency = item.get('currency')
-                total_cost_raw[currency] = total_cost_raw.get(currency, 0) + cost
-                price_label = format_price_string(cost, currency, self.shop_view.currency_config)
-                display += f" - {price_label}"
+                if cost > 0:
+                    currency = item.get('currency')
+                    total_cost_raw[currency] = total_cost_raw.get(currency, 0) + cost
+                    price_label = format_price_string(cost, currency, self.shop_view.currency_config)
+                    display += f" - {price_label}"
 
             container.add_item(TextDisplay(display))
 
@@ -848,8 +846,6 @@ class NewCharacterCartView(LayoutView):
                 starting_currency = starting_wealth.get('currency')
                 starting_amount = starting_wealth.get('amount', 0)
 
-                cost_in_start_curr = consolidated_costs.get(starting_currency, 0)
-
                 denomination_map, base = get_denomination_map(self.shop_view.currency_config, starting_currency)
                 val_in_base = starting_amount * denomination_map.get(starting_currency.lower(), 1)
 
@@ -865,12 +861,11 @@ class NewCharacterCartView(LayoutView):
                 container.add_item(TextDisplay("\n".join(warnings)))
 
         action_row = ActionRow()
-        submit = buttons.WizardSubmitButton(self)
-        submit.disabled = not self.can_afford
-        back_button = buttons.CartBackButton(self.shop_view)
-        back_button.label = "Keep Shopping"
+        submit_button = buttons.WizardSubmitButton(self)
+        submit_button.disabled = not self.can_afford
+        back_button = buttons.WizardKeepShoppingButton(self.shop_view)
 
-        action_row.add_item(submit)
+        action_row.add_item(submit_button)
         action_row.add_item(back_button)
         self.add_item(container)
         self.add_item(action_row)
@@ -927,7 +922,12 @@ async def _handle_submission(interaction, character_id, character_name, items, c
 
             await bot.gdb['approvals'].insert_one(submission_data)
 
-            await interaction.response.edit_message(content="Inventory submitted for approval!", view=None, embed=None)
+            await interaction.response.delete_message()
+            await interaction.followup.send(
+                content=f"Your inventory submission for **{character_name}** has been sent for approval!",
+                ephemeral=True,
+                delete_after=30
+            )
 
         else:
             for name, quantity in items.items():
@@ -936,7 +936,8 @@ async def _handle_submission(interaction, character_id, character_name, items, c
             for name, quantity in currency.items():
                 await update_character_inventory(interaction, interaction.user.id, character_id, name, quantity)
 
-            await interaction.response.edit_message(content="Inventory applied successfully!", view=None, embed=None)
+            await interaction.response.delete_message()
+            await interaction.followup.send(content="Inventory applied successfully!", ephemeral=True, delete_after=30)
 
     except Exception as e:
         await log_exception(e, interaction)

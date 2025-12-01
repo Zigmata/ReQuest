@@ -158,14 +158,15 @@ class OpenInventoryInputButton(Button):
 
 
 class WizardItemButton(Button):
-    def __init__(self, item):
-        label = f'{item["name"]}'
-        if item.get('price') and item.get('currency'):
-            label += f' ({item["price"]} {titlecase(item["currency"])})'
+    def __init__(self, item, inventory_type):
+        label = f'Add to cart'
+        if inventory_type == 'purchase':
+            if item.get('price') and item.get('currency'):
+                label += f' ({item["price"]} {titlecase(item["currency"])})'
 
         super().__init__(
             label=label,
-            style=ButtonStyle.secondary,
+            style=ButtonStyle.success,
             custom_id=f'wiz_item_{item["name"]}'
         )
         self.item = item
@@ -190,7 +191,7 @@ class WizardViewCartButton(Button):
         try:
             from ReQuest.ui.player.views import NewCharacterCartView
             view = NewCharacterCartView(self.calling_view)
-            await setup_view(view, interaction)
+            view.build_view()
             await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
@@ -208,5 +209,39 @@ class WizardSubmitButton(Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             await self.calling_view.submit(interaction)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+class RemoveCharacterButton(Button):
+    def __init__(self):
+        super().__init__(
+            label='Remove Character',
+            style=ButtonStyle.danger,
+            custom_id='remove_character_button'
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            from ReQuest.ui.player.views import RemoveCharacterView
+            view = RemoveCharacterView()
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class WizardKeepShoppingButton(Button):
+    def __init__(self, shop_view):
+        super().__init__(
+            label='Keep Shopping',
+            style=ButtonStyle.primary,
+            custom_id='wiz_keep_shopping_button'
+        )
+        self.shop_view = shop_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            self.shop_view.build_view()
+            await interaction.response.edit_message(view=self.shop_view)
         except Exception as e:
             await log_exception(e, interaction)

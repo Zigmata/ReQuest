@@ -1201,7 +1201,10 @@ class ReviewSubmissionView(LayoutView):
                     await thread.send("Approved!")
                     await thread.edit(locked=True, archived=True)
 
-            await interaction.response.edit_message(content="Submission Approved.", view=None)
+            view = GMApprovalsView()
+            view.build_view()
+
+            await interaction.response.edit_message(view=view)
 
         except Exception as e:
             await log_exception(e, interaction)
