@@ -208,7 +208,7 @@ class OpenInventoryInputModal(Modal):
                         errors.append(f'Item name cannot be empty in line: "{line}".')
                         continue
 
-                    if not quantity.isdigit() or int(quantity) <= 1:
+                    if not quantity.isdigit() or int(quantity) < 1:
                         errors.append(f'Invalid quantity for "{name}": "{quantity}". Must be a positive integer.')
                         continue
 
