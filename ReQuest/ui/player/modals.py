@@ -178,8 +178,8 @@ class OpenInventoryInputModal(Modal):
         )
         self.calling_view = calling_view
         self.items_input = discord.ui.TextInput(
-            label='Items',
-            placeholder='Item Name: Quantity (e.g. Sword: 1)',
+            label='Inventory',
+            placeholder='One per line in <name>: <quantity> format, e.g.:\nSword: 1\ngold: 30',
             style=discord.TextStyle.paragraph,
             required=False
         )
@@ -188,12 +188,41 @@ class OpenInventoryInputModal(Modal):
     async def on_submit(self, interaction: discord.Interaction):
         try:
             items = {}
+            errors = []
+
             if self.items_input.value:
                 for line in self.items_input.value.split('\n'):
-                    if ':' in line:
-                        name, quantity = line.rsplit(':', 1)
-                        if quantity.strip().isdigit():
-                            items[name.strip()] = int(quantity.strip())
+                    line = line.strip()
+                    if not line:
+                        continue
+
+                    if ':' not in line:
+                        errors.append(f'Invalid format: "{line}". Use <name>: <quantity>.')
+                        continue
+
+                    name, quantity = line.rsplit(':', 1)
+                    name = name.strip()
+                    quantity = quantity.strip()
+
+                    if not name:
+                        errors.append(f'Item name cannot be empty in line: "{line}".')
+                        continue
+
+                    if not quantity.isdigit() or int(quantity) <= 1:
+                        errors.append(f'Invalid quantity for "{name}": "{quantity}". Must be a positive integer.')
+                        continue
+
+                    items[name] = int(quantity)
+
+            if errors:
+                error_message = 'Errors in inventory input:\n- ' + '\n- '.join(errors)
+                await interaction.response.send_message(error_message, ephemeral=True)
+                return
+
+            if not items:
+                await interaction.response.send_message('No valid items provided. Initializing with empty inventory.',
+                                                        ephemeral=True)
+                return
 
             await self.calling_view.submit_open_inventory(interaction, items)
 

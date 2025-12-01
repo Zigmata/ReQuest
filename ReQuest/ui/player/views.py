@@ -884,7 +884,7 @@ class NewCharacterCartView(LayoutView):
                     if cost > 0:
                         currency = item.get('currency')
                         price_label = format_price_string(cost, currency, self.shop_view.currency_config)
-                        display += f" - {price_label}"
+                        display += f' - {price_label}'
 
                 edit_button = buttons.WizardEditCartItemButton(name, quantity)
                 section = Section(accessory=edit_button)
@@ -990,21 +990,21 @@ async def _handle_submission(interaction, character_id, character_name, items, c
 
         if forum_channel and isinstance(forum_channel, discord.ForumChannel):
             # Create Embed for Forum Post
-            embed = discord.Embed(title=f"Inventory Approval: {character_name}", color=discord.Color.blue())
+            embed = discord.Embed(title=f'Inventory Approval: {character_name}', color=discord.Color.blue())
             embed.set_author(name=interaction.user.name,
                              icon_url=interaction.user.avatar.url if interaction.user.avatar else None)
 
-            item_labels = [f"{k}: {v}" for k, v in items.items()]
-            embed.add_field(name="Items", value="\n".join(item_labels) or "None", inline=False)
+            item_labels = [f'{k}: {v}' for k, v in items.items()]
+            embed.add_field(name='Items', value='\n'.join(item_labels) or 'None', inline=False)
 
-            currency_labels = [f"{titlecase(k)}: {v:.2f}" for k, v in currency.items()]
-            embed.add_field(name="Currency", value="\n".join(currency_labels) or "None", inline=False)
+            currency_labels = [f'{titlecase(k)}: {v:.2f}' for k, v in currency.items()]
+            embed.add_field(name='Currency', value='\n'.join(currency_labels) or 'None', inline=False)
 
             submission_id = shortuuid.uuid()[:8]
-            embed.set_footer(text=f"Submission ID: {submission_id}")
+            embed.set_footer(text=f'Submission ID: {submission_id}')
 
             # Create Thread
-            thread_name = f"Approval: {character_name}"
+            thread_name = f'Approval: {character_name}'
             thread_message = await forum_channel.create_thread(name=thread_name, embed=embed)
 
             # Store submission in DB (Needed for GM to approve later)
@@ -1026,10 +1026,27 @@ async def _handle_submission(interaction, character_id, character_name, items, c
             for name, quantity in currency.items():
                 await update_character_inventory(interaction, interaction.user.id, character_id, name, quantity)
 
+            currency_config = await bot.gdb['currency'].find_one({'_id': guild_id})
+
+            report_embed = discord.Embed(title='Starting Inventory Applied', color=discord.Color.green())
+            report_embed.description = (
+                f'Player: {interaction.user.mention} as `{character_name}`\n'
+            )
+
+            added_items_summary = []
+            for name, quantity in items.items():
+                quantity_label = f'{quantity}x ' if quantity > 1 else ''
+                added_items_summary.append(f'{quantity_label}{titlecase(name)}')
+
+            report_embed.add_field(name='Items Received', value='\n'.join(added_items_summary) or 'None', inline=False)
+
+            currency_strs = format_consolidated_totals(currency, currency_config)
+            report_embed.add_field(name='Currency Received', value='\n'.join(currency_strs) or 'None', inline=False)
+
+            report_embed.set_footer(text=f'Transaction ID: {shortuuid.uuid()[:12]}')
+
             await interaction.response.edit_message(view=CharacterBaseView())
-            await interaction.followup.send(content=f'{character_name} had their starting inventory applied '
-                                                    f'successfully!',
-                                            ephemeral=True)
+            await interaction.followup.send(embed=report_embed, ephemeral=True)
 
     except Exception as e:
         await log_exception(e, interaction)

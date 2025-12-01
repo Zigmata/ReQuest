@@ -640,29 +640,29 @@ def consolidate_currency_totals(raw_totals: dict, currency_config: dict) -> dict
 def format_consolidated_totals(base_totals: dict, currency_config: dict) -> list[str]:
     output = []
 
-    for base_name_lower, total_val in base_totals.items():
+    for base_name_lower, total_value in base_totals.items():
         curr_conf = None
         if currency_config:
             for c in currency_config.get('currencies', []):
-                if c['name'].lower() == base_name_lower:
+                if c['name'].lower() == base_name_lower.lower():
                     curr_conf = c
                     break
 
         if not curr_conf:
-            output.append(f"{titlecase(base_name_lower)}: {total_val}")
+            output.append(f"{titlecase(base_name_lower)}: {total_value}")
             continue
 
         base_display_name = curr_conf['name']
 
         if curr_conf.get('isDouble', False):
-            output.append(f"{titlecase(base_display_name)}: {total_val:.2f}")
+            output.append(f"{titlecase(base_display_name)}: {total_value:.2f}")
         else:
             denoms = curr_conf.get('denominations', [])
             all_denoms = [{'name': curr_conf['name'], 'value': 1.0}] + denoms
             all_denoms.sort(key=lambda x: float(x['value']), reverse=True)
 
             parts = []
-            remaining_val = total_val
+            remaining_val = total_value
 
             tolerance = 1e-9
 
@@ -671,15 +671,15 @@ def format_consolidated_totals(base_totals: dict, currency_config: dict) -> list
                 if remaining_val + tolerance >= d_val:
                     count = int(remaining_val / d_val + tolerance)
                     if count > 0:
-                        parts.append(f"{count} {titlecase(d['name'])}")
+                        parts.append(f'{count} {titlecase(d["name"])}')
                         remaining_val -= count * d_val
 
             if parts:
-                output.append(f"{titlecase(base_display_name)}: {', '.join(parts)}")
-            elif total_val == 0:
-                output.append(f"{titlecase(base_display_name)}: 0")
-            elif total_val > 0:
-                output.append(f"{titlecase(base_display_name)}: {total_val:.2f}")
+                output.append(', '.join(parts))
+            elif total_value == 0:
+                output.append(f'{titlecase(base_display_name)}: 0')
+            elif total_value > 0:
+                output.append(f'{titlecase(base_display_name)}: {total_value:.2f}')
 
     return output
 
