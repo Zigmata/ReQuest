@@ -281,3 +281,20 @@ class WizardClearCartButton(Button):
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
+
+
+class ConsumeItemButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Consume/Destroy Item',
+            style=ButtonStyle.danger,
+            custom_id='consume_item_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            modal = modals.ConsumeItemModal(self.calling_view)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)

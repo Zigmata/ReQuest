@@ -281,7 +281,9 @@ class InventoryBaseView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         self.active_character = None
+        self.active_character_id = None
         self.spend_currency_button = buttons.SpendCurrencyButton(self)
+        self.consume_item_button = buttons.ConsumeItemButton(self)
         self.current_inventory_info = TextDisplay(
             'No Inventory Available.'
         )
@@ -302,6 +304,12 @@ class InventoryBaseView(LayoutView):
         container.add_item(self.current_inventory_info)
         container.add_item(Separator())
 
+        consume_item_section = Section(accessory=self.consume_item_button)
+        consume_item_section.add_item(TextDisplay(
+            'Consume or destroy an item from your inventory.'
+        ))
+        container.add_item(consume_item_section)
+
         spend_currency_section = Section(accessory=self.spend_currency_button)
         spend_currency_section.add_item(TextDisplay(
             'Spend some currency.'
@@ -318,15 +326,17 @@ class InventoryBaseView(LayoutView):
         currency_config = await interaction.client.gdb['currency'].find_one({'_id': guild_id})
         if not query:
             self.spend_currency_button.disabled = True
+            self.consume_item_button.disabled = True
             self.current_inventory_info.content = 'No Characters: Register a character to use these menus.'
         elif str(guild_id) not in query['activeCharacters']:
             self.spend_currency_button.disabled = True
+            self.consume_item_button.disabled = True
             self.current_inventory_info.content = (
                 'No Active Character: Activate a character for this server to use these menus.'
             )
         else:
-            active_character_id = query['activeCharacters'][str(guild_id)]
-            self.active_character = query['characters'][active_character_id]
+            self.active_character_id = query['activeCharacters'][str(guild_id)]
+            self.active_character = query['characters'][self.active_character_id]
             self.header_info.content = f'**Player Commands - {self.active_character['name']}\'s Inventory**'
 
             # Validate currencies in inventory and convert based on server config
@@ -344,7 +354,7 @@ class InventoryBaseView(LayoutView):
                         await update_character_inventory(
                             interaction,
                             interaction.user.id,
-                            active_character_id,
+                            self.active_character_id,
                             item_name_key,
                             float(quantity)
                         )
@@ -352,7 +362,7 @@ class InventoryBaseView(LayoutView):
                         await collection.update_one(
                             {'_id': interaction.user.id},
                             {'$unset': {
-                                f'characters.{active_character_id}.attributes.inventory.{item_name_key}': ''
+                                f'characters.{self.active_character_id}.attributes.inventory.{item_name_key}': ''
                             }}
                         )
 
@@ -360,7 +370,7 @@ class InventoryBaseView(LayoutView):
 
                 if conversion_occurred:
                     query = await collection.find_one({'_id': interaction.user.id})
-                    self.active_character = query['characters'][active_character_id]
+                    self.active_character = query['characters'][self.active_character_id]
 
             inventory = self.active_character['attributes']['inventory']
             player_currencies = self.active_character['attributes']['currency']
@@ -371,6 +381,16 @@ class InventoryBaseView(LayoutView):
                 pair = (str(item), f'**{inventory[item]}**')
                 value = ': '.join(pair)
                 items.append(value)
+
+            if items:
+                self.consume_item_button.disabled = False
+            else:
+                self.consume_item_button.disabled = True
+
+            if currencies:
+                self.spend_currency_button.disabled = False
+            else:
+                self.spend_currency_button.disabled = True
 
             self.current_inventory_info.content = (
                 f'**Possessions**\n'

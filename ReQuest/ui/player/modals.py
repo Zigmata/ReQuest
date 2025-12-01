@@ -394,3 +394,55 @@ class WizardEditCartItemModal(Modal):
             await interaction.response.edit_message(view=self.cart_view)
         except Exception as e:
             await log_exception(e, interaction)
+
+
+class ConsumeItemModal(Modal):
+    def __init__(self, calling_view):
+        super().__init__(
+            title='Consume/Destroy Item',
+            timeout=300
+        )
+        self.item_name_text_input = discord.ui.TextInput(
+            label='Item Name',
+            placeholder='Enter the name of the item to consume or destroy.',
+            custom_id='consume_item_name_text_input',
+        )
+        self.item_quantity_text_input = discord.ui.TextInput(
+            label='Quantity',
+            placeholder='Enter the amount to consume or destroy.',
+            custom_id='consume_quantity_text_input',
+            default='1',
+            min_length=1
+        )
+        self.calling_view = calling_view
+        self.add_item(self.item_name_text_input)
+        self.add_item(self.item_quantity_text_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            item_name = self.item_name_text_input.value.strip()
+            quantity_value = self.item_quantity_text_input.value.strip()
+
+            if not quantity_value.isdigit() or int(quantity_value) < 1:
+                raise ValueError('Quantity must be a positive integer.')
+
+            quantity = int(quantity_value)
+            character_id = self.calling_view.active_character_id
+
+            inventory = self.calling_view.active_character['attributes'].get('inventory', {})
+            inventory_lower = {k.lower(): v for k, v in inventory.items()}
+
+            current_quantity = inventory_lower.get(item_name.lower(), 0)
+
+            if current_quantity == 0:
+                raise Exception(f'You do not have any items matching the name: {item_name}.')
+
+            if quantity > current_quantity:
+                raise Exception(f'You only have {current_quantity} of {item_name}.')
+
+            await update_character_inventory(interaction, interaction.user.id, character_id, item_name, -quantity)
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
