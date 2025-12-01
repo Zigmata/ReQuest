@@ -10,7 +10,7 @@ from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
     update_character_inventory,
-    update_character_experience, find_currency_or_denomination, get_denomination_map, setup_view, smart_title_case
+    update_character_experience, find_currency_or_denomination, get_denomination_map, setup_view, titlecase
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -313,7 +313,7 @@ class RewardsModal(Modal):
                     items = {}
                     for item in self.item_input.value.strip().split('\n'):
                         item_name, quantity = item.split(':', 1)
-                        items[smart_title_case(item_name.strip())] = int(quantity.strip())
+                        items[titlecase(item_name.strip())] = int(quantity.strip())
 
             await self.caller.modal_callback(interaction, xp, items)
         except Exception as e:
@@ -323,7 +323,7 @@ class RewardsModal(Modal):
     def parse_items_to_string(items) -> str:
         item_list = []
         for item_name, quantity in items.items():
-            item_list.append(f'{smart_title_case(item_name)}: {quantity}')
+            item_list.append(f'{titlecase(item_name)}: {quantity}')
         item_string = '\n'.join(item_list)
         return item_string
 
@@ -445,14 +445,14 @@ class ModPlayerModal(Modal):
 
                 display_value = f"{total_value:.2f}" if isinstance(total_value,
                                                                    float) and total_value % 1 != 0 else str(total_value)
-                mod_summary_embed.add_field(name=smart_title_case(base_currency_name), value=display_value)
+                mod_summary_embed.add_field(name=titlecase(base_currency_name), value=display_value)
 
             for item_name, quantity in item_changes.items():
                 if quantity == 0:
                     continue
                 await update_character_inventory(interaction, self.member.id, self.character_id,
                                                  item_name.lower(), int(quantity))
-                mod_summary_embed.add_field(name=smart_title_case(item_name), value=int(quantity))
+                mod_summary_embed.add_field(name=titlecase(item_name), value=int(quantity))
 
             transaction_id = shortuuid.uuid()[:12]
             mod_summary_embed.set_footer(text=f'Transaction ID: {transaction_id}')
@@ -465,5 +465,35 @@ class ModPlayerModal(Modal):
                 await self.member.send(embed=mod_summary_embed)
             except discord.errors.Forbidden as e:
                 logger.warning(f'Could not send DM to {self.member} regarding GM modification: {e}')
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ReviewSubmissionInputModal(Modal):
+    def __init__(self, calling_view):
+        super().__init__(title="Review Submission", timeout=180)
+        self.calling_view = calling_view
+        self.submission_id_text_input = discord.ui.TextInput(
+            label="Submission ID",
+            placeholder="Enter the 8-char ID",
+            min_length=8,
+            max_length=8
+        )
+        self.add_item(self.submission_id_text_input)
+
+    async def on_submit(self, interaction):
+        try:
+            submission_id = self.submission_id_text_input.value
+            data = await interaction.client.gdb['approvals'].find_one({'submission_id': submission_id})
+
+            if not data:
+                await interaction.response.send_message("Submission not found.", ephemeral=True)
+                return
+
+            currency_config = await interaction.client.gdb['currency'].find_one({'_id': interaction.guild_id})
+
+            from ReQuest.ui.gm.views import ReviewSubmissionView
+            view = ReviewSubmissionView(data, currency_config)
+            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)

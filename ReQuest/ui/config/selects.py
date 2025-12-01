@@ -30,8 +30,12 @@ class GMRoleRemoveSelect(Select):
 
 class SingleChannelConfigSelect(ChannelSelect):
     def __init__(self, calling_view, config_type, config_name):
+        channel_types = [discord.ChannelType.text]
+        if config_type == 'approvalQueueChannel':
+            channel_types = [discord.ChannelType.forum]
+
         super().__init__(
-            channel_types=[discord.ChannelType['text']],
+            channel_types=channel_types,
             placeholder=f'Search for your {config_name} Channel',
             custom_id=f'config_{config_type}_channel_select'
         )
@@ -237,6 +241,68 @@ class DenominationSelect(Select):
             view = self.calling_view
             view.selected_denomination_name = self.values[0]
 
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class InventoryTypeSelect(Select):
+    def __init__(self, calling_view):
+        super().__init__(
+            placeholder='Select Inventory Mode',
+            options=[
+                discord.SelectOption(label='Disabled', value='disabled',
+                                     description='Players start with empty inventories.'),
+                discord.SelectOption(label='Selection', value='selection',
+                                     description='Players choose items freely from the New Character Shop.'),
+                discord.SelectOption(label='Purchase', value='purchase',
+                                     description='Players purchase items from the New Character Shop with a given '
+                                                 'amount of currency.'),
+                discord.SelectOption(label='Open', value='open',
+                                     description='Players manually input their own inventories.'),
+                discord.SelectOption(label='Static', value='static',
+                                     description='Players are given a predefined starting inventory.')
+            ],
+            custom_id='inventory_type_select'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            collection = interaction.client.gdb['inventoryConfig']
+            await collection.update_one({'_id': interaction.guild_id},
+                                        {'$set': {'inventoryType': self.values[0]}},
+                                        upsert=True)
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ConfigStaticKitSelect(Select):
+    def __init__(self, calling_view):
+        super().__init__(
+            placeholder='Select a kit to manage',
+            options=[discord.SelectOption(label='No kits configured', value='None')],
+            custom_id='config_static_kit_select',
+            disabled=True
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            view = self.calling_view
+            view.selected_kit_id = self.values[0]
+            kit_name = None
+            for option in self.options:
+                if option.value == self.values[0]:
+                    kit_name = option.label
+                    break
+            view.edit_kit_button.disabled = False
+            view.edit_kit_button.label = f'Edit {kit_name}'
+            view.remove_kit_button.disabled = False
+            view.remove_kit_button.label = f'Remove {kit_name}'
             await setup_view(view, interaction)
             await interaction.response.edit_message(view=view)
         except Exception as e:

@@ -354,3 +354,30 @@ class CompleteQuestButton(Button):
             await self.calling_view.complete_quest(interaction, summary=summary)
         except Exception as e:
             await log_exception(e, interaction)
+
+
+class ReviewSubmissionButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(label="Review Submission", style=ButtonStyle.success)
+        self.calling_view = calling_view
+
+    async def callback(self, interaction):
+        await interaction.response.send_modal(modals.ReviewSubmissionInputModal(self.calling_view))
+
+
+class ApproveSubmissionButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(label="Approve", style=ButtonStyle.success)
+        self.calling_view = calling_view
+
+    async def callback(self, interaction):
+        await self.calling_view.approve(interaction)
+
+
+class DenySubmissionButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(label="Deny", style=ButtonStyle.danger)
+        self.calling_view = calling_view
+
+    async def callback(self, interaction):
+        await self.calling_view.deny(interaction)

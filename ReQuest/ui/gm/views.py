@@ -15,7 +15,7 @@ from ReQuest.utilities.supportFunctions import (
     update_character_experience,
     attempt_delete,
     update_quest_embed,
-    format_currency_display, setup_view
+    format_currency_display, setup_view, format_consolidated_totals
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -36,6 +36,11 @@ class GMBaseView(MenuBaseView):
                     'name': 'Players',
                     'description': 'Player management information.',
                     'view_class': GMPlayerMenuView
+                },
+                {
+                    'name': 'Character Approvals',
+                    'description': 'Review pending inventory submissions.',
+                    'view_class': GMApprovalsView
                 }
             ],
             menu_level=0
@@ -1123,3 +1128,126 @@ class ViewCharacterView(LayoutView):
         nav_row = ActionRow()
         nav_row.add_item(MenuDoneButton())
         self.add_item(nav_row)
+
+
+# ----- Approval Queue -----
+
+class GMApprovalsView(LayoutView):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.review_button = buttons.ReviewSubmissionButton(self)
+        self.build_view()
+
+    def build_view(self):
+        container = Container()
+        header = Section(accessory=BackButton(GMBaseView))
+        header.add_item(TextDisplay("**Game Master - Inventory Approvals**"))
+        container.add_item(header)
+        container.add_item(Separator())
+
+        section = Section(accessory=self.review_button)
+        section.add_item(TextDisplay("Enter a Submission ID to review and approve/deny it."))
+        container.add_item(section)
+
+        self.add_item(container)
+
+
+class ReviewSubmissionView(LayoutView):
+    def __init__(self, submission_data, currency_config):
+        super().__init__(timeout=None)
+        self.currency_config = currency_config
+        self.data = submission_data
+        self.build_view()
+
+    def build_view(self):
+        container = Container()
+        header = Section(accessory=BackButton(GMApprovalsView))
+        header.add_item(TextDisplay(f'**Reviewing: {self.data["character_name"]}**'))
+        container.add_item(header)
+        container.add_item(Separator())
+
+        items = self.data.get('items', {})
+        currency = self.data.get('currency', {})
+
+        description = '**Items:**\n' + ('\n'.join([f'{k}: {v}' for k, v in items.items()]) or 'None')
+        currency_labels = format_consolidated_totals(currency, self.currency_config)
+        description += '\n\n**Currency:**\n' + ('\n'.join(currency_labels) or 'None')
+
+        container.add_item(TextDisplay(description))
+
+        actions = ActionRow()
+        actions.add_item(buttons.ApproveSubmissionButton(self))
+        actions.add_item(buttons.DenySubmissionButton(self))
+        container.add_item(actions)
+
+        self.add_item(container)
+
+    async def approve(self, interaction):
+        try:
+            character_id = self.data['character_id']
+            user_id = self.data['user_id']
+
+            for name, quantity in self.data.get('items', {}).items():
+                await update_character_inventory(interaction, user_id, character_id, name, quantity)
+            for name, quantity in self.data.get('currency', {}).items():
+                await update_character_inventory(interaction, user_id, character_id, name, quantity)
+
+            await interaction.client.gdb['approvals'].delete_one({'submission_id': self.data['submission_id']})
+
+            approval_embed = discord.Embed(
+                title='Inventory Update Approved',
+                description=(
+                    f'The inventory for **{self.data["character_name"]}** has been approved by '
+                    f'{interaction.user.mention}.'
+                ),
+                color=discord.Color.green(),
+                type='rich'
+            )
+
+            # Post the approval message
+            thread_id = self.data.get('thread_id')
+            thread = interaction.guild.get_thread(thread_id)
+            await thread.send(embed=approval_embed)
+
+            # Either refresh GM view, or delete original response if in thread since it will be archived.
+            if interaction.channel_id == thread_id:
+                await interaction.response.defer()
+                await interaction.followup.delete_message(interaction.message.id)
+            else:
+                view = GMApprovalsView()
+                await interaction.response.edit_message(view=view)
+
+            # Lock/Archive thread
+            await thread.edit(locked=True, archived=True)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def deny(self, interaction):
+        try:
+            # Same logic as above but for denials
+            await interaction.client.gdb['approvals'].delete_one({'submission_id': self.data['submission_id']})
+
+            denial_embed = discord.Embed(
+                title='Inventory Update Denied',
+                description=(
+                    f'The inventory for **{self.data["character_name"]}** has been denied by '
+                    f'{interaction.user.mention}.'
+                ),
+                color=discord.Color.red(),
+                type='rich'
+            )
+
+            thread_id = self.data.get('thread_id')
+            thread = interaction.guild.get_thread(thread_id)
+            await thread.send(embed=denial_embed)
+
+            if interaction.channel_id == thread_id:
+                await interaction.response.defer()
+                await interaction.followup.delete_message(interaction.message.id)
+            else:
+                view = GMApprovalsView()
+                await interaction.response.edit_message(view=view)
+
+            await thread.edit(locked=True, archived=True)
+        except Exception as e:
+            await log_exception(e, interaction)

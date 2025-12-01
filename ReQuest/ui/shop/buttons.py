@@ -4,7 +4,7 @@ from discord.ui import Button
 
 from ReQuest.utilities.supportFunctions import (
     log_exception,
-    smart_title_case
+    titlecase
 )
 
 from ReQuest.ui.shop import modals
@@ -13,7 +13,7 @@ from ReQuest.ui.shop import modals
 class ShopItemButton(Button):
     def __init__(self, item):
         super().__init__(
-            label=f'Add to Cart ({item["price"]} {smart_title_case(item["currency"])})',
+            label=f'Add to Cart ({item["price"]} {titlecase(item["currency"])})',
             style=ButtonStyle.success,
             custom_id=f'shop_item_button_{item["name"]}'
         )

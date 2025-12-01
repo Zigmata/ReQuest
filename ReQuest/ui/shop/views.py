@@ -17,11 +17,14 @@ from discord.ui import (
 from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.shop import buttons
 from ReQuest.utilities.supportFunctions import (
-    smart_title_case,
+    titlecase,
     check_sufficient_funds,
     apply_currency_change_local,
     apply_item_change_local,
-    strip_id, format_price_string, format_consolidated_totals, consolidate_currency_totals, attempt_delete
+    strip_id,
+    format_price_string,
+    format_consolidated_totals,
+    consolidate_currency_totals
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -223,7 +226,7 @@ class ShopCartView(LayoutView):
                         is_ok, _ = check_sufficient_funds(player_wallet, self.currency_config, base_currency, amount)
                         if not is_ok:
                             can_afford_all = False
-                            warnings.append(f"⚠️ Insufficient funds for {smart_title_case(base_currency)}")
+                            warnings.append(f"⚠️ Insufficient funds for {titlecase(base_currency)}")
 
                 start_index = self.current_page * self.items_per_page
                 end_index = start_index + self.items_per_page
@@ -245,7 +248,7 @@ class ShopCartView(LayoutView):
                     edit_button = buttons.EditCartItemButton(item_key, quantity)
                     section = Section(accessory=edit_button)
 
-                    item_line = (f'**{item['name']}** x{quantity} '
+                    item_line = (f'**{item["name"]}** x{quantity} '
                                  f'(Total: {total_item_quantity}) - {price_string}')
                     section.add_item(TextDisplay(item_line))
                     container.add_item(section)
@@ -343,7 +346,7 @@ class ShopCartView(LayoutView):
                                                     self.currency_config, base_currency, amount)
                 if not is_ok:
                     await interaction.response.send_message(
-                        f"Checkout failed: Insufficient {smart_title_case(base_currency)}.", ephemeral=True)
+                        f"Checkout failed: Insufficient {titlecase(base_currency)}.", ephemeral=True)
                     return
 
             for base_currency, amount in self.base_totals.items():
@@ -357,7 +360,7 @@ class ShopCartView(LayoutView):
                 total_qty = quantity * qty_per_item
 
                 character_data = apply_item_change_local(character_data, item['name'], total_qty)
-                summary_string = (f'{total_qty}x ' if total_qty > 1 else '') + smart_title_case(item["name"])
+                summary_string = (f'{total_qty}x ' if total_qty > 1 else '') + titlecase(item["name"])
                 added_items_summary.append(summary_string)
 
             await mdb['characters'].update_one(
@@ -376,10 +379,10 @@ class ShopCartView(LayoutView):
                 f'Player: {interaction.user.mention} as `{character_data["name"]}`\n'
                 f'Shop: {self.prev_view.shop_data.get("shopName", "Unknown Shop")}'
             )
-            receipt_embed.add_field(name="Purchased", value="\n".join(added_items_summary), inline=False)
+            receipt_embed.add_field(name="Purchased", value="\n".join(added_items_summary) or 'No Items', inline=False)
 
             total_strs = format_consolidated_totals(self.base_totals, self.currency_config)
-            receipt_embed.add_field(name="Total Paid", value="\n".join(total_strs), inline=False)
+            receipt_embed.add_field(name="Total Paid", value="\n".join(total_strs) or '0', inline=False)
 
             receipt_embed.set_footer(text=f"Transaction ID: {shortuuid.uuid()[:12]}")
 
