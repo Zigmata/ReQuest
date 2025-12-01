@@ -165,7 +165,7 @@ class CharacterRegisterModal(Modal):
                 from ReQuest.ui.player.views import NewCharacterWizardView
 
                 view = NewCharacterWizardView(character_id, character_name, inventory_type)
-                await interaction.response.send_message(view=view, ephemeral=True)
+                await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -321,5 +321,47 @@ class EditPlayerPostModal(Modal):
             title = self.title_text_input.value
             content = self.content_text_input.value
             await self.calling_view.edit_post(title, content, interaction)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class WizardEditCartItemModal(Modal):
+    def __init__(self, cart_view, item_key, current_quantity):
+        super().__init__(
+            title='Edit Cart Quantity',
+            timeout=600
+        )
+        self.cart_view = cart_view
+        self.item_key = item_key
+
+        self.quantity_text_input = discord.ui.TextInput(
+            label='Quantity',
+            default=str(current_quantity),
+            min_length=1,
+            max_length=5,
+            placeholder='Enter new quantity (0 to remove)',
+            custom_id='wiz_cart_qty_input'
+        )
+        self.add_item(self.quantity_text_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            if not self.quantity_text_input.value.isdigit():
+                await interaction.response.send_message('Please enter a valid positive number.',
+                                                        ephemeral=True, delete_after=10)
+                return
+
+            new_quantity = int(self.quantity_text_input.value)
+            cart = self.cart_view.shop_view.cart
+
+            if new_quantity <= 0:
+                if self.item_key in cart:
+                    del cart[self.item_key]
+            else:
+                if self.item_key in cart:
+                    cart[self.item_key]['quantity'] = new_quantity
+
+            self.cart_view.build_view()
+            await interaction.response.edit_message(view=self.cart_view)
         except Exception as e:
             await log_exception(e, interaction)

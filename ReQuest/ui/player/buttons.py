@@ -234,7 +234,7 @@ class WizardKeepShoppingButton(Button):
     def __init__(self, shop_view):
         super().__init__(
             label='Keep Shopping',
-            style=ButtonStyle.primary,
+            style=ButtonStyle.secondary,
             custom_id='wiz_keep_shopping_button'
         )
         self.shop_view = shop_view
@@ -243,5 +243,41 @@ class WizardKeepShoppingButton(Button):
         try:
             self.shop_view.build_view()
             await interaction.response.edit_message(view=self.shop_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class WizardEditCartItemButton(Button):
+    def __init__(self, item_key, quantity):
+        super().__init__(
+            label='Edit Quantity',
+            style=ButtonStyle.secondary,
+            custom_id=f'wiz_edit_cart_{item_key}'
+        )
+        self.item_key = item_key
+        self.quantity = quantity
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            modal = modals.WizardEditCartItemModal(self.view, self.item_key, self.quantity)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class WizardClearCartButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Clear Cart',
+            style=ButtonStyle.danger,
+            custom_id='wiz_clear_cart_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            self.calling_view.shop_view.cart.clear()
+            self.calling_view.build_view()
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)

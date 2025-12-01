@@ -11,7 +11,7 @@ from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
 from ReQuest.ui.player import buttons, selects
 from ReQuest.utilities.supportFunctions import log_exception, strip_id, attempt_delete, format_currency_display, \
     setup_view, find_currency_or_denomination, update_character_inventory, format_price_string, \
-    consolidate_currency_totals, check_sufficient_funds, get_denomination_map
+    consolidate_currency_totals, check_sufficient_funds, get_denomination_map, format_consolidated_totals
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -703,12 +703,12 @@ class NewCharacterShopView(LayoutView):
         self.clear_items()
         container = Container()
 
-        title = f"**Starting Shop ({self.inventory_type.capitalize()})**"
+        title = f'**Starting Shop ({self.inventory_type.capitalize()})**'
         if self.starting_wealth:
             amount = self.starting_wealth.get('amount', 0)
             currency = self.starting_wealth.get('currency', '')
             formatted_currency = format_price_string(amount, currency, self.currency_config)
-            title += f"\nStarting Wealth: {formatted_currency}"
+            title += f'\nStarting Wealth: {formatted_currency}'
 
         container.add_item(TextDisplay(title))
         container.add_item(Separator())
@@ -789,10 +789,17 @@ class NewCharacterCartView(LayoutView):
         self.cart_items = {}
         self.remaining_wealth = {}
 
+        self.items_per_page = 8
+        self.current_page = 0
+        self.total_pages = 1
+
     def build_view(self):
         self.clear_items()
         container = Container()
-        container.add_item(TextDisplay("**Review Cart**"))
+
+        header_section = Section(accessory=buttons.WizardKeepShoppingButton(self.shop_view))
+        header_section.add_item(TextDisplay('**Review Cart**'))
+        container.add_item(header_section)
         container.add_item(Separator())
 
         total_cost_raw = {}
@@ -803,26 +810,18 @@ class NewCharacterCartView(LayoutView):
             quantity = data['quantity']
             quantity_per_purchase = item.get('quantity', 1)
             total_quantity = quantity * quantity_per_purchase
-            self.cart_items[name] = total_quantity
 
-            display = f'{name} x{quantity}'
-            if quantity_per_purchase > 1:
-                display += f' (Total: {total_quantity})'
+            self.cart_items[name] = total_quantity
 
             if self.shop_view.inventory_type == 'purchase':
                 cost = quantity * item.get('price', 0)
                 if cost > 0:
                     currency = item.get('currency')
                     total_cost_raw[currency] = total_cost_raw.get(currency, 0) + cost
-                    price_label = format_price_string(cost, currency, self.shop_view.currency_config)
-                    display += f" - {price_label}"
-
-            container.add_item(TextDisplay(display))
-
-        container.add_item(Separator())
 
         self.can_afford = True
         warnings = []
+        consolidated_costs = {}
 
         if self.shop_view.inventory_type == 'purchase':
             consolidated_costs = consolidate_currency_totals(total_cost_raw, self.shop_view.currency_config)
@@ -836,7 +835,7 @@ class NewCharacterCartView(LayoutView):
                 is_ok, _ = check_sufficient_funds(wallet, self.shop_view.currency_config, base_currency, amount)
                 if not is_ok:
                     self.can_afford = False
-                    warnings.append(f"Insufficient {titlecase(base_currency)}")
+                    warnings.append(f'Insufficient {titlecase(base_currency)}')
                 else:
                     pass
 
@@ -847,28 +846,120 @@ class NewCharacterCartView(LayoutView):
                 starting_amount = starting_wealth.get('amount', 0)
 
                 denomination_map, base = get_denomination_map(self.shop_view.currency_config, starting_currency)
-                val_in_base = starting_amount * denomination_map.get(starting_currency.lower(), 1)
+                value_in_base = starting_amount * denomination_map.get(starting_currency.lower(), 1)
 
                 total_cost_in_base = consolidated_costs.get(base.lower(), 0)
 
-                remaining_in_base = val_in_base - total_cost_in_base
+                remaining_in_base = value_in_base - total_cost_in_base
 
                 final_currency[base] = remaining_in_base
 
                 self.remaining_wealth = final_currency
 
-            if warnings:
-                container.add_item(TextDisplay("\n".join(warnings)))
+        cart_items = list(self.shop_view.cart.items())
+        self.total_pages = math.ceil(len(cart_items) / self.items_per_page)
 
-        action_row = ActionRow()
-        submit_button = buttons.WizardSubmitButton(self)
-        submit_button.disabled = not self.can_afford
-        back_button = buttons.WizardKeepShoppingButton(self.shop_view)
+        if self.current_page >= self.total_pages and self.current_page > 0:
+            self.current_page = max(0, self.total_pages - 1)
 
-        action_row.add_item(submit_button)
-        action_row.add_item(back_button)
+        if not cart_items:
+            container.add_item(TextDisplay('Your cart is empty.'))
+        else:
+            start = self.current_page * self.items_per_page
+            end = start + self.items_per_page
+            page_items = cart_items[start:end]
+
+            for name, data in page_items:
+                item = data['item']
+                quantity = data['quantity']
+                quantity_per_purchase = item.get('quantity', 1)
+                total_quantity = quantity * quantity_per_purchase
+
+                display = f'**{name}** x{quantity}'
+                if quantity_per_purchase > 1:
+                    display += f' (Total: {total_quantity})'
+
+                if self.shop_view.inventory_type == 'purchase':
+                    cost = quantity * float(item.get('price', 0))
+                    if cost > 0:
+                        currency = item.get('currency')
+                        price_label = format_price_string(cost, currency, self.shop_view.currency_config)
+                        display += f" - {price_label}"
+
+                edit_button = buttons.WizardEditCartItemButton(name, quantity)
+                section = Section(accessory=edit_button)
+                section.add_item(TextDisplay(display))
+                container.add_item(section)
+
+        container.add_item(Separator())
+
+        if warnings:
+            container.add_item(TextDisplay("\n".join(warnings)))
+            container.add_item(Separator())
+
+        if self.shop_view.inventory_type == 'purchase':
+            totals = format_consolidated_totals(consolidated_costs, self.shop_view.currency_config)
+            if totals:
+                container.add_item(TextDisplay(f'**Total Cost:**\n{", ".join(totals)}'))
+            else:
+                container.add_item(TextDisplay('**Total Cost:** Free'))
+
         self.add_item(container)
-        self.add_item(action_row)
+
+        nav_row = ActionRow()
+        if self.total_pages > 1:
+            prev_button = Button(
+                label='Prev',
+                style=discord.ButtonStyle.secondary,
+                custom_id='wiz_cart_prev',
+                disabled=(self.current_page == 0)
+            )
+            prev_button.callback = self.prev_page
+
+            page_display = Button(
+                label=f'Page {self.current_page + 1} of {self.total_pages}',
+                style=discord.ButtonStyle.secondary,
+                custom_id='wiz_cart_page_display'
+            )
+            page_display.callback = self.show_page_jump_modal
+
+            next_button = Button(
+                label='Next',
+                style=discord.ButtonStyle.secondary,
+                custom_id='wiz_cart_next',
+                disabled=(self.current_page >= self.total_pages - 1)
+            )
+            next_button.callback = self.next_page
+
+
+            nav_row.add_item(prev_button)
+            nav_row.add_item(page_display)
+            nav_row.add_item(next_button)
+
+        submit_button = buttons.WizardSubmitButton(self)
+        submit_button.disabled = not self.can_afford or not self.cart_items
+        nav_row.add_item(submit_button)
+        clear_cart_button = buttons.WizardClearCartButton(self)
+        clear_cart_button.disabled = not self.cart_items
+        nav_row.add_item(clear_cart_button)
+
+        self.add_item(nav_row)
+
+    async def prev_page(self, interaction):
+        self.current_page -= 1
+        self.build_view()
+        await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction):
+        self.current_page += 1
+        self.build_view()
+        await interaction.response.edit_message(view=self)
+
+    async def show_page_jump_modal(self, interaction):
+        try:
+            await interaction.response.send_modal(common_modals.PageJumpModal(self))
+        except Exception as e:
+            await log_exception(e, interaction)
 
     async def submit(self, interaction):
         currency_to_give = self.remaining_wealth if self.shop_view.inventory_type == 'purchase' else {}
@@ -922,11 +1013,10 @@ async def _handle_submission(interaction, character_id, character_name, items, c
 
             await bot.gdb['approvals'].insert_one(submission_data)
 
-            await interaction.response.delete_message()
+            await interaction.response.edit_message(view=CharacterBaseView())
             await interaction.followup.send(
-                content=f"Your inventory submission for **{character_name}** has been sent for approval!",
-                ephemeral=True,
-                delete_after=30
+                content=f'Your inventory submission for **{character_name}** has been sent for approval!',
+                ephemeral=True
             )
 
         else:
@@ -936,8 +1026,10 @@ async def _handle_submission(interaction, character_id, character_name, items, c
             for name, quantity in currency.items():
                 await update_character_inventory(interaction, interaction.user.id, character_id, name, quantity)
 
-            await interaction.response.delete_message()
-            await interaction.followup.send(content="Inventory applied successfully!", ephemeral=True, delete_after=30)
+            await interaction.response.edit_message(view=CharacterBaseView())
+            await interaction.followup.send(content=f'{character_name} had their starting inventory applied '
+                                                    f'successfully!',
+                                            ephemeral=True)
 
     except Exception as e:
         await log_exception(e, interaction)
