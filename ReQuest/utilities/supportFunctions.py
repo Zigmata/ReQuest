@@ -16,8 +16,12 @@ logger = logging.getLogger(__name__)
 async def attempt_delete(message):
     try:
         await message.delete()
-    except discord.HTTPException:
+    except discord.HTTPException as e:
+        logger.error(f'HTTPException while deleting message: {e}')
         logger.info('Failed to delete message.')
+    except Exception as e:
+        logger.error(f'Unexpected error while deleting message: {e}')
+        logger.info('An unexpected error occurred while trying to delete the message.')
 
 
 def strip_id(mention) -> int:

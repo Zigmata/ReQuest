@@ -16,7 +16,7 @@ from ReQuest.utilities.supportFunctions import (
     update_character_experience,
     attempt_delete,
     update_quest_embed,
-    format_currency_display, setup_view
+    format_currency_display, setup_view, format_consolidated_totals
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -1154,24 +1154,25 @@ class GMApprovalsView(LayoutView):
 
 
 class ReviewSubmissionView(LayoutView):
-    def __init__(self, submission_data):
+    def __init__(self, submission_data, currency_config):
         super().__init__(timeout=None)
+        self.currency_config = currency_config
         self.data = submission_data
         self.build_view()
 
     def build_view(self):
         container = Container()
         header = Section(accessory=BackButton(GMApprovalsView))
-        header.add_item(TextDisplay(f"**Reviewing: {self.data['character_name']}**"))
+        header.add_item(TextDisplay(f'**Reviewing: {self.data["character_name"]}**'))
         container.add_item(header)
         container.add_item(Separator())
 
         items = self.data.get('items', {})
         currency = self.data.get('currency', {})
 
-        description = "**Items:**\n" + ("\n".join([f"{k}: {v}" for k, v in items.items()]) or "None")
-        description += "\n\n**Currency:**\n" + (
-                "\n".join([f"{titlecase(k)}: {v}" for k, v in currency.items()]) or "None")
+        description = '**Items:**\n' + ('\n'.join([f'{k}: {v}' for k, v in items.items()]) or 'None')
+        currency_labels = format_consolidated_totals(currency, self.currency_config)
+        description += '\n\n**Currency:**\n' + ('\n'.join(currency_labels) or 'None')
 
         container.add_item(TextDisplay(description))
 
@@ -1194,31 +1195,60 @@ class ReviewSubmissionView(LayoutView):
 
             await interaction.client.gdb['approvals'].delete_one({'submission_id': self.data['submission_id']})
 
-            # Close Thread if possible
-            if thread_id := self.data.get('thread_id'):
-                thread = interaction.guild.get_thread(thread_id)
-                if thread:
-                    await thread.send("Approved!")
-                    await thread.edit(locked=True, archived=True)
+            approval_embed = discord.Embed(
+                title='Inventory Update Approved',
+                description=(
+                    f'The inventory for **{self.data["character_name"]}** has been approved by '
+                    f'{interaction.user.mention}.'
+                ),
+                color=discord.Color.green(),
+                type='rich'
+            )
 
-            view = GMApprovalsView()
-            view.build_view()
+            # Post the approval message
+            thread_id = self.data.get('thread_id')
+            thread = interaction.guild.get_thread(thread_id)
+            await thread.send(embed=approval_embed)
 
-            await interaction.response.edit_message(view=view)
+            # Either refresh GM view, or delete original response if in thread since it will be archived.
+            if interaction.channel_id == thread_id:
+                await interaction.response.defer()
+                await interaction.followup.delete_message(interaction.message.id)
+            else:
+                view = GMApprovalsView()
+                await interaction.response.edit_message(view=view)
 
+            # Lock/Archive thread
+            await thread.edit(locked=True, archived=True)
         except Exception as e:
             await log_exception(e, interaction)
 
     async def deny(self, interaction):
         try:
+            # Same logic as above but for denials
             await interaction.client.gdb['approvals'].delete_one({'submission_id': self.data['submission_id']})
 
-            if thread_id := self.data.get('thread_id'):
-                thread = interaction.guild.get_thread(thread_id)
-                if thread:
-                    await thread.send("Denied.")
-                    await thread.edit(locked=True, archived=True)
+            denial_embed = discord.Embed(
+                title='Inventory Update Denied',
+                description=(
+                    f'The inventory for **{self.data["character_name"]}** has been denied by '
+                    f'{interaction.user.mention}.'
+                ),
+                color=discord.Color.red(),
+                type='rich'
+            )
 
-            await interaction.response.edit_message(content="Submission Denied.", view=None)
+            thread_id = self.data.get('thread_id')
+            thread = interaction.guild.get_thread(thread_id)
+            await thread.send(embed=denial_embed)
+
+            if interaction.channel_id == thread_id:
+                await interaction.response.defer()
+                await interaction.followup.delete_message(interaction.message.id)
+            else:
+                view = GMApprovalsView()
+                await interaction.response.edit_message(view=view)
+
+            await thread.edit(locked=True, archived=True)
         except Exception as e:
             await log_exception(e, interaction)

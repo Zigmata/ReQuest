@@ -490,8 +490,10 @@ class ReviewSubmissionInputModal(Modal):
                 await interaction.response.send_message("Submission not found.", ephemeral=True)
                 return
 
+            currency_config = await interaction.client.gdb['currency'].find_one({'_id': interaction.guild_id})
+
             from ReQuest.ui.gm.views import ReviewSubmissionView
-            view = ReviewSubmissionView(data)
+            view = ReviewSubmissionView(data, currency_config)
             await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)

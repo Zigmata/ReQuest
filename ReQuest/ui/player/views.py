@@ -992,6 +992,7 @@ async def _handle_submission(interaction, character_id, character_name, items, c
     try:
         guild_id = interaction.guild_id
         bot = interaction.client
+        currency_config = await bot.gdb['currency'].find_one({'_id': guild_id})
 
         approval_query = await bot.gdb['approvalQueueChannel'].find_one({'_id': guild_id})
         channel_id = strip_id(approval_query['approvalQueueChannel']) if approval_query else None
@@ -1010,14 +1011,18 @@ async def _handle_submission(interaction, character_id, character_name, items, c
 
         if forum_channel and isinstance(forum_channel, discord.ForumChannel):
             # Create Embed for Forum Post
-            embed = discord.Embed(title=f'Inventory Approval: {character_name}', color=discord.Color.blue())
-            embed.set_author(name=interaction.user.name,
+            embed = discord.Embed(
+                title=f'Inventory Approval: {character_name}',
+                description=f'Submitted by {interaction.user.mention}',
+                color=discord.Color.blue()
+            )
+            embed.set_author(name=interaction.user.display_name,
                              icon_url=interaction.user.avatar.url if interaction.user.avatar else None)
 
             item_labels = [f'{k}: {v}' for k, v in items.items()]
             embed.add_field(name='Items', value='\n'.join(item_labels) or 'None', inline=False)
 
-            currency_labels = [f'{titlecase(k)}: {v:.2f}' for k, v in currency.items()]
+            currency_labels = format_consolidated_totals(currency, currency_config)
             embed.add_field(name='Currency', value='\n'.join(currency_labels) or 'None', inline=False)
 
             submission_id = shortuuid.uuid()[:8]
@@ -1034,10 +1039,17 @@ async def _handle_submission(interaction, character_id, character_name, items, c
             await bot.gdb['approvals'].insert_one(submission_data)
 
             await interaction.response.edit_message(view=CharacterBaseView())
-            await interaction.followup.send(
-                content=f'Your inventory submission for **{character_name}** has been sent for approval!',
-                ephemeral=True
+
+            confirmation_embed = discord.Embed(
+                title='Inventory Submission Sent',
+                description=(
+                    f'Your submission for **{character_name}** has been sent to the GM team for approval! '
+                    f'You will be notified once it has been reviewed.\n'
+                    f'[View Submission Thread]({thread_message.thread.jump_url})'
+                ),
+                color=discord.Color.green()
             )
+            await interaction.followup.send(embed=confirmation_embed, ephemeral=True)
 
         else:
             for name, quantity in items.items():
@@ -1046,7 +1058,6 @@ async def _handle_submission(interaction, character_id, character_name, items, c
             for name, quantity in currency.items():
                 await update_character_inventory(interaction, interaction.user.id, character_id, name, quantity)
 
-            currency_config = await bot.gdb['currency'].find_one({'_id': guild_id})
 
             report_embed = discord.Embed(title='Starting Inventory Applied', color=discord.Color.green())
             report_embed.description = (
@@ -1060,8 +1071,8 @@ async def _handle_submission(interaction, character_id, character_name, items, c
 
             report_embed.add_field(name='Items Received', value='\n'.join(added_items_summary) or 'None', inline=False)
 
-            currency_strs = format_consolidated_totals(currency, currency_config)
-            report_embed.add_field(name='Currency Received', value='\n'.join(currency_strs) or 'None', inline=False)
+            currency_labels = format_consolidated_totals(currency, currency_config)
+            report_embed.add_field(name='Currency Received', value='\n'.join(currency_labels) or 'None', inline=False)
 
             report_embed.set_footer(text=f'Transaction ID: {shortuuid.uuid()[:12]}')
 
