@@ -298,3 +298,66 @@ class ConsumeItemButton(Button):
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)
+
+
+class SelectKitOptionButton(Button):
+    def __init__(self, kit_id, kit_data):
+        super().__init__(
+            label='Select',
+            style=ButtonStyle.primary,
+            custom_id=f'sel_kit_{kit_id}'
+        )
+        self.kit_id = kit_id
+        self.kit_data = kit_data
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            from ReQuest.ui.player.views import StaticKitConfirmView
+
+            view = StaticKitConfirmView(
+                self.view.character_id,
+                self.view.character_name,
+                self.kit_id,
+                self.kit_data,
+                self.view.currency_config
+            )
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class KitConfirmButton(Button):
+    def __init__(self):
+        super().__init__(
+            label='Confirm Selection',
+            style=ButtonStyle.success,
+            custom_id='confirm_kit_btn'
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await self.view.submit(interaction)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class KitBackButton(Button):
+    def __init__(self):
+        super().__init__(
+            label='Back to Kits',
+            style=ButtonStyle.secondary,
+            custom_id='kit_back_btn'
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            from ReQuest.ui.player.views import StaticKitSelectView
+
+            view = StaticKitSelectView(
+                self.view.character_id,
+                self.view.character_name
+            )
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)

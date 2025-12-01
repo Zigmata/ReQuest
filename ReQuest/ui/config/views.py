@@ -1531,6 +1531,12 @@ class EditStaticKitView(LayoutView):
 
     def build_view(self):
         self.clear_items()
+
+        self.total_pages = math.ceil(len(self.items) / self.items_per_page)
+
+        if self.current_page >= self.total_pages and self.current_page > 0:
+            self.current_page = max(0, self.total_pages - 1)
+
         container = Container()
 
         header_section = Section(accessory=BackButton(ConfigStaticKitsView))

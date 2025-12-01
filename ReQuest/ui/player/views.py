@@ -645,45 +645,179 @@ class StaticKitSelectView(LayoutView):
         super().__init__(timeout=None)
         self.character_id = character_id
         self.character_name = character_name
-        self.kit_select = selects.Select(
-            placeholder="Select a Kit",
-            options=[],
-            custom_id="static_kit_sel"
-        )
         self.kits = {}
+        self.currency_config = None
+        self.sorted_kits = []
+
+        self.items_per_page = 5
+        self.current_page = 0
+        self.total_pages = 1
 
     async def setup(self, interaction):
-        collection = interaction.client.gdb['staticKits']
+        bot = interaction.client
+        collection = bot.gdb['staticKits']
         query = await collection.find_one({'_id': interaction.guild_id})
         self.kits = query.get('kits', {}) if query else {}
 
-        options = []
-        if self.kits:
-            for kit_id, kit in self.kits.items():
-                options.append(discord.SelectOption(label=titlecase(kit['name']), value=kit_id))
-            self.kit_select.options = options
-            self.kit_select.callback = self.select_callback
-            self.kit_select.disabled = False
-        else:
-            self.kit_select.options = [discord.SelectOption(label="No kits available", value="none")]
-            self.kit_select.disabled = True
+        # Sort kits by name
+        self.sorted_kits = sorted(self.kits.items(), key=lambda x: x[1].get('name', '').lower())
+        self.total_pages = math.ceil(len(self.sorted_kits) / self.items_per_page)
+
+        self.currency_config = await bot.gdb['currency'].find_one({'_id': interaction.guild_id})
 
         self.build_view()
 
     def build_view(self):
         self.clear_items()
         container = Container()
-        container.add_item(TextDisplay(f"**Select a Kit for {self.character_name}**"))
-        container.add_item(ActionRow(self.kit_select))
+        container.add_item(TextDisplay(f'**Select a Kit for {self.character_name}**'))
+        container.add_item(Separator())
+
+        if not self.sorted_kits:
+            container.add_item(TextDisplay('No starting kits are available.'))
+        else:
+            start = self.current_page * self.items_per_page
+            end = start + self.items_per_page
+            page_items = self.sorted_kits[start:end]
+
+            for kit_id, kit_data in page_items:
+                select_button = buttons.SelectKitOptionButton(kit_id, kit_data)
+                section = Section(accessory=select_button)
+
+                kit_name = kit_data.get('name', 'Unknown Kit')
+                description = kit_data.get('description', '')
+
+                content_lines = [f'**{titlecase(kit_name)}**']
+                if description:
+                    content_lines.append(f'*{description}*')
+
+                # Preview Contents
+                items = kit_data.get('items', [])
+                currency = kit_data.get('currency', {})
+
+                preview_list = []
+                for item in items[:3]:  # Show first 3 items
+                    preview_list.append(f'{item.get("quantity", 1)}x {titlecase(item.get("name", ""))}')
+                if len(items) > 3:
+                    preview_list.append(f'...and {len(items) - 3} more items')
+
+                if currency:
+                    curr_strs = format_consolidated_totals(currency, self.currency_config)
+                    preview_list.extend(curr_strs)
+
+                if preview_list:
+                    content_lines.append(f'> {", ".join(preview_list)}')
+                else:
+                    content_lines.append('> *Empty Kit*')
+
+                section.add_item(TextDisplay('\n'.join(content_lines)))
+                container.add_item(section)
+
         self.add_item(container)
 
-    async def select_callback(self, interaction):
-        kit_id = self.kit_select.values[0]
-        kit = self.kits.get(kit_id)
+        # Pagination
+        if self.total_pages > 1:
+            nav_row = ActionRow()
+            prev_button = Button(
+                label='Prev',
+                style=discord.ButtonStyle.secondary,
+                custom_id='kit_prev',
+                disabled=(self.current_page == 0)
+            )
+            prev_button.callback = self.prev_page
 
-        items = {item['name']: item['quantity'] for item in kit.get('items', [])}
-        currency = kit.get('currency', {})
+            page_display = Button(
+                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                style=discord.ButtonStyle.secondary,
+                custom_id='kit_page_display'
+            )
+            page_display.callback = self.show_page_jump_modal
 
+            next_button = Button(
+                label='Next',
+                style=discord.ButtonStyle.secondary,
+                custom_id='kit_next',
+                disabled=(self.current_page >= self.total_pages - 1)
+            )
+            next_button.callback = self.next_page
+
+            nav_row.add_item(prev_button)
+            nav_row.add_item(page_display)
+            nav_row.add_item(next_button)
+
+            self.add_item(nav_row)
+
+    async def prev_page(self, interaction):
+        self.current_page -= 1
+        self.build_view()
+        await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction):
+        self.current_page += 1
+        self.build_view()
+        await interaction.response.edit_message(view=self)
+
+    async def show_page_jump_modal(self, interaction):
+        try:
+            await interaction.response.send_modal(common_modals.PageJumpModal(self))
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class StaticKitConfirmView(LayoutView):
+    def __init__(self, character_id, character_name, kit_id, kit_data, currency_config):
+        super().__init__(timeout=None)
+        self.character_id = character_id
+        self.character_name = character_name
+        self.kit_id = kit_id
+        self.kit_data = kit_data
+        self.currency_config = currency_config
+
+        self.build_view()
+
+    def build_view(self):
+        self.clear_items()
+        container = Container()
+
+        container.add_item(TextDisplay(f'**Confirm Selection: {titlecase(self.kit_data.get("name"))}**'))
+        container.add_item(Separator())
+
+        description = self.kit_data.get('description')
+        if description:
+            container.add_item(TextDisplay(description))
+            container.add_item(Separator())
+
+        items = self.kit_data.get('items', [])
+        currency = self.kit_data.get('currency', {})
+
+        details = []
+        if items:
+            details.append('**Items:**')
+            for item in items:
+                details.append(f'- {item.get("quantity", 1)}x {titlecase(item.get("name"))}')
+
+        if currency:
+            details.append('\n**Currency:**')
+            curr_strs = format_consolidated_totals(currency, self.currency_config)
+            for s in curr_strs:
+                details.append(f'- {s}')
+
+        if not details:
+            details.append('This kit is empty.')
+
+        container.add_item(TextDisplay('\n'.join(details)))
+        container.add_item(Separator())
+
+        actions = ActionRow()
+        actions.add_item(buttons.KitConfirmButton())
+        actions.add_item(buttons.KitBackButton())
+        container.add_item(actions)
+
+        self.add_item(container)
+
+    async def submit(self, interaction):
+        items = {item['name']: item['quantity'] for item in self.kit_data.get('items', [])}
+        currency = self.kit_data.get('currency', {})
         await _handle_submission(interaction, self.character_id, self.character_name, items, currency)
 
 
