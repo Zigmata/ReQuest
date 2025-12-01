@@ -644,16 +644,16 @@ def consolidate_currency_totals(raw_totals: dict, currency_config: dict) -> dict
 def format_consolidated_totals(base_totals: dict, currency_config: dict) -> list[str]:
     output = []
 
-    for base_name_lower, total_value in base_totals.items():
+    for base_name, total_value in base_totals.items():
         curr_conf = None
         if currency_config:
             for c in currency_config.get('currencies', []):
-                if c['name'].lower() == base_name_lower.lower():
+                if c['name'].lower() == base_name.lower():
                     curr_conf = c
                     break
 
         if not curr_conf:
-            output.append(f"{titlecase(base_name_lower)}: {total_value}")
+            output.append(f"{titlecase(base_name)}: {total_value}")
             continue
 
         base_display_name = curr_conf['name']

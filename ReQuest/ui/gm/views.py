@@ -4,7 +4,6 @@ from typing import Any, Dict, Iterator, Tuple
 
 import discord
 from discord.ui import View, LayoutView, Container, TextDisplay, Separator, ActionRow, Section
-from titlecase import titlecase
 
 from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
 from ReQuest.ui.common.views import MenuBaseView

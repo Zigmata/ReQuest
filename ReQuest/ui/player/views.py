@@ -990,8 +990,6 @@ class NewCharacterCartView(LayoutView):
                 if not is_ok:
                     self.can_afford = False
                     warnings.append(f'Insufficient {titlecase(base_currency)}')
-                else:
-                    pass
 
             final_currency = {}
 

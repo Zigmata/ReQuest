@@ -605,7 +605,7 @@ class ConfigUpdateShopJSONModal(Modal):
 
 
 class NewCharacterShopItemModal(Modal):
-    def __init__(self, calling_view, existing_item = None):
+    def __init__(self, calling_view, existing_item=None):
         super().__init__(
             title='Add/Edit NewCharacter Gear',
             timeout=600
@@ -669,7 +669,11 @@ class NewCharacterShopItemModal(Modal):
                 raise Exception('Item quantity must be a positive integer.')
 
             price_str = self.item_price_text_input.value
-            if not price_str.isdigit() or float(price_str) < 0:
+            try:
+                price_value = float(price_str)
+                if price_value < 0:
+                    raise Exception('Item price must be a non-negative number.')
+            except ValueError:
                 raise Exception('Item price must be a non-negative number.')
 
             currency_val = self.item_currency_text_input.value.lower()
@@ -865,18 +869,18 @@ class CreateStaticKitModal(Modal):
             guild_id = interaction.guild_id
             collection = interaction.client.gdb['staticKits']
             kit_id = str(shortuuid.uuid()[:8])
-            kit_name = self.kit_name_text_input.value.strip().lower()
+            kit_name = self.kit_name_text_input.value.strip()
 
             kit_query = await collection.find_one({'_id': guild_id})
             existing_kits = kit_query.get('kits', {}) if kit_query else {}
             if existing_kits:
                 for kit_data in existing_kits.values():
-                    if kit_name == kit_data['name'].lower():
+                    if kit_name.lower() == kit_data['name'].lower():
                         raise Exception(f'A static kit named "{titlecase(kit_name)}" already exists. Please '
                                         f'choose a different name.')
 
             kit_data = {
-                'name': kit_name,
+                'name': titlecase(kit_name),
                 'description': self.kit_description_text_input.value.strip(),
                 'items': [],
                 'currency': {}
