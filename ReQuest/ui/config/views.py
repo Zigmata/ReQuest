@@ -1522,17 +1522,31 @@ class EditStaticKitView(LayoutView):
         self.kit_id = kit_id
         self.kit_data = kit_data
         self.currency_config = currency_config
-        self.items_per_page = 5
+        self.items_per_page = 6
         self.current_page = 0
+        self.total_pages = 0
+
         self.items = self.kit_data.get('items', [])
-        self.total_pages = math.ceil(len(self.items) / self.items_per_page)
 
         self.build_view()
 
     def build_view(self):
         self.clear_items()
 
-        self.total_pages = math.ceil(len(self.items) / self.items_per_page)
+        self.items = self.kit_data.get('items', [])
+        currencies = self.kit_data.get('currency', {})
+
+        combined_list = []
+
+        for currency_name, amount in currencies.items():
+            combined_list.append({'type': 'currency', 'name': currency_name, 'amount': amount})
+
+        for index, item in enumerate(self.items):
+            combined_list.append({'type': 'item', 'index': index, 'data': item})
+
+        self.total_pages = math.ceil(len(combined_list) / self.items_per_page)
+        if self.total_pages == 0:
+            self.total_pages = 1
 
         if self.current_page >= self.total_pages and self.current_page > 0:
             self.current_page = max(0, self.total_pages - 1)
@@ -1547,48 +1561,49 @@ class EditStaticKitView(LayoutView):
             container.add_item(TextDisplay(f"*{description}*"))
         container.add_item(Separator())
 
-        # Currency Section
-        currency_section = Section(accessory=buttons.AddKitCurrencyButton(self))
-        currency_section.add_item(TextDisplay("**Starting Currency**"))
-        container.add_item(currency_section)
-
-        currencies = self.kit_data.get('currency', {})
-        if not currencies:
-            container.add_item(TextDisplay("None"))
-        else:
-            for currency, amount in currencies.items():
-                currency_row = Section(accessory=buttons.DeleteKitCurrencyButton(self, currency))
-
-                display_string = format_price_string(amount, currency, self.currency_config)
-
-                currency_row.add_item(TextDisplay(display_string))
-                container.add_item(currency_row)
-
+        kit_actions = ActionRow()
+        kit_actions.add_item(buttons.AddKitCurrencyButton(self))
+        kit_actions.add_item(buttons.AddKitItemButton(self))
+        container.add_item(kit_actions)
         container.add_item(Separator())
 
-        # Items Section
-        item_section = Section(accessory=buttons.AddKitItemButton(self))
-        item_section.add_item(TextDisplay("**Starting Items**"))
-        container.add_item(item_section)
-        if not self.items:
-            container.add_item(TextDisplay("None"))
+        if not combined_list:
+            container.add_item(TextDisplay("This kit is empty. Use the buttons above to add currency or items."))
         else:
-            start_idx = self.current_page * self.items_per_page
-            end_idx = start_idx + self.items_per_page
-            current_items = self.items[start_idx:end_idx]
+            start_index = self.current_page * self.items_per_page
+            end_index = start_index + self.items_per_page
+            page_entries = combined_list[start_index:end_index]
 
-            for idx, item in enumerate(current_items):
-                global_index = start_idx + idx
-                item_actions = ActionRow()
-                item_actions.add_item(buttons.EditKitItemButton(self, item, global_index))
-                item_actions.add_item(buttons.DeleteKitItemButton(self, global_index))
+            entry_type = ''
+            for entry in page_entries:
+                if entry['type'] == 'currency':
+                    entry_type = 'currency'
+                    currency_name = entry['name']
+                    amount = entry['amount']
 
-                display = f"**{titlecase(item['name'])}** (x{item['quantity']})"
-                if item.get('description'):
-                    display += f"\n*{item['description']}*"
+                    currency_section = Section(accessory=buttons.DeleteKitCurrencyButton(self, currency_name))
+                    display = format_price_string(amount, currency_name, self.currency_config)
+                    currency_section.add_item(TextDisplay(f'**Currency:** {display}'))
+                    container.add_item(currency_section)
+                elif entry['type'] == 'item':
+                    if entry_type == 'currency':
+                        container.add_item(Separator())
+                    entry_type = 'item'
+                    item_data = entry['data']
+                    index = entry['index']
 
-                container.add_item(TextDisplay(display))
-                container.add_item(item_actions)
+                    item_actions = ActionRow()
+                    item_actions.add_item(buttons.EditKitItemButton(self, item_data, index))
+                    item_actions.add_item(buttons.DeleteKitItemButton(self, index))
+
+                    display = f'**Item:** {titlecase(item_data["name"])}'
+                    if item_data['quantity'] > 1:
+                        display += f' (x{item_data["quantity"]})'
+                    if item_data.get('description'):
+                        display += f'\n*{item_data["description"]}*'
+
+                    container.add_item(TextDisplay(display))
+                    container.add_item(item_actions)
 
             # Pagination Controls
             if self.total_pages > 1:

@@ -10,7 +10,7 @@ import discord.ui
 from discord.ui import Modal, Label
 
 from ReQuest.utilities.supportFunctions import log_exception, purge_player_board, setup_view, \
-    find_currency_or_denomination, titlecase
+    find_currency_or_denomination, titlecase, get_denomination_map
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -1007,21 +1007,34 @@ class StaticKitCurrencyModal(Modal):
             if not currency_config:
                 raise Exception("No currencies configured on server.")
 
-            is_valid, parent_name = find_currency_or_denomination(currency_config, currency_input)
-            if not is_valid:
-                raise Exception(f"Currency '{currency_input}' not found.")
+            denomination_map, parent_name = get_denomination_map(currency_config, currency_input)
+
+            if not denomination_map:
+                raise Exception(f'Currency "{currency_input}" not found.')
+
+            multiplier = denomination_map.get(currency_input.lower())
+            converted_amount = amount * multiplier
 
             kit_id = self.calling_view.kit_id
             collection = interaction.client.gdb['staticKits']
 
+            query = await collection.find_one({'_id': interaction.guild_id})
+            existing_amount = 0
+
+            if query and 'kits' in query:
+                existing_amount = query['kits'].get(kit_id, {}).get('currency', {}).get(parent_name, 0)
+
+            final_amount = existing_amount + converted_amount
+
             await collection.update_one(
                 {'_id': interaction.guild_id},
-                {'$set': {f'kits.{kit_id}.currency.{parent_name}': amount}}
+                {'$set': {f'kits.{kit_id}.currency.{parent_name}': final_amount}}
             )
 
             if 'currency' not in self.calling_view.kit_data:
                 self.calling_view.kit_data['currency'] = {}
-            self.calling_view.kit_data['currency'][parent_name] = amount
+
+            self.calling_view.kit_data['currency'][parent_name] = final_amount
 
             self.calling_view.build_view()
             await interaction.response.edit_message(view=self.calling_view)
