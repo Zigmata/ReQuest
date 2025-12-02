@@ -86,9 +86,10 @@ class PlayerExperienceToggleButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            xp_state = self.calling_view.player_experience
             guild_id = interaction.guild_id
             collection = interaction.client.gdb['playerExperience']
+            query = await collection.find_one({'_id': guild_id})
+            xp_state = query['playerExperience'] if query else True
             if xp_state:
                 await collection.update_one({'_id': guild_id}, {'$set': {'playerExperience': False}},
                                             upsert=True)
