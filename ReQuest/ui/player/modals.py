@@ -112,7 +112,7 @@ class TradeModal(Modal):
 
 
 class CharacterRegisterModal(Modal):
-    def __init__(self):
+    def __init__(self, calling_view):
         super().__init__(
             title='Register New Character',
             timeout=180
@@ -131,6 +131,7 @@ class CharacterRegisterModal(Modal):
         )
         self.add_item(self.name_text_input)
         self.add_item(self.note_text_input)
+        self.calling_view = calling_view
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -160,7 +161,8 @@ class CharacterRegisterModal(Modal):
             inventory_type = inventory_config.get('inventoryType', 'disabled') if inventory_config else 'disabled'
 
             if inventory_type == 'disabled':
-                await interaction.response.send_message(f'{character_name} was born!', ephemeral=True, delete_after=10)
+                await setup_view(self.calling_view, interaction)
+                await interaction.response.edit_message(view=self.calling_view)
             else:
                 from ReQuest.ui.player.views import NewCharacterWizardView
 

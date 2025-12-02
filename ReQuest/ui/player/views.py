@@ -68,9 +68,37 @@ class PlayerBaseView(LayoutView):
 class CharacterBaseView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
-        self.build_view()
+        self.characters = {}
+        self.active_character_id = None
+        self.sorted_characters = []
+
+        self.items_per_page = 6
+        self.current_page = 0
+        self.total_pages = 1
+
+    async def setup(self, interaction):
+        try:
+            collection = interaction.client.mdb['characters']
+            query = await collection.find_one({'_id': interaction.user.id})
+
+            self.characters = query.get('characters', {}) if query else {}
+            self.active_character_id = query.get('activeCharacters', {}).get(str(interaction.guild_id)) if query else None
+
+            self.sorted_characters = sorted(self.characters.items(), key=lambda x: x[1].get('name', '').lower())
+
+            self.total_pages = math.ceil(len(self.sorted_characters) / self.items_per_page)
+            if self.total_pages == 0:
+                self.total_pages = 1
+
+            if self.current_page >= self.total_pages:
+                self.current_page = max(0, self.total_pages - 1)
+
+            self.build_view()
+        except Exception as e:
+            await log_exception(e, interaction)
 
     def build_view(self):
+        self.clear_items()
         container = Container()
 
         header_section = Section(accessory=BackButton(PlayerBaseView))
@@ -78,26 +106,98 @@ class CharacterBaseView(LayoutView):
         container.add_item(header_section)
         container.add_item(Separator())
 
-        register_section = Section(accessory=buttons.RegisterCharacterButton())
-        register_section.add_item(TextDisplay(
-            'Registers a new character, and activates that character on the current server.'
-        ))
+        register_section = Section(accessory=buttons.RegisterCharacterButton(self))
+        register_section.add_item(TextDisplay("Register a new character."))
         container.add_item(register_section)
+        container.add_item(Separator())
 
-        list_activate_section = Section(accessory=MenuViewButton(ListCharactersView, 'List/Activate'))
-        list_activate_section.add_item(TextDisplay(
-            'Show all registered characters, and change the active character for this server.'
-        ))
-        container.add_item(list_activate_section)
+        if not self.sorted_characters:
+            container.add_item(TextDisplay("You have no characters registered."))
+        else:
+            start = self.current_page * self.items_per_page
+            end = start + self.items_per_page
+            page_items = self.sorted_characters[start:end]
 
+            for character_id, character_data in page_items:
+                is_active = (character_id == self.active_character_id)
 
-        remove_section = Section(accessory=buttons.RemoveCharacterButton())
-        remove_section.add_item(TextDisplay(
-            'Removes a character permanently.'
-        ))
-        container.add_item(remove_section)
+                name = character_data.get('name')
+                note = character_data.get('note', '')
+                xp = character_data.get('attributes', {}).get('experience', 0)
+
+                display_name = f"**{name}**"
+                if is_active:
+                    display_name += " (Active)"
+
+                info_text = f"{display_name}"
+                if xp and xp > 0:
+                    info_text += f" - {xp} XP"
+                if note:
+                    info_text += f"\n*{note}*"
+
+                actions = ActionRow()
+
+                activate_button = buttons.ActivateCharacterButton(self, character_id, disabled=is_active)
+                if is_active:
+                    activate_button.label = "Active"
+                    activate_button.style = discord.ButtonStyle.success
+
+                actions.add_item(activate_button)
+                actions.add_item(buttons.RemoveCharacterButton(self, character_id, name))
+
+                container.add_item(TextDisplay(info_text))
+                container.add_item(actions)
 
         self.add_item(container)
+
+        if self.total_pages > 1:
+            nav_row = ActionRow()
+
+            prev_button = Button(
+                label='Previous',
+                style=discord.ButtonStyle.secondary,
+                custom_id='char_prev',
+                disabled=(self.current_page == 0)
+            )
+            prev_button.callback = self.prev_page
+            nav_row.add_item(prev_button)
+
+            page_display = Button(
+                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                style=discord.ButtonStyle.secondary,
+                custom_id='char_page_disp'
+            )
+            page_display.callback = self.show_page_jump_modal
+            nav_row.add_item(page_display)
+
+            next_button = Button(
+                label='Next',
+                style=discord.ButtonStyle.secondary,
+                custom_id='char_next',
+                disabled=(self.current_page >= self.total_pages - 1)
+            )
+            next_button.callback = self.next_page
+            nav_row.add_item(next_button)
+
+            self.add_item(nav_row)
+
+    async def prev_page(self, interaction):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction):
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def show_page_jump_modal(self, interaction):
+        try:
+            await interaction.response.send_modal(common_modals.PageJumpModal(self))
+        except Exception as e:
+            await log_exception(e, interaction)
 
 
 class ListCharactersView(LayoutView):

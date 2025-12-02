@@ -6,24 +6,109 @@ from discord.ui import Button
 from titlecase import titlecase
 
 from ReQuest.ui.player import modals
+from ReQuest.ui.common import modals as common_modals
 from ReQuest.utilities.supportFunctions import log_exception, setup_view
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+# ----- CHARACTER MANAGEMENT -----
+
 class RegisterCharacterButton(Button):
-    def __init__(self):
+    def __init__(self, calling_view):
         super().__init__(
-            label='Register',
+            label='Register New Character',
             style=ButtonStyle.success,
             custom_id='register_character_button'
         )
+        self.calling_view = calling_view
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            modal = modals.CharacterRegisterModal()
+            modal = modals.CharacterRegisterModal(self.calling_view)
             await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RemoveCharacterButton(Button):
+    def __init__(self, calling_view, character_id, character_name):
+        super().__init__(
+            label='Remove',
+            style=ButtonStyle.danger,
+            custom_id=f'remove_character_{character_id}'
+        )
+        self.calling_view = calling_view
+        self.character_id = character_id
+        self.character_name = character_name
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            confirm_modal = common_modals.ConfirmModal(
+                title='Confirm Character Removal',
+                prompt_label=f'Delete {self.character_name}?',
+                prompt_placeholder='Type CONFIRM to proceed.',
+                confirm_callback=self._confirm_delete
+            )
+            await interaction.response.send_modal(confirm_modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def _confirm_delete(self, interaction: discord.Interaction):
+        try:
+            collection = interaction.client.mdb['characters']
+            member_id = interaction.user.id
+
+            # Remove character from db
+            await collection.update_one(
+                {'_id': member_id},
+                {'$unset': {f'characters.{self.character_id}': ''}}
+            )
+
+            # Unset active character if it was the one removed
+            character_query = await collection.find_one({'_id': member_id})
+            if character_query and 'activeCharacters' in character_query:
+                updates = {}
+                for guild_id, active_character_id in character_query['activeCharacters'].items():
+                    if active_character_id == self.character_id:
+                        updates[f'activeCharacters.{guild_id}'] = ''
+
+                if updates:
+                    await collection.update_one(
+                        {'_id': member_id},
+                        {'$unset': updates}
+                    )
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ActivateCharacterButton(Button):
+    def __init__(self, calling_view, character_id, disabled=False):
+        super().__init__(
+            label='Activate',
+            style=ButtonStyle.primary,
+            custom_id=f'activate_character_{character_id}',
+            disabled=disabled
+        )
+        self.character_id = character_id
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            collection = interaction.client.mdb['characters']
+
+            await collection.update_one(
+                {'_id': interaction.user.id},
+                {'$set': {f'activeCharacters.{interaction.guild_id}': self.character_id}},
+                upsert=True
+            )
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -209,23 +294,6 @@ class WizardSubmitButton(Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             await self.calling_view.submit(interaction)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-class RemoveCharacterButton(Button):
-    def __init__(self):
-        super().__init__(
-            label='Remove Character',
-            style=ButtonStyle.danger,
-            custom_id='remove_character_button'
-        )
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            from ReQuest.ui.player.views import RemoveCharacterView
-            view = RemoveCharacterView()
-            await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
