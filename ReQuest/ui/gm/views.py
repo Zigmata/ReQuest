@@ -934,7 +934,8 @@ class CompleteQuestsView(LayoutView):
 
             # Get party members and message them with results
             reward_summary = []
-            party_xp = rewards.get('party', {}).get('xp', 0) // len(party)
+            party_xp = rewards.get('party', {}).get('xp', 0)
+            xp_per_member = party_xp // len(party)
             party_items = rewards.get('party', {}).get('items', {})
             for entry in party:
                 for player_id, character_info in entry.items():
@@ -946,7 +947,7 @@ class CompleteQuestsView(LayoutView):
                     reward_summary.append(f'<@!{player_id}> as {character['name']}:')
 
                     # Prep reward data
-                    total_xp = party_xp
+                    total_xp = xp_per_member
                     combined_items = party_items.copy()
 
                     # Check if character has individual rewards
