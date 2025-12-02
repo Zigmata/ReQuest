@@ -11,7 +11,7 @@ from ReQuest.ui.common import modals as common_modals, views as common_views
 from ReQuest.ui.common.buttons import MenuViewButton, BackButton
 from ReQuest.ui.config import buttons, selects, enums
 from ReQuest.utilities.supportFunctions import log_exception, query_config, setup_view, strip_id, titlecase, \
-    format_price_string
+    format_price_string, format_consolidated_totals
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -1460,15 +1460,39 @@ class ConfigNewCharacterShopView(LayoutView):
 class ConfigStaticKitsView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
-        self.selected_kit_id = None
-        self.kit_select = selects.ConfigStaticKitSelect(self)
-        self.add_kit_button = buttons.AddStaticKitButton(self)
-        self.edit_kit_button = buttons.EditStaticKitButton(self)
-        self.remove_kit_button = buttons.RemoveStaticKitButton(self)
+        self.kits = {}
+        self.sorted_kits = []
+        self.currency_config = None
 
-        self.build_view()
+        # Pagination settings
+        self.items_per_page = 5
+        self.current_page = 0
+        self.total_pages = 1
+
+    async def setup(self, bot, guild):
+        try:
+            collection = bot.gdb['staticKits']
+            query = await collection.find_one({'_id': guild.id})
+            self.kits = query.get('kits', {}) if query else {}
+
+            self.sorted_kits = sorted(self.kits.items(), key=lambda x: x[1].get('name', '').lower())
+
+            self.total_pages = math.ceil(len(self.sorted_kits) / self.items_per_page)
+            if self.total_pages == 0:
+                self.total_pages = 1
+
+            if self.current_page >= self.total_pages:
+                self.current_page = max(0, self.total_pages - 1)
+
+            currency_collection = bot.gdb['currency']
+            self.currency_config = await currency_collection.find_one({'_id': guild.id})
+
+            self.build_view()
+        except Exception as e:
+            await log_exception(e)
 
     def build_view(self):
+        self.clear_items()
         container = Container()
 
         header_section = Section(accessory=BackButton(ConfigNewCharacterView))
@@ -1476,44 +1500,101 @@ class ConfigStaticKitsView(LayoutView):
         container.add_item(header_section)
         container.add_item(Separator())
 
-        container.add_item(TextDisplay("Define kits of items and currency to be given to new characters."))
+        add_section = Section(accessory=buttons.AddStaticKitButton(self))
+        add_section.add_item(TextDisplay("Create a new kit definition."))
+        container.add_item(add_section)
+        container.add_item(Separator())
 
-        button_row = ActionRow()
-        button_row.add_item(self.add_kit_button)
-        button_row.add_item(self.edit_kit_button)
-        button_row.add_item(self.remove_kit_button)
-        container.add_item(button_row)
+        if not self.sorted_kits:
+            container.add_item(TextDisplay("No kits configured."))
+        else:
+            start = self.current_page * self.items_per_page
+            end = start + self.items_per_page
+            page_items = self.sorted_kits[start:end]
 
-        container.add_item(ActionRow(self.kit_select))
+            for kit_id, kit_data in page_items:
+                kit_name = kit_data.get('name', 'Unknown')
+                description = kit_data.get('description', '')
+
+                info_text = f"**{titlecase(kit_name)}**"
+                if description:
+                    info_text += f"\n*{description}*"
+
+                items = kit_data.get('items', [])
+                currency = kit_data.get('currency', {})
+                contents = []
+
+                for item in items[:3]:
+                    contents.append(f"{item.get('quantity', 1)}x {titlecase(item.get('name', ''))}")
+                if len(items) > 3:
+                    contents.append(f"...and {len(items) - 3} more items")
+
+                if currency:
+                    contents.extend(format_consolidated_totals(currency, self.currency_config))
+
+                if contents:
+                    info_text += f"\n> {', '.join(contents)}"
+                else:
+                    info_text += "\n> *Empty Kit*"
+
+                container.add_item(TextDisplay(info_text))
+
+                actions = ActionRow()
+                actions.add_item(buttons.EditStaticKitButton(kit_id, kit_data))
+                actions.add_item(buttons.RemoveStaticKitButton(kit_id, kit_name))
+                container.add_item(actions)
 
         self.add_item(container)
 
-    async def setup(self, bot, guild):
+        # Pagination Controls
+        if self.total_pages > 1:
+            nav_row = ActionRow()
+
+            prev_button = Button(
+                label='Previous',
+                style=ButtonStyle.secondary,
+                custom_id='kit_conf_prev',
+                disabled=(self.current_page == 0)
+            )
+            prev_button.callback = self.prev_page
+            nav_row.add_item(prev_button)
+
+            page_display = Button(
+                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                style=ButtonStyle.secondary,
+                custom_id='kit_conf_page_disp'
+            )
+            page_display.callback = self.show_page_jump_modal
+            nav_row.add_item(page_display)
+
+            next_button = Button(
+                label='Next',
+                style=ButtonStyle.secondary,
+                custom_id='kit_conf_next',
+                disabled=(self.current_page >= self.total_pages - 1)
+            )
+            next_button.callback = self.next_page
+            nav_row.add_item(next_button)
+
+            self.add_item(nav_row)
+
+    async def prev_page(self, interaction):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction):
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def show_page_jump_modal(self, interaction):
         try:
-            self.kit_select.options.clear()
-            collection = bot.gdb['staticKits']
-            query = await collection.find_one({'_id': guild.id})
-
-            options = []
-            if query and 'kits' in query and query['kits']:
-                for kit_id, kit_data in query['kits'].items():
-                    options.append(discord.SelectOption(label=titlecase(kit_data['name']), value=kit_id))
-
-                self.kit_select.options = options
-                self.kit_select.disabled = False
-                self.kit_select.placeholder = "Select a kit to manage"
-            else:
-                self.kit_select.options = [discord.SelectOption(label="No kits configured", value="none")]
-                self.kit_select.disabled = True
-                self.kit_select.placeholder = "No kits configured"
-
-            # Reset buttons if no selection
-            if not self.selected_kit_id:
-                self.edit_kit_button.disabled = True
-                self.remove_kit_button.disabled = True
-
+            await interaction.response.send_modal(common_modals.PageJumpModal(self))
         except Exception as e:
-            await log_exception(e)
+            await log_exception(e, interaction)
 
 
 class EditStaticKitView(LayoutView):

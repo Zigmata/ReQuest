@@ -753,48 +753,38 @@ class AddStaticKitButton(Button):
 
 
 class EditStaticKitButton(Button):
-    def __init__(self, calling_view):
+    def __init__(self, kit_id, kit_data):
         super().__init__(
-            label='Edit Kit',
-            style=ButtonStyle.primary,
-            custom_id='edit_static_kit_button',
-            disabled=True
+            label='Edit',
+            style=ButtonStyle.secondary,
+            custom_id=f'edit_static_kit_button_{kit_id}'
         )
-        self.calling_view = calling_view
+        self.kit_id = kit_id
+        self.kit_data = kit_data
 
     async def callback(self, interaction: discord.Interaction):
         try:
             from ReQuest.ui.config.views import EditStaticKitView
 
-            kit_id = self.calling_view.selected_kit_id
-            guild_id = interaction.guild_id
+            currency_config = getattr(self.view, 'currency_config', None)
+            if not currency_config:
+                currency_config = await interaction.client.gdb['currency'].find_one({'_id': interaction.guild_id})
 
-            collection = interaction.client.gdb['staticKits']
-            query = await collection.find_one({'_id': guild_id})
-            kits = query.get('kits', {})
-            kit_data = kits.get(kit_id)
-
-            if not kit_data:
-                raise Exception("Kit data not found.")
-
-            currency_collection = interaction.client.gdb['currency']
-            currency_config = await currency_collection.find_one({'_id': guild_id})
-
-            view = EditStaticKitView(kit_id, kit_data, currency_config)
-            await interaction.response.edit_message(view=view)
+            edit_view = EditStaticKitView(self.kit_id, self.kit_data, currency_config)
+            await interaction.response.edit_message(view=edit_view)
         except Exception as e:
             await log_exception(e, interaction)
 
 
 class RemoveStaticKitButton(Button):
-    def __init__(self, calling_view):
+    def __init__(self, kit_id, kit_name):
         super().__init__(
             label='Delete Kit',
             style=ButtonStyle.danger,
-            custom_id='remove_static_kit_button',
-            disabled=True
+            custom_id=f'remove_static_kit_button_{kit_id}'
         )
-        self.calling_view = calling_view
+        self.kit_id = kit_id
+        self.kit_name = kit_name
 
     async def callback(self, interaction: discord.Interaction):
         try:
@@ -810,20 +800,14 @@ class RemoveStaticKitButton(Button):
 
     async def _confirm_delete(self, interaction: discord.Interaction):
         try:
-            view = self.calling_view
-            kit_id = view.selected_kit_id
             collection = interaction.client.gdb['staticKits']
             await collection.update_one(
                 {'_id': interaction.guild_id},
-                {'$unset': {f'kits.{kit_id}': ''}}
+                {'$unset': {f'kits.{self.kit_id}': ''}}
             )
-            view.selected_kit_name = None
-            await setup_view(view, interaction)
-            view.edit_kit_button.label = 'Edit Kit'
-            view.remove_kit_button.label = 'Delete Kit'
-            view.clear_items()
-            view.build_view()
-            await interaction.response.edit_message(view=self.calling_view)
+
+            await setup_view(self.view, interaction)
+            await interaction.response.edit_message(view=self.view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -941,3 +925,4 @@ class DeleteKitCurrencyButton(Button):
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
+
