@@ -14,37 +14,36 @@ logger = logging.getLogger(__name__)
 
 
 class CreateQuestButton(Button):
-    def __init__(self, quest_view_class):
+    def __init__(self, calling_view):
         super().__init__(
             label='Create',
             style=ButtonStyle.success,
             custom_id='create_quest_button'
         )
-        self.quest_view_class = quest_view_class
+        self.calling_view = calling_view
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            modal = modals.CreateQuestModal(self.quest_view_class)
+            modal = modals.CreateQuestModal(self.calling_view)
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)
 
 
 class EditQuestButton(Button):
-    def __init__(self, calling_view, quest_post_view_class):
+    def __init__(self, calling_view):
         super().__init__(
-            label='Edit',
-            style=ButtonStyle.secondary,
+            label='Edit Details',
+            style=ButtonStyle.primary,
             custom_id='edit_quest_button',
             disabled=True
         )
         self.calling_view = calling_view
-        self.quest_post_view_class = quest_post_view_class
 
     async def callback(self, interaction: discord.Interaction):
         try:
             quest = self.calling_view.selected_quest
-            modal = modals.EditQuestModal(self.calling_view, quest, self.quest_post_view_class)
+            modal = modals.EditQuestModal(self.calling_view, quest)
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)
@@ -54,7 +53,7 @@ class ToggleReadyButton(Button):
     def __init__(self, calling_view):
         super().__init__(
             label='Toggle Ready',
-            style=ButtonStyle.secondary,
+            style=ButtonStyle.primary,
             custom_id='toggle_ready_button',
             disabled=True
         )
@@ -68,19 +67,19 @@ class ToggleReadyButton(Button):
 
 
 class RewardsMenuButton(Button):
-    def __init__(self, calling_view, rewards_view_class):
+    def __init__(self, calling_view):
         super().__init__(
-            label='Rewards',
-            style=ButtonStyle.secondary,
+            label='Configure Rewards',
+            style=ButtonStyle.primary,
             custom_id='rewards_menu_button',
             disabled=True
         )
         self.calling_view = calling_view
-        self.rewards_view_class = rewards_view_class
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            new_view = self.rewards_view_class(self.calling_view)
+            from ReQuest.ui.gm.views import RewardsMenuView
+            new_view = RewardsMenuView(self.calling_view)
             await setup_view(new_view, interaction)
             await interaction.response.edit_message(view=new_view)
         except Exception as e:
@@ -88,7 +87,7 @@ class RewardsMenuButton(Button):
 
 
 class RemovePlayerButton(Button):
-    def __init__(self, calling_view, target_view_class):
+    def __init__(self, calling_view):
         super().__init__(
             label='Remove Player',
             style=ButtonStyle.danger,
@@ -96,12 +95,12 @@ class RemovePlayerButton(Button):
             disabled=True
         )
         self.calling_view = calling_view
-        self.target_view_class = target_view_class
 
     async def callback(self, interaction: discord.Interaction):
         try:
             quest = self.calling_view.selected_quest
-            new_view = self.target_view_class(quest)
+            from ReQuest.ui.gm.views import RemovePlayerView
+            new_view = RemovePlayerView(quest)
             await setup_view(new_view, interaction)
             await interaction.response.edit_message(view=new_view)
         except Exception as e:
@@ -167,9 +166,10 @@ class CancelQuestButton(Button):
             message = quest_channel.get_partial_message(message_id)
             await attempt_delete(message)
 
-            await interaction.response.send_message(f'Quest `{quest['questId']}`: **{title}** cancelled!',
-                                                    ephemeral=True,
-                                                    delete_after=10)
+            from ReQuest.ui.gm.views import GMQuestMenuView
+            view = GMQuestMenuView()
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -329,13 +329,13 @@ class LeaveQuestButton(Button):
 class CompleteQuestButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Confirm?',
-            style=ButtonStyle.danger,
+            label='Complete Quest',
+            style=ButtonStyle.success,
             custom_id='complete_quest_button',
             disabled=True
         )
         self.calling_view = calling_view
-        self.quest_summary_modal = modals.QuestSummaryModal(self)
+        self.quest_summary_modal = modals.QuestSummaryModal(self.calling_view)
 
     async def callback(self, interaction: discord.Interaction):
         try:
@@ -345,13 +345,6 @@ class CompleteQuestButton(Button):
                 await interaction.response.send_modal(self.quest_summary_modal)
             else:
                 await self.calling_view.complete_quest(interaction)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-    async def modal_callback(self, interaction):
-        try:
-            summary = self.quest_summary_modal.summary_input.value
-            await self.calling_view.complete_quest(interaction, summary=summary)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -381,3 +374,41 @@ class DenySubmissionButton(Button):
 
     async def callback(self, interaction):
         await self.calling_view.deny(interaction)
+
+
+class ManageQuestRowButton(Button):
+    def __init__(self, quest):
+        super().__init__(
+            label='Manage',
+            style=ButtonStyle.secondary,
+            custom_id=f'manage_quest_{quest["questId"]}'
+        )
+        self.quest = quest
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            from ReQuest.ui.gm.views import ManageQuestsView
+            view = ManageQuestsView(self.quest)
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class BackToManageQuestButton(Button):
+    def __init__(self, quest):
+        super().__init__(
+            label='Back',
+            style=ButtonStyle.secondary,
+            custom_id='back_to_manage_quest'
+        )
+        self.quest = quest
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            from ReQuest.ui.gm.views import ManageQuestsView
+            view = ManageQuestsView(self.quest)
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)

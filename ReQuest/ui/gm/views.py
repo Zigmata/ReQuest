@@ -1,13 +1,17 @@
 import asyncio
 import logging
+import math
 from typing import Any, Dict, Iterator, Tuple
 
 import discord
-from discord.ui import View, LayoutView, Container, TextDisplay, Separator, ActionRow, Section
+from discord.ui import View, LayoutView, Container, TextDisplay, Separator, ActionRow, Section, Button
+from titlecase import titlecase
 
 from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
 from ReQuest.ui.common.views import MenuBaseView
+from ReQuest.ui.common.modals import PageJumpModal
 from ReQuest.ui.gm import buttons, selects, modals
+from ReQuest.ui.gm.buttons import BackToManageQuestButton
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
@@ -50,13 +54,40 @@ class GMBaseView(MenuBaseView):
 class GMQuestMenuView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
-        self.create_quest_button = buttons.CreateQuestButton(QuestPostView)
-        self.manage_quests_view_button = MenuViewButton(ManageQuestsView, 'Manage')
-        self.complete_quests_button = MenuViewButton(CompleteQuestsView, 'Complete')
+        self.quests = []
 
-        self.build_view()
+        self.items_per_page = 8
+        self.current_page = 0
+        self.total_pages = 1
+
+    async def setup(self, bot, user, guild):
+        try:
+            quest_collection = bot.gdb['quests']
+            self.quests = []
+
+            # Check to see if the user has guild admin privileges. This lets them view any quest in the guild.
+            if user.guild_permissions.manage_guild:
+                cursor = quest_collection.find({'guildId': guild.id})
+            else:
+                cursor = quest_collection.find({'guildId': guild.id, 'gm': user.id})
+
+            async for document in cursor:
+                self.quests.append(dict(document))
+
+            self.quests.sort(key=lambda x: x.get('title', '').lower())
+
+            self.total_pages = math.ceil(len(self.quests) / self.items_per_page)
+            if self.total_pages == 0:
+                self.total_pages = 1
+            if self.current_page >= self.total_pages:
+                self.current_page = max(0, self.total_pages - 1)
+
+            self.build_view()
+        except Exception as e:
+            await log_exception(e)
 
     def build_view(self):
+        self.clear_items()
         container = Container()
 
         header_section = Section(accessory=BackButton(GMBaseView))
@@ -64,140 +95,158 @@ class GMQuestMenuView(LayoutView):
         container.add_item(header_section)
         container.add_item(Separator())
 
-        create_quest_section = Section(accessory=self.create_quest_button)
+        create_quest_section = Section(accessory=buttons.CreateQuestButton(self))
         create_quest_section.add_item(TextDisplay('Create and post a new quest.'))
         container.add_item(create_quest_section)
+        container.add_item(Separator())
 
-        manage_quest_section = Section(accessory=self.manage_quests_view_button)
-        manage_quest_section.add_item(TextDisplay('Manage an active quest: Rewards, edits, etc.'))
-        container.add_item(manage_quest_section)
+        if not self.quests:
+            container.add_item(TextDisplay("No quests found."))
+        else:
+            start = self.current_page * self.items_per_page
+            end = start + self.items_per_page
+            page_items = self.quests[start:end]
 
-        complete_quest_section = Section(accessory=self.complete_quests_button)
-        complete_quest_section.add_item(TextDisplay(
-            'Complete an active quest. Issues rewards, if any, to party members.'
-        ))
-        container.add_item(complete_quest_section)
+            for quest in page_items:
+                title = quest.get('title', 'Untitled')
+                quest_id = quest.get('questId', 'Unknown')
+                lock_state = " (Locked)" if quest.get('lockState') else ""
+
+                info_text = f"**{title}**{lock_state}\nID: `{quest_id}`"
+
+                section = Section(accessory=buttons.ManageQuestRowButton(quest))
+                section.add_item(TextDisplay(info_text))
+                container.add_item(section)
 
         self.add_item(container)
+
+        if self.total_pages > 1:
+            nav_row = ActionRow()
+            prev_button = Button(
+                label='Previous',
+                style=discord.ButtonStyle.secondary,
+                custom_id='gm_q_prev',
+                disabled=(self.current_page == 0)
+            )
+            prev_button.callback = self.prev_page
+            nav_row.add_item(prev_button)
+
+            page_display = Button(
+                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                style=discord.ButtonStyle.secondary,
+                custom_id='gm_q_page'
+            )
+            page_display.callback = self.show_page_jump_modal
+            nav_row.add_item(page_display)
+
+            next_button = Button(
+                label='Next',
+                style=discord.ButtonStyle.secondary,
+                custom_id='gm_q_next',
+                disabled=(self.current_page >= self.total_pages - 1)
+            )
+            next_button.callback = self.next_page
+            nav_row.add_item(next_button)
+
+            self.add_item(nav_row)
+
+    async def prev_page(self, interaction):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction):
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def show_page_jump_modal(self, interaction):
+        try:
+            await interaction.response.send_modal(PageJumpModal(self))
+        except Exception as e:
+            await log_exception(e, interaction)
 
 
 class ManageQuestsView(LayoutView):
-    def __init__(self):
+    def __init__(self, quest):
         super().__init__(timeout=None)
-        self.selected_quest = None
-        self.quests = None
+        self.selected_quest = quest
 
-        self.quest_select = selects.ManageQuestSelect(self)
-
-        self.edit_quest_button = buttons.EditQuestButton(self, QuestPostView)
-        self.edit_quest_info = TextDisplay(
-            'Edit details for the selected quest.'
-        )
+        self.edit_quest_button = buttons.EditQuestButton(self)
+        self.edit_quest_button.disabled = False
 
         self.toggle_ready_button = buttons.ToggleReadyButton(self)
-        self.toggle_ready_info = TextDisplay(
-            'Toggle the ready state of the selected quest.'
-        )
+        self.toggle_ready_button.disabled = False
 
-        self.rewards_menu_button = buttons.RewardsMenuButton(self, RewardsMenuView)
-        self.rewards_menu_info = TextDisplay(
-            'Configure rewards for the selected quest.'
-        )
+        self.rewards_menu_button = buttons.RewardsMenuButton(self)
+        self.rewards_menu_button.disabled = False
 
-        self.remove_player_button = buttons.RemovePlayerButton(self, RemovePlayerView)
-        self.remove_player_info = TextDisplay(
-            'Remove a player from the selected quest.'
-        )
+        self.remove_player_button = buttons.RemovePlayerButton(self)
+        self.remove_player_button.disabled = False
+
+        self.complete_quest_button = buttons.CompleteQuestButton(self)
+        self.complete_quest_button.disabled = False
 
         self.cancel_quest_button = buttons.CancelQuestButton(self)
-        self.cancel_quest_info = TextDisplay(
-            'Cancel the selected quest and delete it from the quest board.'
-        )
+        self.cancel_quest_button.disabled = False
 
         self.build_view()
 
+    async def setup(self, bot):
+        try:
+            quest_collection = bot.gdb['quests']
+            query = await quest_collection.find_one(
+                {'guildId': self.selected_quest['guildId'], 'questId': self.selected_quest['questId']}
+            )
+            if query:
+                self.selected_quest = query
+
+            self.build_view()
+        except Exception as e:
+            await log_exception(e)
+
     def build_view(self):
+        self.clear_items()
         container = Container()
 
+        quest = self.selected_quest
+        title = quest.get('title', 'Unknown')
+        quest_id = quest.get('questId', 'Unknown')
+
         header_section = Section(accessory=BackButton(GMQuestMenuView))
-        header_section.add_item(TextDisplay('**Game Master - Quest Management**'))
+        header_section.add_item(TextDisplay(f'**Manage Quest - {title}** `{quest_id}`'))
         container.add_item(header_section)
         container.add_item(Separator())
 
-        quest_select_row = ActionRow(self.quest_select)
-        container.add_item(quest_select_row)
+        edit_section = Section(accessory=self.edit_quest_button)
+        edit_section.add_item(TextDisplay('Edit details for the selected quest.'))
+        container.add_item(edit_section)
 
-        edit_quest_section = Section(accessory=self.edit_quest_button)
-        edit_quest_section.add_item(self.edit_quest_info)
-        container.add_item(edit_quest_section)
+        ready_status = "Locked/Ready" if quest.get('lockState') else "Open"
+        toggle_section = Section(accessory=self.toggle_ready_button)
+        toggle_section.add_item(TextDisplay(f'Toggle ready state (Current: **{ready_status}**).'))
+        container.add_item(toggle_section)
 
-        toggle_ready_section = Section(accessory=self.toggle_ready_button)
-        toggle_ready_section.add_item(self.toggle_ready_info)
-        container.add_item(toggle_ready_section)
+        rewards_section = Section(accessory=self.rewards_menu_button)
+        rewards_section.add_item(TextDisplay('Configure rewards for the selected quest.'))
+        container.add_item(rewards_section)
 
-        rewards_menu_section = Section(accessory=self.rewards_menu_button)
-        rewards_menu_section.add_item(self.rewards_menu_info)
-        container.add_item(rewards_menu_section)
+        complete_section = Section(accessory=self.complete_quest_button)
+        complete_section.add_item(TextDisplay('Complete an active quest. Issues rewards, if any, to party members.'))
+        container.add_item(complete_section)
 
         remove_player_section = Section(accessory=self.remove_player_button)
-        remove_player_section.add_item(self.remove_player_info)
+        remove_player_section.add_item(TextDisplay('Remove a player from the selected quest.'))
         container.add_item(remove_player_section)
+        container.add_item(Separator())
 
-        cancel_quest_section = Section(accessory=self.cancel_quest_button)
-        cancel_quest_section.add_item(self.cancel_quest_info)
-        container.add_item(cancel_quest_section)
+        cancel_section = Section(accessory=self.cancel_quest_button)
+        cancel_section.add_item(TextDisplay('Cancel the selected quest and delete it from the quest board.'))
+        container.add_item(cancel_section)
 
         self.add_item(container)
-
-    async def setup(self, bot, user, guild):
-        try:
-            quest_collection = bot.gdb['quests']
-            options = []
-            quests = []
-
-            # Check to see if the user has guild admin privileges. This lets them edit any quest in the guild.
-            if user.guild_permissions.manage_guild:
-                quest_query = quest_collection.find({'guildId': guild.id})
-            else:
-                quest_query = quest_collection.find({'guildId': guild.id, 'gm': user.id})
-
-            async for document in quest_query:
-                quests.append(dict(document))
-
-            if len(quests) > 0:
-                for quest in quests:
-                    options.append(discord.SelectOption(label=f'{quest['questId']}: {quest['title']}',
-                                                        value=quest['questId']))
-                self.quests = quests
-                self.quest_select.disabled = False
-            else:
-                options.append(discord.SelectOption(label='No quests were found, or you do not have permissions to edit'
-                                                          ' them.', value='None'))
-                self.quest_select.disabled = True
-
-            self.quest_select.options = options
-
-            if self.selected_quest:
-                quest_title = self.selected_quest.get('title')
-                quest_id = self.selected_quest.get('questId')
-
-                self.edit_quest_info.content = f'Edit details for `{quest_id}`: **{quest_title}**.'
-                self.edit_quest_button.disabled = False
-
-                self.toggle_ready_info.content = f'Toggle the ready state for `{quest_id}`: **{quest_title}**.'
-                self.toggle_ready_button.disabled = False
-
-                self.rewards_menu_info.content = f'Configure rewards for `{quest_id}`: **{quest_title}**.'
-                self.rewards_menu_button.disabled = False
-
-                self.remove_player_info.content = f'Remove a player from `{quest_id}`: **{quest_title}**.'
-                self.remove_player_button.disabled = False
-
-                self.cancel_quest_info.content = f'Cancel `{quest_id}`: **{quest_title}**.'
-                self.cancel_quest_button.disabled = False
-
-        except Exception as e:
-            await log_exception(e)
 
     async def quest_ready_toggle(self, interaction: discord.Interaction):
         try:
@@ -206,7 +255,7 @@ class ManageQuestsView(LayoutView):
             user_id = interaction.user.id
             guild = interaction.client.get_guild(guild_id)
 
-            # Fetch the quest channel to retrieve the message object
+            # Fetch the quest channel
             channel_collection = interaction.client.gdb['questChannel']
             channel_id_query = await channel_collection.find_one({'_id': guild_id})
             if not channel_id_query:
@@ -218,7 +267,7 @@ class ManageQuestsView(LayoutView):
             message_id = quest['messageId']
             message = channel.get_partial_message(message_id)
 
-            # Check to see if the GM has a party role configured
+            # Check to see if the quest has a party role configured
             role = None
             if quest['partyRoleId']:
                 role_id = quest['partyRoleId']
@@ -233,22 +282,19 @@ class ManageQuestsView(LayoutView):
             quest_collection = interaction.client.gdb['quests']
             if not quest['lockState']:
                 await quest_collection.update_one({'questId': quest_id}, {'$set': {'lockState': True}})
-
-                # Fetch the updated quest
                 quest['lockState'] = True
 
                 # Notify each party member that the quest is ready
                 for player in party:
                     for key in player:
                         member = guild.get_member(int(key))
-                        # If the GM has a party role configured, assign it to each party member
+                        # If the quest has a party role configured, assign it to each party member
                         if role:
                             tasks.append(member.add_roles(role))
                         tasks.append(member.send(f'Game Master <@{user_id}> has marked your quest, **"{title}"**, '
                                                  f'ready to start!'))
-
                 await interaction.user.send('Quest roster locked and party notified!')
-            # Unlocks a quest if members are not ready.
+            # Unlocks a quest if members are not ready
             else:
                 # Remove the role from the players
                 if role:
@@ -259,8 +305,6 @@ class ManageQuestsView(LayoutView):
 
                 # Unlock the quest
                 await quest_collection.update_one({'questId': quest_id}, {'$set': {'lockState': False}})
-
-                # Fetch the updated quest
                 quest['lockState'] = False
 
                 await interaction.user.send('Quest roster has been unlocked.')
@@ -285,27 +329,197 @@ class ManageQuestsView(LayoutView):
         except Exception as e:
             await log_exception(e, interaction)
 
+    async def complete_quest(self, interaction: discord.Interaction, summary=None):
+        try:
+            guild_id = interaction.guild_id
+            guild = interaction.client.get_guild(guild_id)
+
+            # Refresh the quest state before attempting to complete it
+            quest_collection = interaction.client.gdb['quests']
+            refreshed_quest = await quest_collection.find_one({
+                'guildId': guild_id,
+                'questId': self.selected_quest['questId']
+            })
+
+            if not refreshed_quest:
+                raise Exception('Could not find the specified quest in the database.')
+
+            self.selected_quest = refreshed_quest
+            quest = self.selected_quest
+
+            # Setup quest variables
+            quest_id, message_id, title, description, gm, party, rewards = (quest['questId'], quest['messageId'],
+                                                                            quest['title'], quest['description'],
+                                                                            quest['gm'], quest['party'],
+                                                                            quest['rewards'])
+
+            if not party:
+                raise Exception('You cannot complete a quest with an empty roster. Try cancelling instead.')
+
+            archive_channel = None
+            archive_query = await interaction.client.gdb['archiveChannel'].find_one({'_id': guild_id})
+            if archive_query:
+                archive_channel = guild.get_channel(strip_id(archive_query['archiveChannel']))
+
+            # Check if a party role was configured, and delete it
+            party_role_id = quest['partyRoleId']
+            if party_role_id:
+                role = guild.get_role(party_role_id)
+                if role:
+                    await role.delete(
+                        reason=f'Quest ID {quest['questId']} was completed by {interaction.user.mention}.')
+
+            # Get party members and message them with results
+            reward_summary = []
+            party_xp = rewards.get('party', {}).get('xp', 0)
+            xp_per_member = party_xp // len(party) if party else 0
+            party_items = rewards.get('party', {}).get('items', {})
+
+            for entry in party:
+                for player_id, character_info in entry.items():
+                    member = guild.get_member(int(player_id))
+
+                    # Get character data
+                    character_id = next(iter(character_info))
+                    character = character_info[character_id]
+                    reward_summary.append(f'<@!{player_id}> as {character["name"]}:')
+
+                    # Prep reward data
+                    total_xp = xp_per_member
+                    combined_items = party_items.copy()
+
+                    # Check if character has individual rewards
+                    if character_id in rewards:
+                        individual_rewards = rewards[character_id]
+                        total_xp += individual_rewards.get('xp', 0)
+
+                        # Merge individual items with party items
+                        for item, quantity in individual_rewards.get('items', {}).items():
+                            combined_items[item] = combined_items.get(item, 0) + quantity
+
+                    # Update the character's XP and inventory
+                    reward_summary.append(f'Experience: {total_xp}')
+                    await update_character_experience(interaction, int(player_id), character_id, total_xp)
+                    for item_name, quantity in combined_items.items():
+                        reward_summary.append(f'{item_name}: {quantity}')
+                        await update_character_inventory(interaction, int(player_id), character_id, item_name, quantity)
+
+                    # Send reward summary to player
+                    reward_strings = CompleteQuestsView.build_reward_summary(total_xp, combined_items)
+                    dm_embed = discord.Embed(title=f'Quest Complete: {title}', type='rich')
+                    if reward_strings:
+                        dm_embed.add_field(name='Rewards', value='\n'.join(reward_strings))
+                    try:
+                        await member.send(embed=dm_embed)
+                    except discord.errors.Forbidden as e:
+                        logger.warning(f'Could not DM {member.id} about quest completion rewards: {e}')
+
+            # Build an embed for feedback
+            quest_embed = discord.Embed(
+                title=f'QUEST COMPLETED: {title}',
+                description=(
+                    f'**GM:** <@!{gm}>\n\n'
+                    f'{description}\n\n'
+                    f'------'
+                ),
+                type='rich'
+            )
+
+            formatted_party = []
+            for player in party:
+                for member_id in player:
+                    for character_id in player[str(member_id)]:
+                        character = player[str(member_id)][str(character_id)]
+                        formatted_party.append(f'- <@!{member_id}> as {character["name"]}')
+
+            quest_embed.add_field(name=f'__Party__', value='\n'.join(formatted_party))
+            quest_embed.set_footer(text='Quest ID: ' + quest_id)
+
+            if summary:
+                quest_embed.add_field(name='Summary', value=summary, inline=False)
+            if reward_summary:
+                quest_embed.add_field(name='Rewards', value='\n'.join(reward_summary), inline=True)
+
+            # If an archive channel is configured, post the archived post
+            if archive_channel:
+                await archive_channel.send(embed=quest_embed)
+
+            # Delete the original quest post
+            quest_channel_query = await interaction.client.gdb['questChannel'].find_one({'_id': guild_id})
+            quest_channel_id = quest_channel_query['questChannel']
+            quest_channel = interaction.client.get_channel(strip_id(quest_channel_id))
+            if quest_channel:
+                quest_message = quest_channel.get_partial_message(message_id)
+                await attempt_delete(quest_message)
+
+            # Remove the quest from the db
+            quest_collection = interaction.client.gdb['quests']
+            await quest_collection.delete_one({'guildId': guild_id, 'questId': quest_id})
+
+            # Message feedback to the GM
+            await interaction.user.send(embed=quest_embed)
+
+            # Check if GM rewards are enabled, and reward the GM accordingly
+            gm_rewards_collection = interaction.client.gdb['gmRewards']
+            gm_rewards_query = await gm_rewards_collection.find_one({'_id': interaction.guild_id})
+            if gm_rewards_query:
+                experience = gm_rewards_query.get('experience')
+                items = gm_rewards_query.get('items')
+
+                character_collection = interaction.client.mdb['characters']
+                character_query = await character_collection.find_one({'_id': interaction.user.id})
+
+                if not character_query:
+                    character_string = ('Your server admin has configured rewards for Game Masters when they complete '
+                                        'quests. However, since you have no registered characters, your rewards could '
+                                        'not be automatically issued at this time.')
+                else:
+                    if str(guild_id) not in character_query.get('activeCharacters', {}):
+                        character_string = ('Your server admin has configured rewards for Game Masters when they '
+                                            'complete quests. However, since you have no active character on this '
+                                            'server, your rewards could not be automatically issued at this time.')
+                    else:
+                        active_character_id = character_query['activeCharacters'][str(guild_id)]
+                        character_string = (f'The following has been warded to your active character, '
+                                            f'{character_query["characters"][active_character_id]["name"]}')
+                        if experience:
+                            await update_character_experience(interaction, interaction.user.id, active_character_id,
+                                                              experience)
+                        if items:
+                            for item_name, quantity in items.items():
+                                await update_character_inventory(interaction, interaction.user.id, active_character_id,
+                                                                 item_name, quantity)
+
+                gm_rewards_embed = discord.Embed(
+                    title='GM Rewards Issued',
+                    description=character_string,
+                    color=discord.Color.gold(),
+                    type='rich'
+                )
+                if experience:
+                    gm_rewards_embed.add_field(name='Experience', value=experience)
+                if items:
+                    item_strings = []
+                    for item_name, quantity in items.items():
+                        item_strings.append(f'{titlecase(item_name)}: {quantity}')
+                    gm_rewards_embed.add_field(name='Items', value='\n'.join(item_strings))
+
+                try:
+                    await interaction.user.send(embed=gm_rewards_embed)
+                except discord.errors.Forbidden as e:
+                    logger.warning(f'Could not DM {interaction.user.id} about GM rewards: {e}')
+
+            # Reset the view and handle the interaction response
+            view = GMQuestMenuView()
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
 
 class RewardsMenuView(LayoutView):
     def __init__(self, calling_view):
         super().__init__(timeout=None)
-        self.embed = discord.Embed(
-            title='',
-            description=(
-                '__**Party Rewards**__\n'
-                'Assigns rewards shared across all party members. XP and currency will be split evenly.\n\n'
-                '__**Individual Rewards**__\n'
-                'Assigns additional bonus rewards for the selected party member.\n\n'
-                '**How To Input Rewards**\n\n'
-                '> Experience Points\n'
-                '- Input the total amount of experience to award.\n\n'
-                '> Items/Currency\n'
-                '- Note the {name}: {quantity} format in the placeholder text.\n'
-                '- Item/Currency names are case-insensitive, so \"gOLd\" == \"Gold\"\n\n'
-                '------'
-            ),
-            type='rich'
-        )
         self.quest = calling_view.selected_quest
         self.selected_character = None
         self.selected_character_id = None
@@ -331,7 +545,7 @@ class RewardsMenuView(LayoutView):
     def build_view(self):
         container = Container()
 
-        header_section = Section(accessory=BackButton(ManageQuestsView))
+        header_section = Section(accessory=buttons.BackToManageQuestButton(self.quest))
         header_section.add_item(TextDisplay(f'**Quest Rewards - {self.quest['title']}**'))
         container.add_item(header_section)
         container.add_item(Separator())
@@ -354,9 +568,6 @@ class RewardsMenuView(LayoutView):
     async def setup(self):
         try:
             self.party_member_select.options.clear()
-            self.embed.clear_fields()
-
-            self.embed.title = f"Quest Rewards - {self.quest.get('title', 'Unknown Quest')}"
 
             options = self._build_party_member_options(self.quest)
             if options:
@@ -506,14 +717,14 @@ class RemovePlayerView(LayoutView):
     def build_view(self):
         container = Container()
 
-        header_section = Section(accessory=BackButton(ManageQuestsView))
+        header_section = Section(accessory=buttons.BackToManageQuestButton(self.quest))
         header_section.add_item(TextDisplay(f'**Remove Player from Quest - {self.quest['title']}**'))
         container.add_item(header_section)
         container.add_item(Separator())
 
         container.add_item(TextDisplay(
             '__**Player Removal Notes**__\n\n'
-            '- Choose a player from the dropdown above to remove them from the quest roster.\n'
+            '- Choose a player from the dropdown below to remove them from the quest roster.\n'
             '- If any players are on a wait list, the first player on the list will be promoted to the party.\n'
             '- Individual rewards for the removed player will be deleted from the quest.\n'
             '- If you wish to reward the player for prior contributions, use the `Modify Player` context menu to issue '
