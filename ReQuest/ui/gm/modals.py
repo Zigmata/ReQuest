@@ -270,9 +270,8 @@ class RewardsModal(Modal):
         else:
             rewards = calling_view.current_individual_rewards
 
-        xp_default = ''
-        if rewards.get('xp') is not None:
-            xp_default = str(rewards['xp'])
+        xp_value = rewards.get('xp')
+        xp_default = str(xp_value) if xp_value is not None else '0'
 
         items_default = ''
         if rewards.get('items'):
@@ -302,7 +301,7 @@ class RewardsModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            xp = None
+            xp = 0
             items = None
             if self.xp_input.value:
                 xp = int(self.xp_input.value)
@@ -379,7 +378,7 @@ class ModPlayerModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            xp = None
+            xp = 0
             gdb = interaction.client.gdb
             guild_id = interaction.guild_id
             currency_config = await gdb['currency'].find_one({'_id': guild_id})
