@@ -7,7 +7,7 @@ from titlecase import titlecase
 
 from ReQuest.ui.player import modals
 from ReQuest.ui.common import modals as common_modals
-from ReQuest.utilities.supportFunctions import log_exception, setup_view
+from ReQuest.utilities.supportFunctions import log_exception, setup_view, attempt_delete
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -113,21 +113,7 @@ class ActivateCharacterButton(Button):
             await log_exception(e, interaction)
 
 
-class SpendCurrencyButton(Button):
-    def __init__(self, calling_view):
-        super().__init__(
-            label='Spend Currency',
-            style=ButtonStyle.primary,
-            custom_id='spend_currency_button'
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            modal = modals.SpendCurrencyModal(self.calling_view)
-            await interaction.response.send_modal(modal)
-        except Exception as e:
-            await log_exception(e, interaction)
+# ----- PLAYER BOARD -----
 
 
 class CreatePlayerPostButton(Button):
@@ -148,34 +134,68 @@ class CreatePlayerPostButton(Button):
 
 
 class RemovePlayerPostButton(Button):
-    def __init__(self, calling_view):
+    def __init__(self, calling_view, post):
         super().__init__(
-            label='Remove Post',
+            label='Remove',
             style=ButtonStyle.danger,
-            custom_id='remove_player_post_button',
-            disabled=True
-        )
+            custom_id=f'remove_player_post_button_{post.get("postId")}'        )
         self.calling_view = calling_view
+        self.post = post
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            await self.calling_view.remove_post(interaction)
+            confirm_modal = common_modals.ConfirmModal(
+                title='Confirm Post Removal',
+                prompt_label=f'WARNING: This action is irreversible!',
+                prompt_placeholder='Type CONFIRM to proceed.',
+                confirm_callback=self._confirm_delete
+            )
+            await interaction.response.send_modal(confirm_modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def _confirm_delete(self, interaction: discord.Interaction):
+        try:
+            post_id = self.post.get('postId')
+            message_id = self.post.get('messageId')
+            guild_id = interaction.guild_id
+
+            post_collection = interaction.client.gdb['playerBoard']
+
+            # Delete from db
+            await post_collection.delete_one({'guildId': guild_id, 'postId': post_id})
+
+            # Delete the post message
+            channel_id = self.calling_view.player_board_channel_id
+            if channel_id:
+                channel = interaction.client.get_channel(channel_id)
+                if channel:
+                    try:
+                        message = channel.get_partial_message(message_id)
+                        await attempt_delete(message)
+                    except discord.NotFound:
+                        logger.warning(f"Message {message_id} not found for deletion.")
+                    except Exception as e:
+                        logger.error(f"Error deleting message {message_id}: {e}")
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
 
 class EditPlayerPostButton(Button):
-    def __init__(self, calling_view):
+    def __init__(self, calling_view, post):
         super().__init__(
-            label='Edit Post',
-            custom_id='edit_player_post_button',
-            disabled=True
+            label='Edit',
+            custom_id=f'edit_player_post_button_{post.get("postId")}'
         )
         self.calling_view = calling_view
+        self.post = post
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            modal = modals.EditPlayerPostModal(self.calling_view)
+            modal = modals.EditPlayerPostModal(self.calling_view, self.post)
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)
@@ -351,6 +371,9 @@ class WizardClearCartButton(Button):
             await log_exception(e, interaction)
 
 
+# ----- INVENTORY MANAGEMENT -----
+
+
 class ConsumeItemButton(Button):
     def __init__(self, calling_view):
         super().__init__(
@@ -363,6 +386,23 @@ class ConsumeItemButton(Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             modal = modals.ConsumeItemModal(self.calling_view)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class SpendCurrencyButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Spend Currency',
+            style=ButtonStyle.primary,
+            custom_id='spend_currency_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            modal = modals.SpendCurrencyModal(self.calling_view)
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)

@@ -404,17 +404,17 @@ class InventoryBaseView(LayoutView):
         container.add_item(self.current_inventory_info)
         container.add_item(Separator())
 
-        consume_item_section = Section(accessory=self.consume_item_button)
-        consume_item_section.add_item(TextDisplay(
-            'Consume or destroy an item from your inventory.'
-        ))
-        container.add_item(consume_item_section)
-
         spend_currency_section = Section(accessory=self.spend_currency_button)
         spend_currency_section.add_item(TextDisplay(
             'Spend some currency.'
         ))
         container.add_item(spend_currency_section)
+
+        consume_item_section = Section(accessory=self.consume_item_button)
+        consume_item_section.add_item(TextDisplay(
+            'Consume or destroy an item from your inventory.'
+        ))
+        container.add_item(consume_item_section)
 
         self.add_item(container)
 
@@ -504,25 +504,40 @@ class PlayerBoardView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         self.player_board_channel_id = None
-        self.selected_post_id = None
         self.posts = []
-        self.selected_post = None
 
-        self.manageable_post_select = selects.ManageablePostSelect(self)
+        self.items_per_page = 6
+        self.current_page = 0
+        self.total_pages = 1
 
-        self.edit_player_post_button = buttons.EditPlayerPostButton(self)
-        self.edit_player_post_info = TextDisplay(
-            'Edit the selected post.'
-        )
+    async def setup(self, bot, user, guild):
+        try:
+            channel_collection = bot.gdb['playerBoardChannel']
+            channel_query = await channel_collection.find_one({'_id': guild.id})
+            self.player_board_channel_id = strip_id(channel_query['playerBoardChannel']) if channel_query else None
 
-        self.remove_player_post_button = buttons.RemovePlayerPostButton(self)
-        self.remove_player_post_info = TextDisplay(
-            'Remove the selected post.'
-        )
+            self.posts = []
+            post_collection = bot.gdb['playerBoard']
+            post_cursor = post_collection.find({'guildId': guild.id, 'playerId': user.id})
+            async for post in post_cursor:
+                self.posts.append(dict(post))
 
-        self.build_view()
+            # Sort by newest first
+            self.posts.sort(key=lambda x: x.get('timestamp', 0), reverse=True)
+
+            self.total_pages = math.ceil(len(self.posts) / self.items_per_page)
+            if self.total_pages == 0:
+                self.total_pages = 1
+
+            if self.current_page >= self.total_pages:
+                self.current_page = max(0, self.total_pages - 1)
+
+            self.build_view()
+        except Exception as e:
+            await log_exception(e)
 
     def build_view(self):
+        self.clear_items()
         container = Container()
 
         header_section = Section(accessory=BackButton(PlayerBaseView))
@@ -537,72 +552,75 @@ class PlayerBoardView(LayoutView):
         container.add_item(create_post_section)
         container.add_item(Separator())
 
-        post_select_row = ActionRow(self.manageable_post_select)
-        container.add_item(post_select_row)
+        if not self.posts:
+            container.add_item(TextDisplay("You don't have any current posts."))
+        else:
+            start = self.current_page * self.items_per_page
+            end = start + self.items_per_page
+            page_posts = self.posts[start:end]
 
-        edit_post_section = Section(accessory=self.edit_player_post_button)
-        edit_post_section.add_item(self.edit_player_post_info)
-        container.add_item(edit_post_section)
+            for post in page_posts:
+                title = post.get('title', 'Untitled')
+                post_id = post.get('postId', 'Unknown')
 
-        remove_post_section = Section(accessory=self.remove_player_post_button)
-        remove_post_section.add_item(self.remove_player_post_info)
-        container.add_item(remove_post_section)
+                info_text = f"**{title}** (ID: `{post_id}`)"
+
+                actions = ActionRow()
+                actions.add_item(buttons.EditPlayerPostButton(self, post))
+                actions.add_item(buttons.RemovePlayerPostButton(self, post))
+
+                container.add_item(TextDisplay(info_text))
+                container.add_item(actions)
 
         self.add_item(container)
 
-    async def setup(self, bot, user, guild):
-        try:
-            channel_collection = bot.gdb['playerBoardChannel']
-            channel_query = await channel_collection.find_one({'_id': guild.id})
-            self.player_board_channel_id = strip_id(channel_query['playerBoardChannel'])
+        # Pagination
+        if self.total_pages > 1:
+            nav_row = ActionRow()
 
-            self.posts.clear()
-            post_collection = bot.gdb['playerBoard']
-            post_cursor = post_collection.find({'guildId': guild.id, 'playerId': user.id})
-            async for post in post_cursor:
-                self.posts.append(dict(post))
+            prev_button = Button(
+                label='Previous',
+                style=discord.ButtonStyle.secondary,
+                custom_id='pb_prev',
+                disabled=(self.current_page == 0)
+            )
+            prev_button.callback = self.prev_page
+            nav_row.add_item(prev_button)
 
-            if self.selected_post_id:
-                self.selected_post = next((post for post in self.posts if post['postId'] == self.selected_post_id),
-                                          None)
+            page_display = Button(
+                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                style=discord.ButtonStyle.secondary,
+                custom_id='pb_page_disp'
+            )
+            page_display.callback = self.show_page_jump_modal
+            nav_row.add_item(page_display)
 
-                self.edit_player_post_button.disabled = False
-                self.edit_player_post_info.content = (
-                    f'Edit `{self.selected_post['postId']}`: {self.selected_post['title']}'
-                )
+            next_button = Button(
+                label='Next',
+                style=discord.ButtonStyle.secondary,
+                custom_id='pb_next',
+                disabled=(self.current_page >= self.total_pages - 1)
+            )
+            next_button.callback = self.next_page
+            nav_row.add_item(next_button)
 
-                self.remove_player_post_button.disabled = False
-                self.remove_player_post_info.content = (
-                    f'Remove `{self.selected_post['postId']}`: {self.selected_post['title']}'
-                )
-            else:
-                self.edit_player_post_button.disabled = True
-                self.remove_player_post_button.disabled = True
+            self.add_item(nav_row)
 
-            options = []
-            if self.posts:
-                for post in self.posts:
-                    options.append(discord.SelectOption(
-                        label=post['title'],
-                        value=post['postId']
-                    ))
-                self.manageable_post_select.disabled = False
-            else:
-                options.append(discord.SelectOption(
-                    label='You don\'t have any current posts',
-                    value='None'
-                ))
-                self.manageable_post_select.disabled = True
-            self.manageable_post_select.options.clear()
-            self.manageable_post_select.options = options
-        except Exception as e:
-            await log_exception(e)
-
-    async def select_callback(self, interaction: discord.Interaction):
-        try:
-            self.selected_post_id = self.manageable_post_select.values[0]
-            await setup_view(self, interaction)
+    async def prev_page(self, interaction):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.build_view()
             await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction):
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def show_page_jump_modal(self, interaction):
+        try:
+            await interaction.response.send_modal(common_modals.PageJumpModal(self))
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -610,6 +628,7 @@ class PlayerBoardView(LayoutView):
         try:
             post_collection = interaction.client.gdb['playerBoard']
             post_id = str(shortuuid.uuid()[:8])
+
             post_embed = discord.Embed(
                 title=title,
                 description=content,
@@ -617,7 +636,11 @@ class PlayerBoardView(LayoutView):
             )
             post_embed.add_field(name='Author', value=interaction.user.mention)
             post_embed.set_footer(text=f'Post ID: {post_id}')
+
             channel = interaction.client.get_channel(self.player_board_channel_id)
+            if not channel:
+                raise Exception("Player Board channel not found.")
+
             message = await channel.send(embed=post_embed)
 
             post = {
@@ -632,71 +655,40 @@ class PlayerBoardView(LayoutView):
 
             await post_collection.insert_one(post)
 
-            self.posts.append(post)
-
-            # Remove placeholder if present before adding the first real post
-            if self.manageable_post_select.disabled:
-                self.manageable_post_select.options.clear()
-            self.manageable_post_select.options.append(discord.SelectOption(
-                label=title,
-                value=post_id
-            ))
-            self.manageable_post_select.disabled = False
-
+            await setup_view(self, interaction)
             await interaction.response.edit_message(view=self)
         except Exception as e:
             await log_exception(e, interaction)
 
-    async def edit_post(self, title, content, interaction):
+    async def edit_post(self, post, new_title, new_content, interaction):
         try:
-            self.selected_post['title'] = title
-            self.selected_post['content'] = content
-            post_embed = discord.Embed(
-                title=title,
-                description=content,
-                type='rich'
-            )
-            post_embed.add_field(name='Author', value=interaction.user.mention)
-            post_embed.set_footer(text=f'Post ID: {self.selected_post_id}')
-
-            message_id = self.selected_post['messageId']
-            channel = interaction.client.get_channel(self.player_board_channel_id)
-            message = channel.get_partial_message(message_id)
-            await message.edit(embed=post_embed)
-
             post_collection = interaction.client.gdb['playerBoard']
-            await post_collection.replace_one({'guildId': interaction.guild_id, 'postId': self.selected_post_id},
-                                              self.selected_post)
-
-            await interaction.response.send_message(f'Post `{self.selected_post_id}`: **{title}** updated!',
-                                                    ephemeral=True)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-    async def remove_post(self, interaction: discord.Interaction):
-        try:
-            confirm_modal = common_modals.ConfirmModal(
-                title='Confirm Post Removal',
-                prompt_label='WARNING: This action is irreversible!',
-                prompt_placeholder='Type CONFIRM to proceed',
-                confirm_callback=self.confirm_post_removal
+            await post_collection.update_one(
+                {'guildId': interaction.guild_id, 'postId': post['postId']},
+                {'$set': {'title': new_title, 'content': new_content}}
             )
-            await interaction.response.send_modal(confirm_modal)
-        except Exception as e:
-            await log_exception(e, interaction)
 
-    async def confirm_post_removal(self, interaction):
-        try:
-            post = self.selected_post
-            post_collection = interaction.client.gdb['playerBoard']
-            await post_collection.delete_one({'guildId': interaction.guild.id, 'postId': self.selected_post_id})
-
+            channel_id = self.player_board_channel_id
             message_id = post['messageId']
-            channel = interaction.client.get_channel(self.player_board_channel_id)
-            message = channel.get_partial_message(message_id)
-            await attempt_delete(message)
-            self.selected_post = None
-            self.selected_post_id = None
+            if channel_id:
+                channel = interaction.client.get_channel(channel_id)
+                if channel:
+                    try:
+                        message = channel.get_partial_message(message_id)
+
+                        embed = discord.Embed(
+                            title=new_title,
+                            description=new_content,
+                            type='rich'
+                        )
+                        embed.add_field(name='Author', value=interaction.user.mention)
+                        embed.set_footer(text=f'Post ID: {post["postId"]}')
+
+                        await message.edit(embed=embed)
+                    except discord.NotFound:
+                        logger.error("Player Board message not found for editing.")
+                    except Exception as e:
+                        logger.error(f"Failed to edit Player Board message: {e}")
 
             await setup_view(self, interaction)
             await interaction.response.edit_message(view=self)
