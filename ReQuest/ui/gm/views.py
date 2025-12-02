@@ -7,11 +7,10 @@ import discord
 from discord.ui import View, LayoutView, Container, TextDisplay, Separator, ActionRow, Section, Button
 from titlecase import titlecase
 
-from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
-from ReQuest.ui.common.views import MenuBaseView
+from ReQuest.ui.common.buttons import MenuDoneButton, BackButton
 from ReQuest.ui.common.modals import PageJumpModal
-from ReQuest.ui.gm import buttons, selects, modals
-from ReQuest.ui.gm.buttons import BackToManageQuestButton
+from ReQuest.ui.common.views import MenuBaseView
+from ReQuest.ui.gm import buttons, selects
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
@@ -405,7 +404,7 @@ class ManageQuestsView(LayoutView):
                         await update_character_inventory(interaction, int(player_id), character_id, item_name, quantity)
 
                     # Send reward summary to player
-                    reward_strings = CompleteQuestsView.build_reward_summary(total_xp, combined_items)
+                    reward_strings = self.build_reward_summary(total_xp, combined_items)
                     dm_embed = discord.Embed(title=f'Quest Complete: {title}', type='rich')
                     if reward_strings:
                         dm_embed.add_field(name='Rewards', value='\n'.join(reward_strings))
@@ -515,6 +514,16 @@ class ManageQuestsView(LayoutView):
             await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
+
+    @staticmethod
+    def build_reward_summary(xp, items) -> list[str]:
+        reward_strings = []
+        if xp and xp > 0:
+            reward_strings.append(f'- Experience Points: {xp}')
+        if items:
+            for item, quantity in items.items():
+                reward_strings.append(f'- {item}: {quantity}')
+        return reward_strings
 
 
 class RewardsMenuView(LayoutView):
@@ -1018,295 +1027,6 @@ class QuestPostView(View):
             await interaction.response.edit_message(embed=self.embed, view=self)
         except Exception as e:
             await log_exception(e, interaction)
-
-
-class CompleteQuestsView(LayoutView):
-    def __init__(self):
-        super().__init__(timeout=None)
-        self.embed = discord.Embed(
-            title='Game Master - Quest Completion',
-            description=(
-                'Choose a quest to complete. **This action is irreversible!**\n\n'
-                'Completing a quest does the following:\n'
-                '- Removes the quest post from the Quest Board channel.\n'
-                '- Issues rewards (if any) to party members.\n'
-                '- Removes GM roles (if any) from party members.\n'
-                '- Messages party members with a summary of their individual rewards.\n'
-                '- If configured in the server, prompts the GM to summarize the results of the quest/story, and posts '
-                'the quest results to a designated Archive Channel.'
-            ),
-            type='rich'
-        )
-        self.quests = None
-        self.selected_quest = None
-        self.quest_select = selects.ManageableQuestSelect(self)
-
-        self.build_view()
-
-    def build_view(self):
-        container = Container()
-
-        header_section = Section(accessory=BackButton(GMQuestMenuView))
-        header_section.add_item(TextDisplay('**Game Master - Quest Completion**'))
-        container.add_item(header_section)
-        container.add_item(Separator())
-
-        container.add_item(TextDisplay(
-                'Choose a quest to complete. **This action is irreversible!**\n\n'
-                'Completing a quest does the following:\n'
-                '- Removes the quest post from the Quest Board channel.\n'
-                '- Issues rewards (if any) to party members.\n'
-                '- Removes GM roles (if any) from party members.\n'
-                '- Messages party members with a summary of their individual rewards.\n'
-                '- If configured in the server, prompts the GM to summarize the results of the quest/story, and posts '
-                'the quest results to a designated Archive Channel.'
-            ))
-        container.add_item(Separator())
-
-        quest_select_row = ActionRow(self.quest_select)
-        container.add_item(quest_select_row)
-
-        self.add_item(container)
-
-    async def setup(self, bot, user, guild):
-        try:
-            quest_collection = bot.gdb['quests']
-            options = []
-            quests = []
-
-            # Check to see if the user has guild admin privileges. This lets them edit any quest in the guild.
-            if user.guild_permissions.manage_guild:
-                quest_query = quest_collection.find({'guildId': guild.id})
-            else:
-                quest_query = quest_collection.find({'guildId': guild.id, 'gm': user.id})
-
-            async for document in quest_query:
-                quests.append(dict(document))
-
-            if len(quests) > 0:
-                for quest in quests:
-                    options.append(discord.SelectOption(label=f'{quest['questId']}: {quest['title']}',
-                                                        value=quest['questId']))
-                self.quests = quests
-                self.quest_select.disabled = False
-            else:
-                options.append(discord.SelectOption(label='No quests were found, or you do not have permissions to edit'
-                                                          ' them.', value='None'))
-                self.quest_select.disabled = True
-
-            self.quest_select.options = options
-        except Exception as e:
-            await log_exception(e)
-
-    async def select_callback(self, interaction: discord.Interaction, quest_id):
-        try:
-            collection = interaction.client.gdb['quests']
-            self.selected_quest = await collection.find_one({'guildId': interaction.guild_id, 'questId': quest_id})
-
-            quest_summary_modal = modals.QuestSummaryModal(self)
-
-            quest_summary_collection = interaction.client.gdb['questSummary']
-            quest_summary_config_query = await quest_summary_collection.find_one({'_id': interaction.guild_id})
-            if quest_summary_config_query and quest_summary_config_query['questSummary']:
-                await interaction.response.send_modal(quest_summary_modal)
-            else:
-                await self.complete_quest(interaction)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-    async def complete_quest(self, interaction: discord.Interaction, summary=None):
-        try:
-            guild_id = interaction.guild_id
-            guild = interaction.client.get_guild(guild_id)
-
-            # Fetch the quest
-            quest = self.selected_quest
-
-            # Setup quest variables
-            quest_id, message_id, title, description, gm, party, rewards = (quest['questId'], quest['messageId'],
-                                                                            quest['title'], quest['description'],
-                                                                            quest['gm'], quest['party'],
-                                                                            quest['rewards'])
-
-            if not party:
-                raise Exception('You cannot complete a quest with an empty roster. Try cancelling instead.')
-
-            # Check if there is a configured quest archive channel
-            archive_channel = None
-            archive_query = await interaction.client.gdb['archiveChannel'].find_one({'_id': guild_id})
-            if archive_query:
-                archive_channel = guild.get_channel(strip_id(archive_query['archiveChannel']))
-
-            # Check if a party role was configured, and delete it
-            party_role_id = quest['partyRoleId']
-            if party_role_id:
-                role = guild.get_role(party_role_id)
-                await role.delete(reason=f'Quest ID {quest['questId']} was completed by {interaction.user.mention}.')
-
-            # Get party members and message them with results
-            reward_summary = []
-            party_xp = rewards.get('party', {}).get('xp', 0)
-            xp_per_member = party_xp // len(party)
-            party_items = rewards.get('party', {}).get('items', {})
-            for entry in party:
-                for player_id, character_info in entry.items():
-                    member = guild.get_member(int(player_id))
-
-                    # Get character data
-                    character_id = next(iter(character_info))
-                    character = character_info[character_id]
-                    reward_summary.append(f'<@!{player_id}> as {character['name']}:')
-
-                    # Prep reward data
-                    total_xp = xp_per_member
-                    combined_items = party_items.copy()
-
-                    # Check if character has individual rewards
-                    if character_id in rewards:
-                        individual_rewards = rewards[character_id]
-                        total_xp += individual_rewards.get('xp', 0)
-
-                        # Merge individual items with party items
-                        for item, quantity in individual_rewards.get('items', {}).items():
-                            combined_items[item] = combined_items.get(item, 0) + quantity
-
-                    # Update the character's XP and inventory
-                    reward_summary.append(f'Experience: {total_xp}')
-                    await update_character_experience(interaction, int(player_id), character_id, total_xp)
-                    for item_name, quantity in combined_items.items():
-                        reward_summary.append(f'{item_name}: {quantity}')
-                        await update_character_inventory(interaction, int(player_id), character_id, item_name, quantity)
-
-                    # Send reward summary to player
-                    reward_strings = self.build_reward_summary(total_xp, combined_items)
-                    dm_embed = discord.Embed(
-                        title=f'Quest Complete: {title}',
-                        type='rich'
-                    )
-                    if reward_strings:
-                        dm_embed.add_field(name='Rewards', value='\n'.join(reward_strings))
-                    try:
-                        await member.send(embed=dm_embed)
-                    except discord.errors.Forbidden as e:
-                        logger.warning(f'Could not DM {member.id} about quest completion rewards: {e}')
-
-            # Build an embed for feedback
-            quest_embed = discord.Embed(
-                title=title,
-                description='',
-                type='rich'
-            )
-            # Format the main embed body
-            post_description = (
-                f'**GM:** <@!{gm}>\n\n'
-                f'{description}\n\n'
-                f'------'
-            )
-            formatted_party = []
-            for player in party:
-                for member_id in player:
-                    for character_id in player[str(member_id)]:
-                        character = player[str(member_id)][str(character_id)]
-                        formatted_party.append(f'- <@!{member_id}> as {character['name']}')
-
-            # Set the embed fields and footer
-            quest_embed.title = f'QUEST COMPLETED: {title}'
-            quest_embed.description = post_description
-            quest_embed.add_field(name=f'__Party__',
-                                  value='\n'.join(formatted_party))
-            quest_embed.set_footer(text='Quest ID: ' + quest_id)
-
-            # Add the summary if provided
-            if summary:
-                quest_embed.add_field(name='Summary', value=summary, inline=False)
-
-            if reward_summary:
-                quest_embed.add_field(name='Rewards', value='\n'.join(reward_summary), inline=True)
-
-            # If an archive channel is configured, post the archived quest
-            if archive_channel:
-                await archive_channel.send(embed=quest_embed)
-
-            # Delete the original quest post
-            quest_channel_query = await interaction.client.gdb['questChannel'].find_one({'_id': guild_id})
-            quest_channel_id = quest_channel_query['questChannel']
-            quest_channel = interaction.client.get_channel(strip_id(quest_channel_id))
-            quest_message = quest_channel.get_partial_message(message_id)
-            await attempt_delete(quest_message)
-
-            # Remove the quest from the database
-            quest_collection = interaction.client.gdb['quests']
-            await quest_collection.delete_one({'guildId': guild_id, 'questId': quest_id})
-
-            # Message feedback to the Game Master
-            await interaction.user.send(embed=quest_embed)
-
-            # Check if GM rewards are enabled, and reward the GM accordingly
-            gm_rewards_collection = interaction.client.gdb['gmRewards']
-            gm_rewards_query = await gm_rewards_collection.find_one({'_id': interaction.guild_id})
-            if gm_rewards_query:
-                experience = gm_rewards_query['experience'] if gm_rewards_query['experience'] else None
-                items = gm_rewards_query['items'] if gm_rewards_query['items'] else None
-
-                character_collection = interaction.client.mdb['characters']
-                character_query = await character_collection.find_one({'_id': interaction.user.id})
-                if not character_query:
-                    character_string = ('Your server admin has configured rewards for Game Masters when they complete '
-                                        'quests. However, since you have no registered characters, your rewards could '
-                                        'not be automatically issued at this time.')
-                else:
-                    if str(interaction.guild_id) not in character_query['activeCharacters']:
-                        character_string = ('Your server admin has configured rewards for Game Masters when they '
-                                            'complete quests. However, since you have no active characters on this '
-                                            'server, your rewards could not be automatically issued at this time.')
-                    else:
-                        active_character_id = character_query['activeCharacters'][str(interaction.guild_id)]
-                        character_string = (f'The following has been awarded to your active character, '
-                                            f'{character_query['characters'][active_character_id]['name']}')
-                        if experience:
-                            await update_character_experience(interaction, interaction.user.id, active_character_id,
-                                                              experience)
-                        if items:
-                            for item_name, quantity in items.items():
-                                await update_character_inventory(interaction, interaction.user.id, active_character_id,
-                                                                 item_name, quantity)
-
-                gm_rewards_embed = discord.Embed(
-                    title='GM Rewards Issued',
-                    description=character_string,
-                    type='rich'
-                )
-
-                if experience:
-                    gm_rewards_embed.add_field(name='Experience', value=experience)
-
-                if items:
-                    item_strings = []
-                    for item_name, quantity in items.items():
-                        item_strings.append(f'{item_name.capitalize()}: {quantity}')
-                    gm_rewards_embed.add_field(name='Items', value='\n'.join(item_strings))
-
-                try:
-                    await interaction.user.send(embed=gm_rewards_embed)
-                except discord.errors.Forbidden as e:
-                    logger.warning(f'Could not DM {interaction.user.id} about GM rewards: {e}')
-
-            # Reset the view and handle the interaction response
-            self.selected_quest = None
-            await setup_view(self, interaction)
-            await interaction.response.edit_message(view=self)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-    @staticmethod
-    def build_reward_summary(xp, items) -> list[str]:
-        reward_strings = []
-        if xp and xp > 0:
-            reward_strings.append(f'- Experience Points: {xp}')
-        if items:
-            for item, quantity in items.items():
-                reward_strings.append(f'- {item}: {quantity}')
-        return reward_strings
 
 
 class ViewCharacterView(LayoutView):

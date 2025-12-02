@@ -1,4 +1,5 @@
 import logging
+import titlecase
 
 import discord
 import discord.ui
@@ -10,7 +11,10 @@ from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
     update_character_inventory,
-    update_character_experience, find_currency_or_denomination, get_denomination_map, setup_view, titlecase
+    update_character_experience,
+    find_currency_or_denomination,
+    get_denomination_map,
+    setup_view
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -328,13 +332,13 @@ class RewardsModal(Modal):
         except Exception as e:
             await log_exception(e, interaction)
 
-    @staticmethod
-    def parse_items_to_string(items) -> str:
-        item_list = []
-        for item_name, quantity in items.items():
-            item_list.append(f'{titlecase(item_name)}: {quantity}')
-        item_string = '\n'.join(item_list)
-        return item_string
+    # @staticmethod
+    # def parse_items_to_string(items) -> str:
+    #     item_list = []
+    #     for item_name, quantity in items.items():
+    #         item_list.append(f'{titlecase(item_name)}: {quantity}')
+    #     item_string = '\n'.join(item_list)
+    #     return item_string
 
 
 class QuestSummaryModal(Modal):
