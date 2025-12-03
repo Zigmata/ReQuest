@@ -20,6 +20,9 @@ class Shop(Cog):
         try:
             collection = interaction.client.gdb['shops']
             shop_query = await collection.find_one({'_id': interaction.guild_id})
+            if not shop_query:
+                await interaction.response.send_message('No shops are configured for this server.', ephemeral=True)
+                return
 
             channel_id = str(interaction.channel.id)
             if channel_id not in shop_query['shopChannels']:

@@ -233,7 +233,7 @@ class GMRewardsModal(Modal):
                 items = {}
                 for item in self.items_text_input.value.strip().split('\n'):
                     item_name, quantity = item.split(':', 1)
-                    items[item_name.strip().capitalize()] = int(quantity.strip())
+                    items[titlecase(item_name.strip())] = int(quantity.strip())
 
             gm_rewards_collection = interaction.client.gdb['gmRewards']
             await gm_rewards_collection.update_one({'_id': interaction.guild_id},
@@ -248,7 +248,7 @@ class GMRewardsModal(Modal):
     def parse_items_to_string(items) -> str:
         item_list = []
         for item_name, quantity in items.items():
-            item_list.append(f'{item_name.capitalize()}: {quantity}')
+            item_list.append(f'{titlecase(item_name)}: {quantity}')
         item_string = '\n'.join(item_list)
         return item_string
 

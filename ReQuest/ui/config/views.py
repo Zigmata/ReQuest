@@ -1124,7 +1124,7 @@ class ConfigQuestsView(LayoutView):
             wait_list = await query_config('questWaitList', bot, guild)
 
             self.wait_list_info.content = (
-                f'**Quest Wait List Size:** {wait_list if wait_list.isdigit() and wait_list > 0 else "Disabled"}\n'
+                f'**Quest Wait List Size:** {wait_list if wait_list and wait_list > 0 else "Disabled"}\n'
                 f'A wait list allows the specified number of players to queue for a quest that is full, in case a '
                 f'player drops.'
             )
