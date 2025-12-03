@@ -682,19 +682,6 @@ class RewardsMenuView(LayoutView):
 class GMPlayerMenuView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
-        self.embed = discord.Embed(
-            title='Game Master - Player Management',
-            description=(
-                '__**Modifying Player Inventory/Experience**__\n'
-                'This command is accessed through context menus. Right-click (desktop) or long-press (mobile) a player '
-                'and choose Apps -> Modify Player to bring up the input modal.\n\n'
-                '- Values entered will be added/subtracted from the player\'s current total.\n'
-                '- To reduce a value, make sure you precede the amount/quantity with a `\'-\'`.\n'
-                '- For items, put each item on a separate line and follow the `item: quantity` format in the '
-                'placeholder text. Currency is treated as an item.\n\n'
-            ),
-            type='rich'
-        )
         self.build_view()
 
     def build_view(self):

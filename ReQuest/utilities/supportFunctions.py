@@ -388,15 +388,6 @@ async def update_quest_embed(quest) -> discord.Embed | None:
         await log_exception(e)
 
 
-def find_character_in_lists(lists, selected_member_id, selected_character_id):
-    for list_name in lists:
-        for player in list_name:
-            for member_id, character_data in player.items():
-                if selected_member_id == member_id and selected_character_id in character_data:
-                    return character_data[selected_character_id]
-    return None
-
-
 def find_member_and_character_id_in_lists(lists, selected_member_id):
     for list_name in lists:
         for player in list_name:

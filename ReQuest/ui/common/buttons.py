@@ -63,20 +63,3 @@ class MenuDoneButton(Button):
             await interaction.followup.delete_message(interaction.message.id)
         except Exception as e:
             await log_exception(e, interaction)
-
-
-class ConfirmButton(Button):
-    def __init__(self, calling_view):
-        super().__init__(
-            label='Confirm',
-            style=ButtonStyle.danger,
-            custom_id='confirm_button',
-            disabled=True
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            await self.calling_view.confirm_callback(interaction)
-        except Exception as e:
-            await log_exception(e, interaction)
