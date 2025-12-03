@@ -85,7 +85,7 @@ class AddCurrencyTextModal(Modal):
             await log_exception(e, interaction)
 
 
-class AddCurrencyDenominationTextModal(Modal):
+class AddCurrencyDenominationModal(Modal):
     def __init__(self, calling_view, base_currency_name):
         super().__init__(
             title=f'Add {base_currency_name} Denomination',

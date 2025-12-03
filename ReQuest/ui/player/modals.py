@@ -112,7 +112,7 @@ class TradeModal(Modal):
 
 
 class CharacterRegisterModal(Modal):
-    def __init__(self):
+    def __init__(self, calling_view):
         super().__init__(
             title='Register New Character',
             timeout=180
@@ -131,6 +131,7 @@ class CharacterRegisterModal(Modal):
         )
         self.add_item(self.name_text_input)
         self.add_item(self.note_text_input)
+        self.calling_view = calling_view
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -160,7 +161,8 @@ class CharacterRegisterModal(Modal):
             inventory_type = inventory_config.get('inventoryType', 'disabled') if inventory_config else 'disabled'
 
             if inventory_type == 'disabled':
-                await interaction.response.send_message(f'{character_name} was born!', ephemeral=True, delete_after=10)
+                await setup_view(self.calling_view, interaction)
+                await interaction.response.edit_message(view=self.calling_view)
             else:
                 from ReQuest.ui.player.views import NewCharacterWizardView
 
@@ -298,7 +300,8 @@ class CreatePlayerPostModal(Modal):
         self.title_text_input = discord.ui.TextInput(
             label='Title',
             custom_id='title_text_input',
-            placeholder='Enter a title for your post'
+            placeholder='Enter a title for your post',
+            max_length=80
         )
         self.content_text_input = discord.ui.TextInput(
             label='Post Content',
@@ -320,18 +323,19 @@ class CreatePlayerPostModal(Modal):
 
 
 class EditPlayerPostModal(Modal):
-    def __init__(self, calling_view):
+    def __init__(self, calling_view, post):
         super().__init__(
             title='Edit Player Board Post',
             timeout=600
         )
         self.calling_view = calling_view
-        post = calling_view.selected_post
+        self.post = post
         self.title_text_input = discord.ui.TextInput(
             label='Title',
             custom_id='title_text_input',
             placeholder='Enter a title for your post',
             default=post['title'],
+            max_length=80,
             required=False
         )
         self.content_text_input = discord.ui.TextInput(
@@ -349,7 +353,7 @@ class EditPlayerPostModal(Modal):
         try:
             title = self.title_text_input.value
             content = self.content_text_input.value
-            await self.calling_view.edit_post(title, content, interaction)
+            await self.calling_view.edit_post(self.post, title, content, interaction)
         except Exception as e:
             await log_exception(e, interaction)
 

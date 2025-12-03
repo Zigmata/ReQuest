@@ -177,7 +177,7 @@ class ShopCartView(LayoutView):
         self.character_data = character_data
         self.base_totals = {}
 
-        self.items_per_page = 8
+        self.items_per_page = 9
         self.current_page = 0
         self.total_pages = math.ceil(len(self.prev_view.cart) / self.items_per_page)
 

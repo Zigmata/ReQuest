@@ -1,47 +1,79 @@
 import logging
+import math
 
 import discord
-from discord.ui import LayoutView, ActionRow, Container, Section, Separator, TextDisplay
+from discord.ui import LayoutView, ActionRow, Container, Section, Separator, TextDisplay, Button
 
-from ReQuest.ui.admin import buttons, selects
+from ReQuest.ui.admin import buttons
 from ReQuest.ui.common import buttons as common_buttons
-from ReQuest.ui.common.views import MenuBaseView
+from ReQuest.ui.common import modals as common_modals
+from ReQuest.ui.common.buttons import MenuDoneButton, MenuViewButton
 from ReQuest.utilities.supportFunctions import log_exception
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class AdminBaseView(MenuBaseView):
+class AdminBaseView(LayoutView):
     def __init__(self):
-        super().__init__(
-            title='**Administrative - Main Menu**',
-            menu_items=[
-                {
-                    'name': 'Allowlist',
-                    'description': 'Configures the server allowlist for invite restrictions.',
-                    'view_class': AdminAllowlistView
-                },
-                {
-                    'name': 'Cogs',
-                    'description': 'Load or reload bot cogs.',
-                    'view_class': AdminCogView
-                }
-            ],
-            menu_level=0
-        )
-        self.children[0].add_item(ActionRow(buttons.AdminShutdownButton(self)))
-        self.children[0].add_item(ActionRow(buttons.PrintGuildsButton()))
+        super().__init__(timeout=None)
+
+        container = Container()
+
+        header_section = Section(accessory=MenuDoneButton())
+        header_section.add_item(TextDisplay('**Administration - Main Menu**'))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        allow_list_section = Section(accessory=MenuViewButton(AdminAllowlistView, 'Allowlist'))
+        allow_list_section.add_item(TextDisplay('Configure the server allowlist for invite restrictions.'))
+        container.add_item(allow_list_section)
+
+        cog_section = Section(accessory=MenuViewButton(AdminCogView, 'Cogs'))
+        cog_section.add_item(TextDisplay('Load or reload cogs.'))
+        container.add_item(cog_section)
+
+        print_guilds_section = Section(accessory=buttons.PrintGuildsButton())
+        print_guilds_section.add_item(TextDisplay('Returns a list of all guilds the bot is a member of.'))
+        container.add_item(print_guilds_section)
+
+        shutdown_section = Section(accessory=buttons.AdminShutdownButton(self))
+        shutdown_section.add_item(TextDisplay('Shuts down the bot'))
+        container.add_item(shutdown_section)
+
+        self.add_item(container)
 
 
 class AdminAllowlistView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
-        self.remove_guild_allowlist_select = selects.RemoveGuildAllowlistSelect(self)
+        self.servers = []
 
-        self.build_view()
+        self.items_per_page = 9
+        self.current_page = 0
+        self.total_pages = 1
+
+    async def setup(self, bot):
+        try:
+            collection = bot.cdb['serverAllowlist']
+            query = await collection.find_one({'servers': {'$exists': True}})
+
+            self.servers = query.get('servers', []) if query else []
+            self.servers.sort(key=lambda x: x.get('name', '').lower())
+
+            self.total_pages = math.ceil(len(self.servers) / self.items_per_page)
+            if self.total_pages == 0:
+                self.total_pages = 1
+
+            if self.current_page >= self.total_pages:
+                self.current_page = max(0, self.total_pages - 1)
+
+            self.build_view()
+        except Exception as e:
+            await log_exception(e)
 
     def build_view(self):
+        self.clear_items()
         container = Container()
 
         header_section = Section(accessory=common_buttons.BackButton(AdminBaseView))
@@ -58,29 +90,73 @@ class AdminAllowlistView(LayoutView):
         container.add_item(add_server_section)
         container.add_item(Separator())
 
-        container.add_item(TextDisplay('Choose a server to remove from the allowlist'))
-        server_select_row = ActionRow(self.remove_guild_allowlist_select)
-        container.add_item(server_select_row)
+        if not self.servers:
+            container.add_item(TextDisplay("No servers in allowlist."))
+        else:
+            start = self.current_page * self.items_per_page
+            end = start + self.items_per_page
+            page_items = self.servers[start:end]
+
+            for server in page_items:
+                name = server.get('name', 'Unknown')
+                server_id = server.get('id', 0)
+
+                info = f"**{name}** (ID: `{server_id}`)"
+
+                section = Section(accessory=buttons.RemoveServerButton(self, server_id, name))
+                section.add_item(TextDisplay(info))
+                container.add_item(section)
 
         self.add_item(container)
 
-    async def setup(self, bot):
-        try:
-            self.remove_guild_allowlist_select.options.clear()
-            collection = bot.cdb['serverAllowlist']
-            query = await collection.find_one()
-            options = []
-            if query and len(query['servers']) > 0:
-                for server in query['servers']:
-                    options.append(discord.SelectOption(label=server['name'], value=server['id']))
-            else:
-                options.append(discord.SelectOption(label='There are no servers in the allowlist', value='None'))
-                self.remove_guild_allowlist_select.placeholder = 'There are no servers in the allowlist'
-                self.remove_guild_allowlist_select.disabled = True
+        if self.total_pages > 1:
+            nav_row = ActionRow()
 
-            self.remove_guild_allowlist_select.options = options
+            prev_button = Button(
+                label='Previous',
+                style=discord.ButtonStyle.secondary,
+                custom_id='allow_prev',
+                disabled=(self.current_page == 0)
+            )
+            prev_button.callback = self.prev_page
+            nav_row.add_item(prev_button)
+
+            page_display = Button(
+                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                style=discord.ButtonStyle.secondary,
+                custom_id='allow_page_disp'
+            )
+            page_display.callback = self.show_page_jump_modal
+            nav_row.add_item(page_display)
+
+            next_button = Button(
+                label='Next',
+                style=discord.ButtonStyle.secondary,
+                custom_id='allow_next',
+                disabled=(self.current_page >= self.total_pages - 1)
+            )
+            next_button.callback = self.next_page
+            nav_row.add_item(next_button)
+
+            self.add_item(nav_row)
+
+    async def prev_page(self, interaction):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction):
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def show_page_jump_modal(self, interaction):
+        try:
+            await interaction.response.send_modal(common_modals.PageJumpModal(self))
         except Exception as e:
-            await log_exception(e)
+            await log_exception(e, interaction)
 
 
 class AdminCogView(LayoutView):
