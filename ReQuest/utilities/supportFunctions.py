@@ -46,6 +46,7 @@ async def log_exception(exception, interaction=None):
         type='rich'
     )
     if interaction:
+        logger.error(f'Logged from guild ID: {interaction.guild_id}, user ID: {interaction.user.id}')
         try:
             if not interaction.response.is_done():
                 await interaction.response.defer(ephemeral=True)
@@ -702,3 +703,17 @@ def format_price_string(amount, currency_name, currency_config):
             return f"{int(amount)} {display_name}"
         else:
             return f"{amount:.2f} {display_name}"
+
+async def get_xp_config(gdb, guild_id):
+    """
+    Retrieves the XP configuration for a guild.
+    """
+    try:
+        query = await gdb['playerExperience'].find_one({'_id': guild_id})
+        if query is None:
+            return True  # Default to XP enabled if no config found
+        return query.get('playerExperience', True)
+    except Exception as e:
+        logger.error(f"Error retrieving XP config: {e}")
+        await log_exception(e)
+        return True  # Default to XP enabled on error

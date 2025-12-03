@@ -11,7 +11,7 @@ from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
 from ReQuest.ui.player import buttons, selects
 from ReQuest.utilities.supportFunctions import log_exception, strip_id, format_currency_display, \
     setup_view, find_currency_or_denomination, update_character_inventory, format_price_string, \
-    consolidate_currency_totals, check_sufficient_funds, get_denomination_map, format_consolidated_totals
+    consolidate_currency_totals, check_sufficient_funds, get_denomination_map, format_consolidated_totals, get_xp_config
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -71,6 +71,7 @@ class CharacterBaseView(LayoutView):
         self.characters = {}
         self.active_character_id = None
         self.sorted_characters = []
+        self.xp_enabled = True
 
         self.items_per_page = 6
         self.current_page = 0
@@ -92,6 +93,8 @@ class CharacterBaseView(LayoutView):
 
             if self.current_page >= self.total_pages:
                 self.current_page = max(0, self.total_pages - 1)
+
+            self.xp_enabled = await get_xp_config(interaction.client.gdb, interaction.guild_id)
 
             self.build_view()
         except Exception as e:
@@ -130,7 +133,7 @@ class CharacterBaseView(LayoutView):
                     display_name += " (Active)"
 
                 info_text = f"{display_name}"
-                if xp and xp > 0:
+                if self.xp_enabled and xp and xp > 0:
                     info_text += f" - {xp} XP"
                 if note:
                     info_text += f"\n*{note}*"
@@ -196,183 +199,6 @@ class CharacterBaseView(LayoutView):
     async def show_page_jump_modal(self, interaction):
         try:
             await interaction.response.send_modal(common_modals.PageJumpModal(self))
-        except Exception as e:
-            await log_exception(e, interaction)
-
-
-class ListCharactersView(LayoutView):
-    def __init__(self):
-        super().__init__(timeout=None)
-        self.active_character_select = selects.ActiveCharacterSelect(self)
-        self.character_list_info = TextDisplay(
-            'No Characters Registered.'
-        )
-
-        self.build_view()
-
-    def build_view(self):
-        container = Container()
-
-        header_section = Section(accessory=BackButton(CharacterBaseView))
-        header_section.add_item(TextDisplay('**Player Commands - List Characters**'))
-        container.add_item(header_section)
-        container.add_item(Separator())
-
-        container.add_item(TextDisplay(
-            'Registered Characters are listed below. Select a character from the dropdown to activate that character '
-            'for this server.'
-        ))
-        container.add_item(Separator())
-
-        container.add_item(self.character_list_info)
-        container.add_item(Separator())
-
-        character_select_row = ActionRow(self.active_character_select)
-        container.add_item(character_select_row)
-
-        self.add_item(container)
-
-    async def setup(self, bot, user, guild):
-        try:
-            collection = bot.mdb['characters']
-            query = await collection.find_one({'_id': user.id})
-            if not query or not query['characters']:
-                self.character_list_info = 'You have no registered characters!'
-            else:
-                ids = []
-                for character_id in query['characters']:
-                    ids.append(character_id)
-
-                character_info = []
-                for character_id in ids:
-                    character = query['characters'][character_id]
-                    if (str(guild.id) in query['activeCharacters']
-                            and character_id == query['activeCharacters'][str(guild.id)]):
-                        character_info.append(
-                            f'**{character['name']}: {character['attributes']['experience']} XP (Active Character)**\n'
-                            f'{character['note']}'
-                        )
-                    else:
-                        character_info.append(
-                            f'**{character['name']}: {character['attributes']['experience']} XP**\n'
-                            f'{character['note']}'
-                        )
-                self.character_list_info.content = ('\n\n'.join(character_info))
-
-            self.active_character_select.options.clear()
-            options = []
-            collection = bot.mdb['characters']
-            query = await collection.find_one({'_id': user.id})
-            if not query or not query['characters'] or len(query['characters']) == 0:
-                options.append(discord.SelectOption(label='No characters', value='None'))
-            else:
-                for character_id in query['characters']:
-                    character = query['characters'][character_id]
-                    character_name = character['name']
-                    option = discord.SelectOption(label=character_name, value=character_id)
-                    options.append(option)
-                self.active_character_select.disabled = False
-                self.active_character_select.placeholder = 'Select a character to activate on this server'
-
-            self.active_character_select.options = options
-        except Exception as e:
-            await log_exception(e)
-
-
-class RemoveCharacterView(LayoutView):
-    def __init__(self):
-        super().__init__(timeout=None)
-        self.selected_character_id = None
-        self.all_characters = {}
-        self.active_characters = {}
-        self.remove_character_select = selects.RemoveCharacterSelect(self)
-
-        self.build_view()
-
-    def build_view(self):
-        container = Container()
-
-        header_section = Section(accessory=BackButton(CharacterBaseView))
-        header_section.add_item(TextDisplay('**Player Commands - Remove Character**'))
-        container.add_item(header_section)
-        container.add_item(Separator())
-
-        container.add_item(TextDisplay(
-            'Choose a character from the dropdown below. Confirm to permanently remove that character.'
-        ))
-        container.add_item(Separator())
-
-        character_select_row = ActionRow(self.remove_character_select)
-        container.add_item(character_select_row)
-
-        self.add_item(container)
-
-    async def setup(self, bot, user):
-        try:
-            collection = bot.mdb['characters']
-            query = await collection.find_one({'_id': user.id})
-            if not query or not query.get('characters'):
-                self.all_characters = {}
-                self.active_characters = {}
-            else:
-                self.all_characters = query.get('characters', {})
-                self.active_characters = query.get('activeCharacters', {})
-
-            self._build_ui()
-
-        except Exception as e:
-            await log_exception(e)
-
-    def _build_ui(self):
-        self.remove_character_select.options.clear()
-        options = []
-
-        if not self.all_characters:
-            self.remove_character_select.placeholder = "You have no registered characters!"
-            options.append(discord.SelectOption(label='No characters to remove', value='None'))
-            self.remove_character_select.disabled = True
-        else:
-            for character_id, character in self.all_characters.items():
-                character_name = character['name']
-                if character_id in self.active_characters.values():
-                    option_label = f'{character_name} (Active)'
-                else:
-                    option_label = character_name
-                option = discord.SelectOption(label=option_label, value=character_id)
-                options.append(option)
-            self.remove_character_select.disabled = False
-            self.remove_character_select.placeholder = 'Select a character to remove'
-
-        self.remove_character_select.options = options
-
-    async def confirm_callback(self, interaction: discord.Interaction):
-        try:
-            selected_character_id = self.selected_character_id
-            collection = interaction.client.mdb['characters']
-            member_id = interaction.user.id
-
-            await collection.update_one({'_id': member_id},
-                                        {'$unset': {f'characters.{selected_character_id}': ''}})
-
-            active_guild_id = None
-            for guild_id, character_id in self.active_characters.items():
-                if character_id == selected_character_id:
-                    active_guild_id = guild_id
-                    break
-
-            if active_guild_id:
-                await collection.update_one({'_id': member_id},
-                                            {'$unset': {f'activeCharacters.{active_guild_id}': ''}})
-
-            if selected_character_id in self.all_characters:
-                del self.all_characters[selected_character_id]
-            if active_guild_id and active_guild_id in self.active_characters:
-                del self.active_characters[active_guild_id]
-
-            self.selected_character_id = None
-
-            self._build_ui()
-            await interaction.response.edit_message(view=self)
         except Exception as e:
             await log_exception(e, interaction)
 

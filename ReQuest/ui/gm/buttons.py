@@ -35,8 +35,7 @@ class EditQuestButton(Button):
         super().__init__(
             label='Edit Details',
             style=ButtonStyle.primary,
-            custom_id='edit_quest_button',
-            disabled=True
+            custom_id='edit_quest_button'
         )
         self.calling_view = calling_view
 
@@ -54,8 +53,7 @@ class ToggleReadyButton(Button):
         super().__init__(
             label='Toggle Ready',
             style=ButtonStyle.primary,
-            custom_id='toggle_ready_button',
-            disabled=True
+            custom_id='toggle_ready_button'
         )
         self.calling_view = calling_view
 
@@ -71,8 +69,7 @@ class RewardsMenuButton(Button):
         super().__init__(
             label='Configure Rewards',
             style=ButtonStyle.primary,
-            custom_id='rewards_menu_button',
-            disabled=True
+            custom_id='rewards_menu_button'
         )
         self.calling_view = calling_view
 
@@ -91,8 +88,7 @@ class RemovePlayerButton(Button):
         super().__init__(
             label='Remove Player',
             style=ButtonStyle.danger,
-            custom_id='remove_player_button',
-            disabled=True
+            custom_id='remove_player_button'
         )
         self.calling_view = calling_view
 
@@ -112,8 +108,7 @@ class CancelQuestButton(Button):
         super().__init__(
             label='Cancel Quest',
             style=ButtonStyle.danger,
-            custom_id='cancel_quest_button',
-            disabled=True
+            custom_id='cancel_quest_button'
         )
         self.calling_view = calling_view
 
@@ -331,8 +326,7 @@ class CompleteQuestButton(Button):
         super().__init__(
             label='Complete Quest',
             style=ButtonStyle.success,
-            custom_id='complete_quest_button',
-            disabled=True
+            custom_id='complete_quest_button'
         )
         self.calling_view = calling_view
         self.quest_summary_modal = modals.QuestSummaryModal(self.calling_view)
