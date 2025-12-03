@@ -1,5 +1,6 @@
 import json
 import logging
+from titlecase import titlecase
 
 import jsonschema
 import shortuuid
@@ -10,7 +11,7 @@ import discord.ui
 from discord.ui import Modal, Label
 
 from ReQuest.utilities.supportFunctions import log_exception, purge_player_board, setup_view, \
-    find_currency_or_denomination, titlecase, get_denomination_map
+    find_currency_or_denomination, get_denomination_map
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
