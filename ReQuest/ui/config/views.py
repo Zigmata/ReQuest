@@ -1744,23 +1744,32 @@ class EditStaticKitView(LayoutView):
 class ConfigCurrencyView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
+        self.currencies = []
 
-        self.selected_currency_name = None
-        self.edit_currency_info = TextDisplay(
-            '**Edit Currency**\n'
-            'Manage the selected currency\'s denominations and display options.'
-        )
-        self.remove_currency_info = TextDisplay(
-            '**Remove Currency**\n'
-            'Remove the selected currency from the server.'
-        )
-        self.edit_currency_button = buttons.EditCurrencyButton(ConfigEditCurrencyView, self)
-        self.edit_currency_select = selects.EditCurrencySelect(self)
-        self.remove_currency_button = buttons.RemoveCurrencyButton(self)
+        self.items_per_page = 9
+        self.current_page = 0
+        self.total_pages = 1
 
-        self.build_view()
+    async def setup(self, bot, guild):
+        try:
+            collection = bot.gdb['currency']
+            query = await collection.find_one({'_id': guild.id})
+
+            self.currencies = query.get('currencies', []) if query else []
+            self.currencies.sort(key=lambda x: x.get('name', '').lower())
+
+            self.total_pages = math.ceil(len(self.currencies) / self.items_per_page)
+            if self.total_pages == 0:
+                self.total_pages = 1
+            if self.current_page >= self.total_pages:
+                self.current_page = max(0, self.total_pages - 1)
+
+            self.build_view()
+        except Exception as e:
+            await log_exception(e)
 
     def build_view(self):
+        self.clear_items()
         container = Container()
 
         header_section = Section(accessory=BackButton(ConfigBaseView))
@@ -1769,114 +1778,129 @@ class ConfigCurrencyView(LayoutView):
         container.add_item(Separator())
 
         add_currency_section = Section(accessory=buttons.AddCurrencyButton(self))
-        add_currency_section.add_item(TextDisplay(
-            'Create a new currency.'
-        ))
+        add_currency_section.add_item(TextDisplay('Create a new currency.'))
         container.add_item(add_currency_section)
         container.add_item(Separator())
 
-        currency_select_row = ActionRow(self.edit_currency_select)
-        container.add_item(currency_select_row)
+        if not self.currencies:
+            container.add_item(TextDisplay('No currencies configured.'))
+        else:
+            start = self.current_page * self.items_per_page
+            end = start + self.items_per_page
+            page_items = self.currencies[start:end]
 
-        edit_currency_section = Section(accessory=self.edit_currency_button)
-        edit_currency_section.add_item(self.edit_currency_info)
-        container.add_item(edit_currency_section)
-        container.add_item(Separator())
+            for currency in page_items:
+                currency_name = currency.get('name', 'Unknown')
+                is_double = currency.get('isDouble', False)
+                denominations = currency.get('denominations', [])
 
-        remove_currency_section = Section(accessory=self.remove_currency_button)
-        remove_currency_section.add_item(self.remove_currency_info)
-        container.add_item(remove_currency_section)
-        container.add_item(Separator())
+                currency_type = 'Double' if is_double else 'Integer'
+                denomination_count = len(denominations)
+
+                info = (f'**{titlecase(currency_name)}**\n'
+                        f'Display Type: {currency_type} | Denominations: {denomination_count}')
+
+                section = Section(accessory=buttons.ManageCurrencyButton(currency_name))
+                section.add_item(TextDisplay(info))
+                container.add_item(section)
 
         self.add_item(container)
 
-    async def setup(self, bot, guild):
-        """
-        Populate the currency select if any currencies are configured
-        """
-        try:
-            collection = bot.gdb['currency']
-            query = await collection.find_one({'_id': guild.id})
+        # Pagination
+        if self.total_pages > 1:
+            nav_row = ActionRow()
+            prev_button = Button(
+                label='Previous',
+                style=discord.ButtonStyle.secondary,
+                custom_id='curr_prev',
+                disabled=(self.current_page == 0)
+            )
+            prev_button.callback = self.prev_page
+            nav_row.add_item(prev_button)
 
-            # Disable everything by default
-            self.edit_currency_button.disabled = True
-            self.remove_currency_button.disabled = True
-            self.edit_currency_select.disabled = True
-            self.edit_currency_select.options.clear()
-            self.edit_currency_select.options = [discord.SelectOption(label='No currencies configured', value='None')]
+            page_display = Button(
+                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                style=discord.ButtonStyle.secondary,
+                custom_id='curr_page_disp'
+            )
+            page_display.callback = self.show_page_jump_modal
+            nav_row.add_item(page_display)
 
-            self.edit_currency_select.placeholder = 'No currencies configured.'
+            next_button = Button(
+                label='Next',
+                style=discord.ButtonStyle.secondary,
+                custom_id='curr_next',
+                disabled=(self.current_page >= self.total_pages - 1)
+            )
+            next_button.callback = self.next_page
+            nav_row.add_item(next_button)
 
-            # Populate the select with options if currencies exist
-            if query and len(query['currencies']) > 0:
-                self.edit_currency_select.disabled = False
-                self.edit_currency_select.placeholder = 'Select a currency to edit.'
+            self.add_item(nav_row)
 
-                options = []
-                for currency in query['currencies']:
-                    options.append(
-                        discord.SelectOption(label=currency['name'], value=currency['name'])
-                    )
-                self.edit_currency_select.options = options
-
-            # If a currency is selected, enable the edit and remove buttons and update their sections
-            if self.selected_currency_name:
-                self.edit_currency_button.disabled = False
-                self.edit_currency_button.label = f'Edit {self.selected_currency_name}'
-                self.edit_currency_info.content = (
-                    f'**Edit Currency:** {self.selected_currency_name}\n'
-                    f'Manage denominations and display options for {self.selected_currency_name}.'
-                )
-
-                self.remove_currency_button.disabled = False
-                self.remove_currency_button.label = f'Remove {self.selected_currency_name}'
-                self.remove_currency_info.content = (
-                    f'**Remove Currency:** {self.selected_currency_name}\n'
-                    f'Remove {self.selected_currency_name} from the server.'
-                )
-        except Exception as e:
-            await log_exception(e)
-
-    async def remove_currency_confirm_callback(self, interaction):
-        try:
-            currency_name = self.selected_currency_name
-            collection = interaction.client.gdb['currency']
-            await collection.update_one({'_id': interaction.guild_id, 'currencies.name': currency_name},
-                                        {'$pull': {'currencies': {'name': currency_name}}}, upsert=True)
-            await setup_view(self, interaction)
+    async def prev_page(self, interaction):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.build_view()
             await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction):
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def show_page_jump_modal(self, interaction):
+        try:
+            await interaction.response.send_modal(common_modals.PageJumpModal(self))
         except Exception as e:
             await log_exception(e, interaction)
 
 
 class ConfigEditCurrencyView(LayoutView):
-    def __init__(self, calling_view):
+    def __init__(self, currency_name):
         super().__init__(timeout=None)
-        self.calling_view = calling_view
-        self.selected_currency_name = calling_view.selected_currency_name
-        self.selected_denomination_name = None
+        self.currency_name = currency_name
+        self.currency_data = {}
+        self.denominations = []
 
-        self.denomination_select = selects.DenominationSelect(self)
-        self.toggle_double_button = buttons.ToggleDoubleButton(self)
-        self.add_denomination_button = buttons.AddDenominationButton(self)
-        self.remove_denomination_button = buttons.RemoveDenominationButton(self)
+        self.items_per_page = 9
+        self.current_page = 0
+        self.total_pages = 1
 
-        self.double_display_info = TextDisplay(
-            '**Display Type:** Integer\n'
-            'Toggles between integer (e.g. 10) and double (e.g. 10.00) display views.'
-        )
+    async def setup(self, bot, guild):
+        try:
+            collection = bot.gdb['currency']
+            query = await collection.find_one({'_id': guild.id})
 
-        self.build_view()
+            if query:
+                self.currency_data = next((c for c in query.get('currencies', [])
+                                           if c['name'] == self.currency_name), {})
+
+            self.denominations = self.currency_data.get('denominations', [])
+            # Sort denominations by value descending
+            self.denominations.sort(key=lambda x: x.get('value', 0), reverse=True)
+
+            self.total_pages = math.ceil(len(self.denominations) / self.items_per_page)
+            if self.total_pages == 0:
+                self.total_pages = 1
+            if self.current_page >= self.total_pages:
+                self.current_page = max(0, self.total_pages - 1)
+
+            self.build_view()
+        except Exception as e:
+            await log_exception(e)
 
     def build_view(self):
+        self.clear_items()
         container = Container()
+        display_type = 'Double' if self.currency_data.get('isDouble') else 'Integer'
 
         header_section = Section(accessory=BackButton(ConfigCurrencyView))
-        header_section.add_item(TextDisplay(f'**Server Configuration - Editing {self.selected_currency_name}**'))
+        header_section.add_item(TextDisplay(f'**Manage Currency: {titlecase(self.currency_name)}**'))
         container.add_item(header_section)
         container.add_item(Separator())
 
-        container.add_item(TextDisplay(
+        info_text = (
             '__**Currency and Denominations**__\n'
             '- The given name of your currency is considered the base currency and has a value of 1.'
             '```Example: "gold" is configured as a currency.```\n'
@@ -1888,93 +1912,85 @@ class ConfigEditCurrencyView(LayoutView):
             '- Currencies displayed as an integer will show each denomination, while currencies displayed as a double '
             'will show only as the base currency.'
             '```Example: The player above with double display enabled will show as 9.97 gold.```\n'
-        ))
+        )
+        container.add_item(TextDisplay(info_text))
         container.add_item(Separator())
 
-        toggle_double_section = Section(accessory=self.toggle_double_button)
-        toggle_double_section.add_item(self.double_display_info)
-        container.add_item(toggle_double_section)
+        actions = ActionRow()
+        toggle_double_button = buttons.ToggleDoubleButton(self)
+        toggle_double_button.label = f'Toggle Display (Current: {display_type})'
+        actions.add_item(toggle_double_button)
+        actions.add_item(buttons.AddDenominationButton(self))
+        actions.add_item(buttons.RemoveCurrencyButton(self, self.currency_name))
+        container.add_item(actions)
         container.add_item(Separator())
 
-        add_denomination_section = Section(accessory=self.add_denomination_button)
-        add_denomination_section.add_item(TextDisplay(
-            '**Add Denomination**\n'
-            'Add one or more denomination(s) to the selected currency.'
-        ))
-        container.add_item(add_denomination_section)
-        container.add_item(Separator())
+        if not self.denominations:
+            container.add_item(TextDisplay("No denominations configured."))
+        else:
+            start = self.current_page * self.items_per_page
+            end = start + self.items_per_page
+            page_items = self.denominations[start:end]
 
-        container.add_item(ActionRow(self.denomination_select))
-        container.add_item(Separator())
+            for denomination in page_items:
+                denomination_name = denomination.get('name', 'Unknown')
+                denomination_value = denomination.get('value', 0)
 
-        remove_denomination_section = Section(accessory=self.remove_denomination_button)
-        remove_denomination_section.add_item(TextDisplay(
-            '**Remove Denomination**\n'
-            'Remove one or more denomination(s) from the selected currency.'
-        ))
-        container.add_item(remove_denomination_section)
-        container.add_item(Separator())
+                info = f"**{titlecase(denomination_name)}** (Value: {denomination_value})"
+
+                section = Section(accessory=buttons.RemoveDenominationButton(self, denomination_name))
+                section.add_item(TextDisplay(info))
+                container.add_item(section)
 
         self.add_item(container)
 
-    async def setup(self, bot, guild):
-        try:
-            self.denomination_select.options.clear()
-            collection = bot.gdb['currency']
-            query = await collection.find_one({'_id': guild.id})
-
-            currency_name = self.selected_currency_name
-            self.toggle_double_button.label = f'Toggle Display for {currency_name}'
-            self.add_denomination_button.label = f'Add Denomination to {currency_name}'
-
-            if self.selected_denomination_name:
-                self.remove_denomination_button.disabled = False
-                self.remove_denomination_button.label = f'Remove {self.selected_denomination_name} from {currency_name}'
-
-            currency = next((item for item in query['currencies'] if item['name'] == currency_name),
-                            None)
-            if currency['isDouble']:
-                display = 'Double'
-            else:
-                display = 'Integer'
-
-            if currency['denominations']:
-                self.denomination_select.disabled = False
-                for denomination in currency['denominations']:
-                    denomination_name = denomination['name']
-                    self.denomination_select.options.append(
-                        discord.SelectOption(label=denomination_name, value=denomination_name)
-                    )
-            else:
-                self.denomination_select.disabled = True
-                self.denomination_select.options.append(
-                    discord.SelectOption(label='No denominations configured', value='None')
-                )
-
-            self.double_display_info.content = (
-                f'**Display Type:** {display}\n'
-                f'Toggles between integer (e.g. 10) and double (e.g. 10.00) display views.'
+        if self.total_pages > 1:
+            nav_row = ActionRow()
+            prev_button = Button(
+                label='Previous',
+                style=discord.ButtonStyle.secondary,
+                custom_id='denom_prev',
+                disabled=(self.current_page == 0)
             )
-        except Exception as e:
-            await log_exception(e)
+            prev_button.callback = self.prev_page
+            nav_row.add_item(prev_button)
 
-    async def remove_denomination_confirm_callback(self, interaction):
-        try:
-            denomination_name = self.selected_denomination_name
-            collection = interaction.client.gdb['currency']
-            guild_id = interaction.guild_id
-            currency_name = self.selected_currency_name
-            await collection.update_one({'_id': guild_id, 'currencies.name': currency_name},
-                                        {'$pull': {'currencies.$.denominations': {'name': denomination_name}}})
+            page_display = Button(
+                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                style=discord.ButtonStyle.secondary,
+                custom_id='denom_page_disp'
+            )
+            page_display.callback = self.show_page_jump_modal
+            nav_row.add_item(page_display)
 
-            self.selected_denomination_name = None
-            self.remove_denomination_button.label = 'Remove Denomination'
-            self.remove_denomination_button.disabled = True
+            next_button = Button(
+                label='Next',
+                style=discord.ButtonStyle.secondary,
+                custom_id='denom_next',
+                disabled=(self.current_page >= self.total_pages - 1)
+            )
+            next_button.callback = self.next_page
+            nav_row.add_item(next_button)
 
-            await setup_view(self, interaction)
+            self.add_item(nav_row)
+
+    async def prev_page(self, interaction):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.build_view()
             await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction):
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def show_page_jump_modal(self, interaction):
+        try:
+            await interaction.response.send_modal(common_modals.PageJumpModal(self))
         except Exception as e:
-            await log_exception(e)
+            await log_exception(e, interaction)
 
 
 # ------ SHOPS ------
