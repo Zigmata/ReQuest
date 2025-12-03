@@ -6,7 +6,8 @@ from discord import ButtonStyle
 from discord.ui import Button
 
 from ReQuest.ui.admin import modals
-from ReQuest.utilities.supportFunctions import log_exception
+from ReQuest.ui.common import modals as common_modals
+from ReQuest.utilities.supportFunctions import log_exception, setup_view
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -19,18 +20,25 @@ class AdminShutdownButton(Button):
             style=ButtonStyle.danger,
             custom_id='shutdown_bot_button'
         )
-        self.confirm = False
         self.calling_view = calling_view
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            if self.confirm:
-                await interaction.response.send_message('Shutting down!', ephemeral=True)
-                await interaction.client.close()
-            else:
-                self.confirm = True
-                self.label = 'CONFIRM SHUTDOWN?'
-                await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
+            confirm_modal = common_modals.ConfirmModal(
+                title='Confirm Shutdown',
+                prompt_label='Warning! This will shut down the bot. Type CONFIRM to proceed.',
+                prompt_placeholder='Type CONFIRM to proceed',
+                confirm_callback=self._confirm_shutdown
+            )
+            await interaction.response.send_modal(confirm_modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    @staticmethod
+    async def _confirm_shutdown(interaction: discord.Interaction):
+        try:
+            await interaction.response.send_message('Shutting down!', ephemeral=True)
+            await interaction.client.close()
         except Exception as e:
             await log_exception(e)
 
@@ -113,5 +121,44 @@ class PrintGuildsButton(Button):
                 f'Connected Guilds:',
                 file=guilds_file,
                 ephemeral=True)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+class RemoveServerButton(Button):
+    def __init__(self, calling_view, guild_id, server_name):
+        super().__init__(
+            label='Remove',
+            style=ButtonStyle.danger,
+            custom_id=f'remove_server_{guild_id}'
+        )
+        self.calling_view = calling_view
+        self.guild_id = guild_id
+        self.server_name = server_name
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            confirm_modal = common_modals.ConfirmModal(
+                title='Confirm Server Removal',
+                prompt_label=f'Remove server from allow list?',
+                prompt_placeholder='Type CONFIRM to proceed',
+                confirm_callback=self._confirm_delete
+            )
+            await interaction.response.send_modal(confirm_modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def _confirm_delete(self, interaction: discord.Interaction):
+        try:
+            collection = interaction.client.cdb['serverAllowlist']
+            await collection.update_one(
+                {'servers': {'$exists': True}},
+                {'$pull': {'servers': {'id': self.guild_id}}}
+            )
+
+            if self.guild_id in interaction.client.allow_list:
+                interaction.client.allow_list.remove(self.guild_id)
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
