@@ -1,5 +1,6 @@
 import logging
 import math
+from titlecase import titlecase
 
 import discord
 import shortuuid
@@ -17,7 +18,6 @@ from discord.ui import (
 from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.shop import buttons
 from ReQuest.utilities.supportFunctions import (
-    titlecase,
     check_sufficient_funds,
     apply_currency_change_local,
     apply_item_change_local,

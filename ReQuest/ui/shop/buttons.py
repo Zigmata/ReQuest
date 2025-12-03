@@ -1,11 +1,9 @@
 import discord
 from discord import ButtonStyle
 from discord.ui import Button
+from titlecase import titlecase
 
-from ReQuest.utilities.supportFunctions import (
-    log_exception,
-    titlecase
-)
+from ReQuest.utilities.supportFunctions import log_exception
 
 from ReQuest.ui.shop import modals
 

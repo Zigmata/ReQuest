@@ -46,6 +46,7 @@ async def log_exception(exception, interaction=None):
         type='rich'
     )
     if interaction:
+        logger.error(f'Logged from guild ID: {interaction.guild_id}, user ID: {interaction.user.id}')
         try:
             if not interaction.response.is_done():
                 await interaction.response.defer(ephemeral=True)
@@ -62,6 +63,8 @@ async def log_exception(exception, interaction=None):
 
 
 def find_currency_or_denomination(currency_def_query, search_name):
+    if not currency_def_query:
+        return None, None
     search_name = search_name.lower()
     for currency in currency_def_query['currencies']:
         if currency['name'].lower() == search_name:
@@ -387,15 +390,6 @@ async def update_quest_embed(quest) -> discord.Embed | None:
         await log_exception(e)
 
 
-def find_character_in_lists(lists, selected_member_id, selected_character_id):
-    for list_name in lists:
-        for player in list_name:
-            for member_id, character_data in player.items():
-                if selected_member_id == member_id and selected_character_id in character_data:
-                    return character_data[selected_character_id]
-    return None
-
-
 def find_member_and_character_id_in_lists(lists, selected_member_id):
     for list_name in lists:
         for player in list_name:
@@ -702,3 +696,17 @@ def format_price_string(amount, currency_name, currency_config):
             return f"{int(amount)} {display_name}"
         else:
             return f"{amount:.2f} {display_name}"
+
+async def get_xp_config(gdb, guild_id):
+    """
+    Retrieves the XP configuration for a guild.
+    """
+    try:
+        query = await gdb['playerExperience'].find_one({'_id': guild_id})
+        if query is None:
+            return True  # Default to XP enabled if no config found
+        return query.get('playerExperience', True)
+    except Exception as e:
+        logger.error(f"Error retrieving XP config: {e}")
+        await log_exception(e)
+        return True  # Default to XP enabled on error

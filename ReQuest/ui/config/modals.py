@@ -1,5 +1,6 @@
 import json
 import logging
+from titlecase import titlecase
 
 import jsonschema
 import shortuuid
@@ -10,7 +11,7 @@ import discord.ui
 from discord.ui import Modal, Label
 
 from ReQuest.utilities.supportFunctions import log_exception, purge_player_board, setup_view, \
-    find_currency_or_denomination, titlecase, get_denomination_map
+    find_currency_or_denomination, get_denomination_map
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -202,13 +203,18 @@ class GMRewardsModal(Modal):
         )
         self.calling_view = calling_view
         current_rewards = calling_view.current_rewards
-        self.experience_text_input = discord.ui.TextInput(
-            label='Experience',
-            custom_id='experience_text_input',
-            placeholder='Enter a number',
-            default=current_rewards['experience'] if current_rewards and current_rewards['experience'] else None,
-            required=False
-        )
+        self.xp_enabled = getattr(calling_view, 'xp_enabled', True)
+
+        if self.xp_enabled:
+            self.experience_text_input = discord.ui.TextInput(
+                label='Experience',
+                custom_id='experience_text_input',
+                placeholder='Enter a number',
+                default=current_rewards['experience'] if current_rewards and current_rewards['experience'] else None,
+                required=False
+            )
+            self.add_item(self.experience_text_input)
+
         self.items_text_input = discord.ui.TextInput(
             label='Items',
             style=discord.TextStyle.paragraph,
@@ -221,12 +227,13 @@ class GMRewardsModal(Modal):
                      else None),
             required=False
         )
-        self.add_item(self.experience_text_input)
         self.add_item(self.items_text_input)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            experience = int(self.experience_text_input.value) if self.experience_text_input.value else None
+            experience = None
+            if self.xp_enabled and hasattr(self, 'experience_text_input') and self.experience_text_input.value:
+                experience = int(self.experience_text_input.value)
 
             items = None
             if self.items_text_input.value:

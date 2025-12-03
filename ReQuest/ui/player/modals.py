@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, timezone
+from titlecase import titlecase
 
 import discord
 import discord.ui
@@ -12,7 +13,10 @@ from ReQuest.utilities.supportFunctions import (
     trade_currency,
     trade_item,
     check_sufficient_funds,
-    update_character_inventory, format_currency_display, setup_view, strip_id, titlecase
+    update_character_inventory,
+    format_currency_display,
+    setup_view,
+    strip_id
 )
 
 logging.basicConfig(level=logging.INFO)

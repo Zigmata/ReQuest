@@ -5,7 +5,7 @@ from discord.ext.commands import Cog
 
 from ReQuest.ui.gm import views, modals
 from ReQuest.utilities.checks import has_gm_or_mod
-from ReQuest.utilities.supportFunctions import log_exception
+from ReQuest.utilities.supportFunctions import log_exception, get_xp_config
 
 
 class GameMaster(Cog):
@@ -58,7 +58,8 @@ class GameMaster(Cog):
 
             active_character_id = player_query['activeCharacters'][guild_id]
             character_data = player_query['characters'][active_character_id]
-            modal = modals.ModPlayerModal(member, active_character_id, character_data)
+            xp_enabled = await get_xp_config(interaction.client.gdb, interaction.guild_id)
+            modal = modals.ModPlayerModal(member, active_character_id, character_data, xp_enabled)
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)
@@ -83,7 +84,8 @@ class GameMaster(Cog):
             character_data = player_query['characters'][active_character_id]
 
             currency_config = await interaction.client.gdb['currency'].find_one({'_id': interaction.guild_id})
-            view = views.ViewCharacterView(member.id, character_data, currency_config)
+            xp_enabled = await get_xp_config(interaction.client.gdb, interaction.guild_id)
+            view = views.ViewCharacterView(member.id, character_data, currency_config, xp_enabled)
             await interaction.response.send_message(view=view, ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)

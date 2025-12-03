@@ -18,7 +18,7 @@ from ReQuest.utilities.supportFunctions import (
     update_character_experience,
     attempt_delete,
     update_quest_embed,
-    format_currency_display, setup_view, format_consolidated_totals
+    format_currency_display, setup_view, format_consolidated_totals, get_xp_config
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -172,35 +172,21 @@ class ManageQuestsView(LayoutView):
     def __init__(self, quest):
         super().__init__(timeout=None)
         self.selected_quest = quest
-
-        self.edit_quest_button = buttons.EditQuestButton(self)
-        self.edit_quest_button.disabled = False
-
-        self.toggle_ready_button = buttons.ToggleReadyButton(self)
-        self.toggle_ready_button.disabled = False
-
-        self.rewards_menu_button = buttons.RewardsMenuButton(self)
-        self.rewards_menu_button.disabled = False
-
-        self.remove_player_button = buttons.RemovePlayerButton(self)
-        self.remove_player_button.disabled = False
-
-        self.complete_quest_button = buttons.CompleteQuestButton(self)
-        self.complete_quest_button.disabled = False
-
-        self.cancel_quest_button = buttons.CancelQuestButton(self)
-        self.cancel_quest_button.disabled = False
+        self.xp_enabled = True
 
         self.build_view()
 
     async def setup(self, bot):
         try:
+            # Refresh the selected quest data
             quest_collection = bot.gdb['quests']
             query = await quest_collection.find_one(
                 {'guildId': self.selected_quest['guildId'], 'questId': self.selected_quest['questId']}
             )
             if query:
                 self.selected_quest = query
+
+            self.xp_enabled = await get_xp_config(bot.gdb, self.selected_quest['guildId'])
 
             self.build_view()
         except Exception as e:
@@ -219,30 +205,39 @@ class ManageQuestsView(LayoutView):
         container.add_item(header_section)
         container.add_item(Separator())
 
-        edit_section = Section(accessory=self.edit_quest_button)
-        edit_section.add_item(TextDisplay('Edit details for the selected quest.'))
+        edit_section = Section(accessory=buttons.EditQuestButton(self))
+        edit_section.add_item(TextDisplay('Edit quest details such as title, description, and party size.'))
         container.add_item(edit_section)
 
         ready_status = "Locked/Ready" if quest.get('lockState') else "Open"
-        toggle_section = Section(accessory=self.toggle_ready_button)
-        toggle_section.add_item(TextDisplay(f'Toggle ready state (Current: **{ready_status}**).'))
+        toggle_section = Section(accessory=buttons.ToggleReadyButton(self))
+        toggle_section.add_item(TextDisplay(
+            f'Toggle ready state (Current: **{ready_status}**)\n'
+            f'-Locks the quest roster and notifies party members that the quest will begin soon. If a role is '
+            f'configured, it will be assigned to party members when locked.\n'
+            f'- Unlocks the roster when set to Open.'
+        ))
         container.add_item(toggle_section)
 
-        rewards_section = Section(accessory=self.rewards_menu_button)
+        rewards_section = Section(accessory=buttons.RewardsMenuButton(self))
         rewards_section.add_item(TextDisplay('Configure rewards for the selected quest.'))
         container.add_item(rewards_section)
 
-        complete_section = Section(accessory=self.complete_quest_button)
-        complete_section.add_item(TextDisplay('Complete an active quest. Issues rewards, if any, to party members.'))
+        complete_quest_button = buttons.CompleteQuestButton(self)
+        complete_quest_button.disabled = not (quest.get('party') is not None and len(quest.get('party')) > 0)
+        complete_section = Section(accessory=complete_quest_button)
+        complete_section.add_item(TextDisplay('Complete a quest. Issues rewards, if any, to party members.'))
         container.add_item(complete_section)
 
-        remove_player_section = Section(accessory=self.remove_player_button)
-        remove_player_section.add_item(TextDisplay('Remove a player from the selected quest.'))
+        remove_player_button = buttons.RemovePlayerButton(self)
+        remove_player_button.disabled = not (quest.get('party') is not None and len(quest.get('party')) > 0)
+        remove_player_section = Section(accessory=remove_player_button)
+        remove_player_section.add_item(TextDisplay('Remove a player from the quest roster and notify them.'))
         container.add_item(remove_player_section)
         container.add_item(Separator())
 
-        cancel_section = Section(accessory=self.cancel_quest_button)
-        cancel_section.add_item(TextDisplay('Cancel the selected quest and delete it from the quest board.'))
+        cancel_section = Section(accessory=buttons.CancelQuestButton(self))
+        cancel_section.add_item(TextDisplay('Cancel the quest and delete it from the quest board.'))
         container.add_item(cancel_section)
 
         self.add_item(container)
@@ -345,6 +340,7 @@ class ManageQuestsView(LayoutView):
 
             self.selected_quest = refreshed_quest
             quest = self.selected_quest
+            xp_enabled = await get_xp_config(interaction.client.gdb, guild_id)
 
             # Setup quest variables
             quest_id, message_id, title, description, gm, party, rewards = (quest['questId'], quest['messageId'],
@@ -385,26 +381,30 @@ class ManageQuestsView(LayoutView):
 
                     # Prep reward data
                     total_xp = xp_per_member
+                    if not xp_enabled:
+                        total_xp = 0
                     combined_items = party_items.copy()
 
                     # Check if character has individual rewards
                     if character_id in rewards:
                         individual_rewards = rewards[character_id]
-                        total_xp += individual_rewards.get('xp', 0)
+                        if xp_enabled:
+                            total_xp += individual_rewards.get('xp', 0)
 
                         # Merge individual items with party items
                         for item, quantity in individual_rewards.get('items', {}).items():
                             combined_items[item] = combined_items.get(item, 0) + quantity
 
                     # Update the character's XP and inventory
-                    reward_summary.append(f'Experience: {total_xp}')
-                    await update_character_experience(interaction, int(player_id), character_id, total_xp)
+                    if xp_enabled and total_xp > 0:
+                        reward_summary.append(f'Experience: {total_xp}')
+                        await update_character_experience(interaction, int(player_id), character_id, total_xp)
                     for item_name, quantity in combined_items.items():
                         reward_summary.append(f'{item_name}: {quantity}')
                         await update_character_inventory(interaction, int(player_id), character_id, item_name, quantity)
 
                     # Send reward summary to player
-                    reward_strings = self.build_reward_summary(total_xp, combined_items)
+                    reward_strings = self.build_reward_summary(total_xp, combined_items, xp_enabled)
                     dm_embed = discord.Embed(title=f'Quest Complete: {title}', type='rich')
                     if reward_strings:
                         dm_embed.add_field(name='Rewards', value='\n'.join(reward_strings))
@@ -481,7 +481,7 @@ class ManageQuestsView(LayoutView):
                         active_character_id = character_query['activeCharacters'][str(guild_id)]
                         character_string = (f'The following has been awarded to your active character, '
                                             f'{character_query["characters"][active_character_id]["name"]}')
-                        if experience:
+                        if experience and xp_enabled:
                             await update_character_experience(interaction, interaction.user.id, active_character_id,
                                                               experience)
                         if items:
@@ -495,7 +495,7 @@ class ManageQuestsView(LayoutView):
                     color=discord.Color.gold(),
                     type='rich'
                 )
-                if experience:
+                if experience and xp_enabled:
                     gm_rewards_embed.add_field(name='Experience', value=experience)
                 if items:
                     item_strings = []
@@ -516,9 +516,9 @@ class ManageQuestsView(LayoutView):
             await log_exception(e, interaction)
 
     @staticmethod
-    def build_reward_summary(xp, items) -> list[str]:
+    def build_reward_summary(xp, items, xp_enabled=True) -> list[str]:
         reward_strings = []
-        if xp and xp > 0:
+        if xp_enabled and xp and xp > 0:
             reward_strings.append(f'- Experience Points: {xp}')
         if items:
             for item, quantity in items.items():
@@ -529,6 +529,7 @@ class ManageQuestsView(LayoutView):
 class RewardsMenuView(LayoutView):
     def __init__(self, calling_view):
         super().__init__(timeout=None)
+        self.calling_view = calling_view
         self.quest = calling_view.selected_quest
         self.selected_character = None
         self.selected_character_id = None
@@ -592,9 +593,10 @@ class RewardsMenuView(LayoutView):
 
             party_rewards = self._extract_party_rewards(self.quest)
             self.current_party_rewards = party_rewards
+            xp_enabled = getattr(self.calling_view, 'xp_enabled', True)
             self.current_party_rewards_info.content = (
                 '**Party Rewards**\n'
-                f'{self._format_rewards_field(party_rewards)}'
+                f'{self._format_rewards_field(party_rewards, xp_enabled)}'
             )
 
             if self.selected_character and self.selected_character_id:
@@ -604,7 +606,7 @@ class RewardsMenuView(LayoutView):
                 char_name = self.selected_character.get('name', 'Selected Character')
                 self.current_individual_rewards_info.content = (
                     f'**Additional rewards for {char_name}**\n'
-                    f'{self._format_rewards_field(individual_rewards)}'
+                    f'{self._format_rewards_field(individual_rewards, xp_enabled)}'
                 )
             else:
                 self.current_individual_rewards = {"xp": None, "items": {}}
@@ -661,11 +663,11 @@ class RewardsMenuView(LayoutView):
         return {"xp": xp_val, "items": items_val}
 
     @staticmethod
-    def _format_rewards_field(rewards: Dict[str, Any]) -> str:
+    def _format_rewards_field(rewards: Dict[str, Any], xp_enabled=True) -> str:
         lines: list[str] = []
 
         xp = rewards.get('xp')
-        if isinstance(xp, int) and xp > 0:
+        if xp_enabled and isinstance(xp, int) and xp > 0:
             lines.append(f'Experience: {xp}')
 
         items = rewards.get('items') or {}
@@ -680,19 +682,6 @@ class RewardsMenuView(LayoutView):
 class GMPlayerMenuView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
-        self.embed = discord.Embed(
-            title='Game Master - Player Management',
-            description=(
-                '__**Modifying Player Inventory/Experience**__\n'
-                'This command is accessed through context menus. Right-click (desktop) or long-press (mobile) a player '
-                'and choose Apps -> Modify Player to bring up the input modal.\n\n'
-                '- Values entered will be added/subtracted from the player\'s current total.\n'
-                '- To reduce a value, make sure you precede the amount/quantity with a `\'-\'`.\n'
-                '- For items, put each item on a separate line and follow the `item: quantity` format in the '
-                'placeholder text. Currency is treated as an item.\n\n'
-            ),
-            type='rich'
-        )
         self.build_view()
 
     def build_view(self):
@@ -1030,7 +1019,7 @@ class QuestPostView(View):
 
 
 class ViewCharacterView(LayoutView):
-    def __init__(self, member_id, character_data, currency_config):
+    def __init__(self, member_id, character_data, currency_config, xp_enabled=True):
         super().__init__(timeout=None)
         container = Container()
 
@@ -1041,7 +1030,7 @@ class ViewCharacterView(LayoutView):
 
         container.add_item(TextDisplay(content=f'**Character Sheet for {name} (<@{member_id}>)**'))
         container.add_item(Separator())
-        if xp:
+        if xp_enabled and xp is not None:
             container.add_item(TextDisplay(f'__**Experience Points:**__\n{xp}'))
         inventory_display = TextDisplay(
             '__**Possessions**__\n\n' + ('\n'.join([f'{item}: **{quantity}**' for item, quantity in inventory.items()])
