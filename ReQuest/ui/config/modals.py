@@ -1,5 +1,6 @@
 import json
 import logging
+from titlecase import titlecase
 
 import jsonschema
 import shortuuid
@@ -10,7 +11,7 @@ import discord.ui
 from discord.ui import Modal, Label
 
 from ReQuest.utilities.supportFunctions import log_exception, purge_player_board, setup_view, \
-    find_currency_or_denomination, titlecase
+    find_currency_or_denomination, get_denomination_map
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -85,7 +86,7 @@ class AddCurrencyTextModal(Modal):
             await log_exception(e, interaction)
 
 
-class AddCurrencyDenominationTextModal(Modal):
+class AddCurrencyDenominationModal(Modal):
     def __init__(self, calling_view, base_currency_name):
         super().__init__(
             title=f'Add {base_currency_name} Denomination',
@@ -202,13 +203,18 @@ class GMRewardsModal(Modal):
         )
         self.calling_view = calling_view
         current_rewards = calling_view.current_rewards
-        self.experience_text_input = discord.ui.TextInput(
-            label='Experience',
-            custom_id='experience_text_input',
-            placeholder='Enter a number',
-            default=current_rewards['experience'] if current_rewards and current_rewards['experience'] else None,
-            required=False
-        )
+        self.xp_enabled = getattr(calling_view, 'xp_enabled', True)
+
+        if self.xp_enabled:
+            self.experience_text_input = discord.ui.TextInput(
+                label='Experience',
+                custom_id='experience_text_input',
+                placeholder='Enter a number',
+                default=current_rewards['experience'] if current_rewards and current_rewards['experience'] else None,
+                required=False
+            )
+            self.add_item(self.experience_text_input)
+
         self.items_text_input = discord.ui.TextInput(
             label='Items',
             style=discord.TextStyle.paragraph,
@@ -221,19 +227,20 @@ class GMRewardsModal(Modal):
                      else None),
             required=False
         )
-        self.add_item(self.experience_text_input)
         self.add_item(self.items_text_input)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            experience = int(self.experience_text_input.value) if self.experience_text_input.value else None
+            experience = None
+            if self.xp_enabled and hasattr(self, 'experience_text_input') and self.experience_text_input.value:
+                experience = int(self.experience_text_input.value)
 
             items = None
             if self.items_text_input.value:
                 items = {}
                 for item in self.items_text_input.value.strip().split('\n'):
                     item_name, quantity = item.split(':', 1)
-                    items[item_name.strip().capitalize()] = int(quantity.strip())
+                    items[titlecase(item_name.strip())] = int(quantity.strip())
 
             gm_rewards_collection = interaction.client.gdb['gmRewards']
             await gm_rewards_collection.update_one({'_id': interaction.guild_id},
@@ -248,7 +255,7 @@ class GMRewardsModal(Modal):
     def parse_items_to_string(items) -> str:
         item_list = []
         for item_name, quantity in items.items():
-            item_list.append(f'{item_name.capitalize()}: {quantity}')
+            item_list.append(f'{titlecase(item_name)}: {quantity}')
         item_string = '\n'.join(item_list)
         return item_string
 
@@ -1007,21 +1014,37 @@ class StaticKitCurrencyModal(Modal):
             if not currency_config:
                 raise Exception("No currencies configured on server.")
 
-            is_valid, parent_name = find_currency_or_denomination(currency_config, currency_input)
-            if not is_valid:
-                raise Exception(f"Currency '{currency_input}' not found.")
+            denomination_map, parent_name = get_denomination_map(currency_config, currency_input)
+
+            if not denomination_map:
+                raise Exception(f'Currency "{currency_input}" not found.')
+
+            multiplier = denomination_map.get(currency_input.lower())
+            if multiplier is None:
+                raise Exception(f'Denomination "{currency_input}" not found in currency configuration.')
+
+            converted_amount = amount * multiplier
 
             kit_id = self.calling_view.kit_id
             collection = interaction.client.gdb['staticKits']
 
+            query = await collection.find_one({'_id': interaction.guild_id})
+            existing_amount = 0
+
+            if query and 'kits' in query:
+                existing_amount = query['kits'].get(kit_id, {}).get('currency', {}).get(parent_name, 0)
+
+            final_amount = existing_amount + converted_amount
+
             await collection.update_one(
                 {'_id': interaction.guild_id},
-                {'$set': {f'kits.{kit_id}.currency.{parent_name}': amount}}
+                {'$set': {f'kits.{kit_id}.currency.{parent_name}': final_amount}}
             )
 
             if 'currency' not in self.calling_view.kit_data:
                 self.calling_view.kit_data['currency'] = {}
-            self.calling_view.kit_data['currency'][parent_name] = amount
+
+            self.calling_view.kit_data['currency'][parent_name] = final_amount
 
             self.calling_view.build_view()
             await interaction.response.edit_message(view=self.calling_view)

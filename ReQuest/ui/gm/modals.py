@@ -1,4 +1,5 @@
 import logging
+from titlecase import titlecase
 
 import discord
 import discord.ui
@@ -10,7 +11,10 @@ from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
     update_character_inventory,
-    update_character_experience, find_currency_or_denomination, get_denomination_map, setup_view, titlecase
+    update_character_experience,
+    find_currency_or_denomination,
+    get_denomination_map,
+    setup_view
 )
 
 logging.basicConfig(level=logging.INFO)
@@ -18,32 +22,41 @@ logger = logging.getLogger(__name__)
 
 
 class CreateQuestModal(Modal):
-    def __init__(self, quest_view_class):
+    def __init__(self, calling_view):
         super().__init__(
             title='Create New Quest',
             timeout=None
         )
-        self.quest_view_class = quest_view_class
-        self.quest_title_text_input = discord.ui.TextInput(label='Quest Title',
-                                                           custom_id='quest_title_text_input',
-                                                           placeholder='Title of your quest')
-        self.quest_restrictions_text_input = discord.ui.TextInput(label='Restrictions',
-                                                                  custom_id='quest_restrictions_text_input',
-                                                                  placeholder='Restrictions, if any, such as player '
-                                                                              'levels',
-                                                                  required=False)
-        self.quest_party_size_text_input = discord.ui.TextInput(label='Maximum Party Size',
-                                                                custom_id='quest_party_size_text_input',
-                                                                placeholder='Max size of the party for this quest',
-                                                                max_length=2)
-        self.quest_party_role_text_input = discord.ui.TextInput(label='Party Role',
-                                                                custom_id='quest_party_role',
-                                                                placeholder='Create a role for this quest (Optional)',
-                                                                required=False)
-        self.quest_description_text_input = discord.ui.TextInput(label='Description',
-                                                                 style=discord.TextStyle.paragraph,
-                                                                 custom_id='quest_description_text_input',
-                                                                 placeholder='Write the details of your quest here')
+        self.calling_view = calling_view
+        self.quest_title_text_input = discord.ui.TextInput(
+            label='Quest Title',
+            custom_id='quest_title_text_input',
+            placeholder='Title of your quest'
+        )
+        self.quest_restrictions_text_input = discord.ui.TextInput(
+            label='Restrictions',
+            custom_id='quest_restrictions_text_input',
+            placeholder='Restrictions, if any, such as player levels',
+            required=False
+        )
+        self.quest_party_size_text_input = discord.ui.TextInput(
+            label='Maximum Party Size',
+            custom_id='quest_party_size_text_input',
+            placeholder='Max size of the party for this quest',
+            max_length=2
+        )
+        self.quest_party_role_text_input = discord.ui.TextInput(
+            label='Party Role',
+            custom_id='quest_party_role',
+            placeholder='Create a role for this quest (Optional)',
+            required=False
+        )
+        self.quest_description_text_input = discord.ui.TextInput(
+            label='Description',
+            style=discord.TextStyle.paragraph,
+            custom_id='quest_description_text_input',
+            placeholder='Write the details of your quest here'
+        )
 
         self.add_item(self.quest_title_text_input)
         self.add_item(self.quest_restrictions_text_input)
@@ -151,21 +164,22 @@ class CreateQuestModal(Modal):
                 'rewards': {}
             }
 
-            view = self.quest_view_class(quest)
+            from ReQuest.ui.gm.views import QuestPostView
+            view = QuestPostView(quest)
             await view.setup()
             msg = await quest_channel.send(embed=view.embed, view=view)
             quest['messageId'] = msg.id
 
             await quest_collection.insert_one(quest)
-            await interaction.response.send_message(f'Quest `{quest_id}`: **{title}** posted!',
-                                                    ephemeral=True,
-                                                    delete_after=10)
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
 
 class EditQuestModal(Modal):
-    def __init__(self, calling_view, quest, quest_post_view_class):
+    def __init__(self, calling_view, quest):
         super().__init__(
             title=f'Editing {quest['title']}',
             timeout=600
@@ -174,7 +188,6 @@ class EditQuestModal(Modal):
         # Get the current quest's values
         self.calling_view = calling_view
         self.quest = quest
-        self.quest_post_view_class = quest_post_view_class
         title = quest['title']
         restrictions = quest['restrictions']
         max_party_size = quest['maxPartySize']
@@ -243,7 +256,8 @@ class EditQuestModal(Modal):
             message = quest_channel.get_partial_message(self.quest['messageId'])
 
             # Create a fresh quest view, and update the original post message
-            quest_view = self.quest_post_view_class(self.quest)
+            from ReQuest.ui.gm.views import QuestPostView
+            quest_view = QuestPostView(self.quest)
             await quest_view.setup()
             await message.edit(embed=quest_view.embed, view=quest_view)
 
@@ -264,29 +278,31 @@ class RewardsModal(Modal):
         self.caller = caller
         self.calling_view = calling_view
         self.reward_type = reward_type
+        self.xp_enabled = getattr(calling_view, 'xp_enabled', True)
 
         if self.reward_type == RewardType.PARTY:
             rewards = calling_view.current_party_rewards
         else:
             rewards = calling_view.current_individual_rewards
 
-        xp_default = ''
-        if rewards.get('xp') is not None:
-            xp_default = str(rewards['xp'])
+        if self.xp_enabled:
+            xp_value = rewards.get('xp')
+            xp_default = str(xp_value) if xp_value is not None else '0'
+            self.xp_input = discord.ui.TextInput(
+                label='Experience Points',
+                style=discord.TextStyle.short,
+                custom_id='experience_text_input',
+                placeholder='Enter a number',
+                default=xp_default,
+                required=False
+            )
+            self.add_item(self.xp_input)
 
         items_default = ''
         if rewards.get('items'):
             lines = [f'{name}: {quantity}' for name, quantity in rewards['items'].items()]
             items_default = '\n'.join(lines)
 
-        self.xp_input = discord.ui.TextInput(
-            label='Experience Points',
-            style=discord.TextStyle.short,
-            custom_id='experience_text_input',
-            placeholder='Enter a number',
-            default=xp_default,
-            required=False
-        )
         self.item_input = discord.ui.TextInput(
             label='Items',
             style=discord.TextStyle.paragraph,
@@ -297,14 +313,13 @@ class RewardsModal(Modal):
             default=items_default,
             required=False
         )
-        self.add_item(self.xp_input)
         self.add_item(self.item_input)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            xp = None
+            xp = 0
             items = None
-            if self.xp_input.value:
+            if self.xp_enabled and hasattr(self, 'xp_input') and self.xp_input.value:
                 xp = int(self.xp_input.value)
             if self.item_input.value:
                 if self.item_input.value.lower() == 'none':
@@ -318,14 +333,6 @@ class RewardsModal(Modal):
             await self.caller.modal_callback(interaction, xp, items)
         except Exception as e:
             await log_exception(e, interaction)
-
-    @staticmethod
-    def parse_items_to_string(items) -> str:
-        item_list = []
-        for item_name, quantity in items.items():
-            item_list.append(f'{titlecase(item_name)}: {quantity}')
-        item_string = '\n'.join(item_list)
-        return item_string
 
 
 class QuestSummaryModal(Modal):
@@ -351,7 +358,7 @@ class QuestSummaryModal(Modal):
 
 
 class ModPlayerModal(Modal):
-    def __init__(self, member: discord.Member, character_id, character_data):
+    def __init__(self, member: discord.Member, character_id, character_data, xp_enabled=True):
         super().__init__(
             title=f'Modifying {member.name}',
             timeout=600
@@ -359,12 +366,17 @@ class ModPlayerModal(Modal):
         self.member = member
         self.character_id = character_id
         self.character_data = character_data
-        self.experience_text_input = discord.ui.TextInput(
-            label='Experience Points',
-            placeholder='Enter a positive or negative number.',
-            custom_id='experience_text_input',
-            required=False
-        )
+        self.xp_enabled = xp_enabled
+
+        if self.xp_enabled:
+            self.experience_text_input = discord.ui.TextInput(
+                label='Experience Points',
+                placeholder='Enter a positive or negative number.',
+                custom_id='experience_text_input',
+                required=False
+            )
+            self.add_item(self.experience_text_input)
+
         self.inventory_text_input = discord.ui.TextInput(
             label='Inventory',
             style=discord.TextStyle.paragraph,
@@ -374,12 +386,11 @@ class ModPlayerModal(Modal):
             custom_id='inventory_text_input',
             required=False
         )
-        self.add_item(self.experience_text_input)
         self.add_item(self.inventory_text_input)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            xp = None
+            xp = 0
             gdb = interaction.client.gdb
             guild_id = interaction.guild_id
             currency_config = await gdb['currency'].find_one({'_id': guild_id})
@@ -392,7 +403,7 @@ class ModPlayerModal(Modal):
             item_changes = {}
             currency_changes = {}
 
-            if self.experience_text_input.value:
+            if self.xp_enabled and hasattr(self, 'experience_text_input') and self.experience_text_input.value:
                 xp = int(self.experience_text_input.value)
 
             if self.inventory_text_input.value:
@@ -433,7 +444,7 @@ class ModPlayerModal(Modal):
                 type='rich'
             )
 
-            if xp:
+            if self.xp_enabled and xp:
                 await update_character_experience(interaction, self.member.id, self.character_id, xp)
                 mod_summary_embed.add_field(name='Experience', value=xp)
 
@@ -481,7 +492,7 @@ class ReviewSubmissionInputModal(Modal):
         )
         self.add_item(self.submission_id_text_input)
 
-    async def on_submit(self, interaction):
+    async def on_submit(self, interaction: discord.Interaction):
         try:
             submission_id = self.submission_id_text_input.value
             data = await interaction.client.gdb['approvals'].find_one({'submission_id': submission_id})

@@ -9,25 +9,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class GMRoleRemoveSelect(Select):
-    def __init__(self, calling_view):
-        super().__init__(
-            placeholder='Select Role(s)',
-            options=[]
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            collection = interaction.client.gdb['gmRoles']
-            for value in self.values:
-                await collection.update_one({'_id': interaction.guild_id}, {'$pull': {'gmRoles': {'name': value}}})
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(view=self.calling_view)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-
 class SingleChannelConfigSelect(ChannelSelect):
     def __init__(self, calling_view, config_type, config_name):
         channel_types = [discord.ChannelType.text]
@@ -139,114 +120,6 @@ class ConfigWaitListSelect(Select):
             await log_exception(e, interaction)
 
 
-class RemoveDenominationSelect(Select):
-    def __init__(self, calling_view):
-        super().__init__(
-            placeholder='Select a denomination',
-            options=[],
-            custom_id='remove_denomination_select',
-            row=0
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            denomination_name = self.values[0]
-            self.calling_view.selected_denomination_name = denomination_name
-            self.calling_view.remove_denomination_confirm_button.label = f'Confirm deletion of {denomination_name}'
-            self.calling_view.remove_denomination_confirm_button.disabled = False
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=self.calling_view.embed, view=self.calling_view)
-        except Exception as e:
-            await log_exception(e)
-
-
-class EditCurrencySelect(Select):
-    def __init__(self, calling_view):
-        super().__init__(
-            placeholder='Choose a currency to edit',
-            options=[],
-            custom_id='edit_currency_select'
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            view = self.calling_view
-            view.selected_currency_name = self.values[0]
-
-            await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
-        except Exception as e:
-            await log_exception(e)
-
-
-class RemoveCurrencySelect(Select):
-    def __init__(self, calling_view):
-        super().__init__(
-            placeholder='Select a currency',
-            options=[],
-            custom_id='remove_currency_select'
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            view = self.calling_view
-            view.selected_currency_name = self.values[0]
-            view.remove_currency_confirm_button.label = f'Confirm deletion of {self.values[0]}'
-            view.remove_currency_confirm_button.disabled = False
-            await view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(embed=view.embed, view=view)
-        except Exception as e:
-            await log_exception(e)
-
-
-class ConfigShopSelect(Select):
-    def __init__(self, calling_view):
-        super().__init__(
-            placeholder='Select a shop to manage',
-            options=[discord.SelectOption(label='No shops configured', value='None')],
-            custom_id='config_shop_select',
-            disabled=True
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            view = self.calling_view
-            view.selected_channel_id = self.values[0]
-
-            view.edit_shop_wizard_button.disabled = False
-            view.remove_shop_button.disabled = False
-
-            await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-
-class DenominationSelect(Select):
-    def __init__(self, calling_view):
-        super().__init__(
-            placeholder='Select a denomination',
-            options=[discord.SelectOption(label='No denominations configured', value='None')],
-            custom_id='denomination_select',
-            disabled=True
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            view = self.calling_view
-            view.selected_denomination_name = self.values[0]
-
-            await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-
 class InventoryTypeSelect(Select):
     def __init__(self, calling_view):
         super().__init__(
@@ -276,34 +149,5 @@ class InventoryTypeSelect(Select):
                                         upsert=True)
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-
-class ConfigStaticKitSelect(Select):
-    def __init__(self, calling_view):
-        super().__init__(
-            placeholder='Select a kit to manage',
-            options=[discord.SelectOption(label='No kits configured', value='None')],
-            custom_id='config_static_kit_select',
-            disabled=True
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            view = self.calling_view
-            view.selected_kit_id = self.values[0]
-            kit_name = None
-            for option in self.options:
-                if option.value == self.values[0]:
-                    kit_name = option.label
-                    break
-            view.edit_kit_button.disabled = False
-            view.edit_kit_button.label = f'Edit {kit_name}'
-            view.remove_kit_button.disabled = False
-            view.remove_kit_button.label = f'Remove {kit_name}'
-            await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)

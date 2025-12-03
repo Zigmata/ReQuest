@@ -10,30 +10,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class ManageQuestSelect(Select):
-    def __init__(self, calling_view):
-        super().__init__(
-            placeholder='Select a quest to manage',
-            options=[],
-            custom_id='quest_select',
-            disabled=True
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            quest_id = self.values[0]
-            view = self.calling_view
-            quest_collection = interaction.client.gdb['quests']
-            quest = await quest_collection.find_one({'guildId': interaction.guild_id, 'questId': quest_id})
-            view.selected_quest = quest
-
-            await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-
 class PartyMemberSelect(Select):
     def __init__(self, calling_view, disabled_components=None):
         super().__init__(
@@ -57,7 +33,7 @@ class PartyMemberSelect(Select):
                             character = player[str(member_id)][character_id]
                             view.selected_character = character
                             view.selected_character_id = character_id
-            await view.setup()
+            await setup_view(view, interaction)
             if self.disabled_components:
                 for component in self.disabled_components:
                     component.disabled = False
@@ -90,22 +66,5 @@ class RemovePlayerSelect(Select):
                 confirm_callback=view.confirm_callback
             )
             await interaction.response.send_modal(confirm_modal)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-
-class ManageableQuestSelect(Select):
-    def __init__(self, calling_view):
-        super().__init__(
-            placeholder='Select a quest',
-            options=[],
-            custom_id='manageable_quest_select'
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            quest_id = self.values[0]
-            await self.calling_view.select_callback(interaction, quest_id)
         except Exception as e:
             await log_exception(e, interaction)

@@ -47,6 +47,42 @@ class GMRoleRemoveViewButton(BaseViewButton):
         )
 
 
+class RemoveGMRoleButton(Button):
+    def __init__(self, calling_view, role_name):
+        super().__init__(
+            label='Remove',
+            style=ButtonStyle.danger,
+            custom_id=f'remove_gm_role_{role_name}'
+        )
+        self.calling_view = calling_view
+        self.role_name = role_name
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            confirm_modal = common_modals.ConfirmModal(
+                title='Confirm Role Removal',
+                prompt_label=f'Remove {self.role_name}?',
+                prompt_placeholder='Type CONFIRM to proceed',
+                confirm_callback=self._confirm_delete
+            )
+            await interaction.response.send_modal(confirm_modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def _confirm_delete(self, interaction: discord.Interaction):
+        try:
+            collection = interaction.client.gdb['gmRoles']
+            await collection.update_one(
+                {'_id': interaction.guild_id},
+                {'$pull': {'gmRoles': {'name': self.role_name}}}
+            )
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
 class QuestSummaryToggleButton(Button):
     def __init__(self, calling_view):
         super().__init__(
@@ -106,7 +142,8 @@ class PlayerExperienceToggleButton(Button):
 class ToggleDoubleButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Select a currency',
+            label='Toggle Display',
+            style=ButtonStyle.primary,
             custom_id='toggle_double_button'
         )
         self.calling_view = calling_view
@@ -114,16 +151,16 @@ class ToggleDoubleButton(Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             view = self.calling_view
-            currency_name = view.selected_currency_name
+            currency_name = view.currency_name
             collection = interaction.client.gdb['currency']
-            query = await collection.find_one({'_id': interaction.guild_id, 'currencies.name': currency_name})
-            currency = next((item for item in query['currencies'] if item['name'] == currency_name), None)
-            if currency and currency['isDouble']:
-                value = False
-            else:
-                value = True
-            await collection.update_one({'_id': interaction.guild_id, 'currencies.name': currency_name},
-                                        {'$set': {'currencies.$.isDouble': value}})
+
+            new_value = not view.currency_data.get('isDouble', False)
+
+            await collection.update_one(
+                {'_id': interaction.guild_id, 'currencies.name': currency_name},
+                {'$set': {'currencies.$.isDouble': new_value}}
+            )
+
             await setup_view(view, interaction)
             await interaction.response.edit_message(view=view)
         except Exception as e:
@@ -133,7 +170,7 @@ class ToggleDoubleButton(Button):
 class AddDenominationButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Select a currency',
+            label='Add Denomination',
             style=ButtonStyle.success,
             custom_id='add_denomination_button'
         )
@@ -141,9 +178,9 @@ class AddDenominationButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            new_modal = modals.AddCurrencyDenominationTextModal(
+            new_modal = modals.AddCurrencyDenominationModal(
                 calling_view=self.calling_view,
-                base_currency_name=self.calling_view.selected_currency_name
+                base_currency_name=self.calling_view.currency_name
             )
             await interaction.response.send_modal(new_modal)
         except Exception as e:
@@ -151,24 +188,40 @@ class AddDenominationButton(Button):
 
 
 class RemoveDenominationButton(Button):
-    def __init__(self, calling_view):
+    def __init__(self, calling_view, denomination_name):
         super().__init__(
-            label='Remove Denomination',
+            label='Remove',
             style=ButtonStyle.danger,
-            custom_id='remove_denomination_button',
-            disabled=True
+            custom_id=f'remove_denomination_button_{denomination_name}'
         )
         self.calling_view = calling_view
+        self.denomination_name = denomination_name
 
     async def callback(self, interaction: discord.Interaction):
         try:
             confirm_modal = common_modals.ConfirmModal(
-                title='Confirm Denomination Removal',
-                prompt_label='WARNING: This action is irreversible!',
+                title='Confirm Removal',
+                prompt_label=f'Remove {self.denomination_name}?',
                 prompt_placeholder='Type CONFIRM to proceed',
-                confirm_callback=self.calling_view.remove_denomination_confirm_callback
+                confirm_callback=self._confirm_delete
             )
             await interaction.response.send_modal(confirm_modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def _confirm_delete(self, interaction: discord.Interaction):
+        try:
+            currency_name = self.calling_view.currency_name
+            denomination_name = self.denomination_name
+
+            currency_collection = interaction.client.gdb['currency']
+            await currency_collection.update_one(
+                {'_id': interaction.guild_id, 'currencies.name': currency_name},
+                {'$pull': {f'currencies.$.denominations': {'name': denomination_name}}}
+            )
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -189,19 +242,19 @@ class AddCurrencyButton(Button):
             await log_exception(e)
 
 
-class EditCurrencyButton(Button):
-    def __init__(self, target_view_class, calling_view):
+class ManageCurrencyButton(Button):
+    def __init__(self, currency_name):
         super().__init__(
-            label='Edit Currency',
-            style=ButtonStyle.secondary,
-            custom_id='edit_currency_button'
+            label='Manage',
+            style=ButtonStyle.primary,
+            custom_id=f'manage_currency_button_{currency_name}'
         )
-        self.target_view_class = target_view_class
-        self.calling_view = calling_view
+        self.currency_name = currency_name
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            view = self.target_view_class(self.calling_view)
+            from ReQuest.ui.config.views import ConfigEditCurrencyView
+            view = ConfigEditCurrencyView(self.currency_name)
             await setup_view(view, interaction)
             await interaction.response.edit_message(view=view)
         except Exception as e:
@@ -209,23 +262,41 @@ class EditCurrencyButton(Button):
 
 
 class RemoveCurrencyButton(Button):
-    def __init__(self, calling_view):
+    def __init__(self, calling_view, currency_name):
         super().__init__(
             label='Remove Currency',
             style=ButtonStyle.danger,
             custom_id='remove_currency_button'
         )
         self.calling_view = calling_view
+        self.currency_name = currency_name
 
     async def callback(self, interaction: discord.Interaction):
         try:
             modal = common_modals.ConfirmModal(
                 title='Confirm Currency Removal',
-                prompt_label='WARNING: This action is irreversible!',
+                prompt_label=f'Remove {self.currency_name}?',
                 prompt_placeholder='Type CONFIRM to proceed',
-                confirm_callback=self.calling_view.remove_currency_confirm_callback
+                confirm_callback=self._confirm_delete
             )
             await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def _confirm_delete(self, interaction: discord.Interaction):
+        try:
+            currency_name = self.currency_name
+            collection = interaction.client.gdb['currency']
+
+            await collection.update_one(
+                {'_id': interaction.guild_id},
+                {'$pull': {'currencies': {'name': currency_name}}}
+            )
+
+            from ReQuest.ui.config.views import ConfigCurrencyView
+            view = ConfigCurrencyView()
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -350,15 +421,32 @@ class AddShopJSONButton(Button):
             await log_exception(e, interaction)
 
 
+class ManageShopNavButton(Button):
+    def __init__(self, channel_id, shop_data, label, style=ButtonStyle.primary):
+        super().__init__(
+            label=label,
+            style=style,
+            custom_id=f'{label}_shop_{channel_id}'
+        )
+        self.channel_id = channel_id
+        self.shop_data = shop_data
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            from ReQuest.ui.config.views import ManageShopView
+            view = ManageShopView(self.channel_id, self.shop_data)
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
 class EditShopButton(Button):
-    def __init__(self, target_view_class, calling_view):
+    def __init__(self, calling_view):
         super().__init__(
             label='Edit Shop (Wizard)',
             style=ButtonStyle.primary,
-            custom_id='edit_shop_wizard_button',
-            disabled=True
+            custom_id='edit_shop_wizard_button'
         )
-        self.target_view_class = target_view_class
         self.calling_view = calling_view
 
     async def callback(self, interaction: discord.Interaction):
@@ -371,10 +459,9 @@ class EditShopButton(Button):
                 await interaction.response.send_message("Error: Could not find that shop's data.", ephemeral=True)
                 return
 
-            view = self.target_view_class(
-                channel_id=self.calling_view.selected_channel_id,
-                shop_data=shop_data
-            )
+            from ReQuest.ui.config.views import EditShopView
+
+            view = EditShopView(self.calling_view.selected_channel_id, shop_data)
             view.build_view()
 
             await interaction.response.edit_message(view=view)
@@ -388,9 +475,7 @@ class RemoveShopButton(Button):
         super().__init__(
             label='Remove Shop',
             style=ButtonStyle.danger,
-            custom_id='remove_shop_button',
-            row=4,
-            disabled=True
+            custom_id='remove_shop_button'
         )
         self.calling_view = calling_view
 
@@ -403,13 +488,13 @@ class RemoveShopButton(Button):
                 title='Confirm Shop Removal',
                 prompt_label='WARNING: This action is irreversible!',
                 prompt_placeholder='Type CONFIRM to proceed',
-                confirm_callback=self._confirm_delete_callback
+                confirm_callback=self._confirm_delete
             )
             await interaction.response.send_modal(confirm_modal)
         except Exception as e:
             await log_exception(e, interaction)
 
-    async def _confirm_delete_callback(self, interaction: discord.Interaction):
+    async def _confirm_delete(self, interaction: discord.Interaction):
         try:
             view = self.calling_view
             if not view.selected_channel_id:
@@ -424,10 +509,10 @@ class RemoveShopButton(Button):
                 {'$unset': {f'shopChannels.{channel_id}': ''}}
             )
 
-            view.selected_channel_id = None
-
-            await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            from ReQuest.ui.config.views import ConfigShopsView
+            new_view = ConfigShopsView()
+            await setup_view(new_view, interaction)
+            await interaction.response.edit_message(view=new_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -526,9 +611,7 @@ class DownloadShopJSONButton(Button):
         super().__init__(
             label='Download JSON',
             style=ButtonStyle.secondary,
-            custom_id='download_shop_json_button',
-            row=2,
-            disabled=True
+            custom_id='download_shop_json_button'
         )
         self.calling_view = calling_view
 
@@ -569,9 +652,7 @@ class UpdateShopJSONButton(Button):
         super().__init__(
             label='Edit Shop (JSON)',
             style=ButtonStyle.primary,
-            custom_id='edit_shop_json_button',
-            row=2,
-            disabled=True
+            custom_id='edit_shop_json_button'
         )
         self.calling_view = calling_view
 
@@ -753,48 +834,38 @@ class AddStaticKitButton(Button):
 
 
 class EditStaticKitButton(Button):
-    def __init__(self, calling_view):
+    def __init__(self, kit_id, kit_data):
         super().__init__(
-            label='Edit Kit',
-            style=ButtonStyle.primary,
-            custom_id='edit_static_kit_button',
-            disabled=True
+            label='Edit',
+            style=ButtonStyle.secondary,
+            custom_id=f'edit_static_kit_button_{kit_id}'
         )
-        self.calling_view = calling_view
+        self.kit_id = kit_id
+        self.kit_data = kit_data
 
     async def callback(self, interaction: discord.Interaction):
         try:
             from ReQuest.ui.config.views import EditStaticKitView
 
-            kit_id = self.calling_view.selected_kit_id
-            guild_id = interaction.guild_id
+            currency_config = getattr(self.view, 'currency_config', None)
+            if not currency_config:
+                currency_config = await interaction.client.gdb['currency'].find_one({'_id': interaction.guild_id})
 
-            collection = interaction.client.gdb['staticKits']
-            query = await collection.find_one({'_id': guild_id})
-            kits = query.get('kits', {})
-            kit_data = kits.get(kit_id)
-
-            if not kit_data:
-                raise Exception("Kit data not found.")
-
-            currency_collection = interaction.client.gdb['currency']
-            currency_config = await currency_collection.find_one({'_id': guild_id})
-
-            view = EditStaticKitView(kit_id, kit_data, currency_config)
-            await interaction.response.edit_message(view=view)
+            edit_view = EditStaticKitView(self.kit_id, self.kit_data, currency_config)
+            await interaction.response.edit_message(view=edit_view)
         except Exception as e:
             await log_exception(e, interaction)
 
 
 class RemoveStaticKitButton(Button):
-    def __init__(self, calling_view):
+    def __init__(self, kit_id, kit_name):
         super().__init__(
             label='Delete Kit',
             style=ButtonStyle.danger,
-            custom_id='remove_static_kit_button',
-            disabled=True
+            custom_id=f'remove_static_kit_button_{kit_id}'
         )
-        self.calling_view = calling_view
+        self.kit_id = kit_id
+        self.kit_name = kit_name
 
     async def callback(self, interaction: discord.Interaction):
         try:
@@ -810,20 +881,16 @@ class RemoveStaticKitButton(Button):
 
     async def _confirm_delete(self, interaction: discord.Interaction):
         try:
-            view = self.calling_view
-            kit_id = view.selected_kit_id
             collection = interaction.client.gdb['staticKits']
             await collection.update_one(
                 {'_id': interaction.guild_id},
-                {'$unset': {f'kits.{kit_id}': ''}}
+                {'$unset': {f'kits.{self.kit_id}': ''}}
             )
-            view.selected_kit_name = None
-            await setup_view(view, interaction)
-            view.edit_kit_button.label = 'Edit Kit'
-            view.remove_kit_button.label = 'Delete Kit'
-            view.clear_items()
-            view.build_view()
-            await interaction.response.edit_message(view=self.calling_view)
+
+            from ReQuest.ui.config.views import ConfigStaticKitsView
+            new_view = ConfigStaticKitsView()
+            await setup_view(new_view, interaction)
+            await interaction.response.edit_message(view=new_view)
         except Exception as e:
             await log_exception(e, interaction)
 
