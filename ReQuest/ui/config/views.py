@@ -1523,8 +1523,7 @@ class ConfigStaticKitsView(LayoutView):
         self.sorted_kits = []
         self.currency_config = None
 
-        # Pagination settings
-        self.items_per_page = 5
+        self.items_per_page = 6
         self.current_page = 0
         self.total_pages = 1
 
@@ -1921,7 +1920,7 @@ class ConfigEditCurrencyView(LayoutView):
         self.currency_data = {}
         self.denominations = []
 
-        self.items_per_page = 9
+        self.items_per_page = 8
         self.current_page = 0
         self.total_pages = 1
 
@@ -2059,7 +2058,7 @@ class ConfigShopsView(LayoutView):
         super().__init__(timeout=None)
         self.shops = []
 
-        self.items_per_page = 6
+        self.items_per_page = 8
         self.current_page = 0
         self.total_pages = 1
 

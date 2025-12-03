@@ -55,7 +55,7 @@ class GMQuestMenuView(LayoutView):
         super().__init__(timeout=None)
         self.quests = []
 
-        self.items_per_page = 8
+        self.items_per_page = 9
         self.current_page = 0
         self.total_pages = 1
 

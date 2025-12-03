@@ -741,7 +741,7 @@ class StaticKitSelectView(LayoutView):
         self.currency_config = None
         self.sorted_kits = []
 
-        self.items_per_page = 5
+        self.items_per_page = 11
         self.current_page = 0
         self.total_pages = 1
 
@@ -762,6 +762,7 @@ class StaticKitSelectView(LayoutView):
     def build_view(self):
         self.clear_items()
         container = Container()
+
         container.add_item(TextDisplay(f'**Select a Kit for {self.character_name}**'))
         container.add_item(Separator())
 
@@ -794,8 +795,8 @@ class StaticKitSelectView(LayoutView):
                     preview_list.append(f'...and {len(items) - 3} more items')
 
                 if currency:
-                    curr_strs = format_consolidated_totals(currency, self.currency_config)
-                    preview_list.extend(curr_strs)
+                    currency_strings = format_consolidated_totals(currency, self.currency_config)
+                    preview_list.extend(currency_strings)
 
                 if preview_list:
                     content_lines.append(f'> {", ".join(preview_list)}')
@@ -922,7 +923,7 @@ class NewCharacterShopView(LayoutView):
         self.shop_stock = []
         self.cart = {}
 
-        self.items_per_page = 8
+        self.items_per_page = 11
         self.current_page = 0
         self.total_pages = 1
 
