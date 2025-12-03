@@ -887,8 +887,10 @@ class RemoveStaticKitButton(Button):
                 {'$unset': {f'kits.{self.kit_id}': ''}}
             )
 
-            await setup_view(self.view, interaction)
-            await interaction.response.edit_message(view=self.view)
+            from ReQuest.ui.config.views import ConfigStaticKitsView
+            new_view = ConfigStaticKitsView()
+            await setup_view(new_view, interaction)
+            await interaction.response.edit_message(view=new_view)
         except Exception as e:
             await log_exception(e, interaction)
 

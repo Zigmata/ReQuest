@@ -138,7 +138,7 @@ class RemovePlayerPostButton(Button):
         super().__init__(
             label='Remove',
             style=ButtonStyle.danger,
-            custom_id=f'remove_player_post_button_{post.get("postId")}'        )
+            custom_id=f'remove_player_post_button_{post.get("postId")}')
         self.calling_view = calling_view
         self.post = post
 

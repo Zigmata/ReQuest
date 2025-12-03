@@ -479,7 +479,7 @@ class ManageQuestsView(LayoutView):
                                             'server, your rewards could not be automatically issued at this time.')
                     else:
                         active_character_id = character_query['activeCharacters'][str(guild_id)]
-                        character_string = (f'The following has been warded to your active character, '
+                        character_string = (f'The following has been awarded to your active character, '
                                             f'{character_query["characters"][active_character_id]["name"]}')
                         if experience:
                             await update_character_experience(interaction, interaction.user.id, active_character_id,
