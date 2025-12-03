@@ -47,6 +47,42 @@ class GMRoleRemoveViewButton(BaseViewButton):
         )
 
 
+class RemoveGMRoleButton(Button):
+    def __init__(self, calling_view, role_name):
+        super().__init__(
+            label='Remove',
+            style=ButtonStyle.danger,
+            custom_id=f'remove_gm_role_{role_name}'
+        )
+        self.calling_view = calling_view
+        self.role_name = role_name
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            confirm_modal = common_modals.ConfirmModal(
+                title='Confirm Role Removal',
+                prompt_label=f'Remove {self.role_name}?',
+                prompt_placeholder='Type CONFIRM to proceed',
+                confirm_callback=self._confirm_delete
+            )
+            await interaction.response.send_modal(confirm_modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def _confirm_delete(self, interaction: discord.Interaction):
+        try:
+            collection = interaction.client.gdb['gmRoles']
+            await collection.update_one(
+                {'_id': interaction.guild_id},
+                {'$pull': {'gmRoles': {'name': self.role_name}}}
+            )
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
 class QuestSummaryToggleButton(Button):
     def __init__(self, calling_view):
         super().__init__(

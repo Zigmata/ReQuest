@@ -9,25 +9,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class GMRoleRemoveSelect(Select):
-    def __init__(self, calling_view):
-        super().__init__(
-            placeholder='Select Role(s)',
-            options=[]
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            collection = interaction.client.gdb['gmRoles']
-            for value in self.values:
-                await collection.update_one({'_id': interaction.guild_id}, {'$pull': {'gmRoles': {'name': value}}})
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
-            await interaction.response.edit_message(view=self.calling_view)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-
 class SingleChannelConfigSelect(ChannelSelect):
     def __init__(self, calling_view, config_type, config_name):
         channel_types = [discord.ChannelType.text]

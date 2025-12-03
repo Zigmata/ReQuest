@@ -805,53 +805,111 @@ class ConfigRolesView(LayoutView):
 class ConfigGMRoleRemoveView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
-        self.gm_role_remove_select = selects.GMRoleRemoveSelect(self)
+        self.roles = []
 
-        self.build_view()
+        self.items_per_page = 10
+        self.current_page = 0
+        self.total_pages = 1
+
+    async def setup(self, bot, guild):
+        try:
+            collection = bot.gdb['gmRoles']
+            query = await collection.find_one({'_id': guild.id})
+
+            self.roles = query.get('gmRoles', []) if query else []
+            self.roles.sort(key=lambda x: x.get('name', '').lower())
+
+            self.total_pages = math.ceil(len(self.roles) / self.items_per_page)
+            if self.total_pages == 0:
+                self.total_pages = 1
+
+            if self.current_page >= self.total_pages:
+                self.current_page = max(0, self.total_pages - 1)
+
+            self.build_view()
+        except Exception as e:
+            await log_exception(e)
 
     def build_view(self):
+        self.clear_items()
         container = Container()
 
         header_section = Section(accessory=BackButton(ConfigRolesView))
         header_section.add_item(TextDisplay('**Server Configuration - Remove GM Role(s)**'))
-
         container.add_item(header_section)
         container.add_item(Separator())
 
-        container.add_item(TextDisplay('Choose roles from the dropdown below to remove from GM status.'))
-        gm_role_remove_select_row = ActionRow(self.gm_role_remove_select)
-        container.add_item(gm_role_remove_select_row)
+        if not self.roles:
+            container.add_item(TextDisplay("No GM roles configured."))
+        else:
+            start = self.current_page * self.items_per_page
+            end = start + self.items_per_page
+            page_roles = self.roles[start:end]
+
+            for role in page_roles:
+                name = role.get('name', 'Unknown')
+                mention = role.get('mention', '')
+
+                info = f"{mention}"
+
+                section = Section(accessory=buttons.RemoveGMRoleButton(self, name))
+                section.add_item(TextDisplay(info))
+                container.add_item(section)
 
         self.add_item(container)
 
-    async def setup(self, bot, guild):
+        if self.total_pages > 1:
+            nav_row = ActionRow()
+
+            prev_button = Button(
+                label='Previous',
+                style=discord.ButtonStyle.secondary,
+                custom_id='gm_role_prev',
+                disabled=(self.current_page == 0)
+            )
+            prev_button.callback = self.prev_page
+            nav_row.add_item(prev_button)
+
+            page_display = Button(
+                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                style=discord.ButtonStyle.secondary,
+                custom_id='gm_role_page'
+            )
+            page_display.callback = self.show_page_jump_modal
+            nav_row.add_item(page_display)
+
+            next_button = Button(
+                label='Next',
+                style=discord.ButtonStyle.secondary,
+                custom_id='gm_role_next',
+                disabled=(self.current_page >= self.total_pages - 1)
+            )
+            next_button.callback = self.next_page
+            nav_row.add_item(next_button)
+
+            self.add_item(nav_row)
+
+    async def prev_page(self, interaction):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction):
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def show_page_jump_modal(self, interaction):
         try:
-            # Clear any embed fields or select options
-            self.gm_role_remove_select.options.clear()
-
-            # Query the db for configured GM roles
-            collection = bot.gdb['gmRoles']
-            query = await collection.find_one({'_id': guild.id})
-            options = []
-            role_mentions = []
-
-            # If roles are configured, populate the select options and build a string to display in the embed
-            if query and query['gmRoles']:
-                roles = query['gmRoles']
-                for role in roles:
-                    name = role['name']
-                    role_mentions.append(role['mention'])
-                    options.append(discord.SelectOption(label=name, value=name))
-                self.gm_role_remove_select.disabled = False
-            else:
-                options.append(discord.SelectOption(label='None', value='None'))
-                self.gm_role_remove_select.disabled = True
-            self.gm_role_remove_select.options = options
+            await interaction.response.send_modal(common_modals.PageJumpModal(self))
         except Exception as e:
-            await log_exception(e)
+            await log_exception(e, interaction)
 
 
 # ------ CHANNELS ------
+
 
 class ConfigChannelsView(LayoutView):
     def __init__(self):
