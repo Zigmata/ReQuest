@@ -10,6 +10,7 @@ from discord.ui import LayoutView, Container, Section, Separator, ActionRow, But
 from ReQuest.ui.common import modals as common_modals, views as common_views
 from ReQuest.ui.common.buttons import MenuViewButton, BackButton
 from ReQuest.ui.config import buttons, selects, enums
+from ReQuest.ui.config.buttons import AddShopJSONButton
 from ReQuest.utilities.supportFunctions import log_exception, query_config, setup_view, strip_id, titlecase, \
     format_price_string, format_consolidated_totals
 
@@ -1982,34 +1983,37 @@ class ConfigEditCurrencyView(LayoutView):
 class ConfigShopsView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
-        self.selected_channel_id = None
+        self.shops = []
 
-        self.edit_shop_wizard_info = TextDisplay(
-            '**Edit Shop**\n'
-            'Edit the selected shop using a UI wizard.'
-        )
-        self.edit_shop_json_info = TextDisplay(
-            '**Edit Shop (JSON)**\n'
-            'Upload a new JSON file to replace the selected shop\'s definition.'
-        )
-        self.download_shop_json_info = TextDisplay(
-            '**Download JSON**\n'
-            'Download the selected shop\'s current JSON definition.'
-        )
-        self.remove_shop_info = TextDisplay(
-            '**Remove Shop**\n'
-            'Removes the selected shop.'
-        )
+        self.items_per_page = 6
+        self.current_page = 0
+        self.total_pages = 1
 
-        self.shop_select = selects.ConfigShopSelect(self)
-        self.add_shop_wizard_button = buttons.AddShopWizardButton(self)
-        self.add_shop_json_button = buttons.AddShopJSONButton(self)
-        self.edit_shop_wizard_button = buttons.EditShopButton(EditShopView, self)
-        self.download_shop_json_button = buttons.DownloadShopJSONButton(self)
-        self.edit_shop_json_button = buttons.UpdateShopJSONButton(self)
-        self.remove_shop_button = buttons.RemoveShopButton(self)
+    async def setup(self, bot, guild):
+        try:
+            collection = bot.gdb['shops']
+            query = await collection.find_one({'_id': guild.id})
 
-        self.build_view()
+            unsorted_shops = []
+            if query and query.get('shopChannels'):
+                for channel_id, shop_data in query['shopChannels'].items():
+                    unsorted_shops.append({
+                        'id': channel_id,
+                        'data': shop_data
+                    })
+
+            self.shops = sorted(unsorted_shops, key=lambda x: x['data'].get('shopName', '').lower())
+
+            self.total_pages = math.ceil(len(self.shops) / self.items_per_page)
+            if self.total_pages == 0:
+                self.total_pages = 1
+            if self.current_page >= self.total_pages:
+                self.current_page = max(0, self.total_pages - 1)
+
+            self.build_view()
+
+        except Exception as e:
+            await log_exception(e)
 
     def build_view(self):
         container = Container()
@@ -2019,14 +2023,14 @@ class ConfigShopsView(LayoutView):
         container.add_item(header_section)
         container.add_item(Separator())
 
-        add_shop_wizard_section = Section(accessory=self.add_shop_wizard_button)
+        add_shop_wizard_section = Section(accessory=buttons.AddShopWizardButton(self))
         add_shop_wizard_section.add_item(TextDisplay(
             '**Add Shop (Wizard)**\n'
             'Create a new, empty shop from a form.'
         ))
         container.add_item(add_shop_wizard_section)
 
-        add_shop_json_section = Section(accessory=self.add_shop_json_button)
+        add_shop_json_section = Section(accessory=AddShopJSONButton(self))
         add_shop_json_section.add_item(TextDisplay(
             '**Add Shop (JSON)**\n'
             'Create a new shop by providing a full JSON definition. (Advanced)'
@@ -2034,89 +2038,120 @@ class ConfigShopsView(LayoutView):
         container.add_item(add_shop_json_section)
         container.add_item(Separator())
 
-        container.add_item(ActionRow(self.shop_select))
+        if not self.shops:
+            container.add_item(TextDisplay("No shops configured."))
+        else:
+            start = self.current_page * self.items_per_page
+            end = start + self.items_per_page
+            page_items = self.shops[start:end]
 
-        edit_shop_wizard_section = Section(accessory=self.edit_shop_wizard_button)
-        edit_shop_wizard_section.add_item(self.edit_shop_wizard_info)
-        container.add_item(edit_shop_wizard_section)
+            for shop in page_items:
+                shop_name = shop['data'].get('shopName', 'Unknown Shop')
+                channel_id = shop['id']
 
-        edit_shop_json_section = Section(accessory=self.edit_shop_json_button)
-        edit_shop_json_section.add_item(self.edit_shop_json_info)
-        container.add_item(edit_shop_json_section)
+                info = f"**{shop_name}**\nChannel: <#{channel_id}>"
 
-        download_shop_json_section = Section(accessory=self.download_shop_json_button)
-        download_shop_json_section.add_item(self.download_shop_json_info)
-        container.add_item(download_shop_json_section)
-
-        remove_shop_section = Section(accessory=self.remove_shop_button)
-        remove_shop_section.add_item(self.remove_shop_info)
-        container.add_item(remove_shop_section)
+                section = Section(accessory=buttons.ManageShopNavButton(channel_id, shop['data'], 'Manage'))
+                section.add_item(TextDisplay(info))
+                container.add_item(section)
 
         self.add_item(container)
 
-    async def setup(self, bot, guild):
+        if self.total_pages > 1:
+            nav_row = ActionRow()
+            prev_button = Button(
+                label='Previous',
+                style=ButtonStyle.secondary,
+                custom_id='conf_shop_prev',
+                disabled=(self.current_page == 0)
+            )
+            prev_button.callback = self.prev_page
+            nav_row.add_item(prev_button)
+
+            page_display = Button(
+                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                style=discord.ButtonStyle.secondary,
+                custom_id='conf_shop_page'
+            )
+            page_display.callback = self.show_page_jump_modal
+            nav_row.add_item(page_display)
+
+            next_button = Button(
+                label='Next',
+                style=ButtonStyle.secondary,
+                custom_id='conf_shop_next',
+                disabled=(self.current_page >= self.total_pages - 1)
+            )
+            next_button.callback = self.next_page
+            nav_row.add_item(next_button)
+
+            self.add_item(nav_row)
+
+    async def prev_page(self, interaction):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction):
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def show_page_jump_modal(self, interaction):
         try:
-            self.shop_select.options.clear()
-
-            collection = bot.gdb['shops']
-            query = await collection.find_one({'_id': guild.id})
-
-            shop_options = []
-            if query and query.get('shopChannels'):
-                for channel_id, shop_data in query['shopChannels'].items():
-                    shop_name = shop_data.get('shopName')
-                    channel_name = guild.get_channel(int(channel_id)).name
-                    shop_options.append(discord.SelectOption(label=f'{shop_name} (#{channel_name})', value=channel_id))
-
-            if shop_options:
-                self.shop_select.options = shop_options
-                self.shop_select.disabled = False
-                self.shop_select.placeholder = 'Select a shop to manage'
-            else:
-                self.shop_select.options = [discord.SelectOption(label='No shops configured', value='None')]
-                self.shop_select.disabled = True
-                self.shop_select.placeholder = 'No shops configured'
-
-            if self.selected_channel_id:
-                shop_name = next(
-                    (opt.label for opt in shop_options if opt.value == self.selected_channel_id),
-                    "Unknown").split('(')[0].strip()
-
-                self.edit_shop_wizard_button.disabled = False
-                self.edit_shop_wizard_button.label = f'Edit {shop_name} (Wizard)'
-                self.edit_shop_wizard_info.content = (
-                    f'**Edit Shop (Wizard):** {shop_name}\n'
-                    f'Edit **{shop_name}** using a UI wizard.'
-                )
-
-                self.download_shop_json_button.disabled = False
-                self.download_shop_json_button.label = f'Download {shop_name} JSON'
-                self.download_shop_json_info.content = (
-                    f'**Download JSON:** {shop_name}\n'
-                    f'Download the current JSON definition for **{shop_name}**.'
-                )
-
-                self.edit_shop_json_button.disabled = False
-                self.edit_shop_json_button.label = f'Edit {shop_name} (JSON)'
-                self.edit_shop_json_info.content = (
-                    f'**Edit Shop (JSON):** {shop_name}\n'
-                    f'Upload a new JSON file to replace the current definition for **{shop_name}**.'
-                )
-
-                self.remove_shop_button.disabled = False
-                self.remove_shop_button.label = f'Remove {shop_name}'
-                self.remove_shop_info.content = (
-                    f'**Remove Shop:** {shop_name}\n'
-                    f'Removes **{shop_name}** from the server.'
-                )
-
-            if not self.selected_channel_id:
-                self.edit_shop_wizard_button.disabled = True
-                self.download_shop_json_button.disabled = True
-                self.edit_shop_json_button.disabled = True
-                self.remove_shop_button.disabled = True
+            await interaction.response.send_modal(common_modals.PageJumpModal(self))
         except Exception as e:
-            await log_exception(e)
+            await log_exception(e, interaction)
+
+
+class ManageShopView(LayoutView):
+    def __init__(self, channel_id, shop_data):
+        super().__init__(timeout=None)
+        self.selected_channel_id = channel_id
+        self.shop_data = shop_data
+
+        self.build_view()
+
+    def build_view(self):
+        self.clear_items()
+        container = Container()
+
+        shop_name = self.shop_data.get('shopName', 'Unknown')
+
+        header_section = Section(accessory=BackButton(ConfigShopsView))
+        header_section.add_item(TextDisplay(f'**Manage Shop: {shop_name}**'))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        shop_keeper = self.shop_data.get('shopKeeper', 'None')
+        shop_description = self.shop_data.get('shopDescription', 'None')
+        info_text = f"**Shopkeeper:** {shop_keeper}\n**Description:** {shop_description}"
+        container.add_item(TextDisplay(info_text))
+        container.add_item(Separator())
+
+        wizard_section = Section(accessory=buttons.EditShopButton(self))
+        wizard_section.add_item(TextDisplay("Edit Shop details and items via Wizard."))
+        container.add_item(wizard_section)
+
+        json_section = Section(accessory=buttons.UpdateShopJSONButton(self))
+        json_section.add_item(TextDisplay("Upload a new JSON definition for this shop."))
+        container.add_item(json_section)
+
+        download_section = Section(accessory=buttons.DownloadShopJSONButton(self))
+        download_section.add_item(TextDisplay("Download the current JSON definition."))
+        container.add_item(download_section)
+        container.add_item(Separator())
+
+        remove_section = Section(accessory=buttons.RemoveShopButton(self))
+        remove_section.add_item(TextDisplay("Permanently remove this shop."))
+        container.add_item(remove_section)
+
+        self.add_item(container)
+
+    def update_details(self, new_data):
+        self.shop_data = new_data
 
 
 class EditShopView(LayoutView):
@@ -2129,8 +2164,8 @@ class EditShopView(LayoutView):
         self.items_per_page = 6
         self.current_page = 0
         self.total_pages = math.ceil(len(self.all_stock) / self.items_per_page)
-        self.done_editing_button = BackButton(ConfigShopsView)
-        self.done_editing_button.label = 'Done Editing'  # Override the label for this button to avoid confusion
+        self.done_editing_button = buttons.ManageShopNavButton(self.channel_id, self.shop_data,
+                                                               'Done Editing', ButtonStyle.secondary)
 
     def build_view(self):
         self.clear_items()

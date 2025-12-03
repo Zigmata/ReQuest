@@ -350,15 +350,32 @@ class AddShopJSONButton(Button):
             await log_exception(e, interaction)
 
 
+class ManageShopNavButton(Button):
+    def __init__(self, channel_id, shop_data, label, style=ButtonStyle.primary):
+        super().__init__(
+            label=label,
+            style=style,
+            custom_id=f'{label}_shop_{channel_id}'
+        )
+        self.channel_id = channel_id
+        self.shop_data = shop_data
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            from ReQuest.ui.config.views import ManageShopView
+            view = ManageShopView(self.channel_id, self.shop_data)
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
 class EditShopButton(Button):
-    def __init__(self, target_view_class, calling_view):
+    def __init__(self, calling_view):
         super().__init__(
             label='Edit Shop (Wizard)',
             style=ButtonStyle.primary,
-            custom_id='edit_shop_wizard_button',
-            disabled=True
+            custom_id='edit_shop_wizard_button'
         )
-        self.target_view_class = target_view_class
         self.calling_view = calling_view
 
     async def callback(self, interaction: discord.Interaction):
@@ -371,10 +388,9 @@ class EditShopButton(Button):
                 await interaction.response.send_message("Error: Could not find that shop's data.", ephemeral=True)
                 return
 
-            view = self.target_view_class(
-                channel_id=self.calling_view.selected_channel_id,
-                shop_data=shop_data
-            )
+            from ReQuest.ui.config.views import EditShopView
+
+            view = EditShopView(self.calling_view.selected_channel_id, shop_data)
             view.build_view()
 
             await interaction.response.edit_message(view=view)
@@ -388,9 +404,7 @@ class RemoveShopButton(Button):
         super().__init__(
             label='Remove Shop',
             style=ButtonStyle.danger,
-            custom_id='remove_shop_button',
-            row=4,
-            disabled=True
+            custom_id='remove_shop_button'
         )
         self.calling_view = calling_view
 
@@ -403,13 +417,13 @@ class RemoveShopButton(Button):
                 title='Confirm Shop Removal',
                 prompt_label='WARNING: This action is irreversible!',
                 prompt_placeholder='Type CONFIRM to proceed',
-                confirm_callback=self._confirm_delete_callback
+                confirm_callback=self._confirm_delete
             )
             await interaction.response.send_modal(confirm_modal)
         except Exception as e:
             await log_exception(e, interaction)
 
-    async def _confirm_delete_callback(self, interaction: discord.Interaction):
+    async def _confirm_delete(self, interaction: discord.Interaction):
         try:
             view = self.calling_view
             if not view.selected_channel_id:
@@ -424,10 +438,10 @@ class RemoveShopButton(Button):
                 {'$unset': {f'shopChannels.{channel_id}': ''}}
             )
 
-            view.selected_channel_id = None
-
-            await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            from ReQuest.ui.config.views import ConfigShopsView
+            new_view = ConfigShopsView()
+            await setup_view(new_view, interaction)
+            await interaction.response.edit_message(view=new_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -526,9 +540,7 @@ class DownloadShopJSONButton(Button):
         super().__init__(
             label='Download JSON',
             style=ButtonStyle.secondary,
-            custom_id='download_shop_json_button',
-            row=2,
-            disabled=True
+            custom_id='download_shop_json_button'
         )
         self.calling_view = calling_view
 
@@ -569,9 +581,7 @@ class UpdateShopJSONButton(Button):
         super().__init__(
             label='Edit Shop (JSON)',
             style=ButtonStyle.primary,
-            custom_id='edit_shop_json_button',
-            row=2,
-            disabled=True
+            custom_id='edit_shop_json_button'
         )
         self.calling_view = calling_view
 
