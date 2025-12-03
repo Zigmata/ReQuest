@@ -19,14 +19,15 @@ class Admin(Cog):
     @commands.Cog.listener()
     async def on_guild_join(self, guild):
         try:
-            if not self.bot.allow_list or guild.id in self.bot.allow_list:
-                return None
-            else:
-                await guild.owner.send(
-                    'Thank you for your interest in ReQuest! Your server is not in ReQuest\'s list of '
-                    'authorized testing servers. Please join the support server and contact the '
-                    'development team to request test access.')
-                return await guild.leave()
+            if self.bot.allow_list_enabled:
+                if guild.id in self.bot.allow_list:
+                    return None
+                else:
+                    await guild.owner.send(
+                        'Thank you for your interest in ReQuest! Your server is not in ReQuest\'s list of '
+                        'authorized testing servers. Please join the support server and contact the '
+                        'development team to request test access.')
+                    return await guild.leave()
         except Exception as e:
             await log_exception(e)
 

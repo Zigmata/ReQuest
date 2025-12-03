@@ -20,6 +20,7 @@ class ReQuest(commands.Bot):
         self.mdb = None
         self.gdb = None
         self.session = None
+        self.allow_list_enabled = False
         intents = discord.Intents.default()
         intents.members = True  # Subscribe to the privileged members intent.
         intents.presences = True  # Subscribe to the privileged presences intent.
@@ -79,6 +80,7 @@ class ReQuest(commands.Bot):
 
         # If the white list is enabled, load it async in the background
         if os.getenv('ALLOWLIST'):
+            self.allow_list_enabled = True
             await asyncio.create_task(self.load_allow_list())
 
         # If the bot is restarted with any existing quests, this reloads their views so they can be interacted with.

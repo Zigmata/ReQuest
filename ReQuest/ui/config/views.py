@@ -1332,28 +1332,41 @@ class ConfigNewCharacterView(LayoutView):
                 f'{type_description.get(inventory_type, "")}'
             )
 
+
             # New character Shop section
-            if inventory_type in ['selection', 'purchase']:
+            currency_config = await bot.gdb['currency'].find_one({'_id': guild.id})
+
+            self.new_character_shop_button.disabled = True
+            self.new_character_shop_button.label = 'Configure New Character Shop'
+            self.new_character_wealth_button.disabled = True
+            self.new_character_wealth_button.label = 'Configure New Character Wealth'
+            self.static_kits_button.disabled = True
+
+            if inventory_type == 'selection':
                 self.new_character_shop_button.disabled = False
-            else:
-                self.new_character_shop_button.disabled = True
+                if currency_config:
+                    self.new_character_wealth_button.disabled = False
+                else:
+                    self.new_character_wealth_button.label = 'Disabled (No Currency Configured)'
 
             if inventory_type == 'purchase':
-                self.new_character_wealth_button.disabled = False
-            else:
-                self.new_character_wealth_button.disabled = True
+                if not currency_config:
+                    self.new_character_shop_button.label = 'Disabled (No Currency Configured)'
+                    self.new_character_wealth_button.label = 'Disabled (No Currency Configured)'
+                else:
+                    self.new_character_wealth_button.disabled = False
+                    if not new_character_wealth:
+                        self.new_character_shop_button.label = 'Disabled (No Starting Wealth Configured)'
+                    else:
+                        self.new_character_shop_button.disabled = False
 
             if inventory_type == 'static':
                 self.static_kits_button.disabled = False
-            else:
-                self.static_kits_button.disabled = True
-
 
             if new_character_wealth:
                 amount = new_character_wealth.get('amount', 0)
                 currency_name = new_character_wealth.get('currency', '')
 
-                currency_config = await bot.gdb['currency'].find_one({'_id': guild.id})
                 formatted_wealth = format_price_string(amount, currency_name, currency_config)
 
                 self.new_character_wealth_info.content = (

@@ -63,6 +63,8 @@ async def log_exception(exception, interaction=None):
 
 
 def find_currency_or_denomination(currency_def_query, search_name):
+    if not currency_def_query:
+        return None, None
     search_name = search_name.lower()
     for currency in currency_def_query['currencies']:
         if currency['name'].lower() == search_name:
