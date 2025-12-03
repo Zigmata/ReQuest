@@ -1020,6 +1020,9 @@ class StaticKitCurrencyModal(Modal):
                 raise Exception(f'Currency "{currency_input}" not found.')
 
             multiplier = denomination_map.get(currency_input.lower())
+            if multiplier is None:
+                raise Exception(f'Denomination "{currency_input}" not found in currency configuration.')
+
             converted_amount = amount * multiplier
 
             kit_id = self.calling_view.kit_id

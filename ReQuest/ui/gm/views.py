@@ -372,7 +372,10 @@ class ManageQuestsView(LayoutView):
 
             for entry in party:
                 for player_id, character_info in entry.items():
+                    # If the player left the server, this will return None
                     member = guild.get_member(int(player_id))
+                    if not member:
+                        continue # Skip the player if they left.
 
                     # Get character data
                     character_id = next(iter(character_info))
@@ -392,7 +395,7 @@ class ManageQuestsView(LayoutView):
                             total_xp += individual_rewards.get('xp', 0)
 
                         # Merge individual items with party items
-                        for item, quantity in individual_rewards.get('items', {}).items():
+                        for item, quantity in (individual_rewards.get('items') or {}).items():
                             combined_items[item] = combined_items.get(item, 0) + quantity
 
                     # Update the character's XP and inventory
