@@ -1,5 +1,5 @@
 import logging
-import titlecase
+from titlecase import titlecase
 
 import discord
 import discord.ui
@@ -332,14 +332,6 @@ class RewardsModal(Modal):
         except Exception as e:
             await log_exception(e, interaction)
 
-    # @staticmethod
-    # def parse_items_to_string(items) -> str:
-    #     item_list = []
-    #     for item_name, quantity in items.items():
-    #         item_list.append(f'{titlecase(item_name)}: {quantity}')
-    #     item_string = '\n'.join(item_list)
-    #     return item_string
-
 
 class QuestSummaryModal(Modal):
     def __init__(self, calling_view):
@@ -494,7 +486,7 @@ class ReviewSubmissionInputModal(Modal):
         )
         self.add_item(self.submission_id_text_input)
 
-    async def on_submit(self, interaction):
+    async def on_submit(self, interaction: discord.Interaction):
         try:
             submission_id = self.submission_id_text_input.value
             data = await interaction.client.gdb['approvals'].find_one({'submission_id': submission_id})

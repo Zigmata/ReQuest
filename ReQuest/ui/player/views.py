@@ -9,7 +9,7 @@ from titlecase import titlecase
 from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
 from ReQuest.ui.player import buttons, selects
-from ReQuest.utilities.supportFunctions import log_exception, strip_id, attempt_delete, format_currency_display, \
+from ReQuest.utilities.supportFunctions import log_exception, strip_id, format_currency_display, \
     setup_view, find_currency_or_denomination, update_character_inventory, format_price_string, \
     consolidate_currency_totals, check_sufficient_funds, get_denomination_map, format_consolidated_totals
 
