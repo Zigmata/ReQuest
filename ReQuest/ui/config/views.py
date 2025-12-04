@@ -1123,13 +1123,16 @@ class ConfigQuestsView(LayoutView):
             quest_summary = await query_config('questSummary', bot, guild)
             wait_list = await query_config('questWaitList', bot, guild)
 
+            wait_list_display = wait_list if isinstance(wait_list, int) and wait_list > 0 else 'Disabled'
+            quest_summary_display = "Enabled" if quest_summary is True else "Disabled"
+
             self.wait_list_info.content = (
-                f'**Quest Wait List Size:** {wait_list if wait_list and wait_list > 0 else "Disabled"}\n'
+                f'**Quest Wait List Size:** {wait_list_display}\n'
                 f'A wait list allows the specified number of players to queue for a quest that is full, in case a '
                 f'player drops.'
             )
             self.quest_summary_info.content = (
-                f'**Quest Summary:** {"Enabled" if quest_summary else "Disabled"}\n'
+                f'**Quest Summary:** {quest_summary_display}\n'
                 f'This option enables GMs to provide a short summary when closing out quests.'
             )
         except Exception as e:
