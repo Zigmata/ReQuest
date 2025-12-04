@@ -15,6 +15,7 @@ from ReQuest.utilities.supportFunctions import (
     check_sufficient_funds,
     update_character_inventory,
     format_currency_display,
+    format_price_string,
     setup_view,
     strip_id,
     UserFeedbackError
@@ -56,9 +57,9 @@ class TradeModal(Modal):
             member_active_character = member_query['characters'][member_active_character_id]
 
             log_channel = None
-            log_channel_query = await gdb['playerTradingLogChannel'].find_one({'_id': guild_id})
+            log_channel_query = await gdb['playerTransactionLogChannel'].find_one({'_id': guild_id})
             if log_channel_query:
-                log_channel_id = strip_id(log_channel_query['playerTradingLogChannel'])
+                log_channel_id = strip_id(log_channel_query['playerTransactionLogChannel'])
                 log_channel = interaction.guild.get_channel(log_channel_id)
 
             target_query = await collection.find_one({'_id': target_id})
@@ -262,7 +263,10 @@ class SpendCurrencyModal(Modal):
     async def on_submit(self, interaction: discord.Interaction):
         try:
             currency_name = self.currency_name_text_input.value.strip()
-            amount = float(self.currency_amount_text_input.value.strip())
+            try:
+                amount = float(self.currency_amount_text_input.value.strip())
+            except ValueError:
+                raise UserFeedbackError('Amount must be a number.')
 
             if amount <= 0:
                 raise ValueError('You must spend a positive amount.')
@@ -277,21 +281,56 @@ class SpendCurrencyModal(Modal):
                 raise UserFeedbackError("You do not have an active character on this server.")
 
             active_character_id = character_query['activeCharacters'][str(guild_id)]
-            player_currency = character_query['characters'][active_character_id]['attributes'].get('currency', {})
+            character_data = character_query['characters'][active_character_id]
+            current_wallet = character_data['attributes'].get('currency', {})
 
             currency_config = await gdb['currency'].find_one({'_id': guild_id})
             if not currency_config:
                 raise UserFeedbackError("A currency configuration was not found for this server.")
 
-            can_afford, message = check_sufficient_funds(player_currency, currency_config, currency_name, amount)
+            can_afford, message = check_sufficient_funds(current_wallet, currency_config, currency_name, amount)
             if not can_afford:
                 raise UserFeedbackError(message)
 
             await update_character_inventory(interaction, member_id, active_character_id, currency_name, -amount)
 
-            await setup_view(self.calling_view, interaction)
+            updated_query = await mdb['characters'].find_one({'_id': member_id})
+            new_wallet = updated_query['characters'][active_character_id]['attributes'].get('currency', {})
 
+            formatted_amount = format_price_string(amount, currency_name, currency_config)
+            balance_lines = format_currency_display(new_wallet, currency_config)
+            balance_str = '\n'.join(balance_lines) or "None"
+
+            character_name = character_data['name']
+            trade_embed = discord.Embed(
+                title=f'Player Transaction Report',
+                description=(
+                    f'Player: {interaction.user.mention} as `{character_name}`\n'
+                    f'Transaction: **{character_name}** spent **{formatted_amount}**.'
+                ),
+                color=discord.Color.gold(),
+                type='rich'
+            )
+            trade_embed.set_author(
+                name=interaction.user.display_name,
+                icon_url=interaction.user.display_avatar.url if interaction.user.display_avatar else None
+            )
+            trade_embed.add_field(name=f'{character_name}\'s Balance', value=balance_str, inline=False)
+            trade_embed.set_footer(text=f'Transaction ID: {shortuuid.uuid()[:12]}')
+
+            await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
+            receipt = await interaction.followup.send(embed=trade_embed, wait=True)
+
+            log_channel_query = await gdb['playerTransactionLogChannel'].find_one({'_id': guild_id})
+            if log_channel_query:
+                log_channel_id = strip_id(log_channel_query['playerTransactionLogChannel'])
+                log_channel = interaction.guild.get_channel(log_channel_id)
+                if log_channel:
+                    channel_mention = interaction.channel.mention
+                    trade_embed.add_field(name='Channel', value=channel_mention)
+                    trade_embed.add_field(name='Receipt', value=receipt.jump_url)
+                    await log_channel.send(embed=trade_embed)
         except Exception as e:
             await log_exception(e, interaction)
 

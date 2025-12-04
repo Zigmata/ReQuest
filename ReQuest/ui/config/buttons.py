@@ -321,8 +321,8 @@ class ClearChannelButton(Button):
                 await interaction.client.gdb['archiveChannel'].delete_one({'_id': interaction.guild_id})
             elif self.channel_type == enums.ChannelType.GM_TRANSACTION_LOG:
                 await interaction.client.gdb['gmTransactionLogChannel'].delete_one({'_id': interaction.guild_id})
-            elif self.channel_type == enums.ChannelType.PLAYER_TRADING_LOG:
-                await interaction.client.gdb['playerTradingLogChannel'].delete_one({'_id': interaction.guild_id})
+            elif self.channel_type == enums.ChannelType.PLAYER_TRANSACTION_LOG:
+                await interaction.client.gdb['playerTransactionLogChannel'].delete_one({'_id': interaction.guild_id})
             elif self.channel_type == enums.ChannelType.SHOP_LOG:
                 await interaction.client.gdb['shopLogChannel'].delete_one({'_id': interaction.guild_id})
             elif self.channel_type == enums.ChannelType.APPROVAL_QUEUE:
