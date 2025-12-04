@@ -151,6 +151,7 @@ services:
 #      LOAD_EXTENSIONS: admin, config, gm, info, player, shop
 #      ALLOWLIST: True
 #      LOG_LEVEL: INFO
+#      BOT_ACTIVITY: "Playing by Post" # Customize the displayed activity status
 #    depends_on:
 #      - mongodb
 #    restart: unless-stopped

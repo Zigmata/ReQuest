@@ -35,8 +35,11 @@ class ReQuest(commands.Bot):
         intents.presences = True  # Subscribe to the privileged presences intent.
         intents.message_content = True  # Subscribe to the privileged message content intent.
         allowed_mentions = discord.AllowedMentions(roles=True, everyone=False, users=True)
+        activity = discord.CustomActivity(
+            name=os.getenv('BOT_ACTIVITY', 'Playing by Post')
+        )
         super(ReQuest, self).__init__(
-            activity=discord.Game(name=f'by Post'),
+            activity=activity,
             allowed_mentions=allowed_mentions,
             case_insensitive=True,
             command_prefix='rq!',

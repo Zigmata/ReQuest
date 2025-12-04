@@ -40,13 +40,13 @@ def strip_id(mention) -> int:
 
 async def log_exception(exception, interaction=None):
     report_string = (
-        f'⚠️ An exception occurred:\n\n'
+        f'An exception occurred:\n\n'
         f'```{str(exception)}```\n'
         f'If this error is unexpected, or you suspect the bot is not functioning correctly, please submit a bug report '
         f'in the [Official ReQuest Support Discord](https://discord.gg/Zq37gj4).'
     )
     error_embed = discord.Embed(
-        title='Oops!',
+        title='⚠️ Oops!',
         description=report_string,
         color=discord.Color.red(),
         type='rich'
@@ -56,7 +56,7 @@ async def log_exception(exception, interaction=None):
         exception = exception.original
 
     if isinstance(exception, (UserFeedbackError, app_commands.CheckFailure)):
-        logger.info(f'User feedback triggered: {exception}\nUser: {interaction.user.id if interaction else "Unknown"}')
+        logger.debug(f'User feedback triggered: {exception}\nUser: {interaction.user.id if interaction else "Unknown"}')
 
         if interaction:
             try:
