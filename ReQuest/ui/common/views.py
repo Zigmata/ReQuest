@@ -1,4 +1,10 @@
-from discord.ui import LayoutView, Container, Section, Separator, TextDisplay
+from discord.ui import (
+    LayoutView,
+    Container,
+    Section,
+    Separator,
+    TextDisplay
+)
 
 from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton
 

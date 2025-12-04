@@ -4,7 +4,16 @@ import math
 from typing import Any, Dict, Iterator, Tuple
 
 import discord
-from discord.ui import View, LayoutView, Container, TextDisplay, Separator, ActionRow, Section, Button
+from discord.ui import (
+    View,
+    LayoutView,
+    Container,
+    TextDisplay,
+    Separator,
+    ActionRow,
+    Section,
+    Button
+)
 from titlecase import titlecase
 
 from ReQuest.ui.common.buttons import MenuDoneButton, BackButton
@@ -18,10 +27,13 @@ from ReQuest.utilities.supportFunctions import (
     update_character_experience,
     attempt_delete,
     update_quest_embed,
-    format_currency_display, setup_view, format_consolidated_totals, get_xp_config
+    format_currency_display,
+    setup_view,
+    format_consolidated_totals,
+    get_xp_config,
+    UserFeedbackError
 )
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -253,7 +265,7 @@ class ManageQuestsView(LayoutView):
             channel_collection = interaction.client.gdb['questChannel']
             channel_id_query = await channel_collection.find_one({'_id': guild_id})
             if not channel_id_query:
-                raise Exception('Quest channel has not been set!')
+                raise UserFeedbackError('Quest channel has not been set!')
             channel_id = strip_id(channel_id_query['questChannel'])
             channel = interaction.client.get_channel(channel_id)
 
@@ -349,7 +361,7 @@ class ManageQuestsView(LayoutView):
                                                                             quest['rewards'])
 
             if not party:
-                raise Exception('You cannot complete a quest with an empty roster. Try cancelling instead.')
+                raise UserFeedbackError('You cannot complete a quest with an empty roster. Try cancelling instead.')
 
             archive_channel = None
             archive_query = await interaction.client.gdb['archiveChannel'].find_one({'_id': guild_id})
@@ -895,7 +907,7 @@ class QuestPostView(View):
             for player in current_party:
                 if str(user_id) in player:
                     for character_id, character_data in player[str(user_id)].items():
-                        raise Exception(f'You are already on this quest as {character_data['name']}')
+                        raise UserFeedbackError(f'You are already on this quest as {character_data['name']}')
             max_wait_list_size = quest['maxWaitListSize']
             max_party_size = quest['maxPartySize']
             member_collection = interaction.client.mdb['characters']
@@ -903,14 +915,17 @@ class QuestPostView(View):
             if (not player_characters or
                     'activeCharacters' not in player_characters or
                     str(guild_id) not in player_characters['activeCharacters']):
-                raise Exception('You do not have an active character on this server. Use the `/player` menus to create'
-                                'a new character, or activate an existing one on this server.')
+                raise UserFeedbackError(
+                    'You do not have an active character on this server. Use the `/player` menus to create a new '
+                    'character, or activate an existing one on this server.'
+                )
             active_character_id = player_characters['activeCharacters'][str(guild_id)]
             active_character = player_characters['characters'][active_character_id]
 
             if quest['lockState']:
-                raise Exception(f'Error joining quest **{quest["title"]}**: The quest is locked and not accepting new '
-                                f'players.')
+                raise UserFeedbackError(
+                    f'Error joining quest **{quest["title"]}**: The quest is locked and not accepting new players.'
+                )
             else:
                 new_player_entry = {f'{user_id}': {f'{active_character_id}': active_character}}
                 # If the wait list is enabled, this section formats the embed to include the wait list
@@ -932,7 +947,7 @@ class QuestPostView(View):
 
                     # Otherwise, inform the user that the party/wait list is full
                     else:
-                        raise Exception(f'Error joining quest **{quest["title"]}**: The quest roster is full!')
+                        raise UserFeedbackError(f'Error joining quest **{quest["title"]}**: The quest roster is full!')
                 # If there is no wait list, this section formats the embed without it
                 else:
                     # If there is room in the party, add the user.
@@ -943,7 +958,7 @@ class QuestPostView(View):
                         )
                         self.quest['party'].append(new_player_entry)
                     else:
-                        raise Exception(f'Error joining quest **{quest["title"]}**: The quest roster is full!')
+                        raise UserFeedbackError(f'Error joining quest **{quest["title"]}**: The quest roster is full!')
 
                 await self.setup()
                 await interaction.response.edit_message(embed=self.embed, view=self)
@@ -972,7 +987,7 @@ class QuestPostView(View):
                     if str(user_id) in player:
                         in_wait_list = True
             if not in_party and not in_wait_list:
-                raise Exception(f'You are not signed up for this quest.')
+                raise UserFeedbackError(f'You are not signed up for this quest.')
 
             if in_wait_list:
                 for player in wait_list:

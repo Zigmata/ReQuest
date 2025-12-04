@@ -16,10 +16,10 @@ from ReQuest.utilities.supportFunctions import (
     update_character_inventory,
     format_currency_display,
     setup_view,
-    strip_id
+    strip_id,
+    UserFeedbackError
 )
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -63,10 +63,11 @@ class TradeModal(Modal):
 
             target_query = await collection.find_one({'_id': target_id})
             if not target_query:
-                raise Exception('The player you are attempting to trade with has no characters!')
+                raise UserFeedbackError('The player you are attempting to trade with has no characters!')
             elif str(guild_id) not in target_query['activeCharacters']:
-                raise Exception('The player you are attempting to trade with does not have an active character on this'
-                                'server!')
+                raise UserFeedbackError(
+                    'The player you are attempting to trade with does not have an active character on this server!'
+                )
             target_active_character_id = target_query['activeCharacters'][str(guild_id)]
             target_active_character = target_query['characters'][target_active_character_id]
 
@@ -273,18 +274,18 @@ class SpendCurrencyModal(Modal):
 
             character_query = await mdb['characters'].find_one({'_id': member_id})
             if not character_query or str(guild_id) not in character_query['activeCharacters']:
-                raise Exception("You do not have an active character on this server.")
+                raise UserFeedbackError("You do not have an active character on this server.")
 
             active_character_id = character_query['activeCharacters'][str(guild_id)]
             player_currency = character_query['characters'][active_character_id]['attributes'].get('currency', {})
 
             currency_config = await gdb['currency'].find_one({'_id': guild_id})
             if not currency_config:
-                raise Exception("Currency is not configured on this server.")
+                raise UserFeedbackError("A currency configuration was not found for this server.")
 
             can_afford, message = check_sufficient_funds(player_currency, currency_config, currency_name, amount)
             if not can_afford:
-                raise Exception(message)
+                raise UserFeedbackError(message)
 
             await update_character_inventory(interaction, member_id, active_character_id, currency_name, -amount)
 
@@ -443,10 +444,10 @@ class ConsumeItemModal(Modal):
             current_quantity = inventory_lower.get(item_name.lower(), 0)
 
             if current_quantity == 0:
-                raise Exception(f'You do not have any items matching the name: {item_name}.')
+                raise UserFeedbackError(f'You do not have any items matching the name: {item_name}.')
 
             if quantity > current_quantity:
-                raise Exception(f'You only have {current_quantity} of {item_name}.')
+                raise UserFeedbackError(f'You only have {current_quantity} of {item_name}.')
 
             await update_character_inventory(interaction, interaction.user.id, character_id, item_name, -quantity)
 

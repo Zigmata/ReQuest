@@ -147,9 +147,10 @@ services:
 #      GUILD_DB: guilds
 #      MEMBER_DB: members
 #      CONFIG_DB: config
-#      VERSION: 1.1.0
+#      VERSION: 1.2.6 # Doesn't affect functionality, just for info with the `/support` command
 #      LOAD_EXTENSIONS: admin, config, gm, info, player, shop
 #      ALLOWLIST: True
+#      LOG_LEVEL: INFO
 #    depends_on:
 #      - mongodb
 #    restart: unless-stopped

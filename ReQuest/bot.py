@@ -1,6 +1,7 @@
 import asyncio
 import os
 import signal
+import logging
 from urllib.parse import quote_plus
 
 import aiohttp
@@ -11,6 +12,14 @@ from pymongo import AsyncMongoClient as MongoClient
 
 from ReQuest.ui.gm.views import QuestPostView
 from utilities.supportFunctions import attempt_delete, log_exception
+
+log_level = os.getenv('LOG_LEVEL', 'INFO').upper()
+logging.basicConfig(
+    level=log_level,
+    format='%(asctime)s %(name)s %(levelname)s %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger=logging.getLogger(__name__)
 
 
 class ReQuest(commands.Bot):
@@ -137,7 +146,7 @@ class ReQuest(commands.Bot):
 
     @staticmethod
     async def on_ready():
-        print("ReQuest is online.")
+        logger.info("ReQuest is online.")
 
 
 bot = ReQuest()

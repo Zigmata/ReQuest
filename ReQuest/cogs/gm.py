@@ -5,7 +5,7 @@ from discord.ext.commands import Cog
 
 from ReQuest.ui.gm import views, modals
 from ReQuest.utilities.checks import has_gm_or_mod
-from ReQuest.utilities.supportFunctions import log_exception, get_xp_config
+from ReQuest.utilities.supportFunctions import log_exception, get_xp_config, UserFeedbackError
 
 
 class GameMaster(Cog):
@@ -51,10 +51,10 @@ class GameMaster(Cog):
             character_collection = interaction.client.mdb['characters']
             player_query = await character_collection.find_one({'_id': member.id})
             if not player_query:
-                raise Exception('The target player does not have any registered characters.')
+                raise UserFeedbackError('The target player does not have any registered characters.')
 
             if guild_id not in player_query['activeCharacters']:
-                raise Exception('The target player does not have a character activated on this server.')
+                raise UserFeedbackError('The target player does not have a character activated on this server.')
 
             active_character_id = player_query['activeCharacters'][guild_id]
             character_data = player_query['characters'][active_character_id]
@@ -75,10 +75,10 @@ class GameMaster(Cog):
             character_collection = interaction.client.mdb['characters']
             player_query = await character_collection.find_one({'_id': member.id})
             if not player_query:
-                raise Exception('The target player does not have any registered characters.')
+                raise UserFeedbackError('The target player does not have any registered characters.')
 
             if guild_id not in player_query['activeCharacters']:
-                raise Exception('The target player does not have a character activated on this server.')
+                raise UserFeedbackError('The target player does not have a character activated on this server.')
 
             active_character_id = player_query['activeCharacters'][guild_id]
             character_data = player_query['characters'][active_character_id]
