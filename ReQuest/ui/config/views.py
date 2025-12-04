@@ -6,16 +6,30 @@ from titlecase import titlecase
 
 import discord
 from discord import ButtonStyle
-from discord.ui import LayoutView, Container, Section, Separator, ActionRow, Button, TextDisplay, Thumbnail
+from discord.ui import (
+    LayoutView,
+    Container,
+    Section,
+    Separator,
+    ActionRow,
+    Button,
+    TextDisplay,
+    Thumbnail
+)
 
 from ReQuest.ui.common import modals as common_modals, views as common_views
 from ReQuest.ui.common.buttons import MenuViewButton, BackButton
 from ReQuest.ui.config import buttons, selects, enums
 from ReQuest.ui.config.buttons import AddShopJSONButton
-from ReQuest.utilities.supportFunctions import log_exception, query_config, strip_id, \
-    format_price_string, format_consolidated_totals, get_xp_config
+from ReQuest.utilities.supportFunctions import (
+    log_exception,
+    query_config,
+    strip_id,
+    format_price_string,
+    format_consolidated_totals,
+    get_xp_config
+)
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 

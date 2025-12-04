@@ -3,12 +3,20 @@ import math
 
 import discord
 import shortuuid
-from discord.ui import Container, Section, TextDisplay, Separator, LayoutView, ActionRow, Button
+from discord.ui import (
+    Container,
+    Section,
+    TextDisplay,
+    Separator,
+    LayoutView,
+    ActionRow,
+    Button
+)
 from titlecase import titlecase
 
 from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
-from ReQuest.ui.player import buttons, selects
+from ReQuest.ui.player import buttons
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
@@ -21,10 +29,10 @@ from ReQuest.utilities.supportFunctions import (
     check_sufficient_funds,
     get_denomination_map,
     format_consolidated_totals,
-    get_xp_config
+    get_xp_config,
+    UserFeedbackError
 )
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -476,7 +484,7 @@ class PlayerBoardView(LayoutView):
 
             channel = interaction.client.get_channel(self.player_board_channel_id)
             if not channel:
-                raise Exception("Player Board channel not found.")
+                raise UserFeedbackError("Player Board channel not found.")
 
             message = await channel.send(embed=post_embed)
 

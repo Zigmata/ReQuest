@@ -4,9 +4,8 @@ import discord
 import discord.ui
 from discord.ui import Modal
 
-from ReQuest.utilities.supportFunctions import log_exception
+from ReQuest.utilities.supportFunctions import log_exception, UserFeedbackError
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -27,7 +26,7 @@ class ConfirmModal(Modal):
             if self.prompt.value.strip() == 'CONFIRM':
                 await self.confirm_callback(interaction)
             else:
-                raise Exception('Confirmation Failed: Operation cancelled.')
+                raise UserFeedbackError('Confirmation Failed: Operation cancelled.')
         except Exception as e:
             await log_exception(e, interaction)
 

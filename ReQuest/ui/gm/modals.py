@@ -14,10 +14,10 @@ from ReQuest.utilities.supportFunctions import (
     update_character_experience,
     find_currency_or_denomination,
     get_denomination_map,
-    setup_view
+    setup_view,
+    UserFeedbackError
 )
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -96,11 +96,11 @@ class CreateQuestModal(Modal):
 
                 if (party_role_name.lower() in default_forbidden_names or
                         party_role_name.lower() in custom_forbidden_names):
-                    raise Exception('The name provided for the party role is forbidden.')
+                    raise UserFeedbackError('The name provided for the party role is forbidden.')
 
                 for role in guild.roles:
                     if role.name.lower() == party_role_name.lower():
-                        raise Exception('The name provided for the party role already exists on this server!')
+                        raise UserFeedbackError('A role with that name already exists in this server.')
 
                 party_role = await guild.create_role(
                     name=party_role_name,
@@ -119,8 +119,10 @@ class CreateQuestModal(Modal):
 
             # Inform user if quest channel is not set. Otherwise, get the channel string
             if not quest_channel_query:
-                raise Exception('A channel has not yet been designated for quest posts. Contact a server admin to '
-                                'configure the Quest Channel.')
+                raise UserFeedbackError(
+                    'A channel has not yet been designated for quest posts. Contact a server admin to configure the '
+                    'Quest Channel.'
+                )
             else:
                 quest_channel_mention = quest_channel_query['questChannel']
 

@@ -6,7 +6,6 @@ from discord.ui import Modal
 
 from ReQuest.utilities.supportFunctions import log_exception
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 

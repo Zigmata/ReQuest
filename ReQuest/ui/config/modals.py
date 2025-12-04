@@ -10,10 +10,15 @@ import discord
 import discord.ui
 from discord.ui import Modal, Label
 
-from ReQuest.utilities.supportFunctions import log_exception, purge_player_board, setup_view, \
-    find_currency_or_denomination, get_denomination_map
+from ReQuest.utilities.supportFunctions import (
+    log_exception,
+    purge_player_board,
+    setup_view,
+    find_currency_or_denomination,
+    get_denomination_map,
+    UserFeedbackError
+)
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 SHOP_SCHEMA = {
@@ -116,21 +121,27 @@ class AddCurrencyDenominationModal(Modal):
             query = await collection.find_one({'_id': guild_id})
             for currency in query['currencies']:
                 if new_name.lower() == currency['name'].lower():
-                    raise Exception(f'New denomination name cannot match an existing currency on this server! Found '
-                                    f'existing currency named \"{currency['name']}\".')
+                    raise UserFeedbackError(
+                        f'New denomination name cannot match an existing currency on this server! Found existing '
+                        f'currency named \"{currency['name']}\".'
+                    )
                 for denomination in currency['denominations']:
                     if new_name.lower() == denomination['name'].lower():
-                        raise Exception(f'New denomination name cannot match an existing denomination on this server! '
-                                        f'Found existing denomination named \"{denomination['name']}\" under the '
-                                        f'currency named \"{currency['name']}\".')
+                        raise UserFeedbackError(
+                            f'New denomination name cannot match an existing denomination on this server! Found '
+                            f'existing denomination named \"{denomination['name']}\" under the currency named '
+                            f'\"{currency['name']}\".'
+                        )
             base_currency = next((item for item in query['currencies'] if item['name'] == self.base_currency_name),
                                  None)
             if base_currency:
                 for denomination in base_currency['denominations']:
                     if float(self.denomination_value_text_input.value) == denomination['value']:
                         using_name = denomination['name']
-                        raise Exception(f'Denominations under a single currency must have unique values! '
-                                        f'{using_name} already has this value assigned.')
+                        raise UserFeedbackError(
+                            f'Denominations under a single currency must have unique values! {using_name} already has '
+                            f'this value assigned.'
+                        )
 
                 await collection.update_one({'_id': guild_id, 'currencies.name': self.base_currency_name},
                                             {'$push': {'currencies.$.denominations': {
@@ -331,14 +342,16 @@ class ConfigShopDetailsModal(Modal):
                 channel_id = self.existing_channel_id
             else:
                 if not self.shop_channel_select or not self.shop_channel_select.values:
-                    raise Exception('No channel selected for the shop.')
+                    raise UserFeedbackError('No channel selected for the shop.')
                 channel_id = str(self.shop_channel_select.values[0].id)
 
             if not self.existing_channel_id:
                 query = await collection.find_one({'_id': guild_id})
                 if query and channel_id in query.get('shopChannels', {}):
-                    raise Exception('A shop is already registered in the selected channel. '
-                                    'Please choose a different channel or edit the existing shop.')
+                    raise UserFeedbackError(
+                        'A shop is already registered in the selected channel. Please choose a different channel or '
+                        'edit the existing shop.'
+                    )
 
             shop_data = {
                 'shopName': self.shop_name_text_input.value,
@@ -404,15 +417,17 @@ class ConfigShopJSONModal(Modal):
 
             query = await collection.find_one({'_id': guild_id})
             if query and channel_id in query.get('shopChannels', {}):
-                raise Exception('A shop is already registered in the selected channel. '
-                                'Please choose a different channel or edit the existing shop.')
+                raise UserFeedbackError(
+                    'A shop is already registered in the selected channel. Please choose a different channel or edit '
+                    'the existing shop.'
+                )
 
             if not self.shop_json_file_upload.values:
-                raise Exception('No JSON file uploaded for the shop.')
+                raise UserFeedbackError('No JSON file uploaded for the shop.')
 
             uploaded_file = self.shop_json_file_upload.values[0]
             if not uploaded_file.filename.endswith('.json'):
-                raise Exception('Uploaded file must be a JSON file (.json).')
+                raise UserFeedbackError('Uploaded file must be a JSON file (.json).')
 
             file_bytes = await uploaded_file.read()
 
@@ -421,12 +436,12 @@ class ConfigShopJSONModal(Modal):
             try:
                 shop_data = json.loads(file_content)
             except json.JSONDecodeError as jde:
-                raise Exception(f'Invalid JSON format: {str(jde)}')
+                raise UserFeedbackError(f'Invalid JSON format: {str(jde)}')
 
             try:
                 validate(instance=shop_data, schema=SHOP_SCHEMA)
             except jsonschema.exceptions.ValidationError as ve:
-                raise Exception(f'JSON does not conform to schema: {str(ve)}')
+                raise UserFeedbackError(f'JSON does not conform to schema: {str(ve)}')
 
             await collection.update_one(
                 {'_id': guild_id},
@@ -503,11 +518,11 @@ class ShopItemModal(Modal):
 
             quantity_str = self.item_quantity_text_input.value
             if not quantity_str.isdigit() or int(quantity_str) < 1:
-                raise Exception('Item quantity must be a positive integer.')
+                raise UserFeedbackError('Item quantity must be a positive integer.')
 
             price_str = self.item_price_text_input.value
             if not price_str.isdigit() or int(price_str) < 0:
-                raise Exception('Item price must be a non-negative integer.')
+                raise UserFeedbackError('Item price must be a non-negative integer.')
 
             new_item = {
                 'name': self.item_name_text_input.value,
@@ -536,7 +551,7 @@ class ShopItemModal(Modal):
             else:
                 for item in shop_stock:
                     if item.get('name').lower() == new_item['name'].lower():
-                        raise Exception(f'An item named {new_item["name"]} already exists in this shop.')
+                        raise UserFeedbackError(f'An item named {new_item["name"]} already exists in this shop.')
                 shop_data['shopStock'].append(new_item)
 
             await collection.update_one(
@@ -578,11 +593,11 @@ class ConfigUpdateShopJSONModal(Modal):
             channel_id = self.calling_view.selected_channel_id
 
             if not self.shop_json_file_upload.values:
-                raise Exception("No file was uploaded.")
+                raise UserFeedbackError("No file was uploaded.")
 
             uploaded_file = self.shop_json_file_upload.values[0]
             if not uploaded_file.filename.endswith('.json'):
-                raise Exception("File must be a `.json` file.")
+                raise UserFeedbackError("File must be a `.json` file.")
 
             file_bytes = await uploaded_file.read()
             file_content = file_bytes.decode('utf-8')
@@ -590,12 +605,12 @@ class ConfigUpdateShopJSONModal(Modal):
             try:
                 shop_data = json.loads(file_content)
             except json.JSONDecodeError as jde:
-                raise Exception(f'Invalid JSON format: {str(jde)}')
+                raise UserFeedbackError(f'Invalid JSON format: {str(jde)}')
 
             try:
                 validate(instance=shop_data, schema=SHOP_SCHEMA)
             except jsonschema.exceptions.ValidationError as err:
-                raise Exception(f"JSON validation failed: {err.message}")
+                raise UserFeedbackError(f"JSON validation failed: {err.message}")
 
             await collection.update_one(
                 {'_id': guild_id},
@@ -673,19 +688,19 @@ class NewCharacterShopItemModal(Modal):
 
             quantity_string = self.item_quantity_text_input.value
             if not quantity_string.isdigit() or int(quantity_string) < 1:
-                raise Exception('Item quantity must be a positive integer.')
+                raise UserFeedbackError('Item quantity must be a positive integer.')
 
             price_str = self.item_price_text_input.value
             try:
                 price_value = float(price_str)
                 if price_value < 0:
-                    raise Exception('Item price must be a non-negative number.')
+                    raise UserFeedbackError('Item price must be a non-negative number.')
             except ValueError:
-                raise Exception('Item price must be a non-negative number.')
+                raise UserFeedbackError('Item price must be a non-negative number.')
 
             currency_val = self.item_currency_text_input.value.lower()
             if int(price_str) > 0 and not currency_val:
-                raise Exception('Currency is required if price is greater than 0.')
+                raise UserFeedbackError('Currency is required if price is greater than 0.')
 
             new_item = {
                 'name': self.item_name_text_input.value,
@@ -713,7 +728,9 @@ class NewCharacterShopItemModal(Modal):
             else:
                 for item in shop_stock:
                     if item.get('name').lower() == new_item['name'].lower():
-                        raise Exception(f'An item named {new_item["name"]} already exists in the New Character shop.')
+                        raise UserFeedbackError(
+                            f'An item named {new_item["name"]} already exists in the New Character shop.'
+                        )
                 shop_stock.append(new_item)
 
             await collection.update_one(
@@ -751,11 +768,11 @@ class NewCharacterShopJSONModal(Modal):
             collection = interaction.client.gdb['newCharacterShop']
 
             if not self.shop_json_file_upload.values:
-                raise Exception('No JSON file uploaded.')
+                raise UserFeedbackError('No JSON file uploaded.')
 
             uploaded_file = self.shop_json_file_upload.values[0]
             if not uploaded_file.filename.endswith('.json'):
-                raise Exception('Uploaded file must be a JSON file (.json).')
+                raise UserFeedbackError('Uploaded file must be a JSON file (.json).')
 
             file_bytes = await uploaded_file.read()
             file_content = file_bytes.decode('utf-8')
@@ -763,14 +780,14 @@ class NewCharacterShopJSONModal(Modal):
             try:
                 shop_data = json.loads(file_content)
             except json.JSONDecodeError as jde:
-                raise Exception(f'Invalid JSON format: {str(jde)}')
+                raise UserFeedbackError(f'Invalid JSON format: {str(jde)}')
 
             if 'shopStock' not in shop_data or not isinstance(shop_data['shopStock'], list):
-                raise Exception("JSON must contain a 'shopStock' array.")
+                raise UserFeedbackError("JSON must contain a 'shopStock' array.")
 
             for item in shop_data['shopStock']:
                 if 'name' not in item or 'price' not in item:
-                    raise Exception("All items must have 'name' and 'price'.")
+                    raise UserFeedbackError("All items must have 'name' and 'price'.")
 
             await collection.update_one(
                 {'_id': guild_id},
@@ -827,13 +844,14 @@ class ConfigNewCharacterWealthModal(Modal):
                 currency_config = await currency_collection.find_one({'_id': guild_id})
 
                 if not currency_config:
-                    raise Exception('No currencies are configured on this server.')
+                    raise UserFeedbackError('No currencies are configured on this server.')
 
                 is_currency, parent_name = find_currency_or_denomination(currency_config, currency_input)
 
                 if not is_currency:
-                    raise Exception(f'Currency or denomination named {currency_input} not found. Please use a valid '
-                                    f'currency.')
+                    raise UserFeedbackError(
+                        f'Currency or denomination named {currency_input} not found. Please use a valid currency.'
+                    )
 
                 await inventory_config_collection.update_one(
                     {'_id': interaction.guild_id},
@@ -883,8 +901,9 @@ class CreateStaticKitModal(Modal):
             if existing_kits:
                 for kit_data in existing_kits.values():
                     if kit_name.lower() == kit_data['name'].lower():
-                        raise Exception(f'A static kit named "{titlecase(kit_name)}" already exists. Please '
-                                        f'choose a different name.')
+                        raise UserFeedbackError(
+                            f'A static kit named "{titlecase(kit_name)}" already exists. Please choose a different name.'
+                        )
 
             kit_data = {
                 'name': titlecase(kit_name),
@@ -1007,21 +1026,21 @@ class StaticKitCurrencyModal(Modal):
         try:
             currency_input = self.currency_name_text_input.value.strip()
             if not self.amount_text_input.value.replace('.', '', 1).isdigit():
-                raise ValueError("Amount must be a number.")
+                raise UserFeedbackError("Amount must be a number.")
             amount = float(self.amount_text_input.value)
 
             currency_config = await interaction.client.gdb['currency'].find_one({'_id': interaction.guild_id})
             if not currency_config:
-                raise Exception("No currencies configured on server.")
+                raise UserFeedbackError("No currencies configured on server.")
 
             denomination_map, parent_name = get_denomination_map(currency_config, currency_input)
 
             if not denomination_map:
-                raise Exception(f'Currency "{currency_input}" not found.')
+                raise UserFeedbackError(f'Currency "{currency_input}" not found.')
 
             multiplier = denomination_map.get(currency_input.lower())
             if multiplier is None:
-                raise Exception(f'Denomination "{currency_input}" not found in currency configuration.')
+                raise UserFeedbackError(f'Denomination "{currency_input}" not found in currency configuration.')
 
             converted_amount = amount * multiplier
 

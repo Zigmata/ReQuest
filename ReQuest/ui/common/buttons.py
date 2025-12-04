@@ -6,7 +6,6 @@ from discord.ui import Button
 
 from ReQuest.utilities.supportFunctions import log_exception, setup_view
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 

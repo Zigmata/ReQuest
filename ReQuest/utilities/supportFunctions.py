@@ -4,12 +4,20 @@ import logging
 import re
 import traceback
 from typing import Tuple
+
+from discord import app_commands
 from titlecase import titlecase
 
 import discord
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+class UserFeedbackError(Exception):
+    """
+    This is used for errors that should be reported to the user directly but do not need to log a stack trace.
+    """
+    pass
 
 
 # Deletes command invocations
@@ -31,8 +39,6 @@ def strip_id(mention) -> int:
 
 
 async def log_exception(exception, interaction=None):
-    logger.error(f'{type(exception).__name__}: {exception}')
-    logger.error(traceback.format_exc())
     report_string = (
         f'An exception occurred:\n\n'
         f'```{str(exception)}```\n'
@@ -40,11 +46,36 @@ async def log_exception(exception, interaction=None):
         f'in the [Official ReQuest Support Discord](https://discord.gg/Zq37gj4).'
     )
     error_embed = discord.Embed(
-        title='Oops!',
+        title='⚠️ Oops!',
         description=report_string,
         color=discord.Color.red(),
         type='rich'
     )
+
+    if isinstance(exception, app_commands.CommandInvokeError):
+        exception = exception.original
+
+    if isinstance(exception, (UserFeedbackError, app_commands.CheckFailure)):
+        logger.debug(f'User feedback triggered: {exception}\nUser: {interaction.user.id if interaction else "Unknown"}')
+
+        if interaction:
+            try:
+                if not interaction.response.is_done():
+                    await interaction.response.send_message(embed=error_embed, ephemeral=True)
+                else:
+                    await interaction.followup.send(embed=error_embed, ephemeral=True)
+            except discord.errors.InteractionResponded:
+                try:
+                    await interaction.followup.send(embed=error_embed, ephemeral=True)
+                except Exception as e:
+                    logger.error(f'Failed to send followup user feedback message: {e}')
+            except Exception as e:
+                logger.error(f'Failed to handle user feedback in log_exception: {e}')
+        return
+
+
+    logger.error(f'{type(exception).__name__}: {exception}')
+    logger.error(traceback.format_exc())
     if interaction:
         logger.error(f'Logged from guild ID: {interaction.guild_id}, user ID: {interaction.user.id}')
         try:
@@ -145,7 +176,7 @@ async def trade_currency(interaction, gdb, currency_name, amount, sending_member
 
     can_afford, message = check_sufficient_funds(sender_currency, currency_config, currency_name, amount)
     if not can_afford:
-        raise Exception(f"Sender has insufficient funds: {message}")
+        raise UserFeedbackError(f'The transaction cannot be completed:\n{message}')
 
     await update_character_inventory(interaction, sending_member_id, sender_character_id, currency_name, -amount)
     receiver_data = await collection.find_one({'_id': receiving_member_id})
@@ -179,8 +210,10 @@ async def trade_item(mdb, item_name, quantity, sending_member_id, receiving_memb
 
     # Check if sender has enough items
     sender_inventory = {k.lower(): v for k, v in sender_character['attributes']['inventory'].items()}
-    if sender_inventory.get(normalized_item_name, 0) < quantity:
-        raise Exception('Insufficient items')
+    quantity_owned = sender_inventory.get(normalized_item_name, 0)
+    if quantity_owned < quantity:
+        raise UserFeedbackError(f'You have {quantity_owned}x {titlecase(normalized_item_name)} but are trying to give '
+                                f'{quantity}.')
 
     # Perform the trade operation
     sender_inventory[normalized_item_name] -= quantity
@@ -225,7 +258,7 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
         if is_currency:
             denomination_map, _ = get_denomination_map(currency_query, normalized_item_name)
             if not denomination_map:
-                raise Exception(f"Currency {item_name} could not be processed.")
+                raise UserFeedbackError(f"Currency {item_name} could not be processed.")
 
             min_value = min(denomination_map.values())
             if min_value <= 0:
@@ -243,7 +276,7 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
 
             tolerance = 1e-9
             if total_in_lowest_denom < -tolerance:
-                raise Exception(f"Insufficient funds to cover this transaction.")
+                raise UserFeedbackError(f"Insufficient funds to cover this transaction.")
 
             if total_in_lowest_denom < 0:
                 total_in_lowest_denom = 0
@@ -282,7 +315,7 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
             elif quantity > 0:
                 character_inventory[normalized_item_name] = int(quantity)
             elif quantity < 0:
-                raise Exception(f"Insufficient item(s): {titlecase(item_name)}")
+                raise UserFeedbackError(f"Insufficient item(s): {titlecase(item_name)}")
 
             inventory_for_db = {titlecase(k): v for k, v in character_inventory.items()}
 
@@ -467,7 +500,9 @@ def get_denomination_map(currency_config: dict, currency_name: str) -> Tuple[dic
         return None, None  # Not a valid configured currency
 
     parent_currency_config = next(
-        (c for c in currency_config['currencies'] if c['name'].lower() == parent_name.lower()), None)
+        (currency for currency in currency_config['currencies'] if currency['name'].lower() == parent_name.lower()),
+        None
+    )
 
     if not parent_currency_config:
         return None, None  # Config is inconsistent
@@ -533,7 +568,7 @@ def apply_item_change_local(character_data: dict, item_name: str, quantity: int)
     elif quantity > 0:
         inventory[item_name.lower()] = int(quantity)
     elif quantity < 0:
-        raise Exception(f"Insufficient item(s): {titlecase(item_name)}")
+        raise UserFeedbackError(f"Insufficient item(s): {titlecase(item_name)}")
 
     character_data['attributes']['inventory'] = {titlecase(k): v for k, v in inventory.items()}
     return character_data
@@ -544,15 +579,15 @@ def apply_currency_change_local(character_data: dict, currency_config: dict, ite
     is_currency, currency_parent_name = find_currency_or_denomination(currency_config, normalized_item_name)
 
     if not is_currency:
-        raise Exception(f"{item_name} is not a valid currency.")
+        raise UserFeedbackError(f'{item_name} is not a valid currency.')
 
     denomination_map, _ = get_denomination_map(currency_config, normalized_item_name)
     if not denomination_map:
-        raise Exception(f"Currency {item_name} could not be processed.")
+        raise UserFeedbackError(f'Currency {item_name} could not be processed.')
 
     min_value = min(denomination_map.values())
     if min_value <= 0:
-        raise Exception(f"Currency {currency_parent_name} has a non-positive denomination value.")
+        raise Exception(f'Currency {currency_parent_name} has a non-positive denomination value.')
 
     character_currency = normalize_currency_keys(character_data['attributes'].get('currency', {}))
 
@@ -566,7 +601,7 @@ def apply_currency_change_local(character_data: dict, currency_config: dict, ite
 
     tolerance = 1e-9
     if total_in_lowest_denom < -tolerance:
-        raise Exception("Insufficient funds for this transaction.")
+        raise UserFeedbackError('Insufficient funds for this transaction.')
     if total_in_lowest_denom < 0:
         total_in_lowest_denom = 0.0
 
