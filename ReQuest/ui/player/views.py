@@ -1129,7 +1129,10 @@ async def _handle_submission(interaction, character_id, character_name, items, c
 
             await bot.gdb['approvals'].insert_one(submission_data)
 
-            await interaction.response.edit_message(view=CharacterBaseView())
+            # Reset the view to Character Base View
+            new_view = CharacterBaseView()
+            await setup_view(new_view, interaction)
+            await interaction.response.edit_message(view=new_view)
 
             confirmation_embed = discord.Embed(
                 title='Inventory Submission Sent',
