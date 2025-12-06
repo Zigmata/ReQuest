@@ -269,7 +269,7 @@ class SpendCurrencyModal(Modal):
                 raise UserFeedbackError('Amount must be a number.')
 
             if amount <= 0:
-                raise ValueError('You must spend a positive amount.')
+                raise UserFeedbackError('You must spend a positive amount.')
 
             member_id = interaction.user.id
             guild_id = interaction.guild_id

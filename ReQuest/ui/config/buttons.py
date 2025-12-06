@@ -618,6 +618,9 @@ class DownloadShopJSONButton(Button):
             query = await collection.find_one({'_id': guild_id})
             shop_data = query.get('shopChannels', {}).get(channel_id)
 
+            if not shop_data:
+                raise Exception('Shop data not found.')
+
             shop_name = shop_data.get("shopName", "shop")
             file_name = f"{shop_name.replace(' ', '_')}_{channel_id}.json"
 

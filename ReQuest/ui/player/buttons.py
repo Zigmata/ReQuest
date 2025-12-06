@@ -5,10 +5,9 @@ from discord import ButtonStyle
 from discord.ui import Button
 from titlecase import titlecase
 
-from ReQuest.ui.player import modals
 from ReQuest.ui.common import modals as common_modals
-from ReQuest.utilities.supportFunctions import log_exception, setup_view, attempt_delete, UserFeedbackError, \
-    format_currency_display
+from ReQuest.ui.player import modals
+from ReQuest.utilities.supportFunctions import log_exception, setup_view, attempt_delete
 
 logger = logging.getLogger(__name__)
 
