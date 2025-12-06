@@ -7,7 +7,7 @@ def is_owner():
         if await interaction.client.is_owner(interaction.user):
             return True
 
-        raise app_commands.AppCommandError("Only the bot owner can use this command!")
+        raise app_commands.CheckFailure("Only the bot owner can use this command!")
 
     return app_commands.check(predicate)
 
@@ -29,7 +29,7 @@ def has_gm_or_mod():
                     if role.mention in gm_role_mentions:
                         return True
 
-        raise app_commands.AppCommandError("You do not have permissions to run this command!")
+        raise app_commands.CheckFailure("You do not have permissions to run this command!")
 
     return check(predicate)
 
@@ -45,8 +45,8 @@ def has_active_character():
             if str(guild_id) in query['activeCharacters']:
                 return True
             else:
-                raise app_commands.AppCommandError("You do not have an active character on this server!")
+                raise app_commands.CheckFailure("You do not have an active character on this server!")
         else:
-            raise app_commands.AppCommandError("You do not have any registered characters!")
+            raise app_commands.CheckFailure("You do not have any registered characters!")
 
     return check(predicate)

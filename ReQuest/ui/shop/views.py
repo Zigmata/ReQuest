@@ -27,7 +27,6 @@ from ReQuest.utilities.supportFunctions import (
     consolidate_currency_totals
 )
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 

@@ -1,6 +1,7 @@
 import asyncio
 import os
 import signal
+import logging
 from urllib.parse import quote_plus
 
 import aiohttp
@@ -11,6 +12,14 @@ from pymongo import AsyncMongoClient as MongoClient
 
 from ReQuest.ui.gm.views import QuestPostView
 from utilities.supportFunctions import attempt_delete, log_exception
+
+log_level = os.getenv('LOG_LEVEL', 'INFO').upper()
+logging.basicConfig(
+    level=log_level,
+    format='%(asctime)s %(name)s %(levelname)s %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
 
 class ReQuest(commands.Bot):
@@ -26,8 +35,11 @@ class ReQuest(commands.Bot):
         intents.presences = True  # Subscribe to the privileged presences intent.
         intents.message_content = True  # Subscribe to the privileged message content intent.
         allowed_mentions = discord.AllowedMentions(roles=True, everyone=False, users=True)
+        activity = discord.CustomActivity(
+            name=os.getenv('BOT_ACTIVITY', 'Playing by Post')
+        )
         super(ReQuest, self).__init__(
-            activity=discord.Game(name=f'by Post'),
+            activity=activity,
             allowed_mentions=allowed_mentions,
             case_insensitive=True,
             command_prefix='rq!',
@@ -137,7 +149,7 @@ class ReQuest(commands.Bot):
 
     @staticmethod
     async def on_ready():
-        print("ReQuest is online.")
+        logger.info("ReQuest is online.")
 
 
 bot = ReQuest()

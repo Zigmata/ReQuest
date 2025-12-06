@@ -9,7 +9,6 @@ from ReQuest.ui.gm import modals
 from ReQuest.ui.common.enums import RewardType
 from ReQuest.utilities.supportFunctions import log_exception, setup_view, strip_id, attempt_delete
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 

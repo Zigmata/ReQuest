@@ -9,7 +9,6 @@ from ReQuest.ui.admin import modals
 from ReQuest.ui.common import modals as common_modals
 from ReQuest.utilities.supportFunctions import log_exception, setup_view
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 

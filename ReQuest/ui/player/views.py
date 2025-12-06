@@ -3,12 +3,20 @@ import math
 
 import discord
 import shortuuid
-from discord.ui import Container, Section, TextDisplay, Separator, LayoutView, ActionRow, Button
+from discord.ui import (
+    Container,
+    Section,
+    TextDisplay,
+    Separator,
+    LayoutView,
+    ActionRow,
+    Button
+)
 from titlecase import titlecase
 
 from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
-from ReQuest.ui.player import buttons, selects
+from ReQuest.ui.player import buttons
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
@@ -21,10 +29,10 @@ from ReQuest.utilities.supportFunctions import (
     check_sufficient_funds,
     get_denomination_map,
     format_consolidated_totals,
-    get_xp_config
+    get_xp_config,
+    UserFeedbackError
 )
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -219,16 +227,17 @@ class InventoryBaseView(LayoutView):
         super().__init__(timeout=None)
         self.active_character = None
         self.active_character_id = None
+        self.items = []
+        self.currencies = []
         self.spend_currency_button = buttons.SpendCurrencyButton(self)
         self.consume_item_button = buttons.ConsumeItemButton(self)
+        self.print_inventory_button = buttons.PrintInventoryButton(self)
         self.current_inventory_info = TextDisplay(
             'No Inventory Available.'
         )
         self.header_info = TextDisplay(
             '**Player Commands - Inventory**'
         )
-
-        self.build_view()
 
     def build_view(self):
         container = Container()
@@ -253,9 +262,18 @@ class InventoryBaseView(LayoutView):
         ))
         container.add_item(consume_item_section)
 
+        container.add_item(Separator())
+
+        print_inventory_section = Section(accessory=self.print_inventory_button)
+        print_inventory_section.add_item(TextDisplay(
+            'Print your current inventory to the channel.'
+        ))
+        container.add_item(print_inventory_section)
+
         self.add_item(container)
 
     async def setup(self, interaction: discord.Interaction):
+        self.clear_items()
         collection = interaction.client.mdb['characters']
         guild_id = interaction.guild_id
         query = await collection.find_one({'_id': interaction.user.id})
@@ -321,20 +339,31 @@ class InventoryBaseView(LayoutView):
 
             if items:
                 self.consume_item_button.disabled = False
+                self.items = items
             else:
                 self.consume_item_button.disabled = True
+                self.items.clear()
 
             if currencies:
                 self.spend_currency_button.disabled = False
+                self.currencies = currencies
             else:
                 self.spend_currency_button.disabled = True
+                self.currencies.clear()
+
+            if not items and not currencies:
+                self.print_inventory_button.disabled = True
+            else:
+                self.print_inventory_button.disabled = False
 
             self.current_inventory_info.content = (
-                f'**Possessions**\n'
+                f'**Items**\n'
                 f'{('\n'.join(items) or 'None')}\n\n'
                 f'**Currency**\n'
                 f'{('\n'.join(currencies) or 'None')}'
             )
+
+        self.build_view()
 
 
 class PlayerBoardView(LayoutView):
@@ -476,7 +505,7 @@ class PlayerBoardView(LayoutView):
 
             channel = interaction.client.get_channel(self.player_board_channel_id)
             if not channel:
-                raise Exception("Player Board channel not found.")
+                raise UserFeedbackError("Player Board channel not found.")
 
             message = await channel.send(embed=post_embed)
 
@@ -1100,7 +1129,10 @@ async def _handle_submission(interaction, character_id, character_name, items, c
 
             await bot.gdb['approvals'].insert_one(submission_data)
 
-            await interaction.response.edit_message(view=CharacterBaseView())
+            # Reset the view to Character Base View
+            new_view = CharacterBaseView()
+            await setup_view(new_view, interaction)
+            await interaction.response.edit_message(view=new_view)
 
             confirmation_embed = discord.Embed(
                 title='Inventory Submission Sent',
@@ -1138,7 +1170,9 @@ async def _handle_submission(interaction, character_id, character_name, items, c
 
             report_embed.set_footer(text=f'Transaction ID: {shortuuid.uuid()[:12]}')
 
-            await interaction.response.edit_message(view=CharacterBaseView())
+            view = CharacterBaseView()
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
             await interaction.followup.send(embed=report_embed, ephemeral=True)
 
     except Exception as e:

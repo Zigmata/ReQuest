@@ -5,11 +5,10 @@ from discord import ButtonStyle
 from discord.ui import Button
 from titlecase import titlecase
 
-from ReQuest.ui.player import modals
 from ReQuest.ui.common import modals as common_modals
+from ReQuest.ui.player import modals
 from ReQuest.utilities.supportFunctions import log_exception, setup_view, attempt_delete
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -467,5 +466,29 @@ class KitBackButton(Button):
             )
             await setup_view(view, interaction)
             await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+class PrintInventoryButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Print Inventory',
+            style=ButtonStyle.secondary,
+            custom_id='print_inventory_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            character_name = self.calling_view.active_character['name']
+            items = self.calling_view.items
+            currencies = self.calling_view.currencies
+            inventory_embed = discord.Embed(
+                title=f"{character_name}'s Inventory",
+                color=discord.Color.blue()
+            )
+            inventory_embed.add_field(name='Items', value='\n'.join(items) or 'None', inline=False)
+            inventory_embed.add_field(name='Currencies', value='\n'.join(currencies) or 'None', inline=False)
+            await interaction.response.send_message(embed=inventory_embed)
         except Exception as e:
             await log_exception(e, interaction)

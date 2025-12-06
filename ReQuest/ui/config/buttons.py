@@ -11,7 +11,6 @@ from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.common.buttons import BaseViewButton
 from ReQuest.utilities.supportFunctions import log_exception, setup_view
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -322,8 +321,8 @@ class ClearChannelButton(Button):
                 await interaction.client.gdb['archiveChannel'].delete_one({'_id': interaction.guild_id})
             elif self.channel_type == enums.ChannelType.GM_TRANSACTION_LOG:
                 await interaction.client.gdb['gmTransactionLogChannel'].delete_one({'_id': interaction.guild_id})
-            elif self.channel_type == enums.ChannelType.PLAYER_TRADING_LOG:
-                await interaction.client.gdb['playerTradingLogChannel'].delete_one({'_id': interaction.guild_id})
+            elif self.channel_type == enums.ChannelType.PLAYER_TRANSACTION_LOG:
+                await interaction.client.gdb['playerTransactionLogChannel'].delete_one({'_id': interaction.guild_id})
             elif self.channel_type == enums.ChannelType.SHOP_LOG:
                 await interaction.client.gdb['shopLogChannel'].delete_one({'_id': interaction.guild_id})
             elif self.channel_type == enums.ChannelType.APPROVAL_QUEUE:
@@ -481,9 +480,6 @@ class RemoveShopButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            if not self.calling_view.selected_channel_id:
-                raise Exception('No shop selected')
-
             confirm_modal = common_modals.ConfirmModal(
                 title='Confirm Shop Removal',
                 prompt_label='WARNING: This action is irreversible!',
@@ -497,8 +493,6 @@ class RemoveShopButton(Button):
     async def _confirm_delete(self, interaction: discord.Interaction):
         try:
             view = self.calling_view
-            if not view.selected_channel_id:
-                raise Exception('No shop was selected for removal')
 
             guild_id = interaction.guild_id
             collection = interaction.client.gdb['shops']
@@ -619,15 +613,13 @@ class DownloadShopJSONButton(Button):
         try:
             guild_id = interaction.guild_id
             channel_id = self.calling_view.selected_channel_id
-            if not channel_id:
-                raise Exception("No shop selected.")
 
             collection = interaction.client.gdb['shops']
             query = await collection.find_one({'_id': guild_id})
             shop_data = query.get('shopChannels', {}).get(channel_id)
 
             if not shop_data:
-                raise Exception("Could not find shop data.")
+                raise Exception('Shop data not found.')
 
             shop_name = shop_data.get("shopName", "shop")
             file_name = f"{shop_name.replace(' ', '_')}_{channel_id}.json"
@@ -658,9 +650,6 @@ class UpdateShopJSONButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            if not self.calling_view.selected_channel_id:
-                raise Exception("No shop selected.")
-
             await interaction.response.send_modal(
                 modals.ConfigUpdateShopJSONModal(self.calling_view)
             )
