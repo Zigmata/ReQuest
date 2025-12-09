@@ -91,7 +91,7 @@ class ReQuest(commands.Bot):
                 print('{}: {}'.format(type(e).__name__, e))
 
         # If the white list is enabled, load it async in the background
-        if os.getenv('ALLOWLIST'):
+        if os.getenv('ALLOWLIST', 'false').lower() == 'true':
             self.allow_list_enabled = True
             await asyncio.create_task(self.load_allow_list())
 
