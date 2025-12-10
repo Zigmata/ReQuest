@@ -150,6 +150,7 @@ services:
       MONGO_PORT: 27017
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      REDIS_PASSWORD: # your redis password, if needed
       BOT_TOKEN: # insert your bot's token here
       GUILD_DB: guilds
       MEMBER_DB: members
