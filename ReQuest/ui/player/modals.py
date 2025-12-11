@@ -99,7 +99,7 @@ class TradeModal(Modal):
                                       inline=False)
             else:
                 quantity = int(quantity)
-                await trade_item(mdb, item_name, quantity, member_id, target_id, guild_id)
+                await trade_item(interaction.client, item_name, quantity, member_id, target_id, guild_id)
                 trade_embed.add_field(name='Item', value=titlecase(item_name))
                 trade_embed.add_field(name='Quantity', value=quantity)
 

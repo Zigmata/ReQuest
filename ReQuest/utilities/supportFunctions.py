@@ -3,6 +3,7 @@ import inspect
 import logging
 import re
 import traceback
+import json
 from typing import Tuple
 
 from discord import app_commands
@@ -20,8 +21,122 @@ class UserFeedbackError(Exception):
     pass
 
 
-# Deletes command invocations
-async def attempt_delete(message):
+def build_cache_key(database_name, identifier, collection_name):
+    return f'{database_name}:{identifier}:{collection_name}'
+
+
+async def get_cached_data(bot, mongo_database, collection_name, query, cache_id=None):
+    """
+    Fetches a document from mongodb using redis caching.
+
+    :param bot: the discord bot instance
+    :param mongo_database: the mongodb database instance
+    :param collection_name: the mongodb collection name
+    :param query: mongodb dict query
+    :param cache_id: optional identifier for redis caching; if not provided, uses the '_id' from the query
+    """
+    if cache_id is None:
+        if '_id' in query:
+            cache_id = query['_id']
+        else:
+            raise ValueError('cache_id must be provided if "_id" is not in the query.')
+
+    cache_key = build_cache_key(mongo_database.name, cache_id, collection_name)
+
+    try:
+        cached = await bot.rdb.get(cache_key)
+        if cached:
+            return json.loads(cached)
+    except Exception as e:
+        logger.error(f"Redis read failed: {e}")
+
+    try:
+        data = await mongo_database[collection_name].find_one(query)
+
+        if data:
+            try:
+                await bot.rdb.set(cache_key, json.dumps(data, default=str), ex=3600)
+            except Exception as e:
+                logger.error(f"Redis write failed: {e}")
+        return data
+    except Exception as e:
+        await log_exception(e)
+        return None
+
+
+async def update_cached_data(bot, mongo_database, collection_name, query, update_data, cache_id=None):
+    """
+    Updates mongodb and deletes the corresponding key from redis
+
+    :param bot: the discord bot instance
+    :param mongo_database: the mongodb database instance
+    :param collection_name: the mongodb collection name
+    :param query: mongodb dict query
+    :param update_data: the update dict for mongo
+    :param cache_id: identifier for redis; if not provided, uses the '_id' from the query
+    """
+    if cache_id is None:
+        if '_id' in query:
+            cache_id = query['_id']
+        else:
+            raise ValueError('cache_id must be provided if "_id" is not in the query.')
+
+    cache_key = build_cache_key(mongo_database.name, cache_id, collection_name)
+
+    try:
+        mongo_collection = mongo_database[collection_name]
+        await mongo_collection.update_one(
+            query,
+            update_data,
+            upsert=True
+        )
+    except Exception as e:
+        raise Exception(f'Error updating config in database: {e}') from e
+
+    try:
+        await bot.rdb.delete(cache_key)
+    except Exception as e:
+        logger.error(f"Redis delete failed: {e}")
+
+
+async def delete_cached_data(bot, mongo_database, collection_name, search_filter, is_single: bool, cache_id=None):
+    """
+    Deletes documents from mongodb and deletes the corresponding keys from redis
+
+    :param bot: the discord bot instance
+    :param mongo_database: the mongodb database instance
+    :param collection_name: the mongodb collection name
+    :param search_filter: dict for the delete filter
+    :param is_single: whether to delete a single document or multiple
+    :param cache_id: identifier for redis; if not provided, uses the '_id' from the query
+    """
+    if cache_id is None:
+        if '_id' in search_filter:
+            cache_id = search_filter['_id']
+        else:
+            raise ValueError('cache_id must be provided if "_id" is not in the query.')
+
+    cache_key = build_cache_key(mongo_database.name, cache_id, collection_name)
+
+    try:
+        mongo_collection = mongo_database[collection_name]
+        if is_single:
+            await mongo_collection.delete_one(search_filter)
+        else:
+            await mongo_collection.delete_many(search_filter)
+    except Exception as e:
+        raise Exception(f'Error deleting config in database: {e}') from e
+
+    try:
+        await bot.rdb.delete(cache_key)
+    except Exception as e:
+        logger.error(f"Redis delete failed: {e}")
+
+
+async def attempt_delete(message: discord.Message):
+    """
+    Attempts to delete a message
+    """
     try:
         await message.delete()
     except discord.HTTPException as e:
@@ -32,13 +147,23 @@ async def attempt_delete(message):
         logger.info('An unexpected error occurred while trying to delete the message.')
 
 
-def strip_id(mention) -> int:
+def strip_id(mention: str) -> int:
+    """
+    Strips a mention string to extract the ID as an integer.
+
+    :param mention: The mention string (e.g., '<@!123456789012345678>')
+
+    :return: The extracted ID as an integer
+    """
     stripped_mention = re.sub(r'[<>#!@&]', '', mention)
     parsed_id = int(stripped_mention)
     return parsed_id
 
 
 async def log_exception(exception, interaction=None):
+    """
+    Logs an exception and sends a user-friendly message if interaction is provided.
+    """
     report_string = (
         f'An exception occurred:\n\n'
         f'```{str(exception)}```\n'
@@ -93,7 +218,17 @@ async def log_exception(exception, interaction=None):
             logger.error(f'Failed to handle exception in log_exception: {e}')
 
 
-def find_currency_or_denomination(currency_def_query, search_name):
+def find_currency_or_denomination(currency_def_query, search_name) -> Tuple[str | None, str | None]:
+    """
+    Finds a currency or denomination by name in the currency definition.
+
+    :param currency_def_query: The server's currency definition dict
+    :param search_name: The name of the currency or denomination to search for
+
+    :return: A tuple containing:
+                - The found currency or denomination name, or None if not found
+                - The parent currency name, or None if not found
+    """
     if not currency_def_query:
         return None, None
     search_name = search_name.lower()
@@ -115,6 +250,11 @@ def format_currency_display(player_currency: dict, currency_config: dict) -> lis
     """
     Formats currency into a list of strings based on the server's currency configuration
     (double vs integer).
+
+    :param player_currency: The player's currency dict
+    :param currency_config: The server's currency config dict
+
+    :return: A list of formatted currency strings
     """
     if not player_currency or not currency_config or 'currencies' not in currency_config:
         return []
@@ -163,11 +303,23 @@ def format_currency_display(player_currency: dict, currency_config: dict) -> lis
 
 async def trade_currency(interaction, gdb, currency_name, amount, sending_member_id, receiving_member_id,
                          guild_id):
+    bot = interaction.client
     currency_name = currency_name.lower()
-    collection = interaction.client.mdb['characters']
-    sender_data = await collection.find_one({'_id': sending_member_id})
+    sender_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': sending_member_id}
+    )
+    receiver_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': receiving_member_id}
+    )
     sender_character_id = sender_data['activeCharacters'][str(guild_id)]
     sender_currency = sender_data['characters'][sender_character_id]['attributes'].get('currency', {})
+    receiver_character_id = receiver_data['activeCharacters'][str(guild_id)]
 
     currency_collection = gdb['currency']
     currency_config = await currency_collection.find_one({'_id': guild_id})
@@ -179,32 +331,47 @@ async def trade_currency(interaction, gdb, currency_name, amount, sending_member
         raise UserFeedbackError(f'The transaction cannot be completed:\n{message}')
 
     await update_character_inventory(interaction, sending_member_id, sender_character_id, currency_name, -amount)
-    receiver_data = await collection.find_one({'_id': receiving_member_id})
-    receiver_character_id = receiver_data['activeCharacters'][str(guild_id)]
     await update_character_inventory(interaction, receiving_member_id, receiver_character_id, currency_name, amount)
 
-    sender_data = await collection.find_one({'_id': sending_member_id})
-    sender_currency_db = sender_data['characters'][sender_character_id]['attributes'].get('currency', {})
+    updated_sender_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': sending_member_id}
+    )
+    updated_receiver_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': receiving_member_id}
+    )
+    updated_sender_currency = updated_sender_data['characters'][sender_character_id]['attributes'].get('currency')
+    updated_receiver_currency = updated_receiver_data['characters'][receiver_character_id]['attributes'].get('currency')
 
-    receiver_data = await collection.find_one({'_id': receiving_member_id})
-    receiver_currency_db = receiver_data['characters'][receiver_character_id]['attributes'].get('currency', {})
-
-    return sender_currency_db, receiver_currency_db
+    return updated_sender_currency, updated_receiver_currency
 
 
-async def trade_item(mdb, item_name, quantity, sending_member_id, receiving_member_id, guild_id):
-    collection = mdb['characters']
-
+async def trade_item(bot, item_name, quantity, sending_member_id, receiving_member_id, guild_id):
     # Normalize the item name for consistent storage and comparison
     normalized_item_name = item_name.lower()
 
     # Fetch sending character
-    sender_data = await collection.find_one({'_id': sending_member_id})
+    sender_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': sending_member_id}
+    )
     sender_character_id = sender_data['activeCharacters'][str(guild_id)]
     sender_character = sender_data['characters'][sender_character_id]
 
     # Fetch receiving character
-    receiver_data = await collection.find_one({'_id': receiving_member_id})
+    receiver_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': receiving_member_id}
+    )
     receiver_character_id = receiver_data['activeCharacters'][str(guild_id)]
     receiver_character = receiver_data['characters'][receiver_character_id]
 
@@ -227,25 +394,37 @@ async def trade_item(mdb, item_name, quantity, sending_member_id, receiving_memb
     sender_character['attributes']['inventory'] = {titlecase(k): v for k, v in sender_inventory.items()}
     receiver_character['attributes']['inventory'] = {titlecase(k): v for k, v in receiver_inventory.items()}
 
-    await collection.update_one(
-        {'_id': sending_member_id, f'characters.{sender_character_id}.attributes.inventory': {'$exists': True}},
-        {'$set': {
-            f'characters.{sender_character_id}.attributes.inventory': sender_character['attributes']['inventory']}}
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': sending_member_id, f'characters.{sender_character_id}.attributes.inventory': {'$exists': True}},
+        update_data={'$set': {f'characters.{sender_character_id}.attributes.inventory':
+                              sender_character['attributes']['inventory']}}
     )
-    await collection.update_one(
-        {'_id': receiving_member_id, f'characters.{receiver_character_id}.attributes.inventory': {'$exists': True}},
-        {'$set': {
-            f'characters.{receiver_character_id}.attributes.inventory': receiver_character['attributes']['inventory']}}
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': receiving_member_id,
+               f'characters.{receiver_character_id}.attributes.inventory': {'$exists': True}},
+        update_data={'$set': {f'characters.{receiver_character_id}.attributes.inventory':
+                              receiver_character['attributes']['inventory']}}
     )
 
 
 async def update_character_inventory(interaction: discord.Interaction, player_id: int, character_id: str,
                                      item_name: str, quantity: float):
     try:
+        bot = interaction.client
         normalized_item_name = item_name.lower()
 
-        character_collection = interaction.client.mdb['characters']
-        player_data = await character_collection.find_one({'_id': player_id})
+        player_data = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.mdb,
+            collection_name='characters',
+            query={'_id': player_id}
+        )
         character_data = player_data['characters'].get(character_id)
 
         currency_collection = interaction.client.gdb['currency']
@@ -299,11 +478,13 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
 
             character_currency_db = {titlecase(k): v for k, v in final_wallet.items() if v > 0}
 
-            await character_collection.update_one(
-                {'_id': player_id},
-                {'$set': {f'characters.{character_id}.attributes.currency': character_currency_db}}
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.mdb,
+                collection_name='characters',
+                query={'_id': player_id},
+                update_data={'$set': {f'characters.{character_id}.attributes.currency': character_currency_db}}
             )
-
         else:
             character_inventory = normalize_currency_keys(character_data['attributes'].get('inventory', {}))
             found_key = normalized_item_name
@@ -319,9 +500,12 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
 
             inventory_for_db = {titlecase(k): v for k, v in character_inventory.items()}
 
-            await character_collection.update_one(
-                {'_id': player_id},
-                {'$set': {f'characters.{character_id}.attributes.inventory': inventory_for_db}}
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.mdb,
+                collection_name='characters',
+                query={'_id': player_id},
+                update_data={'$set': {f'characters.{character_id}.attributes.inventory': inventory_for_db}}
             )
     except Exception as e:
         await log_exception(e, interaction)
@@ -329,32 +513,53 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
 
 async def update_character_experience(interaction: discord.Interaction, player_id: int, character_id: str,
                                       amount: int):
+    bot = interaction.client
     try:
-        character_collection = interaction.client.mdb['characters']
-        player_data = await character_collection.find_one({'_id': player_id})
+        player_data = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.mdb,
+            collection_name='characters',
+            query={'_id': player_id}
+        )
         character_data = player_data['characters'].get(character_id)
         if character_data['attributes']['experience']:
             character_data['attributes']['experience'] += amount
         else:
             character_data['attributes']['experience'] = amount
-        await character_collection.update_one(
-            {'_id': player_id},
-            {'$set': {f'characters.{character_id}': character_data}}
+
+        await update_cached_data(
+            bot=bot,
+            mongo_database=bot.mdb,
+            collection_name='characters',
+            query={'_id': player_id},
+            update_data={'$set': {f'characters.{character_id}': character_data}}
         )
     except Exception as e:
         await log_exception(e, interaction)
 
 
-async def update_quest_embed(quest) -> discord.Embed | None:
+async def update_quest_embed(quest: dict) -> discord.Embed | None:
+    """
+    Updates a quest embed based on the current quest data.
+
+    :param quest: The quest data dictionary
+
+    :return: Updated discord.Embed object
+    """
     try:
         embed = discord.Embed()
+
         # Initialize all the current quest values
-        (guild_id, quest_id, title, description, max_party_size, restrictions, gm, party, wait_list,
-         max_wait_list_size, lock_state, rewards) = (quest['guildId'], quest['questId'], quest['title'],
-                                                     quest['description'], quest['maxPartySize'],
-                                                     quest['restrictions'], quest['gm'], quest['party'],
-                                                     quest['waitList'], quest['maxWaitListSize'],
-                                                     quest['lockState'], quest['rewards'])
+        quest_id = quest['questId']
+        title = quest['title']
+        description = quest['description']
+        max_party_size = quest['maxPartySize']
+        restrictions = quest['restrictions']
+        gm = quest['gm']
+        party = quest['party']
+        wait_list = quest['waitList']
+        max_wait_list_size = quest['maxWaitListSize']
+        lock_state = quest['lockState']
 
         # Format the main embed body
         if restrictions:
@@ -433,20 +638,32 @@ def find_member_and_character_id_in_lists(lists, selected_member_id):
     return None, None
 
 
-async def purge_player_board(age, interaction):
+async def purge_player_board(age, interaction: discord.Interaction):
+    """
+    Purges player board posts and database records older than the specified age in days.
+
+    :param age: Age in days to purge
+    :param interaction: The Discord interaction context
+    """
+    bot = interaction.client
     try:
         # Get the current datetime and calculate the cutoff date
         current_datetime = datetime.datetime.now(datetime.UTC)
         cutoff_date = current_datetime - datetime.timedelta(days=age)
 
         # Delete all records in the db matching this guild that are older than the cutoff
-        player_board_collection = interaction.client.gdb['playerBoard']
-        await player_board_collection.delete_many({'guildId': interaction.guild_id,
-                                                  'timestamp': {'$lt': cutoff_date}})
+        await delete_cached_data(bot=bot, mongo_database=bot.gdb, collection_name='playerBoard',
+                                 search_filter={'guildId': interaction.guild_id,
+                                                'timestamp': {'$lt': cutoff_date}}, is_single=False,
+                                 cache_id=interaction.guild_id)
 
         # Get the channel object and purge all messages older than the cutoff
-        config_collection = interaction.client.gdb['playerBoardChannel']
-        config_query = await config_collection.find_one({'_id': interaction.guild_id})
+        config_query = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name='playerBoardChannel',
+            query={'_id': interaction.guild_id}
+        )
         channel_id = strip_id(config_query['playerBoardChannel'])
         channel = interaction.guild.get_channel(channel_id)
         await channel.purge(before=cutoff_date)
@@ -458,21 +675,10 @@ async def purge_player_board(age, interaction):
         await log_exception(e, interaction)
 
 
-async def query_config(config_type, bot, guild):
-    try:
-        collection = bot.gdb[config_type]
-
-        query = await collection.find_one({'_id': guild.id})
-        logger.debug(f'{config_type} query: {query}')
-        if not query:
-            return 'Not Configured'
-        else:
-            return query[config_type]
-    except Exception as e:
-        await log_exception(e)
-
-
-async def setup_view(view, interaction):
+async def setup_view(view, interaction: discord.Interaction):
+    """
+    Dynamically sets up a view by inspecting its setup method for required parameters.
+    """
     setup_function = view.setup
     sig = inspect.signature(setup_function)
     params = sig.parameters
@@ -491,13 +697,23 @@ async def setup_view(view, interaction):
 
 
 def get_denomination_map(currency_config: dict, currency_name: str) -> Tuple[dict | None, str | None]:
+    """
+    Retrieves a mapping of denomination names to their values for a given currency.
+
+    :param currency_config: The server's currency config dict
+    :param currency_name: The name of the currency or denomination to look up
+
+    :return: A tuple containing:
+             - A dict mapping denomination names (lowercase) to their float values, or None if not found
+             - The parent currency name, or None if not found
+    """
     if not currency_config or 'currencies' not in currency_config:
         return None, None
 
     _denom_name, parent_name = find_currency_or_denomination(currency_config, currency_name)
 
     if not parent_name:
-        return None, None  # Not a valid configured currency
+        return None, None
 
     parent_currency_config = next(
         (currency for currency in currency_config['currencies'] if currency['name'].lower() == parent_name.lower()),
@@ -516,6 +732,18 @@ def get_denomination_map(currency_config: dict, currency_name: str) -> Tuple[dic
 
 def check_sufficient_funds(player_currency: dict, currency_config: dict, cost_currency_name: str,
                            cost_amount: float) -> Tuple[bool, str]:
+    """
+    Verifies that a player has funds to cover the attempted transaction.
+
+    :param player_currency: The player's currency dict
+    :param currency_config: The server's currency config dict
+    :param cost_currency_name: The name of the currency or denomination that is being used
+    :param cost_amount: The amount of the currency or denomination that is being used
+
+    :return: A tuple containing:
+             - A boolean indicating if the player has sufficient funds
+             - A message string indicating success or the reason for failure
+    """
     try:
         if cost_amount <= 0:
             return True, "OK"
@@ -548,7 +776,6 @@ def check_sufficient_funds(player_currency: dict, currency_config: dict, cost_cu
             return False, "Insufficient funds."
 
         return True, "OK"
-
     except Exception as e:
         logger.error(f"Error in check_sufficient_funds: {e}")
         logger.error(traceback.format_exc())
@@ -556,6 +783,15 @@ def check_sufficient_funds(player_currency: dict, currency_config: dict, cost_cu
 
 
 def apply_item_change_local(character_data: dict, item_name: str, quantity: int) -> dict:
+    """
+    Applies an item change to a character's inventory dict.
+
+    :param character_data: The character's data dictionary
+    :param item_name: The name of the item to add or remove
+    :param quantity: The quantity to add (positive) or remove (negative)
+
+    :return: The updated character data dictionary
+    """
     inventory = normalize_currency_keys(character_data['attributes'].get('inventory', {}))
     item_name_lower = item_name.lower()
 
@@ -575,6 +811,16 @@ def apply_item_change_local(character_data: dict, item_name: str, quantity: int)
 
 
 def apply_currency_change_local(character_data: dict, currency_config: dict, item_name: str, quantity: float) -> dict:
+    """
+    Applies a currency change to a character's currency dict.
+
+    :param character_data: The character's data dictionary
+    :param currency_config: The server's currency config dict
+    :param item_name: The name of the currency or denomination to add or remove
+    :param quantity: The amount to add (positive) or remove (negative)
+
+    :return: The updated character data dictionary
+    """
     normalized_item_name = item_name.lower()
     is_currency, currency_parent_name = find_currency_or_denomination(currency_config, normalized_item_name)
 
@@ -623,6 +869,7 @@ def apply_currency_change_local(character_data: dict, currency_config: dict, ite
     character_data['attributes']['currency'] = {titlecase(k): v for k, v in final_wallet.items() if v > 0}
     return character_data
 
+
 def get_base_currency_info(currency_config: dict, currency_name: str):
     """
     Returns base currency info for a given currency name.
@@ -652,7 +899,17 @@ def get_base_currency_info(currency_config: dict, currency_name: str):
 
     return base_name, multiplier, is_double
 
+
 def consolidate_currency_totals(raw_totals: dict, currency_config: dict) -> dict:
+    """
+    Consolidates raw currency totals into base currencies, or in other words, makes change so that a given currency
+    is represented by the fewest amount of coins/denominations.
+
+    :param raw_totals: A dict mapping currency/denomination names to their total amounts
+    :param currency_config: The server's currency config dict
+
+    :return: A dict mapping base currency names to their consolidated total amounts
+    """
     if not currency_config:
         return raw_totals
 
@@ -670,7 +927,16 @@ def consolidate_currency_totals(raw_totals: dict, currency_config: dict) -> dict
 
     return consolidated
 
+
 def format_consolidated_totals(base_totals: dict, currency_config: dict) -> list[str]:
+    """
+    Formats consolidated currency totals into a list of strings for display.
+
+    :param base_totals: A dict mapping base currency names to their total amounts
+    :param currency_config: The server's currency config dict
+
+    :return: A list of formatted currency total strings
+    """
     output = []
 
     for base_name, total_value in base_totals.items():
@@ -716,9 +982,16 @@ def format_consolidated_totals(base_totals: dict, currency_config: dict) -> list
 
     return output
 
-def format_price_string(amount, currency_name, currency_config):
+
+def format_price_string(amount, currency_name, currency_config) -> str:
     """
     Formats a single price/cost string.
+
+    :param amount: The amount of currency
+    :param currency_name: The name of the currency
+    :param currency_config: The server's currency config dict
+
+    :return: A formatted price string
     """
     base_name, _, is_double = get_base_currency_info(currency_config, currency_name)
 
@@ -732,12 +1005,23 @@ def format_price_string(amount, currency_name, currency_config):
         else:
             return f"{amount:.2f} {display_name}"
 
-async def get_xp_config(gdb, guild_id):
+
+async def get_xp_config(bot, guild) -> bool:
     """
     Retrieves the XP configuration for a guild.
+
+    :param bot: The Discord bot instance
+    :param guild: The Discord guild object
+
+    :return: True if XP is enabled, False if XP is disabled
     """
     try:
-        query = await gdb['playerExperience'].find_one({'_id': guild_id})
+        query = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name='playerExperience',
+            query={'_id': guild.id}
+        )
         if query is None:
             return True  # Default to XP enabled if no config found
         return query.get('playerExperience', True)
