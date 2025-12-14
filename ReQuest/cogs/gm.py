@@ -5,7 +5,12 @@ from discord.ext.commands import Cog
 
 from ReQuest.ui.gm import views, modals
 from ReQuest.utilities.checks import has_gm_or_mod
-from ReQuest.utilities.supportFunctions import log_exception, get_xp_config, UserFeedbackError
+from ReQuest.utilities.supportFunctions import (
+    log_exception,
+    get_cached_data,
+    get_xp_config,
+    UserFeedbackError
+)
 
 
 class GameMaster(Cog):
@@ -47,9 +52,14 @@ class GameMaster(Cog):
         Add or remove items or experience from a player.
         """
         try:
+            bot = interaction.client
             guild_id = str(interaction.guild_id)
-            character_collection = interaction.client.mdb['characters']
-            player_query = await character_collection.find_one({'_id': member.id})
+            player_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.mdb,
+                collection_name='characters',
+                query={'_id': member.id}
+            )
             if not player_query:
                 raise UserFeedbackError('The target player does not have any registered characters.')
 
@@ -71,9 +81,14 @@ class GameMaster(Cog):
         View a player's active character.
         """
         try:
+            bot = interaction.client
             guild_id = str(interaction.guild_id)
-            character_collection = interaction.client.mdb['characters']
-            player_query = await character_collection.find_one({'_id': member.id})
+            player_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.mdb,
+                collection_name='characters',
+                query={'_id': member.id}
+            )
             if not player_query:
                 raise UserFeedbackError('The target player does not have any registered characters.')
 
@@ -83,7 +98,12 @@ class GameMaster(Cog):
             active_character_id = player_query['activeCharacters'][guild_id]
             character_data = player_query['characters'][active_character_id]
 
-            currency_config = await interaction.client.gdb['currency'].find_one({'_id': interaction.guild_id})
+            currency_config = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='currency',
+                query={'_id': interaction.guild_id}
+            )
             xp_enabled = await get_xp_config(interaction.client.gdb, interaction.guild_id)
             view = views.ViewCharacterView(member.id, character_data, currency_config, xp_enabled)
             await interaction.response.send_message(view=view, ephemeral=True)

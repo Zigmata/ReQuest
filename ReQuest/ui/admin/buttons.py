@@ -7,7 +7,7 @@ from discord.ui import Button
 
 from ReQuest.ui.admin import modals
 from ReQuest.ui.common import modals as common_modals
-from ReQuest.utilities.supportFunctions import log_exception, setup_view
+from ReQuest.utilities.supportFunctions import log_exception, setup_view, update_cached_data
 
 logger = logging.getLogger(__name__)
 
@@ -113,15 +113,16 @@ class PrintGuildsButton(Button):
         try:
             guilds = interaction.client.guilds
             guild_list = [f'{guild.name} (ID: {guild.id})' for guild in guilds]
-            guilds_message = 'Connected Guilds:\n' + '\n'.join(guild_list)
+            guilds_message = f'Connected to ({len(guilds)}) guilds:\n' + '\n'.join(guild_list)
             file_name = f'guilds_list.txt'
             guilds_file = discord.File(fp=io.BytesIO(guilds_message.encode()), filename=file_name)
             await interaction.response.send_message(
-                f'Connected Guilds:',
+                f'Connected to {len(guilds)} guilds:',
                 file=guilds_file,
                 ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)
+
 
 class RemoveServerButton(Button):
     def __init__(self, calling_view, guild_id, server_name):
@@ -148,10 +149,14 @@ class RemoveServerButton(Button):
 
     async def _confirm_delete(self, interaction: discord.Interaction):
         try:
-            collection = interaction.client.cdb['serverAllowlist']
-            await collection.update_one(
-                {'servers': {'$exists': True}},
-                {'$pull': {'servers': {'id': self.guild_id}}}
+            bot = interaction.client
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.cdb,
+                collection_name='serverAllowlist',
+                query={'servers': {'$exists': True}},
+                update_data={'$pull': {'servers': {'id': self.guild_id}}},
+                cache_id=self.guild_id
             )
 
             if self.guild_id in interaction.client.allow_list:

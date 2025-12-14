@@ -4,7 +4,7 @@ import logging
 import re
 import traceback
 import json
-from typing import Tuple
+from typing import Tuple, Union
 
 from discord import app_commands
 from titlecase import titlecase
@@ -25,7 +25,7 @@ def build_cache_key(database_name, identifier, collection_name):
     return f'{database_name}:{identifier}:{collection_name}'
 
 
-async def get_cached_data(bot, mongo_database, collection_name, query, cache_id=None):
+async def get_cached_data(bot, mongo_database, collection_name, query, is_single=True, cache_id=None):
     """
     Fetches a document from mongodb using redis caching.
 
@@ -33,7 +33,10 @@ async def get_cached_data(bot, mongo_database, collection_name, query, cache_id=
     :param mongo_database: the mongodb database instance
     :param collection_name: the mongodb collection name
     :param query: mongodb dict query
+    :param is_single: whether to fetch a single document or return a list of documents
     :param cache_id: optional identifier for redis caching; if not provided, uses the '_id' from the query
+
+    :return: the fetched document(s) or None if not found
     """
     if cache_id is None:
         if '_id' in query:
@@ -51,20 +54,32 @@ async def get_cached_data(bot, mongo_database, collection_name, query, cache_id=
         logger.error(f"Redis read failed: {e}")
 
     try:
-        data = await mongo_database[collection_name].find_one(query)
+        if is_single:
+            data = await mongo_database[collection_name].find_one(query)
 
-        if data:
-            try:
-                await bot.rdb.set(cache_key, json.dumps(data, default=str), ex=3600)
-            except Exception as e:
-                logger.error(f"Redis write failed: {e}")
+            if data:
+                try:
+                    await bot.rdb.set(cache_key, json.dumps(data, default=str), ex=3600)
+                except Exception as e:
+                    logger.error(f"Redis write failed: {e}")
+        else:
+            cursor = mongo_database[collection_name].find(query)
+            data = await cursor.to_list(length=None)
+
+            if data is not None:
+                try:
+                    await bot.rdb.set(cache_key, json.dumps(data, default=str), ex=3600)
+                except Exception as e:
+                    logger.error(f"Redis write failed: {e}")
+
         return data
     except Exception as e:
         await log_exception(e)
         return None
 
 
-async def update_cached_data(bot, mongo_database, collection_name, query, update_data, cache_id=None):
+async def update_cached_data(bot, mongo_database, collection_name, query, update_data,
+                             is_single: bool = True, cache_id=None):
     """
     Updates mongodb and deletes the corresponding key from redis
 
@@ -73,6 +88,7 @@ async def update_cached_data(bot, mongo_database, collection_name, query, update
     :param collection_name: the mongodb collection name
     :param query: mongodb dict query
     :param update_data: the update dict for mongo
+    :param is_single: whether to update a single document or multiple
     :param cache_id: identifier for redis; if not provided, uses the '_id' from the query
     """
     if cache_id is None:
@@ -85,11 +101,18 @@ async def update_cached_data(bot, mongo_database, collection_name, query, update
 
     try:
         mongo_collection = mongo_database[collection_name]
-        await mongo_collection.update_one(
-            query,
-            update_data,
-            upsert=True
-        )
+        if is_single:
+            await mongo_collection.update_one(
+                query,
+                update_data,
+                upsert=True
+            )
+        else:
+            await mongo_collection.update_many(
+                query,
+                update_data,
+                upsert=True
+            )
     except Exception as e:
         raise Exception(f'Error updating config in database: {e}') from e
 
@@ -99,7 +122,8 @@ async def update_cached_data(bot, mongo_database, collection_name, query, update
         logger.error(f"Redis delete failed: {e}")
 
 
-async def delete_cached_data(bot, mongo_database, collection_name, search_filter, is_single: bool, cache_id=None):
+async def delete_cached_data(bot, mongo_database, collection_name, search_filter,
+                             is_single: bool = True, cache_id=None):
     """
     Deletes documents from mongodb and deletes the corresponding keys from redis
 
@@ -133,7 +157,7 @@ async def delete_cached_data(bot, mongo_database, collection_name, search_filter
         logger.error(f"Redis delete failed: {e}")
 
 
-async def attempt_delete(message: discord.Message):
+async def attempt_delete(message: discord.Message | discord.PartialMessage):
     """
     Attempts to delete a message
     """
@@ -197,7 +221,6 @@ async def log_exception(exception, interaction=None):
             except Exception as e:
                 logger.error(f'Failed to handle user feedback in log_exception: {e}')
         return
-
 
     logger.error(f'{type(exception).__name__}: {exception}')
     logger.error(traceback.format_exc())
@@ -400,7 +423,7 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
         collection_name='characters',
         query={'_id': sending_member_id, f'characters.{sender_character_id}.attributes.inventory': {'$exists': True}},
         update_data={'$set': {f'characters.{sender_character_id}.attributes.inventory':
-                              sender_character['attributes']['inventory']}}
+                                  sender_character['attributes']['inventory']}}
     )
     await update_cached_data(
         bot=bot,
@@ -409,7 +432,7 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
         query={'_id': receiving_member_id,
                f'characters.{receiver_character_id}.attributes.inventory': {'$exists': True}},
         update_data={'$set': {f'characters.{receiver_character_id}.attributes.inventory':
-                              receiver_character['attributes']['inventory']}}
+                                  receiver_character['attributes']['inventory']}}
     )
 
 
@@ -636,43 +659,6 @@ def find_member_and_character_id_in_lists(lists, selected_member_id):
                     for character_id in character_data:
                         return member_id, character_id
     return None, None
-
-
-async def purge_player_board(age, interaction: discord.Interaction):
-    """
-    Purges player board posts and database records older than the specified age in days.
-
-    :param age: Age in days to purge
-    :param interaction: The Discord interaction context
-    """
-    bot = interaction.client
-    try:
-        # Get the current datetime and calculate the cutoff date
-        current_datetime = datetime.datetime.now(datetime.UTC)
-        cutoff_date = current_datetime - datetime.timedelta(days=age)
-
-        # Delete all records in the db matching this guild that are older than the cutoff
-        await delete_cached_data(bot=bot, mongo_database=bot.gdb, collection_name='playerBoard',
-                                 search_filter={'guildId': interaction.guild_id,
-                                                'timestamp': {'$lt': cutoff_date}}, is_single=False,
-                                 cache_id=interaction.guild_id)
-
-        # Get the channel object and purge all messages older than the cutoff
-        config_query = await get_cached_data(
-            bot=bot,
-            mongo_database=bot.gdb,
-            collection_name='playerBoardChannel',
-            query={'_id': interaction.guild_id}
-        )
-        channel_id = strip_id(config_query['playerBoardChannel'])
-        channel = interaction.guild.get_channel(channel_id)
-        await channel.purge(before=cutoff_date)
-
-        await interaction.response.send_message(f'Posts older than {age} days have been purged!',
-                                                ephemeral=True,
-                                                delete_after=10)
-    except Exception as e:
-        await log_exception(e, interaction)
 
 
 async def setup_view(view, interaction: discord.Interaction):

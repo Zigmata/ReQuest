@@ -3,7 +3,7 @@ from discord import ButtonStyle
 from discord.ui import Button
 from titlecase import titlecase
 
-from ReQuest.utilities.supportFunctions import log_exception
+from ReQuest.utilities.supportFunctions import log_exception, get_cached_data
 
 from ReQuest.ui.shop import modals
 
@@ -41,9 +41,19 @@ class ViewCartButton(Button):
             guild_id = interaction.guild_id
             user_id = interaction.user.id
 
-            currency_config = await bot.gdb['currency'].find_one({'_id': guild_id})
+            currency_config = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='currency',
+                query={'_id': guild_id}
+            )
 
-            character_query = await bot.mdb['characters'].find_one({'_id': user_id})
+            character_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.mdb,
+                collection_name='characters',
+                query={'_id': user_id}
+            )
             active_character = None
             if character_query and str(guild_id) in character_query.get('activeCharacters', {}):
                 character_id = character_query['activeCharacters'][str(guild_id)]

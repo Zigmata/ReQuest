@@ -597,26 +597,48 @@ class ConfigWizardView(LayoutView):
 
     async def run_scan(self, interaction):
         try:
+            bot = interaction.client
             guild = interaction.guild
             gdb = interaction.client.gdb
 
             # Bot permissions
-            bot_perm_text, bot_perm_warnings = self.validate_bot_permission(guild)
+            bot_permission_text, bot_permission_warnings = self.validate_bot_permission(guild)
 
             # Role configs
-            announcement_role_query = await gdb['announceRole'].find_one({'_id': guild.id})
-            gm_roles_query = await gdb['gmRoles'].find_one({'_id': guild.id})
+            announcement_role_query = await get_cached_data(
+                bot=bot,
+                mongo_database=gdb,
+                collection_name='announceRole',
+                query={'_id': guild.id}
+            )
+            gm_roles_query = await get_cached_data(
+                bot=bot,
+                mongo_database=gdb,
+                collection_name='gmRoles',
+                query={'_id': guild.id}
+            )
 
             # Channel configs
             channels = []
-            quest_channel_query = await gdb['questChannel'].find_one({'_id': guild.id})
+            quest_channel_query = await get_cached_data(
+                bot=bot,
+                mongo_database=gdb,
+                collection_name='questChannel',
+                query={'_id': guild.id}
+            )
             channels.append(
                 {
                     'name': 'Quest Board',
                     'mention': quest_channel_query['questChannel'] if quest_channel_query else None,
                     'required': True}
             )
-            player_channel_query = await gdb['playerBoardChannel'].find_one({'_id': guild.id})
+
+            player_channel_query = await get_cached_data(
+                bot=bot,
+                mongo_database=gdb,
+                collection_name='playerBoardChannel',
+                query={'_id': guild.id}
+            )
             channels.append(
                 {
                     'name': 'Player Board',
@@ -624,7 +646,12 @@ class ConfigWizardView(LayoutView):
                     'required': False}
             )
 
-            archive_channel_query = await gdb['archiveChannel'].find_one({'_id': guild.id})
+            archive_channel_query = await get_cached_data(
+                bot=bot,
+                mongo_database=gdb,
+                collection_name='archiveChannel',
+                query={'_id': guild.id}
+            )
             channels.append(
                 {
                     'name': 'Quest Archive',
@@ -633,7 +660,12 @@ class ConfigWizardView(LayoutView):
                 }
             )
 
-            gm_log_query = await gdb['gmTransactionLogChannel'].find_one({'_id': guild.id})
+            gm_log_query = await get_cached_data(
+                bot=bot,
+                mongo_database=gdb,
+                collection_name='gmTransactionLogChannel',
+                query={'_id': guild.id}
+            )
             channels.append(
                 {
                     'name': 'GM Transaction Log',
@@ -642,7 +674,12 @@ class ConfigWizardView(LayoutView):
                 }
             )
 
-            player_transaction_log_query = await gdb['playerTransactionLogChannel'].find_one({'_id': guild.id})
+            player_transaction_log_query = await get_cached_data(
+                bot=bot,
+                mongo_database=gdb,
+                collection_name='playerTransactionLogChannel',
+                query={'_id': guild.id}
+            )
             channels.append(
                 {
                     'name': 'Player Transaction Log',
@@ -651,7 +688,12 @@ class ConfigWizardView(LayoutView):
                 }
             )
 
-            shop_log_query = await gdb['shopLogChannel'].find_one({'_id': guild.id})
+            shop_log_query = await get_cached_data(
+                bot=bot,
+                mongo_database=gdb,
+                collection_name='shopLogChannel',
+                query={'_id': guild.id}
+            )
             channels.append(
                 {
                     'name': 'Shop Log',
@@ -661,11 +703,36 @@ class ConfigWizardView(LayoutView):
             )
 
             # Dashboard configs
-            wait_list_query = await gdb['questWaitList'].find_one({'_id': guild.id})
-            quest_summary_query = await gdb['questSummary'].find_one({'_id': guild.id})
-            gm_rewards_query = await gdb['gmRewards'].find_one({'_id': guild.id})
-            player_xp_query = await gdb['playerExperience'].find_one({'_id': guild.id})
-            currency_config_query = await gdb['currency'].find_one({'_id': guild.id})
+            wait_list_query = await get_cached_data(
+                bot=bot,
+                mongo_database=gdb,
+                collection_name='questWaitList',
+                query={'_id': guild.id}
+            )
+            quest_summary_query = await get_cached_data(
+                bot=bot,
+                mongo_database=gdb,
+                collection_name='questSummary',
+                query={'_id': guild.id}
+            )
+            gm_rewards_query = await get_cached_data(
+                bot=bot,
+                mongo_database=gdb,
+                collection_name='gmRewards',
+                query={'_id': guild.id}
+            )
+            player_xp_query = await get_cached_data(
+                bot=bot,
+                mongo_database=gdb,
+                collection_name='playerExperience',
+                query={'_id': guild.id}
+            )
+            currency_config_query = await get_cached_data(
+                bot=bot,
+                mongo_database=gdb,
+                collection_name='currency',
+                query={'_id': guild.id}
+            )
 
             # Role validation report
             role_text, role_has_warnings = self.validate_roles(guild, gm_roles_query, announcement_role_query)
@@ -683,7 +750,7 @@ class ConfigWizardView(LayoutView):
             # Compile pages
             self.pages = [
                 {
-                    'content': bot_perm_text,
+                    'content': bot_permission_text,
                     'shortcut_button': None
                 },
                 {
@@ -825,8 +892,12 @@ class ConfigGMRoleRemoveView(LayoutView):
 
     async def setup(self, bot, guild):
         try:
-            collection = bot.gdb['gmRoles']
-            query = await collection.find_one({'_id': guild.id})
+            query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='gmRoles',
+                query={'_id': guild.id}
+            )
 
             self.roles = query.get('gmRoles', []) if query else []
             self.roles.sort(key=lambda x: x.get('name', '').lower())
@@ -991,21 +1062,21 @@ class ConfigChannelsView(LayoutView):
         container.add_item(header_section)
         container.add_item(Separator())
 
-        quest_board_section = Section(accessory=buttons.ClearChannelButton(self, enums.ChannelType.QUEST_BOARD))
+        quest_board_section = Section(accessory=buttons.ClearChannelButton(self, 'questChannel'))
         quest_board_section.add_item(self.quest_board_info)
         container.add_item(quest_board_section)
         quest_board_select_row = ActionRow(self.quest_channel_select)
         container.add_item(quest_board_select_row)
         container.add_item(Separator())
 
-        player_board_section = Section(accessory=buttons.ClearChannelButton(self, enums.ChannelType.PLAYER_BOARD))
+        player_board_section = Section(accessory=buttons.ClearChannelButton(self, 'playerBoardChannel'))
         player_board_section.add_item(self.player_board_info)
         container.add_item(player_board_section)
         player_board_select_row = ActionRow(self.player_board_channel_select)
         container.add_item(player_board_select_row)
         container.add_item(Separator())
 
-        quest_archive_section = Section(accessory=buttons.ClearChannelButton(self, enums.ChannelType.QUEST_ARCHIVE))
+        quest_archive_section = Section(accessory=buttons.ClearChannelButton(self, 'archiveChannel'))
         quest_archive_section.add_item(self.quest_archive_info)
         container.add_item(quest_archive_section)
         quest_archive_select_row = ActionRow(self.archive_channel_select)
@@ -1013,7 +1084,7 @@ class ConfigChannelsView(LayoutView):
         container.add_item(Separator())
 
         gm_transaction_log_section = Section(accessory=buttons.ClearChannelButton(self,
-                                                                                  enums.ChannelType.GM_TRANSACTION_LOG))
+                                                                                  'gmTransactionLogChannel'))
         gm_transaction_log_section.add_item(self.gm_transaction_log_info)
         container.add_item(gm_transaction_log_section)
         gm_transaction_log_select_row = ActionRow(self.gm_transaction_log_channel_select)
@@ -1021,14 +1092,14 @@ class ConfigChannelsView(LayoutView):
         container.add_item(Separator())
 
         player_transaction_log_section = Section(accessory=buttons.ClearChannelButton(self,
-                                                                                  enums.ChannelType.PLAYER_TRANSACTION_LOG))
+                                                                                      'playerTransactionLogChannel'))
         player_transaction_log_section.add_item(self.player_transaction_log_info)
         container.add_item(player_transaction_log_section)
         player_transaction_log_select_row = ActionRow(self.player_transaction_log_channel_select)
         container.add_item(player_transaction_log_select_row)
         container.add_item(Separator())
 
-        shop_log_section = Section(accessory=buttons.ClearChannelButton(self, enums.ChannelType.SHOP_LOG))
+        shop_log_section = Section(accessory=buttons.ClearChannelButton(self, 'shopLogChannel'))
         shop_log_section.add_item(self.shop_log_info)
         container.add_item(shop_log_section)
         shop_log_select_row = ActionRow(self.shop_log_channel_select)
@@ -1328,7 +1399,7 @@ class ConfigNewCharacterView(LayoutView):
         self.approval_queue_select = selects.SingleChannelConfigSelect(
             self, 'approvalQueueChannel', 'Approval Queue'
         )
-        self.approval_queue_clear_button = buttons.ClearChannelButton(self, enums.ChannelType.APPROVAL_QUEUE)
+        self.approval_queue_clear_button = buttons.ClearChannelButton(self, 'approvalQueueChannel')
 
         self.new_character_shop_button = MenuViewButton(ConfigNewCharacterShopView, 'Configure New Character Shop')
         self.new_character_wealth_button = buttons.ConfigNewCharacterWealthButton(self)

@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 from titlecase import titlecase
@@ -12,11 +13,14 @@ from discord.ui import Modal, Label
 
 from ReQuest.utilities.supportFunctions import (
     log_exception,
-    purge_player_board,
     setup_view,
     find_currency_or_denomination,
+    get_cached_data,
     get_denomination_map,
-    UserFeedbackError
+    update_cached_data,
+    UserFeedbackError,
+    delete_cached_data,
+    strip_id
 )
 
 logger = logging.getLogger(__name__)
@@ -62,10 +66,15 @@ class AddCurrencyTextModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             guild_id = interaction.guild_id
             view = self.calling_view
-            collection = interaction.client.gdb['currency']
-            query = await collection.find_one({'_id': guild_id})
+            query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='currency',
+                query={'_id': guild_id}
+            )
             matches = 0
             if query:
                 for currency in query['currencies']:
@@ -81,10 +90,14 @@ class AddCurrencyTextModal(Modal):
                 await interaction.followup.send(f'A currency or denomination named {self.text_input.value} '
                                                 f'already exists!')
             else:
-                await collection.update_one({'_id': guild_id},
-                                            {'$push': {'currencies': {'name': self.text_input.value,
-                                                                      'isDouble': False, 'denominations': []}}},
-                                            upsert=True)
+                await update_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name='currency',
+                    query={'_id': guild_id},
+                    update_data={'$push': {'currencies': {'name': self.text_input.value,
+                                                          'isDouble': False, 'denominations': []}}}
+                )
                 await setup_view(view, interaction)
                 await interaction.response.edit_message(view=view)
         except Exception as e:
@@ -115,10 +128,16 @@ class AddCurrencyDenominationModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             guild_id = interaction.guild_id
             new_name = self.denomination_name_text_input.value
-            collection = interaction.client.gdb['currency']
-            query = await collection.find_one({'_id': guild_id})
+
+            query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='currency',
+                query={'_id': guild_id}
+            )
             for currency in query['currencies']:
                 if new_name.lower() == currency['name'].lower():
                     raise UserFeedbackError(
@@ -143,11 +162,18 @@ class AddCurrencyDenominationModal(Modal):
                             f'this value assigned.'
                         )
 
-                await collection.update_one({'_id': guild_id, 'currencies.name': self.base_currency_name},
-                                            {'$push': {'currencies.$.denominations': {
-                                                'name': new_name,
-                                                'value': float(self.denomination_value_text_input.value)}}},
-                                            upsert=True)
+                await update_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name='currency',
+                    query={'_id': guild_id, 'currencies.name': self.base_currency_name},
+                    update_data={
+                        '$push': {'currencies.$.denominations': {
+                            'name': new_name,
+                            'value': float(self.denomination_value_text_input.value)}
+                        }
+                    }
+                )
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
@@ -172,13 +198,18 @@ class ForbiddenRolesModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             names = []
             for name in self.names_text_input.value.strip().split(','):
                 names.append(name.lower().strip())
-            config_collection = interaction.client.gdb['forbiddenRoles']
-            await config_collection.update_one({'_id': interaction.guild_id},
-                                               {'$set': {'forbiddenRoles': names}},
-                                               upsert=True)
+
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='forbiddenRoles',
+                query={'_id': interaction.guild_id},
+                update_data={'$set': {'forbiddenRoles': names}}
+            )
             await interaction.response.send_message('Forbidden roles updated!', ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)
@@ -200,8 +231,37 @@ class PlayerBoardPurgeModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             age = int(self.age_text_input.value)
-            await purge_player_board(age, interaction)
+
+            # Get the current datetime and calculate the cutoff date
+            current_datetime = datetime.datetime.now(datetime.UTC)
+            cutoff_date = current_datetime - datetime.timedelta(days=age)
+
+            # Delete all records in the db matching this guild that are older than the cutoff
+            await delete_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='playerBoard',
+                search_filter={'guildId': interaction.guild_id, 'timestamp': {'$lt': cutoff_date}},
+                is_single=False,
+                cache_id=interaction.guild_id
+            )
+
+            # Get the channel object and purge all messages older than the cutoff
+            config_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='playerBoardChannel',
+                query={'_id': interaction.guild_id}
+            )
+            channel_id = strip_id(config_query['playerBoardChannel'])
+            channel = interaction.guild.get_channel(channel_id)
+            await channel.purge(before=cutoff_date)
+
+            await interaction.response.send_message(f'Posts older than {age} days have been purged!',
+                                                    ephemeral=True,
+                                                    delete_after=10)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -242,6 +302,7 @@ class GMRewardsModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             experience = None
             if self.xp_enabled and hasattr(self, 'experience_text_input') and self.experience_text_input.value:
                 experience = int(self.experience_text_input.value)
@@ -253,10 +314,14 @@ class GMRewardsModal(Modal):
                     item_name, quantity = item.split(':', 1)
                     items[titlecase(item_name.strip())] = int(quantity.strip())
 
-            gm_rewards_collection = interaction.client.gdb['gmRewards']
-            await gm_rewards_collection.update_one({'_id': interaction.guild_id},
-                                                   {'$set': {'experience': experience, 'items': items}},
-                                                   upsert=True)
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='gmRewards',
+                query={'_id': interaction.guild_id},
+                update_data={'$set': {'experience': experience, 'items': items}}
+            )
+
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
@@ -335,8 +400,8 @@ class ConfigShopDetailsModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             guild_id = interaction.guild_id
-            collection = interaction.client.gdb['shops']
 
             if self.existing_channel_id:
                 channel_id = self.existing_channel_id
@@ -346,7 +411,12 @@ class ConfigShopDetailsModal(Modal):
                 channel_id = str(self.shop_channel_select.values[0].id)
 
             if not self.existing_channel_id:
-                query = await collection.find_one({'_id': guild_id})
+                query = await get_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name='shops',
+                    query={'_id': guild_id}
+                )
                 if query and channel_id in query.get('shopChannels', {}):
                     raise UserFeedbackError(
                         'A shop is already registered in the selected channel. Please choose a different channel or '
@@ -362,14 +432,21 @@ class ConfigShopDetailsModal(Modal):
             }
 
             if self.existing_channel_id:
-                existing_query = await collection.find_one({'_id': guild_id})
+                existing_query = await get_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name='shops',
+                    query={'_id': guild_id}
+                )
                 existing_shop_data = existing_query.get('shopChannels', {}).get(channel_id, {})
                 shop_data['shopStock'] = existing_shop_data.get('shopStock', [])
 
-            await collection.update_one(
-                {'_id': guild_id},
-                {'$set': {f'shopChannels.{channel_id}': shop_data}},
-                upsert=True
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='shops',
+                query={'_id': guild_id},
+                update_data={'$set': {f'shopChannels.{channel_id}': shop_data}}
             )
 
             if hasattr(self.calling_view, 'update_details'):
@@ -411,11 +488,16 @@ class ConfigShopJSONModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             guild_id = interaction.guild_id
-            collection = interaction.client.gdb['shops']
             channel_id = str(self.shop_channel_select.values[0].id)
 
-            query = await collection.find_one({'_id': guild_id})
+            query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='shops',
+                query={'_id': guild_id}
+            )
             if query and channel_id in query.get('shopChannels', {}):
                 raise UserFeedbackError(
                     'A shop is already registered in the selected channel. Please choose a different channel or edit '
@@ -443,10 +525,12 @@ class ConfigShopJSONModal(Modal):
             except jsonschema.exceptions.ValidationError as ve:
                 raise UserFeedbackError(f'JSON does not conform to schema: {str(ve)}')
 
-            await collection.update_one(
-                {'_id': guild_id},
-                {'$set': {f'shopChannels.{channel_id}': shop_data}},
-                upsert=True
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='shops',
+                query={'_id': guild_id},
+                update_data={'$set': {f'shopChannels.{channel_id}': shop_data}}
             )
 
             await setup_view(self.calling_view, interaction)
@@ -511,9 +595,9 @@ class ShopItemModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             guild_id = interaction.guild_id
             view = self.calling_view
-            collection = interaction.client.gdb['shops']
             channel_id = view.channel_id
 
             quantity_str = self.item_quantity_text_input.value
@@ -532,7 +616,12 @@ class ShopItemModal(Modal):
                 'currency': self.item_currency_text_input.value.lower()
             }
 
-            shop_query = await collection.find_one({'_id': guild_id})
+            shop_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='shops',
+                query={'_id': guild_id}
+            )
             shop_data = shop_query.get('shopChannels', {}).get(channel_id, {})
             shop_stock = shop_data.get('shopStock', [])
 
@@ -554,10 +643,12 @@ class ShopItemModal(Modal):
                         raise UserFeedbackError(f'An item named {new_item["name"]} already exists in this shop.')
                 shop_data['shopStock'].append(new_item)
 
-            await collection.update_one(
-                {'_id': guild_id},
-                {'$set': {f'shopChannels.{channel_id}': shop_data}},
-                upsert=True
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='shops',
+                query={'_id': guild_id},
+                update_data={'$set': {f'shopChannels.{channel_id}': shop_data}}
             )
 
             self.calling_view.update_stock(shop_data['shopStock'])
@@ -588,8 +679,8 @@ class ConfigUpdateShopJSONModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             guild_id = interaction.guild_id
-            collection = interaction.client.gdb['shops']
             channel_id = self.calling_view.selected_channel_id
 
             if not self.shop_json_file_upload.values:
@@ -612,10 +703,12 @@ class ConfigUpdateShopJSONModal(Modal):
             except jsonschema.exceptions.ValidationError as err:
                 raise UserFeedbackError(f"JSON validation failed: {err.message}")
 
-            await collection.update_one(
-                {'_id': guild_id},
-                {'$set': {f'shopChannels.{channel_id}': shop_data}},
-                upsert=False
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='shops',
+                query={'_id': guild_id},
+                update_data={'$set': {f'shopChannels.{channel_id}': shop_data}}
             )
 
             if hasattr(self.calling_view, 'update_details'):
@@ -683,8 +776,8 @@ class NewCharacterShopItemModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             guild_id = interaction.guild_id
-            collection = interaction.client.gdb['newCharacterShop']
 
             quantity_string = self.item_quantity_text_input.value
             if not quantity_string.isdigit() or int(quantity_string) < 1:
@@ -710,7 +803,12 @@ class NewCharacterShopItemModal(Modal):
                 'currency': currency_val
             }
 
-            query = await collection.find_one({'_id': guild_id})
+            query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='newCharacterShop',
+                query={'_id': guild_id}
+            )
             shop_stock = query.get('shopStock', []) if query else []
 
             if self.existing_item_name:
@@ -733,10 +831,12 @@ class NewCharacterShopItemModal(Modal):
                         )
                 shop_stock.append(new_item)
 
-            await collection.update_one(
-                {'_id': guild_id},
-                {'$set': {'shopStock': shop_stock}},
-                upsert=True
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='newCharacterShop',
+                query={'_id': guild_id},
+                update_data={'$set': {'shopStock': shop_stock}}
             )
 
             self.calling_view.update_stock(shop_stock)
@@ -744,6 +844,7 @@ class NewCharacterShopItemModal(Modal):
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
+
 
 class NewCharacterShopJSONModal(Modal):
     def __init__(self, calling_view):
@@ -764,8 +865,8 @@ class NewCharacterShopJSONModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             guild_id = interaction.guild_id
-            collection = interaction.client.gdb['newCharacterShop']
 
             if not self.shop_json_file_upload.values:
                 raise UserFeedbackError('No JSON file uploaded.')
@@ -789,10 +890,12 @@ class NewCharacterShopJSONModal(Modal):
                 if 'name' not in item or 'price' not in item:
                     raise UserFeedbackError("All items must have 'name' and 'price'.")
 
-            await collection.update_one(
-                {'_id': guild_id},
-                {'$set': {'shopStock': shop_data['shopStock']}},
-                upsert=True
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='newCharacterShop',
+                query={'_id': guild_id},
+                update_data={'$set': {'shopStock': shop_data['shopStock']}}
             )
 
             self.calling_view.update_stock(shop_data['shopStock'])
@@ -824,24 +927,29 @@ class ConfigNewCharacterWealthModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             guild_id = interaction.guild_id
 
             if not self.amount_text_input.value.replace('.', '', 1).isdigit():
                 raise ValueError('Amount must be a number.')
             amount = float(self.amount_text_input.value)
 
-            inventory_config_collection = interaction.client.gdb['inventoryConfig']
-
             if amount <= 0:
-                await inventory_config_collection.update_one(
-                    {'_id': interaction.guild_id},
-                    {'$unset': {'newCharacterWealth': ''}},
-                    upsert=True
+                await update_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name='inventoryConfig',
+                    query={'_id': guild_id},
+                    update_data={'$unset': {'newCharacterWealth': ''}}
                 )
             else:
                 currency_input = self.currency_name_text_input.value.strip()
-                currency_collection = interaction.client.gdb['currency']
-                currency_config = await currency_collection.find_one({'_id': guild_id})
+                currency_config = await get_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name='currency',
+                    query={'_id': guild_id}
+                )
 
                 if not currency_config:
                     raise UserFeedbackError('No currencies are configured on this server.')
@@ -853,16 +961,19 @@ class ConfigNewCharacterWealthModal(Modal):
                         f'Currency or denomination named {currency_input} not found. Please use a valid currency.'
                     )
 
-                await inventory_config_collection.update_one(
-                    {'_id': interaction.guild_id},
-                    {'$set': {'newCharacterWealth': {'currency': parent_name, 'amount': amount}}},
-                    upsert=True
+                await update_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name='inventoryConfig',
+                    query={'_id': guild_id},
+                    update_data={'$set': {'newCharacterWealth': {'currency': parent_name, 'amount': amount}}}
                 )
 
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
+
 
 class CreateStaticKitModal(Modal):
     def __init__(self, calling_view):
@@ -891,12 +1002,17 @@ class CreateStaticKitModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             guild_id = interaction.guild_id
-            collection = interaction.client.gdb['staticKits']
             kit_id = str(shortuuid.uuid()[:8])
             kit_name = self.kit_name_text_input.value.strip()
 
-            kit_query = await collection.find_one({'_id': guild_id})
+            kit_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='staticKits',
+                query={'_id': guild_id}
+            )
             existing_kits = kit_query.get('kits', {}) if kit_query else {}
             if existing_kits:
                 for kit_data in existing_kits.values():
@@ -912,10 +1028,12 @@ class CreateStaticKitModal(Modal):
                 'currency': {}
             }
 
-            await collection.update_one(
-                {'_id': guild_id},
-                {'$set': {f'kits.{kit_id}': kit_data}},
-                upsert=True
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='staticKits',
+                query={'_id': guild_id},
+                update_data={'$set': {f'kits.{kit_id}': kit_data}}
             )
 
             await setup_view(self.calling_view, interaction)
@@ -972,10 +1090,15 @@ class StaticKitItemModal(Modal):
                 'quantity': int(self.item_quantity_text_input.value)
             }
 
+            bot = interaction.client
             kit_id = self.calling_view.kit_id
-            collection = interaction.client.gdb['staticKits']
 
-            query = await collection.find_one({'_id': interaction.guild_id})
+            query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='staticKits',
+                query={'_id': interaction.guild_id}
+            )
             kits = query.get('kits', {})
             current_kit = kits.get(kit_id)
 
@@ -989,9 +1112,12 @@ class StaticKitItemModal(Modal):
             else:
                 items.append(item_data)
 
-            await collection.update_one(
-                {'_id': interaction.guild_id},
-                {'$set': {f'kits.{kit_id}.items': items}}
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='staticKits',
+                query={'_id': interaction.guild_id},
+                update_data={'$set': {f'kits.{kit_id}.items': items}}
             )
 
             self.calling_view.kit_data['items'] = items
@@ -1024,12 +1150,18 @@ class StaticKitCurrencyModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             currency_input = self.currency_name_text_input.value.strip()
             if not self.amount_text_input.value.replace('.', '', 1).isdigit():
                 raise UserFeedbackError("Amount must be a number.")
             amount = float(self.amount_text_input.value)
 
-            currency_config = await interaction.client.gdb['currency'].find_one({'_id': interaction.guild_id})
+            currency_config = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='currency',
+                query={'_id': interaction.guild_id}
+            )
             if not currency_config:
                 raise UserFeedbackError("No currencies configured on server.")
 
@@ -1045,9 +1177,14 @@ class StaticKitCurrencyModal(Modal):
             converted_amount = amount * multiplier
 
             kit_id = self.calling_view.kit_id
-            collection = interaction.client.gdb['staticKits']
 
-            query = await collection.find_one({'_id': interaction.guild_id})
+            query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='staticKits',
+                query={'_id': interaction.guild_id}
+            )
+
             existing_amount = 0
 
             if query and 'kits' in query:
@@ -1055,9 +1192,12 @@ class StaticKitCurrencyModal(Modal):
 
             final_amount = existing_amount + converted_amount
 
-            await collection.update_one(
-                {'_id': interaction.guild_id},
-                {'$set': {f'kits.{kit_id}.currency.{parent_name}': final_amount}}
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='staticKits',
+                query={'_id': interaction.guild_id},
+                update_data={'$set': {f'kits.{kit_id}.currency.{parent_name}': final_amount}}
             )
 
             if 'currency' not in self.calling_view.kit_data:

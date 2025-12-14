@@ -3,7 +3,7 @@ import logging
 import discord
 from discord.ui import Select
 
-from ReQuest.utilities.supportFunctions import log_exception, setup_view
+from ReQuest.utilities.supportFunctions import log_exception, setup_view, update_cached_data
 from ReQuest.ui.common import modals
 
 logger = logging.getLogger(__name__)
@@ -21,11 +21,17 @@ class ActiveCharacterSelect(Select):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             selected_character_id = self.values[0]
-            collection = interaction.client.mdb['characters']
-            await collection.update_one({'_id': interaction.user.id},
-                                        {'$set': {f'activeCharacters.{interaction.guild_id}': selected_character_id}},
-                                        upsert=True)
+
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.mdb,
+                collection_name='characters',
+                query={'_id': interaction.user.id},
+                update_data={'$set': {f'activeCharacters.{interaction.guild_id}': selected_character_id}}
+            )
+
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:

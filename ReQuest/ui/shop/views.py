@@ -24,7 +24,9 @@ from ReQuest.utilities.supportFunctions import (
     strip_id,
     format_price_string,
     format_consolidated_totals,
-    consolidate_currency_totals
+    consolidate_currency_totals,
+    get_cached_data,
+    update_cached_data
 )
 
 logger = logging.getLogger(__name__)
@@ -325,12 +327,15 @@ class ShopCartView(LayoutView):
     async def checkout(self, interaction: discord.Interaction):
         try:
             bot = interaction.client
-            mdb = bot.mdb
-            gdb = bot.gdb
             guild_id = interaction.guild_id
             user_id = interaction.user.id
 
-            character_query = await mdb['characters'].find_one({'_id': user_id})
+            character_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.mdb,
+                collection_name='characters',
+                query={'_id': user_id}
+            )
 
             if not character_query or str(guild_id) not in character_query['activeCharacters']:
                 await interaction.response.send_message("You do not have an active character on this server.",
@@ -349,7 +354,8 @@ class ShopCartView(LayoutView):
                     return
 
             for base_currency, amount in self.base_totals.items():
-                character_data = apply_currency_change_local(character_data, self.currency_config, base_currency, -amount)
+                character_data = apply_currency_change_local(character_data, self.currency_config,
+                                                             base_currency, -amount)
 
             added_items_summary = []
             for item_key, data in self.prev_view.cart.items():
@@ -362,13 +368,21 @@ class ShopCartView(LayoutView):
                 summary_string = (f'{total_qty}x ' if total_qty > 1 else '') + titlecase(item["name"])
                 added_items_summary.append(summary_string)
 
-            await mdb['characters'].update_one(
-                {'_id': user_id},
-                {'$set': {f'characters.{active_char_id}': character_data}}
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.mdb,
+                collection_name='characters',
+                query={'_id': user_id},
+                update_data={'$set': {f'characters.{active_char_id}': character_data}}
             )
 
             log_channel = None
-            log_channel_query = await gdb['shopLogChannel'].find_one({'_id': guild_id})
+            log_channel_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='shopLogChannel',
+                query={'_id': guild_id}
+            )
             if log_channel_query:
                 log_channel_id = strip_id(log_channel_query['shopLogChannel'])
                 log_channel = interaction.guild.get_channel(log_channel_id)

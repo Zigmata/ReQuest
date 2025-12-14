@@ -7,7 +7,15 @@ from titlecase import titlecase
 
 from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.player import modals
-from ReQuest.utilities.supportFunctions import log_exception, setup_view, attempt_delete
+from ReQuest.utilities.supportFunctions import (
+    log_exception,
+    setup_view,
+    attempt_delete,
+    build_cache_key,
+    get_cached_data,
+    update_cached_data,
+    delete_cached_data
+)
 
 logger = logging.getLogger(__name__)
 
@@ -56,17 +64,25 @@ class RemoveCharacterButton(Button):
 
     async def _confirm_delete(self, interaction: discord.Interaction):
         try:
-            collection = interaction.client.mdb['characters']
+            bot = interaction.client
             member_id = interaction.user.id
 
             # Remove character from db
-            await collection.update_one(
-                {'_id': member_id},
-                {'$unset': {f'characters.{self.character_id}': ''}}
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.mdb,
+                collection_name='characters',
+                query={'_id': member_id},
+                update_data={'$unset': {f'characters.{self.character_id}': ''}}
             )
 
             # Unset active character if it was the one removed
-            character_query = await collection.find_one({'_id': member_id})
+            character_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.mdb,
+                collection_name='characters',
+                query={'_id': member_id}
+            )
             if character_query and 'activeCharacters' in character_query:
                 updates = {}
                 for guild_id, active_character_id in character_query['activeCharacters'].items():
@@ -74,9 +90,12 @@ class RemoveCharacterButton(Button):
                         updates[f'activeCharacters.{guild_id}'] = ''
 
                 if updates:
-                    await collection.update_one(
-                        {'_id': member_id},
-                        {'$unset': updates}
+                    await update_cached_data(
+                        bot=bot,
+                        mongo_database=bot.mdb,
+                        collection_name='characters',
+                        query={'_id': member_id},
+                        update_data={'$unset': updates}
                     )
 
             await setup_view(self.calling_view, interaction)
@@ -98,12 +117,14 @@ class ActivateCharacterButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            collection = interaction.client.mdb['characters']
+            bot = interaction.client
 
-            await collection.update_one(
-                {'_id': interaction.user.id},
-                {'$set': {f'activeCharacters.{interaction.guild_id}': self.character_id}},
-                upsert=True
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.mdb,
+                collection_name='characters',
+                query={'_id': interaction.user.id},
+                update_data={'$set': {f'activeCharacters.{interaction.guild_id}': self.character_id}}
             )
 
             await setup_view(self.calling_view, interaction)
@@ -155,14 +176,19 @@ class RemovePlayerPostButton(Button):
 
     async def _confirm_delete(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             post_id = self.post.get('postId')
             message_id = self.post.get('messageId')
             guild_id = interaction.guild_id
 
-            post_collection = interaction.client.gdb['playerBoard']
-
             # Delete from db
-            await post_collection.delete_one({'guildId': guild_id, 'postId': post_id})
+            await delete_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='playerBoard',
+                search_filter={'guildId': guild_id, 'postId': post_id},
+                cache_id=f'{guild_id}:{post_id}'
+            )
 
             # Delete the post message
             channel_id = self.calling_view.player_board_channel_id
@@ -176,6 +202,12 @@ class RemovePlayerPostButton(Button):
                         logger.warning(f"Message {message_id} not found for deletion.")
                     except Exception as e:
                         logger.error(f"Error deleting message {message_id}: {e}")
+
+            # Invalidate the cached list
+            cache_id = f'{guild_id}:{interaction.user.id}'
+            redis_key = build_cache_key(interaction.client.gdb.name, cache_id, 'playerBoard')
+
+            await interaction.client.rds.delete(redis_key)
 
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)

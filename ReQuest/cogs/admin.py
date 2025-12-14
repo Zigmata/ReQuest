@@ -23,10 +23,15 @@ class Admin(Cog):
                 if guild.id in self.bot.allow_list:
                     return None
                 else:
-                    await guild.owner.send(
-                        'Thank you for your interest in ReQuest! Your server is not in ReQuest\'s list of '
-                        'authorized testing servers. Please join the support server and contact the '
-                        'development team to request test access.')
+                    embed = discord.Embed(
+                        title='Unauthorized Server',
+                        description='Thank you for your interest in ReQuest! Your server is not in ReQuest\'s list of '
+                                    'authorized testing servers. Please join the support Discord below, and contact '
+                                    'the development team to request test access.\n\n'
+                                    '[ReQuest Development Discord](https://discord.gg/Zq37gj4)',
+                        color=discord.Color.red()
+                    )
+                    await guild.owner.send(embed=embed)
                     return await guild.leave()
         except Exception as e:
             await log_exception(e)
