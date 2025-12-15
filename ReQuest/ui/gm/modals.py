@@ -15,7 +15,10 @@ from ReQuest.utilities.supportFunctions import (
     find_currency_or_denomination,
     get_denomination_map,
     setup_view,
-    UserFeedbackError
+    UserFeedbackError,
+    update_cached_data,
+    get_cached_data,
+    build_cache_key
 )
 
 logger = logging.getLogger(__name__)
@@ -73,7 +76,7 @@ class CreateQuestModal(Modal):
             description = self.quest_description_text_input.value
 
             guild = interaction.guild
-            guild_id = guild.id
+            guild_id = interaction.guild_id
             quest_id = str(shortuuid.uuid()[:8])
             bot = interaction.client
             max_wait_list_size = 0
@@ -88,8 +91,12 @@ class CreateQuestModal(Modal):
                     'gm',
                 ]
                 custom_forbidden_names = []
-                config_collection = interaction.client.gdb['forbiddenRoles']
-                config_query = await config_collection.find_one({'_id': interaction.guild_id})
+                config_query = await get_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name='forbiddenRoles',
+                    query={'_id': guild_id}
+                )
                 if config_query and config_query['forbiddenRoles']:
                     for name in config_query['forbiddenRoles']:
                         custom_forbidden_names.append(name)
@@ -110,12 +117,22 @@ class CreateQuestModal(Modal):
                 party_role_id = party_role.id
 
             # Get the server's wait list configuration
-            wait_list_query = await bot.gdb['questWaitList'].find_one({'_id': guild_id})
+            wait_list_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='questWaitList',
+                query={'_id': guild_id}
+            )
             if wait_list_query:
                 max_wait_list_size = wait_list_query['questWaitList']
 
             # Query the collection to see if a channel is set
-            quest_channel_query = await bot.gdb['questChannel'].find_one({'_id': guild_id})
+            quest_channel_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='questChannel',
+                query={'_id': guild_id}
+            )
 
             # Inform user if quest channel is not set. Otherwise, get the channel string
             if not quest_channel_query:
@@ -127,14 +144,18 @@ class CreateQuestModal(Modal):
                 quest_channel_mention = quest_channel_query['questChannel']
 
             # Query the collection to see if a role is set
-            announce_role_query = await bot.gdb['announceRole'].find_one({'_id': guild_id})
+            announce_role_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='announceRole',
+                query={'_id': guild_id}
+            )
 
             # Grab the announcement role, if configured.
             announce_role = None
             if announce_role_query:
                 announce_role = announce_role_query['announceRole']
 
-            quest_collection = bot.gdb['quests']
             # Get the channel object.
             quest_channel = bot.get_channel(strip_id(quest_channel_mention))
 
@@ -172,7 +193,15 @@ class CreateQuestModal(Modal):
             msg = await quest_channel.send(embed=view.embed, view=view)
             quest['messageId'] = msg.id
 
+            quest_collection = bot.gdb['quests']
             await quest_collection.insert_one(quest)
+
+            # Clear the cached guild quests for the GM
+            admin_key = build_cache_key(bot.gdb.name, f'guild_quests:{guild_id}', 'quests')
+            await bot.rdb.delete(admin_key)
+
+            gm_key = build_cache_key(bot.gdb.name, f'gm_quests:{guild_id}:{author_id}', 'quests')
+            await bot.rdb.delete(gm_key)
 
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
@@ -232,24 +261,34 @@ class EditQuestModal(Modal):
     async def on_submit(self, interaction: discord.Interaction):
         try:
             # Push the updates
-            gdb = interaction.client.gdb
+            bot = interaction.client
             guild_id = interaction.guild_id
-            quest_collection = gdb['quests']
             updates = {
                 'title': self.title_text_input.value,
                 'restrictions': self.restrictions_text_input.value,
                 'maxPartySize': int(self.max_party_size_text_input.value),
                 'description': self.description_text_input.value
             }
-            await quest_collection.update_one({'guildId': interaction.guild_id, 'questId': self.quest['questId']},
-                                              {'$set': updates})
+
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='quests',
+                query={'guildId': guild_id, 'questId': self.quest['questId']},
+                update_data={'$set': updates},
+                cache_id=f'{guild_id}:{self.quest["questId"]}'
+            )
 
             # Get the updated quest
             self.quest.update(updates)
 
             # Get the quest board channel
-            quest_channel_collection = gdb['questChannel']
-            quest_channel_query = await quest_channel_collection.find_one({'_id': guild_id})
+            quest_channel_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='questChannel',
+                query={'_id': guild_id}
+            )
             quest_channel_id = strip_id(quest_channel_query['questChannel'])
             guild = interaction.client.get_guild(guild_id)
             quest_channel = guild.get_channel(quest_channel_id)
@@ -260,7 +299,7 @@ class EditQuestModal(Modal):
             # Create a fresh quest view, and update the original post message
             from ReQuest.ui.gm.views import QuestPostView
             quest_view = QuestPostView(self.quest)
-            await quest_view.setup()
+            await setup_view(quest_view, interaction)
             await message.edit(embed=quest_view.embed, view=quest_view)
 
             # Reload the UI view
@@ -392,11 +431,21 @@ class ModPlayerModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             xp = 0
-            gdb = interaction.client.gdb
             guild_id = interaction.guild_id
-            currency_config = await gdb['currency'].find_one({'_id': guild_id})
-            log_channel_config = await gdb['gmTransactionLogChannel'].find_one({'_id': guild_id})
+            currency_config = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='currency',
+                query={'_id': guild_id}
+            )
+            log_channel_config = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='gmTransactionLogChannel',
+                query={'_id': guild_id}
+            )
             log_channel = None
             if log_channel_config:
                 log_channel_id = strip_id(log_channel_config['gmTransactionLogChannel'])
@@ -496,14 +545,27 @@ class ReviewSubmissionInputModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             submission_id = self.submission_id_text_input.value
-            data = await interaction.client.gdb['approvals'].find_one({'submission_id': submission_id})
+
+            data = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='approvals',
+                query={'submission_id': submission_id},
+                cache_id=f'approval_submission:{submission_id}'
+            )
 
             if not data:
                 await interaction.response.send_message("Submission not found.", ephemeral=True)
                 return
 
-            currency_config = await interaction.client.gdb['currency'].find_one({'_id': interaction.guild_id})
+            currency_config = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='currency',
+                query={'_id': interaction.guild_id}
+            )
 
             from ReQuest.ui.gm.views import ReviewSubmissionView
             view = ReviewSubmissionView(data, currency_config)

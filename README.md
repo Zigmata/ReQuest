@@ -133,28 +133,36 @@ services:
     #       MONGO_INITDB_ROOT_USERNAME: # Give MongoDB an initial root username
     #       MONGO_INITDB_ROOT_PASSWORD: # Give MongoDB an initial root password
     restart: unless-stopped
+  
+  redis:
+    image: redis:alpine
+    container_name: redis
+    restart: unless-stopped
 
-#  request:
-#    image: zigmata/request:latest
-#    container_name: request
-#    environment:
-#      MONGO_USER: # Username if you are using auth in your mongoDB deployment
-#      MONGO_PASSWORD: # your mongo user password
-#      AUTH_DB: # name of the database your mongo user lives in
-#      MONGO_HOST: mongodb
-#      MONGO_PORT: 27017
-#      BOT_TOKEN: # insert your bot's token here
-#      GUILD_DB: guilds
-#      MEMBER_DB: members
-#      CONFIG_DB: config
-#      VERSION: 1.2.6 # Doesn't affect functionality, just for info with the `/support` command
-#      LOAD_EXTENSIONS: admin, config, gm, info, player, shop
-#      ALLOWLIST: True
-#      LOG_LEVEL: INFO
-#      BOT_ACTIVITY: "Playing by Post" # Customize the displayed activity status
-#    depends_on:
-#      - mongodb
-#    restart: unless-stopped
+  request:
+    image: zigmata/request:latest
+    container_name: request
+    environment:
+      MONGO_USER: # Username if you are using auth in your mongoDB deployment
+      MONGO_PASSWORD: # your mongo user password
+      AUTH_DB: # name of the database your mongo user lives in
+      MONGO_HOST: mongodb
+      MONGO_PORT: 27017
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: # your redis password, if needed
+      BOT_TOKEN: # insert your bot's token here
+      GUILD_DB: guilds
+      MEMBER_DB: members
+      CONFIG_DB: config
+      VERSION: 1.2.7 # Doesn't affect functionality, just for info with the `/support` command
+      LOAD_EXTENSIONS: admin, config, gm, info, player, shop
+      ALLOWLIST: True
+      LOG_LEVEL: INFO
+      BOT_ACTIVITY: "Playing by Post" # Customize the displayed activity status
+    depends_on:
+      - mongodb
+    restart: unless-stopped
 ```
 
 ### Docker Installation Notes
@@ -165,7 +173,8 @@ services:
       one for a default unauthenticated connection, and one using an authenticated connection URI. Comment/un-comment 
       the appropriate lines as needed.
 - You will not need to expose any ports past your host firewall if your mongoDB and ReQuest containers are on the same
-  docker bridge network. Docker creates this bridge network by default if no network definitions are provided.
+  docker bridge network, and you are not going to access the db (for example, via mongosh) from outside its container. 
+  Docker creates this bridge network by default if no network definitions are provided.
 - If your bot runs on a publicly-accessible host, it is strongly recommended to research and implement best practices
   regarding mongoDB user authentication, least-privilege database access, and persistent database volume file security.
   You will also need to modify your docker-compose accordingly for specific volume mounts, users, etc. Guidance on these

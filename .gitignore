@@ -10,6 +10,7 @@
 *.sln.docstates
 Dockerfile-dev
 requirements-dev.txt
+dev_env/
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

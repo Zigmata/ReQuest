@@ -9,6 +9,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import errors
 from pymongo import AsyncMongoClient as MongoClient
+import redis.asyncio as redis
 
 from ReQuest.ui.gm.views import QuestPostView
 from utilities.supportFunctions import attempt_delete, log_exception
@@ -28,6 +29,7 @@ class ReQuest(commands.Bot):
         self.cdb = None
         self.mdb = None
         self.gdb = None
+        self.rdb = None
         self.session = None
         self.allow_list_enabled = False
         intents = discord.Intents.default()
@@ -81,6 +83,20 @@ class ReQuest(commands.Bot):
         self.cdb = self.mongo_client[os.getenv('CONFIG_DB')]
         self.gdb = self.mongo_client[os.getenv('GUILD_DB')]
 
+        # Connect to Redis
+        redis_host = os.getenv('REDIS_HOST', 'localhost')
+        redis_port = int(os.getenv('REDIS_PORT', 6379))
+        redis_password = os.getenv('REDIS_PASSWORD')
+
+        self.rdb = redis.Redis(
+            host=redis_host,
+            port=redis_port,
+            password=redis_password,
+            decode_responses=True,
+            socket_keepalive=True,
+            health_check_interval=30
+        )
+
         # Grab the list of extensions and load them asynchronously
         initial_extensions = os.getenv('LOAD_EXTENSIONS').split(', ')
         for ext in initial_extensions:
@@ -90,7 +106,7 @@ class ReQuest(commands.Bot):
                 print(f'Failed to load extension: {ext}')
                 print('{}: {}'.format(type(e).__name__, e))
 
-        # If the white list is enabled, load it async in the background
+        # If the allow list is enabled, load it async in the background
         if os.getenv('ALLOWLIST'):
             self.allow_list_enabled = True
             await asyncio.create_task(self.load_allow_list())
@@ -108,6 +124,10 @@ class ReQuest(commands.Bot):
         await super().close()
         if self.session:
             await self.session.close()
+        if self.mongo_client:
+            await self.mongo_client.close()
+        if self.rdb:
+            await self.rdb.close()
 
     async def load_allow_list(self):
         collection_list = await self.cdb.list_collection_names()

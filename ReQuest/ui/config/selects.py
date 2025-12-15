@@ -3,7 +3,12 @@ import logging
 import discord
 from discord.ui import Select, RoleSelect, ChannelSelect
 
-from ReQuest.utilities.supportFunctions import log_exception, setup_view
+from ReQuest.utilities.supportFunctions import (
+    log_exception,
+    setup_view,
+    get_cached_data,
+    update_cached_data
+)
 
 logger = logging.getLogger(__name__)
 
@@ -24,10 +29,15 @@ class SingleChannelConfigSelect(ChannelSelect):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            collection = interaction.client.gdb[self.config_type]
-            await collection.update_one({'_id': interaction.guild_id},
-                                        {'$set': {self.config_type: self.values[0].mention}},
-                                        upsert=True)
+            bot = interaction.client
+            update_data = {'$set': {self.config_type: self.values[0].mention}}
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=self.config_type,
+                query={'_id': interaction.guild_id},
+                update_data=update_data
+            )
             await setup_view(self.calling_view, interaction)
             return await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
@@ -44,11 +54,16 @@ class QuestAnnounceRoleSelect(RoleSelect):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            collection = interaction.client.gdb['announceRole']
-            await collection.update_one({'_id': interaction.guild_id},
-                                        {'$set': {'announceRole': self.values[0].mention}},
-                                        upsert=True)
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
+            bot = interaction.client
+            update_data = {'$set': {'announceRole': self.values[0].mention}}
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='announceRole',
+                query={'_id': interaction.guild_id},
+                update_data=update_data
+            )
+            await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
@@ -65,13 +80,23 @@ class AddGMRoleSelect(RoleSelect):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            collection = interaction.client.gdb['gmRoles']
-            query = await collection.find_one({'_id': interaction.guild_id})
+            bot = interaction.client
+            query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='gmRoles',
+                query={'_id': interaction.guild_id}
+            )
             if not query:
                 for value in self.values:
-                    await collection.update_one({'_id': interaction.guild_id},
-                                                {'$push': {'gmRoles': {'mention': value.mention, 'name': value.name}}},
-                                                upsert=True)
+                    update_data = {'$push': {'gmRoles': {'mention': value.mention, 'name': value.name}}}
+                    await update_cached_data(
+                        bot=bot,
+                        mongo_database=bot.gdb,
+                        collection_name='gmRoles',
+                        query={'_id': interaction.guild_id},
+                        update_data=update_data
+                    )
             else:
                 for value in self.values:
                     matches = 0
@@ -80,12 +105,16 @@ class AddGMRoleSelect(RoleSelect):
                             matches += 1
 
                     if matches == 0:
-                        await collection.update_one({'_id': interaction.guild_id},
-                                                    {'$push': {
-                                                        'gmRoles': {'mention': value.mention, 'name': value.name}}},
-                                                    upsert=True)
+                        update_data = {'$push': {'gmRoles': {'mention': value.mention, 'name': value.name}}}
+                        await update_cached_data(
+                            bot=bot,
+                            mongo_database=bot.gdb,
+                            collection_name='gmRoles',
+                            query={'_id': interaction.guild_id},
+                            update_data=update_data
+                        )
 
-            await self.calling_view.setup(bot=interaction.client, guild=interaction.guild)
+            await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
@@ -109,10 +138,15 @@ class ConfigWaitListSelect(Select):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            collection = interaction.client.gdb['questWaitList']
-            await collection.update_one({'_id': interaction.guild_id},
-                                        {'$set': {'questWaitList': int(self.values[0])}},
-                                        upsert=True)
+            bot = interaction.client
+            update_data = {'$set': {'questWaitList': int(self.values[0])}}
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='questWaitList',
+                query={'_id': interaction.guild_id},
+                update_data=update_data
+            )
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
@@ -142,10 +176,14 @@ class InventoryTypeSelect(Select):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            collection = interaction.client.gdb['inventoryConfig']
-            await collection.update_one({'_id': interaction.guild_id},
-                                        {'$set': {'inventoryType': self.values[0]}},
-                                        upsert=True)
+            bot = interaction.client
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='inventoryConfig',
+                query={'_id': interaction.guild_id},
+                update_data={'$set': {'inventoryType': self.values[0]}}
+            )
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:

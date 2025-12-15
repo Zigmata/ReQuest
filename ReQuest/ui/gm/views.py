@@ -31,7 +31,10 @@ from ReQuest.utilities.supportFunctions import (
     setup_view,
     format_consolidated_totals,
     get_xp_config,
-    UserFeedbackError
+    UserFeedbackError,
+    get_cached_data,
+    delete_cached_data,
+    update_cached_data
 )
 
 logger = logging.getLogger(__name__)
@@ -73,17 +76,25 @@ class GMQuestMenuView(LayoutView):
 
     async def setup(self, bot, user, guild):
         try:
-            quest_collection = bot.gdb['quests']
-            self.quests = []
-
             # Check to see if the user has guild admin privileges. This lets them view any quest in the guild.
             if user.guild_permissions.manage_guild:
-                cursor = quest_collection.find({'guildId': guild.id})
+                query = {'guildId': guild.id}
+                cache_id = f'guild_quests:{guild.id}'
             else:
-                cursor = quest_collection.find({'guildId': guild.id, 'gm': user.id})
+                query = {'guildId': guild.id, 'gm': user.id}
+                cache_id = f'gm_quests:{guild.id}:{user.id}'
 
-            async for document in cursor:
-                self.quests.append(dict(document))
+            self.quests = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='quests',
+                query=query,
+                is_single=False,
+                cache_id=cache_id
+            )
+
+            if self.quests is None:
+                self.quests = []
 
             self.quests.sort(key=lambda x: x.get('title', '').lower())
 
@@ -186,19 +197,20 @@ class ManageQuestsView(LayoutView):
         self.selected_quest = quest
         self.xp_enabled = True
 
-        self.build_view()
-
     async def setup(self, bot):
         try:
             # Refresh the selected quest data
-            quest_collection = bot.gdb['quests']
-            query = await quest_collection.find_one(
-                {'guildId': self.selected_quest['guildId'], 'questId': self.selected_quest['questId']}
+            query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='quests',
+                query={'guildId': self.selected_quest['guildId'], 'questId': self.selected_quest['questId']},
+                cache_id=f"{self.selected_quest['guildId']}:{self.selected_quest['questId']}"
             )
             if query:
                 self.selected_quest = query
 
-            self.xp_enabled = await get_xp_config(bot.gdb, self.selected_quest['guildId'])
+            self.xp_enabled = await get_xp_config(bot, self.selected_quest['guildId'])
 
             self.build_view()
         except Exception as e:
@@ -225,7 +237,7 @@ class ManageQuestsView(LayoutView):
         toggle_section = Section(accessory=buttons.ToggleReadyButton(self))
         toggle_section.add_item(TextDisplay(
             f'Toggle ready state (Current: **{ready_status}**)\n'
-            f'-Locks the quest roster and notifies party members that the quest will begin soon. If a role is '
+            f'- Locks the quest roster and notifies party members that the quest will begin soon. If a role is '
             f'configured, it will be assigned to party members when locked.\n'
             f'- Unlocks the roster when set to Open.'
         ))
@@ -256,14 +268,19 @@ class ManageQuestsView(LayoutView):
 
     async def quest_ready_toggle(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             quest = self.selected_quest
             guild_id = interaction.guild_id
             user_id = interaction.user.id
-            guild = interaction.client.get_guild(guild_id)
+            guild = interaction.guild
 
             # Fetch the quest channel
-            channel_collection = interaction.client.gdb['questChannel']
-            channel_id_query = await channel_collection.find_one({'_id': guild_id})
+            channel_id_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='questChannel',
+                query={'_id': guild_id}
+            )
             if not channel_id_query:
                 raise UserFeedbackError('Quest channel has not been set!')
             channel_id = strip_id(channel_id_query['questChannel'])
@@ -285,9 +302,15 @@ class ManageQuestsView(LayoutView):
             tasks = []
 
             # Locks the quest roster and alerts party members that the quest is ready.
-            quest_collection = interaction.client.gdb['quests']
             if not quest['lockState']:
-                await quest_collection.update_one({'questId': quest_id}, {'$set': {'lockState': True}})
+                await update_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name='quests',
+                    query={'questId': quest_id},
+                    update_data={'$set': {'lockState': True}},
+                    cache_id=f'{guild_id}:{quest_id}'
+                )
                 quest['lockState'] = True
 
                 # Notify each party member that the quest is ready
@@ -310,7 +333,14 @@ class ManageQuestsView(LayoutView):
                             tasks.append(member.remove_roles(role))
 
                 # Unlock the quest
-                await quest_collection.update_one({'questId': quest_id}, {'$set': {'lockState': False}})
+                await update_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name='quests',
+                    query={'questId': quest_id},
+                    update_data={'$set': {'lockState': False}},
+                    cache_id=f'{guild_id}:{quest_id}'
+                )
                 quest['lockState'] = False
 
                 await interaction.user.send('Quest roster has been unlocked.')
@@ -337,34 +367,45 @@ class ManageQuestsView(LayoutView):
 
     async def complete_quest(self, interaction: discord.Interaction, summary=None):
         try:
+            bot = interaction.client
             guild_id = interaction.guild_id
-            guild = interaction.client.get_guild(guild_id)
+            guild = interaction.guild
 
             # Refresh the quest state before attempting to complete it
-            quest_collection = interaction.client.gdb['quests']
-            refreshed_quest = await quest_collection.find_one({
-                'guildId': guild_id,
-                'questId': self.selected_quest['questId']
-            })
+            refreshed_quest = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='quests',
+                query={'guildId': guild_id, 'questId': self.selected_quest['questId']},
+                cache_id=f'{guild_id}:{self.selected_quest["questId"]}'
+            )
 
             if not refreshed_quest:
                 raise Exception('Could not find the specified quest in the database.')
 
             self.selected_quest = refreshed_quest
             quest = self.selected_quest
-            xp_enabled = await get_xp_config(interaction.client.gdb, guild_id)
+            xp_enabled = await get_xp_config(interaction.client, guild_id)
 
             # Setup quest variables
-            quest_id, message_id, title, description, gm, party, rewards = (quest['questId'], quest['messageId'],
-                                                                            quest['title'], quest['description'],
-                                                                            quest['gm'], quest['party'],
-                                                                            quest['rewards'])
+            quest_id = quest['questId']
+            message_id = quest['messageId']
+            title = quest['title']
+            description = quest['description']
+            gm = quest['gm']
+            party = quest['party']
+            rewards = quest['rewards']
 
             if not party:
                 raise UserFeedbackError('You cannot complete a quest with an empty roster. Try cancelling instead.')
 
             archive_channel = None
-            archive_query = await interaction.client.gdb['archiveChannel'].find_one({'_id': guild_id})
+            archive_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='archiveChannel',
+                query={'_id': guild_id}
+            )
             if archive_query:
                 archive_channel = guild.get_channel(strip_id(archive_query['archiveChannel']))
 
@@ -387,7 +428,7 @@ class ManageQuestsView(LayoutView):
                     # If the player left the server, this will return None
                     member = guild.get_member(int(player_id))
                     if not member:
-                        continue # Skip the player if they left.
+                        continue  # Skip the player if they left.
 
                     # Get character data
                     character_id = next(iter(character_info))
@@ -459,7 +500,13 @@ class ManageQuestsView(LayoutView):
                 await archive_channel.send(embed=quest_embed)
 
             # Delete the original quest post
-            quest_channel_query = await interaction.client.gdb['questChannel'].find_one({'_id': guild_id})
+            quest_channel_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='questChannel',
+                query={'_id': guild_id}
+            )
+
             quest_channel_id = quest_channel_query['questChannel']
             quest_channel = interaction.client.get_channel(strip_id(quest_channel_id))
             if quest_channel:
@@ -467,21 +514,40 @@ class ManageQuestsView(LayoutView):
                 await attempt_delete(quest_message)
 
             # Remove the quest from the db
-            quest_collection = interaction.client.gdb['quests']
-            await quest_collection.delete_one({'guildId': guild_id, 'questId': quest_id})
+            await delete_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='quests',
+                search_filter={'guildId': guild_id, 'questId': quest_id},
+                cache_id=f'{guild_id}:{quest_id}'
+            )
+
+            admin_list_key = f'guild_quests:{guild_id}'
+            await bot.rdb.delete(admin_list_key)
+
+            gm_list_key = f'gm_quests:{guild_id}:{gm}'
+            await bot.rdb.delete(gm_list_key)
 
             # Message feedback to the GM
             await interaction.user.send(embed=quest_embed)
 
             # Check if GM rewards are enabled, and reward the GM accordingly
-            gm_rewards_collection = interaction.client.gdb['gmRewards']
-            gm_rewards_query = await gm_rewards_collection.find_one({'_id': interaction.guild_id})
+            gm_rewards_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='gmRewards',
+                query={'_id': guild_id}
+            )
             if gm_rewards_query:
                 experience = gm_rewards_query.get('experience')
                 items = gm_rewards_query.get('items')
 
-                character_collection = interaction.client.mdb['characters']
-                character_query = await character_collection.find_one({'_id': interaction.user.id})
+                character_query = await get_cached_data(
+                    bot=bot,
+                    mongo_database=bot.mdb,
+                    collection_name='characters',
+                    query={'_id': interaction.user.id}
+                )
 
                 if not character_query:
                     character_string = ('Your server admin has configured rewards for Game Masters when they complete '
@@ -779,6 +845,7 @@ class RemovePlayerView(LayoutView):
 
     async def confirm_callback(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             quest = self.quest
             (quest_id, message_id, title, gm, party,
              wait_list, max_wait_list_size, lock_state, rewards) = (quest['questId'], quest['messageId'],
@@ -792,8 +859,12 @@ class RemovePlayerView(LayoutView):
             member = guild.get_member(int(removed_member_id))
 
             # Fetch the quest channel to retrieve the message object
-            channel_collection = interaction.client.gdb['questChannel']
-            channel_id_query = await channel_collection.find_one({'_id': guild_id})
+            channel_id_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='questChannel',
+                query={'_id': guild_id}
+            )
             channel_id = strip_id(channel_id_query['questChannel'])
             channel = interaction.client.get_channel(channel_id)
             message = channel.get_partial_message(message_id)
@@ -895,12 +966,18 @@ class QuestPostView(View):
 
     async def join_callback(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             guild_id = interaction.guild_id
             user_id = interaction.user.id
-
-            quest_collection = interaction.client.gdb['quests']
             quest_id = self.quest['questId']
-            quest = await quest_collection.find_one({'guildId': guild_id, 'questId': quest_id})
+
+            quest = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='quests',
+                query={'guildId': guild_id, 'questId': quest_id},
+                cache_id=f'{guild_id}:{quest_id}'
+            )
 
             current_party = quest['party']
             current_wait_list = quest['waitList']
@@ -910,8 +987,13 @@ class QuestPostView(View):
                         raise UserFeedbackError(f'You are already on this quest as {character_data['name']}')
             max_wait_list_size = quest['maxWaitListSize']
             max_party_size = quest['maxPartySize']
-            member_collection = interaction.client.mdb['characters']
-            player_characters = await member_collection.find_one({'_id': user_id})
+
+            player_characters = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.mdb,
+                collection_name='characters',
+                query={'_id': user_id}
+            )
             if (not player_characters or
                     'activeCharacters' not in player_characters or
                     str(guild_id) not in player_characters['activeCharacters']):
@@ -932,16 +1014,24 @@ class QuestPostView(View):
                 if max_wait_list_size > 0:
                     # If there is room in the party, add the user.
                     if len(current_party) < max_party_size:
-                        await quest_collection.update_one(
-                            {'guildId': guild_id, 'questId': quest_id},
-                            {'$push': {'party': new_player_entry}}
+                        await update_cached_data(
+                            bot=bot,
+                            mongo_database=bot.gdb,
+                            collection_name='quests',
+                            query={'guildId': guild_id, 'questId': quest_id},
+                            update_data={'$push': {'party': new_player_entry}},
+                            cache_id=f'{guild_id}:{quest_id}'
                         )
                         self.quest['party'].append(new_player_entry)
                     # If the party is full but the wait list is not, add the user to wait list.
                     elif len(current_party) >= max_party_size and len(current_wait_list) < max_wait_list_size:
-                        await quest_collection.update_one(
-                            {'guildId': guild_id, 'questId': quest_id},
-                            {'$push': {'waitList': new_player_entry}}
+                        await update_cached_data(
+                            bot=bot,
+                            mongo_database=bot.gdb,
+                            collection_name='quests',
+                            query={'guildId': guild_id, 'questId': quest_id},
+                            update_data={'$push': {'waitList': new_player_entry}},
+                            cache_id=f'{guild_id}:{quest_id}'
                         )
                         self.quest['waitList'].append(new_player_entry)
 
@@ -952,15 +1042,19 @@ class QuestPostView(View):
                 else:
                     # If there is room in the party, add the user.
                     if len(current_party) < max_party_size:
-                        await quest_collection.update_one(
-                            {'guildId': guild_id, 'questId': quest_id},
-                            {'$push': {'party': new_player_entry}}
+                        await update_cached_data(
+                            bot=bot,
+                            mongo_database=bot.gdb,
+                            collection_name='quests',
+                            query={'guildId': guild_id, 'questId': quest_id},
+                            update_data={'$push': {'party': new_player_entry}},
+                            cache_id=f'{guild_id}:{quest_id}'
                         )
                         self.quest['party'].append(new_player_entry)
                     else:
                         raise UserFeedbackError(f'Error joining quest **{quest["title"]}**: The quest roster is full!')
 
-                await self.setup()
+                await setup_view(self, interaction)
                 await interaction.response.edit_message(embed=self.embed, view=self)
         except Exception as e:
             await log_exception(e, interaction)
@@ -1123,15 +1217,23 @@ class ReviewSubmissionView(LayoutView):
 
     async def approve(self, interaction):
         try:
+            bot = interaction.client
             character_id = self.data['character_id']
             user_id = self.data['user_id']
+            submission_id = self.data['submission_id']
 
             for name, quantity in self.data.get('items', {}).items():
                 await update_character_inventory(interaction, user_id, character_id, name, quantity)
             for name, quantity in self.data.get('currency', {}).items():
                 await update_character_inventory(interaction, user_id, character_id, name, quantity)
 
-            await interaction.client.gdb['approvals'].delete_one({'submission_id': self.data['submission_id']})
+            await delete_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='approvals',
+                search_filter={'submission_id': submission_id},
+                cache_id=f'approval_submission:{submission_id}'
+            )
 
             approval_embed = discord.Embed(
                 title='Inventory Update Approved',
@@ -1164,7 +1266,16 @@ class ReviewSubmissionView(LayoutView):
     async def deny(self, interaction):
         try:
             # Same logic as above but for denials
-            await interaction.client.gdb['approvals'].delete_one({'submission_id': self.data['submission_id']})
+            bot = interaction.client
+            submission_id = self.data['submission_id']
+
+            await delete_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='approvals',
+                search_filter={'submission_id': submission_id},
+                cache_id=f'approval_submission:{submission_id}'
+            )
 
             denial_embed = discord.Embed(
                 title='Inventory Update Denied',
