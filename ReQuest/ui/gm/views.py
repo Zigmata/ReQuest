@@ -615,6 +615,8 @@ class RewardsMenuView(LayoutView):
         self.selected_character = None
         self.selected_character_id = None
 
+        self.xp_enabled = getattr(calling_view, 'xp_enabled', True)
+
         self.party_rewards_button = buttons.PartyRewardsButton(self)
         self.current_party_rewards = self._extract_party_rewards(self.quest)
         self.current_party_rewards_info = TextDisplay(
