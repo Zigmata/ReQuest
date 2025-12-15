@@ -52,6 +52,7 @@ async def get_cached_data(bot, mongo_database, collection_name, query, is_single
             return json.loads(cached)
     except Exception as e:
         logger.error(f"Redis read failed: {e}")
+        await log_exception(e)
 
     try:
         if is_single:
@@ -992,12 +993,12 @@ def format_price_string(amount, currency_name, currency_config) -> str:
             return f"{amount:.2f} {display_name}"
 
 
-async def get_xp_config(bot, guild) -> bool:
+async def get_xp_config(bot, guild_id) -> bool:
     """
     Retrieves the XP configuration for a guild.
 
     :param bot: The Discord bot instance
-    :param guild: The Discord guild object
+    :param guild_id: The Discord guild id
 
     :return: True if XP is enabled, False if XP is disabled
     """
@@ -1006,7 +1007,7 @@ async def get_xp_config(bot, guild) -> bool:
             bot=bot,
             mongo_database=bot.gdb,
             collection_name='playerExperience',
-            query={'_id': guild.id}
+            query={'_id': guild_id}
         )
         if query is None:
             return True  # Default to XP enabled if no config found

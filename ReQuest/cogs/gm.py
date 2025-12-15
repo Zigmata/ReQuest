@@ -68,7 +68,7 @@ class GameMaster(Cog):
 
             active_character_id = player_query['activeCharacters'][guild_id]
             character_data = player_query['characters'][active_character_id]
-            xp_enabled = await get_xp_config(interaction.client.gdb, interaction.guild_id)
+            xp_enabled = await get_xp_config(interaction.client, interaction.guild_id)
             modal = modals.ModPlayerModal(member, active_character_id, character_data, xp_enabled)
             await interaction.response.send_modal(modal)
         except Exception as e:
@@ -104,7 +104,7 @@ class GameMaster(Cog):
                 collection_name='currency',
                 query={'_id': interaction.guild_id}
             )
-            xp_enabled = await get_xp_config(interaction.client.gdb, interaction.guild_id)
+            xp_enabled = await get_xp_config(interaction.client, interaction.guild_id)
             view = views.ViewCharacterView(member.id, character_data, currency_config, xp_enabled)
             await interaction.response.send_message(view=view, ephemeral=True)
         except Exception as e:

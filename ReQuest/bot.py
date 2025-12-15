@@ -87,12 +87,11 @@ class ReQuest(commands.Bot):
         redis_host = os.getenv('REDIS_HOST', 'localhost')
         redis_port = int(os.getenv('REDIS_PORT', 6379))
         redis_password = os.getenv('REDIS_PASSWORD')
-        r_password = quote_plus(redis_password)
 
         self.rdb = redis.Redis(
             host=redis_host,
             port=redis_port,
-            password=r_password,
+            password=redis_password,
             decode_responses=True,
             socket_keepalive=True,
             health_check_interval=30

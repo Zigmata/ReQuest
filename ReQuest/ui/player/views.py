@@ -125,7 +125,7 @@ class CharacterBaseView(LayoutView):
             if self.current_page >= self.total_pages:
                 self.current_page = max(0, self.total_pages - 1)
 
-            self.xp_enabled = await get_xp_config(interaction.client.gdb, interaction.guild_id)
+            self.xp_enabled = await get_xp_config(interaction.client, interaction.guild_id)
 
             self.build_view()
         except Exception as e:

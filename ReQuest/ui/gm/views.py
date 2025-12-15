@@ -213,7 +213,7 @@ class ManageQuestsView(LayoutView):
             if query:
                 self.selected_quest = query
 
-            self.xp_enabled = await get_xp_config(bot.gdb, self.selected_quest['guildId'])
+            self.xp_enabled = await get_xp_config(bot, self.selected_quest['guildId'])
 
             self.build_view()
         except Exception as e:
@@ -240,7 +240,7 @@ class ManageQuestsView(LayoutView):
         toggle_section = Section(accessory=buttons.ToggleReadyButton(self))
         toggle_section.add_item(TextDisplay(
             f'Toggle ready state (Current: **{ready_status}**)\n'
-            f'-Locks the quest roster and notifies party members that the quest will begin soon. If a role is '
+            f'- Locks the quest roster and notifies party members that the quest will begin soon. If a role is '
             f'configured, it will be assigned to party members when locked.\n'
             f'- Unlocks the roster when set to Open.'
         ))
@@ -388,7 +388,7 @@ class ManageQuestsView(LayoutView):
 
             self.selected_quest = refreshed_quest
             quest = self.selected_quest
-            xp_enabled = await get_xp_config(interaction.client.gdb, guild_id)
+            xp_enabled = await get_xp_config(interaction.client, guild_id)
 
             # Setup quest variables
             quest_id = quest['questId']

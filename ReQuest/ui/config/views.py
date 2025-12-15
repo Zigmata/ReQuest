@@ -1289,7 +1289,7 @@ class GMRewardsView(LayoutView):
 
     async def setup(self, bot, guild):
         try:
-            self.xp_enabled = await get_xp_config(bot, guild)
+            self.xp_enabled = await get_xp_config(bot, guild.id)
             gm_rewards_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -1370,7 +1370,7 @@ class ConfigPlayersView(LayoutView):
     async def setup(self, bot, guild):
         try:
             # XP section
-            player_experience = await get_xp_config(bot, guild)
+            player_experience = await get_xp_config(bot, guild.id)
             self.player_experience_info.content = (
                 f'**Player Experience:** {"Enabled" if player_experience else "Disabled"}\n'
                 f'Enables/Disables the use of experience points (or similar value-based character progression.'
