@@ -364,7 +364,7 @@ class InventoryBaseView(LayoutView):
             items = []
             currencies = format_currency_display(player_currencies, currency_config)
 
-            for item in inventory:
+            for item in sorted(inventory):
                 pair = (str(item), f'**{inventory[item]}**')
                 value = ': '.join(pair)
                 items.append(value)
