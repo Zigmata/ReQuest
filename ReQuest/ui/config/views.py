@@ -19,7 +19,7 @@ from discord.ui import (
 
 from ReQuest.ui.common import modals as common_modals, views as common_views
 from ReQuest.ui.common.buttons import MenuViewButton, BackButton
-from ReQuest.ui.config import buttons, selects, enums
+from ReQuest.ui.config import buttons, selects
 from ReQuest.ui.config.buttons import AddShopJSONButton
 from ReQuest.utilities.supportFunctions import (
     log_exception,

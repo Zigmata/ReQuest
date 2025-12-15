@@ -14,7 +14,7 @@ from ReQuest.utilities.supportFunctions import (
     attempt_delete,
     get_cached_data,
     update_cached_data,
-    delete_cached_data
+    delete_cached_data, build_cache_key
 )
 
 logger = logging.getLogger(__name__)
@@ -164,13 +164,15 @@ class CancelQuestButton(Button):
                 mongo_database=bot.gdb,
                 collection_name='quests',
                 search_filter={'guildId': guild_id, 'questId': quest['questId']},
-                cache_id=f'guild_quest:{guild_id}:{quest["questId"]}'
+                cache_id=f'{guild_id}:{quest["questId"]}'
             )
 
             # Delete the quest from the redis cache
-            gm_id = quest['gm']
-            await interaction.client.rdb.delete(f'guild_quests:{guild_id}')
-            await interaction.client.rdb.delete(f'gm_quests:{guild_id}:{gm_id}')
+            admin_list_key = build_cache_key(bot.gdb.name, f'guild_quests:{guild_id}', 'quests')
+            await bot.rdb.delete(admin_list_key)
+
+            gm_list_key = build_cache_key(bot.gdb.name, f'gm_quests:{guild_id}:{quest["gm"]}', 'quests')
+            await bot.rdb.delete(gm_list_key)
 
             # Delete the quest from the quest channel
             channel_query = await get_cached_data(
