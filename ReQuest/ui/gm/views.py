@@ -198,8 +198,6 @@ class ManageQuestsView(LayoutView):
         self.selected_quest = quest
         self.xp_enabled = True
 
-        self.build_view()
-
     async def setup(self, bot):
         try:
             # Refresh the selected quest data
