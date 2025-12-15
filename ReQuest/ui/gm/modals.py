@@ -15,7 +15,7 @@ from ReQuest.utilities.supportFunctions import (
     find_currency_or_denomination,
     get_denomination_map,
     setup_view,
-    UserFeedbackError, update_cached_data, get_cached_data
+    UserFeedbackError, update_cached_data, get_cached_data, build_cache_key
 )
 
 logger = logging.getLogger(__name__)
@@ -194,8 +194,11 @@ class CreateQuestModal(Modal):
             await quest_collection.insert_one(quest)
 
             # Clear the cached guild quests for the GM
-            await interaction.client.rdb.delete(f'guild_quests:{guild_id}')
-            await interaction.client.rdb.delete(f'gm:guild_quests:{guild_id}:{author_id}')
+            admin_key = build_cache_key(bot.gdb.name, f'guild_quests:{guild_id}', 'quests')
+            await bot.rdb.delete(admin_key)
+
+            gm_key = build_cache_key(bot.gdb.name, f'gm_quests:{guild_id}:{author_id}', 'quests')
+            await bot.rdb.delete(gm_key)
 
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
@@ -269,7 +272,8 @@ class EditQuestModal(Modal):
                 mongo_database=bot.gdb,
                 collection_name='quests',
                 query={'guildId': guild_id, 'questId': self.quest['questId']},
-                update_data={'$set': updates}
+                update_data={'$set': updates},
+                cache_id=f'{guild_id}:{self.quest["questId"]}'
             )
 
             # Get the updated quest

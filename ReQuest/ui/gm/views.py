@@ -34,7 +34,8 @@ from ReQuest.utilities.supportFunctions import (
     UserFeedbackError,
     get_cached_data,
     delete_cached_data,
-    update_cached_data
+    update_cached_data,
+    build_cache_key
 )
 
 logger = logging.getLogger(__name__)
@@ -206,7 +207,8 @@ class ManageQuestsView(LayoutView):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='quests',
-                query={'guildId': self.selected_quest['guildId'], 'questId': self.selected_quest['questId']}
+                query={'guildId': self.selected_quest['guildId'], 'questId': self.selected_quest['questId']},
+                cache_id=f"{self.selected_quest['guildId']}:{self.selected_quest['questId']}"
             )
             if query:
                 self.selected_quest = query
@@ -377,7 +379,8 @@ class ManageQuestsView(LayoutView):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='quests',
-                query={'guildId': guild_id, 'questId': self.selected_quest['questId']}
+                query={'guildId': guild_id, 'questId': self.selected_quest['questId']},
+                cache_id=f'{guild_id}:{self.selected_quest["questId"]}'
             )
 
             if not refreshed_quest:
@@ -521,6 +524,12 @@ class ManageQuestsView(LayoutView):
                 search_filter={'guildId': guild_id, 'questId': quest_id},
                 cache_id=f'{guild_id}:{quest_id}'
             )
+
+            admin_list_key = build_cache_key(bot.gdb.name, f'guild_quests:{guild_id}', 'quests')
+            await bot.rdb.delete(admin_list_key)
+
+            gm_list_key = build_cache_key(bot.gdb.name, f'gm_quests:{guild_id}:{gm}', 'quests')
+            await bot.rdb.delete(gm_list_key)
 
             # Message feedback to the GM
             await interaction.user.send(embed=quest_embed)
@@ -1226,7 +1235,7 @@ class ReviewSubmissionView(LayoutView):
                 mongo_database=bot.gdb,
                 collection_name='approvals',
                 search_filter={'submission_id': submission_id},
-                cache_id=f'{interaction.guild_id}:{submission_id}'
+                cache_id=f'approval_submission:{submission_id}'
             )
 
             approval_embed = discord.Embed(
@@ -1268,7 +1277,7 @@ class ReviewSubmissionView(LayoutView):
                 mongo_database=bot.gdb,
                 collection_name='approvals',
                 search_filter={'submission_id': submission_id},
-                cache_id=f'{interaction.guild_id}:{submission_id}'
+                cache_id=f'approval_submission:{submission_id}'
             )
 
             denial_embed = discord.Embed(
