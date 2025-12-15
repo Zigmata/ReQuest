@@ -615,6 +615,8 @@ class RewardsMenuView(LayoutView):
         self.selected_character = None
         self.selected_character_id = None
 
+        self.xp_enabled = getattr(calling_view, 'xp_enabled', True)
+
         self.party_rewards_button = buttons.PartyRewardsButton(self)
         self.current_party_rewards = self._extract_party_rewards(self.quest)
         self.current_party_rewards_info = TextDisplay(
@@ -1144,10 +1146,11 @@ class ViewCharacterView(LayoutView):
         container.add_item(Separator())
         if xp_enabled and xp is not None:
             container.add_item(TextDisplay(f'__**Experience Points:**__\n{xp}'))
-        inventory_display = TextDisplay(
-            '__**Possessions**__\n\n' + ('\n'.join([f'{item}: **{quantity}**' for item, quantity in inventory.items()])
-                                         if inventory else 'No items in inventory.')
-        )
+        if inventory:
+            items = '\n'.join([f'{item}: **{quantity}**' for item, quantity in sorted(inventory.items())])
+        else:
+            items = 'No items in inventory.'
+        inventory_display = TextDisplay(f'__**Possessions**__\n\n{items}')
         currency_lines = format_currency_display(currency, currency_config)
         currency_display = TextDisplay(
             '__**Currency**__\n\n' + ('\n'.join(currency_lines)
@@ -1202,7 +1205,7 @@ class ReviewSubmissionView(LayoutView):
         items = self.data.get('items', {})
         currency = self.data.get('currency', {})
 
-        description = '**Items:**\n' + ('\n'.join([f'{k}: {v}' for k, v in items.items()]) or 'None')
+        description = '**Items:**\n' + ('\n'.join([f'{k}: {v}' for k, v in sorted(items.items())]) or 'None')
         currency_labels = format_consolidated_totals(currency, self.currency_config)
         description += '\n\n**Currency:**\n' + ('\n'.join(currency_labels) or 'None')
 
