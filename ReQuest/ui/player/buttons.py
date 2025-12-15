@@ -207,7 +207,7 @@ class RemovePlayerPostButton(Button):
             cache_id = f'{guild_id}:{interaction.user.id}'
             redis_key = build_cache_key(interaction.client.gdb.name, cache_id, 'playerBoard')
 
-            await interaction.client.rds.delete(redis_key)
+            await interaction.client.rdb.delete(redis_key)
 
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)

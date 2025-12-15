@@ -23,7 +23,7 @@ def has_gm_or_mod():
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='serverSettings',
+                collection_name='gmRoles',
                 query={'_id': interaction.guild.id}
             )
             if query:

@@ -1,15 +1,13 @@
-import datetime
 import inspect
+import json
 import logging
 import re
 import traceback
-import json
-from typing import Tuple, Union
-
-from discord import app_commands
-from titlecase import titlecase
+from typing import Tuple
 
 import discord
+from discord import app_commands
+from titlecase import titlecase
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +65,7 @@ async def get_cached_data(bot, mongo_database, collection_name, query, is_single
             cursor = mongo_database[collection_name].find(query)
             data = await cursor.to_list(length=None)
 
-            if data is not None:
+            if len(data) > 0:
                 try:
                     await bot.rdb.set(cache_key, json.dumps(data, default=str), ex=3600)
                 except Exception as e:

@@ -14,7 +14,8 @@ from ReQuest.utilities.supportFunctions import (
     attempt_delete,
     get_cached_data,
     update_cached_data,
-    delete_cached_data, build_cache_key
+    delete_cached_data,
+    build_cache_key
 )
 
 logger = logging.getLogger(__name__)
@@ -246,7 +247,7 @@ class PartyRewardsButton(Button):
                 collection_name='quests',
                 query={'guildId': quest['guildId'], 'questId': quest['questId']},
                 update_data={'$set': updates},
-                cache_id=f'guild_quest:{quest["guildId"]}:{quest["questId"]}'
+                cache_id=f'{quest["guildId"]}:{quest["questId"]}'
             )
 
             party_rewards['xp'] = xp_val
@@ -311,7 +312,7 @@ class IndividualRewardsButton(Button):
                 collection_name='quests',
                 query={'guildId': quest['guildId'], 'questId': quest['questId']},
                 update_data={'$set': updates},
-                cache_id=f'guild_quest:{quest["guildId"]}:{quest["questId"]}'
+                cache_id=f'{quest["guildId"]}:{quest["questId"]}'
             )
 
             char_rewards['xp'] = xp_val

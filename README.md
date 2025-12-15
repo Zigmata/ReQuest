@@ -135,7 +135,7 @@ services:
     restart: unless-stopped
   
   redis:
-    image: redis:latest
+    image: redis:alpine
     container_name: redis
     restart: unless-stopped
 

@@ -34,8 +34,7 @@ from ReQuest.utilities.supportFunctions import (
     UserFeedbackError,
     get_cached_data,
     delete_cached_data,
-    update_cached_data,
-    build_cache_key
+    update_cached_data
 )
 
 logger = logging.getLogger(__name__)
@@ -523,10 +522,10 @@ class ManageQuestsView(LayoutView):
                 cache_id=f'{guild_id}:{quest_id}'
             )
 
-            admin_list_key = build_cache_key(bot.gdb.name, f'guild_quests:{guild_id}', 'quests')
+            admin_list_key = f'guild_quests:{guild_id}'
             await bot.rdb.delete(admin_list_key)
 
-            gm_list_key = build_cache_key(bot.gdb.name, f'gm_quests:{guild_id}:{gm}', 'quests')
+            gm_list_key = f'gm_quests:{guild_id}:{gm}'
             await bot.rdb.delete(gm_list_key)
 
             # Message feedback to the GM

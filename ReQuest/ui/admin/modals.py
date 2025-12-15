@@ -41,7 +41,7 @@ class AllowServerModal(Modal):
                 collection_name='serverAllowlist',
                 query={'servers': {'$exists': True}},
                 update_data={'$push': {'servers': {'name': input_name, 'id': guild_id}}},
-                cache_id=guild_id
+                cache_id=f'{guild_id}'
             )
 
             interaction.client.allow_list.append(guild_id)

@@ -15,7 +15,10 @@ from ReQuest.utilities.supportFunctions import (
     find_currency_or_denomination,
     get_denomination_map,
     setup_view,
-    UserFeedbackError, update_cached_data, get_cached_data, build_cache_key
+    UserFeedbackError,
+    update_cached_data,
+    get_cached_data,
+    build_cache_key
 )
 
 logger = logging.getLogger(__name__)
@@ -431,7 +434,7 @@ class ModPlayerModal(Modal):
             bot = interaction.client
             xp = 0
             guild_id = interaction.guild_id
-            currency_config = get_cached_data(
+            currency_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='currency',
