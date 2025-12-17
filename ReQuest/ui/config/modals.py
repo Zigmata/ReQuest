@@ -454,7 +454,8 @@ class ConfigShopDetailsModal(Modal):
                 self.calling_view.build_view()
                 await interaction.response.edit_message(view=self.calling_view)
             else:
-                await interaction.response.defer()
+                await setup_view(self.calling_view, interaction)
+                await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 

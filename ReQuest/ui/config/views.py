@@ -45,19 +45,14 @@ class ConfigBaseView(common_views.MenuBaseView):
                     'view_class': ConfigWizardView
                 },
                 {
-                    'name': 'Roles',
-                    'description': 'Configuration options for pingable or privileged roles.',
-                    'view_class': ConfigRolesView
-                },
-                {
                     'name': 'Channels',
                     'description': 'Set designated channels for ReQuest posts.',
                     'view_class': ConfigChannelsView
                 },
                 {
-                    'name': 'Quests',
-                    'description': 'Global quest settings, such as wait lists.',
-                    'view_class': ConfigQuestsView
+                    'name': 'Currency',
+                    'description': 'Global currency settings.',
+                    'view_class': ConfigCurrencyView
                 },
                 {
                     'name': 'Players',
@@ -65,9 +60,19 @@ class ConfigBaseView(common_views.MenuBaseView):
                     'view_class': ConfigPlayersView
                 },
                 {
-                    'name': 'Currency',
-                    'description': 'Global currency settings.',
-                    'view_class': ConfigCurrencyView
+                    'name': 'Quests',
+                    'description': 'Global quest settings, such as wait lists.',
+                    'view_class': ConfigQuestsView
+                },
+                {
+                    'name': 'Role-play Rewards',
+                    'description': 'Configure role-play rewards.',
+                    'view_class': ConfigRoleplayView
+                },
+                {
+                    'name': 'Roles',
+                    'description': 'Configuration options for pingable or privileged roles.',
+                    'view_class': ConfigRolesView
                 },
                 {
                     'name': 'Shops',
@@ -1112,42 +1117,53 @@ class ConfigChannelsView(LayoutView):
 
     async def setup(self, bot, guild):
         try:
-            player_board = await get_cached_data(
+            player_board_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='playerBoardChannel',
                 query={'_id': guild.id}
             )
-            quest_board = await get_cached_data(
+            player_board = player_board_query['playerBoardChannel'] if player_board_query else None
+
+            quest_board_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='questChannel',
                 query={'_id': guild.id}
             )
-            quest_archive = await get_cached_data(
+            quest_board = quest_board_query['questChannel'] if quest_board_query else None
+
+            quest_archive_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='archiveChannel',
                 query={'_id': guild.id}
             )
-            gm_transaction_log = await get_cached_data(
+            quest_archive = quest_archive_query['archiveChannel'] if quest_archive_query else None
+
+            gm_log_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='gmTransactionLogChannel',
                 query={'_id': guild.id}
             )
-            player_transaction_log = await get_cached_data(
+            gm_transaction_log = gm_log_query['gmTransactionLogChannel'] if gm_log_query else None
+
+            player_log_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='playerTransactionLogChannel',
                 query={'_id': guild.id}
             )
-            shop_log = await get_cached_data(
+            player_transaction_log = player_log_query['playerTransactionLogChannel'] if player_log_query else None
+
+            shop_log_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='shopLogChannel',
                 query={'_id': guild.id}
             )
+            shop_log = shop_log_query['shopLogChannel'] if shop_log_query else None
 
             self.quest_board_info.content = (
                 f'**Quest Board:** {quest_board}\n'
@@ -1228,18 +1244,21 @@ class ConfigQuestsView(LayoutView):
 
     async def setup(self, bot, guild):
         try:
-            quest_summary = await get_cached_data(
+            quest_summary_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='questSummary',
                 query={'_id': guild.id}
             )
-            wait_list = await get_cached_data(
+            quest_summary = quest_summary_query['questSummary'] if quest_summary_query else False
+
+            wait_list_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='questWaitList',
                 query={'_id': guild.id}
             )
+            wait_list = wait_list_query['questWaitList'] if wait_list_query else 0
 
             wait_list_display = wait_list if isinstance(wait_list, int) and wait_list > 0 else 'Disabled'
             quest_summary_display = "Enabled" if quest_summary is True else "Disabled"
