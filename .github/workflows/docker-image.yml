@@ -4,16 +4,16 @@ on:
   push:
     branches:
       - main
-      - dev
-  pull_request:
-    branches:
-      - main
-      - dev
-    types:
-      - opened
-      - synchronize
-      - reopened
-  workflow_dispatch:
+#      - dev
+#  pull_request:
+#    branches:
+#      - main
+#      - dev
+#    types:
+#      - opened
+#      - synchronize
+#      - reopened
+#  workflow_dispatch:
 
 env:
   IMAGE_NAME: zigmata/request
