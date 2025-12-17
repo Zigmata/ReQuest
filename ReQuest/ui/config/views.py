@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import logging
 import math
 from collections import namedtuple
@@ -827,25 +828,27 @@ class ConfigRolesView(LayoutView):
             'By default, `everyone`, `administrator`, `gm`, and `game master` cannot be used. This configuration '
             'extends that list.\n'
         ))
-        role_row_5 = ActionRow(self.forbidden_roles_button)
-        container.add_item(role_row_5)
+        forbidden_role_row = ActionRow(self.forbidden_roles_button)
+        container.add_item(forbidden_role_row)
 
         self.add_item(container)
 
     async def setup(self, bot, guild):
         try:
-            announcement_role = await get_cached_data(
+            announcement_role_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='announceRole',
                 query={'_id': guild.id}
             )
-            gm_roles = await get_cached_data(
+            announcement_role = announcement_role_query['announceRole'] if announcement_role_query else None
+            gm_role_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='gmRoles',
                 query={'_id': guild.id}
             )
+            gm_roles = gm_role_query['gmRoles'] if gm_role_query else []
 
             if not announcement_role:
                 announcement_role_string = (
@@ -2553,3 +2556,119 @@ class EditShopView(LayoutView):
     def update_details(self, new_shop_data: dict):
         new_shop_data['shopStock'] = self.all_stock
         self.shop_data = new_shop_data
+
+
+class ConfigRoleplayView(LayoutView):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.config = {}
+        self.roleplay_toggle_button = buttons.RoleplayToggleEnableButton(self)
+        self.channel_select = selects.RoleplayChannelSelect(self)
+        self.rewards_button = buttons.RoleplayRewardsButton(self)
+        self.general_settings_button = buttons.RoleplayGeneralSettingsButton(self)
+        self.mode_select = selects.RoleplayModeSelect(self)
+        self.configure_mode_button = buttons.RoleplayConfigureModeButton(self)
+
+    async def setup(self, bot, guild):
+        try:
+            self.config = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='roleplayConfig',
+                query={'_id': guild.id}
+            )
+            if not self.config:
+                self.config = {'enabled': False, 'mode': 'scheduled'}
+
+            self.build_view()
+        except Exception as e:
+            await log_exception(e)
+
+    def build_view(self):
+        self.clear_items()
+        container = Container()
+
+        header_section = Section(accessory=BackButton(ConfigBaseView))
+        header_section.add_item(TextDisplay('**Server Configuration - Roleplay Rewards**'))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        # Status & Time
+        enabled = self.config.get('enabled', False)
+        mode = self.config.get('mode', 'scheduled').capitalize()
+        min_length = self.config.get('minLength', 0)
+
+        now = datetime.now(timezone.utc)
+        time_str = now.strftime('%H:%M UTC')
+
+        status_text = (
+            f'**Status:** {"Enabled" if enabled else "Disabled"}\n'
+            f'**Current Mode:** {mode}\n'
+            f'**Min Message Length:** {min_length} chars\n\n'
+            f'ℹ️ **Server Time:** `{time_str}` (Use this to calculate reset times)'
+        )
+
+        status_section = Section(accessory=self.roleplay_toggle_button)
+        self.roleplay_toggle_button.label = 'Disable' if enabled else 'Enable'
+        self.roleplay_toggle_button.style = ButtonStyle.danger if enabled else ButtonStyle.success
+        status_section.add_item(TextDisplay(status_text))
+        container.add_item(status_section)
+
+        # General Settings
+        general_row = ActionRow()
+        general_row.add_item(self.general_settings_button)
+        container.add_item(general_row)
+
+        container.add_item(Separator())
+
+        # Channels
+        channels = self.config.get('channels', [])
+        channel_count = len(channels)
+        channel_text = f'**Eligible Channels:** {channel_count} configured'
+
+        channel_section = Section(accessory=self.channel_select)
+        channel_section.add_item(TextDisplay(channel_text))
+        container.add_item(channel_section)
+        container.add_item(Separator())
+
+        # Rewards
+        rewards_text = '**Rewards:**\n'
+        rewards_data = self.config.get('rewards', {})
+        if not rewards_data:
+            rewards_text += "None configured."
+        else:
+            if xp := rewards_data.get('xp'):
+                rewards_text += f'- XP: {xp}\n'
+            if items := rewards_data.get('items'):
+                rewards_text += f'- Items: {len(items)}\n'
+            if currency := rewards_data.get('currency'):
+                rewards_text += f'- Currency: {len(currency)}\n'
+
+        reward_section = Section(accessory=self.rewards_button)
+        reward_section.add_item(TextDisplay(rewards_text))
+        container.add_item(reward_section)
+        container.add_item(Separator())
+
+        # Mode Config
+        mode_config = self.config.get('config', {})
+        mode_details = ''
+        if mode == 'Scheduled':
+            frequency = mode_config.get('frequency', 'daily').capitalize()
+            reset = mode_config.get('resetTime', '00:00')
+            message_threshold = mode_config.get('threshold', 0)
+            mode_details = f'Frequency: {frequency}\nReset: {reset} UTC\nThreshold: {message_threshold} msgs'
+        else:
+            frequency = mode_config.get('frequency', 0)
+            cooldown = mode_config.get('cooldown', 0)
+            mode_details = f'Every {frequency} messages\nCooldown: {cooldown}s'
+
+        mode_section = Section(accessory=self.mode_select)
+        mode_section.add_item(TextDisplay(f'**Mode Settings ({mode})**\n{mode_details}'))
+        container.add_item(mode_section)
+
+        mode_row = ActionRow()
+        mode_row.add_item(self.configure_mode_button)
+        self.configure_mode_button.label = f'Configure {mode} Mode'
+        container.add_item(mode_row)
+
+        self.add_item(container)

@@ -188,3 +188,68 @@ class InventoryTypeSelect(Select):
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
+
+
+class RoleplayChannelSelect(ChannelSelect):
+    def __init__(self, calling_view):
+        super().__init__(
+            channel_types=[discord.ChannelType.text],
+            placeholder='Select Eligible Channels',
+            min_values=0,
+            max_values=25,
+            custom_id='rp_channel_select'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            channel_ids = [str(channel.id) for channel in self.values]
+
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='roleplayConfig',
+                query={'_id': interaction.guild_id},
+                update_data={'$set': {'channels': channel_ids}}
+            )
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RoleplayModeSelect(Select):
+    def __init__(self, calling_view):
+        super().__init__(
+            placeholder='Select Logic Mode',
+            options=[
+                discord.SelectOption(
+                    label='Scheduled',
+                    value='scheduled',
+                    description='Rewards are granted once for any number eligible messages sent within a reset period.'
+                ),
+                discord.SelectOption(
+                    label='Accrued',
+                    value='accrued',
+                    description='Rewards are repeatedly granted based on specified activity levels.'
+                )
+            ],
+            custom_id='rp_mode_select'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='roleplayConfig',
+                query={'_id': interaction.guild_id},
+                update_data={'$set': {'mode': self.values[0]}}
+            )
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)

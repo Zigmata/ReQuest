@@ -1102,3 +1102,80 @@ class DeleteKitCurrencyButton(Button):
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
+
+
+class RoleplayToggleEnableButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Toggle RP Rewards',
+            custom_id='rp_toggle_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            current_state = self.calling_view.config.get('enabled', False)
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='roleplayConfig',
+                query={'_id': interaction.guild_id},
+                update_data={'$set': {'enabled': not current_state}}
+            )
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RoleplayGeneralSettingsButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='General Settings',
+            style=ButtonStyle.secondary,
+            custom_id='rp_settings_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.send_modal(modals.RoleplayGeneralSettingsModal(self.calling_view))
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RoleplayRewardsButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Configure Rewards',
+            style=ButtonStyle.primary,
+            custom_id='rp_rewards_button')
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            rp_modal = modals.RoleplayRewardsModal(self.calling_view, interaction.client, interaction.guild_id)
+            await interaction.response.send_modal(rp_modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RoleplayConfigureModeButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Configure Mode',
+            style=ButtonStyle.primary,
+            custom_id='rp_mode_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            mode = self.calling_view.config.get('mode', 'accrued')
+            if mode == 'scheduled':
+                await interaction.response.send_modal(modals.RoleplayScheduledConfigModal(self.calling_view))
+            else:
+                await interaction.response.send_modal(modals.RoleplayAccruedConfigModal(self.calling_view))
+        except Exception as e:
+            await log_exception(e, interaction)
