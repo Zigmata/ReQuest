@@ -15,16 +15,21 @@ on:
       - reopened
   workflow_dispatch:
 
+env:
+  IMAGE_NAME: zigmata/request
+
 jobs:
-  build:
+  docker:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@main
-
       - name: Docker Hub Login
-        if: github.event_name != 'pull_request' || (github.event_name == 'pull_request' && github.base_ref == 'dev')
-        run: echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+        uses: docker/login-action@main
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@main
 
       - name: Set tag based on ref
         id: docker_tag
@@ -41,16 +46,58 @@ jobs:
             fi
           fi
 
-      - name: Build Docker Image
-        run: docker build . --file Dockerfile --tag ${{ secrets.DOCKER_USERNAME }}/request:${{ steps.docker_tag.outputs.tag }}
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@main
+        with:
+          images: ${{ env.IMAGE_NAME }}
 
-      - name: Debug Image Name
-        run: echo "${{ secrets.DOCKER_USERNAME }}/request:${{ steps.docker_tag.outputs.tag }}"
+      - name: Build and push image
+        uses: docker/build-push-action@main
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          provenance: mode=max
+          sbom: true
 
-      - name: Push Docker Image (dev/main merges)
-        if: github.event_name != 'pull_request'
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/request:${{ steps.docker_tag.outputs.tag }}
-
-      - name: Push Docker Image (Dev PRs)
-        if: github.event_name == 'pull_request' && github.base_ref == 'dev'
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/request:${{ steps.docker_tag.outputs.tag }}
+#  build:
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - uses: actions/checkout@main
+#
+#      - name: Docker Hub Login
+#        if: github.event_name != 'pull_request' || (github.event_name == 'pull_request' && github.base_ref == 'dev')
+#        run: echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+#
+#      - name: Set tag based on ref
+#        id: docker_tag
+#        run: |
+#          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+#            echo "tag=dev" >> $GITHUB_OUTPUT
+#          else
+#            if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+#              echo "tag=latest" >> $GITHUB_OUTPUT
+#            elif [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
+#              echo "tag=dev" >> $GITHUB_OUTPUT
+#            else
+#              echo "tag=pr-${{ github.event.number }}" >> $GITHUB_OUTPUT
+#            fi
+#          fi
+#
+#      - name: Build Docker Image
+#        run: docker build . --file Dockerfile --tag ${{ secrets.DOCKER_USERNAME }}/request:${{ steps.docker_tag.outputs.tag }} --provenance=true --sbom=true
+#
+#      - name: Debug Image Name
+#        run: echo "${{ secrets.DOCKER_USERNAME }}/request:${{ steps.docker_tag.outputs.tag }}"
+#
+#      - name: Push Docker Image (dev/main merges)
+#        if: github.event_name != 'pull_request'
+#        run: docker push ${{ secrets.DOCKER_USERNAME }}/request:${{ steps.docker_tag.outputs.tag }}
+#
+#      - name: Push Docker Image (Dev PRs)
+#        if: github.event_name == 'pull_request' && github.base_ref == 'dev'
+#        run: docker push ${{ secrets.DOCKER_USERNAME }}/request:${{ steps.docker_tag.outputs.tag }}
