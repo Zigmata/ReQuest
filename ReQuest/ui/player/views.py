@@ -114,7 +114,8 @@ class CharacterBaseView(LayoutView):
             )
 
             self.characters = query.get('characters', {}) if query else {}
-            self.active_character_id = query.get('activeCharacters', {}).get(str(interaction.guild_id)) if query else None
+            self.active_character_id = query.get('activeCharacters', {}).get(str(interaction.guild_id)) \
+                if query else None
 
             self.sorted_characters = sorted(self.characters.items(), key=lambda x: x[1].get('name', '').lower())
 
@@ -1121,7 +1122,6 @@ class NewCharacterCartView(LayoutView):
             )
             next_button.callback = self.next_page
 
-
             nav_row.add_item(prev_button)
             nav_row.add_item(page_display)
             nav_row.add_item(next_button)
@@ -1241,7 +1241,6 @@ async def _handle_submission(interaction, character_id, character_name, items, c
 
             for name, quantity in currency.items():
                 await update_character_inventory(interaction, interaction.user.id, character_id, name, quantity)
-
 
             report_embed = discord.Embed(title='Starting Inventory Applied', color=discord.Color.green())
             report_embed.description = (

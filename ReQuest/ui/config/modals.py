@@ -2,6 +2,7 @@ import datetime
 import json
 import logging
 from titlecase import titlecase
+from datetime import datetime
 
 import jsonschema
 import shortuuid
@@ -290,8 +291,8 @@ class GMRewardsModal(Modal):
             label='Items',
             style=discord.TextStyle.paragraph,
             custom_id='items_text_input',
-            placeholder='{item}: {quantity}\n'
-                        '{item2}: {quantity}\n'
+            placeholder='Name: Quantity\n'
+                        'Name2: Quantity\n'
                         'etc.',
             default=(self.parse_items_to_string(current_rewards['items'])
                      if current_rewards and current_rewards['items']
@@ -454,7 +455,8 @@ class ConfigShopDetailsModal(Modal):
                 self.calling_view.build_view()
                 await interaction.response.edit_message(view=self.calling_view)
             else:
-                await interaction.response.defer()
+                await setup_view(self.calling_view, interaction)
+                await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -1018,7 +1020,8 @@ class CreateStaticKitModal(Modal):
                 for kit_data in existing_kits.values():
                     if kit_name.lower() == kit_data['name'].lower():
                         raise UserFeedbackError(
-                            f'A static kit named "{titlecase(kit_name)}" already exists. Please choose a different name.'
+                            f'A static kit named "{titlecase(kit_name)}" already exists. Please choose a '
+                            f'different name.'
                         )
 
             kit_data = {
@@ -1206,6 +1209,207 @@ class StaticKitCurrencyModal(Modal):
             self.calling_view.kit_data['currency'][parent_name] = final_amount
 
             self.calling_view.build_view()
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RoleplaySettingsModal(Modal):
+    def __init__(self, calling_view):
+        super().__init__(
+            title='Roleplay Settings'
+        )
+        self.calling_view = calling_view
+        config = calling_view.config
+        mode_config = config.get('config', {})
+        self.mode = config.get('mode', 'accrued')
+
+        self.minimum_length_text_input = discord.ui.TextInput(
+            label='Minimum Message Length (characters)',
+            placeholder='# of characters required for a message to be eligible. 0 for no limit',
+            default=str(mode_config.get('minLength', 0)),
+            max_length=4
+        )
+        self.add_item(self.minimum_length_text_input)
+
+        self.cooldown_text_input = discord.ui.TextInput(
+            label='Cooldown (seconds)',
+            placeholder='Wait time, in seconds, between counting messages as eligible for rewards',
+            default=str(mode_config.get('cooldown', 30)),
+            max_length=4
+        )
+        self.add_item(self.cooldown_text_input)
+
+        if self.mode == 'scheduled':
+            self.threshold_text_input = discord.ui.TextInput(
+                label='Message Threshold',
+                placeholder='Number of messages required to trigger reward',
+                default=str(mode_config.get('threshold', 20)),
+                max_length=4
+            )
+            self.add_item(self.threshold_text_input)
+
+        elif self.mode == 'accrued':
+            self.frequency_text_input = discord.ui.TextInput(
+                label='Frequency (# of messages)',
+                placeholder='Number of eligible messages required to earn rewards',
+                default=str(mode_config.get('frequency', 20)),
+                max_length=4
+            )
+            self.add_item(self.frequency_text_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            new_config = self.calling_view.config.get('config', {})
+
+            # Minimum Length
+            try:
+                minimum_length = int(self.minimum_length_text_input.value)
+                if minimum_length < 0:
+                    raise ValueError
+            except ValueError:
+                raise UserFeedbackError('Minimum Message Length must be a non-negative integer.')
+
+            new_config['minLength'] = minimum_length
+
+            # Cooldown
+            try:
+                cooldown_seconds = int(self.cooldown_text_input.value)
+                if cooldown_seconds < 0:
+                    raise ValueError
+            except ValueError:
+                raise UserFeedbackError('Cooldown must be a non-negative integer.')
+
+            new_config['cooldown'] = cooldown_seconds
+
+            # Validate and add scheduled settings
+            if self.mode == 'scheduled':
+                try:
+                    threshold = int(self.threshold_text_input.value)
+                    if threshold < 1:
+                        raise ValueError
+                except ValueError:
+                    raise UserFeedbackError('Message Threshold must be a positive integer.')
+
+                new_config['threshold'] = threshold
+
+            # Validate and add accrued settings
+            elif self.mode == 'accrued':
+                try:
+                    frequency = int(self.frequency_text_input.value)
+                    if frequency < 1:
+                        raise ValueError
+                except ValueError:
+                    raise UserFeedbackError('Frequency must be a positive integer.')
+
+                new_config['frequency'] = frequency
+
+            # Push updates to db
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='roleplayConfig',
+                query={'_id': interaction.guild_id},
+                update_data={'$set': {'config': new_config}}
+            )
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RoleplayRewardsModal(Modal):
+    def __init__(self, calling_view, xp_enabled):
+        super().__init__(title='Configure Roleplay Rewards')
+        self.calling_view = calling_view
+        rewards = calling_view.config.get('rewards', {})
+
+        self.xp_enabled = xp_enabled
+        if self.xp_enabled:
+            self.experience_text_input = discord.ui.TextInput(
+                label='Experience',
+                default=str(rewards.get('xp', 0)),
+                required=False
+            )
+            self.add_item(self.experience_text_input)
+
+        item_display = ''
+        if items := rewards.get('items'):
+            item_display = '\n'.join([f'{k}: {v}' for k, v in sorted(items.items())])
+
+        self.items = discord.ui.TextInput(
+            label='Items (Name: Quantity)',
+            style=discord.TextStyle.paragraph,
+            default=item_display,
+            required=False
+        )
+        self.add_item(self.items)
+
+        currency_display = ''
+        if currency := rewards.get('currency'):
+            currency_display = '\n'.join([f'{k}: {v}' for k, v in currency.items()])
+
+        self.currency = discord.ui.TextInput(
+            label='Currency (Name: Amount)',
+            style=discord.TextStyle.paragraph,
+            default=currency_display,
+            required=False
+        )
+        self.add_item(self.currency)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+
+            xp = 0
+            if self.xp_enabled:
+                try:
+                    xp = int(self.experience_text_input.value.strip())
+                    if xp < 0:
+                        raise ValueError
+                except ValueError:
+                    raise UserFeedbackError('Experience must be a non-negative integer.')
+
+            items = {}
+            if self.items.value:
+                for line in self.items.value.split('\n'):
+                    if ':' in line:
+                        k, v = line.split(':', 1)
+                        try:
+                            items[titlecase(k.strip())] = int(v.strip())
+                            if int(v.strip()) < 1:
+                                raise ValueError
+                        except ValueError:
+                            raise UserFeedbackError(f'Item quantity for "{k.strip()}" must be a positive integer.')
+
+            currency = {}
+            if self.currency.value:
+                for line in self.currency.value.split('\n'):
+                    if ':' in line:
+                        k, v = line.split(':', 1)
+                        try:
+                            currency[k.strip().lower()] = float(v.strip())
+                            if float(v.strip()) <= 0:
+                                raise ValueError
+                        except ValueError:
+                            raise UserFeedbackError(f'Currency amount for "{k.strip()}" must be a positive number.')
+
+            new_rewards = {
+                'xp': xp,
+                'items': items,
+                'currency': currency
+            }
+
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='roleplayConfig',
+                query={'_id': interaction.guild_id},
+                update_data={'$set': {'rewards': new_rewards}}
+            )
+            await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)

@@ -1,3 +1,4 @@
+from datetime import datetime, timezone, time
 import logging
 import math
 from collections import namedtuple
@@ -27,7 +28,7 @@ from ReQuest.utilities.supportFunctions import (
     format_price_string,
     format_consolidated_totals,
     get_xp_config,
-    get_cached_data
+    get_cached_data, consolidate_currency_totals
 )
 
 logger = logging.getLogger(__name__)
@@ -44,19 +45,14 @@ class ConfigBaseView(common_views.MenuBaseView):
                     'view_class': ConfigWizardView
                 },
                 {
-                    'name': 'Roles',
-                    'description': 'Configuration options for pingable or privileged roles.',
-                    'view_class': ConfigRolesView
-                },
-                {
                     'name': 'Channels',
                     'description': 'Set designated channels for ReQuest posts.',
                     'view_class': ConfigChannelsView
                 },
                 {
-                    'name': 'Quests',
-                    'description': 'Global quest settings, such as wait lists.',
-                    'view_class': ConfigQuestsView
+                    'name': 'Currency',
+                    'description': 'Global currency settings.',
+                    'view_class': ConfigCurrencyView
                 },
                 {
                     'name': 'Players',
@@ -64,9 +60,19 @@ class ConfigBaseView(common_views.MenuBaseView):
                     'view_class': ConfigPlayersView
                 },
                 {
-                    'name': 'Currency',
-                    'description': 'Global currency settings.',
-                    'view_class': ConfigCurrencyView
+                    'name': 'Quests',
+                    'description': 'Global quest settings, such as wait lists.',
+                    'view_class': ConfigQuestsView
+                },
+                {
+                    'name': 'RP Rewards',
+                    'description': 'Configure roleplaying rewards.',
+                    'view_class': ConfigRoleplayView
+                },
+                {
+                    'name': 'Roles',
+                    'description': 'Configuration options for pingable or privileged roles.',
+                    'view_class': ConfigRolesView
                 },
                 {
                     'name': 'Shops',
@@ -683,7 +689,8 @@ class ConfigWizardView(LayoutView):
             channels.append(
                 {
                     'name': 'Player Transaction Log',
-                    'mention': player_transaction_log_query['playerTransactionLogChannel'] if player_transaction_log_query else None,
+                    'mention': player_transaction_log_query['playerTransactionLogChannel']
+                    if player_transaction_log_query else None,
                     'required': False
                 }
             )
@@ -827,25 +834,27 @@ class ConfigRolesView(LayoutView):
             'By default, `everyone`, `administrator`, `gm`, and `game master` cannot be used. This configuration '
             'extends that list.\n'
         ))
-        role_row_5 = ActionRow(self.forbidden_roles_button)
-        container.add_item(role_row_5)
+        forbidden_role_row = ActionRow(self.forbidden_roles_button)
+        container.add_item(forbidden_role_row)
 
         self.add_item(container)
 
     async def setup(self, bot, guild):
         try:
-            announcement_role = await get_cached_data(
+            announcement_role_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='announceRole',
                 query={'_id': guild.id}
             )
-            gm_roles = await get_cached_data(
+            announcement_role = announcement_role_query.get('announceRole') if announcement_role_query else None
+            gm_role_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='gmRoles',
                 query={'_id': guild.id}
             )
+            gm_roles = gm_role_query.get('gmRoles', []) if gm_role_query else []
 
             if not announcement_role:
                 announcement_role_string = (
@@ -1109,42 +1118,53 @@ class ConfigChannelsView(LayoutView):
 
     async def setup(self, bot, guild):
         try:
-            player_board = await get_cached_data(
+            player_board_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='playerBoardChannel',
                 query={'_id': guild.id}
             )
-            quest_board = await get_cached_data(
+            player_board = player_board_query.get('playerBoardChannel') if player_board_query else None
+
+            quest_board_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='questChannel',
                 query={'_id': guild.id}
             )
-            quest_archive = await get_cached_data(
+            quest_board = quest_board_query.get('questChannel') if quest_board_query else None
+
+            quest_archive_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='archiveChannel',
                 query={'_id': guild.id}
             )
-            gm_transaction_log = await get_cached_data(
+            quest_archive = quest_archive_query.get('archiveChannel') if quest_archive_query else None
+
+            gm_log_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='gmTransactionLogChannel',
                 query={'_id': guild.id}
             )
-            player_transaction_log = await get_cached_data(
+            gm_transaction_log = gm_log_query.get('gmTransactionLogChannel') if gm_log_query else None
+
+            player_log_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='playerTransactionLogChannel',
                 query={'_id': guild.id}
             )
-            shop_log = await get_cached_data(
+            player_transaction_log = player_log_query.get('playerTransactionLogChannel') if player_log_query else None
+
+            shop_log_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='shopLogChannel',
                 query={'_id': guild.id}
             )
+            shop_log = shop_log_query.get('shopLogChannel') if shop_log_query else None
 
             self.quest_board_info.content = (
                 f'**Quest Board:** {quest_board}\n'
@@ -1225,18 +1245,21 @@ class ConfigQuestsView(LayoutView):
 
     async def setup(self, bot, guild):
         try:
-            quest_summary = await get_cached_data(
+            quest_summary_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='questSummary',
                 query={'_id': guild.id}
             )
-            wait_list = await get_cached_data(
+            quest_summary = quest_summary_query.get('questSummary') if quest_summary_query else False
+
+            wait_list_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='questWaitList',
                 query={'_id': guild.id}
             )
+            wait_list = wait_list_query.get('questWaitList', 0) if wait_list_query else 0
 
             wait_list_display = wait_list if isinstance(wait_list, int) and wait_list > 0 else 'Disabled'
             quest_summary_display = "Enabled" if quest_summary is True else "Disabled"
@@ -1461,7 +1484,6 @@ class ConfigNewCharacterView(LayoutView):
                 f'**New Character Inventory Type:** {inventory_type.capitalize()}\n'
                 f'{type_description.get(inventory_type, "")}'
             )
-
 
             # New character Shop section
             currency_config = await get_cached_data(
@@ -2553,3 +2575,184 @@ class EditShopView(LayoutView):
     def update_details(self, new_shop_data: dict):
         new_shop_data['shopStock'] = self.all_stock
         self.shop_data = new_shop_data
+
+
+class ConfigRoleplayView(LayoutView):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.config = {}
+        self.currency_config = {}
+        self.roleplay_toggle_button = buttons.RoleplayToggleEnableButton(self)
+        self.channel_select = selects.RoleplayChannelSelect(self)
+        self.rewards_button = buttons.RoleplayRewardsButton(self)
+
+    async def setup(self, bot, guild):
+        try:
+            self.config = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='roleplayConfig',
+                query={'_id': guild.id}
+            )
+            if not self.config:
+                self.config = {'enabled': False, 'mode': 'scheduled'}
+
+            self.currency_config = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='currency',
+                query={'_id': guild.id}
+            )
+
+            self.build_view()
+        except Exception as e:
+            await log_exception(e)
+
+    def build_view(self):
+        self.clear_items()
+        container = Container()
+
+        header_section = Section(accessory=BackButton(ConfigBaseView))
+        header_section.add_item(TextDisplay('**Server Configuration - Roleplay Rewards**'))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        # Status & Time
+        enabled = self.config.get('enabled', False)
+        mode = self.config.get('mode', 'scheduled')
+
+        now = datetime.now(timezone.utc)
+        time_str = now.strftime('%H:%M UTC')
+
+        status_text = (
+            f'**Status:** {"Enabled" if enabled else "Disabled"}\n'
+            f'ℹ️ **Server Time:** `{time_str}`'
+        )
+
+        status_section = Section(accessory=self.roleplay_toggle_button)
+        self.roleplay_toggle_button.label = 'Disable' if enabled else 'Enable'
+        self.roleplay_toggle_button.style = ButtonStyle.danger if enabled else ButtonStyle.success
+        status_section.add_item(TextDisplay(status_text))
+        container.add_item(status_section)
+        container.add_item(Separator())
+
+        # Mode Description
+        if mode == 'scheduled':
+            mode_description = (
+                '```Rewards are distributed once, upon sending the required threshold of eligible messages within the '
+                'set time period (hourly, daily, or weekly).```'
+            )
+        else:
+            mode_description = (
+                '```Rewards are distributed on a recurring basis each time a set number of eligible messages are sent.'
+                '```'
+            )
+
+        # Settings
+        settings_config = self.config.get('config', {})
+        min_length = settings_config.get('minLength', 20)
+        cooldown = settings_config.get('cooldown', 30)
+        setting_details = (
+            f'**Configuration Details:**\n\n'
+            f'**Mode:** {mode.capitalize()}\n'
+            f'{mode_description}'
+            f'**Minimum Message Length:** {min_length} characters\n'
+            f'**Cooldown:** {cooldown} seconds\n'
+        )
+
+        if mode == 'scheduled':
+            frequency = 'hour'
+            frequency_config = settings_config.get('resetPeriod', 'hourly')
+            if frequency_config == 'daily':
+                frequency = 'day'
+            elif frequency_config == 'weekly':
+                frequency = 'week'
+            setting_details += f'**Frequency:** Once per {frequency}\n'
+
+            if frequency_config in ['daily', 'weekly']:
+                reset_time = settings_config.get('resetTime', 0)
+                formatted_time = time(hour=reset_time, minute=0, tzinfo=timezone.utc).strftime('%H:%M')
+
+                formatted_day = ''
+                if frequency_config == 'weekly':
+                    reset_day = settings_config.get('resetDay', 'monday')
+                    formatted_day = f'{reset_day.capitalize()}s at '
+
+                setting_details += f'**Reset Time:** {formatted_day}{formatted_time} UTC\n'
+
+            message_threshold = settings_config.get('threshold', 20)
+
+            setting_details += f'**Threshold:** {message_threshold} eligible messages'
+        else:
+            frequency = settings_config.get('frequency', 20)
+            setting_details += f'**Frequency:** Every {frequency} eligible messages'
+
+        settings_section = Section(accessory=buttons.RoleplaySettingsButton(self))
+        settings_section.add_item(setting_details)
+        container.add_item(settings_section)
+
+        mode_select_row = ActionRow()
+        mode_select_row.add_item(selects.RoleplayModeSelect(self))
+        container.add_item(mode_select_row)
+
+        if mode == 'scheduled':
+            frequency_select_row = ActionRow()
+            frequency_select_row.add_item(selects.RoleplayResetSelect(self))
+            container.add_item(frequency_select_row)
+
+        if mode == 'scheduled' and settings_config.get('resetPeriod') in ['daily', 'weekly']:
+            reset_time_action_row = ActionRow()
+            reset_time_action_row.add_item(selects.RoleplayResetTimeSelect(self))
+            container.add_item(reset_time_action_row)
+
+        if mode == 'scheduled' and settings_config.get('resetPeriod') == 'weekly':
+            reset_day_action_row = ActionRow()
+            reset_day_action_row.add_item(selects.RoleplayResetDaySelect(self))
+            container.add_item(reset_day_action_row)
+
+        container.add_item(Separator())
+
+        # Channels
+        channels = self.config.get('channels', [])
+        if not channels:
+            channel_lines = 'None configured.'
+        else:
+            shown_channels = channels[:6]
+            formatted_lines = [f'- <#{chan_id}>' for chan_id in shown_channels]
+            remaining = len(channels) - len(shown_channels)
+            if remaining > 0:
+                formatted_lines.append(f'...and {remaining} more.')
+            channel_lines = '\n'.join(formatted_lines)
+
+        channel_text = f'**Roleplaying Channels:**\n{channel_lines}'
+
+        channel_section = Section(accessory=buttons.RoleplayClearChannelsButton(self))
+        channel_section.add_item(TextDisplay(channel_text))
+        channel_select_row = ActionRow()
+        channel_select_row.add_item(self.channel_select)
+        container.add_item(channel_section)
+        container.add_item(channel_select_row)
+        container.add_item(Separator())
+
+        # Rewards
+        rewards_text = '**Rewards:**\n'
+        rewards_data = self.config.get('rewards', {})
+        if not rewards_data:
+            rewards_text += "None configured."
+        else:
+            if xp := rewards_data.get('xp'):
+                rewards_text += f'**Experience:** {xp}\n'
+            if items := rewards_data.get('items'):
+                item_lines = [f'- {titlecase(name)}: {quantity}' for name, quantity in items.items()]
+                rewards_text += f'**Items:**\n{"\n".join(item_lines)}\n'
+            if currency := rewards_data.get('currency'):
+                consolidated = consolidate_currency_totals(currency, self.currency_config)
+                currency_lines = format_consolidated_totals(consolidated, self.currency_config)
+                formatted_lines = [f'- {line}' for line in currency_lines]
+                rewards_text += f'**Currency:**\n{"\n".join(formatted_lines)}\n'
+
+        reward_section = Section(accessory=self.rewards_button)
+        reward_section.add_item(TextDisplay(rewards_text))
+        container.add_item(reward_section)
+
+        self.add_item(container)
