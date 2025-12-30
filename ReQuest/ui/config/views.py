@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, time
 import logging
 import math
 from collections import namedtuple
@@ -28,7 +28,7 @@ from ReQuest.utilities.supportFunctions import (
     format_price_string,
     format_consolidated_totals,
     get_xp_config,
-    get_cached_data
+    get_cached_data, consolidate_currency_totals
 )
 
 logger = logging.getLogger(__name__)
@@ -65,8 +65,8 @@ class ConfigBaseView(common_views.MenuBaseView):
                     'view_class': ConfigQuestsView
                 },
                 {
-                    'name': 'Role-play Rewards',
-                    'description': 'Configure role-play rewards.',
+                    'name': 'RP Rewards',
+                    'description': 'Configure roleplaying rewards.',
                     'view_class': ConfigRoleplayView
                 },
                 {
@@ -2581,11 +2581,10 @@ class ConfigRoleplayView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         self.config = {}
+        self.currency_config = {}
         self.roleplay_toggle_button = buttons.RoleplayToggleEnableButton(self)
         self.channel_select = selects.RoleplayChannelSelect(self)
         self.rewards_button = buttons.RoleplayRewardsButton(self)
-        self.general_settings_button = buttons.RoleplayGeneralSettingsButton(self)
-        self.mode_select = selects.RoleplayModeSelect(self)
         self.configure_mode_button = buttons.RoleplayConfigureModeButton(self)
 
     async def setup(self, bot, guild):
@@ -2598,6 +2597,13 @@ class ConfigRoleplayView(LayoutView):
             )
             if not self.config:
                 self.config = {'enabled': False, 'mode': 'scheduled'}
+
+            self.currency_config = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='currency',
+                query={'_id': guild.id}
+            )
 
             self.build_view()
         except Exception as e:
@@ -2614,17 +2620,14 @@ class ConfigRoleplayView(LayoutView):
 
         # Status & Time
         enabled = self.config.get('enabled', False)
-        mode = self.config.get('mode', 'scheduled').capitalize()
-        min_length = self.config.get('minLength', 0)
+        mode = self.config.get('mode', 'scheduled')
 
         now = datetime.now(timezone.utc)
         time_str = now.strftime('%H:%M UTC')
 
         status_text = (
             f'**Status:** {"Enabled" if enabled else "Disabled"}\n'
-            f'**Current Mode:** {mode}\n'
-            f'**Min Message Length:** {min_length} chars\n\n'
-            f'ℹ️ **Server Time:** `{time_str}` (Use this to calculate reset times)'
+            f'ℹ️ **Server Time:** `{time_str}`'
         )
 
         status_section = Section(accessory=self.roleplay_toggle_button)
@@ -2632,22 +2635,104 @@ class ConfigRoleplayView(LayoutView):
         self.roleplay_toggle_button.style = ButtonStyle.danger if enabled else ButtonStyle.success
         status_section.add_item(TextDisplay(status_text))
         container.add_item(status_section)
+        container.add_item(Separator())
 
-        # General Settings
-        general_row = ActionRow()
-        general_row.add_item(self.general_settings_button)
-        container.add_item(general_row)
+        # Mode Description
+        if mode == 'scheduled':
+            mode_description = (
+                '```Rewards are distributed once, upon sending the required threshold of eligible messages within the '
+                'set time period (hourly, daily, or weekly).```'
+            )
+        else:
+            mode_description = (
+                '```Rewards are distributed on a recurring basis each time a set number of eligible messages are sent.'
+                '```'
+            )
+
+        # Settings
+        settings_config = self.config.get('config', {})
+        min_length = settings_config.get('minLength', 20)
+        cooldown = settings_config.get('cooldown', 30)
+        setting_details = (
+            f'**Configuration Details:**\n\n'
+            f'**Mode:** {mode.capitalize()}\n'
+            f'{mode_description}'
+            f'**Minimum Message Length:** {min_length} characters\n'
+            f'**Cooldown:** {cooldown} seconds\n'
+        )
+
+        if mode == 'scheduled':
+            frequency = 'hour'
+            frequency_config = settings_config.get('resetPeriod', 'hourly')
+            if frequency_config == 'daily':
+                frequency = 'day'
+            elif frequency_config == 'weekly':
+                frequency = 'week'
+            setting_details += f'**Frequency:** Once per {frequency}\n'
+
+            if frequency_config in ['daily', 'weekly']:
+                reset_time = settings_config.get('resetTime', 0)
+                formatted_time = time(hour=reset_time, minute=0, tzinfo=timezone.utc).strftime('%H:%M')
+
+                formatted_day = ''
+                if frequency_config == 'weekly':
+                    reset_day = settings_config.get('resetDay', 'monday')
+                    formatted_day = f'{reset_day.capitalize()}s at '
+
+                setting_details += f'**Reset Time:** {formatted_day}{formatted_time} UTC\n'
+
+            message_threshold = settings_config.get('threshold', 20)
+
+            setting_details += f'**Threshold:** {message_threshold} eligible messages'
+        else:
+            frequency = settings_config.get('frequency', 20)
+            setting_details += f'**Frequency** Every {frequency} eligible messages'
+
+        settings_section = Section(accessory=buttons.RoleplaySettingsButton(self))
+        settings_section.add_item(setting_details)
+        container.add_item(settings_section)
+
+        mode_select_row = ActionRow()
+        mode_select_row.add_item(selects.RoleplayModeSelect(self))
+        container.add_item(mode_select_row)
+
+        if mode == 'scheduled':
+            frequency_select_row = ActionRow()
+            frequency_select_row.add_item(selects.RoleplayResetSelect(self))
+            container.add_item(frequency_select_row)
+
+        if mode == 'scheduled' and settings_config.get('resetPeriod') in ['daily', 'weekly']:
+            reset_time_action_row = ActionRow()
+            reset_time_action_row.add_item(selects.RoleplayResetTimeSelect(self))
+            container.add_item(reset_time_action_row)
+
+        if mode == 'scheduled' and settings_config.get('resetPeriod') == 'weekly':
+            reset_day_action_row = ActionRow()
+            reset_day_action_row.add_item(selects.RoleplayResetDaySelect(self))
+            container.add_item(reset_day_action_row)
 
         container.add_item(Separator())
 
         # Channels
         channels = self.config.get('channels', [])
-        channel_count = len(channels)
-        channel_text = f'**Eligible Channels:** {channel_count} configured'
+        if not channels:
+            channel_lines = 'None configured.'
+        else:
+            shown_channels = channels[:6]
+            formatted_lines = [f'- <#{chan_id}>' for chan_id in shown_channels]
+            remaining = len(channels) - len(shown_channels)
+            if remaining > 0:
+                formatted_lines.append(f'...and {remaining} more.')
+            channel_lines = '\n'.join(formatted_lines)
 
-        channel_section = Section(accessory=self.channel_select)
+        channel_text = f'**Roleplaying Channels:**\n{channel_lines}'
+
+        channel_section = Section(accessory=buttons.RoleplayClearChannelsButton(self))
         channel_section.add_item(TextDisplay(channel_text))
+        channel_select_row = ActionRow()
+        channel_select_row.add_item(self.channel_select)
         container.add_item(channel_section)
+        container.add_item(channel_select_row)
         container.add_item(Separator())
 
         # Rewards
@@ -2657,37 +2742,18 @@ class ConfigRoleplayView(LayoutView):
             rewards_text += "None configured."
         else:
             if xp := rewards_data.get('xp'):
-                rewards_text += f'- XP: {xp}\n'
+                rewards_text += f'**Experience:** {xp}\n'
             if items := rewards_data.get('items'):
-                rewards_text += f'- Items: {len(items)}\n'
+                item_lines = [f'- {titlecase(name)}: {quantity}' for name, quantity in items.items()]
+                rewards_text += f'**Items:**\n{"\n".join(item_lines)}\n'
             if currency := rewards_data.get('currency'):
-                rewards_text += f'- Currency: {len(currency)}\n'
+                consolidated = consolidate_currency_totals(currency, self.currency_config)
+                currency_lines = format_consolidated_totals(consolidated, self.currency_config)
+                formatted_lines = [f'- {line}' for line in currency_lines]
+                rewards_text += f'**Currency:**\n{"\n".join(formatted_lines)}\n'
 
         reward_section = Section(accessory=self.rewards_button)
         reward_section.add_item(TextDisplay(rewards_text))
         container.add_item(reward_section)
-        container.add_item(Separator())
-
-        # Mode Config
-        mode_config = self.config.get('config', {})
-        mode_details = ''
-        if mode == 'Scheduled':
-            frequency = mode_config.get('frequency', 'daily').capitalize()
-            reset = mode_config.get('resetTime', '00:00')
-            message_threshold = mode_config.get('threshold', 0)
-            mode_details = f'Frequency: {frequency}\nReset: {reset} UTC\nThreshold: {message_threshold} msgs'
-        else:
-            frequency = mode_config.get('frequency', 0)
-            cooldown = mode_config.get('cooldown', 0)
-            mode_details = f'Every {frequency} messages\nCooldown: {cooldown}s'
-
-        mode_section = Section(accessory=self.mode_select)
-        mode_section.add_item(TextDisplay(f'**Mode Settings ({mode})**\n{mode_details}'))
-        container.add_item(mode_section)
-
-        mode_row = ActionRow()
-        mode_row.add_item(self.configure_mode_button)
-        self.configure_mode_button.label = f'Configure {mode} Mode'
-        container.add_item(mode_row)
 
         self.add_item(container)

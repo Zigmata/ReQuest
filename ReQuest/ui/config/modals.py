@@ -2,6 +2,7 @@ import datetime
 import json
 import logging
 from titlecase import titlecase
+from datetime import datetime, timezone
 
 import jsonschema
 import shortuuid
@@ -20,7 +21,7 @@ from ReQuest.utilities.supportFunctions import (
     update_cached_data,
     UserFeedbackError,
     delete_cached_data,
-    strip_id, get_xp_config
+    strip_id
 )
 
 logger = logging.getLogger(__name__)
@@ -1212,127 +1213,96 @@ class StaticKitCurrencyModal(Modal):
             await log_exception(e, interaction)
 
 
-class RoleplayGeneralSettingsModal(Modal):
+class RoleplaySettingsModal(Modal):
     def __init__(self, calling_view):
         super().__init__(
-            title='Roleplay General Settings'
+            title='Roleplay Settings'
         )
         self.calling_view = calling_view
-        current_minimum = calling_view.config.get('minLength', 0)
+        config = calling_view.config
+        mode_config = config.get('config', {})
+        self.mode = config.get('mode', 'accrued')
 
         self.minimum_length_text_input = discord.ui.TextInput(
-            label='Minimum Message Length',
-            placeholder='0 for no limit',
-            default=str(current_minimum),
+            label='Minimum Message Length (characters)',
+            placeholder='# of characters required for a message to be eligible. 0 for no limit',
+            default=str(mode_config.get('minLength', 0)),
             max_length=4
         )
         self.add_item(self.minimum_length_text_input)
 
-    async def on_submit(self, interaction: discord.Interaction):
-        try:
-            bot = interaction.client
-            minimum_length = int(self.minimum_length_text_input.value)
-            if minimum_length < 0:
-                raise ValueError
-
-            await update_cached_data(
-                bot=bot,
-                mongo_database=bot.gdb,
-                collection_name='roleplayConfig',
-                query={'_id': interaction.guild_id},
-                update_data={'$set': {'minLength': minimum_length}}
-            )
-            await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-
-class RoleplayScheduledConfigModal(Modal):
-    def __init__(self, calling_view):
-        super().__init__(
-            title='Scheduled Mode Config'
-        )
-        self.calling_view = calling_view
-        config = calling_view.config.get('config', {})
-
-        self.threshold_text_input = discord.ui.TextInput(
-            label='Message Threshold',
-            placeholder='Number of messages required to trigger reward',
-            default=str(config.get('threshold', 20))
-        )
-
-        self.reset_time_text_input = discord.ui.TextInput(
-            label='Reset Time (UTC HH:MM)',
-            placeholder='The time of day when message counts reset. Format: HH:MM',
-            default=config.get('resetTime', '00:00'),
-            min_length=5, max_length=5
-        )
-
-        self.add_item(self.threshold_text_input)
-        self.add_item(self.reset_time_text_input)
-
-    async def on_submit(self, interaction: discord.Interaction):
-        try:
-            try:
-                datetime.datetime.strptime(self.reset_time_text_input.value, '%H:%M')
-            except ValueError:
-                raise UserFeedbackError("Invalid Time Format. Use HH:MM (24-hour).")
-
-            threshold = int(self.threshold_text_input.value)
-            if threshold < 1:
-                raise ValueError
-
-            new_config = self.calling_view.config.get('config', {})
-            new_config['threshold'] = threshold
-            new_config['resetTime'] = self.reset_time_text_input.value
-
-            await update_cached_data(
-                bot=interaction.client,
-                mongo_database=interaction.client.gdb,
-                collection_name='roleplayConfig',
-                query={'_id': interaction.guild_id},
-                update_data={'$set': {'config': new_config}}
-            )
-            await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-
-class RoleplayAccruedConfigModal(Modal):
-    def __init__(self, calling_view):
-        super().__init__(
-            title='Accrued Mode Config'
-        )
-        self.calling_view = calling_view
-        config = calling_view.config.get('config', {})
-
-        self.frequency_text_input = discord.ui.TextInput(
-            label='Frequency (# of eligible messages between rewards)',
-            placeholder='Reward every X messages',
-            default=str(config.get('frequency', 20))
-        )
         self.cooldown_text_input = discord.ui.TextInput(
-            label='Cooldown (Seconds)',
-            placeholder='Wait time between eligible messages',
-            default=str(config.get('cooldown', 30))
+            label='Cooldown (seconds)',
+            placeholder='Wait time, in seconds, between counting messages as eligible for rewards',
+            default=str(mode_config.get('cooldown', 30)),
+            max_length=4
         )
-        self.add_item(self.frequency_text_input)
         self.add_item(self.cooldown_text_input)
 
+        if self.mode == 'scheduled':
+            self.threshold_text_input = discord.ui.TextInput(
+                label='Message Threshold',
+                placeholder='Number of messages required to trigger reward',
+                default=str(mode_config.get('threshold', 20)),
+                max_length=4
+            )
+            self.add_item(self.threshold_text_input)
+
+        elif self.mode == 'accrued':
+            self.frequency_text_input = discord.ui.TextInput(
+                label='Frequency (# of messages)',
+                placeholder='Number of eligible messages required to earn rewards',
+                default=str(mode_config.get('frequency', 20)),
+                max_length=4
+            )
+            self.add_item(self.frequency_text_input)
+
     async def on_submit(self, interaction: discord.Interaction):
         try:
             bot = interaction.client
-            frequency = int(self.frequency_text_input.value)
-            cooldown_seconds = int(self.cooldown_text_input.value)
-            if frequency < 1 or cooldown_seconds < 0: raise ValueError
+            new_config = self.calling_view.config.get('config', {})
 
-            new_config = {
-                'frequency': frequency,
-                'cooldown': cooldown_seconds
-            }
+            # Minimum Length
+            try:
+                minimum_length = int(self.minimum_length_text_input.value)
+                if minimum_length < 0:
+                    raise ValueError
+            except ValueError:
+                raise UserFeedbackError('Minimum Message Length must be a non-negative integer.')
 
+            new_config['minLength'] = minimum_length
+
+            # Validate and add scheduled settings
+            if self.mode == 'scheduled':
+                try:
+                    threshold = int(self.threshold_text_input.value)
+                    if threshold < 1:
+                        raise ValueError
+                except ValueError:
+                    raise UserFeedbackError('Message Threshold must be a positive integer.')
+
+                new_config['threshold'] = threshold
+
+            # Validate and add accrued settings
+            elif self.mode == 'accrued':
+                try:
+                    frequency = int(self.frequency_text_input.value)
+                    if frequency < 1:
+                        raise ValueError
+                except ValueError:
+                    raise UserFeedbackError('Frequency must be a positive integer.')
+
+                try:
+                    cooldown_seconds = int(self.cooldown_text_input.value)
+                    if cooldown_seconds < 0:
+                        raise ValueError
+                except ValueError:
+                    raise UserFeedbackError('Cooldown must be a non-negative integer.')
+
+                new_config['frequency'] = frequency
+                new_config['cooldown'] = cooldown_seconds
+
+            # Push updates to db
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -1340,6 +1310,7 @@ class RoleplayAccruedConfigModal(Modal):
                 query={'_id': interaction.guild_id},
                 update_data={'$set': {'config': new_config}}
             )
+
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
@@ -1347,13 +1318,13 @@ class RoleplayAccruedConfigModal(Modal):
 
 
 class RoleplayRewardsModal(Modal):
-    def __init__(self, calling_view, bot, guild_id):
+    def __init__(self, calling_view, xp_enabled):
         super().__init__(title='Configure Roleplay Rewards')
         self.calling_view = calling_view
         rewards = calling_view.config.get('rewards', {})
 
-        self.xp_config = get_xp_config(bot, guild_id)
-        if self.xp_config:
+        self.xp_enabled = xp_enabled
+        if self.xp_enabled:
             self.experience_text_input = discord.ui.TextInput(
                 label='Experience',
                 default=str(rewards.get('xp', 0)),
@@ -1373,7 +1344,6 @@ class RoleplayRewardsModal(Modal):
         )
         self.add_item(self.items)
 
-
         currency_display = ''
         if currency := rewards.get('currency'):
             currency_display = '\n'.join([f'{k}: {v}' for k, v in currency.items()])
@@ -1391,7 +1361,7 @@ class RoleplayRewardsModal(Modal):
             bot = interaction.client
 
             xp = 0
-            if self.xp_config:
+            if self.xp_enabled:
                 xp = int(self.experience_text_input.value) if self.experience_text_input.value.isdigit() else 0
 
             items = {}

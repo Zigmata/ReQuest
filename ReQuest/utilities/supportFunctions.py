@@ -1009,7 +1009,7 @@ async def get_xp_config(bot, guild_id) -> bool:
         )
         if query is None:
             return True  # Default to XP enabled if no config found
-        return query.get('playerExperience', True)
+        return query['playerExperience']
     except Exception as e:
         logger.error(f"Error retrieving XP config: {e}")
         await log_exception(e)

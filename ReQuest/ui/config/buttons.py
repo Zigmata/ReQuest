@@ -14,7 +14,8 @@ from ReQuest.utilities.supportFunctions import (
     setup_view,
     get_cached_data,
     delete_cached_data,
-    update_cached_data
+    update_cached_data,
+    get_xp_config
 )
 
 logger = logging.getLogger(__name__)
@@ -1129,18 +1130,43 @@ class RoleplayToggleEnableButton(Button):
             await log_exception(e, interaction)
 
 
-class RoleplayGeneralSettingsButton(Button):
+class RoleplayClearChannelsButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='General Settings',
-            style=ButtonStyle.secondary,
+            label='Clear Channels',
+            style=ButtonStyle.danger,
+            custom_id='rp_clear_channels_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='roleplayConfig',
+                query={'_id': interaction.guild_id},
+                update_data={'$set': {'channels': []}}
+            )
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RoleplaySettingsButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Edit Settings',
+            style=ButtonStyle.primary,
             custom_id='rp_settings_button'
         )
         self.calling_view = calling_view
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            await interaction.response.send_modal(modals.RoleplayGeneralSettingsModal(self.calling_view))
+            await interaction.response.send_modal(modals.RoleplaySettingsModal(self.calling_view))
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -1155,7 +1181,8 @@ class RoleplayRewardsButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            rp_modal = modals.RoleplayRewardsModal(self.calling_view, interaction.client, interaction.guild_id)
+            xp_enabled = await get_xp_config(interaction.client, interaction.guild_id)
+            rp_modal = modals.RoleplayRewardsModal(self.calling_view, xp_enabled)
             await interaction.response.send_modal(rp_modal)
         except Exception as e:
             await log_exception(e, interaction)

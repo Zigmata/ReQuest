@@ -28,20 +28,16 @@ class Roleplay(Cog):
         """
         Calculates the current cycle key for Scheduled mode based on the reset time.
         """
-        reset_time_str = config.get('resetTime', '00:00')
-        try:
-            h, m = map(int, reset_time_str.split(':'))
-        except ValueError:
-            h, m = 0, 0
+        reset_time = config.get('resetTime', 0)
 
-        reset_time_today = now.replace(hour=h, minute=m, second=0, microsecond=0)
+        reset_time_today = now.replace(hour=reset_time, minute=0, second=0, microsecond=0)
 
         if now < reset_time_today:
             target_date = now - datetime.timedelta(days=1)
         else:
             target_date = now
 
-        frequency = config.get('frequency', 'daily')
+        frequency = config.get('frequency', 'hour')
 
         if frequency == 'hourly':
             return now.strftime('%Y-%m-%d-%H')
@@ -72,19 +68,22 @@ class Roleplay(Cog):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='roleplayConfig',
-                query={'_id': guild_id},
-                cache_id=guild_id
+                query={'_id': guild_id}
             )
+            rp_settings = rp_config.get('config', None)
 
             if not rp_config or not rp_config.get('enabled'):
+                logger.debug(f'Roleplay not enabled in guild {guild_id}.')
                 return
 
             allowed_channels = rp_config.get('channels', [])
             if str(message.channel.id) not in allowed_channels:
+                logger.debug(f'Message in channel {message.channel.id} not in allowed RP channels.')
                 return
 
-            min_length = rp_config.get('minLength', 0)
+            min_length = rp_settings.get('minLength', 0)
             if len(message.content) < min_length:
+                logger.debug(f'Message length {len(message.content)} is below minimum {min_length}.')
                 return
 
             character_data = await get_cached_data(
@@ -95,6 +94,7 @@ class Roleplay(Cog):
             )
 
             if not character_data or str(guild_id) not in character_data.get('activeCharacters', {}):
+                logger.debug(f'User {user_id} has no active character in guild {guild_id}.')
                 return
 
             active_char_id = character_data['activeCharacters'][str(guild_id)]
@@ -106,11 +106,13 @@ class Roleplay(Cog):
             if mode == 'accrued':
                 cooldown_time = int(config_data.get('cooldown', 20))
 
-            redis_key = f"rp:{guild_id}:{user_id}:cooldown"
-            if await bot.rdb.exists(redis_key):
+            cooldown_state_key = f"rp:{guild_id}:{user_id}:cooldown"
+            if await bot.rdb.exists(cooldown_state_key):
+                logger.info(f'User {user_id} is on cooldown in guild {guild_id}.')
                 return
 
-            await bot.rdb.set(redis_key, "1", ex=cooldown_time)
+            if cooldown_time > 0:
+                await bot.rdb.set(cooldown_state_key, "1", ex=cooldown_time)
 
             collection = bot.gdb['roleplayData']
             db_key = f"{guild_id}:{user_id}"
@@ -206,6 +208,7 @@ class Roleplay(Cog):
                         self.user = user
                         self.guild = guild
                         self.channel = channel
+                        self.guild_id = guild.id
                         self.response = None
 
                 mock_interaction = MockInteraction(bot, message.author, message.guild, message.channel)
