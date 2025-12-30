@@ -12,7 +12,7 @@ from pymongo import AsyncMongoClient as MongoClient
 import redis.asyncio as redis
 
 from ReQuest.ui.gm.views import QuestPostView
-from utilities.supportFunctions import attempt_delete, log_exception
+from ReQuest.utilities.supportFunctions import attempt_delete, log_exception
 
 log_level = os.getenv('LOG_LEVEL', 'INFO').upper()
 logging.basicConfig(
