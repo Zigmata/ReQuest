@@ -37,11 +37,11 @@ class Roleplay(Cog):
         else:
             target_date = now
 
-        frequency = config.get('frequency', 'hour')
+        reset_period = config.get('resetPeriod', 'hourly')
 
-        if frequency == 'hourly':
+        if reset_period == 'hourly':
             return now.strftime('%Y-%m-%d-%H')
-        elif frequency == 'weekly':
+        elif reset_period == 'weekly':
             reset_day_str = config.get('resetDay', 'monday').lower()
             days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
             target_weekday = days.index(reset_day_str) if reset_day_str in days else 0
@@ -102,9 +102,7 @@ class Roleplay(Cog):
             mode = rp_config.get('mode', 'scheduled')
             config_data = rp_config.get('config', {})
 
-            cooldown_time = 60
-            if mode == 'accrued':
-                cooldown_time = int(config_data.get('cooldown', 20))
+            cooldown_time = int(config_data.get('cooldown', 20))
 
             cooldown_state_key = f"rp:{guild_id}:{user_id}:cooldown"
             if await bot.rdb.exists(cooldown_state_key):
@@ -190,17 +188,6 @@ class Roleplay(Cog):
                 currency = rewards.get('currency', {})
 
                 xp_enabled = await get_xp_config(bot, guild_id)
-                if xp_enabled and xp_amount:
-
-                    char_data_fresh = await bot.mdb['characters'].find_one({'_id': user_id})
-                    active_char = char_data_fresh['characters'][active_char_id]
-
-                    if active_char['attributes'].get('experience') is None:
-                        active_char['attributes']['experience'] = 0
-
-                    active_char['attributes']['experience'] += xp_amount
-
-                    pass
 
                 class MockInteraction:
                     def __init__(self, client, user, guild, channel):

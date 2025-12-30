@@ -847,14 +847,14 @@ class ConfigRolesView(LayoutView):
                 collection_name='announceRole',
                 query={'_id': guild.id}
             )
-            announcement_role = announcement_role_query['announceRole'] if announcement_role_query else None
+            announcement_role = announcement_role_query.get('announceRole') if announcement_role_query else None
             gm_role_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='gmRoles',
                 query={'_id': guild.id}
             )
-            gm_roles = gm_role_query['gmRoles'] if gm_role_query else []
+            gm_roles = gm_role_query.get('gmRoles', []) if gm_role_query else []
 
             if not announcement_role:
                 announcement_role_string = (
@@ -1124,7 +1124,7 @@ class ConfigChannelsView(LayoutView):
                 collection_name='playerBoardChannel',
                 query={'_id': guild.id}
             )
-            player_board = player_board_query['playerBoardChannel'] if player_board_query else None
+            player_board = player_board_query.get('playerBoardChannel') if player_board_query else None
 
             quest_board_query = await get_cached_data(
                 bot=bot,
@@ -1132,7 +1132,7 @@ class ConfigChannelsView(LayoutView):
                 collection_name='questChannel',
                 query={'_id': guild.id}
             )
-            quest_board = quest_board_query['questChannel'] if quest_board_query else None
+            quest_board = quest_board_query.get('questChannel') if quest_board_query else None
 
             quest_archive_query = await get_cached_data(
                 bot=bot,
@@ -1140,7 +1140,7 @@ class ConfigChannelsView(LayoutView):
                 collection_name='archiveChannel',
                 query={'_id': guild.id}
             )
-            quest_archive = quest_archive_query['archiveChannel'] if quest_archive_query else None
+            quest_archive = quest_archive_query.get('archiveChannel') if quest_archive_query else None
 
             gm_log_query = await get_cached_data(
                 bot=bot,
@@ -1148,7 +1148,7 @@ class ConfigChannelsView(LayoutView):
                 collection_name='gmTransactionLogChannel',
                 query={'_id': guild.id}
             )
-            gm_transaction_log = gm_log_query['gmTransactionLogChannel'] if gm_log_query else None
+            gm_transaction_log = gm_log_query.get('gmTransactionLogChannel') if gm_log_query else None
 
             player_log_query = await get_cached_data(
                 bot=bot,
@@ -1156,7 +1156,7 @@ class ConfigChannelsView(LayoutView):
                 collection_name='playerTransactionLogChannel',
                 query={'_id': guild.id}
             )
-            player_transaction_log = player_log_query['playerTransactionLogChannel'] if player_log_query else None
+            player_transaction_log = player_log_query.get('playerTransactionLogChannel') if player_log_query else None
 
             shop_log_query = await get_cached_data(
                 bot=bot,
@@ -1164,7 +1164,7 @@ class ConfigChannelsView(LayoutView):
                 collection_name='shopLogChannel',
                 query={'_id': guild.id}
             )
-            shop_log = shop_log_query['shopLogChannel'] if shop_log_query else None
+            shop_log = shop_log_query.get('shopLogChannel') if shop_log_query else None
 
             self.quest_board_info.content = (
                 f'**Quest Board:** {quest_board}\n'
@@ -1251,7 +1251,7 @@ class ConfigQuestsView(LayoutView):
                 collection_name='questSummary',
                 query={'_id': guild.id}
             )
-            quest_summary = quest_summary_query['questSummary'] if quest_summary_query else False
+            quest_summary = quest_summary_query.get('questSummary') if quest_summary_query else False
 
             wait_list_query = await get_cached_data(
                 bot=bot,
@@ -1259,7 +1259,7 @@ class ConfigQuestsView(LayoutView):
                 collection_name='questWaitList',
                 query={'_id': guild.id}
             )
-            wait_list = wait_list_query['questWaitList'] if wait_list_query else 0
+            wait_list = wait_list_query.get('questWaitList', 0) if wait_list_query else 0
 
             wait_list_display = wait_list if isinstance(wait_list, int) and wait_list > 0 else 'Disabled'
             quest_summary_display = "Enabled" if quest_summary is True else "Disabled"
@@ -2685,7 +2685,7 @@ class ConfigRoleplayView(LayoutView):
             setting_details += f'**Threshold:** {message_threshold} eligible messages'
         else:
             frequency = settings_config.get('frequency', 20)
-            setting_details += f'**Frequency** Every {frequency} eligible messages'
+            setting_details += f'**Frequency:** Every {frequency} eligible messages'
 
         settings_section = Section(accessory=buttons.RoleplaySettingsButton(self))
         settings_section.add_item(setting_details)

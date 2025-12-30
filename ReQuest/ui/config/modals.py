@@ -1273,6 +1273,14 @@ class RoleplaySettingsModal(Modal):
 
             new_config['minLength'] = minimum_length
 
+            # Cooldown
+            try:
+                cooldown_seconds = int(self.cooldown_text_input.value)
+                if cooldown_seconds < 0:
+                    raise ValueError
+            except ValueError:
+                raise UserFeedbackError('Cooldown must be a non-negative integer.')
+
             # Validate and add scheduled settings
             if self.mode == 'scheduled':
                 try:
@@ -1292,13 +1300,6 @@ class RoleplaySettingsModal(Modal):
                         raise ValueError
                 except ValueError:
                     raise UserFeedbackError('Frequency must be a positive integer.')
-
-                try:
-                    cooldown_seconds = int(self.cooldown_text_input.value)
-                    if cooldown_seconds < 0:
-                        raise ValueError
-                except ValueError:
-                    raise UserFeedbackError('Cooldown must be a non-negative integer.')
 
                 new_config['frequency'] = frequency
                 new_config['cooldown'] = cooldown_seconds
