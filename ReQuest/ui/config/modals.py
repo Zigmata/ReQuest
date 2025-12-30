@@ -2,7 +2,7 @@ import datetime
 import json
 import logging
 from titlecase import titlecase
-from datetime import datetime, timezone
+from datetime import datetime
 
 import jsonschema
 import shortuuid
@@ -1020,7 +1020,8 @@ class CreateStaticKitModal(Modal):
                 for kit_data in existing_kits.values():
                     if kit_name.lower() == kit_data['name'].lower():
                         raise UserFeedbackError(
-                            f'A static kit named "{titlecase(kit_name)}" already exists. Please choose a different name.'
+                            f'A static kit named "{titlecase(kit_name)}" already exists. Please choose a '
+                            f'different name.'
                         )
 
             kit_data = {

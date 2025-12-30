@@ -1186,23 +1186,3 @@ class RoleplayRewardsButton(Button):
             await interaction.response.send_modal(rp_modal)
         except Exception as e:
             await log_exception(e, interaction)
-
-
-class RoleplayConfigureModeButton(Button):
-    def __init__(self, calling_view):
-        super().__init__(
-            label='Configure Mode',
-            style=ButtonStyle.primary,
-            custom_id='rp_mode_button'
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            mode = self.calling_view.config.get('mode', 'accrued')
-            if mode == 'scheduled':
-                await interaction.response.send_modal(modals.RoleplayScheduledConfigModal(self.calling_view))
-            else:
-                await interaction.response.send_modal(modals.RoleplayAccruedConfigModal(self.calling_view))
-        except Exception as e:
-            await log_exception(e, interaction)

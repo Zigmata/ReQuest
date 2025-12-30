@@ -422,7 +422,7 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
         collection_name='characters',
         query={'_id': sending_member_id, f'characters.{sender_character_id}.attributes.inventory': {'$exists': True}},
         update_data={'$set': {f'characters.{sender_character_id}.attributes.inventory':
-                                  sender_character['attributes']['inventory']}}
+                              sender_character['attributes']['inventory']}}
     )
     await update_cached_data(
         bot=bot,
@@ -431,7 +431,7 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
         query={'_id': receiving_member_id,
                f'characters.{receiver_character_id}.attributes.inventory': {'$exists': True}},
         update_data={'$set': {f'characters.{receiver_character_id}.attributes.inventory':
-                                  receiver_character['attributes']['inventory']}}
+                              receiver_character['attributes']['inventory']}}
     )
 
 

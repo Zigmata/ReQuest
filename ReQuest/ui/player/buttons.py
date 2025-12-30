@@ -501,6 +501,7 @@ class KitBackButton(Button):
         except Exception as e:
             await log_exception(e, interaction)
 
+
 class PrintInventoryButton(Button):
     def __init__(self, calling_view):
         super().__init__(

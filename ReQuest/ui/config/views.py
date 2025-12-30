@@ -689,7 +689,8 @@ class ConfigWizardView(LayoutView):
             channels.append(
                 {
                     'name': 'Player Transaction Log',
-                    'mention': player_transaction_log_query['playerTransactionLogChannel'] if player_transaction_log_query else None,
+                    'mention': player_transaction_log_query['playerTransactionLogChannel']
+                    if player_transaction_log_query else None,
                     'required': False
                 }
             )
@@ -1483,7 +1484,6 @@ class ConfigNewCharacterView(LayoutView):
                 f'**New Character Inventory Type:** {inventory_type.capitalize()}\n'
                 f'{type_description.get(inventory_type, "")}'
             )
-
 
             # New character Shop section
             currency_config = await get_cached_data(
@@ -2585,7 +2585,6 @@ class ConfigRoleplayView(LayoutView):
         self.roleplay_toggle_button = buttons.RoleplayToggleEnableButton(self)
         self.channel_select = selects.RoleplayChannelSelect(self)
         self.rewards_button = buttons.RoleplayRewardsButton(self)
-        self.configure_mode_button = buttons.RoleplayConfigureModeButton(self)
 
     async def setup(self, bot, guild):
         try:
