@@ -1281,6 +1281,8 @@ class RoleplaySettingsModal(Modal):
             except ValueError:
                 raise UserFeedbackError('Cooldown must be a non-negative integer.')
 
+            new_config['cooldown'] = cooldown_seconds
+
             # Validate and add scheduled settings
             if self.mode == 'scheduled':
                 try:
@@ -1302,7 +1304,6 @@ class RoleplaySettingsModal(Modal):
                     raise UserFeedbackError('Frequency must be a positive integer.')
 
                 new_config['frequency'] = frequency
-                new_config['cooldown'] = cooldown_seconds
 
             # Push updates to db
             await update_cached_data(
@@ -1364,21 +1365,36 @@ class RoleplayRewardsModal(Modal):
 
             xp = 0
             if self.xp_enabled:
-                xp = int(self.experience_text_input.value) if self.experience_text_input.value.isdigit() else 0
+                try:
+                    xp = int(self.experience_text_input.value.strip())
+                    if xp < 0:
+                        raise ValueError
+                except ValueError:
+                    raise UserFeedbackError('Experience must be a non-negative integer.')
 
             items = {}
             if self.items.value:
                 for line in self.items.value.split('\n'):
                     if ':' in line:
                         k, v = line.split(':', 1)
-                        items[k.strip().title()] = int(v.strip())
+                        try:
+                            items[titlecase(k.strip())] = int(v.strip())
+                            if int(v.strip()) < 1:
+                                raise ValueError
+                        except ValueError:
+                            raise UserFeedbackError(f'Item quantity for "{k.strip()}" must be a positive integer.')
 
             currency = {}
             if self.currency.value:
                 for line in self.currency.value.split('\n'):
                     if ':' in line:
                         k, v = line.split(':', 1)
-                        currency[k.strip().lower()] = float(v.strip())
+                        try:
+                            currency[k.strip().lower()] = float(v.strip())
+                            if float(v.strip()) <= 0:
+                                raise ValueError
+                        except ValueError:
+                            raise UserFeedbackError(f'Currency amount for "{k.strip()}" must be a positive number.')
 
             new_rewards = {
                 'xp': xp,

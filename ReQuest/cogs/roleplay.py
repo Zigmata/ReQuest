@@ -23,6 +23,15 @@ class Roleplay(Cog):
         super().__init__()
         self.bot = bot
 
+    class MockInteraction:
+        def __init__(self, client, user, guild, channel):
+            self.client = client
+            self.user = user
+            self.guild = guild
+            self.channel = channel
+            self.guild_id = guild.id
+            self.response = None
+
     @staticmethod
     def _get_cycle_key(config, now: datetime.datetime):
         """
@@ -70,7 +79,7 @@ class Roleplay(Cog):
                 collection_name='roleplayConfig',
                 query={'_id': guild_id}
             )
-            rp_settings = rp_config.get('config', None)
+            rp_settings = rp_config.get('config', {})
 
             if not rp_config or not rp_config.get('enabled'):
                 logger.debug(f'Roleplay not enabled in guild {guild_id}.')
@@ -106,7 +115,7 @@ class Roleplay(Cog):
 
             cooldown_state_key = f"rp:{guild_id}:{user_id}:cooldown"
             if await bot.rdb.exists(cooldown_state_key):
-                logger.info(f'User {user_id} is on cooldown in guild {guild_id}.')
+                logger.debug(f'User {user_id} is on cooldown in guild {guild_id}.')
                 return
 
             if cooldown_time > 0:
@@ -189,16 +198,7 @@ class Roleplay(Cog):
 
                 xp_enabled = await get_xp_config(bot, guild_id)
 
-                class MockInteraction:
-                    def __init__(self, client, user, guild, channel):
-                        self.client = client
-                        self.user = user
-                        self.guild = guild
-                        self.channel = channel
-                        self.guild_id = guild.id
-                        self.response = None
-
-                mock_interaction = MockInteraction(bot, message.author, message.guild, message.channel)
+                mock_interaction = self.MockInteraction(bot, message.author, message.guild, message.channel)
 
                 if xp_enabled and xp_amount:
                     await update_character_experience(mock_interaction, user_id, active_char_id, xp_amount)
