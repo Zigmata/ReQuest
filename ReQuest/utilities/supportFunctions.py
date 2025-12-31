@@ -983,12 +983,12 @@ def format_price_string(amount, currency_name, currency_config) -> str:
     display_name = titlecase(currency_name)
 
     if is_double:
-        return f"{amount:.2f} {display_name}"
+        return f'{amount:.2f} {display_name}'
     else:
         if amount % 1 == 0:
-            return f"{int(amount)} {display_name}"
+            return f'{int(amount)} {display_name}'
         else:
-            return f"{amount:.2f} {display_name}"
+            return f'{amount:.2f} {display_name}'
 
 
 async def get_xp_config(bot, guild_id) -> bool:
@@ -1014,3 +1014,30 @@ async def get_xp_config(bot, guild_id) -> bool:
         logger.error(f"Error retrieving XP config: {e}")
         await log_exception(e)
         return True  # Default to XP enabled on error
+
+
+def format_complex_cost(costs: list, currency_config: dict) -> str:
+    """
+    Formats a list of complex costs into a readable string.
+
+    :param costs: A list of cost dictionaries, e.g. [{'gold': 10}, {'reputation': 50}]
+    :param currency_config: The server's currency config dict
+
+    :return: A formatted cost string
+    """
+
+    if not costs:
+        return 'Free'
+
+    option_strings = []
+    for option in costs:
+        component_strings = []
+        for currency_name, amount in option.items():
+            component_strings.append(format_price_string(amount, currency_name, currency_config))
+        if component_strings:
+            option_strings.append(' + '.join(component_strings))
+
+    if not option_strings:
+        return 'Free'
+
+    return ' OR\n'.join(option_strings)

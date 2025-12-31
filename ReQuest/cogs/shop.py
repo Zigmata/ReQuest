@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord.ext.commands import Cog
 
 from ReQuest.ui.shop import views
-from ReQuest.utilities.supportFunctions import log_exception, get_cached_data, UserFeedbackError
+from ReQuest.utilities.supportFunctions import log_exception, get_cached_data, UserFeedbackError, setup_view
 
 
 class Shop(Cog):
@@ -38,6 +38,7 @@ class Shop(Cog):
             shop_data = shop_query['shopChannels'][channel_id]
 
             view = views.ShopBaseView(shop_data)
+            await setup_view(view, interaction)
             await interaction.response.send_message(view=view, ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)
