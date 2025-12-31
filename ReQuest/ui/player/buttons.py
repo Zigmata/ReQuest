@@ -294,7 +294,7 @@ class OpenInventoryInputButton(Button):
 
 
 class WizardItemButton(Button):
-    def __init__(self, item, inventory_type):
+    def __init__(self, item, inventory_type, cost_string='Free'):
         label = f'Add to Cart'
         costs = item.get('costs', [])
 
@@ -302,7 +302,7 @@ class WizardItemButton(Button):
             if len(costs) > 1:
                 label = 'View Purchase Options'
             else:
-                pass
+                label = f'Add to Cart ({cost_string})'
 
         super().__init__(
             label=label,

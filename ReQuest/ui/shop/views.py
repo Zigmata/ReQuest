@@ -88,7 +88,7 @@ class ShopBaseView(LayoutView):
                 costs = item.get('costs', [])
                 cost_string = format_complex_cost(costs, getattr(self, 'currency_config', {}))
 
-                buy_button = buttons.ShopItemButton(item)
+                buy_button = buttons.ShopItemButton(item, cost_string)
                 section = Section(accessory=buy_button)
 
                 item_name = item.get('name', 'Unknown Item')
@@ -96,12 +96,14 @@ class ShopBaseView(LayoutView):
                 item_quantity = item.get('quantity', 1)
                 item_display_name = f'{item_name} x{item_quantity}' if item_quantity > 1 else item_name
 
-                cart_info = ''
-                if item_name in self.cart:
-                    cart_quantity = self.cart[item_name]['quantity']
-                    cart_info = f' (In Cart: {cart_quantity})'
+                cart_quantity = 0
+                for value in self.cart.values():
+                    if value['item'].get('name') == item_name:
+                        cart_quantity += value['quantity']
 
-                content = f'{item_display_name}{cart_info}\n**Cost:** {cost_string}'
+                content = item_display_name
+                if cart_quantity > 0:
+                    content += f' (In Cart: {cart_quantity})'
                 if item_description:
                     content += f'\n*{item_description}*'
 
@@ -456,7 +458,7 @@ class ComplexItemPurchaseView(LayoutView):
 
             select_button = buttons.SelectCostOptionButton(self.parent_view, self.item, index)
             section = Section(accessory=select_button)
-            section.add_item(TextDisplay(f"**Option {index + 1}:** {cost_str}"))
+            section.add_item(TextDisplay(cost_str))
             container.add_item(section)
 
         self.add_item(container)

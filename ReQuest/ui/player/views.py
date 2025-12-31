@@ -942,16 +942,16 @@ class NewCharacterShopView(LayoutView):
         stock_slice = self.shop_stock[start:end]
 
         for item in stock_slice:
-            section = Section(accessory=buttons.WizardItemButton(item, self.inventory_type))
+            cost_string = 'Free'
+            if self.inventory_type == 'purchase':
+                costs = item.get('costs', [])
+                cost_string = format_complex_cost(costs, self.currency_config)
+
+            section = Section(accessory=buttons.WizardItemButton(item, self.inventory_type, cost_string))
 
             display = f'**{item["name"]}**'
             if item.get('quantity', 1) > 1:
                 display += f'(x{item.get("quantity", 1)})'
-
-            if self.inventory_type == 'purchase':
-                costs = item.get('costs', [])
-                cost_str = format_complex_cost(costs, self.currency_config)
-                display += f' - {cost_str}'
 
             if item_name := item.get('name'):
                 item_quantity_in_cart = 0
