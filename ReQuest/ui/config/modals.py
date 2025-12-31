@@ -660,7 +660,7 @@ class ShopItemModal(Modal):
 
                         if not currency_config_entry:
                             raise UserFeedbackError(
-                                f'Unknown currency `{currency_name}`. Please use a valid currency configured for this'
+                                f'Unknown currency `{currency_name}`. Please use a valid currency configured for this '
                                 f'server.'
                             )
 
@@ -870,13 +870,28 @@ class NewCharacterShopItemModal(Modal):
 
                             try:
                                 amount = float(amount_str)
-                                if amount < 0:
+                                if amount <= 0:
                                     raise ValueError
                             except ValueError:
                                 raise UserFeedbackError(
                                     f"Invalid amount '{amount_str}' for currency '{currency_name}'.")
 
-                            current_option_dict[currency_name.lower()] = amount
+                            currency_key = currency_name.lower()
+                            currency_config = await get_cached_data(
+                                bot=bot,
+                                mongo_database=bot.gdb,
+                                collection_name='currency',
+                                query={'_id': guild_id}
+                            )
+                            currency_config_entry = find_currency_or_denomination(currency_config, currency_key)
+
+                            if not currency_config_entry:
+                                raise UserFeedbackError(
+                                    f'Unknown currency `{currency_name}`. Please use a valid currency configured for '
+                                    f'this server.'
+                                )
+
+                            current_option_dict[currency_key] = amount
 
                         if current_option_dict:
                             parsed_costs.append(current_option_dict)
