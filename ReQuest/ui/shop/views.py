@@ -153,9 +153,6 @@ class ShopBaseView(LayoutView):
         except Exception as e:
             logging.error(f'Error building shop view: {e}')
 
-    async def add_to_cart(self, interaction: discord.Interaction, item):
-        await self.add_to_cart_with_option(interaction, item, 0)
-
     async def add_to_cart_with_option(self, interaction: discord.Interaction, item, option_index=0):
         item_name = item.get('name')
         cart_key = f"{item_name}::{option_index}"
@@ -264,10 +261,15 @@ class ShopCartView(LayoutView):
 
                     costs = item.get('costs', [])
                     price_string = 'Invalid Cost'
-                    if 0 <= option_index < len(costs):
+                    if not costs:
+                        price_string = 'Free'
+                    elif 0 <= option_index < len(costs):
                         selected_cost = costs[option_index]
-                        total_cost = {k: v * quantity for k, v in selected_cost.items()}
-                        price_string = format_complex_cost([total_cost], self.currency_config)
+                        if not selected_cost:
+                            price_string = 'Free'
+                        else:
+                            total_cost = {k: v * quantity for k, v in selected_cost.items()}
+                            price_string = format_complex_cost([total_cost], self.currency_config)
 
                     edit_button = buttons.EditCartItemButton(item_key, quantity)
                     section = Section(accessory=edit_button)
@@ -280,9 +282,14 @@ class ShopCartView(LayoutView):
                 container.add_item(Separator())
 
                 total_strings = format_consolidated_totals(self.base_totals, self.currency_config)
-                cost_string = f'**Total Cost:**\n{', '.join(total_strings)}' + (
-                    f'\n**Warning:**\n- ' + '\n- '.join(warnings) if warnings else ''
-                )
+                cost_string = f'**Total Cost:**'
+                if total_strings:
+                    cost_string += f'\n{', '.join(total_strings)}'
+                else:
+                    cost_string += '\nFree'
+                if warnings:
+                    cost_string += f'\n**Warning:**\n- ' + '\n- '.join(warnings)
+
                 container.add_item(TextDisplay(cost_string))
 
             self.add_item(container)
@@ -453,12 +460,15 @@ class ComplexItemPurchaseView(LayoutView):
         costs = self.item.get('costs', [])
         currency_config = getattr(self.parent_view, 'currency_config', {})
 
-        for index, cost_option in enumerate(costs):
-            cost_str = format_complex_cost([cost_option], currency_config)
+        if not costs:
+            container.add_item(TextDisplay("There are no purchase options available for this item."))
+        else:
+            for index, cost_option in enumerate(costs):
+                cost_str = format_complex_cost([cost_option], currency_config)
 
-            select_button = buttons.SelectCostOptionButton(self.parent_view, self.item, index)
-            section = Section(accessory=select_button)
-            section.add_item(TextDisplay(cost_str))
-            container.add_item(section)
+                select_button = buttons.SelectCostOptionButton(self.parent_view, self.item, index)
+                section = Section(accessory=select_button)
+                section.add_item(TextDisplay(cost_str))
+                container.add_item(section)
 
         self.add_item(container)

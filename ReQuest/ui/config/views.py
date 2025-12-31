@@ -1564,6 +1564,7 @@ class ConfigNewCharacterShopView(LayoutView):
         self.total_pages = 1
         self.mode_description = ''
         self.currency_config = {}
+        self.inventory_type = ''
 
     def build_view(self):
         self.clear_items()
@@ -1598,7 +1599,9 @@ class ConfigNewCharacterShopView(LayoutView):
                 costs = item.get('costs', [])
                 cost_string = format_complex_cost(costs, getattr(self, 'currency_config', {}))
 
-                display_string = f"**{item_name}** (x{item_quantity}) - {cost_string}"
+                display_string = f'**{item_name}** (x{item_quantity})'
+                if cost_string:
+                    display_string += f' - {cost_string}'
 
                 if item_description:
                     display_string += f"\n*{item_description}*"
@@ -1651,21 +1654,21 @@ class ConfigNewCharacterShopView(LayoutView):
                 collection_name='inventoryConfig',
                 query={'_id': guild.id}
             )
-            inventory_type = inventory_config.get('inventoryType', 'disabled') if inventory_config else 'disabled'
+            self.inventory_type = inventory_config.get('inventoryType', 'disabled') if inventory_config else 'disabled'
 
-            if inventory_type == 'selection':
+            if self.inventory_type == 'selection':
                 self.mode_description = (
                     '**Inventory Type:** Selection\n'
                     'Players choose items freely from the New Character Shop.'
                 )
-            elif inventory_type == 'purchase':
+            elif self.inventory_type == 'purchase':
                 self.mode_description = (
                     '**Inventory Type:** Purchase\n'
                     'Players purchase items from the New Character Shop with a given amount of currency.'
                 )
             else:
                 self.mode_description = (
-                    f'**Inventory Type:** {titlecase(inventory_type)}\n'
+                    f'**Inventory Type:** {titlecase(self.inventory_type)}\n'
                     f'New Character Shop is not in use.'
                 )
 
@@ -2494,6 +2497,7 @@ class EditShopView(LayoutView):
         else:
             for item in header_items:
                 container.add_item(item)
+
         header_buttons = ActionRow()
         header_buttons.add_item(buttons.AddItemButton(self))
         header_buttons.add_item(buttons.EditShopDetailsButton(self))
@@ -2509,7 +2513,7 @@ class EditShopView(LayoutView):
             item_description = item.get('description', None)
             item_quantity = item.get('quantity', 1)
 
-            costs = item.get('costs', {})
+            costs = item.get('costs', [])
             cost_string = format_complex_cost(costs, getattr(self, 'currency_config', {}))
 
             if item_quantity > 1:
@@ -2517,7 +2521,7 @@ class EditShopView(LayoutView):
             else:
                 item_text = item_name
 
-            display_string = f'**{item_text}**: - {cost_string}'
+            display_string = f'**{item_text}** - {cost_string}'
 
             if item_description:
                 display_string += f'\n*{item_description}*'

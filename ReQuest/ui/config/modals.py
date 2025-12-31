@@ -649,7 +649,22 @@ class ShopItemModal(Modal):
                                 f'positive number.'
                             )
 
-                        current_options[currency_name.lower()] = amount
+                        currency_key = currency_name.lower()
+                        currency_config = await get_cached_data(
+                            bot=bot,
+                            mongo_database=bot.gdb,
+                            collection_name='currency',
+                            query={'_id': guild_id}
+                        )
+                        currency_config_entry = find_currency_or_denomination(currency_config, currency_key)
+
+                        if not currency_config_entry:
+                            raise UserFeedbackError(
+                                f'Unknown currency `{currency_name}`. Please use a valid currency configured for this'
+                                f'server.'
+                            )
+
+                        current_options[currency_key] = amount
 
                     if current_options:
                         parsed_costs.append(current_options)
@@ -765,19 +780,26 @@ class ConfigUpdateShopJSONModal(Modal):
 
 
 class NewCharacterShopItemModal(Modal):
-    def __init__(self, calling_view, existing_item=None):
+    def __init__(self, calling_view, inventory_type, existing_item=None):
         super().__init__(
             title='Add/Edit NewCharacter Gear',
             timeout=600
         )
         self.calling_view = calling_view
+        self.inventory_type = inventory_type
         self.existing_item_name = existing_item.get('name') if existing_item else None
 
         name_default = existing_item.get('name', '') if existing_item else ''
         description_default = existing_item.get('description', '') if existing_item else ''
-        price_default = str(existing_item.get('price', '0')) if existing_item else '0'
         quantity_default = str(existing_item.get('quantity', '1')) if existing_item else '1'
-        currency_default = existing_item.get('currency', '') if existing_item else ''
+
+        costs_default = ''
+        if existing_item and 'costs' in existing_item:
+            lines = []
+            for option in existing_item['costs']:
+                components = [f'{amount} {currency}' for currency, amount in option.items()]
+                lines.append(' + '.join(components))
+            costs_default = '\n'.join(lines)
 
         self.item_name_text_input = discord.ui.TextInput(
             label='Item Name',
@@ -785,6 +807,8 @@ class NewCharacterShopItemModal(Modal):
             placeholder='Enter the name of the item',
             default=name_default
         )
+        self.add_item(self.item_name_text_input)
+
         self.item_description_text_input = discord.ui.TextInput(
             label='Item Description',
             style=discord.TextStyle.paragraph,
@@ -793,12 +817,8 @@ class NewCharacterShopItemModal(Modal):
             default=description_default,
             required=False
         )
-        self.item_price_text_input = discord.ui.TextInput(
-            label='Item Price',
-            custom_id='item_price_text_input',
-            placeholder='Enter the price (0 for free/selection)',
-            default=price_default
-        )
+        self.add_item(self.item_description_text_input)
+
         self.item_quantity_text_input = discord.ui.TextInput(
             label='Item Quantity',
             custom_id='item_quantity_text_input',
@@ -806,18 +826,18 @@ class NewCharacterShopItemModal(Modal):
             default=quantity_default,
             required=False
         )
-        self.item_currency_text_input = discord.ui.TextInput(
-            label='Currency (Optional)',
-            custom_id='item_currency_text_input',
-            placeholder='Required if price > 0',
-            default=currency_default,
-            required=False
-        )
-        self.add_item(self.item_name_text_input)
-        self.add_item(self.item_description_text_input)
-        self.add_item(self.item_price_text_input)
         self.add_item(self.item_quantity_text_input)
-        self.add_item(self.item_currency_text_input)
+
+        if inventory_type == 'purchase':
+            self.item_cost_text_input = discord.ui.TextInput(
+                label='Item Cost',
+                custom_id='item_cost_text_input',
+                placeholder='E.g.: 10 gold + 5 silver\nOR: 50 rep\n(Use + for AND, New Lines for OR)',
+                style=discord.TextStyle.paragraph,
+                default=costs_default,
+                required=False
+            )
+            self.add_item(self.item_cost_text_input)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -828,24 +848,44 @@ class NewCharacterShopItemModal(Modal):
             if not quantity_string.isdigit() or int(quantity_string) < 1:
                 raise UserFeedbackError('Item quantity must be a positive integer.')
 
-            price_str = self.item_price_text_input.value
-            try:
-                price_value = float(price_str)
-                if price_value < 0:
-                    raise UserFeedbackError('Item price must be a non-negative number.')
-            except ValueError:
-                raise UserFeedbackError('Item price must be a non-negative number.')
+            parsed_costs = []
+            if self.inventory_type == 'purchase':
+                cost_string = self.item_cost_text_input.value
 
-            currency_val = self.item_currency_text_input.value.lower()
-            if int(price_str) > 0 and not currency_val:
-                raise UserFeedbackError('Currency is required if price is greater than 0.')
+                if cost_string.strip():
+                    options = cost_string.strip().split('\n')
+                    for option in options:
+                        if not option.strip():
+                            continue
+                        current_option_dict = {}
+                        components = option.split('+')
+                        for component in components:
+                            parts = component.strip().split(' ', 1)
+                            if len(parts) < 2:
+                                raise UserFeedbackError(
+                                    f"Invalid cost format: '{component}'. Expected 'Amount Currency'.")
+
+                            amount_str = parts[0]
+                            currency_name = parts[1]
+
+                            try:
+                                amount = float(amount_str)
+                                if amount < 0:
+                                    raise ValueError
+                            except ValueError:
+                                raise UserFeedbackError(
+                                    f"Invalid amount '{amount_str}' for currency '{currency_name}'.")
+
+                            current_option_dict[currency_name.lower()] = amount
+
+                        if current_option_dict:
+                            parsed_costs.append(current_option_dict)
 
             new_item = {
                 'name': self.item_name_text_input.value,
                 'description': self.item_description_text_input.value,
-                'price': int(self.item_price_text_input.value),
                 'quantity': int(self.item_quantity_text_input.value),
-                'currency': currency_val
+                'costs': parsed_costs
             }
 
             query = await get_cached_data(

@@ -1037,4 +1037,7 @@ def format_complex_cost(costs: list, currency_config: dict) -> str:
         if component_strings:
             option_strings.append(' + '.join(component_strings))
 
+    if not option_strings:
+        return 'Free'
+
     return ' OR\n'.join(option_strings)

@@ -865,13 +865,16 @@ class NewCharacterComplexItemPurchaseView(LayoutView):
         costs = self.item.get('costs', [])
         currency_config = getattr(self.parent_view, 'currency_config', {})
 
-        for index, cost_option in enumerate(costs):
-            cost_str = format_complex_cost([cost_option], currency_config)
+        if not costs:
+            container.add_item(TextDisplay("This item has no cost options available."))
+        else:
+            for index, cost_option in enumerate(costs):
+                cost_str = format_complex_cost([cost_option], currency_config)
 
-            select_button = buttons.WizardSelectCostOptionButton(self.parent_view, self.item, index)
-            section = Section(accessory=select_button)
-            section.add_item(TextDisplay(f"**Option {index + 1}:** {cost_str}"))
-            container.add_item(section)
+                select_button = buttons.WizardSelectCostOptionButton(self.parent_view, self.item, index)
+                section = Section(accessory=select_button)
+                section.add_item(TextDisplay(f"**Option {index + 1}:** {cost_str}"))
+                container.add_item(section)
 
         self.add_item(container)
 
@@ -1131,9 +1134,10 @@ class NewCharacterCartView(LayoutView):
                     costs = item.get('costs', [])
                     if 0 <= option_index < len(costs):
                         selected_cost = costs[option_index]
-                        total_line_cost = {k: v * quantity for k, v in selected_cost.items()}
-                        price_label = format_complex_cost([total_line_cost], self.shop_view.currency_config)
-                        display += f' - {price_label}'
+                        if selected_cost:
+                            total_line_cost = {k: v * quantity for k, v in selected_cost.items()}
+                            price_label = format_complex_cost([total_line_cost], self.shop_view.currency_config)
+                            display += f' - {price_label}'
 
                 edit_button = buttons.WizardEditCartItemButton(key, quantity)
                 section = Section(accessory=edit_button)

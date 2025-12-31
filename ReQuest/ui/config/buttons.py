@@ -759,7 +759,8 @@ class AddNewCharacterShopItemButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            await interaction.response.send_modal(modals.NewCharacterShopItemModal(self.calling_view))
+            item_modal = modals.NewCharacterShopItemModal(self.calling_view, self.calling_view.inventory_type)
+            await interaction.response.send_modal(item_modal)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -776,7 +777,9 @@ class EditNewCharacterShopItemButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            await interaction.response.send_modal(modals.NewCharacterShopItemModal(self.calling_view, self.item))
+            view = self.calling_view
+            item_modal = modals.NewCharacterShopItemModal(view, view.inventory_type, self.item)
+            await interaction.response.send_modal(item_modal)
         except Exception as e:
             await log_exception(e, interaction)
 
