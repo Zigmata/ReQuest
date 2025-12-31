@@ -33,7 +33,8 @@ from ReQuest.utilities.supportFunctions import (
     UserFeedbackError,
     get_cached_data,
     update_cached_data,
-    build_cache_key
+    build_cache_key,
+    format_complex_cost
 )
 
 logger = logging.getLogger(__name__)
@@ -845,6 +846,36 @@ class StaticKitConfirmView(LayoutView):
         await _handle_submission(interaction, self.character_id, self.character_name, items, currency)
 
 
+class NewCharacterComplexItemPurchaseView(LayoutView):
+    def __init__(self, parent_view, item):
+        super().__init__(timeout=None)
+        self.parent_view = parent_view
+        self.item = item
+        self.build_view()
+
+    def build_view(self):
+        self.clear_items()
+        container = Container()
+
+        header = Section(accessory=buttons.WizardKeepShoppingButton(self.parent_view))
+        header.add_item(TextDisplay(f"**Purchase Options: {self.item['name']}**"))
+        container.add_item(header)
+        container.add_item(Separator())
+
+        costs = self.item.get('costs', [])
+        currency_config = getattr(self.parent_view, 'currency_config', {})
+
+        for index, cost_option in enumerate(costs):
+            cost_str = format_complex_cost([cost_option], currency_config)
+
+            select_button = buttons.WizardSelectCostOptionButton(self.parent_view, self.item, index)
+            section = Section(accessory=select_button)
+            section.add_item(TextDisplay(f"**Option {index + 1}:** {cost_str}"))
+            container.add_item(section)
+
+        self.add_item(container)
+
+
 class NewCharacterShopView(LayoutView):
     def __init__(self, character_id, character_name, inventory_type):
         super().__init__(timeout=None)
@@ -858,7 +889,7 @@ class NewCharacterShopView(LayoutView):
         self.current_page = 0
         self.total_pages = 1
 
-        self.currency_config = None
+        self.currency_config = {}
         self.starting_wealth = None
 
     async def setup(self, interaction):
@@ -917,9 +948,19 @@ class NewCharacterShopView(LayoutView):
             if item.get('quantity', 1) > 1:
                 display += f'(x{item.get("quantity", 1)})'
 
+            if self.inventory_type == 'purchase':
+                costs = item.get('costs', [])
+                cost_str = format_complex_cost(costs, self.currency_config)
+                display += f' - {cost_str}'
+
             if item_name := item.get('name'):
-                if item_name in self.cart:
-                    display += f" **(In Cart: {self.cart[item_name]['quantity']})**"
+                item_quantity_in_cart = 0
+                for value in self.cart.values():
+                    if value['item']['name'] == item_name:
+                        item_quantity_in_cart += value['quantity']
+
+                if item_quantity_in_cart > 0:
+                    display += f" **(In Cart: {item_quantity_in_cart})**"
 
             if description := item.get('description'):
                 display += f"\n*{description}*"
@@ -963,6 +1004,17 @@ class NewCharacterShopView(LayoutView):
         self.build_view()
         await interaction.response.edit_message(view=self)
 
+    async def add_to_cart_with_option(self, interaction, item, option_index=0):
+        name = item['name']
+        key = f"{name}::{option_index}"
+
+        if key in self.cart:
+            self.cart[key]['quantity'] += 1
+        else:
+            self.cart[key] = {'item': item, 'quantity': 1, 'option_index': option_index}
+        self.build_view()
+        await interaction.response.edit_message(view=self)
+
     async def prev_page(self, interaction):
         self.current_page -= 1
         self.build_view()
@@ -998,19 +1050,22 @@ class NewCharacterCartView(LayoutView):
         total_cost_raw = {}
         self.cart_items = {}
 
-        for name, data in self.shop_view.cart.items():
+        for key, data in self.shop_view.cart.items():
             item = data['item']
             quantity = data['quantity']
+            option_index = data.get('option_index', 0)
             quantity_per_purchase = item.get('quantity', 1)
             total_quantity = quantity * quantity_per_purchase
 
-            self.cart_items[name] = total_quantity
+            name = item['name']
+            self.cart_items[name] = self.cart_items.get(name, 0) + total_quantity
 
             if self.shop_view.inventory_type == 'purchase':
-                cost = quantity * item.get('price', 0)
-                if cost > 0:
-                    currency = item.get('currency')
-                    total_cost_raw[currency] = total_cost_raw.get(currency, 0) + cost
+                costs = item.get('costs', [])
+                if 0 <= option_index < len(costs):
+                    selected_cost = costs[option_index]
+                    for currency, amount in selected_cost.items():
+                        total_cost_raw[currency] = total_cost_raw.get(currency, 0) + (amount * quantity)
 
         self.can_afford = True
         warnings = []
@@ -1060,9 +1115,11 @@ class NewCharacterCartView(LayoutView):
             end = start + self.items_per_page
             page_items = cart_items[start:end]
 
-            for name, data in page_items:
+            for key, data in page_items:
                 item = data['item']
+                name = item.get('name')
                 quantity = data['quantity']
+                option_index = data.get('option_index', 0)
                 quantity_per_purchase = item.get('quantity', 1)
                 total_quantity = quantity * quantity_per_purchase
 
@@ -1071,13 +1128,14 @@ class NewCharacterCartView(LayoutView):
                     display += f' (Total: {total_quantity})'
 
                 if self.shop_view.inventory_type == 'purchase':
-                    cost = quantity * float(item.get('price', 0))
-                    if cost > 0:
-                        currency = item.get('currency')
-                        price_label = format_price_string(cost, currency, self.shop_view.currency_config)
+                    costs = item.get('costs', [])
+                    if 0 <= option_index < len(costs):
+                        selected_cost = costs[option_index]
+                        total_line_cost = {k: v * quantity for k, v in selected_cost.items()}
+                        price_label = format_complex_cost([total_line_cost], self.shop_view.currency_config)
                         display += f' - {price_label}'
 
-                edit_button = buttons.WizardEditCartItemButton(name, quantity)
+                edit_button = buttons.WizardEditCartItemButton(key, quantity)
                 section = Section(accessory=edit_button)
                 section.add_item(TextDisplay(display))
                 container.add_item(section)

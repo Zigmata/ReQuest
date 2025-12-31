@@ -526,10 +526,8 @@ class EditShopButton(Button):
             from ReQuest.ui.config.views import EditShopView
 
             view = EditShopView(self.calling_view.selected_channel_id, shop_data)
-            view.build_view()
-
+            await setup_view(view, interaction)
             await interaction.response.edit_message(view=view)
-
         except Exception as e:
             await log_exception(e, interaction)
 

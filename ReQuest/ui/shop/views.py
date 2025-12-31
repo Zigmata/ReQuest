@@ -1,6 +1,5 @@
 import logging
 import math
-from titlecase import titlecase
 
 import discord
 import shortuuid
@@ -14,6 +13,7 @@ from discord.ui import (
     Thumbnail,
     Button
 )
+from titlecase import titlecase
 
 from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.shop import buttons
@@ -22,11 +22,11 @@ from ReQuest.utilities.supportFunctions import (
     apply_currency_change_local,
     apply_item_change_local,
     strip_id,
-    format_price_string,
     format_consolidated_totals,
     consolidate_currency_totals,
     get_cached_data,
-    update_cached_data
+    update_cached_data,
+    format_complex_cost
 )
 
 logger = logging.getLogger(__name__)
@@ -40,8 +40,16 @@ class ShopBaseView(LayoutView):
         self.items_per_page = 9
         self.current_page = 0
         self.total_pages = math.ceil(len(self.all_stock) / self.items_per_page)
-
+        self.currency_config = {}
         self.cart = {}
+
+    async def setup(self, bot, guild):
+        self.currency_config = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name='currency',
+            query={'_id': guild.id}
+        )
 
         self.build_view()
 
@@ -77,6 +85,9 @@ class ShopBaseView(LayoutView):
             current_stock = self.all_stock[start_index:end_index]
 
             for item in current_stock:
+                costs = item.get('costs', [])
+                cost_string = format_complex_cost(costs, getattr(self, 'currency_config', {}))
+
                 buy_button = buttons.ShopItemButton(item)
                 section = Section(accessory=buy_button)
 
@@ -90,7 +101,7 @@ class ShopBaseView(LayoutView):
                     cart_quantity = self.cart[item_name]['quantity']
                     cart_info = f' (In Cart: {cart_quantity})'
 
-                content = f'{item_display_name}{cart_info}'
+                content = f'{item_display_name}{cart_info}\n**Cost:** {cost_string}'
                 if item_description:
                     content += f'\n*{item_description}*'
 
@@ -141,11 +152,16 @@ class ShopBaseView(LayoutView):
             logging.error(f'Error building shop view: {e}')
 
     async def add_to_cart(self, interaction: discord.Interaction, item):
+        await self.add_to_cart_with_option(interaction, item, 0)
+
+    async def add_to_cart_with_option(self, interaction: discord.Interaction, item, option_index=0):
         item_name = item.get('name')
-        if item_name in self.cart:
-            self.cart[item_name]['quantity'] += 1
+        cart_key = f"{item_name}::{option_index}"
+
+        if cart_key in self.cart:
+            self.cart[cart_key]['quantity'] += 1
         else:
-            self.cart[item_name] = {'item': item, 'quantity': 1}
+            self.cart[cart_key] = {'item': item, 'quantity': 1, 'option_index': option_index}
 
         self.build_view()
         await interaction.response.edit_message(view=self)
@@ -210,11 +226,13 @@ class ShopCartView(LayoutView):
                 for item_key, data in self.prev_view.cart.items():
                     item = data['item']
                     quantity = data['quantity']
+                    option_index = data.get('option_index', 0)
 
-                    total_price = quantity * float(item.get('price', 0))
-                    currency_name = item.get('currency')
-
-                    raw_totals[currency_name] = raw_totals.get(currency_name, 0.0) + total_price
+                    costs = item.get('costs', [])
+                    if 0 <= option_index < len(costs):
+                        selected_cost = costs[option_index]
+                        for currency_name, amount in selected_cost.items():
+                            raw_totals[currency_name] = raw_totals.get(currency_name, 0.0) + (amount * quantity)
 
                 self.base_totals = consolidate_currency_totals(raw_totals, self.currency_config)
 
@@ -239,12 +257,15 @@ class ShopCartView(LayoutView):
                     item = data['item']
                     quantity = data['quantity']
                     quantity_per_item = item.get('quantity', 1)
-
+                    option_index = data.get('option_index', 0)
                     total_item_quantity = quantity * quantity_per_item
-                    total_price = quantity * float(item.get('price', 0))
-                    currency_name = item.get('currency')
 
-                    price_string = format_price_string(total_price, currency_name, self.currency_config)
+                    costs = item.get('costs', [])
+                    price_string = 'Invalid Cost'
+                    if 0 <= option_index < len(costs):
+                        selected_cost = costs[option_index]
+                        total_cost = {k: v * quantity for k, v in selected_cost.items()}
+                        price_string = format_complex_cost([total_cost], self.currency_config)
 
                     edit_button = buttons.EditCartItemButton(item_key, quantity)
                     section = Section(accessory=edit_button)
@@ -409,3 +430,33 @@ class ShopCartView(LayoutView):
             await interaction.followup.send(embed=receipt_embed, ephemeral=True)
         except Exception as e:
             logging.error(f'Error during checkout: {e}')
+
+
+class ComplexItemPurchaseView(LayoutView):
+    def __init__(self, parent_view, item):
+        super().__init__(timeout=None)
+        self.parent_view = parent_view
+        self.item = item
+        self.build_view()
+
+    def build_view(self):
+        self.clear_items()
+        container = Container()
+
+        header = Section(accessory=buttons.CartBackButton(self.parent_view))
+        header.add_item(TextDisplay(f"**Purchase Options: {self.item['name']}**"))
+        container.add_item(header)
+        container.add_item(Separator())
+
+        costs = self.item.get('costs', [])
+        currency_config = getattr(self.parent_view, 'currency_config', {})
+
+        for index, cost_option in enumerate(costs):
+            cost_str = format_complex_cost([cost_option], currency_config)
+
+            select_button = buttons.SelectCostOptionButton(self.parent_view, self.item, index)
+            section = Section(accessory=select_button)
+            section.add_item(TextDisplay(f"**Option {index + 1}:** {cost_str}"))
+            container.add_item(section)
+
+        self.add_item(container)

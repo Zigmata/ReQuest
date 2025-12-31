@@ -25,10 +25,12 @@ from ReQuest.ui.config.buttons import AddShopJSONButton
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
+    format_complex_cost,
     format_price_string,
     format_consolidated_totals,
     get_xp_config,
-    get_cached_data, consolidate_currency_totals
+    get_cached_data,
+    consolidate_currency_totals
 )
 
 logger = logging.getLogger(__name__)
@@ -1561,6 +1563,7 @@ class ConfigNewCharacterShopView(LayoutView):
         self.current_page = 0
         self.total_pages = 1
         self.mode_description = ''
+        self.currency_config = {}
 
     def build_view(self):
         self.clear_items()
@@ -1590,15 +1593,12 @@ class ConfigNewCharacterShopView(LayoutView):
             for item in current_stock:
                 item_name = item.get('name')
                 item_description = item.get('description')
-                item_price = item.get('price', 0)
-                item_currency = item.get('currency', '')
                 item_quantity = item.get('quantity', 1)
 
-                display_string = f"**{item_name}** (x{item_quantity})"
-                if item_price > 0:
-                    display_string += f" - {item_price} {item_currency}"
-                else:
-                    display_string += " - Free"
+                costs = item.get('costs', [])
+                cost_string = format_complex_cost(costs, getattr(self, 'currency_config', {}))
+
+                display_string = f"**{item_name}** (x{item_quantity}) - {cost_string}"
 
                 if item_description:
                     display_string += f"\n*{item_description}*"
@@ -1679,6 +1679,13 @@ class ConfigNewCharacterShopView(LayoutView):
                 self.update_stock(query['shopStock'])
             else:
                 self.update_stock([])
+
+            self.currency_config = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='currency',
+                query={'_id': guild.id}
+            )
 
             self.build_view()
         except Exception as e:
@@ -2445,8 +2452,26 @@ class EditShopView(LayoutView):
         self.items_per_page = 6
         self.current_page = 0
         self.total_pages = math.ceil(len(self.all_stock) / self.items_per_page)
-        self.done_editing_button = buttons.ManageShopNavButton(self.channel_id, self.shop_data,
-                                                               'Done Editing', ButtonStyle.secondary)
+        self.done_editing_button = buttons.ManageShopNavButton(
+            self.channel_id,
+            self.shop_data,
+            'Done Editing',
+            ButtonStyle.secondary
+        )
+        self.currency_config = {}
+
+    async def setup(self, bot, guild):
+        try:
+            self.currency_config = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='currency',
+                query={'_id': guild.id}
+            )
+
+            self.build_view()
+        except Exception as e:
+            await log_exception(e)
 
     def build_view(self):
         self.clear_items()
@@ -2481,24 +2506,23 @@ class EditShopView(LayoutView):
 
         for item in current_stock:
             item_name = item.get('name')
-            item_desc = item.get('description', None)
-            item_price = item.get('price')
-            item_currency = item.get('currency')
+            item_description = item.get('description', None)
             item_quantity = item.get('quantity', 1)
 
-            item_text = f'{f'{item_name} x{item_quantity}' if item_quantity > 1 else item_name}'
+            costs = item.get('costs', {})
+            cost_string = format_complex_cost(costs, getattr(self, 'currency_config', {}))
 
-            if item_desc:
-                item_display = TextDisplay(
-                    f'**{item_text}**: {item_price} {item_currency}\n'
-                    f'*{item_desc}*'
-                )
+            if item_quantity > 1:
+                item_text = f'{item_name} x{item_quantity}'
             else:
-                item_display = TextDisplay(
-                    f'**{item_text}**: {item_price} {item_currency}'
-                )
+                item_text = item_name
 
-            container.add_item(item_display)
+            display_string = f'**{item_text}**: - {cost_string}'
+
+            if item_description:
+                display_string += f'\n*{item_description}*'
+
+            container.add_item(TextDisplay(display_string))
 
             item_buttons = ActionRow()
             item_buttons.add_item(buttons.EditShopItemButton(item, self))

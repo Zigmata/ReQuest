@@ -10,8 +10,14 @@ from ReQuest.ui.shop import modals
 
 class ShopItemButton(Button):
     def __init__(self, item):
+        costs = item.get('costs', [])
+        if len(costs) > 1:
+            label = 'View Purchase Options'
+        else:
+            label = 'Add to Cart'
+
         super().__init__(
-            label=f'Add to Cart ({item["price"]} {titlecase(item["currency"])})',
+            label=label,
             style=ButtonStyle.success,
             custom_id=f'shop_item_button_{item["name"]}'
         )
@@ -19,7 +25,31 @@ class ShopItemButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            await self.view.add_to_cart(interaction, self.item)
+            costs = self.item.get('costs', [])
+            if len(costs) > 1:
+                from ReQuest.ui.shop.views import ComplexItemPurchaseView
+                view = ComplexItemPurchaseView(self.view, self.item)
+                await interaction.response.edit_message(view=view)
+            else:
+                await self.view.add_to_cart_with_option(interaction, self.item, 0)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class SelectCostOptionButton(Button):
+    def __init__(self, shop_view, item, index):
+        super().__init__(
+            label="Select",
+            style=ButtonStyle.primary,
+            custom_id=f'sel_opt_{item["name"]}_{index}'
+        )
+        self.shop_view = shop_view
+        self.item = item
+        self.index = index
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await self.shop_view.add_to_cart_with_option(interaction, self.item, self.index)
         except Exception as e:
             await log_exception(e, interaction)
 
