@@ -1,16 +1,14 @@
-import datetime
 import json
 import logging
-from titlecase import titlecase
-from datetime import datetime
-
-import jsonschema
-import shortuuid
-from jsonschema import validate
+from datetime import datetime, timezone, timedelta
 
 import discord
 import discord.ui
+import jsonschema
+import shortuuid
 from discord.ui import Modal, Label
+from jsonschema import validate
+from titlecase import titlecase
 
 from ReQuest.utilities.supportFunctions import (
     log_exception,
@@ -21,7 +19,8 @@ from ReQuest.utilities.supportFunctions import (
     update_cached_data,
     UserFeedbackError,
     delete_cached_data,
-    strip_id
+    strip_id,
+    initialize_item_stock
 )
 
 logger = logging.getLogger(__name__)
@@ -33,6 +32,18 @@ SHOP_SCHEMA = {
         "shopKeeper": {"type": "string"},
         "shopDescription": {"type": "string"},
         "shopImage": {"type": "string", "format": "uri"},
+        "restockConfig": {
+            "type": "object",
+            "properties": {
+                "enabled": {"type": "boolean"},
+                "schedule": {"type": "string", "enum": ["hourly", "daily", "weekly"]},
+                "dayOfWeek": {"type": "integer", "minimum": 0, "maximum": 6},
+                "hour": {"type": "integer", "minimum": 0, "maximum": 23},
+                "minute": {"type": "integer", "minimum": 0, "maximum": 59},
+                "mode": {"type": "string", "enum": ["full", "incremental"]},
+                "incrementAmount": {"type": "integer", "minimum": 1}
+            }
+        },
         "shopStock": {
             "type": "array",
             "items": {
@@ -41,6 +52,7 @@ SHOP_SCHEMA = {
                     "name": {"type": "string"},
                     "description": {"type": "string"},
                     "quantity": {"type": "integer", "minimum": 1},
+                    "maxStock": {"type": "integer", "minimum": 1},
                     "costs": {
                         "type": "array",
                         "items": {
@@ -243,8 +255,8 @@ class PlayerBoardPurgeModal(Modal):
             age = int(self.age_text_input.value)
 
             # Get the current datetime and calculate the cutoff date
-            current_datetime = datetime.datetime.now(datetime.UTC)
-            cutoff_date = current_datetime - datetime.timedelta(days=age)
+            current_datetime = datetime.now(timezone.utc)
+            cutoff_date = current_datetime - timedelta(days=age)
 
             # Delete all records in the db matching this guild that are older than the cutoff
             await delete_cached_data(
@@ -1507,6 +1519,270 @@ class RoleplayRewardsModal(Modal):
                 query={'_id': interaction.guild_id},
                 update_data={'$set': {'rewards': new_rewards}}
             )
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class SetItemStockModal(Modal):
+    def __init__(self, calling_view, item_name: str, current_max: int | None = None,
+                 current_stock: int | None = None):
+        super().__init__(
+            title=f'Stock Limit: {item_name[:40]}',
+            timeout=600
+        )
+        self.calling_view = calling_view
+        self.item_name = item_name
+
+        self.max_stock_text_input = discord.ui.TextInput(
+            label='Maximum Stock',
+            custom_id='max_stock_text_input',
+            placeholder='Enter max stock (e.g., 10)',
+            default=str(current_max) if current_max is not None else '',
+            required=True
+        )
+
+        # Default current stock to max if setting up for first time
+        default_current = ''
+        if current_stock is not None:
+            default_current = str(current_stock)
+        elif current_max is not None:
+            default_current = str(current_max)
+
+        self.current_stock_text_input = discord.ui.TextInput(
+            label='Current Stock',
+            custom_id='current_stock_text_input',
+            placeholder='Enter current available stock',
+            default=default_current,
+            required=True
+        )
+
+        self.add_item(self.max_stock_text_input)
+        self.add_item(self.current_stock_text_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            guild_id = interaction.guild_id
+            channel_id = self.calling_view.channel_id
+
+            # Validate max stock
+            max_stock_str = self.max_stock_text_input.value.strip()
+            try:
+                max_stock = int(max_stock_str)
+                if max_stock < 1:
+                    raise ValueError
+            except ValueError:
+                raise UserFeedbackError('Maximum stock must be a positive integer.')
+
+            # Validate current stock
+            current_stock_str = self.current_stock_text_input.value.strip()
+            try:
+                current_stock = int(current_stock_str)
+                if current_stock < 0:
+                    raise ValueError
+            except ValueError:
+                raise UserFeedbackError('Current stock must be a non-negative integer.')
+
+            if current_stock > max_stock:
+                raise UserFeedbackError('Current stock cannot exceed maximum stock.')
+
+            # Update the shop config with maxStock for this item
+            shop_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='shops',
+                query={'_id': guild_id}
+            )
+            shop_data = shop_query.get('shopChannels', {}).get(channel_id, {})
+            shop_stock = shop_data.get('shopStock', [])
+
+            # Find and update the item
+            item_found = False
+            for item in shop_stock:
+                if item.get('name') == self.item_name:
+                    item['maxStock'] = max_stock
+                    item_found = True
+                    break
+
+            if not item_found:
+                raise UserFeedbackError(f'Item "{self.item_name}" not found in shop.')
+
+            # Save shop config
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='shops',
+                query={'_id': guild_id},
+                update_data={'$set': {f'shopChannels.{channel_id}': shop_data}}
+            )
+
+            # Initialize/update the runtime stock tracking
+            await initialize_item_stock(bot, guild_id, channel_id, self.item_name, max_stock, current_stock)
+
+            # Refresh the view
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RestockScheduleModal(Modal):
+    def __init__(self, calling_view, current_config: dict | None = None):
+        super().__init__(
+            title='Configure Restock Schedule',
+            timeout=600
+        )
+        self.calling_view = calling_view
+
+        # Get current UTC time for display
+        now = datetime.now(timezone.utc)
+        utc_time_str = now.strftime('%Y-%m-%d %H:%M UTC')
+
+        current_config = current_config or {}
+        schedule = current_config.get('schedule', '')
+        hour = current_config.get('hour', 0)
+        minute = current_config.get('minute', 0)
+        day = current_config.get('dayOfWeek', 0)
+        mode = current_config.get('mode', 'full')
+        increment = current_config.get('incrementAmount', 1)
+
+        self.schedule_text_input = discord.ui.TextInput(
+            label='Schedule (hourly/daily/weekly/none)',
+            custom_id='schedule_text_input',
+            placeholder='Enter: hourly, daily, weekly, or none',
+            default=schedule if schedule else 'none',
+            required=True
+        )
+
+        self.time_text_input = discord.ui.TextInput(
+            custom_id='time_text_input',
+            placeholder='e.g., 14:30 for 2:30 PM UTC',
+            default=f'{hour:02d}:{minute:02d}',
+            required=False
+        )
+
+        self.time_label = Label(
+            text='Time (HH:MM in UTC)',
+            description=f'Current time: {utc_time_str}',
+            component=self.time_text_input
+        )
+
+        self.day_text_input = discord.ui.TextInput(
+            label='Day of Week (0=Mon, 6=Sun) - Weekly only',
+            custom_id='day_text_input',
+            placeholder='Enter 0-6 (Monday=0, Sunday=6)',
+            default=str(day),
+            required=False
+        )
+
+        self.mode_text_input = discord.ui.TextInput(
+            label='Mode (full/incremental)',
+            custom_id='mode_text_input',
+            placeholder='full = reset to max, incremental = add amount',
+            default=mode,
+            required=True
+        )
+
+        self.increment_text_input = discord.ui.TextInput(
+            label='Increment Amount (for incremental mode)',
+            custom_id='increment_text_input',
+            placeholder='Amount to add per restock cycle',
+            default=str(increment),
+            required=False
+        )
+
+        self.add_item(self.schedule_text_input)
+        self.add_item(self.time_label)
+        self.add_item(self.day_text_input)
+        self.add_item(self.mode_text_input)
+        self.add_item(self.increment_text_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            guild_id = interaction.guild_id
+            channel_id = self.calling_view.channel_id
+
+            schedule = self.schedule_text_input.value.strip().lower()
+            if schedule not in ['hourly', 'daily', 'weekly', 'none', '']:
+                raise UserFeedbackError('Schedule must be one of: hourly, daily, weekly, or none.')
+
+            # Parse time
+            hour, minute = 0, 0
+            time_str = self.time_text_input.value.strip()
+            if time_str and schedule not in ['none', '']:
+                try:
+                    parts = time_str.split(':')
+                    hour = int(parts[0])
+                    minute = int(parts[1]) if len(parts) > 1 else 0
+                    if not (0 <= hour <= 23 and 0 <= minute <= 59):
+                        raise ValueError
+                except (ValueError, IndexError):
+                    raise UserFeedbackError('Time must be in HH:MM format (e.g., 14:30).')
+
+            # Parse day of week
+            day = 0
+            if schedule == 'weekly':
+                day_str = self.day_text_input.value.strip()
+                try:
+                    day = int(day_str)
+                    if not (0 <= day <= 6):
+                        raise ValueError
+                except ValueError:
+                    raise UserFeedbackError('Day of week must be 0-6 (Monday=0, Sunday=6).')
+
+            # Parse mode
+            mode = self.mode_text_input.value.strip().lower()
+            if mode not in ['full', 'incremental']:
+                raise UserFeedbackError('Mode must be either "full" or "incremental".')
+
+            # Parse increment amount
+            increment_amount = 1
+            if mode == 'incremental':
+                increment_str = self.increment_text_input.value.strip()
+                if increment_str:
+                    try:
+                        increment_amount = int(increment_str)
+                        if increment_amount < 1:
+                            raise ValueError
+                    except ValueError:
+                        raise UserFeedbackError('Increment amount must be a positive integer.')
+
+            # Build restock config
+            if schedule in ['none', '']:
+                restock_config = {'enabled': False}
+            else:
+                restock_config = {
+                    'enabled': True,
+                    'schedule': schedule,
+                    'hour': hour,
+                    'minute': minute,
+                    'dayOfWeek': day,
+                    'mode': mode,
+                    'incrementAmount': increment_amount
+                }
+
+            # Update shop config
+            shop_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='shops',
+                query={'_id': guild_id}
+            )
+            shop_data = shop_query.get('shopChannels', {}).get(channel_id, {})
+            shop_data['restockConfig'] = restock_config
+
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='shops',
+                query={'_id': guild_id},
+                update_data={'$set': {f'shopChannels.{channel_id}': shop_data}}
+            )
+
+            # Refresh the view
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:

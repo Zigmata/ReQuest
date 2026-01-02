@@ -15,7 +15,7 @@ from ReQuest.utilities.supportFunctions import (
     get_cached_data,
     delete_cached_data,
     update_cached_data,
-    get_xp_config
+    get_xp_config, remove_item_stock_limit
 )
 
 logger = logging.getLogger(__name__)
@@ -1185,5 +1185,163 @@ class RoleplayRewardsButton(Button):
             xp_enabled = await get_xp_config(interaction.client, interaction.guild_id)
             rp_modal = modals.RoleplayRewardsModal(self.calling_view, xp_enabled)
             await interaction.response.send_modal(rp_modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ConfigStockLimitsButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Stock Limits',
+            style=ButtonStyle.secondary,
+            custom_id='config_stock_limits_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            from ReQuest.ui.config.views import ConfigStockLimitsView
+
+            view = ConfigStockLimitsView(
+                self.calling_view.channel_id,
+                self.calling_view.shop_data
+            )
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class SetItemStockButton(Button):
+    def __init__(self, item: dict, calling_view, current_stock: int | None = None):
+        # Determine label based on whether limit exists
+        has_limit = item.get('maxStock') is not None
+        label = 'Edit Limit' if has_limit else 'Set Limit'
+
+        super().__init__(
+            label=label,
+            style=ButtonStyle.primary,
+            custom_id=f"set_stock_{item['name']}"
+        )
+        self.item = item
+        self.calling_view = calling_view
+        self.current_stock = current_stock
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            modal = modals.SetItemStockModal(
+                calling_view=self.calling_view,
+                item_name=self.item['name'],
+                current_max=self.item.get('maxStock'),
+                current_stock=self.current_stock
+            )
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RemoveItemStockLimitButton(Button):
+    def __init__(self, item: dict, calling_view):
+        super().__init__(
+            label='Remove Limit',
+            style=ButtonStyle.danger,
+            custom_id=f"remove_stock_limit_{item['name']}"
+        )
+        self.item = item
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            confirm_modal = common_modals.ConfirmModal(
+                title='Confirm Remove Stock Limit',
+                prompt_label='Type CONFIRM to remove the stock limit',
+                prompt_placeholder='Type CONFIRM',
+                confirm_callback=self._confirm_callback
+            )
+            await interaction.response.send_modal(confirm_modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def _confirm_callback(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            guild_id = interaction.guild_id
+            channel_id = self.calling_view.channel_id
+            item_name = self.item['name']
+
+            # Update shop config to remove maxStock from item
+            shop_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='shops',
+                query={'_id': guild_id}
+            )
+            shop_data = shop_query.get('shopChannels', {}).get(channel_id, {})
+            shop_stock = shop_data.get('shopStock', [])
+
+            # Find and update the item
+            for item in shop_stock:
+                if item.get('name') == item_name:
+                    if 'maxStock' in item:
+                        del item['maxStock']
+                    break
+
+            # Save shop config
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='shops',
+                query={'_id': guild_id},
+                update_data={'$set': {f'shopChannels.{channel_id}': shop_data}}
+            )
+
+            # Remove from runtime stock tracking
+            await remove_item_stock_limit(bot, guild_id, channel_id, item_name)
+
+            # Refresh the view
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RestockScheduleButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Configure Restock Schedule',
+            style=ButtonStyle.primary,
+            custom_id='restock_schedule_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            current_config = self.calling_view.shop_data.get('restockConfig')
+            modal = modals.RestockScheduleModal(
+                calling_view=self.calling_view,
+                current_config=current_config
+            )
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class BackToEditShopButton(Button):
+    def __init__(self, channel_id: str, shop_data: dict):
+        super().__init__(
+            label='Back to Shop Editor',
+            style=ButtonStyle.secondary,
+            custom_id='back_to_edit_shop_button'
+        )
+        self.channel_id = channel_id
+        self.shop_data = shop_data
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            from ReQuest.ui.config.views import EditShopView
+
+            view = EditShopView(self.channel_id, self.shop_data)
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)

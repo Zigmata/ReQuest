@@ -26,24 +26,39 @@ from ReQuest.utilities.supportFunctions import (
     consolidate_currency_totals,
     get_cached_data,
     update_cached_data,
-    format_complex_cost
+    format_complex_cost,
+    get_shop_stock,
+    get_cart,
+    add_item_to_cart,
+    clear_cart_and_release_stock,
+    finalize_cart_purchase,
+    log_exception,
+    UserFeedbackError
 )
 
 logger = logging.getLogger(__name__)
 
 
 class ShopBaseView(LayoutView):
-    def __init__(self, shop_data):
-        super().__init__(timeout=None)
+    def __init__(self, shop_data, channel_id: str = None):
+        super().__init__(timeout=600)
         self.shop_data = shop_data
+        self.channel_id = channel_id
         self.all_stock = self.shop_data.get('shopStock', [])
         self.items_per_page = 9
         self.current_page = 0
-        self.total_pages = math.ceil(len(self.all_stock) / self.items_per_page)
+        self.total_pages = math.ceil(len(self.all_stock) / self.items_per_page) if self.all_stock else 1
         self.currency_config = {}
         self.cart = {}
+        self.stock_info = {}
+        self.guild_id = None
+        self.user_id = None
+        self.bot = None
 
     async def setup(self, bot, guild):
+        self.bot = bot
+        self.guild_id = guild.id
+
         self.currency_config = await get_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
@@ -51,7 +66,27 @@ class ShopBaseView(LayoutView):
             query={'_id': guild.id}
         )
 
+        # Load stock info for limited items
+        if self.channel_id:
+            self.stock_info = await get_shop_stock(bot, guild.id, self.channel_id)
+
         self.build_view()
+
+    async def setup_for_user(self, interaction: discord.Interaction):
+        self.user_id = interaction.user.id
+        self.bot = interaction.client
+
+        if not self.channel_id:
+            self.channel_id = str(interaction.channel.id)
+
+        # Load existing cart from database
+        if self.user_id and self.channel_id:
+            db_cart = await get_cart(self.bot, self.guild_id, self.user_id, self.channel_id)
+            if db_cart:
+                self.cart = db_cart.get('items', {})
+
+        # Refresh stock info
+        self.stock_info = await get_shop_stock(self.bot, self.guild_id, self.channel_id)
 
     def build_view(self):
         try:
@@ -88,22 +123,36 @@ class ShopBaseView(LayoutView):
                 costs = item.get('costs', [])
                 cost_string = format_complex_cost(costs, getattr(self, 'currency_config', {}))
 
-                buy_button = buttons.ShopItemButton(item, cost_string)
+                item_name = item.get('name', 'Unknown Item')
+
+                # Get stock info for this item
+                item_stock_info = self.stock_info.get(item_name) if self.stock_info else None
+
+                buy_button = buttons.ShopItemButton(item, cost_string, item_stock_info)
                 section = Section(accessory=buy_button)
 
-                item_name = item.get('name', 'Unknown Item')
                 item_description = item.get('description', None)
                 item_quantity = item.get('quantity', 1)
                 item_display_name = f'{item_name} x{item_quantity}' if item_quantity > 1 else item_name
 
                 cart_quantity = 0
                 for value in self.cart.values():
-                    if value['item'].get('name') == item_name:
-                        cart_quantity += value['quantity']
+                    cart_item = value.get('item', value)  # Handle both DB and local formats
+                    if cart_item.get('name') == item_name:
+                        cart_quantity += value.get('quantity', 0)
 
                 content = item_display_name
                 if cart_quantity > 0:
                     content += f' (In Cart: {cart_quantity})'
+
+                # Show stock info if item has limits
+                if item_stock_info is not None:
+                    available = item_stock_info.get('available', 0)
+                    if available == 0:
+                        content += f'\n**OUT OF STOCK**'
+                    else:
+                        content += f'\n*Stock: {available}*'
+
                 if item_description:
                     content += f'\n*{item_description}*'
 
@@ -115,7 +164,6 @@ class ShopBaseView(LayoutView):
             # Pagination buttons
             nav_row = ActionRow()
             if self.total_pages > 1:
-
                 prev_button = Button(
                     label='Previous',
                     style=discord.ButtonStyle.secondary,
@@ -143,7 +191,7 @@ class ShopBaseView(LayoutView):
                 nav_row.add_item(page_display)
                 nav_row.add_item(next_button)
 
-            cart_item_count = sum(item['quantity'] for item in self.cart.values())
+            cart_item_count = sum(item.get('quantity', 0) for item in self.cart.values())
             view_cart_button = buttons.ViewCartButton(self)
             view_cart_button.label = f'View Cart ({cart_item_count})' if cart_item_count > 0 else 'View Cart'
 
@@ -154,16 +202,40 @@ class ShopBaseView(LayoutView):
             logging.error(f'Error building shop view: {e}')
 
     async def add_to_cart_with_option(self, interaction: discord.Interaction, item, option_index=0):
-        item_name = item.get('name')
-        cart_key = f"{item_name}::{option_index}"
+        try:
+            # Ensure user context is set up
+            if not self.user_id:
+                await self.setup_for_user(interaction)
 
-        if cart_key in self.cart:
-            self.cart[cart_key]['quantity'] += 1
-        else:
-            self.cart[cart_key] = {'item': item, 'quantity': 1, 'option_index': option_index}
+            item_name = item.get('name')
 
-        self.build_view()
-        await interaction.response.edit_message(view=self)
+            # Use database-backed cart with reservation
+            success = await add_item_to_cart(
+                self.bot, self.guild_id, self.user_id, self.channel_id, item, option_index
+            )
+
+            if not success:
+                raise UserFeedbackError(f'**{item_name}** is out of stock.')
+
+            # Refresh local cart cache and stock info
+            db_cart = await get_cart(self.bot, self.guild_id, self.user_id, self.channel_id)
+            if db_cart:
+                self.cart = db_cart.get('items', {})
+
+            # Refresh stock info after reservation
+            self.stock_info = await get_shop_stock(self.bot, self.guild_id, self.channel_id)
+
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def on_timeout(self):
+        try:
+            if self.user_id and self.channel_id and self.bot:
+                await clear_cart_and_release_stock(self.bot, self.guild_id, self.user_id, self.channel_id)
+        except Exception as e:
+            logging.error(f'Error releasing stock on timeout: {e}')
 
     async def prev_page(self, interaction: discord.Interaction):
         if self.current_page > 0:
@@ -360,6 +432,8 @@ class ShopCartView(LayoutView):
             guild_id = interaction.guild_id
             user_id = interaction.user.id
 
+            channel_id = self.prev_view.channel_id
+
             character_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
@@ -389,8 +463,8 @@ class ShopCartView(LayoutView):
 
             added_items_summary = []
             for item_key, data in self.prev_view.cart.items():
-                item = data['item']
-                quantity = data['quantity']
+                item = data.get('item', data)  # Handle both DB and local formats
+                quantity = data.get('quantity', 0)
                 qty_per_item = item.get('quantity', 1)
                 total_qty = quantity * qty_per_item
 
@@ -405,6 +479,9 @@ class ShopCartView(LayoutView):
                 query={'_id': user_id},
                 update_data={'$set': {f'characters.{active_char_id}': character_data}}
             )
+
+            # Finalize stock (remove from reserved counts) and clear cart from database
+            await finalize_cart_purchase(bot, guild_id, user_id, channel_id)
 
             log_channel = None
             log_channel_query = await get_cached_data(
@@ -432,7 +509,9 @@ class ShopCartView(LayoutView):
             if log_channel:
                 await log_channel.send(embed=receipt_embed)
 
+            # Clear local cart cache and refresh stock info
             self.prev_view.cart.clear()
+            self.prev_view.stock_info = await get_shop_stock(bot, guild_id, channel_id)
             self.prev_view.build_view()
 
             await interaction.response.edit_message(view=self.prev_view)

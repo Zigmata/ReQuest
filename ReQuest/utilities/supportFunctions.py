@@ -8,6 +8,7 @@ from typing import Tuple
 import discord
 from discord import app_commands
 from titlecase import titlecase
+from datetime import datetime, timezone, timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -164,10 +165,8 @@ async def attempt_delete(message: discord.Message | discord.PartialMessage):
         await message.delete()
     except discord.HTTPException as e:
         logger.error(f'HTTPException while deleting message: {e}')
-        logger.info('Failed to delete message.')
     except Exception as e:
         logger.error(f'Unexpected error while deleting message: {e}')
-        logger.info('An unexpected error occurred while trying to delete the message.')
 
 
 def strip_id(mention: str) -> int:
@@ -1041,3 +1040,765 @@ def format_complex_cost(costs: list, currency_config: dict) -> str:
         return 'Free'
 
     return ' OR\n'.join(option_strings)
+
+
+# ----- Shop Stock Management -----
+
+
+async def get_item_stock(bot, guild_id: int, channel_id: str, item_name: str) -> dict | None:
+    """
+    Retrieves stock information for a specific item in a shop.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param channel_id: The shop channel ID
+    :param item_name: The name of the item
+
+    :return: Dict with 'available' and 'reserved' counts, or None if unlimited
+    """
+    stock_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopStock',
+        query={'_id': guild_id}
+    )
+
+    if not stock_data:
+        return None
+
+    shops = stock_data.get('shops', {})
+    shop_stock = shops.get(str(channel_id), {})
+    item_stock = shop_stock.get(item_name)
+
+    if item_stock is None:
+        return None
+
+    return {
+        'available': item_stock.get('available', 0),
+        'reserved': item_stock.get('reserved', 0)
+    }
+
+
+async def get_shop_stock(bot, guild_id: int, channel_id: str) -> dict:
+    """
+    Retrieves all stock information for a shop.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param channel_id: The shop channel ID
+
+    :return: Dict mapping item names to their stock info, empty dict if no stock limits
+    """
+    stock_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopStock',
+        query={'_id': guild_id}
+    )
+
+    if not stock_data:
+        return {}
+
+    shops = stock_data.get('shops', {})
+    return shops.get(str(channel_id), {})
+
+
+async def initialize_item_stock(bot, guild_id: int, channel_id: str, item_name: str,
+                                max_stock: int, current_stock: int | None = None):
+    """
+    Initializes stock tracking for a limited item.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param channel_id: The shop channel ID
+    :param item_name: The name of the item
+    :param max_stock: The maximum stock for this item
+    :param current_stock: The current stock (defaults to max_stock if not provided)
+    """
+    if current_stock is None:
+        current_stock = max_stock
+
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopStock',
+        query={'_id': guild_id},
+        update_data={
+            '$set': {
+                f'shops.{channel_id}.{item_name}': {
+                    'available': current_stock,
+                    'reserved': 0
+                }
+            }
+        }
+    )
+
+
+async def remove_item_stock_limit(bot, guild_id: int, channel_id: str, item_name: str):
+    """
+    Removes stock tracking for an item (makes it unlimited).
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param channel_id: The shop channel ID
+    :param item_name: The name of the item
+    """
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopStock',
+        query={'_id': guild_id},
+        update_data={
+            '$unset': {
+                f'shops.{channel_id}.{item_name}': ''
+            }
+        }
+    )
+
+
+async def reserve_stock(bot, guild_id: int, channel_id: str, item_name: str, quantity: int = 1) -> bool:
+    """
+    Atomically reserves stock by moving from available to reserved.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param channel_id: The shop channel ID
+    :param item_name: The name of the item
+    :param quantity: The quantity to reserve
+
+    :return: True if reservation succeeded, False if insufficient stock
+    """
+    collection = bot.gdb['shopStock']
+
+    result = await collection.find_one_and_update(
+        {
+            '_id': guild_id,
+            f'shops.{channel_id}.{item_name}.available': {'$gte': quantity}
+        },
+        {
+            '$inc': {
+                f'shops.{channel_id}.{item_name}.available': -quantity,
+                f'shops.{channel_id}.{item_name}.reserved': quantity
+            }
+        },
+        return_document=True
+    )
+
+    # Invalidate cache after update
+    if result:
+        cache_key = build_cache_key(bot.gdb.name, guild_id, 'shopStock')
+        try:
+            await bot.rdb.delete(cache_key)
+        except Exception as e:
+            logger.error(f"Redis delete failed: {e}")
+        return True
+
+    return False
+
+
+async def release_stock(bot, guild_id: int, channel_id: str, item_name: str, quantity: int = 1):
+    """
+    Releases reserved stock back to available.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param channel_id: The shop channel ID
+    :param item_name: The name of the item
+    :param quantity: The quantity to release
+    """
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopStock',
+        query={'_id': guild_id},
+        update_data={
+            '$inc': {
+                f'shops.{channel_id}.{item_name}.available': quantity,
+                f'shops.{channel_id}.{item_name}.reserved': -quantity
+            },
+            '$max': {
+                f'shops.{channel_id}.{item_name}.reserved': 0  # Prevent negative reserved stock
+            }
+        }
+    )
+
+
+async def finalize_stock(bot, guild_id: int, channel_id: str, item_name: str, quantity: int = 1):
+    """
+    Finalizes a purchase by removing from reserved (stock already decremented from available).
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param channel_id: The shop channel ID
+    :param item_name: The name of the item
+    :param quantity: The quantity to finalize
+    """
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopStock',
+        query={'_id': guild_id},
+        update_data={
+            '$inc': {
+                f'shops.{channel_id}.{item_name}.reserved': -quantity
+            },
+            '$max': {
+                f'shops.{channel_id}.{item_name}.reserved': 0  # Prevent negative reserved stock
+            }
+        }
+    )
+
+
+async def set_available_stock(bot, guild_id: int, channel_id: str, item_name: str, amount: int):
+    """
+    Sets the available stock to a specific amount (used for full restock).
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param channel_id: The shop channel ID
+    :param item_name: The name of the item
+    :param amount: The amount to set available stock to
+    """
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopStock',
+        query={'_id': guild_id},
+        update_data={
+            '$set': {
+                f'shops.{channel_id}.{item_name}.available': amount
+            }
+        }
+    )
+
+
+async def increment_available_stock(bot, guild_id: int, channel_id: str, item_name: str,
+                                    increment: int, max_stock: int):
+    """
+    Increments available stock up to the maximum (used for incremental restock).
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param channel_id: The shop channel ID
+    :param item_name: The name of the item
+    :param increment: The amount to add
+    :param max_stock: The maximum stock allowed
+    """
+    # Validate item exists in shop stock
+    current = await get_item_stock(bot, guild_id, channel_id, item_name)
+    if current is None:
+        return
+
+    field_path = f'shops.{channel_id}.{item_name}.available'
+
+    # Increment stock but do not exceed max_stock
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopStock',
+        query={'_id': guild_id},
+        update_data={
+            '$inc': {
+                field_path: increment
+            },
+            '$min': {
+                field_path: max_stock
+            }
+        }
+    )
+
+
+async def update_last_restock(bot, guild_id: int, channel_id: str, timestamp: str):
+    """
+    Updates the last restock timestamp for a shop.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param channel_id: The shop channel ID
+    :param timestamp: ISO format timestamp string
+    """
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopStock',
+        query={'_id': guild_id},
+        update_data={
+            '$set': {
+                f'lastRestock.{channel_id}': timestamp
+            }
+        }
+    )
+
+
+async def get_last_restock(bot, guild_id: int, channel_id: str) -> str | None:
+    """
+    Gets the last restock timestamp for a shop.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param channel_id: The shop channel ID
+
+    :return: ISO format timestamp string or None
+    """
+    stock_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopStock',
+        query={'_id': guild_id}
+    )
+
+    if not stock_data:
+        return None
+
+    return stock_data.get('lastRestock', {}).get(str(channel_id))
+
+
+# ----- Shop Cart Management -----
+
+
+CART_TTL_MINUTES = 10
+
+
+def build_cart_id(guild_id: int, user_id: int, channel_id: str) -> str:
+    """Builds the cart document ID."""
+    return f"{guild_id}:{user_id}:{channel_id}"
+
+
+async def get_cart(bot, guild_id: int, user_id: int, channel_id: str) -> dict | None:
+    """
+    Retrieves an existing cart for a user in a specific shop.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param user_id: The user ID
+    :param channel_id: The shop channel ID
+
+    :return: Cart document or None if not found
+    """
+    cart_id = build_cart_id(guild_id, user_id, channel_id)
+
+    cart = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopCarts',
+        query={'_id': cart_id},
+        cache_id=cart_id
+    )
+
+    if not cart:
+        return None
+
+    # Check if cart has expired
+    expires_at = cart.get('expiresAt')
+    if expires_at:
+        if isinstance(expires_at, str):
+            expires_at = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
+        if datetime.now(timezone.utc) > expires_at:
+            # Cart expired, clean it up
+            await clear_cart_and_release_stock(bot, guild_id, user_id, channel_id)
+            return None
+
+    return cart
+
+
+async def get_or_create_cart(bot, guild_id: int, user_id: int, channel_id: str) -> dict:
+    """
+    Gets an existing cart or creates a new one.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param user_id: The user ID
+    :param channel_id: The shop channel ID
+
+    :return: Cart document
+    """
+    cart = await get_cart(bot, guild_id, user_id, channel_id)
+
+    if cart:
+        return cart
+
+    # Create new cart
+    cart_id = build_cart_id(guild_id, user_id, channel_id)
+    now = datetime.now(timezone.utc)
+    expires_at = now + timedelta(minutes=CART_TTL_MINUTES)
+
+    new_cart = {
+        '_id': cart_id,
+        'guildId': guild_id,
+        'userId': user_id,
+        'channelId': channel_id,
+        'items': {},
+        'createdAt': now.isoformat(),
+        'updatedAt': now.isoformat(),
+        'expiresAt': expires_at.isoformat()
+    }
+
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopCarts',
+        query={'_id': cart_id},
+        update_data={'$set': new_cart},
+        cache_id=cart_id
+    )
+
+    return new_cart
+
+
+async def update_cart_expiry(bot, guild_id: int, user_id: int, channel_id: str):
+    """
+    Extends the cart expiry to now + TTL.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param user_id: The user ID
+    :param channel_id: The shop channel ID
+    """
+    cart_id = build_cart_id(guild_id, user_id, channel_id)
+    now = datetime.now(timezone.utc)
+    expires_at = now + timedelta(minutes=CART_TTL_MINUTES)
+
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopCarts',
+        query={'_id': cart_id},
+        update_data={
+            '$set': {
+                'updatedAt': now.isoformat(),
+                'expiresAt': expires_at.isoformat()
+            }
+        },
+        cache_id=cart_id
+    )
+
+
+async def add_item_to_cart(bot, guild_id: int, user_id: int, channel_id: str,
+                           item: dict, option_index: int = 0) -> bool:
+    """
+    Adds an item to the cart and reserves stock if applicable.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param user_id: The user ID
+    :param channel_id: The shop channel ID
+    :param item: The item data dictionary
+    :param option_index: The cost option index
+
+    :return: True if successful, False if out of stock
+    """
+    item_name = item.get('name')
+    cart_key = f"{item_name}::{option_index}"
+
+    # Check if item has stock limit and reserve if needed
+    has_stock_limit = item.get('maxStock') is not None
+    if has_stock_limit:
+        success = await reserve_stock(bot, guild_id, channel_id, item_name, 1)
+        if not success:
+            return False
+
+    # Get or create cart
+    cart = await get_or_create_cart(bot, guild_id, user_id, channel_id)
+    cart_id = cart['_id']
+
+    now = datetime.now(timezone.utc)
+    expires_at = now + timedelta(minutes=CART_TTL_MINUTES)
+
+    # Check if item already in cart
+    existing_items = cart.get('items', {})
+    if cart_key in existing_items:
+        # Increment quantity
+        await update_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name='shopCarts',
+            query={'_id': cart_id},
+            update_data={
+                '$inc': {f'items.{cart_key}.quantity': 1},
+                '$set': {
+                    'updatedAt': now.isoformat(),
+                    'expiresAt': expires_at.isoformat()
+                }
+            },
+            cache_id=cart_id
+        )
+    else:
+        # Add new item
+        cart_item = {
+            'item': item,
+            'quantity': 1,
+            'optionIndex': option_index,
+            'reservedAt': now.isoformat()
+        }
+        await update_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name='shopCarts',
+            query={'_id': cart_id},
+            update_data={
+                '$set': {
+                    f'items.{cart_key}': cart_item,
+                    'updatedAt': now.isoformat(),
+                    'expiresAt': expires_at.isoformat()
+                }
+            },
+            cache_id=cart_id
+        )
+
+    return True
+
+
+async def remove_item_from_cart(bot, guild_id: int, user_id: int, channel_id: str,
+                                cart_key: str, quantity: int = 1):
+    """
+    Removes an item from the cart and releases reserved stock.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param user_id: The user ID
+    :param channel_id: The shop channel ID
+    :param cart_key: The cart item key (item_name::option_index)
+    :param quantity: The quantity to remove
+    """
+    cart = await get_cart(bot, guild_id, user_id, channel_id)
+    if not cart:
+        return
+
+    cart_id = cart['_id']
+    items = cart.get('items', {})
+
+    if cart_key not in items:
+        return
+
+    cart_item = items[cart_key]
+    item = cart_item['item']
+    current_quantity = cart_item['quantity']
+    item_name = item.get('name')
+
+    # Release stock if item has stock limit
+    has_stock_limit = item.get('maxStock') is not None
+    if has_stock_limit:
+        release_qty = min(quantity, current_quantity)
+        await release_stock(bot, guild_id, channel_id, item_name, release_qty)
+
+    now = datetime.now(timezone.utc)
+    expires_at = now + timedelta(minutes=CART_TTL_MINUTES)
+
+    if quantity >= current_quantity:
+        # Remove item entirely
+        await update_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name='shopCarts',
+            query={'_id': cart_id},
+            update_data={
+                '$unset': {f'items.{cart_key}': ''},
+                '$set': {
+                    'updatedAt': now.isoformat(),
+                    'expiresAt': expires_at.isoformat()
+                }
+            },
+            cache_id=cart_id
+        )
+    else:
+        # Decrement quantity
+        await update_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name='shopCarts',
+            query={'_id': cart_id},
+            update_data={
+                '$inc': {f'items.{cart_key}.quantity': -quantity},
+                '$set': {
+                    'updatedAt': now.isoformat(),
+                    'expiresAt': expires_at.isoformat()
+                }
+            },
+            cache_id=cart_id
+        )
+
+
+async def update_cart_item_quantity(bot, guild_id: int, user_id: int, channel_id: str,
+                                    cart_key: str, new_quantity: int) -> Tuple[bool, str]:
+    """
+    Updates the quantity of an item in the cart, handling stock reservations.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param user_id: The user ID
+    :param channel_id: The shop channel ID
+    :param cart_key: The cart item key (item_name::option_index)
+    :param new_quantity: The new quantity
+
+    :return: Tuple of (success, message)
+    """
+    cart = await get_cart(bot, guild_id, user_id, channel_id)
+    if not cart:
+        return False, "Cart not found."
+
+    items = cart.get('items', {})
+    if cart_key not in items:
+        return False, "Item not in cart."
+
+    cart_item = items[cart_key]
+    item = cart_item['item']
+    current_quantity = cart_item['quantity']
+    item_name = item.get('name')
+
+    if new_quantity <= 0:
+        # Remove item entirely
+        await remove_item_from_cart(bot, guild_id, user_id, channel_id, cart_key, current_quantity)
+        return True, "Item removed from cart."
+
+    quantity_diff = new_quantity - current_quantity
+    has_stock_limit = item.get('maxStock') is not None
+
+    if quantity_diff > 0:
+        # Trying to add more
+        if has_stock_limit:
+            # Need to reserve additional stock
+            success = await reserve_stock(bot, guild_id, channel_id, item_name, quantity_diff)
+            if not success:
+                return False, "Not enough stock available."
+
+        # Update quantity
+        now = datetime.now(timezone.utc)
+        expires_at = now + timedelta(minutes=CART_TTL_MINUTES)
+
+        cart_id = cart['_id']
+        await update_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name='shopCarts',
+            query={'_id': cart_id},
+            update_data={
+                '$set': {
+                    f'items.{cart_key}.quantity': new_quantity,
+                    'updatedAt': now.isoformat(),
+                    'expiresAt': expires_at.isoformat()
+                }
+            },
+            cache_id=cart_id
+        )
+    elif quantity_diff < 0:
+        # Reducing quantity, release stock
+        await remove_item_from_cart(bot, guild_id, user_id, channel_id, cart_key, abs(quantity_diff))
+
+    return True, "Cart updated."
+
+
+async def clear_cart_and_release_stock(bot, guild_id: int, user_id: int, channel_id: str):
+    """
+    Clears a cart and releases all reserved stock.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param user_id: The user ID
+    :param channel_id: The shop channel ID
+    """
+    cart = await get_cart(bot, guild_id, user_id, channel_id)
+    if not cart:
+        return
+
+    cart_id = cart['_id']
+    items = cart.get('items', {})
+
+    # Release all reserved stock
+    for cart_key, cart_item in items.items():
+        item = cart_item['item']
+        quantity = cart_item['quantity']
+        item_name = item.get('name')
+
+        has_stock_limit = item.get('maxStock') is not None
+        if has_stock_limit:
+            await release_stock(bot, guild_id, channel_id, item_name, quantity)
+
+    # Delete the cart
+    await delete_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopCarts',
+        search_filter={'_id': cart_id},
+        cache_id=cart_id
+    )
+
+
+async def finalize_cart_purchase(bot, guild_id: int, user_id: int, channel_id: str):
+    """
+    Finalizes a cart purchase by removing reserved stock counts and deleting the cart.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param user_id: The user ID
+    :param channel_id: The shop channel ID
+    """
+    cart = await get_cart(bot, guild_id, user_id, channel_id)
+    if not cart:
+        return
+
+    cart_id = cart['_id']
+    items = cart.get('items', {})
+
+    # Finalize stock (remove from reserved counts)
+    for cart_key, cart_item in items.items():
+        item = cart_item['item']
+        quantity = cart_item['quantity']
+        item_name = item.get('name')
+
+        has_stock_limit = item.get('maxStock') is not None
+        if has_stock_limit:
+            await finalize_stock(bot, guild_id, channel_id, item_name, quantity)
+
+    # Delete the cart
+    await delete_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopCarts',
+        search_filter={'_id': cart_id},
+        cache_id=cart_id
+    )
+
+
+async def cleanup_expired_carts(bot):
+    """
+    Finds and cleans up all expired carts, releasing reserved stock.
+
+    :param bot: The Discord bot instance
+    """
+    now = datetime.now(timezone.utc)
+
+    # Query all expired carts directly from MongoDB (bypass cache for cleanup)
+    collection = bot.gdb['shopCarts']
+    cursor = collection.find({
+        'expiresAt': {'$lt': now.isoformat()}
+    })
+
+    expired_carts = await cursor.to_list(length=None)
+
+    for cart in expired_carts:
+        guild_id = cart['guildId']
+        channel_id = cart['channelId']
+        items = cart.get('items', {})
+
+        # Release all reserved stock
+        for cart_key, cart_item in items.items():
+            item = cart_item['item']
+            quantity = cart_item['quantity']
+            item_name = item.get('name')
+
+            has_stock_limit = item.get('maxStock') is not None
+            if has_stock_limit:
+                await release_stock(bot, guild_id, channel_id, item_name, quantity)
+
+        # Delete the cart
+        cart_id = cart['_id']
+        await delete_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name='shopCarts',
+            search_filter={'_id': cart_id},
+            cache_id=cart_id
+        )
+
+    if expired_carts:
+        logger.info(f"Cleaned up {len(expired_carts)} expired shop carts.")

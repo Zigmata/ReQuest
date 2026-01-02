@@ -1,9 +1,8 @@
-from datetime import datetime, timezone, time
 import logging
 import math
 from collections import namedtuple
+from datetime import datetime, timezone, time
 from typing import List
-from titlecase import titlecase
 
 import discord
 from discord import ButtonStyle
@@ -17,6 +16,7 @@ from discord.ui import (
     TextDisplay,
     Thumbnail
 )
+from titlecase import titlecase
 
 from ReQuest.ui.common import modals as common_modals, views as common_views
 from ReQuest.ui.common.buttons import MenuViewButton, BackButton
@@ -30,7 +30,8 @@ from ReQuest.utilities.supportFunctions import (
     format_consolidated_totals,
     get_xp_config,
     get_cached_data,
-    consolidate_currency_totals
+    consolidate_currency_totals,
+    get_shop_stock
 )
 
 logger = logging.getLogger(__name__)
@@ -2501,6 +2502,7 @@ class EditShopView(LayoutView):
         header_buttons = ActionRow()
         header_buttons.add_item(buttons.AddItemButton(self))
         header_buttons.add_item(buttons.EditShopDetailsButton(self))
+        header_buttons.add_item(buttons.ConfigStockLimitsButton(self))
         container.add_item(header_buttons)
         container.add_item(Separator())
 
@@ -2603,6 +2605,186 @@ class EditShopView(LayoutView):
     def update_details(self, new_shop_data: dict):
         new_shop_data['shopStock'] = self.all_stock
         self.shop_data = new_shop_data
+
+
+class ConfigStockLimitsView(LayoutView):
+    def __init__(self, channel_id: str, shop_data: dict):
+        super().__init__(timeout=None)
+        self.channel_id = channel_id
+        self.shop_data = shop_data
+        self.all_stock = self.shop_data.get('shopStock', [])
+        self.stock_info = {}
+
+        self.items_per_page = 6
+        self.current_page = 0
+        self.total_pages = max(1, math.ceil(len(self.all_stock) / self.items_per_page))
+
+    async def setup(self, bot, guild):
+        try:
+            # Refresh shop data from database
+            shop_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='shops',
+                query={'_id': guild.id}
+            )
+            if shop_query:
+                self.shop_data = shop_query.get('shopChannels', {}).get(self.channel_id, self.shop_data)
+                self.all_stock = self.shop_data.get('shopStock', [])
+
+            # Get runtime stock info
+            self.stock_info = await get_shop_stock(bot, guild.id, self.channel_id)
+
+            self.total_pages = max(1, math.ceil(len(self.all_stock) / self.items_per_page))
+            if self.current_page >= self.total_pages:
+                self.current_page = max(0, self.total_pages - 1)
+
+            self.build_view()
+        except Exception as e:
+            await log_exception(e)
+
+    def build_view(self):
+        self.clear_items()
+        container = Container()
+
+        # Header
+        shop_name = self.shop_data.get('shopName', 'Unknown Shop')
+        header_section = Section(accessory=buttons.BackToEditShopButton(self.channel_id, self.shop_data))
+        header_section.add_item(TextDisplay(f'**Stock Configuration: {shop_name}**'))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        # Current UTC time display
+        now = datetime.now(timezone.utc)
+        utc_time_str = now.strftime('%Y-%m-%d %H:%M UTC')
+        container.add_item(TextDisplay(f'Current UTC Time: **{utc_time_str}**'))
+        container.add_item(Separator())
+
+        # Restock schedule section
+        restock_config = self.shop_data.get('restockConfig', {})
+        if restock_config.get('enabled'):
+            schedule = restock_config.get('schedule', 'none')
+            hour = restock_config.get('hour', 0)
+            minute = restock_config.get('minute', 0)
+            day_of_week = restock_config.get('dayOfWeek', 0)
+            mode = restock_config.get('mode', 'full')
+            increment = restock_config.get('incrementAmount', 1)
+
+            day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+            day_name = day_names[day_of_week] if 0 <= day_of_week <= 6 else 'Unknown'
+
+            schedule_text = f'**Restock Schedule:** {schedule.capitalize()}'
+            if schedule == 'hourly':
+                schedule_text += f' at minute :{minute:02d}'
+            elif schedule == 'daily':
+                schedule_text += f' at {hour:02d}:{minute:02d} UTC'
+            elif schedule == 'weekly':
+                schedule_text += f' on {day_name} at {hour:02d}:{minute:02d} UTC'
+
+            mode_text = 'Full restock' if mode == 'full' else f'Add {increment} per cycle (up to max)'
+            schedule_text += f'\n**Mode:** {mode_text}'
+        else:
+            schedule_text = '**Restock Schedule:** Disabled'
+
+        schedule_section = Section(accessory=buttons.RestockScheduleButton(self))
+        schedule_section.add_item(TextDisplay(schedule_text))
+        container.add_item(schedule_section)
+        container.add_item(Separator())
+
+        # Item stock limits section
+        container.add_item(TextDisplay('**Item Stock Limits**'))
+
+        if not self.all_stock:
+            container.add_item(TextDisplay('No items in this shop.'))
+        else:
+            start_index = self.current_page * self.items_per_page
+            end_index = start_index + self.items_per_page
+            page_items = self.all_stock[start_index:end_index]
+
+            for item in page_items:
+                item_name = item.get('name', 'Unknown')
+                max_stock = item.get('maxStock')
+
+                # Get runtime stock info
+                runtime_stock = self.stock_info.get(item_name)
+                current_available = None
+                reserved = 0
+                if runtime_stock:
+                    current_available = runtime_stock.get('available', 0)
+                    reserved = runtime_stock.get('reserved', 0)
+
+                if max_stock is not None:
+                    if current_available is not None:
+                        stock_text = f'**{item_name}**\nMax: {max_stock} | Available: {current_available}'
+                        if reserved > 0:
+                            stock_text += f' | Reserved: {reserved}'
+                    else:
+                        stock_text = f'**{item_name}**\nMax: {max_stock} | Available: (not initialized)'
+
+                    # Create button row with edit and remove buttons
+                    item_row = ActionRow()
+                    item_row.add_item(buttons.SetItemStockButton(item, self, current_available))
+                    item_row.add_item(buttons.RemoveItemStockLimitButton(item, self))
+
+                    container.add_item(TextDisplay(stock_text))
+                    container.add_item(item_row)
+                else:
+                    stock_text = f'**{item_name}**\nStock: Unlimited'
+                    item_section = Section(accessory=buttons.SetItemStockButton(item, self))
+                    item_section.add_item(TextDisplay(stock_text))
+                    container.add_item(item_section)
+
+        self.add_item(container)
+
+        # Pagination
+        if self.total_pages > 1:
+            nav_row = ActionRow()
+
+            prev_button = Button(
+                label='Previous',
+                style=ButtonStyle.secondary,
+                custom_id='stock_limits_prev',
+                disabled=(self.current_page == 0)
+            )
+            prev_button.callback = self.prev_page
+
+            page_display = Button(
+                label=f'Page {self.current_page + 1} of {self.total_pages}',
+                style=ButtonStyle.secondary,
+                custom_id='stock_limits_page'
+            )
+            page_display.callback = self.show_page_jump_modal
+
+            next_button = Button(
+                label='Next',
+                style=ButtonStyle.primary,
+                custom_id='stock_limits_next',
+                disabled=(self.current_page >= self.total_pages - 1)
+            )
+            next_button.callback = self.next_page
+
+            nav_row.add_item(prev_button)
+            nav_row.add_item(page_display)
+            nav_row.add_item(next_button)
+            self.add_item(nav_row)
+
+    async def prev_page(self, interaction: discord.Interaction):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction: discord.Interaction):
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def show_page_jump_modal(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.send_modal(common_modals.PageJumpModal(self))
+        except Exception as e:
+            await log_exception(e, interaction)
 
 
 class ConfigRoleplayView(LayoutView):

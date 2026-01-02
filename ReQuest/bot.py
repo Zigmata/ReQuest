@@ -98,10 +98,10 @@ class ReQuest(commands.Bot):
         )
 
         # Grab the list of extensions and load them asynchronously
-        initial_extensions = os.getenv('LOAD_EXTENSIONS').split(', ')
+        initial_extensions = os.getenv('LOAD_EXTENSIONS').split(',')
         for ext in initial_extensions:
             try:
-                await asyncio.create_task(self.load_extension(f'ReQuest.cogs.{ext}'))
+                await asyncio.create_task(self.load_extension(f'ReQuest.cogs.{ext.strip()}'))
             except Exception as e:
                 print(f'Failed to load extension: {ext}')
                 print('{}: {}'.format(type(e).__name__, e))
