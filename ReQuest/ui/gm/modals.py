@@ -161,8 +161,8 @@ class CreateQuestModal(Modal):
 
             # Log the author, then post the new quest with an emoji reaction.
             author_id = interaction.user.id
-            party: [int] = []
-            wait_list: [int] = []
+            party = []
+            wait_list = []
             lock_state = False
 
             # If an announcement role is set, ping it and then delete the message.
@@ -211,8 +211,11 @@ class CreateQuestModal(Modal):
 
 class EditQuestModal(Modal):
     def __init__(self, calling_view, quest):
+        header = f'Editing {quest["title"]}'
+        if len(header) > 45:
+            header = header[:42] + '...'
         super().__init__(
-            title=f'Editing {quest['title']}',
+            title=header,
             timeout=600
         )
 

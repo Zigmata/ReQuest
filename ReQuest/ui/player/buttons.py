@@ -3,7 +3,6 @@ import logging
 import discord
 from discord import ButtonStyle
 from discord.ui import Button
-from titlecase import titlecase
 
 from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.player import modals

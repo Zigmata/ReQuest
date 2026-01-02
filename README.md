@@ -155,13 +155,22 @@ services:
       GUILD_DB: guilds
       MEMBER_DB: members
       CONFIG_DB: config
-      VERSION: 1.2.7 # Doesn't affect functionality, just for info with the `/support` command
-      LOAD_EXTENSIONS: admin, config, gm, info, player, shop
+      VERSION: 1.3.0 # Doesn't affect functionality, just for info with the `/support` command
+      LOAD_EXTENSIONS: >-
+        admin,
+        config,
+        gm,
+        info,
+        player,
+        shop,
+        roleplay,
+        tasks
       ALLOWLIST: True
       LOG_LEVEL: INFO
       BOT_ACTIVITY: "Playing by Post" # Customize the displayed activity status
     depends_on:
       - mongodb
+      - redis
     restart: unless-stopped
 ```
 
@@ -172,12 +181,14 @@ services:
     - Make note of the mongoDB instantiation in the `setup_hook()` function of `bot.py`. There are two methods provided,
       one for a default unauthenticated connection, and one using an authenticated connection URI. Comment/un-comment 
       the appropriate lines as needed.
-- You will not need to expose any ports past your host firewall if your mongoDB and ReQuest containers are on the same
-  docker bridge network, and you are not going to access the db (for example, via mongosh) from outside its container. 
+- You will not need to expose any ports past your host firewall if your containers are on the same docker bridge 
+  network, and you are not going to access the databases (for example, via mongosh) from outside their containers. 
   Docker creates this bridge network by default if no network definitions are provided.
 - If your bot runs on a publicly-accessible host, it is strongly recommended to research and implement best practices
   regarding mongoDB user authentication, least-privilege database access, and persistent database volume file security.
   You will also need to modify your docker-compose accordingly for specific volume mounts, users, etc. Guidance on these
   topics is well outside the scope of this README.
+- Similarly, the provided Redis container is a barebones example. If you are running this bot in a production 
+  environment, please research best practices for securing Redis.
 - A `dev` branch of this repo tracks any current feature implementation work and builds a corresponding `dev` tag in
   Docker Hub. Be warned when pulling this tag, for here there be dragons.
