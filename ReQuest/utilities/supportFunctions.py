@@ -1241,6 +1241,9 @@ async def finalize_stock(bot, guild_id: int, channel_id: str, item_name: str, qu
         update_data={
             '$inc': {
                 f'shops.{channel_id}.{item_name}.reserved': -quantity
+            },
+            '$max': {
+                f'shops.{channel_id}.{item_name}.reserved': 0  # Prevent negative reserved stock
             }
         }
     )

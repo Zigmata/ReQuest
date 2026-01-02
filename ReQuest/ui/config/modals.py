@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 import discord
 import discord.ui
@@ -255,8 +255,8 @@ class PlayerBoardPurgeModal(Modal):
             age = int(self.age_text_input.value)
 
             # Get the current datetime and calculate the cutoff date
-            current_datetime = datetime.datetime.now(datetime.UTC)
-            cutoff_date = current_datetime - datetime.timedelta(days=age)
+            current_datetime = datetime.now(timezone.utc)
+            cutoff_date = current_datetime - timedelta(days=age)
 
             # Delete all records in the db matching this guild that are older than the cutoff
             await delete_cached_data(
@@ -1637,7 +1637,7 @@ class RestockScheduleModal(Modal):
         self.calling_view = calling_view
 
         # Get current UTC time for display
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         utc_time_str = now.strftime('%Y-%m-%d %H:%M UTC')
 
         current_config = current_config or {}
