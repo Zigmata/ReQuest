@@ -1215,6 +1215,9 @@ async def release_stock(bot, guild_id: int, channel_id: str, item_name: str, qua
             '$inc': {
                 f'shops.{channel_id}.{item_name}.available': quantity,
                 f'shops.{channel_id}.{item_name}.reserved': -quantity
+            },
+            '$max': {
+                f'shops.{channel_id}.{item_name}.reserved': 0  # Prevent negative reserved stock
             }
         }
     )
@@ -1278,15 +1281,28 @@ async def increment_available_stock(bot, guild_id: int, channel_id: str, item_na
     :param increment: The amount to add
     :param max_stock: The maximum stock allowed
     """
-    # First get current stock to calculate new value
+    # Validate item exists in shop stock
     current = await get_item_stock(bot, guild_id, channel_id, item_name)
-
     if current is None:
         return
 
-    new_available = min(current['available'] + increment, max_stock)
+    field_path = f'shops.{channel_id}.{item_name}.available'
 
-    await set_available_stock(bot, guild_id, channel_id, item_name, new_available)
+    # Increment stock but do not exceed max_stock
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopStock',
+        query={'_id': guild_id},
+        update_data={
+            '$inc': {
+                field_path: increment
+            },
+            '$min': {
+                field_path: max_stock
+            }
+        }
+    )
 
 
 async def update_last_restock(bot, guild_id: int, channel_id: str, timestamp: str):

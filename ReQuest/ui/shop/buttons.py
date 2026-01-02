@@ -3,8 +3,15 @@ from discord import ButtonStyle
 from discord.ui import Button
 
 from ReQuest.ui.shop import modals
-from ReQuest.utilities.supportFunctions import log_exception, get_cached_data, UserFeedbackError, \
-    clear_cart_and_release_stock, get_shop_stock, get_cart
+from ReQuest.utilities.supportFunctions import (
+    log_exception,
+    get_cached_data,
+    UserFeedbackError,
+    clear_cart_and_release_stock,
+    get_shop_stock,
+    get_cart,
+    get_item_stock
+)
 
 
 class ShopItemButton(Button):
@@ -50,6 +57,9 @@ class ShopItemButton(Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             # Double-check stock availability (in case UI is stale)
+            item_name = self.item['name']
+            channel_id = str(interaction.channel_id)
+            self.stock_info = await get_item_stock(interaction.client, interaction.guild_id, channel_id, item_name)
             if self.stock_info is not None and self.stock_info.get('available', 0) <= 0:
                 raise UserFeedbackError(f'**{self.item["name"]}** is out of stock.')
 

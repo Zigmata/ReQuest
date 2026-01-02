@@ -115,13 +115,15 @@ class Tasks(Cog):
         target_day = restock_config.get('dayOfWeek', 0)  # 0 = Monday
 
         if schedule == 'hourly':
-            # Check if we're at the target minute
-            if now.minute == target_minute:
+            # Check time with a tolerance of 1 minute
+            minute_diff = (now.minute - target_minute) % 60
+            if minute_diff in (0, 1):
                 if last_restock is None:
                     return True
-                # Check if at least 1 hour has passed
+
+                # Checks with a 1-minute buffer
                 time_diff = now - last_restock
-                if time_diff.total_seconds() >= 3600 - 60:  # 1 hour minus 1 minute buffer
+                if time_diff.total_seconds() >= 3600 - 60:
                     return True
 
         elif schedule == 'daily':
