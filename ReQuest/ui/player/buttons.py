@@ -13,7 +13,7 @@ from ReQuest.utilities.supportFunctions import (
     build_cache_key,
     get_cached_data,
     update_cached_data,
-    delete_cached_data
+    delete_cached_data, move_item_between_containers
 )
 
 logger = logging.getLogger(__name__)
@@ -672,7 +672,7 @@ class DeleteContainerButton(Button):
             from ReQuest.utilities.supportFunctions import delete_container
 
             await delete_container(
-                interaction.client.mdb,
+                interaction.client,
                 interaction.user.id,
                 self.calling_view.character_id,
                 self.calling_view.selected_container_id
@@ -700,7 +700,7 @@ class MoveContainerUpButton(Button):
             from ReQuest.utilities.supportFunctions import reorder_container
 
             await reorder_container(
-                interaction.client.mdb,
+                interaction.client,
                 interaction.user.id,
                 self.calling_view.character_id,
                 self.calling_view.selected_container_id,
@@ -728,7 +728,7 @@ class MoveContainerDownButton(Button):
             from ReQuest.utilities.supportFunctions import reorder_container
 
             await reorder_container(
-                interaction.client.mdb,
+                interaction.client,
                 interaction.user.id,
                 self.calling_view.character_id,
                 self.calling_view.selected_container_id,
@@ -825,11 +825,10 @@ class MoveAllButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            from ReQuest.utilities.supportFunctions import move_item_between_containers
             from ReQuest.ui.player.views import ContainerItemsView
 
             await move_item_between_containers(
-                interaction.client.mdb,
+                interaction.client,
                 interaction.user.id,
                 self.calling_view.source_view.character_id,
                 self.calling_view.item_name,

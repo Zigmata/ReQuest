@@ -20,7 +20,7 @@ from ReQuest.utilities.supportFunctions import (
     strip_id,
     UserFeedbackError,
     get_cached_data,
-    update_cached_data
+    update_cached_data, create_container
 )
 
 logger = logging.getLogger(__name__)
@@ -607,11 +607,9 @@ class CreateContainerModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            from ReQuest.utilities.supportFunctions import create_container
-
             name = self.name_input.value.strip()
             await create_container(
-                interaction.client.mdb,
+                interaction.client,
                 interaction.user.id,
                 self.calling_view.character_id,
                 name
@@ -647,7 +645,7 @@ class RenameContainerModal(Modal):
 
             new_name = self.name_input.value.strip()
             await rename_container(
-                interaction.client.mdb,
+                interaction.client,
                 interaction.user.id,
                 self.calling_view.character_id,
                 self.container_id,
@@ -701,7 +699,7 @@ class ConsumeFromContainerModal(Modal):
             )
 
             await consume_item_from_container(
-                interaction.client.mdb,
+                interaction.client,
                 interaction.user.id,
                 self.calling_view.character_id,
                 self.item_name,
@@ -761,7 +759,7 @@ class MoveItemQuantityModal(Modal):
                 raise UserFeedbackError(f'You only have {self.max_quantity} of this item.')
 
             await move_item_between_containers(
-                interaction.client.mdb,
+                interaction.client,
                 interaction.user.id,
                 self.calling_view.source_view.character_id,
                 self.item_name,
