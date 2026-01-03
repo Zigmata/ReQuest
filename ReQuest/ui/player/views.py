@@ -590,6 +590,7 @@ class MoveDestinationView(LayoutView):
         self.available_quantity = available_quantity
 
         self.selected_destination = None
+        self.loose_items_selected = False
         self.containers = []
 
         self.items_per_page = 25
@@ -641,12 +642,12 @@ class MoveDestinationView(LayoutView):
             destination_select_row.add_item(dest_select)
             container.add_item(destination_select_row)
 
-            if self.selected_destination is not None or self.selected_destination == 'loose':
+            if self.selected_destination is not None or self._loose_selected():
                 # Find destination name
                 dest_name = 'Loose Items'
-                for c in self.containers:
-                    if c['id'] == self.selected_destination:
-                        dest_name = c['name']
+                for container in self.containers:
+                    if container['id'] == self.selected_destination:
+                        dest_name = container['name']
                         break
                 container.add_item(TextDisplay(f'Destination: **{dest_name}**'))
 
@@ -656,8 +657,8 @@ class MoveDestinationView(LayoutView):
         action_row = ActionRow()
 
         # Check if we have a valid destination
-        has_destination = hasattr(self, '_loose_items_selected') and self._loose_items_selected
-        has_destination = has_destination or self.selected_destination is not None
+        loose_selected = self._loose_selected()
+        has_destination = loose_selected or self.selected_destination is not None
 
         move_all_button = buttons.MoveAllButton(self)
         move_all_button.disabled = not has_destination
