@@ -1987,11 +1987,11 @@ async def create_container(bot, player_id: int, character_id: str, name: str) ->
     order = get_next_container_order(character_data)
 
     await update_cached_data(
-        bot,
-        bot.mdb,
-        'characters',
-        {'_id': player_id},
-        {'$set': {
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': player_id},
+        update_data={'$set': {
             f'characters.{character_id}.attributes.containers.{container_id}': {
                 'name': name,
                 'order': order,
@@ -2029,11 +2029,11 @@ async def rename_container(bot, player_id: int, character_id: str,
         raise UserFeedbackError(f'A container named "{new_name}" already exists.')
 
     await update_cached_data(
-        bot,
-        bot.mdb,
-        'characters',
-        {'_id': player_id},
-        {'$set': {f'characters.{character_id}.attributes.containers.{container_id}.name': new_name}}
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': player_id},
+        update_data={'$set': {f'characters.{character_id}.attributes.containers.{container_id}.name': new_name}}
     )
 
 
@@ -2074,22 +2074,22 @@ async def delete_container(bot, player_id: int, character_id: str,
         new_inventory = {name: qty for name, qty in inventory_lower.values()}
 
         await update_cached_data(
-            bot,
-            bot.mdb,
-            'characters',
-            {'_id': player_id},
-            {
+            bot=bot,
+            mongo_database=bot.mdb,
+            collection_name='characters',
+            query={'_id': player_id},
+            update_data={
                 '$set': {f'characters.{character_id}.attributes.inventory': new_inventory},
                 '$unset': {f'characters.{character_id}.attributes.containers.{container_id}': ''}
             }
         )
     else:
         await update_cached_data(
-            bot,
-            bot.mdb,
-            'characters',
-            {'_id': player_id},
-            {'$unset': {f'characters.{character_id}.attributes.containers.{container_id}': ''}}
+            bot=bot,
+            mongo_database=bot.mdb,
+            collection_name='characters',
+            query={'_id': player_id},
+            update_data={'$unset': {f'characters.{character_id}.attributes.containers.{container_id}': ''}}
         )
 
     return items_count
@@ -2135,11 +2135,11 @@ async def reorder_container(bot, player_id: int, character_id: str,
     target_order = containers[target_container_id].get('order', target_index)
 
     await update_cached_data(
-        bot,
-        bot.mdb,
-        'characters',
-        {'_id': player_id},
-        {'$set': {
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': player_id},
+        update_data={'$set': {
             f'characters.{character_id}.attributes.containers.{current_container_id}.order': target_order,
             f'characters.{character_id}.attributes.containers.{target_container_id}.order': current_order
         }}
@@ -2241,11 +2241,11 @@ async def move_item_between_containers(
 
     if update_ops:
         await update_cached_data(
-            bot,
-            bot.mdb,
-            'characters',
-            {'_id': player_id},
-            update_ops
+            bot=bot,
+            mongo_database=bot.mdb,
+            collection_name='characters',
+            query={'_id': player_id},
+            update_data=update_ops
         )
 
 
