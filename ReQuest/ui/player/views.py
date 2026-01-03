@@ -34,7 +34,10 @@ from ReQuest.utilities.supportFunctions import (
     get_cached_data,
     update_cached_data,
     build_cache_key,
-    format_complex_cost
+    format_complex_cost,
+    get_containers_sorted,
+    get_container_name,
+    get_container_items
 )
 
 logger = logging.getLogger(__name__)
@@ -300,7 +303,6 @@ class InventoryOverviewView(LayoutView):
                     self.active_character = query['characters'][self.active_character_id]
 
             # Get containers
-            from ReQuest.utilities.supportFunctions import get_containers_sorted
             self.containers = get_containers_sorted(self.active_character)
 
             # Calculate pagination
@@ -458,8 +460,6 @@ class ContainerItemsView(LayoutView):
         query = await collection.find_one({'_id': interaction.user.id})
         self.character_data = query['characters'][self.character_id]
 
-        from ReQuest.utilities.supportFunctions import get_container_items, get_container_name
-
         self.container_name = get_container_name(self.character_data, self.container_id)
         items_dict = get_container_items(self.character_data, self.container_id)
 
@@ -602,8 +602,6 @@ class MoveDestinationView(LayoutView):
         query = await collection.find_one({'_id': interaction.user.id})
         self.source_view.character_data = query['characters'][self.source_view.character_id]
 
-        from ReQuest.utilities.supportFunctions import get_containers_sorted
-
         all_containers = get_containers_sorted(self.source_view.character_data)
 
         # Exclude source container
@@ -745,8 +743,6 @@ class ContainerManagementView(LayoutView):
         query = await collection.find_one({'_id': interaction.user.id})
         self.character_data = query['characters'][self.character_id]
 
-        from ReQuest.utilities.supportFunctions import get_containers_sorted
-
         self.containers = get_containers_sorted(self.character_data)
 
         self.total_pages = math.ceil(len(self.containers) / self.items_per_page)
@@ -806,7 +802,6 @@ class ContainerManagementView(LayoutView):
         manage_row = ActionRow()
 
         # These are disabled for Loose Items (selected_container_id is None)
-        is_loose_items = self.has_selection and self.selected_container_id is None
         has_valid_selection = self.has_selection and self.selected_container_id is not None
 
         rename_button = buttons.RenameContainerButton(self)

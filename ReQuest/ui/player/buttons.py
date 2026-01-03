@@ -13,7 +13,8 @@ from ReQuest.utilities.supportFunctions import (
     build_cache_key,
     get_cached_data,
     update_cached_data,
-    delete_cached_data, move_item_between_containers
+    delete_cached_data,
+    move_item_between_containers
 )
 
 logger = logging.getLogger(__name__)

@@ -20,7 +20,12 @@ from ReQuest.utilities.supportFunctions import (
     strip_id,
     UserFeedbackError,
     get_cached_data,
-    update_cached_data, create_container
+    update_cached_data,
+    create_container,
+    rename_container,
+    get_container_name,
+    consume_item_from_container,
+    move_item_between_containers
 )
 
 logger = logging.getLogger(__name__)
@@ -641,8 +646,6 @@ class RenameContainerModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            from ReQuest.utilities.supportFunctions import rename_container
-
             new_name = self.name_input.value.strip()
             await rename_container(
                 interaction.client,
@@ -679,11 +682,6 @@ class ConsumeFromContainerModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            from ReQuest.utilities.supportFunctions import (
-                consume_item_from_container,
-                get_container_name
-            )
-
             if not self.quantity_input.value.isdigit():
                 raise UserFeedbackError('Quantity must be a positive integer.')
 
@@ -747,8 +745,6 @@ class MoveItemQuantityModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            from ReQuest.utilities.supportFunctions import move_item_between_containers
-
             if not self.quantity_input.value.isdigit():
                 raise UserFeedbackError('Quantity must be a positive integer.')
 
