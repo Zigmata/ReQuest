@@ -587,3 +587,198 @@ class ConsumeItemModal(Modal):
                     await log_channel.send(embed=receipt_embed)
         except Exception as e:
             await log_exception(e, interaction)
+
+
+class CreateContainerModal(Modal):
+    def __init__(self, calling_view):
+        super().__init__(
+            title='Create New Container',
+            timeout=180
+        )
+        self.calling_view = calling_view
+        self.name_input = discord.ui.TextInput(
+            label='Container Name',
+            placeholder='Enter a name for your container (e.g., Backpack)',
+            custom_id='container_name_input',
+            max_length=50,
+            required=True
+        )
+        self.add_item(self.name_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            from ReQuest.utilities.supportFunctions import create_container
+
+            name = self.name_input.value.strip()
+            await create_container(
+                interaction.client.mdb,
+                interaction.user.id,
+                self.calling_view.character_id,
+                name
+            )
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RenameContainerModal(Modal):
+    def __init__(self, calling_view, container_id: str, current_name: str):
+        super().__init__(
+            title='Rename Container',
+            timeout=180
+        )
+        self.calling_view = calling_view
+        self.container_id = container_id
+        self.name_input = discord.ui.TextInput(
+            label='New Container Name',
+            placeholder='Enter the new name',
+            custom_id='container_rename_input',
+            default=current_name,
+            max_length=50,
+            required=True
+        )
+        self.add_item(self.name_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            from ReQuest.utilities.supportFunctions import rename_container
+
+            new_name = self.name_input.value.strip()
+            await rename_container(
+                interaction.client.mdb,
+                interaction.user.id,
+                self.calling_view.character_id,
+                self.container_id,
+                new_name
+            )
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ConsumeFromContainerModal(Modal):
+    def __init__(self, calling_view, item_name: str, max_quantity: int):
+        super().__init__(
+            title='Consume/Destroy Item',
+            timeout=180
+        )
+        self.calling_view = calling_view
+        self.item_name = item_name
+        self.max_quantity = max_quantity
+
+        self.quantity_input = discord.ui.TextInput(
+            label=f'Quantity (max: {max_quantity})',
+            placeholder='Enter amount to consume/destroy',
+            custom_id='consume_quantity_input',
+            default='1',
+            required=True
+        )
+        self.add_item(self.quantity_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            from ReQuest.utilities.supportFunctions import (
+                consume_item_from_container,
+                get_container_name
+            )
+
+            if not self.quantity_input.value.isdigit():
+                raise UserFeedbackError('Quantity must be a positive integer.')
+
+            quantity = int(self.quantity_input.value)
+            if quantity < 1:
+                raise UserFeedbackError('Quantity must be at least 1.')
+            if quantity > self.max_quantity:
+                raise UserFeedbackError(f'You only have {self.max_quantity} of this item.')
+
+            container_name = get_container_name(
+                self.calling_view.character_data,
+                self.calling_view.container_id
+            )
+
+            await consume_item_from_container(
+                interaction.client.mdb,
+                interaction.user.id,
+                self.calling_view.character_id,
+                self.item_name,
+                quantity,
+                self.calling_view.container_id
+            )
+
+            # Clear selection and refresh
+            self.calling_view.selected_item = None
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+
+            # Send receipt
+            receipt_embed = discord.Embed(
+                title='Item Consumption Report',
+                description=f'Removed **{quantity}x {titlecase(self.item_name)}** from '
+                            f'**{container_name}**',
+                color=discord.Color.gold()
+            )
+            receipt_embed.set_footer(text=f'Transaction ID: {shortuuid.uuid()[:12]}')
+            await interaction.followup.send(embed=receipt_embed, ephemeral=True)
+
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class MoveItemQuantityModal(Modal):
+    def __init__(self, calling_view, item_name: str, max_quantity: int):
+        super().__init__(
+            title='Move Item',
+            timeout=180
+        )
+        self.calling_view = calling_view
+        self.item_name = item_name
+        self.max_quantity = max_quantity
+
+        self.quantity_input = discord.ui.TextInput(
+            label=f'Quantity to move (max: {max_quantity})',
+            placeholder='Enter amount to move',
+            custom_id='move_quantity_input',
+            default=str(max_quantity),
+            required=True
+        )
+        self.add_item(self.quantity_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            from ReQuest.utilities.supportFunctions import move_item_between_containers
+
+            if not self.quantity_input.value.isdigit():
+                raise UserFeedbackError('Quantity must be a positive integer.')
+
+            quantity = int(self.quantity_input.value)
+            if quantity < 1:
+                raise UserFeedbackError('Quantity must be at least 1.')
+            if quantity > self.max_quantity:
+                raise UserFeedbackError(f'You only have {self.max_quantity} of this item.')
+
+            await move_item_between_containers(
+                interaction.client.mdb,
+                interaction.user.id,
+                self.calling_view.source_view.character_id,
+                self.item_name,
+                quantity,
+                self.calling_view.source_container_id,
+                self.calling_view.selected_destination
+            )
+
+            # Return to the source container view
+            from ReQuest.ui.player.views import ContainerItemsView
+            view = ContainerItemsView(
+                self.calling_view.source_view.character_id,
+                self.calling_view.source_view.character_data,
+                self.calling_view.source_container_id
+            )
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
+
+        except Exception as e:
+            await log_exception(e, interaction)

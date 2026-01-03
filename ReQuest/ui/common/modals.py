@@ -11,6 +11,12 @@ logger = logging.getLogger(__name__)
 
 class ConfirmModal(Modal):
     def __init__(self, title: str, prompt_label: str, prompt_placeholder: str, confirm_callback):
+        if len(title) > 45:
+            title = title[:42] + '...'
+        if len(prompt_label) > 45:
+            prompt_label = prompt_label[:42] + '...'
+        if len(prompt_placeholder) > 100:
+            prompt_placeholder = prompt_placeholder[:97] + '...'
         super().__init__(title=title)
         self.confirm_callback = confirm_callback
         self.prompt = discord.ui.TextInput(

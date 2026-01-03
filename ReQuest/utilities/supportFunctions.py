@@ -1802,3 +1802,516 @@ async def cleanup_expired_carts(bot):
 
     if expired_carts:
         logger.info(f"Cleaned up {len(expired_carts)} expired shop carts.")
+
+
+# ----- Container Management -----
+
+
+MAX_CONTAINERS_PER_PLAYER = 50
+MAX_CONTAINER_NAME_LENGTH = 50
+
+
+def get_containers_sorted(character_data: dict) -> list[dict]:
+    """
+    Returns list of container dicts sorted by order.
+    First entry is always Loose Items.
+
+    Each dict: {'id': str|None, 'name': str, 'items': dict, 'count': int}
+    """
+    result = []
+
+    # Loose items (root inventory) is always first
+    loose_items = character_data['attributes'].get('inventory', {})
+    result.append({
+        'id': None,
+        'name': 'Loose Items',
+        'items': loose_items,
+        'count': len(loose_items)
+    })
+
+    # Get containers sorted by order
+    containers = character_data['attributes'].get('containers', {})
+    sorted_containers = sorted(
+        containers.items(),
+        key=lambda x: x[1].get('order', 0)
+    )
+
+    for container_id, container_data in sorted_containers:
+        items = container_data.get('items', {})
+        result.append({
+            'id': container_id,
+            'name': container_data.get('name', 'Unknown'),
+            'items': items,
+            'count': len(items)
+        })
+
+    return result
+
+
+def get_container_items(character_data: dict, container_id: str | None) -> dict:
+    """
+    Returns items dict for the specified container.
+    container_id=None returns root inventory (Loose Items).
+    """
+    if container_id is None:
+        return character_data['attributes'].get('inventory', {})
+
+    containers = character_data['attributes'].get('containers', {})
+    container = containers.get(container_id, {})
+    return container.get('items', {})
+
+
+def get_container_name(character_data: dict, container_id: str | None) -> str:
+    """Returns the name of a container. None returns 'Loose Items'."""
+    if container_id is None:
+        return 'Loose Items'
+
+    containers = character_data['attributes'].get('containers', {})
+    container = containers.get(container_id, {})
+    return container.get('name', 'Unknown')
+
+
+def get_total_item_quantity(character_data: dict, item_name: str) -> int:
+    """
+    Returns total quantity of item across ALL containers + loose items.
+    Useful for validating trades, quest requirements, etc.
+    """
+    item_name_lower = item_name.lower()
+    total = 0
+
+    # Check loose items
+    inventory = character_data['attributes'].get('inventory', {})
+    for name, qty in inventory.items():
+        if name.lower() == item_name_lower:
+            total += qty
+
+    # Check all containers
+    containers = character_data['attributes'].get('containers', {})
+    for container_data in containers.values():
+        items = container_data.get('items', {})
+        for name, qty in items.items():
+            if name.lower() == item_name_lower:
+                total += qty
+
+    return total
+
+
+def get_item_locations(character_data: dict, item_name: str) -> list[dict]:
+    """
+    Returns list of dicts for everywhere this item exists.
+    Each dict: {'id': str|None, 'name': str, 'quantity': int}
+    """
+    item_name_lower = item_name.lower()
+    locations = []
+
+    # Check loose items
+    inventory = character_data['attributes'].get('inventory', {})
+    for name, qty in inventory.items():
+        if name.lower() == item_name_lower and qty > 0:
+            locations.append({'id': None, 'name': 'Loose Items', 'quantity': qty})
+
+    # Check all containers
+    containers = character_data['attributes'].get('containers', {})
+    for container_id, container_data in containers.items():
+        items = container_data.get('items', {})
+        for name, qty in items.items():
+            if name.lower() == item_name_lower and qty > 0:
+                locations.append({
+                    'id': container_id,
+                    'name': container_data.get('name', 'Unknown'),
+                    'quantity': qty
+                })
+
+    return locations
+
+
+def get_container_count(character_data: dict) -> int:
+    """Returns the number of containers (excluding Loose Items)."""
+    return len(character_data['attributes'].get('containers', {}))
+
+
+def get_next_container_order(character_data: dict) -> int:
+    """Returns the next available order value for a new container."""
+    containers = character_data['attributes'].get('containers', {})
+    if not containers:
+        return 1
+    max_order = max(c.get('order', 0) for c in containers.values())
+    return max_order + 1
+
+
+def container_name_exists(character_data: dict, name: str, exclude_id: str | None = None) -> bool:
+    """Check if a container name already exists (case-insensitive)."""
+    name_lower = name.lower()
+
+    # Check against "Loose Items"
+    if name_lower == 'loose items':
+        return True
+
+    containers = character_data['attributes'].get('containers', {})
+    for container_id, container_data in containers.items():
+        if exclude_id and container_id == exclude_id:
+            continue
+        if container_data.get('name', '').lower() == name_lower:
+            return True
+
+    return False
+
+
+async def create_container(mdb, player_id: int, character_id: str, name: str) -> str:
+    """
+    Creates a new container with the given name.
+    Returns the new container's UUID.
+    Raises UserFeedbackError if name already exists or max containers reached.
+    """
+    import shortuuid
+
+    name = name.strip()
+
+    if not name:
+        raise UserFeedbackError('Container name cannot be empty.')
+
+    if len(name) > MAX_CONTAINER_NAME_LENGTH:
+        raise UserFeedbackError(f'Container name cannot exceed {MAX_CONTAINER_NAME_LENGTH} characters.')
+
+    collection = mdb['characters']
+    player_data = await collection.find_one({'_id': player_id})
+    character_data = player_data['characters'].get(character_id)
+
+    if get_container_count(character_data) >= MAX_CONTAINERS_PER_PLAYER:
+        raise UserFeedbackError(f'You cannot create more than {MAX_CONTAINERS_PER_PLAYER} containers.')
+
+    if container_name_exists(character_data, name):
+        raise UserFeedbackError(f'A container named "{name}" already exists.')
+
+    container_id = str(shortuuid.uuid())
+    order = get_next_container_order(character_data)
+
+    await collection.update_one(
+        {'_id': player_id},
+        {'$set': {
+            f'characters.{character_id}.attributes.containers.{container_id}': {
+                'name': name,
+                'order': order,
+                'items': {}
+            }
+        }}
+    )
+
+    return container_id
+
+
+async def rename_container(mdb, player_id: int, character_id: str,
+                           container_id: str, new_name: str) -> None:
+    """
+    Renames an existing container.
+    Raises UserFeedbackError if new_name already exists or container not found.
+    """
+    new_name = new_name.strip()
+
+    if not new_name:
+        raise UserFeedbackError('Container name cannot be empty.')
+
+    if len(new_name) > MAX_CONTAINER_NAME_LENGTH:
+        raise UserFeedbackError(f'Container name cannot exceed {MAX_CONTAINER_NAME_LENGTH} characters.')
+
+    collection = mdb['characters']
+    player_data = await collection.find_one({'_id': player_id})
+    character_data = player_data['characters'].get(character_id)
+
+    containers = character_data['attributes'].get('containers', {})
+    if container_id not in containers:
+        raise UserFeedbackError('Container not found.')
+
+    if container_name_exists(character_data, new_name, exclude_id=container_id):
+        raise UserFeedbackError(f'A container named "{new_name}" already exists.')
+
+    await collection.update_one(
+        {'_id': player_id},
+        {'$set': {f'characters.{character_id}.attributes.containers.{container_id}.name': new_name}}
+    )
+
+
+async def delete_container(mdb, player_id: int, character_id: str,
+                           container_id: str) -> int:
+    """
+    Deletes a container. Moves any items to root inventory (Loose Items).
+    Returns count of items moved.
+    Raises UserFeedbackError if container not found.
+    """
+    collection = mdb['characters']
+    player_data = await collection.find_one({'_id': player_id})
+    character_data = player_data['characters'].get(character_id)
+
+    containers = character_data['attributes'].get('containers', {})
+    if container_id not in containers:
+        raise UserFeedbackError('Container not found.')
+
+    container = containers[container_id]
+    items_to_move = container.get('items', {})
+    items_count = len(items_to_move)
+
+    # Move items to loose inventory
+    if items_to_move:
+        current_inventory = character_data['attributes'].get('inventory', {})
+        # Normalize to lowercase for merging
+        inventory_lower = {k.lower(): (k, v) for k, v in current_inventory.items()}
+
+        for item_name, quantity in items_to_move.items():
+            item_lower = item_name.lower()
+            if item_lower in inventory_lower:
+                original_name, current_qty = inventory_lower[item_lower]
+                inventory_lower[item_lower] = (original_name, current_qty + quantity)
+            else:
+                inventory_lower[item_lower] = (titlecase(item_name), quantity)
+
+        # Rebuild inventory with titlecase keys
+        new_inventory = {name: qty for name, qty in inventory_lower.values()}
+
+        await collection.update_one(
+            {'_id': player_id},
+            {
+                '$set': {f'characters.{character_id}.attributes.inventory': new_inventory},
+                '$unset': {f'characters.{character_id}.attributes.containers.{container_id}': ''}
+            }
+        )
+    else:
+        await collection.update_one(
+            {'_id': player_id},
+            {'$unset': {f'characters.{character_id}.attributes.containers.{container_id}': ''}}
+        )
+
+    return items_count
+
+
+async def reorder_container(mdb, player_id: int, character_id: str,
+                            container_id: str, direction: int) -> None:
+    """
+    Moves container up (direction=-1) or down (direction=1) in order.
+    Swaps order values with adjacent container.
+    """
+    collection = mdb['characters']
+    player_data = await collection.find_one({'_id': player_id})
+    character_data = player_data['characters'].get(character_id)
+
+    containers = character_data['attributes'].get('containers', {})
+    if container_id not in containers:
+        raise UserFeedbackError('Container not found.')
+
+    # Sort containers by order
+    sorted_containers = sorted(containers.items(), key=lambda x: x[1].get('order', 0))
+
+    current_index = None
+    for i, (cid, _) in enumerate(sorted_containers):
+        if cid == container_id:
+            current_index = i
+            break
+
+    if current_index is None:
+        raise UserFeedbackError('Container not found.')
+
+    target_index = current_index + direction
+
+    if target_index < 0 or target_index >= len(sorted_containers):
+        # Already at boundary, nothing to do
+        return
+
+    # Swap order values
+    current_container_id = sorted_containers[current_index][0]
+    target_container_id = sorted_containers[target_index][0]
+
+    current_order = containers[current_container_id].get('order', current_index)
+    target_order = containers[target_container_id].get('order', target_index)
+
+    await collection.update_one(
+        {'_id': player_id},
+        {'$set': {
+            f'characters.{character_id}.attributes.containers.{current_container_id}.order': target_order,
+            f'characters.{character_id}.attributes.containers.{target_container_id}.order': current_order
+        }}
+    )
+
+
+async def move_item_between_containers(
+        mdb, player_id: int, character_id: str,
+        item_name: str, quantity: int,
+        source_container_id: str | None,
+        dest_container_id: str | None
+) -> None:
+    """
+    Moves quantity of item from source to destination container.
+    None = Loose Items (root inventory).
+    Raises UserFeedbackError if insufficient quantity in source.
+    """
+    if source_container_id == dest_container_id:
+        raise UserFeedbackError('Item is already in this container.')
+
+    if quantity < 1:
+        raise UserFeedbackError('Quantity must be at least 1.')
+
+    collection = mdb['characters']
+    player_data = await collection.find_one({'_id': player_id})
+    character_data = player_data['characters'].get(character_id)
+
+    item_name_lower = item_name.lower()
+
+    # Get source items
+    if source_container_id is None:
+        source_items = character_data['attributes'].get('inventory', {})
+        source_path = f'characters.{character_id}.attributes.inventory'
+    else:
+        containers = character_data['attributes'].get('containers', {})
+        if source_container_id not in containers:
+            raise UserFeedbackError('Source container not found.')
+        source_items = containers[source_container_id].get('items', {})
+        source_path = f'characters.{character_id}.attributes.containers.{source_container_id}.items'
+
+    # Find item in source (case-insensitive)
+    source_key = None
+    source_qty = 0
+    for key, qty in source_items.items():
+        if key.lower() == item_name_lower:
+            source_key = key
+            source_qty = qty
+            break
+
+    if source_key is None or source_qty < quantity:
+        raise UserFeedbackError(f'Insufficient quantity. You have {source_qty} in this container.')
+
+    # Get destination items
+    if dest_container_id is None:
+        dest_items = character_data['attributes'].get('inventory', {})
+        dest_path = f'characters.{character_id}.attributes.inventory'
+    else:
+        containers = character_data['attributes'].get('containers', {})
+        if dest_container_id not in containers:
+            raise UserFeedbackError('Destination container not found.')
+        dest_items = containers[dest_container_id].get('items', {})
+        dest_path = f'characters.{character_id}.attributes.containers.{dest_container_id}.items'
+
+    # Find existing item in destination (case-insensitive)
+    dest_key = None
+    dest_qty = 0
+    for key, qty in dest_items.items():
+        if key.lower() == item_name_lower:
+            dest_key = key
+            dest_qty = qty
+            break
+
+    # Use titlecase for the item name
+    display_name = titlecase(item_name)
+
+    # Prepare updates
+    updates = {}
+    unsets = {}
+
+    # Update source
+    new_source_qty = source_qty - quantity
+    if new_source_qty <= 0:
+        unsets[f'{source_path}.{source_key}'] = ''
+    else:
+        updates[f'{source_path}.{source_key}'] = new_source_qty
+
+    # Update destination
+    if dest_key:
+        updates[f'{dest_path}.{dest_key}'] = dest_qty + quantity
+    else:
+        updates[f'{dest_path}.{display_name}'] = quantity
+
+    # Execute updates
+    update_ops = {}
+    if updates:
+        update_ops['$set'] = updates
+    if unsets:
+        update_ops['$unset'] = unsets
+
+    if update_ops:
+        await collection.update_one({'_id': player_id}, update_ops)
+
+
+async def consume_item_from_container(
+        mdb, player_id: int, character_id: str,
+        item_name: str, quantity: int,
+        container_id: str | None
+) -> None:
+    """
+    Removes quantity of item from specific container.
+    container_id=None targets Loose Items.
+    Raises UserFeedbackError if insufficient quantity.
+    """
+    if quantity < 1:
+        raise UserFeedbackError('Quantity must be at least 1.')
+
+    collection = mdb['characters']
+    player_data = await collection.find_one({'_id': player_id})
+    character_data = player_data['characters'].get(character_id)
+
+    item_name_lower = item_name.lower()
+
+    # Get container items
+    if container_id is None:
+        items = character_data['attributes'].get('inventory', {})
+        path = f'characters.{character_id}.attributes.inventory'
+    else:
+        containers = character_data['attributes'].get('containers', {})
+        if container_id not in containers:
+            raise UserFeedbackError('Container not found.')
+        items = containers[container_id].get('items', {})
+        path = f'characters.{character_id}.attributes.containers.{container_id}.items'
+
+    # Find item (case-insensitive)
+    item_key = None
+    current_qty = 0
+    for key, qty in items.items():
+        if key.lower() == item_name_lower:
+            item_key = key
+            current_qty = qty
+            break
+
+    if item_key is None:
+        raise UserFeedbackError(f'Item "{item_name}" not found in this container.')
+
+    if current_qty < quantity:
+        raise UserFeedbackError(f'You only have {current_qty} of this item in this container.')
+
+    new_qty = current_qty - quantity
+
+    if new_qty <= 0:
+        await collection.update_one(
+            {'_id': player_id},
+            {'$unset': {f'{path}.{item_key}': ''}}
+        )
+    else:
+        await collection.update_one(
+            {'_id': player_id},
+            {'$set': {f'{path}.{item_key}': new_qty}}
+        )
+
+
+def format_inventory_by_container(character_data: dict, currency_config: dict | None = None) -> str:
+    """
+    Formats the full inventory grouped by container for display/printing.
+    Returns a formatted string.
+    """
+    lines = []
+    containers = get_containers_sorted(character_data)
+
+    for container in containers:
+        items = container['items']
+        if not items:
+            continue  # Skip empty containers in print output
+
+        lines.append(f'**{container["name"]}**')
+        for item_name, quantity in sorted(items.items()):
+            lines.append(f'• {item_name}: **{quantity}**')
+        lines.append('')  # Blank line between containers
+
+    # Add currency section
+    player_currency = character_data['attributes'].get('currency', {})
+    if player_currency and currency_config:
+        currency_lines = format_currency_display(player_currency, currency_config)
+        if currency_lines:
+            lines.append('**Currency**')
+            for currency_line in currency_lines:
+                lines.append(currency_line)
+
+    return '\n'.join(lines) if lines else 'Inventory is empty.'
