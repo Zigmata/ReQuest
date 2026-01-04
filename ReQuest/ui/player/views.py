@@ -806,10 +806,10 @@ class ContainerManagementView(LayoutView):
 
         # Container list
         container_lines = []
-        for i, c in enumerate(self.containers):
-            prefix = f'{i + 1}. '
-            suffix = ' (default)' if c['id'] is None else ''
-            container_lines.append(f"{prefix}**{c['name']}** ({c['count']} items){suffix}")
+        for index, container_data in enumerate(self.containers):
+            prefix = f'{index + 1}. '
+            suffix = ' (default)' if container_data['id'] is None else ''
+            container_lines.append(f"{prefix}**{container_data['name']}** ({container_data['count']} items){suffix}")
 
         container.add_item(TextDisplay('\n'.join(container_lines) if container_lines else 'No containers.'))
         container.add_item(Separator())
@@ -827,9 +827,9 @@ class ContainerManagementView(LayoutView):
         if self.has_selection:
             selected_name = 'Loose Items'
             if self.selected_container_id is not None:
-                for c in self.containers:
-                    if c['id'] == self.selected_container_id:
-                        selected_name = c['name']
+                for container_data in self.containers:
+                    if container_data['id'] == self.selected_container_id:
+                        selected_name = container_data['name']
                         break
             container.add_item(TextDisplay(f'Selected: **{selected_name}**'))
 
@@ -858,11 +858,11 @@ class ContainerManagementView(LayoutView):
         can_move_up = False
         can_move_down = False
         if has_valid_selection:
-            for i, c in enumerate(self.containers):
-                if c['id'] == self.selected_container_id:
+            for index, container_data in enumerate(self.containers):
+                if container_data['id'] == self.selected_container_id:
                     # Index 0 is Loose Items, so real containers start at 1
-                    can_move_up = i > 1  # Can't move above Loose Items
-                    can_move_down = i < len(self.containers) - 1
+                    can_move_up = index > 1  # Can't move above Loose Items
+                    can_move_down = index < len(self.containers) - 1
                     break
 
         up_button = buttons.MoveContainerUpButton(self)

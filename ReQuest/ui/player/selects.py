@@ -187,11 +187,12 @@ class ManageContainerSelect(Select):
     def __init__(self, calling_view, containers: list[dict], current_page: int = 0):
         options = []
         for container in containers:
-            value = container['id'] if container['id'] else 'loose'
-            label = f"{container['name']} ({container['count']} items)"
-            if len(label) > 100:
-                label = label[:97] + '...'
-            options.append(discord.SelectOption(label=label, value=value))
+            if container['name'].lower() != 'loose items':
+                value = container['id'] if container['id'] else 'loose'
+                label = f"{container['name']} ({container['count']} items)"
+                if len(label) > 100:
+                    label = label[:97] + '...'
+                options.append(discord.SelectOption(label=label, value=value))
 
         super().__init__(
             placeholder='Select a container...',
