@@ -112,7 +112,7 @@ class TradeModal(Modal):
             )
 
             if is_currency:
-                sender_currency, receiver_currency = await trade_currency(interaction, bot.gdb, item_name, quantity,
+                sender_currency, receiver_currency = await trade_currency(interaction, item_name, quantity,
                                                                           member_id, target_id, guild_id)
                 sender_balance_str = '\n'.join(format_currency_display(sender_currency, currency_query)) or "None"
                 receiver_currency_str = '\n'.join(format_currency_display(receiver_currency, currency_query)) or "None"

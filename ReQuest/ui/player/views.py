@@ -674,16 +674,18 @@ class MoveDestinationView(LayoutView):
             container.add_item(destination_select_row)
 
             if self.selected_destination is not None or self._loose_selected():
+                destination_name = None
                 # Find destination name
                 if self.selected_destination is None:
                     destination_name = 'Loose Items'
                 else:
-                    destination_name = 'Loose Items'
                     for dest_container in self.containers:
                         if dest_container['id'] == self.selected_destination:
                             destination_name = dest_container['name']
                             break
-                container.add_item(TextDisplay(f'Destination: **{destination_name}**'))
+
+                if destination_name is not None:
+                    container.add_item(TextDisplay(f'Destination: **{destination_name}**'))
 
         self.add_item(container)
 

@@ -6,6 +6,7 @@ import traceback
 from typing import Tuple
 
 import discord
+import shortuuid
 from discord import app_commands
 from titlecase import titlecase
 from datetime import datetime, timezone, timedelta
@@ -322,7 +323,7 @@ def format_currency_display(player_currency: dict, currency_config: dict) -> lis
     return output_lines
 
 
-async def trade_currency(interaction, gdb, currency_name, amount, sending_member_id, receiving_member_id,
+async def trade_currency(interaction, currency_name, amount, sending_member_id, receiving_member_id,
                          guild_id):
     bot = interaction.client
     currency_name = currency_name.lower()
@@ -1983,8 +1984,6 @@ async def create_container(bot, player_id: int, character_id: str, name: str) ->
     Returns the new container's UUID.
     Raises UserFeedbackError if name already exists or max containers reached.
     """
-    import shortuuid
-
     name = name.strip()
 
     if not name:
