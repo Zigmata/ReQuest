@@ -20,7 +20,12 @@ from ReQuest.utilities.supportFunctions import (
     strip_id,
     UserFeedbackError,
     get_cached_data,
-    update_cached_data
+    update_cached_data,
+    create_container,
+    rename_container,
+    get_container_name,
+    consume_item_from_container,
+    move_item_between_containers
 )
 
 logger = logging.getLogger(__name__)
@@ -107,7 +112,7 @@ class TradeModal(Modal):
             )
 
             if is_currency:
-                sender_currency, receiver_currency = await trade_currency(interaction, bot.gdb, item_name, quantity,
+                sender_currency, receiver_currency = await trade_currency(interaction, item_name, quantity,
                                                                           member_id, target_id, guild_id)
                 sender_balance_str = '\n'.join(format_currency_display(sender_currency, currency_query)) or "None"
                 receiver_currency_str = '\n'.join(format_currency_display(receiver_currency, currency_query)) or "None"
@@ -493,71 +498,127 @@ class WizardEditCartItemModal(Modal):
             await log_exception(e, interaction)
 
 
-class ConsumeItemModal(Modal):
+class CreateContainerModal(Modal):
     def __init__(self, calling_view):
         super().__init__(
-            title='Consume/Destroy Item',
-            timeout=300
-        )
-        self.item_name_text_input = discord.ui.TextInput(
-            label='Item Name',
-            placeholder='Enter the name of the item to consume or destroy.',
-            custom_id='consume_item_name_text_input',
-        )
-        self.item_quantity_text_input = discord.ui.TextInput(
-            label='Quantity',
-            placeholder='Enter the amount to consume or destroy.',
-            custom_id='consume_quantity_text_input',
-            default='1',
-            min_length=1
+            title='Create New Container',
+            timeout=180
         )
         self.calling_view = calling_view
-        self.add_item(self.item_name_text_input)
-        self.add_item(self.item_quantity_text_input)
+        self.name_input = discord.ui.TextInput(
+            label='Container Name',
+            placeholder='Enter a name for your container (e.g., Backpack)',
+            custom_id='container_name_input',
+            max_length=50,
+            required=True
+        )
+        self.add_item(self.name_input)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            item_name = self.item_name_text_input.value.strip()
-            if not self.item_quantity_text_input.value.isdigit():
-                raise UserFeedbackError('Quantity must be a positive integer.')
-
-            quantity = int(self.item_quantity_text_input.value)
-            if quantity < 1:
-                raise UserFeedbackError('Quantity must be a positive integer.')
-
-            bot = interaction.client
-            user_id = interaction.user.id
-            guild_id = interaction.guild_id
-
-            character_query = await get_cached_data(
-                bot=bot,
-                mongo_database=bot.mdb,
-                collection_name='characters',
-                query={'_id': user_id}
+            name = self.name_input.value.strip()
+            await create_container(
+                interaction.client,
+                interaction.user.id,
+                self.calling_view.character_id,
+                name
             )
-            if not character_query or str(guild_id) not in character_query.get('activeCharacters', {}):
-                raise UserFeedbackError("You do not have an active character on this server.")
 
-            active_char_id = character_query['activeCharacters'][str(guild_id)]
-            character_data = character_query['characters'][active_char_id]
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
 
-            inventory = character_data['attributes'].get('inventory', {})
-            inventory_lower = {k.lower(): v for k, v in inventory.items()}
 
-            current_quantity = inventory_lower.get(item_name.lower(), 0)
+class RenameContainerModal(Modal):
+    def __init__(self, calling_view, container_id: str, current_name: str):
+        super().__init__(
+            title='Rename Container',
+            timeout=180
+        )
+        self.calling_view = calling_view
+        self.container_id = container_id
+        self.name_input = discord.ui.TextInput(
+            label='New Container Name',
+            placeholder='Enter the new name',
+            custom_id='container_rename_input',
+            default=current_name,
+            max_length=50,
+            required=True
+        )
+        self.add_item(self.name_input)
 
-            if current_quantity == 0:
-                raise UserFeedbackError(f'You do not have any items matching the name: {item_name}.')
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            new_name = self.name_input.value.strip()
+            await rename_container(
+                interaction.client,
+                interaction.user.id,
+                self.calling_view.character_id,
+                self.container_id,
+                new_name
+            )
 
-            if quantity > current_quantity:
-                raise UserFeedbackError(f'You only have {current_quantity} of {item_name}.')
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
 
-            await update_character_inventory(interaction, user_id, active_char_id, item_name, -quantity)
 
+class ConsumeFromContainerModal(Modal):
+    def __init__(self, calling_view, item_name: str, max_quantity: int):
+        super().__init__(
+            title='Consume/Destroy Item',
+            timeout=180
+        )
+        self.calling_view = calling_view
+        self.item_name = item_name
+        self.max_quantity = max_quantity
+
+        self.quantity_input = discord.ui.TextInput(
+            label=f'Quantity (max: {max_quantity})',
+            placeholder='Enter amount to consume/destroy',
+            custom_id='consume_quantity_input',
+            default='1',
+            required=True
+        )
+        self.add_item(self.quantity_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            if not self.quantity_input.value.isdigit():
+                raise UserFeedbackError('Quantity must be a positive integer.')
+
+            quantity = int(self.quantity_input.value)
+            if quantity < 1:
+                raise UserFeedbackError('Quantity must be at least 1.')
+            if quantity > self.max_quantity:
+                raise UserFeedbackError(f'You only have {self.max_quantity} of this item.')
+
+            container_name = get_container_name(
+                self.calling_view.character_data,
+                self.calling_view.container_id
+            )
+
+            await consume_item_from_container(
+                interaction.client,
+                interaction.user.id,
+                self.calling_view.character_id,
+                self.item_name,
+                quantity,
+                self.calling_view.container_id
+            )
+
+            # Clear selection and refresh
+            self.calling_view.selected_item = None
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+
+            # Send receipt
             receipt_embed = discord.Embed(
                 title='Item Consumption Report',
-                description=f'Player: {interaction.user.mention} as `{character_data["name"]}`\n'
-                            f'Removed: **{quantity}x {titlecase(item_name)}**',
+                description=f'Player: {interaction.user.mention } as `{self.calling_view.character_data["name"]}`\n'
+                            f'Removed: **{quantity}x {titlecase(self.item_name)}** from **{container_name}**',
                 color=discord.Color.gold(),
                 type='rich'
             )
@@ -567,10 +628,11 @@ class ConsumeItemModal(Modal):
             )
             receipt_embed.set_footer(text=f'Transaction ID: {shortuuid.uuid()[:12]}')
 
-            await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            receipt_message = await interaction.followup.send(embed=receipt_embed, wait=True)
 
-            receipt_msg = await interaction.followup.send(embed=receipt_embed, wait=True)
+            # Log to transaction channel if set
+            bot = interaction.client
+            guild_id = interaction.guild_id
 
             log_channel_query = await get_cached_data(
                 bot=bot,
@@ -583,7 +645,61 @@ class ConsumeItemModal(Modal):
                 log_channel = interaction.guild.get_channel(log_channel_id)
                 if log_channel:
                     receipt_embed.add_field(name='Channel', value=interaction.channel.mention)
-                    receipt_embed.add_field(name='Receipt', value=receipt_msg.jump_url)
+                    receipt_embed.add_field(name='Receipt', value=receipt_message.jump_url)
                     await log_channel.send(embed=receipt_embed)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class MoveItemQuantityModal(Modal):
+    def __init__(self, calling_view, item_name: str, max_quantity: int):
+        super().__init__(
+            title='Move Item',
+            timeout=180
+        )
+        self.calling_view = calling_view
+        self.item_name = item_name
+        self.max_quantity = max_quantity
+
+        self.quantity_input = discord.ui.TextInput(
+            label=f'Quantity to move (max: {max_quantity})',
+            placeholder='Enter amount to move',
+            custom_id='move_quantity_input',
+            default=str(max_quantity),
+            required=True
+        )
+        self.add_item(self.quantity_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            if not self.quantity_input.value.isdigit():
+                raise UserFeedbackError('Quantity must be a positive integer.')
+
+            quantity = int(self.quantity_input.value)
+            if quantity < 1:
+                raise UserFeedbackError('Quantity must be at least 1.')
+            if quantity > self.max_quantity:
+                raise UserFeedbackError(f'You only have {self.max_quantity} of this item.')
+
+            await move_item_between_containers(
+                interaction.client,
+                interaction.user.id,
+                self.calling_view.source_view.character_id,
+                self.item_name,
+                quantity,
+                self.calling_view.source_container_id,
+                self.calling_view.selected_destination
+            )
+
+            # Return to the source container view
+            from ReQuest.ui.player.views import ContainerItemsView
+            view = ContainerItemsView(
+                self.calling_view.source_view.character_id,
+                self.calling_view.source_view.character_data,
+                self.calling_view.source_container_id
+            )
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
+
         except Exception as e:
             await log_exception(e, interaction)

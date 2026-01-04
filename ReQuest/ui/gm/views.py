@@ -27,14 +27,14 @@ from ReQuest.utilities.supportFunctions import (
     update_character_experience,
     attempt_delete,
     update_quest_embed,
-    format_currency_display,
     setup_view,
     format_consolidated_totals,
     get_xp_config,
     UserFeedbackError,
     get_cached_data,
     delete_cached_data,
-    update_cached_data
+    update_cached_data,
+    format_inventory_by_container
 )
 
 logger = logging.getLogger(__name__)
@@ -1135,29 +1135,22 @@ class QuestPostView(View):
 class ViewCharacterView(LayoutView):
     def __init__(self, member_id, character_data, currency_config, xp_enabled=True):
         super().__init__(timeout=None)
+
         container = Container()
 
         name = character_data.get('name', 'Unknown')
         xp = character_data['attributes'].get('experience', None)
-        inventory = character_data['attributes'].get('inventory', {})
-        currency = character_data['attributes'].get('currency', {})
 
         container.add_item(TextDisplay(content=f'**Character Sheet for {name} (<@{member_id}>)**'))
         container.add_item(Separator())
+
         if xp_enabled and xp is not None:
             container.add_item(TextDisplay(f'__**Experience Points:**__\n{xp}'))
-        if inventory:
-            items = '\n'.join([f'{item}: **{quantity}**' for item, quantity in sorted(inventory.items())])
-        else:
-            items = 'No items in inventory.'
-        inventory_display = TextDisplay(f'__**Possessions**__\n\n{items}')
-        currency_lines = format_currency_display(currency, currency_config)
-        currency_display = TextDisplay(
-            '__**Currency**__\n\n' + ('\n'.join(currency_lines)
-                                      if currency_lines else 'No currency.'))
+            container.add_item(Separator())
 
-        container.add_item(inventory_display)
-        container.add_item(currency_display)
+        # Display inventory grouped by container
+        inventory_display = format_inventory_by_container(character_data, currency_config)
+        container.add_item(TextDisplay(f'__**Possessions**__\n\n{inventory_display}'))
 
         self.add_item(container)
 

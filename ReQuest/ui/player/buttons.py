@@ -13,7 +13,13 @@ from ReQuest.utilities.supportFunctions import (
     build_cache_key,
     get_cached_data,
     update_cached_data,
-    delete_cached_data
+    delete_cached_data,
+    move_item_between_containers,
+    format_inventory_by_container,
+    UserFeedbackError,
+    get_container_items,
+    delete_container,
+    reorder_container
 )
 
 logger = logging.getLogger(__name__)
@@ -432,23 +438,6 @@ class WizardClearCartButton(Button):
 # ----- INVENTORY MANAGEMENT -----
 
 
-class ConsumeItemButton(Button):
-    def __init__(self, calling_view):
-        super().__init__(
-            label='Consume/Destroy Item',
-            style=ButtonStyle.danger,
-            custom_id='consume_item_button'
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            modal = modals.ConsumeItemModal(self.calling_view)
-            await interaction.response.send_modal(modal)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-
 class SpendCurrencyButton(Button):
     def __init__(self, calling_view):
         super().__init__(
@@ -541,14 +530,351 @@ class PrintInventoryButton(Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             character_name = self.calling_view.active_character['name']
-            items = self.calling_view.items
-            currencies = self.calling_view.currencies
+            formatted = format_inventory_by_container(
+                self.calling_view.active_character,
+                self.calling_view.currency_config
+            )
+
             inventory_embed = discord.Embed(
                 title=f"{character_name}'s Inventory",
+                description=formatted,
                 color=discord.Color.blue()
             )
-            inventory_embed.add_field(name='Items', value='\n'.join(items) or 'None', inline=False)
-            inventory_embed.add_field(name='Currencies', value='\n'.join(currencies) or 'None', inline=False)
             await interaction.response.send_message(embed=inventory_embed)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+# ----- CONTAINER MANAGEMENT -----
+
+
+class ManageContainersButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Manage Containers',
+            style=ButtonStyle.secondary,
+            custom_id='manage_containers_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            from ReQuest.ui.player.views import ContainerManagementView
+            view = ContainerManagementView(
+                self.calling_view.active_character_id,
+                self.calling_view.active_character
+            )
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class CreateContainerButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='+ Create New',
+            style=ButtonStyle.success,
+            custom_id='create_container_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            modal = modals.CreateContainerModal(self.calling_view)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RenameContainerButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Rename',
+            style=ButtonStyle.secondary,
+            custom_id='rename_container_button',
+            disabled=True
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            container_id = self.calling_view.selected_container_id
+            if container_id is None:
+                raise UserFeedbackError('Cannot rename Loose Items.')
+
+            # Get current name
+            containers = self.calling_view.character_data['attributes'].get('containers', {})
+            current_name = containers.get(container_id, {}).get('name', '')
+
+            modal = modals.RenameContainerModal(self.calling_view, container_id, current_name)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class DeleteContainerButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Delete',
+            style=ButtonStyle.danger,
+            custom_id='delete_container_button',
+            disabled=True
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            container_id = self.calling_view.selected_container_id
+            if container_id is None:
+                raise UserFeedbackError('Cannot delete Loose Items.')
+
+            items = get_container_items(self.calling_view.character_data, container_id)
+            item_count = len(items)
+
+            containers = self.calling_view.character_data['attributes'].get('containers', {})
+            container_name = containers.get(container_id, {}).get('name', 'Unknown')
+
+            if item_count > 0:
+                prompt_label = f'Has {item_count} items. Will move to Loose Items.'
+            else:
+                prompt_label = f'Delete "{container_name}"?'
+
+            confirm_modal = common_modals.ConfirmModal(
+                title='Confirm Container Deletion',
+                prompt_label=prompt_label,
+                prompt_placeholder='Type CONFIRM to proceed',
+                confirm_callback=self._confirm_delete
+            )
+            await interaction.response.send_modal(confirm_modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def _confirm_delete(self, interaction: discord.Interaction):
+        try:
+            await delete_container(
+                interaction.client,
+                interaction.user.id,
+                self.calling_view.character_id,
+                self.calling_view.selected_container_id
+            )
+
+            self.calling_view.selected_container_id = None
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class MoveContainerUpButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='▲ Up',
+            style=ButtonStyle.secondary,
+            custom_id='move_container_up_button',
+            disabled=True
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await reorder_container(
+                interaction.client,
+                interaction.user.id,
+                self.calling_view.character_id,
+                self.calling_view.selected_container_id,
+                -1  # Move up
+            )
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class MoveContainerDownButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='▼ Down',
+            style=ButtonStyle.secondary,
+            custom_id='move_container_down_button',
+            disabled=True
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await reorder_container(
+                interaction.client,
+                interaction.user.id,
+                self.calling_view.character_id,
+                self.calling_view.selected_container_id,
+                1  # Move down
+            )
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ConsumeFromContainerButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Consume/Destroy',
+            style=ButtonStyle.danger,
+            custom_id='consume_from_container_button',
+            disabled=True
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            item_name = self.calling_view.selected_item
+            items = get_container_items(
+                self.calling_view.character_data,
+                self.calling_view.container_id
+            )
+
+            # Find quantity (case-insensitive)
+            max_qty = 0
+            for name, qty in items.items():
+                if name.lower() == item_name.lower():
+                    max_qty = qty
+                    break
+
+            modal = modals.ConsumeFromContainerModal(self.calling_view, item_name, max_qty)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class MoveItemButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Move',
+            style=ButtonStyle.primary,
+            custom_id='move_item_button',
+            disabled=True
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            from ReQuest.ui.player.views import MoveDestinationView
+
+            item_name = self.calling_view.selected_item
+            items = get_container_items(
+                self.calling_view.character_data,
+                self.calling_view.container_id
+            )
+
+            # Find quantity (case-insensitive)
+            max_qty = 0
+            for name, qty in items.items():
+                if name.lower() == item_name.lower():
+                    max_qty = qty
+                    break
+
+            view = MoveDestinationView(
+                self.calling_view,
+                item_name,
+                max_qty
+            )
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class MoveAllButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Move All',
+            style=ButtonStyle.success,
+            custom_id='move_all_button',
+            disabled=True
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            from ReQuest.ui.player.views import ContainerItemsView
+
+            await move_item_between_containers(
+                interaction.client,
+                interaction.user.id,
+                self.calling_view.source_view.character_id,
+                self.calling_view.item_name,
+                self.calling_view.available_quantity,
+                self.calling_view.source_container_id,
+                self.calling_view.selected_destination
+            )
+
+            # Return to source container view
+            view = ContainerItemsView(
+                self.calling_view.source_view.character_id,
+                self.calling_view.source_view.character_data,
+                self.calling_view.source_container_id
+            )
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class MoveSomeButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Move Some...',
+            style=ButtonStyle.secondary,
+            custom_id='move_some_button',
+            disabled=True
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            modal = modals.MoveItemQuantityModal(
+                self.calling_view,
+                self.calling_view.item_name,
+                self.calling_view.available_quantity
+            )
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class BackToInventoryOverviewButton(Button):
+    def __init__(self):
+        super().__init__(
+            label='← Back to Overview',
+            style=ButtonStyle.secondary,
+            custom_id='back_to_inv_overview_button'
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            from ReQuest.ui.player.views import InventoryOverviewView
+            view = InventoryOverviewView()
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class CancelMoveButton(Button):
+    def __init__(self, source_view):
+        super().__init__(
+            label='← Cancel',
+            style=ButtonStyle.secondary,
+            custom_id='cancel_move_button'
+        )
+        self.source_view = source_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await setup_view(self.source_view, interaction)
+            await interaction.response.edit_message(view=self.source_view)
         except Exception as e:
             await log_exception(e, interaction)
