@@ -2081,12 +2081,12 @@ async def delete_container(bot, player_id: int, character_id: str,
     Deletes a container. Moves any items to root inventory.
     Returns the number of unique items moved.
 
-    param bot: The Discord bot instance
-    param player_id: The player's Discord ID
-    param character_id: The character's ID
-    param container_id: The container's ID to delete
+    :param bot: The Discord bot instance
+    :param player_id: The player's Discord ID
+    :param character_id: The character's ID
+    :param container_id: The container's ID to delete
 
-    returns: Number of unique items moved to the root inventory
+    :return: Number of unique items moved to the root inventory
     """
     player_data = await get_cached_data(
         bot=bot,

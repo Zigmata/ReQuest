@@ -669,18 +669,21 @@ class MoveDestinationView(LayoutView):
             page_containers = self.containers[start:end]
 
             destination_select_row = ActionRow()
-            dest_select = selects.DestinationContainerSelect(self, page_containers, self.current_page)
-            destination_select_row.add_item(dest_select)
+            destination_select = selects.DestinationContainerSelect(self, page_containers, self.current_page)
+            destination_select_row.add_item(destination_select)
             container.add_item(destination_select_row)
 
             if self.selected_destination is not None or self._loose_selected():
                 # Find destination name
-                dest_name = 'Loose Items'
-                for container in self.containers:
-                    if container['id'] == self.selected_destination:
-                        dest_name = container['name']
-                        break
-                container.add_item(TextDisplay(f'Destination: **{dest_name}**'))
+                if self.selected_destination is None:
+                    destination_name = 'Loose Items'
+                else:
+                    destination_name = 'Loose Items'
+                    for dest_container in self.containers:
+                        if dest_container['id'] == self.selected_destination:
+                            destination_name = dest_container['name']
+                            break
+                container.add_item(TextDisplay(f'Destination: **{destination_name}**'))
 
         self.add_item(container)
 
@@ -734,7 +737,7 @@ class MoveDestinationView(LayoutView):
             self.add_item(nav_row)
 
     def _loose_selected(self) -> bool:
-        return hasattr(self, '_loose_items_selected') and self._loose_items_selected
+        return self._loose_items_selected
 
     async def prev_page(self, interaction):
         if self.current_page > 0:
