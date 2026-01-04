@@ -255,7 +255,6 @@ class InventoryOverviewView(LayoutView):
 
     async def setup(self, interaction: discord.Interaction):
         bot = interaction.client
-        collection = interaction.client.mdb['characters']
         guild_id = interaction.guild_id
         query = await get_cached_data(
             bot=bot,
@@ -300,6 +299,8 @@ class InventoryOverviewView(LayoutView):
                             float(quantity)
                         )
 
+                        # In the event a currency was given prior to being defined (and therefore stored as an item),
+                        # this second update removes the old entry from inventory
                         await update_cached_data(
                             bot=bot,
                             mongo_database=bot.mdb,
@@ -307,12 +308,17 @@ class InventoryOverviewView(LayoutView):
                             query={'_id': interaction.user.id},
                             update_data={'$unset': {
                                 f'characters.{self.active_character_id}.attributes.inventory.{item_name_key}': ''
-                            }},
+                            }}
                         )
                         conversion_occurred = True
 
                 if conversion_occurred:
-                    query = await collection.find_one({'_id': interaction.user.id})
+                    query = await get_cached_data(
+                        bot=bot,
+                        mongo_database=bot.mdb,
+                        collection_name='characters',
+                        query={'_id': interaction.user.id}
+                    )
                     self.active_character = query['characters'][self.active_character_id]
 
             # Get containers
@@ -469,9 +475,15 @@ class ContainerItemsView(LayoutView):
 
     async def setup(self, interaction: discord.Interaction):
         # Refresh character data
-        collection = interaction.client.mdb['characters']
-        query = await collection.find_one({'_id': interaction.user.id})
-        self.character_data = query['characters'][self.character_id]
+        bot = interaction.client
+        player_data = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.mdb,
+            collection_name='characters',
+            query={'_id': interaction.user.id}
+        )
+
+        self.character_data = player_data['characters'][self.character_id]
 
         self.container_name = get_container_name(self.character_data, self.container_id)
         items_dict = get_container_items(self.character_data, self.container_id)
@@ -612,9 +624,15 @@ class MoveDestinationView(LayoutView):
 
     async def setup(self, interaction: discord.Interaction):
         # Refresh character data
-        collection = interaction.client.mdb['characters']
-        query = await collection.find_one({'_id': interaction.user.id})
-        self.source_view.character_data = query['characters'][self.source_view.character_id]
+        bot = interaction.client
+        player_data = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.mdb,
+            collection_name='characters',
+            query={'_id': interaction.user.id}
+        )
+
+        self.source_view.character_data = player_data['characters'][self.source_view.character_id]
 
         all_containers = get_containers_sorted(self.source_view.character_data)
 
@@ -753,9 +771,14 @@ class ContainerManagementView(LayoutView):
 
     async def setup(self, interaction: discord.Interaction):
         # Refresh character data
-        collection = interaction.client.mdb['characters']
-        query = await collection.find_one({'_id': interaction.user.id})
-        self.character_data = query['characters'][self.character_id]
+        bot = interaction.client
+        player_data = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.mdb,
+            collection_name='characters',
+            query={'_id': interaction.user.id}
+        )
+        self.character_data = player_data['characters'][self.character_id]
 
         self.containers = get_containers_sorted(self.character_data)
 

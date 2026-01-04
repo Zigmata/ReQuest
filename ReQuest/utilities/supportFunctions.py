@@ -1982,8 +1982,12 @@ async def create_container(bot, player_id: int, character_id: str, name: str) ->
     if len(name) > MAX_CONTAINER_NAME_LENGTH:
         raise UserFeedbackError(f'Container name cannot exceed {MAX_CONTAINER_NAME_LENGTH} characters.')
 
-    collection = bot.mdb['characters']
-    player_data = await collection.find_one({'_id': player_id})
+    player_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': player_id}
+    )
     if not player_data:
         raise UserFeedbackError('Player data not found.')
 
@@ -2031,8 +2035,12 @@ async def rename_container(bot, player_id: int, character_id: str,
     if len(new_name) > MAX_CONTAINER_NAME_LENGTH:
         raise UserFeedbackError(f'Container name cannot exceed {MAX_CONTAINER_NAME_LENGTH} characters.')
 
-    collection = bot.mdb['characters']
-    player_data = await collection.find_one({'_id': player_id})
+    player_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': player_id}
+    )
     if not player_data:
         raise UserFeedbackError('Player data not found.')
 
@@ -2069,8 +2077,12 @@ async def delete_container(bot, player_id: int, character_id: str,
 
     returns: Number of unique items moved to the root inventory
     """
-    collection = bot.mdb['characters']
-    player_data = await collection.find_one({'_id': player_id})
+    player_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': player_id}
+    )
 
     if not player_data:
         raise UserFeedbackError('Player data not found.')
@@ -2132,8 +2144,13 @@ async def reorder_container(bot, player_id: int, character_id: str,
     Moves container up (direction=-1) or down (direction=1) in order.
     Swaps order values with adjacent container.
     """
-    collection = bot.mdb['characters']
-    player_data = await collection.find_one({'_id': player_id})
+    player_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': player_id}
+    )
+
     if not player_data:
         raise UserFeedbackError('Player data not found.')
     character_data = player_data['characters'].get(character_id)
@@ -2198,9 +2215,18 @@ async def move_item_between_containers(
     if quantity < 1:
         raise UserFeedbackError('Quantity must be at least 1.')
 
-    collection = bot.mdb['characters']
-    player_data = await collection.find_one({'_id': player_id})
+    player_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': player_id}
+    )
+    if not player_data:
+        raise UserFeedbackError('Player data not found.')
+
     character_data = player_data['characters'].get(character_id)
+    if not character_data:
+        raise UserFeedbackError('Character not found.')
 
     item_name_lower = item_name.lower()
 
@@ -2301,8 +2327,18 @@ async def consume_item_from_container(
         raise UserFeedbackError('Quantity must be at least 1.')
 
     collection = bot.mdb['characters']
-    player_data = await collection.find_one({'_id': player_id})
+    player_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': player_id}
+    )
+    if not player_data:
+        raise UserFeedbackError('Player data not found.')
+
     character_data = player_data['characters'].get(character_id)
+    if not character_data:
+        raise UserFeedbackError('Character not found.')
 
     item_name_lower = item_name.lower()
 
