@@ -498,102 +498,6 @@ class WizardEditCartItemModal(Modal):
             await log_exception(e, interaction)
 
 
-class ConsumeItemModal(Modal):
-    def __init__(self, calling_view):
-        super().__init__(
-            title='Consume/Destroy Item',
-            timeout=300
-        )
-        self.item_name_text_input = discord.ui.TextInput(
-            label='Item Name',
-            placeholder='Enter the name of the item to consume or destroy.',
-            custom_id='consume_item_name_text_input',
-        )
-        self.item_quantity_text_input = discord.ui.TextInput(
-            label='Quantity',
-            placeholder='Enter the amount to consume or destroy.',
-            custom_id='consume_quantity_text_input',
-            default='1',
-            min_length=1
-        )
-        self.calling_view = calling_view
-        self.add_item(self.item_name_text_input)
-        self.add_item(self.item_quantity_text_input)
-
-    async def on_submit(self, interaction: discord.Interaction):
-        try:
-            item_name = self.item_name_text_input.value.strip()
-            if not self.item_quantity_text_input.value.isdigit():
-                raise UserFeedbackError('Quantity must be a positive integer.')
-
-            quantity = int(self.item_quantity_text_input.value)
-            if quantity < 1:
-                raise UserFeedbackError('Quantity must be a positive integer.')
-
-            bot = interaction.client
-            user_id = interaction.user.id
-            guild_id = interaction.guild_id
-
-            character_query = await get_cached_data(
-                bot=bot,
-                mongo_database=bot.mdb,
-                collection_name='characters',
-                query={'_id': user_id}
-            )
-            if not character_query or str(guild_id) not in character_query.get('activeCharacters', {}):
-                raise UserFeedbackError("You do not have an active character on this server.")
-
-            active_char_id = character_query['activeCharacters'][str(guild_id)]
-            character_data = character_query['characters'][active_char_id]
-
-            inventory = character_data['attributes'].get('inventory', {})
-            inventory_lower = {k.lower(): v for k, v in inventory.items()}
-
-            current_quantity = inventory_lower.get(item_name.lower(), 0)
-
-            if current_quantity == 0:
-                raise UserFeedbackError(f'You do not have any items matching the name: {item_name}.')
-
-            if quantity > current_quantity:
-                raise UserFeedbackError(f'You only have {current_quantity} of {item_name}.')
-
-            await update_character_inventory(interaction, user_id, active_char_id, item_name, -quantity)
-
-            receipt_embed = discord.Embed(
-                title='Item Consumption Report',
-                description=f'Player: {interaction.user.mention} as `{character_data["name"]}`\n'
-                            f'Removed: **{quantity}x {titlecase(item_name)}**',
-                color=discord.Color.gold(),
-                type='rich'
-            )
-            receipt_embed.set_author(
-                name=interaction.user.display_name,
-                icon_url=interaction.user.display_avatar.url if interaction.user.display_avatar else None
-            )
-            receipt_embed.set_footer(text=f'Transaction ID: {shortuuid.uuid()[:12]}')
-
-            await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
-
-            receipt_msg = await interaction.followup.send(embed=receipt_embed, wait=True)
-
-            log_channel_query = await get_cached_data(
-                bot=bot,
-                mongo_database=bot.gdb,
-                collection_name='playerTransactionLogChannel',
-                query={'_id': guild_id}
-            )
-            if log_channel_query:
-                log_channel_id = strip_id(log_channel_query['playerTransactionLogChannel'])
-                log_channel = interaction.guild.get_channel(log_channel_id)
-                if log_channel:
-                    receipt_embed.add_field(name='Channel', value=interaction.channel.mention)
-                    receipt_embed.add_field(name='Receipt', value=receipt_msg.jump_url)
-                    await log_channel.send(embed=receipt_embed)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-
 class CreateContainerModal(Modal):
     def __init__(self, calling_view):
         super().__init__(
@@ -713,13 +617,36 @@ class ConsumeFromContainerModal(Modal):
             # Send receipt
             receipt_embed = discord.Embed(
                 title='Item Consumption Report',
-                description=f'Removed **{quantity}x {titlecase(self.item_name)}** from '
-                            f'**{container_name}**',
-                color=discord.Color.gold()
+                description=f'Player: {interaction.user.mention } as `{self.calling_view.character_data["name"]}`\n'
+                            f'Removed: **{quantity}x {titlecase(self.item_name)}** from **{container_name}**',
+                color=discord.Color.gold(),
+                type='rich'
+            )
+            receipt_embed.set_author(
+                name=interaction.user.display_name,
+                icon_url=interaction.user.display_avatar.url if interaction.user.display_avatar else None
             )
             receipt_embed.set_footer(text=f'Transaction ID: {shortuuid.uuid()[:12]}')
-            await interaction.followup.send(embed=receipt_embed, ephemeral=True)
 
+            receipt_message = await interaction.followup.send(embed=receipt_embed, wait=True)
+
+            # Log to transaction channel if set
+            bot = interaction.client
+            guild_id = interaction.guild_id
+
+            log_channel_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='playerTransactionLogChannel',
+                query={'_id': guild_id}
+            )
+            if log_channel_query:
+                log_channel_id = strip_id(log_channel_query['playerTransactionLogChannel'])
+                log_channel = interaction.guild.get_channel(log_channel_id)
+                if log_channel:
+                    receipt_embed.add_field(name='Channel', value=interaction.channel.mention)
+                    receipt_embed.add_field(name='Receipt', value=receipt_message.jump_url)
+                    await log_channel.send(embed=receipt_embed)
         except Exception as e:
             await log_exception(e, interaction)
 
