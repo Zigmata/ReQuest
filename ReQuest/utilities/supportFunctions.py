@@ -342,8 +342,13 @@ async def trade_currency(interaction, gdb, currency_name, amount, sending_member
     sender_currency = sender_data['characters'][sender_character_id]['attributes'].get('currency', {})
     receiver_character_id = receiver_data['activeCharacters'][str(guild_id)]
 
-    currency_collection = gdb['currency']
-    currency_config = await currency_collection.find_one({'_id': guild_id})
+    currency_config = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='currency',
+        query={'_id': guild_id}
+    )
+
     if not currency_config:
         raise Exception('Currency definition not found')
 
@@ -448,8 +453,12 @@ async def update_character_inventory(interaction, player_id: int, character_id: 
         )
         character_data = player_data['characters'].get(character_id)
 
-        currency_collection = interaction.client.gdb['currency']
-        currency_query = await currency_collection.find_one({'_id': interaction.guild_id})
+        currency_query = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name='currency',
+            query={'_id': interaction.guild_id}
+        )
 
         is_currency, currency_parent_name = None, None
         if currency_query:
@@ -1975,7 +1984,12 @@ async def create_container(bot, player_id: int, character_id: str, name: str) ->
 
     collection = bot.mdb['characters']
     player_data = await collection.find_one({'_id': player_id})
+    if not player_data:
+        raise UserFeedbackError('Player data not found.')
+
     character_data = player_data['characters'].get(character_id)
+    if not character_data:
+        raise UserFeedbackError('Character not found.')
 
     if get_container_count(character_data) >= MAX_CONTAINERS_PER_PLAYER:
         raise UserFeedbackError(f'You cannot create more than {MAX_CONTAINERS_PER_PLAYER} containers.')
@@ -2019,7 +2033,12 @@ async def rename_container(bot, player_id: int, character_id: str,
 
     collection = bot.mdb['characters']
     player_data = await collection.find_one({'_id': player_id})
+    if not player_data:
+        raise UserFeedbackError('Player data not found.')
+
     character_data = player_data['characters'].get(character_id)
+    if not character_data:
+        raise UserFeedbackError('Character not found.')
 
     containers = character_data['attributes'].get('containers', {})
     if container_id not in containers:
@@ -2040,13 +2059,25 @@ async def rename_container(bot, player_id: int, character_id: str,
 async def delete_container(bot, player_id: int, character_id: str,
                            container_id: str) -> int:
     """
-    Deletes a container. Moves any items to root inventory (Loose Items).
-    Returns count of items moved.
-    Raises UserFeedbackError if container not found.
+    Deletes a container. Moves any items to root inventory.
+    Returns the number of unique items moved.
+
+    param bot: The Discord bot instance
+    param player_id: The player's Discord ID
+    param character_id: The character's ID
+    param container_id: The container's ID to delete
+
+    returns: Number of unique items moved to the root inventory
     """
     collection = bot.mdb['characters']
     player_data = await collection.find_one({'_id': player_id})
+
+    if not player_data:
+        raise UserFeedbackError('Player data not found.')
+
     character_data = player_data['characters'].get(character_id)
+    if not character_data:
+        raise UserFeedbackError('Character not found.')
 
     containers = character_data['attributes'].get('containers', {})
     if container_id not in containers:
@@ -2056,7 +2087,7 @@ async def delete_container(bot, player_id: int, character_id: str,
     items_to_move = container.get('items', {})
     items_count = len(items_to_move)
 
-    # Move items to loose inventory
+    # Move items to root inventory
     if items_to_move:
         current_inventory = character_data['attributes'].get('inventory', {})
         # Normalize to lowercase for merging
@@ -2103,7 +2134,11 @@ async def reorder_container(bot, player_id: int, character_id: str,
     """
     collection = bot.mdb['characters']
     player_data = await collection.find_one({'_id': player_id})
+    if not player_data:
+        raise UserFeedbackError('Player data not found.')
     character_data = player_data['characters'].get(character_id)
+    if not character_data:
+        raise UserFeedbackError('Character not found.')
 
     containers = character_data['attributes'].get('containers', {})
     if container_id not in containers:
@@ -2189,7 +2224,10 @@ async def move_item_between_containers(
             source_qty = qty
             break
 
-    if source_key is None or source_qty < quantity:
+    if source_key is None:
+        raise UserFeedbackError(f'Item "{item_name}" not found in the source container.')
+
+    if source_qty < quantity:
         raise UserFeedbackError(f'Insufficient quantity. You have {source_qty} in this container.')
 
     # Get destination items

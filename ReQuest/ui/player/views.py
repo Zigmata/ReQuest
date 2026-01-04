@@ -254,11 +254,22 @@ class InventoryOverviewView(LayoutView):
         self.total_pages = 1
 
     async def setup(self, interaction: discord.Interaction):
+        bot = interaction.client
         collection = interaction.client.mdb['characters']
         guild_id = interaction.guild_id
-        query = await collection.find_one({'_id': interaction.user.id})
+        query = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.mdb,
+            collection_name='characters',
+            query={'_id': interaction.user.id}
+        )
 
-        self.currency_config = await interaction.client.gdb['currency'].find_one({'_id': guild_id})
+        self.currency_config = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name='currency',
+            query={'_id': guild_id}
+        )
 
         if not query:
             self.active_character = None
@@ -289,13 +300,15 @@ class InventoryOverviewView(LayoutView):
                             float(quantity)
                         )
 
-                        await collection.update_one(
-                            {'_id': interaction.user.id},
-                            {'$unset': {
+                        await update_cached_data(
+                            bot=bot,
+                            mongo_database=bot.mdb,
+                            collection_name='characters',
+                            query={'_id': interaction.user.id},
+                            update_data={'$unset': {
                                 f'characters.{self.active_character_id}.attributes.inventory.{item_name_key}': ''
-                            }}
+                            }},
                         )
-
                         conversion_occurred = True
 
                 if conversion_occurred:
@@ -383,7 +396,7 @@ class InventoryOverviewView(LayoutView):
         action_row.add_item(spend_button)
 
         print_button = buttons.PrintInventoryButton(self)
-        print_button.disabled = (total_items == 0 and not self.currencies)
+        print_button.disabled = (total_items == 0 and not self.currencies) or not self.active_character
         action_row.add_item(print_button)
 
         self.add_item(action_row)
@@ -590,7 +603,7 @@ class MoveDestinationView(LayoutView):
         self.available_quantity = available_quantity
 
         self.selected_destination = None
-        self.loose_items_selected = False
+        self._loose_items_selected = False
         self.containers = []
 
         self.items_per_page = 25

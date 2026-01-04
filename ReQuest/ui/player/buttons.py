@@ -14,7 +14,7 @@ from ReQuest.utilities.supportFunctions import (
     get_cached_data,
     update_cached_data,
     delete_cached_data,
-    move_item_between_containers
+    move_item_between_containers, format_inventory_by_container
 )
 
 logger = logging.getLogger(__name__)
@@ -433,23 +433,6 @@ class WizardClearCartButton(Button):
 # ----- INVENTORY MANAGEMENT -----
 
 
-class ConsumeItemButton(Button):
-    def __init__(self, calling_view):
-        super().__init__(
-            label='Consume/Destroy Item',
-            style=ButtonStyle.danger,
-            custom_id='consume_item_button'
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            modal = modals.ConsumeItemModal(self.calling_view)
-            await interaction.response.send_modal(modal)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-
 class SpendCurrencyButton(Button):
     def __init__(self, calling_view):
         super().__init__(
@@ -541,8 +524,6 @@ class PrintInventoryButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            from ReQuest.utilities.supportFunctions import format_inventory_by_container
-
             character_name = self.calling_view.active_character['name']
             formatted = format_inventory_by_container(
                 self.calling_view.active_character,
@@ -745,7 +726,7 @@ class MoveContainerDownButton(Button):
 class ConsumeFromContainerButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Consume',
+            label='Consume/Destroy',
             style=ButtonStyle.danger,
             custom_id='consume_from_container_button',
             disabled=True
