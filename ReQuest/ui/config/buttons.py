@@ -15,7 +15,8 @@ from ReQuest.utilities.supportFunctions import (
     get_cached_data,
     delete_cached_data,
     update_cached_data,
-    get_xp_config, remove_item_stock_limit
+    get_xp_config,
+    remove_item_stock_limit
 )
 
 logger = logging.getLogger(__name__)

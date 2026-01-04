@@ -33,7 +33,8 @@ from ReQuest.utilities.supportFunctions import (
     UserFeedbackError,
     get_cached_data,
     delete_cached_data,
-    update_cached_data, format_inventory_by_container
+    update_cached_data,
+    format_inventory_by_container
 )
 
 logger = logging.getLogger(__name__)
