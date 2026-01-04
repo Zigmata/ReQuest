@@ -451,7 +451,12 @@ async def update_character_inventory(interaction, player_id: int, character_id: 
             collection_name='characters',
             query={'_id': player_id}
         )
+        if not player_data:
+            raise UserFeedbackError('Player data not found.')
+
         character_data = player_data['characters'].get(character_id)
+        if not character_data:
+            raise UserFeedbackError('Character data not found.')
 
         currency_query = await get_cached_data(
             bot=bot,
@@ -551,7 +556,13 @@ async def update_character_experience(interaction, player_id: int, character_id:
             collection_name='characters',
             query={'_id': player_id}
         )
+        if not player_data:
+            raise UserFeedbackError('Player data not found.')
+
         character_data = player_data['characters'].get(character_id)
+        if not character_data:
+            raise UserFeedbackError('Character data not found.')
+
         if character_data['attributes']['experience']:
             character_data['attributes']['experience'] += amount
         else:
@@ -2326,7 +2337,6 @@ async def consume_item_from_container(
     if quantity < 1:
         raise UserFeedbackError('Quantity must be at least 1.')
 
-    collection = bot.mdb['characters']
     player_data = await get_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
