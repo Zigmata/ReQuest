@@ -34,7 +34,7 @@ from ReQuest.utilities.supportFunctions import (
     get_cached_data,
     delete_cached_data,
     update_cached_data,
-    format_inventory_by_container
+    format_inventory_by_container, replace_cached_data
 )
 
 logger = logging.getLogger(__name__)
@@ -848,12 +848,15 @@ class RemovePlayerView(LayoutView):
     async def confirm_callback(self, interaction: discord.Interaction):
         try:
             bot = interaction.client
+
             quest = self.quest
-            (quest_id, message_id, title, gm, party,
-             wait_list, max_wait_list_size, lock_state, rewards) = (quest['questId'], quest['messageId'],
-                                                                    quest['title'], quest['gm'], quest['party'],
-                                                                    quest['waitList'], quest['maxWaitListSize'],
-                                                                    quest['lockState'], quest['rewards'])
+            quest_id = quest['questId']
+            message_id = quest['messageId']
+            party = quest['party']
+            wait_list = quest['waitList']
+            max_wait_list_size = quest['maxWaitListSize']
+            lock_state = quest['lockState']
+            rewards = quest['rewards']
 
             removed_member_id = self.selected_member_id
             guild_id = interaction.guild_id
@@ -922,7 +925,14 @@ class RemovePlayerView(LayoutView):
                                 del rewards[self.selected_character_id]
                         break
 
-            await quest_collection.replace_one({'guildId': guild_id, 'questId': quest_id}, self.quest)
+            await replace_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='quests',
+                query={'guildId': guild_id, 'questId': quest_id},
+                new_data=self.quest,
+                cache_id=f'{guild_id}:{quest_id}'
+            )
 
             # Give the GM some feedback that the changes applied
             gm_member = guild.get_member(interaction.user.id)
@@ -1063,15 +1073,17 @@ class QuestPostView(View):
 
     async def leave_callback(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             guild_id = interaction.guild_id
             user_id = interaction.user.id
             guild = interaction.client.get_guild(guild_id)
 
-            quest_collection = interaction.client.gdb['quests']
             quest = self.quest
-            quest_id, party, wait_list, max_wait_list_size, lock_state = (quest['questId'], quest['party'],
-                                                                          quest['waitList'], quest['maxWaitListSize'],
-                                                                          quest['lockState'])
+            quest_id = quest['questId']
+            party = quest['party']
+            wait_list = quest['waitList']
+            max_wait_list_size = quest['maxWaitListSize']
+            lock_state = quest['lockState']
 
             in_party = False
             for player in party:
@@ -1123,7 +1135,14 @@ class QuestPostView(View):
                         await new_member.add_roles(role)
 
             # Update the database
-            await quest_collection.replace_one({'guildId': guild_id, 'questId': quest_id}, self.quest)
+            await replace_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='quests',
+                query={'guildId': guild_id, 'questId': quest_id},
+                new_data=self.quest,
+                cache_id=f'{guild_id}:{quest_id}'
+            )
 
             # Refresh the query with the new document and edit the post
             await self.setup()

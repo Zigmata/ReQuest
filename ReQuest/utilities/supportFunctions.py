@@ -123,6 +123,41 @@ async def update_cached_data(bot, mongo_database, collection_name, query, update
         logger.error(f"Redis delete failed: {e}")
 
 
+async def replace_cached_data(bot, mongo_database, collection_name, query, new_data, cache_id=None):
+    """
+    Replaces a document in mongodb and deletes the corresponding key from redis
+
+    :param bot: the discord bot instance
+    :param mongo_database: the mongodb database instance
+    :param collection_name: the mongodb collection name
+    :param query: mongodb dict query
+    :param new_data: the new document data to replace with
+    :param cache_id: identifier for redis; if not provided, uses the '_id' from the query
+    """
+    if cache_id is None:
+        if '_id' in query:
+            cache_id = query['_id']
+        else:
+            raise ValueError('cache_id must be provided if "_id" is not in the query.')
+
+    cache_key = build_cache_key(mongo_database.name, cache_id, collection_name)
+
+    try:
+        mongo_collection = mongo_database[collection_name]
+        await mongo_collection.replace_one(
+            query,
+            new_data,
+            upsert=True
+        )
+    except Exception as e:
+        raise Exception(f'Error replacing config in database: {e}') from e
+
+    try:
+        await bot.rdb.delete(cache_key)
+    except Exception as e:
+        logger.error(f"Redis delete failed: {e}")
+
+
 async def delete_cached_data(bot, mongo_database, collection_name, search_filter,
                              is_single: bool = True, cache_id=None):
     """
