@@ -79,6 +79,9 @@ class Roleplay(Cog):
                 collection_name='roleplayConfig',
                 query={'_id': guild_id}
             )
+            if not rp_config:
+                logger.debug(f'No roleplay configuration found for guild {guild_id}.')
+                return
             rp_settings = rp_config.get('config', {})
 
             if not rp_config or not rp_config.get('enabled'):
