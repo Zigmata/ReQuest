@@ -15,7 +15,7 @@ class Info(Cog):
         """
         Get a quick reply from the bot to see if it is online.
         """
-        await interaction.response.send_message('**Pong!**\n{0}ms'.format(round(self.bot.latency * 1000), 1),
+        await interaction.response.send_message('**Pong!**\n{0}ms'.format(round(self.bot.latency * 1000)),
                                                 ephemeral=True)
 
     @app_commands.command(name='invite')

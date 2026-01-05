@@ -101,7 +101,7 @@ class ReQuest(commands.Bot):
         initial_extensions = os.getenv('LOAD_EXTENSIONS').split(',')
         for ext in initial_extensions:
             try:
-                await asyncio.create_task(self.load_extension(f'ReQuest.cogs.{ext.strip()}'))
+                await self.load_extension(f'ReQuest.cogs.{ext.strip()}')
             except Exception as e:
                 print(f'Failed to load extension: {ext}')
                 print('{}: {}'.format(type(e).__name__, e))
@@ -109,7 +109,7 @@ class ReQuest(commands.Bot):
         # If the allow list is enabled, load it async in the background
         if os.getenv('ALLOWLIST', 'false').lower() == 'true':
             self.allow_list_enabled = True
-            await asyncio.create_task(self.load_allow_list())
+            await self.load_allow_list()
 
         # If the bot is restarted with any existing quests, this reloads their views so they can be interacted with.
         quests = []
@@ -199,7 +199,7 @@ async def shutdown_bot():
 def handle_shutdown_signal(signal_number, frame):
     print(f'Received signal {signal_number}, shutting down...')
     print(f'Shutdown requested by function: {frame.f_code.co_name}')
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     loop.create_task(shutdown_bot())
 
 

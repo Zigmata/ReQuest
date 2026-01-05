@@ -1,5 +1,4 @@
 from discord import app_commands, Interaction
-from discord.app_commands.commands import check
 
 from ReQuest.utilities.supportFunctions import get_cached_data
 
@@ -37,7 +36,7 @@ def has_gm_or_mod():
 
         raise app_commands.CheckFailure("You do not have permissions to run this command!")
 
-    return check(predicate)
+    return app_commands.check(predicate)
 
 
 def has_active_character():
@@ -59,4 +58,4 @@ def has_active_character():
         else:
             raise app_commands.CheckFailure("You do not have any registered characters!")
 
-    return check(predicate)
+    return app_commands.check(predicate)

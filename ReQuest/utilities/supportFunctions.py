@@ -440,7 +440,7 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
     )
 
 
-async def update_character_inventory(interaction, player_id: int, character_id: str,
+async def update_character_inventory(interaction: discord.Interaction, player_id: int, character_id: str,
                                      item_name: str, quantity: float):
     try:
         bot = interaction.client
