@@ -7,7 +7,16 @@ from discord.ui import Button
 from ReQuest.ui.common.modals import ConfirmModal
 from ReQuest.ui.gm import modals
 from ReQuest.ui.common.enums import RewardType
-from ReQuest.utilities.supportFunctions import log_exception, setup_view, strip_id, attempt_delete
+from ReQuest.utilities.supportFunctions import (
+    log_exception,
+    setup_view,
+    strip_id,
+    attempt_delete,
+    get_cached_data,
+    update_cached_data,
+    delete_cached_data,
+    build_cache_key
+)
 
 logger = logging.getLogger(__name__)
 
@@ -125,6 +134,7 @@ class CancelQuestButton(Button):
 
     async def confirm_callback(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             quest = self.calling_view.selected_quest
             guild_id = interaction.guild_id
             guild = interaction.guild
@@ -150,10 +160,28 @@ class CancelQuestButton(Button):
                 await party_role.delete(reason=f'Quest {quest['questId']} cancelled by {interaction.user.mention}.')
 
             # Delete the quest from the database
-            await interaction.client.gdb['quests'].delete_one({'guildId': guild_id, 'questId': quest['questId']})
+            await delete_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='quests',
+                search_filter={'guildId': guild_id, 'questId': quest['questId']},
+                cache_id=f'{guild_id}:{quest["questId"]}'
+            )
+
+            # Delete the quest from the redis cache
+            admin_list_key = build_cache_key(bot.gdb.name, f'guild_quests:{guild_id}', 'quests')
+            await bot.rdb.delete(admin_list_key)
+
+            gm_list_key = build_cache_key(bot.gdb.name, f'gm_quests:{guild_id}:{quest["gm"]}', 'quests')
+            await bot.rdb.delete(gm_list_key)
 
             # Delete the quest from the quest channel
-            channel_query = await interaction.client.gdb['questChannel'].find_one({'_id': guild_id})
+            channel_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='questChannel',
+                query={'_id': guild_id}
+            )
             channel_id = strip_id(channel_query['questChannel'])
             quest_channel = guild.get_channel(channel_id)
             message_id = quest['messageId']
@@ -186,6 +214,7 @@ class PartyRewardsButton(Button):
 
     async def modal_callback(self, interaction: discord.Interaction, xp, items):
         try:
+            bot = interaction.client
             view = self.calling_view
             quest = view.quest
 
@@ -212,10 +241,13 @@ class PartyRewardsButton(Button):
                 'rewards.party.items': items_val
             }
 
-            quest_collection = interaction.client.gdb['quests']
-            await quest_collection.update_one(
-                {'guildId': quest['guildId'], 'questId': quest['questId']},
-                {'$set': updates}
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='quests',
+                query={'guildId': quest['guildId'], 'questId': quest['questId']},
+                update_data={'$set': updates},
+                cache_id=f'{quest["guildId"]}:{quest["questId"]}'
             )
 
             party_rewards['xp'] = xp_val
@@ -246,6 +278,7 @@ class IndividualRewardsButton(Button):
 
     async def modal_callback(self, interaction: discord.Interaction, xp, items):
         try:
+            bot = interaction.client
             view = self.calling_view
             quest = view.quest
             character_id = view.selected_character_id
@@ -273,10 +306,13 @@ class IndividualRewardsButton(Button):
                 f'rewards.{character_id}.items': items_val
             }
 
-            quest_collection = interaction.client.gdb['quests']
-            await quest_collection.update_one(
-                {'guildId': quest['guildId'], 'questId': quest['questId']},
-                {'$set': updates}
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='quests',
+                query={'guildId': quest['guildId'], 'questId': quest['questId']},
+                update_data={'$set': updates},
+                cache_id=f'{quest["guildId"]}:{quest["questId"]}'
             )
 
             char_rewards['xp'] = xp_val
@@ -332,8 +368,15 @@ class CompleteQuestButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            quest_summary_collection = interaction.client.gdb['questSummary']
-            quest_summary_config_query = await quest_summary_collection.find_one({'_id': interaction.guild_id})
+            bot = interaction.client
+
+            quest_summary_config_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='questSummary',
+                query={'_id': interaction.guild_id}
+            )
+
             if quest_summary_config_query and quest_summary_config_query['questSummary']:
                 await interaction.response.send_modal(self.quest_summary_modal)
             else:

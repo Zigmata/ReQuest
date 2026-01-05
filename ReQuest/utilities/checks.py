@@ -1,5 +1,6 @@
 from discord import app_commands, Interaction
-from discord.app_commands.commands import check
+
+from ReQuest.utilities.supportFunctions import get_cached_data
 
 
 def is_owner():
@@ -17,9 +18,13 @@ def has_gm_or_mod():
         if interaction.user.guild_permissions.manage_guild:
             return True
         else:
-            collection = interaction.client.gdb['gmRoles']
-            guild_id = interaction.guild.id
-            query = await collection.find_one({'_id': guild_id})
+            bot = interaction.client
+            query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='gmRoles',
+                query={'_id': interaction.guild.id}
+            )
             if query:
                 gm_role_mentions = []
                 gm_roles = query['gmRoles']
@@ -31,15 +36,19 @@ def has_gm_or_mod():
 
         raise app_commands.CheckFailure("You do not have permissions to run this command!")
 
-    return check(predicate)
+    return app_commands.check(predicate)
 
 
 def has_active_character():
     async def predicate(interaction: Interaction) -> bool:
         member_id = interaction.user.id
         guild_id = interaction.guild_id
-        collection = interaction.client.mdb['characters']
-        query = await collection.find_one({'_id': member_id})
+        query = await get_cached_data(
+            bot=interaction.client,
+            mongo_database=interaction.client.mdb,
+            collection_name='characters',
+            query={'_id': member_id}
+        )
 
         if query:
             if str(guild_id) in query['activeCharacters']:
@@ -49,4 +58,4 @@ def has_active_character():
         else:
             raise app_commands.CheckFailure("You do not have any registered characters!")
 
-    return check(predicate)
+    return app_commands.check(predicate)

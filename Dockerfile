@@ -29,6 +29,6 @@ RUN pip install -U pip && \
 COPY --chown=request:request ReQuest /app/ReQuest
 
 USER request
-WORKDIR /app/ReQuest
+WORKDIR /app
 
-CMD ["python", "bot.py"]
+CMD ["python", "-m", "ReQuest.bot"]

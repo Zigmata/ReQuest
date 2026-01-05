@@ -18,7 +18,14 @@ from ReQuest.utilities.supportFunctions import (
     format_price_string,
     setup_view,
     strip_id,
-    UserFeedbackError
+    UserFeedbackError,
+    get_cached_data,
+    update_cached_data,
+    create_container,
+    rename_container,
+    get_container_name,
+    consume_item_from_container,
+    move_item_between_containers
 )
 
 logger = logging.getLogger(__name__)
@@ -42,27 +49,41 @@ class TradeModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             transaction_id = shortuuid.uuid()[:12]
-            mdb = interaction.client.mdb
-            gdb = interaction.client.gdb
             member_id = interaction.user.id
             target_id = self.target.id
             guild_id = interaction.guild_id
             quantity = float(self.item_quantity_text_input.value)
             item_name = self.item_name_text_input.value
 
-            collection = mdb['characters']
-            member_query = await collection.find_one({'_id': member_id})
+            member_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.mdb,
+                collection_name='characters',
+                query={'_id': member_id}
+            )
+
             member_active_character_id = member_query['activeCharacters'][str(guild_id)]
             member_active_character = member_query['characters'][member_active_character_id]
 
             log_channel = None
-            log_channel_query = await gdb['playerTransactionLogChannel'].find_one({'_id': guild_id})
+            log_channel_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='playerTransactionLogChannel',
+                query={'_id': guild_id}
+            )
             if log_channel_query:
                 log_channel_id = strip_id(log_channel_query['playerTransactionLogChannel'])
                 log_channel = interaction.guild.get_channel(log_channel_id)
 
-            target_query = await collection.find_one({'_id': target_id})
+            target_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.mdb,
+                collection_name='characters',
+                query={'_id': target_id}
+            )
             if not target_query:
                 raise UserFeedbackError('The player you are attempting to trade with has no characters!')
             elif str(guild_id) not in target_query['activeCharacters']:
@@ -72,8 +93,12 @@ class TradeModal(Modal):
             target_active_character_id = target_query['activeCharacters'][str(guild_id)]
             target_active_character = target_query['characters'][target_active_character_id]
 
-            currency_collection = gdb['currency']
-            currency_query = await currency_collection.find_one({'_id': guild_id})
+            currency_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='currency',
+                query={'_id': guild_id}
+            )
 
             is_currency, _ = find_currency_or_denomination(currency_query, item_name)
 
@@ -87,7 +112,7 @@ class TradeModal(Modal):
             )
 
             if is_currency:
-                sender_currency, receiver_currency = await trade_currency(interaction, gdb, item_name, quantity,
+                sender_currency, receiver_currency = await trade_currency(interaction, item_name, quantity,
                                                                           member_id, target_id, guild_id)
                 sender_balance_str = '\n'.join(format_currency_display(sender_currency, currency_query)) or "None"
                 receiver_currency_str = '\n'.join(format_currency_display(receiver_currency, currency_query)) or "None"
@@ -99,7 +124,7 @@ class TradeModal(Modal):
                                       inline=False)
             else:
                 quantity = int(quantity)
-                await trade_item(mdb, item_name, quantity, member_id, target_id, guild_id)
+                await trade_item(interaction.client, item_name, quantity, member_id, target_id, guild_id)
                 trade_embed.add_field(name='Item', value=titlecase(item_name))
                 trade_embed.add_field(name='Quantity', value=quantity)
 
@@ -141,29 +166,38 @@ class CharacterRegisterModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             character_id = str(shortuuid.uuid())
-            collection = interaction.client.mdb['characters']
             member_id = interaction.user.id
             guild_id = interaction.guild_id
             date = datetime.now(timezone.utc)
             character_name = self.name_text_input.value
             character_note = self.note_text_input.value
 
-            await collection.update_one({'_id': member_id},
-                                        {'$set': {f'activeCharacters.{guild_id}': character_id,
-                                                  f'characters.{character_id}': {
-                                                      'name': character_name,
-                                                      'note': character_note,
-                                                      'registeredDate': date,
-                                                      'attributes': {
-                                                          'level': None,
-                                                          'experience': None,
-                                                          'inventory': {},
-                                                          'currency': {}
-                                                      }}}},
-                                        upsert=True)
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.mdb,
+                collection_name='characters',
+                query={'_id': member_id},
+                update_data={'$set': {f'activeCharacters.{guild_id}': character_id,
+                                      f'characters.{character_id}': {
+                                          'name': character_name,
+                                          'note': character_note,
+                                          'registeredDate': date,
+                                          'attributes': {
+                                              'level': None,
+                                              'experience': None,
+                                              'inventory': {},
+                                              'currency': {}
+                                          }}}}
+            )
 
-            inventory_config = await interaction.client.gdb['inventoryConfig'].find_one({'_id': guild_id})
+            inventory_config = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='inventoryConfig',
+                query={'_id': guild_id}
+            )
             inventory_type = inventory_config.get('inventoryType', 'disabled') if inventory_config else 'disabled'
 
             if inventory_type == 'disabled':
@@ -271,12 +305,16 @@ class SpendCurrencyModal(Modal):
             if amount <= 0:
                 raise UserFeedbackError('You must spend a positive amount.')
 
+            bot = interaction.client
             member_id = interaction.user.id
             guild_id = interaction.guild_id
-            mdb = interaction.client.mdb
-            gdb = interaction.client.gdb
 
-            character_query = await mdb['characters'].find_one({'_id': member_id})
+            character_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.mdb,
+                collection_name='characters',
+                query={'_id': member_id}
+            )
             if not character_query or str(guild_id) not in character_query['activeCharacters']:
                 raise UserFeedbackError("You do not have an active character on this server.")
 
@@ -284,7 +322,12 @@ class SpendCurrencyModal(Modal):
             character_data = character_query['characters'][active_character_id]
             current_wallet = character_data['attributes'].get('currency', {})
 
-            currency_config = await gdb['currency'].find_one({'_id': guild_id})
+            currency_config = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='currency',
+                query={'_id': guild_id}
+            )
             if not currency_config:
                 raise UserFeedbackError("A currency configuration was not found for this server.")
 
@@ -294,7 +337,13 @@ class SpendCurrencyModal(Modal):
 
             await update_character_inventory(interaction, member_id, active_character_id, currency_name, -amount)
 
-            updated_query = await mdb['characters'].find_one({'_id': member_id})
+            updated_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.mdb,
+                collection_name='characters',
+                query={'_id': member_id}
+            )
+
             new_wallet = updated_query['characters'][active_character_id]['attributes'].get('currency', {})
 
             formatted_amount = format_price_string(amount, currency_name, currency_config)
@@ -322,7 +371,12 @@ class SpendCurrencyModal(Modal):
             await interaction.response.edit_message(view=self.calling_view)
             receipt = await interaction.followup.send(embed=trade_embed, wait=True)
 
-            log_channel_query = await gdb['playerTransactionLogChannel'].find_one({'_id': guild_id})
+            log_channel_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='playerTransactionLogChannel',
+                query={'_id': guild_id}
+            )
             if log_channel_query:
                 log_channel_id = strip_id(log_channel_query['playerTransactionLogChannel'])
                 log_channel = interaction.guild.get_channel(log_channel_id)
@@ -444,67 +498,127 @@ class WizardEditCartItemModal(Modal):
             await log_exception(e, interaction)
 
 
-class ConsumeItemModal(Modal):
+class CreateContainerModal(Modal):
     def __init__(self, calling_view):
         super().__init__(
-            title='Consume/Destroy Item',
-            timeout=300
-        )
-        self.item_name_text_input = discord.ui.TextInput(
-            label='Item Name',
-            placeholder='Enter the name of the item to consume or destroy.',
-            custom_id='consume_item_name_text_input',
-        )
-        self.item_quantity_text_input = discord.ui.TextInput(
-            label='Quantity',
-            placeholder='Enter the amount to consume or destroy.',
-            custom_id='consume_quantity_text_input',
-            default='1',
-            min_length=1
+            title='Create New Container',
+            timeout=180
         )
         self.calling_view = calling_view
-        self.add_item(self.item_name_text_input)
-        self.add_item(self.item_quantity_text_input)
+        self.name_input = discord.ui.TextInput(
+            label='Container Name',
+            placeholder='Enter a name for your container (e.g., Backpack)',
+            custom_id='container_name_input',
+            max_length=50,
+            required=True
+        )
+        self.add_item(self.name_input)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            item_name = self.item_name_text_input.value.strip()
-            if not self.item_quantity_text_input.value.isdigit():
+            name = self.name_input.value.strip()
+            await create_container(
+                interaction.client,
+                interaction.user.id,
+                self.calling_view.character_id,
+                name
+            )
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RenameContainerModal(Modal):
+    def __init__(self, calling_view, container_id: str, current_name: str):
+        super().__init__(
+            title='Rename Container',
+            timeout=180
+        )
+        self.calling_view = calling_view
+        self.container_id = container_id
+        self.name_input = discord.ui.TextInput(
+            label='New Container Name',
+            placeholder='Enter the new name',
+            custom_id='container_rename_input',
+            default=current_name,
+            max_length=50,
+            required=True
+        )
+        self.add_item(self.name_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            new_name = self.name_input.value.strip()
+            await rename_container(
+                interaction.client,
+                interaction.user.id,
+                self.calling_view.character_id,
+                self.container_id,
+                new_name
+            )
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ConsumeFromContainerModal(Modal):
+    def __init__(self, calling_view, item_name: str, max_quantity: int):
+        super().__init__(
+            title='Consume/Destroy Item',
+            timeout=180
+        )
+        self.calling_view = calling_view
+        self.item_name = item_name
+        self.max_quantity = max_quantity
+
+        self.quantity_input = discord.ui.TextInput(
+            label=f'Quantity (max: {max_quantity})',
+            placeholder='Enter amount to consume/destroy',
+            custom_id='consume_quantity_input',
+            default='1',
+            required=True
+        )
+        self.add_item(self.quantity_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            if not self.quantity_input.value.isdigit():
                 raise UserFeedbackError('Quantity must be a positive integer.')
 
-            quantity = int(self.item_quantity_text_input.value)
+            quantity = int(self.quantity_input.value)
             if quantity < 1:
-                raise UserFeedbackError('Quantity must be a positive integer.')
+                raise UserFeedbackError('Quantity must be at least 1.')
+            if quantity > self.max_quantity:
+                raise UserFeedbackError(f'You only have {self.max_quantity} of this item.')
 
-            user_id = interaction.user.id
-            guild_id = interaction.guild_id
-            mdb = interaction.client.mdb
-            gdb = interaction.client.gdb
+            container_name = get_container_name(
+                self.calling_view.character_data,
+                self.calling_view.container_id
+            )
 
-            character_query = await mdb['characters'].find_one({'_id': user_id})
-            if not character_query or str(guild_id) not in character_query.get('activeCharacters', {}):
-                raise UserFeedbackError("You do not have an active character on this server.")
+            await consume_item_from_container(
+                interaction.client,
+                interaction.user.id,
+                self.calling_view.character_id,
+                self.item_name,
+                quantity,
+                self.calling_view.container_id
+            )
 
-            active_char_id = character_query['activeCharacters'][str(guild_id)]
-            character_data = character_query['characters'][active_char_id]
+            # Clear selection and refresh
+            self.calling_view.selected_item = None
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
 
-            inventory = character_data['attributes'].get('inventory', {})
-            inventory_lower = {k.lower(): v for k, v in inventory.items()}
-
-            current_quantity = inventory_lower.get(item_name.lower(), 0)
-
-            if current_quantity == 0:
-                raise UserFeedbackError(f'You do not have any items matching the name: {item_name}.')
-
-            if quantity > current_quantity:
-                raise UserFeedbackError(f'You only have {current_quantity} of {item_name}.')
-
-            await update_character_inventory(interaction, user_id, active_char_id, item_name, -quantity)
-
+            # Send receipt
             receipt_embed = discord.Embed(
                 title='Item Consumption Report',
-                description=f'Player: {interaction.user.mention} as `{character_data["name"]}`\n'
-                            f'Removed: **{quantity}x {titlecase(item_name)}**',
+                description=f'Player: {interaction.user.mention } as `{self.calling_view.character_data["name"]}`\n'
+                            f'Removed: **{quantity}x {titlecase(self.item_name)}** from **{container_name}**',
                 color=discord.Color.gold(),
                 type='rich'
             )
@@ -514,18 +628,78 @@ class ConsumeItemModal(Modal):
             )
             receipt_embed.set_footer(text=f'Transaction ID: {shortuuid.uuid()[:12]}')
 
-            await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            receipt_message = await interaction.followup.send(embed=receipt_embed, wait=True)
 
-            receipt_msg = await interaction.followup.send(embed=receipt_embed, wait=True)
+            # Log to transaction channel if set
+            bot = interaction.client
+            guild_id = interaction.guild_id
 
-            log_channel_query = await gdb['playerTransactionLogChannel'].find_one({'_id': guild_id})
+            log_channel_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='playerTransactionLogChannel',
+                query={'_id': guild_id}
+            )
             if log_channel_query:
                 log_channel_id = strip_id(log_channel_query['playerTransactionLogChannel'])
                 log_channel = interaction.guild.get_channel(log_channel_id)
                 if log_channel:
                     receipt_embed.add_field(name='Channel', value=interaction.channel.mention)
-                    receipt_embed.add_field(name='Receipt', value=receipt_msg.jump_url)
+                    receipt_embed.add_field(name='Receipt', value=receipt_message.jump_url)
                     await log_channel.send(embed=receipt_embed)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class MoveItemQuantityModal(Modal):
+    def __init__(self, calling_view, item_name: str, max_quantity: int):
+        super().__init__(
+            title='Move Item',
+            timeout=180
+        )
+        self.calling_view = calling_view
+        self.item_name = item_name
+        self.max_quantity = max_quantity
+
+        self.quantity_input = discord.ui.TextInput(
+            label=f'Quantity to move (max: {max_quantity})',
+            placeholder='Enter amount to move',
+            custom_id='move_quantity_input',
+            default=str(max_quantity),
+            required=True
+        )
+        self.add_item(self.quantity_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            if not self.quantity_input.value.isdigit():
+                raise UserFeedbackError('Quantity must be a positive integer.')
+
+            quantity = int(self.quantity_input.value)
+            if quantity < 1:
+                raise UserFeedbackError('Quantity must be at least 1.')
+            if quantity > self.max_quantity:
+                raise UserFeedbackError(f'You only have {self.max_quantity} of this item.')
+
+            await move_item_between_containers(
+                interaction.client,
+                interaction.user.id,
+                self.calling_view.source_view.character_id,
+                self.item_name,
+                quantity,
+                self.calling_view.source_container_id,
+                self.calling_view.selected_destination
+            )
+
+            # Return to the source container view
+            from ReQuest.ui.player.views import ContainerItemsView
+            view = ContainerItemsView(
+                self.calling_view.source_view.character_id,
+                self.calling_view.source_view.character_data,
+                self.calling_view.source_container_id
+            )
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
+
         except Exception as e:
             await log_exception(e, interaction)

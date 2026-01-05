@@ -6,10 +6,18 @@ import discord
 from discord import ButtonStyle
 from discord.ui import Button
 
-from ReQuest.ui.config import modals, enums
+from ReQuest.ui.config import modals
 from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.common.buttons import BaseViewButton
-from ReQuest.utilities.supportFunctions import log_exception, setup_view
+from ReQuest.utilities.supportFunctions import (
+    log_exception,
+    setup_view,
+    get_cached_data,
+    delete_cached_data,
+    update_cached_data,
+    get_xp_config,
+    remove_item_stock_limit
+)
 
 logger = logging.getLogger(__name__)
 
@@ -25,10 +33,13 @@ class QuestAnnounceRoleRemoveButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            collection = interaction.client.gdb['announceRole']
-            query = await collection.find_one({'_id': interaction.guild_id})
-            if query:
-                await collection.delete_one({'_id': interaction.guild_id})
+            bot = interaction.client
+            await delete_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='announceRole',
+                search_filter={'_id': interaction.guild_id}
+            )
 
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
@@ -70,10 +81,13 @@ class RemoveGMRoleButton(Button):
 
     async def _confirm_delete(self, interaction: discord.Interaction):
         try:
-            collection = interaction.client.gdb['gmRoles']
-            await collection.update_one(
-                {'_id': interaction.guild_id},
-                {'$pull': {'gmRoles': {'name': self.role_name}}}
+            bot = interaction.client
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='gmRoles',
+                query={'_id': interaction.guild_id},
+                update_data={'$pull': {'gmRoles': {'name': self.role_name}}}
             )
 
             await setup_view(self.calling_view, interaction)
@@ -93,16 +107,41 @@ class QuestSummaryToggleButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             guild_id = interaction.guild_id
-            collection = interaction.client.gdb['questSummary']
-            query = await collection.find_one({'_id': guild_id})
+
+            query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='questSummary',
+                query={'_id': guild_id}
+            )
+
             if not query:
-                await collection.insert_one({'_id': guild_id, 'questSummary': True})
+                await update_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name='questSummary',
+                    query={'_id': guild_id},
+                    update_data={'$set': {'questSummary': True}}
+                )
             else:
                 if query['questSummary']:
-                    await collection.update_one({'_id': guild_id}, {'$set': {'questSummary': False}})
+                    await update_cached_data(
+                        bot=bot,
+                        mongo_database=bot.gdb,
+                        collection_name='questSummary',
+                        query={'_id': guild_id},
+                        update_data={'$set': {'questSummary': False}}
+                    )
                 else:
-                    await collection.update_one({'_id': guild_id}, {'$set': {'questSummary': True}})
+                    await update_cached_data(
+                        bot=bot,
+                        mongo_database=bot.gdb,
+                        collection_name='questSummary',
+                        query={'_id': guild_id},
+                        update_data={'$set': {'questSummary': True}}
+                    )
 
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
@@ -121,16 +160,31 @@ class PlayerExperienceToggleButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             guild_id = interaction.guild_id
-            collection = interaction.client.gdb['playerExperience']
-            query = await collection.find_one({'_id': guild_id})
+            query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='playerExperience',
+                query={'_id': guild_id}
+            )
             xp_state = query['playerExperience'] if query else True
             if xp_state:
-                await collection.update_one({'_id': guild_id}, {'$set': {'playerExperience': False}},
-                                            upsert=True)
+                await update_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name='playerExperience',
+                    query={'_id': guild_id},
+                    update_data={'$set': {'playerExperience': False}}
+                )
             else:
-                await collection.update_one({'_id': guild_id}, {'$set': {'playerExperience': True}},
-                                            upsert=True)
+                await update_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name='playerExperience',
+                    query={'_id': guild_id},
+                    update_data={'$set': {'playerExperience': True}}
+                )
 
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
@@ -149,15 +203,18 @@ class ToggleDoubleButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             view = self.calling_view
             currency_name = view.currency_name
-            collection = interaction.client.gdb['currency']
 
             new_value = not view.currency_data.get('isDouble', False)
 
-            await collection.update_one(
-                {'_id': interaction.guild_id, 'currencies.name': currency_name},
-                {'$set': {'currencies.$.isDouble': new_value}}
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='currency',
+                query={'_id': interaction.guild_id, 'currencies.name': currency_name},
+                update_data={'$set': {'currencies.$.isDouble': new_value}}
             )
 
             await setup_view(view, interaction)
@@ -210,13 +267,16 @@ class RemoveDenominationButton(Button):
 
     async def _confirm_delete(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             currency_name = self.calling_view.currency_name
             denomination_name = self.denomination_name
 
-            currency_collection = interaction.client.gdb['currency']
-            await currency_collection.update_one(
-                {'_id': interaction.guild_id, 'currencies.name': currency_name},
-                {'$pull': {f'currencies.$.denominations': {'name': denomination_name}}}
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='currency',
+                query={'_id': interaction.guild_id, 'currencies.name': currency_name},
+                update_data={'$pull': {f'currencies.$.denominations': {'name': denomination_name}}}
             )
 
             await setup_view(self.calling_view, interaction)
@@ -284,12 +344,15 @@ class RemoveCurrencyButton(Button):
 
     async def _confirm_delete(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             currency_name = self.currency_name
-            collection = interaction.client.gdb['currency']
 
-            await collection.update_one(
-                {'_id': interaction.guild_id},
-                {'$pull': {'currencies': {'name': currency_name}}}
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='currency',
+                query={'_id': interaction.guild_id},
+                update_data={'$pull': {'currencies': {'name': currency_name}}}
             )
 
             from ReQuest.ui.config.views import ConfigCurrencyView
@@ -301,32 +364,25 @@ class RemoveCurrencyButton(Button):
 
 
 class ClearChannelButton(Button):
-    def __init__(self, calling_view, channel_type: enums.ChannelType):
+    def __init__(self, calling_view, collection_name):
         super().__init__(
             label='Clear',
             style=ButtonStyle.danger,
-            custom_id=f'clear_{channel_type.value}_channel_button'
+            custom_id=f'clear_{collection_name}_channel_button'
         )
         self.calling_view = calling_view
-        self.channel_type = channel_type
+        self.collection_name = collection_name
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             view = self.calling_view
-            if self.channel_type == enums.ChannelType.QUEST_BOARD:
-                await interaction.client.gdb['questChannel'].delete_one({'_id': interaction.guild_id})
-            elif self.channel_type == enums.ChannelType.PLAYER_BOARD:
-                await interaction.client.gdb['playerBoardChannel'].delete_one({'_id': interaction.guild_id})
-            elif self.channel_type == enums.ChannelType.QUEST_ARCHIVE:
-                await interaction.client.gdb['archiveChannel'].delete_one({'_id': interaction.guild_id})
-            elif self.channel_type == enums.ChannelType.GM_TRANSACTION_LOG:
-                await interaction.client.gdb['gmTransactionLogChannel'].delete_one({'_id': interaction.guild_id})
-            elif self.channel_type == enums.ChannelType.PLAYER_TRANSACTION_LOG:
-                await interaction.client.gdb['playerTransactionLogChannel'].delete_one({'_id': interaction.guild_id})
-            elif self.channel_type == enums.ChannelType.SHOP_LOG:
-                await interaction.client.gdb['shopLogChannel'].delete_one({'_id': interaction.guild_id})
-            elif self.channel_type == enums.ChannelType.APPROVAL_QUEUE:
-                await interaction.client.gdb['approvalQueueChannel'].delete_one({'_id': interaction.guild_id})
+            await delete_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=self.collection_name,
+                search_filter={'_id': interaction.guild_id}
+            )
             await setup_view(view, interaction)
             await interaction.response.edit_message(view=view)
         except Exception as e:
@@ -343,9 +399,14 @@ class ForbiddenRolesButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             current_roles = []
-            config_collection = interaction.client.gdb['forbiddenRoles']
-            config_query = await config_collection.find_one({'_id': interaction.guild_id})
+            config_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='forbiddenRoles',
+                query={'_id': interaction.guild_id}
+            )
             if config_query and config_query['forbiddenRoles']:
                 current_roles = config_query['forbiddenRoles']
             modal = modals.ForbiddenRolesModal(current_roles)
@@ -450,21 +511,24 @@ class EditShopButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            collection = interaction.client.gdb['shops']
-            query = await collection.find_one({'_id': interaction.guild_id})
+            bot = interaction.client
+            query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='shops',
+                query={'_id': interaction.guild_id}
+            )
             shop_data = query.get('shopChannels', {}).get(self.calling_view.selected_channel_id)
 
             if not shop_data:
-                await interaction.response.send_message("Error: Could not find that shop's data.", ephemeral=True)
+                await interaction.response.send_message('Error: Could not find that shop\'s data.', ephemeral=True)
                 return
 
             from ReQuest.ui.config.views import EditShopView
 
             view = EditShopView(self.calling_view.selected_channel_id, shop_data)
-            view.build_view()
-
+            await setup_view(view, interaction)
             await interaction.response.edit_message(view=view)
-
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -494,13 +558,16 @@ class RemoveShopButton(Button):
         try:
             view = self.calling_view
 
+            bot = interaction.client
             guild_id = interaction.guild_id
-            collection = interaction.client.gdb['shops']
             channel_id = view.selected_channel_id
 
-            await collection.update_one(
-                {'_id': guild_id},
-                {'$unset': {f'shopChannels.{channel_id}': ''}}
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='shops',
+                query={'_id': guild_id},
+                update_data={'$unset': {f'shopChannels.{channel_id}': ''}}
             )
 
             from ReQuest.ui.config.views import ConfigShopsView
@@ -544,14 +611,17 @@ class DeleteShopItemButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             guild_id = interaction.guild_id
-            collection = interaction.client.gdb['shops']
             channel_id = self.calling_view.channel_id
             item_name = self.item['name']
 
-            await collection.update_one(
-                {'_id': guild_id},
-                {'$pull': {f'shopChannels.{channel_id}.shopStock': {'name': item_name}}}
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='shops',
+                query={'_id': guild_id},
+                update_data={'$pull': {f'shopChannels.{channel_id}.shopStock': {'name': item_name}}}
             )
 
             new_stock = [item for item in self.calling_view.all_stock if item['name'] != item_name]
@@ -611,11 +681,16 @@ class DownloadShopJSONButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             guild_id = interaction.guild_id
             channel_id = self.calling_view.selected_channel_id
 
-            collection = interaction.client.gdb['shops']
-            query = await collection.find_one({'_id': guild_id})
+            query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='shops',
+                query={'_id': guild_id}
+            )
             shop_data = query.get('shopChannels', {}).get(channel_id)
 
             if not shop_data:
@@ -685,7 +760,8 @@ class AddNewCharacterShopItemButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            await interaction.response.send_modal(modals.NewCharacterShopItemModal(self.calling_view))
+            item_modal = modals.NewCharacterShopItemModal(self.calling_view, self.calling_view.inventory_type)
+            await interaction.response.send_modal(item_modal)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -702,7 +778,9 @@ class EditNewCharacterShopItemButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            await interaction.response.send_modal(modals.NewCharacterShopItemModal(self.calling_view, self.item))
+            view = self.calling_view
+            item_modal = modals.NewCharacterShopItemModal(view, view.inventory_type, self.item)
+            await interaction.response.send_modal(item_modal)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -719,13 +797,16 @@ class DeleteNewCharacterShopItemButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             guild_id = interaction.guild_id
-            collection = interaction.client.gdb['newCharacterShop']
             item_name = self.item['name']
 
-            await collection.update_one(
-                {'_id': guild_id},
-                {'$pull': {'shopStock': {'name': item_name}}}
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='newCharacterShop',
+                query={'_id': guild_id},
+                update_data={'$pull': {'shopStock': {'name': item_name}}}
             )
 
             new_stock = [item for item in self.calling_view.all_stock if item['name'] != item_name]
@@ -765,9 +846,15 @@ class DownloadNewCharacterShopJSONButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             guild_id = interaction.guild_id
-            collection = interaction.client.gdb['newCharacterShop']
-            query = await collection.find_one({'_id': guild_id})
+
+            query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='newCharacterShop',
+                query={'_id': guild_id}
+            )
 
             shop_data = {'shopStock': query.get('shopStock', []) if query else []}
 
@@ -838,7 +925,13 @@ class EditStaticKitButton(Button):
 
             currency_config = getattr(self.view, 'currency_config', None)
             if not currency_config:
-                currency_config = await interaction.client.gdb['currency'].find_one({'_id': interaction.guild_id})
+                bot = interaction.client
+                currency_config = await get_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name='currency',
+                    query={'_id': interaction.guild_id}
+                )
 
             edit_view = EditStaticKitView(self.kit_id, self.kit_data, currency_config)
             await interaction.response.edit_message(view=edit_view)
@@ -870,10 +963,14 @@ class RemoveStaticKitButton(Button):
 
     async def _confirm_delete(self, interaction: discord.Interaction):
         try:
-            collection = interaction.client.gdb['staticKits']
-            await collection.update_one(
-                {'_id': interaction.guild_id},
-                {'$unset': {f'kits.{self.kit_id}': ''}}
+            bot = interaction.client
+
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='staticKits',
+                query={'_id': interaction.guild_id},
+                update_data={'$unset': {f'kits.{self.kit_id}': ''}}
             )
 
             from ReQuest.ui.config.views import ConfigStaticKitsView
@@ -932,18 +1029,26 @@ class DeleteKitItemButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             kit_id = self.calling_view.kit_id
-            collection = interaction.client.gdb['staticKits']
 
-            query = await collection.find_one({'_id': interaction.guild_id})
+            query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='staticKits',
+                query={'_id': interaction.guild_id}
+            )
             items = query['kits'][kit_id].get('items', [])
 
             if 0 <= self.index < len(items):
                 del items[self.index]
 
-            await collection.update_one(
-                {'_id': interaction.guild_id},
-                {'$set': {f'kits.{kit_id}.items': items}}
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='staticKits',
+                query={'_id': interaction.guild_id},
+                update_data={'$set': {f'kits.{kit_id}.items': items}}
             )
 
             self.calling_view.kit_data['items'] = items
@@ -982,12 +1087,15 @@ class DeleteKitCurrencyButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            bot = interaction.client
             kit_id = self.calling_view.kit_id
-            collection = interaction.client.gdb['staticKits']
 
-            await collection.update_one(
-                {'_id': interaction.guild_id},
-                {'$unset': {f'kits.{kit_id}.currency.{self.currency_name}': ''}}
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='staticKits',
+                query={'_id': interaction.guild_id},
+                update_data={'$unset': {f'kits.{kit_id}.currency.{self.currency_name}': ''}}
             )
 
             if self.currency_name in self.calling_view.kit_data.get('currency', {}):
@@ -995,5 +1103,246 @@ class DeleteKitCurrencyButton(Button):
 
             self.calling_view.build_view()
             await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RoleplayToggleEnableButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Toggle RP Rewards',
+            custom_id='rp_toggle_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            current_state = self.calling_view.config.get('enabled', False)
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='roleplayConfig',
+                query={'_id': interaction.guild_id},
+                update_data={'$set': {'enabled': not current_state}}
+            )
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RoleplayClearChannelsButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Clear Channels',
+            style=ButtonStyle.danger,
+            custom_id='rp_clear_channels_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='roleplayConfig',
+                query={'_id': interaction.guild_id},
+                update_data={'$set': {'channels': []}}
+            )
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RoleplaySettingsButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Edit Settings',
+            style=ButtonStyle.primary,
+            custom_id='rp_settings_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.send_modal(modals.RoleplaySettingsModal(self.calling_view))
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RoleplayRewardsButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Configure Rewards',
+            style=ButtonStyle.primary,
+            custom_id='rp_rewards_button')
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            xp_enabled = await get_xp_config(interaction.client, interaction.guild_id)
+            rp_modal = modals.RoleplayRewardsModal(self.calling_view, xp_enabled)
+            await interaction.response.send_modal(rp_modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ConfigStockLimitsButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Stock Limits',
+            style=ButtonStyle.secondary,
+            custom_id='config_stock_limits_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            from ReQuest.ui.config.views import ConfigStockLimitsView
+
+            view = ConfigStockLimitsView(
+                self.calling_view.channel_id,
+                self.calling_view.shop_data
+            )
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class SetItemStockButton(Button):
+    def __init__(self, item: dict, calling_view, current_stock: int | None = None):
+        # Determine label based on whether limit exists
+        has_limit = item.get('maxStock') is not None
+        label = 'Edit Limit' if has_limit else 'Set Limit'
+
+        super().__init__(
+            label=label,
+            style=ButtonStyle.primary,
+            custom_id=f"set_stock_{item['name']}"
+        )
+        self.item = item
+        self.calling_view = calling_view
+        self.current_stock = current_stock
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            modal = modals.SetItemStockModal(
+                calling_view=self.calling_view,
+                item_name=self.item['name'],
+                current_max=self.item.get('maxStock'),
+                current_stock=self.current_stock
+            )
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RemoveItemStockLimitButton(Button):
+    def __init__(self, item: dict, calling_view):
+        super().__init__(
+            label='Remove Limit',
+            style=ButtonStyle.danger,
+            custom_id=f"remove_stock_limit_{item['name']}"
+        )
+        self.item = item
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            confirm_modal = common_modals.ConfirmModal(
+                title='Confirm Remove Stock Limit',
+                prompt_label='Type CONFIRM to remove the stock limit',
+                prompt_placeholder='Type CONFIRM',
+                confirm_callback=self._confirm_callback
+            )
+            await interaction.response.send_modal(confirm_modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def _confirm_callback(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            guild_id = interaction.guild_id
+            channel_id = self.calling_view.channel_id
+            item_name = self.item['name']
+
+            # Update shop config to remove maxStock from item
+            shop_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='shops',
+                query={'_id': guild_id}
+            )
+            shop_data = shop_query.get('shopChannels', {}).get(channel_id, {})
+            shop_stock = shop_data.get('shopStock', [])
+
+            # Find and update the item
+            for item in shop_stock:
+                if item.get('name') == item_name:
+                    if 'maxStock' in item:
+                        del item['maxStock']
+                    break
+
+            # Save shop config
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='shops',
+                query={'_id': guild_id},
+                update_data={'$set': {f'shopChannels.{channel_id}': shop_data}}
+            )
+
+            # Remove from runtime stock tracking
+            await remove_item_stock_limit(bot, guild_id, channel_id, item_name)
+
+            # Refresh the view
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RestockScheduleButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Configure Restock Schedule',
+            style=ButtonStyle.primary,
+            custom_id='restock_schedule_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            current_config = self.calling_view.shop_data.get('restockConfig')
+            modal = modals.RestockScheduleModal(
+                calling_view=self.calling_view,
+                current_config=current_config
+            )
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class BackToEditShopButton(Button):
+    def __init__(self, channel_id: str, shop_data: dict):
+        super().__init__(
+            label='Back to Shop Editor',
+            style=ButtonStyle.secondary,
+            custom_id='back_to_edit_shop_button'
+        )
+        self.channel_id = channel_id
+        self.shop_data = shop_data
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            from ReQuest.ui.config.views import EditShopView
+
+            view = EditShopView(self.channel_id, self.shop_data)
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)

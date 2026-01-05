@@ -15,7 +15,7 @@ class Info(Cog):
         """
         Get a quick reply from the bot to see if it is online.
         """
-        await interaction.response.send_message('**Pong!**\n{0}ms'.format(round(self.bot.latency * 1000), 1),
+        await interaction.response.send_message('**Pong!**\n{0}ms'.format(round(self.bot.latency * 1000)),
                                                 ephemeral=True)
 
     @app_commands.command(name='invite')
@@ -58,7 +58,8 @@ class Info(Cog):
                 '- `/gm`: All Game Master functions. Requires a GM role to be configured for the server.\n'
                 '- `/shop`: View and purchase items from the current channel\'s shop (if configured).\n\n'
                 'The following commands are context-menus. To access them on the desktop client, right-click a user\'s '
-                'name and choose "Apps". On mobile, view a user\'s profile and select "Apps" from the upper-right menu.\n\n'
+                'name and choose "Apps". On mobile, view a user\'s profile and select "Apps" from the upper-right '
+                'menu.\n\n'
                 '- Trade: Give items or currency to another player.\n'
                 '- View Player (GM-only): View another player\'s active character inventory.\n'
                 '- Modify Player (GM-only): Modify another player\'s active character inventory or experience.\n'

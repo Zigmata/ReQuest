@@ -4,7 +4,7 @@ import discord
 import discord.ui
 from discord.ui import Modal
 
-from ReQuest.utilities.supportFunctions import log_exception
+from ReQuest.utilities.supportFunctions import log_exception, update_cached_data
 
 logger = logging.getLogger(__name__)
 
@@ -33,11 +33,16 @@ class AllowServerModal(Modal):
         try:
             input_name = self.allow_server_name_input.value
             guild_id = int(self.allow_server_id_input.value)
-            collection = interaction.client.cdb['serverAllowlist']
+            bot = interaction.client
 
-            await collection.update_one({'servers': {'$exists': True}},
-                                        {'$push': {'servers': {'name': input_name, 'id': guild_id}}},
-                                        upsert=True)
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.cdb,
+                collection_name='serverAllowlist',
+                query={'servers': {'$exists': True}},
+                update_data={'$push': {'servers': {'name': input_name, 'id': guild_id}}},
+                cache_id=f'{guild_id}'
+            )
 
             interaction.client.allow_list.append(guild_id)
 

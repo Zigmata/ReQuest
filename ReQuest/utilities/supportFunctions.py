@@ -1,14 +1,15 @@
-import datetime
 import inspect
+import json
 import logging
 import re
 import traceback
 from typing import Tuple
 
+import discord
+import shortuuid
 from discord import app_commands
 from titlecase import titlecase
-
-import discord
+from datetime import datetime, timezone, timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -20,25 +21,207 @@ class UserFeedbackError(Exception):
     pass
 
 
-# Deletes command invocations
-async def attempt_delete(message):
+def build_cache_key(database_name, identifier, collection_name):
+    return f'{database_name}:{identifier}:{collection_name}'
+
+
+async def get_cached_data(bot, mongo_database, collection_name, query, is_single=True, cache_id=None):
+    """
+    Fetches a document from mongodb using redis caching.
+
+    :param bot: the discord bot instance
+    :param mongo_database: the mongodb database instance
+    :param collection_name: the mongodb collection name
+    :param query: mongodb dict query
+    :param is_single: whether to fetch a single document or return a list of documents
+    :param cache_id: optional identifier for redis caching; if not provided, uses the '_id' from the query
+
+    :return: the fetched document(s) or None if not found
+    """
+    if cache_id is None:
+        if '_id' in query:
+            cache_id = query['_id']
+        else:
+            raise ValueError('cache_id must be provided if "_id" is not in the query.')
+
+    cache_key = build_cache_key(mongo_database.name, cache_id, collection_name)
+
+    try:
+        cached = await bot.rdb.get(cache_key)
+        if cached:
+            return json.loads(cached)
+    except Exception as e:
+        logger.error(f"Redis read failed: {e}")
+        await log_exception(e)
+
+    try:
+        if is_single:
+            data = await mongo_database[collection_name].find_one(query)
+
+            if data:
+                try:
+                    await bot.rdb.set(cache_key, json.dumps(data, default=str), ex=3600)
+                except Exception as e:
+                    logger.error(f"Redis write failed: {e}")
+        else:
+            cursor = mongo_database[collection_name].find(query)
+            data = await cursor.to_list(length=None)
+
+            if data:
+                try:
+                    await bot.rdb.set(cache_key, json.dumps(data, default=str), ex=3600)
+                except Exception as e:
+                    logger.error(f"Redis write failed: {e}")
+
+        return data
+    except Exception as e:
+        await log_exception(e)
+        return None
+
+
+async def update_cached_data(bot, mongo_database, collection_name, query, update_data,
+                             is_single: bool = True, cache_id=None):
+    """
+    Updates mongodb and deletes the corresponding key from redis
+
+    :param bot: the discord bot instance
+    :param mongo_database: the mongodb database instance
+    :param collection_name: the mongodb collection name
+    :param query: mongodb dict query
+    :param update_data: the update dict for mongo
+    :param is_single: whether to update a single document or multiple
+    :param cache_id: identifier for redis; if not provided, uses the '_id' from the query
+    """
+    if cache_id is None:
+        if '_id' in query:
+            cache_id = query['_id']
+        else:
+            raise ValueError('cache_id must be provided if "_id" is not in the query.')
+
+    cache_key = build_cache_key(mongo_database.name, cache_id, collection_name)
+
+    try:
+        mongo_collection = mongo_database[collection_name]
+        if is_single:
+            await mongo_collection.update_one(
+                query,
+                update_data,
+                upsert=True
+            )
+        else:
+            await mongo_collection.update_many(
+                query,
+                update_data,
+                upsert=True
+            )
+    except Exception as e:
+        raise Exception(f'Error updating config in database: {e}') from e
+
+    try:
+        await bot.rdb.delete(cache_key)
+    except Exception as e:
+        logger.error(f"Redis delete failed: {e}")
+
+
+async def replace_cached_data(bot, mongo_database, collection_name, query, new_data, cache_id=None):
+    """
+    Replaces a document in mongodb and deletes the corresponding key from redis
+
+    :param bot: the discord bot instance
+    :param mongo_database: the mongodb database instance
+    :param collection_name: the mongodb collection name
+    :param query: mongodb dict query
+    :param new_data: the new document data to replace with
+    :param cache_id: identifier for redis; if not provided, uses the '_id' from the query
+    """
+    if cache_id is None:
+        if '_id' in query:
+            cache_id = query['_id']
+        else:
+            raise ValueError('cache_id must be provided if "_id" is not in the query.')
+
+    cache_key = build_cache_key(mongo_database.name, cache_id, collection_name)
+
+    try:
+        mongo_collection = mongo_database[collection_name]
+        await mongo_collection.replace_one(
+            query,
+            new_data,
+            upsert=True
+        )
+    except Exception as e:
+        raise Exception(f'Error replacing config in database: {e}') from e
+
+    try:
+        await bot.rdb.delete(cache_key)
+    except Exception as e:
+        logger.error(f"Redis delete failed: {e}")
+
+
+async def delete_cached_data(bot, mongo_database, collection_name, search_filter,
+                             is_single: bool = True, cache_id=None):
+    """
+    Deletes documents from mongodb and deletes the corresponding keys from redis
+
+    :param bot: the discord bot instance
+    :param mongo_database: the mongodb database instance
+    :param collection_name: the mongodb collection name
+    :param search_filter: dict for the delete filter
+    :param is_single: whether to delete a single document or multiple
+    :param cache_id: identifier for redis; if not provided, uses the '_id' from the query
+    """
+    if cache_id is None:
+        if '_id' in search_filter:
+            cache_id = search_filter['_id']
+        else:
+            raise ValueError('cache_id must be provided if "_id" is not in the query.')
+
+    cache_key = build_cache_key(mongo_database.name, cache_id, collection_name)
+
+    try:
+        mongo_collection = mongo_database[collection_name]
+        if is_single:
+            await mongo_collection.delete_one(search_filter)
+        else:
+            await mongo_collection.delete_many(search_filter)
+    except Exception as e:
+        raise Exception(f'Error deleting config in database: {e}') from e
+
+    try:
+        await bot.rdb.delete(cache_key)
+    except Exception as e:
+        logger.error(f"Redis delete failed: {e}")
+
+
+async def attempt_delete(message: discord.Message | discord.PartialMessage):
+    """
+    Attempts to delete a message
+    """
     try:
         await message.delete()
     except discord.HTTPException as e:
         logger.error(f'HTTPException while deleting message: {e}')
-        logger.info('Failed to delete message.')
     except Exception as e:
         logger.error(f'Unexpected error while deleting message: {e}')
-        logger.info('An unexpected error occurred while trying to delete the message.')
 
 
-def strip_id(mention) -> int:
+def strip_id(mention: str) -> int:
+    """
+    Strips a mention string to extract the ID as an integer.
+
+    :param mention: The mention string (e.g., '<@!123456789012345678>')
+
+    :return: The extracted ID as an integer
+    """
     stripped_mention = re.sub(r'[<>#!@&]', '', mention)
     parsed_id = int(stripped_mention)
     return parsed_id
 
 
 async def log_exception(exception, interaction=None):
+    """
+    Logs an exception and sends a user-friendly message if interaction is provided.
+    """
     report_string = (
         f'An exception occurred:\n\n'
         f'```{str(exception)}```\n'
@@ -73,7 +256,6 @@ async def log_exception(exception, interaction=None):
                 logger.error(f'Failed to handle user feedback in log_exception: {e}')
         return
 
-
     logger.error(f'{type(exception).__name__}: {exception}')
     logger.error(traceback.format_exc())
     if interaction:
@@ -93,7 +275,17 @@ async def log_exception(exception, interaction=None):
             logger.error(f'Failed to handle exception in log_exception: {e}')
 
 
-def find_currency_or_denomination(currency_def_query, search_name):
+def find_currency_or_denomination(currency_def_query, search_name) -> Tuple[str | None, str | None]:
+    """
+    Finds a currency or denomination by name in the currency definition.
+
+    :param currency_def_query: The server's currency definition dict
+    :param search_name: The name of the currency or denomination to search for
+
+    :return: A tuple containing:
+                - The found currency or denomination name, or None if not found
+                - The parent currency name, or None if not found
+    """
     if not currency_def_query:
         return None, None
     search_name = search_name.lower()
@@ -115,6 +307,11 @@ def format_currency_display(player_currency: dict, currency_config: dict) -> lis
     """
     Formats currency into a list of strings based on the server's currency configuration
     (double vs integer).
+
+    :param player_currency: The player's currency dict
+    :param currency_config: The server's currency config dict
+
+    :return: A list of formatted currency strings
     """
     if not player_currency or not currency_config or 'currencies' not in currency_config:
         return []
@@ -161,16 +358,33 @@ def format_currency_display(player_currency: dict, currency_config: dict) -> lis
     return output_lines
 
 
-async def trade_currency(interaction, gdb, currency_name, amount, sending_member_id, receiving_member_id,
+async def trade_currency(interaction, currency_name, amount, sending_member_id, receiving_member_id,
                          guild_id):
+    bot = interaction.client
     currency_name = currency_name.lower()
-    collection = interaction.client.mdb['characters']
-    sender_data = await collection.find_one({'_id': sending_member_id})
+    sender_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': sending_member_id}
+    )
+    receiver_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': receiving_member_id}
+    )
     sender_character_id = sender_data['activeCharacters'][str(guild_id)]
     sender_currency = sender_data['characters'][sender_character_id]['attributes'].get('currency', {})
+    receiver_character_id = receiver_data['activeCharacters'][str(guild_id)]
 
-    currency_collection = gdb['currency']
-    currency_config = await currency_collection.find_one({'_id': guild_id})
+    currency_config = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='currency',
+        query={'_id': guild_id}
+    )
+
     if not currency_config:
         raise Exception('Currency definition not found')
 
@@ -179,32 +393,47 @@ async def trade_currency(interaction, gdb, currency_name, amount, sending_member
         raise UserFeedbackError(f'The transaction cannot be completed:\n{message}')
 
     await update_character_inventory(interaction, sending_member_id, sender_character_id, currency_name, -amount)
-    receiver_data = await collection.find_one({'_id': receiving_member_id})
-    receiver_character_id = receiver_data['activeCharacters'][str(guild_id)]
     await update_character_inventory(interaction, receiving_member_id, receiver_character_id, currency_name, amount)
 
-    sender_data = await collection.find_one({'_id': sending_member_id})
-    sender_currency_db = sender_data['characters'][sender_character_id]['attributes'].get('currency', {})
+    updated_sender_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': sending_member_id}
+    )
+    updated_receiver_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': receiving_member_id}
+    )
+    updated_sender_currency = updated_sender_data['characters'][sender_character_id]['attributes'].get('currency')
+    updated_receiver_currency = updated_receiver_data['characters'][receiver_character_id]['attributes'].get('currency')
 
-    receiver_data = await collection.find_one({'_id': receiving_member_id})
-    receiver_currency_db = receiver_data['characters'][receiver_character_id]['attributes'].get('currency', {})
-
-    return sender_currency_db, receiver_currency_db
+    return updated_sender_currency, updated_receiver_currency
 
 
-async def trade_item(mdb, item_name, quantity, sending_member_id, receiving_member_id, guild_id):
-    collection = mdb['characters']
-
+async def trade_item(bot, item_name, quantity, sending_member_id, receiving_member_id, guild_id):
     # Normalize the item name for consistent storage and comparison
     normalized_item_name = item_name.lower()
 
     # Fetch sending character
-    sender_data = await collection.find_one({'_id': sending_member_id})
+    sender_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': sending_member_id}
+    )
     sender_character_id = sender_data['activeCharacters'][str(guild_id)]
     sender_character = sender_data['characters'][sender_character_id]
 
     # Fetch receiving character
-    receiver_data = await collection.find_one({'_id': receiving_member_id})
+    receiver_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': receiving_member_id}
+    )
     receiver_character_id = receiver_data['activeCharacters'][str(guild_id)]
     receiver_character = receiver_data['characters'][receiver_character_id]
 
@@ -227,29 +456,50 @@ async def trade_item(mdb, item_name, quantity, sending_member_id, receiving_memb
     sender_character['attributes']['inventory'] = {titlecase(k): v for k, v in sender_inventory.items()}
     receiver_character['attributes']['inventory'] = {titlecase(k): v for k, v in receiver_inventory.items()}
 
-    await collection.update_one(
-        {'_id': sending_member_id, f'characters.{sender_character_id}.attributes.inventory': {'$exists': True}},
-        {'$set': {
-            f'characters.{sender_character_id}.attributes.inventory': sender_character['attributes']['inventory']}}
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': sending_member_id, f'characters.{sender_character_id}.attributes.inventory': {'$exists': True}},
+        update_data={'$set': {f'characters.{sender_character_id}.attributes.inventory':
+                              sender_character['attributes']['inventory']}}
     )
-    await collection.update_one(
-        {'_id': receiving_member_id, f'characters.{receiver_character_id}.attributes.inventory': {'$exists': True}},
-        {'$set': {
-            f'characters.{receiver_character_id}.attributes.inventory': receiver_character['attributes']['inventory']}}
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': receiving_member_id,
+               f'characters.{receiver_character_id}.attributes.inventory': {'$exists': True}},
+        update_data={'$set': {f'characters.{receiver_character_id}.attributes.inventory':
+                              receiver_character['attributes']['inventory']}}
     )
 
 
 async def update_character_inventory(interaction: discord.Interaction, player_id: int, character_id: str,
                                      item_name: str, quantity: float):
     try:
+        bot = interaction.client
         normalized_item_name = item_name.lower()
 
-        character_collection = interaction.client.mdb['characters']
-        player_data = await character_collection.find_one({'_id': player_id})
-        character_data = player_data['characters'].get(character_id)
+        player_data = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.mdb,
+            collection_name='characters',
+            query={'_id': player_id}
+        )
+        if not player_data:
+            raise UserFeedbackError('Player data not found.')
 
-        currency_collection = interaction.client.gdb['currency']
-        currency_query = await currency_collection.find_one({'_id': interaction.guild_id})
+        character_data = player_data['characters'].get(character_id)
+        if not character_data:
+            raise UserFeedbackError('Character data not found.')
+
+        currency_query = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name='currency',
+            query={'_id': interaction.guild_id}
+        )
 
         is_currency, currency_parent_name = None, None
         if currency_query:
@@ -299,11 +549,13 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
 
             character_currency_db = {titlecase(k): v for k, v in final_wallet.items() if v > 0}
 
-            await character_collection.update_one(
-                {'_id': player_id},
-                {'$set': {f'characters.{character_id}.attributes.currency': character_currency_db}}
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.mdb,
+                collection_name='characters',
+                query={'_id': player_id},
+                update_data={'$set': {f'characters.{character_id}.attributes.currency': character_currency_db}}
             )
-
         else:
             character_inventory = normalize_currency_keys(character_data['attributes'].get('inventory', {}))
             found_key = normalized_item_name
@@ -319,42 +571,72 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
 
             inventory_for_db = {titlecase(k): v for k, v in character_inventory.items()}
 
-            await character_collection.update_one(
-                {'_id': player_id},
-                {'$set': {f'characters.{character_id}.attributes.inventory': inventory_for_db}}
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.mdb,
+                collection_name='characters',
+                query={'_id': player_id},
+                update_data={'$set': {f'characters.{character_id}.attributes.inventory': inventory_for_db}}
             )
     except Exception as e:
         await log_exception(e, interaction)
 
 
-async def update_character_experience(interaction: discord.Interaction, player_id: int, character_id: str,
+async def update_character_experience(interaction, player_id: int, character_id: str,
                                       amount: int):
+    bot = interaction.client
     try:
-        character_collection = interaction.client.mdb['characters']
-        player_data = await character_collection.find_one({'_id': player_id})
+        player_data = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.mdb,
+            collection_name='characters',
+            query={'_id': player_id}
+        )
+        if not player_data:
+            raise UserFeedbackError('Player data not found.')
+
         character_data = player_data['characters'].get(character_id)
+        if not character_data:
+            raise UserFeedbackError('Character data not found.')
+
         if character_data['attributes']['experience']:
             character_data['attributes']['experience'] += amount
         else:
             character_data['attributes']['experience'] = amount
-        await character_collection.update_one(
-            {'_id': player_id},
-            {'$set': {f'characters.{character_id}': character_data}}
+
+        await update_cached_data(
+            bot=bot,
+            mongo_database=bot.mdb,
+            collection_name='characters',
+            query={'_id': player_id},
+            update_data={'$set': {f'characters.{character_id}': character_data}}
         )
     except Exception as e:
         await log_exception(e, interaction)
 
 
-async def update_quest_embed(quest) -> discord.Embed | None:
+async def update_quest_embed(quest: dict) -> discord.Embed | None:
+    """
+    Updates a quest embed based on the current quest data.
+
+    :param quest: The quest data dictionary
+
+    :return: Updated discord.Embed object
+    """
     try:
         embed = discord.Embed()
+
         # Initialize all the current quest values
-        (guild_id, quest_id, title, description, max_party_size, restrictions, gm, party, wait_list,
-         max_wait_list_size, lock_state, rewards) = (quest['guildId'], quest['questId'], quest['title'],
-                                                     quest['description'], quest['maxPartySize'],
-                                                     quest['restrictions'], quest['gm'], quest['party'],
-                                                     quest['waitList'], quest['maxWaitListSize'],
-                                                     quest['lockState'], quest['rewards'])
+        quest_id = quest['questId']
+        title = quest['title']
+        description = quest['description']
+        max_party_size = quest['maxPartySize']
+        restrictions = quest['restrictions']
+        gm = quest['gm']
+        party = quest['party']
+        wait_list = quest['waitList']
+        max_wait_list_size = quest['maxWaitListSize']
+        lock_state = quest['lockState']
 
         # Format the main embed body
         if restrictions:
@@ -381,7 +663,7 @@ async def update_quest_embed(quest) -> discord.Embed | None:
 
         formatted_party = []
         # Map int list to string for formatting, then format the list of users as user mentions
-        if len(party) > 0:
+        if party:
             for player in party:
                 for member_id in player:
                     for character_id in player[str(member_id)]:
@@ -390,7 +672,7 @@ async def update_quest_embed(quest) -> discord.Embed | None:
 
         formatted_wait_list = []
         # Only format the wait list if there is one.
-        if len(wait_list) > 0:
+        if wait_list:
             for player in wait_list:
                 for member_id in player:
                     for character_id in player[str(member_id)]:
@@ -400,21 +682,22 @@ async def update_quest_embed(quest) -> discord.Embed | None:
         # Set the embed fields and footer
         embed.title = title
         embed.description = post_description
-        if len(formatted_party) == 0:
-            embed.add_field(name=f'__Party ({current_party_size}/{max_party_size})__',
-                            value='None')
+        if formatted_party:
+            party_string = '\n'.join(formatted_party)
         else:
-            embed.add_field(name=f'__Party ({current_party_size}/{max_party_size})__',
-                            value='\n'.join(formatted_party))
+            party_string = 'None'
+        embed.add_field(name=f'__Party ({current_party_size}/{max_party_size})__',
+                        value=party_string)
 
         # Add a wait list field if one is present, unless the quest is being archived.
         if max_wait_list_size > 0:
-            if len(formatted_wait_list) == 0:
-                embed.add_field(name=f'__Wait List ({current_wait_list_size}/{max_wait_list_size})__',
-                                value='None')
+            if formatted_wait_list:
+                wait_list_string = '\n'.join(formatted_wait_list)
             else:
-                embed.add_field(name=f'__Wait List ({current_wait_list_size}/{max_wait_list_size})__',
-                                value='\n'.join(formatted_wait_list))
+                wait_list_string = 'None'
+
+            embed.add_field(name=f'__Wait List ({current_wait_list_size}/{max_wait_list_size})__',
+                            value=wait_list_string)
 
         embed.set_footer(text='Quest ID: ' + quest_id)
 
@@ -433,46 +716,10 @@ def find_member_and_character_id_in_lists(lists, selected_member_id):
     return None, None
 
 
-async def purge_player_board(age, interaction):
-    try:
-        # Get the current datetime and calculate the cutoff date
-        current_datetime = datetime.datetime.now(datetime.UTC)
-        cutoff_date = current_datetime - datetime.timedelta(days=age)
-
-        # Delete all records in the db matching this guild that are older than the cutoff
-        player_board_collection = interaction.client.gdb['playerBoard']
-        await player_board_collection.delete_many({'guildId': interaction.guild_id,
-                                                  'timestamp': {'$lt': cutoff_date}})
-
-        # Get the channel object and purge all messages older than the cutoff
-        config_collection = interaction.client.gdb['playerBoardChannel']
-        config_query = await config_collection.find_one({'_id': interaction.guild_id})
-        channel_id = strip_id(config_query['playerBoardChannel'])
-        channel = interaction.guild.get_channel(channel_id)
-        await channel.purge(before=cutoff_date)
-
-        await interaction.response.send_message(f'Posts older than {age} days have been purged!',
-                                                ephemeral=True,
-                                                delete_after=10)
-    except Exception as e:
-        await log_exception(e, interaction)
-
-
-async def query_config(config_type, bot, guild):
-    try:
-        collection = bot.gdb[config_type]
-
-        query = await collection.find_one({'_id': guild.id})
-        logger.debug(f'{config_type} query: {query}')
-        if not query:
-            return 'Not Configured'
-        else:
-            return query[config_type]
-    except Exception as e:
-        await log_exception(e)
-
-
-async def setup_view(view, interaction):
+async def setup_view(view, interaction: discord.Interaction):
+    """
+    Dynamically sets up a view by inspecting its setup method for required parameters.
+    """
     setup_function = view.setup
     sig = inspect.signature(setup_function)
     params = sig.parameters
@@ -491,13 +738,23 @@ async def setup_view(view, interaction):
 
 
 def get_denomination_map(currency_config: dict, currency_name: str) -> Tuple[dict | None, str | None]:
+    """
+    Retrieves a mapping of denomination names to their values for a given currency.
+
+    :param currency_config: The server's currency config dict
+    :param currency_name: The name of the currency or denomination to look up
+
+    :return: A tuple containing:
+             - A dict mapping denomination names (lowercase) to their float values, or None if not found
+             - The parent currency name, or None if not found
+    """
     if not currency_config or 'currencies' not in currency_config:
         return None, None
 
     _denom_name, parent_name = find_currency_or_denomination(currency_config, currency_name)
 
     if not parent_name:
-        return None, None  # Not a valid configured currency
+        return None, None
 
     parent_currency_config = next(
         (currency for currency in currency_config['currencies'] if currency['name'].lower() == parent_name.lower()),
@@ -516,6 +773,18 @@ def get_denomination_map(currency_config: dict, currency_name: str) -> Tuple[dic
 
 def check_sufficient_funds(player_currency: dict, currency_config: dict, cost_currency_name: str,
                            cost_amount: float) -> Tuple[bool, str]:
+    """
+    Verifies that a player has funds to cover the attempted transaction.
+
+    :param player_currency: The player's currency dict
+    :param currency_config: The server's currency config dict
+    :param cost_currency_name: The name of the currency or denomination that is being used
+    :param cost_amount: The amount of the currency or denomination that is being used
+
+    :return: A tuple containing:
+             - A boolean indicating if the player has sufficient funds
+             - A message string indicating success or the reason for failure
+    """
     try:
         if cost_amount <= 0:
             return True, "OK"
@@ -548,7 +817,6 @@ def check_sufficient_funds(player_currency: dict, currency_config: dict, cost_cu
             return False, "Insufficient funds."
 
         return True, "OK"
-
     except Exception as e:
         logger.error(f"Error in check_sufficient_funds: {e}")
         logger.error(traceback.format_exc())
@@ -556,6 +824,15 @@ def check_sufficient_funds(player_currency: dict, currency_config: dict, cost_cu
 
 
 def apply_item_change_local(character_data: dict, item_name: str, quantity: int) -> dict:
+    """
+    Applies an item change to a character's inventory dict.
+
+    :param character_data: The character's data dictionary
+    :param item_name: The name of the item to add or remove
+    :param quantity: The quantity to add (positive) or remove (negative)
+
+    :return: The updated character data dictionary
+    """
     inventory = normalize_currency_keys(character_data['attributes'].get('inventory', {}))
     item_name_lower = item_name.lower()
 
@@ -575,6 +852,16 @@ def apply_item_change_local(character_data: dict, item_name: str, quantity: int)
 
 
 def apply_currency_change_local(character_data: dict, currency_config: dict, item_name: str, quantity: float) -> dict:
+    """
+    Applies a currency change to a character's currency dict.
+
+    :param character_data: The character's data dictionary
+    :param currency_config: The server's currency config dict
+    :param item_name: The name of the currency or denomination to add or remove
+    :param quantity: The amount to add (positive) or remove (negative)
+
+    :return: The updated character data dictionary
+    """
     normalized_item_name = item_name.lower()
     is_currency, currency_parent_name = find_currency_or_denomination(currency_config, normalized_item_name)
 
@@ -623,6 +910,7 @@ def apply_currency_change_local(character_data: dict, currency_config: dict, ite
     character_data['attributes']['currency'] = {titlecase(k): v for k, v in final_wallet.items() if v > 0}
     return character_data
 
+
 def get_base_currency_info(currency_config: dict, currency_name: str):
     """
     Returns base currency info for a given currency name.
@@ -652,7 +940,17 @@ def get_base_currency_info(currency_config: dict, currency_name: str):
 
     return base_name, multiplier, is_double
 
+
 def consolidate_currency_totals(raw_totals: dict, currency_config: dict) -> dict:
+    """
+    Consolidates raw currency totals into base currencies, or in other words, makes change so that a given currency
+    is represented by the fewest amount of coins/denominations.
+
+    :param raw_totals: A dict mapping currency/denomination names to their total amounts
+    :param currency_config: The server's currency config dict
+
+    :return: A dict mapping base currency names to their consolidated total amounts
+    """
     if not currency_config:
         return raw_totals
 
@@ -670,7 +968,16 @@ def consolidate_currency_totals(raw_totals: dict, currency_config: dict) -> dict
 
     return consolidated
 
+
 def format_consolidated_totals(base_totals: dict, currency_config: dict) -> list[str]:
+    """
+    Formats consolidated currency totals into a list of strings for display.
+
+    :param base_totals: A dict mapping base currency names to their total amounts
+    :param currency_config: The server's currency config dict
+
+    :return: A list of formatted currency total strings
+    """
     output = []
 
     for base_name, total_value in base_totals.items():
@@ -716,28 +1023,46 @@ def format_consolidated_totals(base_totals: dict, currency_config: dict) -> list
 
     return output
 
-def format_price_string(amount, currency_name, currency_config):
+
+def format_price_string(amount, currency_name, currency_config) -> str:
     """
     Formats a single price/cost string.
+
+    :param amount: The amount of currency
+    :param currency_name: The name of the currency
+    :param currency_config: The server's currency config dict
+
+    :return: A formatted price string
     """
     base_name, _, is_double = get_base_currency_info(currency_config, currency_name)
 
     display_name = titlecase(currency_name)
 
     if is_double:
-        return f"{amount:.2f} {display_name}"
+        return f'{amount:.2f} {display_name}'
     else:
         if amount % 1 == 0:
-            return f"{int(amount)} {display_name}"
+            return f'{int(amount)} {display_name}'
         else:
-            return f"{amount:.2f} {display_name}"
+            return f'{amount:.2f} {display_name}'
 
-async def get_xp_config(gdb, guild_id):
+
+async def get_xp_config(bot, guild_id) -> bool:
     """
     Retrieves the XP configuration for a guild.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The Discord guild id
+
+    :return: True if XP is enabled, False if XP is disabled
     """
     try:
-        query = await gdb['playerExperience'].find_one({'_id': guild_id})
+        query = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name='playerExperience',
+            query={'_id': guild_id}
+        )
         if query is None:
             return True  # Default to XP enabled if no config found
         return query.get('playerExperience', True)
@@ -745,3 +1070,1394 @@ async def get_xp_config(gdb, guild_id):
         logger.error(f"Error retrieving XP config: {e}")
         await log_exception(e)
         return True  # Default to XP enabled on error
+
+
+def format_complex_cost(costs: list, currency_config: dict) -> str:
+    """
+    Formats a list of complex costs into a readable string.
+
+    :param costs: A list of cost dictionaries, e.g. [{'gold': 10}, {'reputation': 50}]
+    :param currency_config: The server's currency config dict
+
+    :return: A formatted cost string
+    """
+
+    if not costs:
+        return 'Free'
+
+    option_strings = []
+    for option in costs:
+        component_strings = []
+        for currency_name, amount in option.items():
+            component_strings.append(format_price_string(amount, currency_name, currency_config))
+        if component_strings:
+            option_strings.append(' + '.join(component_strings))
+
+    if not option_strings:
+        return 'Free'
+
+    return ' OR\n'.join(option_strings)
+
+
+# ----- Shop Stock Management -----
+
+
+async def get_item_stock(bot, guild_id: int, channel_id: str, item_name: str) -> dict | None:
+    """
+    Retrieves stock information for a specific item in a shop.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param channel_id: The shop channel ID
+    :param item_name: The name of the item
+
+    :return: Dict with 'available' and 'reserved' counts, or None if unlimited
+    """
+    stock_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopStock',
+        query={'_id': guild_id}
+    )
+
+    if not stock_data:
+        return None
+
+    shops = stock_data.get('shops', {})
+    shop_stock = shops.get(str(channel_id), {})
+    item_stock = shop_stock.get(item_name)
+
+    if item_stock is None:
+        return None
+
+    return {
+        'available': item_stock.get('available', 0),
+        'reserved': item_stock.get('reserved', 0)
+    }
+
+
+async def get_shop_stock(bot, guild_id: int, channel_id: str) -> dict:
+    """
+    Retrieves all stock information for a shop.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param channel_id: The shop channel ID
+
+    :return: Dict mapping item names to their stock info, empty dict if no stock limits
+    """
+    stock_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopStock',
+        query={'_id': guild_id}
+    )
+
+    if not stock_data:
+        return {}
+
+    shops = stock_data.get('shops', {})
+    return shops.get(str(channel_id), {})
+
+
+async def initialize_item_stock(bot, guild_id: int, channel_id: str, item_name: str,
+                                max_stock: int, current_stock: int | None = None):
+    """
+    Initializes stock tracking for a limited item.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param channel_id: The shop channel ID
+    :param item_name: The name of the item
+    :param max_stock: The maximum stock for this item
+    :param current_stock: The current stock (defaults to max_stock if not provided)
+    """
+    if current_stock is None:
+        current_stock = max_stock
+
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopStock',
+        query={'_id': guild_id},
+        update_data={
+            '$set': {
+                f'shops.{channel_id}.{item_name}': {
+                    'available': current_stock,
+                    'reserved': 0
+                }
+            }
+        }
+    )
+
+
+async def remove_item_stock_limit(bot, guild_id: int, channel_id: str, item_name: str):
+    """
+    Removes stock tracking for an item (makes it unlimited).
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param channel_id: The shop channel ID
+    :param item_name: The name of the item
+    """
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopStock',
+        query={'_id': guild_id},
+        update_data={
+            '$unset': {
+                f'shops.{channel_id}.{item_name}': ''
+            }
+        }
+    )
+
+
+async def reserve_stock(bot, guild_id: int, channel_id: str, item_name: str, quantity: int = 1) -> bool:
+    """
+    Atomically reserves stock by moving from available to reserved.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param channel_id: The shop channel ID
+    :param item_name: The name of the item
+    :param quantity: The quantity to reserve
+
+    :return: True if reservation succeeded, False if insufficient stock
+    """
+    collection = bot.gdb['shopStock']
+
+    result = await collection.find_one_and_update(
+        {
+            '_id': guild_id,
+            f'shops.{channel_id}.{item_name}.available': {'$gte': quantity}
+        },
+        {
+            '$inc': {
+                f'shops.{channel_id}.{item_name}.available': -quantity,
+                f'shops.{channel_id}.{item_name}.reserved': quantity
+            }
+        },
+        return_document=True
+    )
+
+    # Invalidate cache after update
+    if result:
+        cache_key = build_cache_key(bot.gdb.name, guild_id, 'shopStock')
+        try:
+            await bot.rdb.delete(cache_key)
+        except Exception as e:
+            logger.error(f"Redis delete failed: {e}")
+        return True
+
+    return False
+
+
+async def release_stock(bot, guild_id: int, channel_id: str, item_name: str, quantity: int = 1):
+    """
+    Releases reserved stock back to available.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param channel_id: The shop channel ID
+    :param item_name: The name of the item
+    :param quantity: The quantity to release
+    """
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopStock',
+        query={'_id': guild_id},
+        update_data={
+            '$inc': {
+                f'shops.{channel_id}.{item_name}.available': quantity,
+                f'shops.{channel_id}.{item_name}.reserved': -quantity
+            },
+            '$max': {
+                f'shops.{channel_id}.{item_name}.reserved': 0  # Prevent negative reserved stock
+            }
+        }
+    )
+
+
+async def finalize_stock(bot, guild_id: int, channel_id: str, item_name: str, quantity: int = 1):
+    """
+    Finalizes a purchase by removing from reserved (stock already decremented from available).
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param channel_id: The shop channel ID
+    :param item_name: The name of the item
+    :param quantity: The quantity to finalize
+    """
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopStock',
+        query={'_id': guild_id},
+        update_data={
+            '$inc': {
+                f'shops.{channel_id}.{item_name}.reserved': -quantity
+            },
+            '$max': {
+                f'shops.{channel_id}.{item_name}.reserved': 0  # Prevent negative reserved stock
+            }
+        }
+    )
+
+
+async def set_available_stock(bot, guild_id: int, channel_id: str, item_name: str, amount: int):
+    """
+    Sets the available stock to a specific amount (used for full restock).
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param channel_id: The shop channel ID
+    :param item_name: The name of the item
+    :param amount: The amount to set available stock to
+    """
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopStock',
+        query={'_id': guild_id},
+        update_data={
+            '$set': {
+                f'shops.{channel_id}.{item_name}.available': amount
+            }
+        }
+    )
+
+
+async def increment_available_stock(bot, guild_id: int, channel_id: str, item_name: str,
+                                    increment: int, max_stock: int):
+    """
+    Increments available stock up to the maximum (used for incremental restock).
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param channel_id: The shop channel ID
+    :param item_name: The name of the item
+    :param increment: The amount to add
+    :param max_stock: The maximum stock allowed
+    """
+    # Validate item exists in shop stock
+    current = await get_item_stock(bot, guild_id, channel_id, item_name)
+    if current is None:
+        return
+
+    field_path = f'shops.{channel_id}.{item_name}.available'
+
+    # Increment stock but do not exceed max_stock
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopStock',
+        query={'_id': guild_id},
+        update_data={
+            '$inc': {
+                field_path: increment
+            },
+            '$min': {
+                field_path: max_stock
+            }
+        }
+    )
+
+
+async def update_last_restock(bot, guild_id: int, channel_id: str, timestamp: str):
+    """
+    Updates the last restock timestamp for a shop.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param channel_id: The shop channel ID
+    :param timestamp: ISO format timestamp string
+    """
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopStock',
+        query={'_id': guild_id},
+        update_data={
+            '$set': {
+                f'lastRestock.{channel_id}': timestamp
+            }
+        }
+    )
+
+
+async def get_last_restock(bot, guild_id: int, channel_id: str) -> str | None:
+    """
+    Gets the last restock timestamp for a shop.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param channel_id: The shop channel ID
+
+    :return: ISO format timestamp string or None
+    """
+    stock_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopStock',
+        query={'_id': guild_id}
+    )
+
+    if not stock_data:
+        return None
+
+    return stock_data.get('lastRestock', {}).get(str(channel_id))
+
+
+# ----- Shop Cart Management -----
+
+
+CART_TTL_MINUTES = 10
+
+
+def build_cart_id(guild_id: int, user_id: int, channel_id: str) -> str:
+    """Builds the cart document ID."""
+    return f"{guild_id}:{user_id}:{channel_id}"
+
+
+async def get_cart(bot, guild_id: int, user_id: int, channel_id: str) -> dict | None:
+    """
+    Retrieves an existing cart for a user in a specific shop.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param user_id: The user ID
+    :param channel_id: The shop channel ID
+
+    :return: Cart document or None if not found
+    """
+    cart_id = build_cart_id(guild_id, user_id, channel_id)
+
+    cart = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopCarts',
+        query={'_id': cart_id},
+        cache_id=cart_id
+    )
+
+    if not cart:
+        return None
+
+    # Check if cart has expired
+    expires_at = cart.get('expiresAt')
+    if expires_at:
+        if isinstance(expires_at, str):
+            expires_at = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
+        if datetime.now(timezone.utc) > expires_at:
+            # Cart expired, clean it up
+            await clear_cart_and_release_stock(bot, guild_id, user_id, channel_id)
+            return None
+
+    return cart
+
+
+async def get_or_create_cart(bot, guild_id: int, user_id: int, channel_id: str) -> dict:
+    """
+    Gets an existing cart or creates a new one.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param user_id: The user ID
+    :param channel_id: The shop channel ID
+
+    :return: Cart document
+    """
+    cart = await get_cart(bot, guild_id, user_id, channel_id)
+
+    if cart:
+        return cart
+
+    # Create new cart
+    cart_id = build_cart_id(guild_id, user_id, channel_id)
+    now = datetime.now(timezone.utc)
+    expires_at = now + timedelta(minutes=CART_TTL_MINUTES)
+
+    new_cart = {
+        '_id': cart_id,
+        'guildId': guild_id,
+        'userId': user_id,
+        'channelId': channel_id,
+        'items': {},
+        'createdAt': now.isoformat(),
+        'updatedAt': now.isoformat(),
+        'expiresAt': expires_at.isoformat()
+    }
+
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopCarts',
+        query={'_id': cart_id},
+        update_data={'$set': new_cart},
+        cache_id=cart_id
+    )
+
+    return new_cart
+
+
+async def update_cart_expiry(bot, guild_id: int, user_id: int, channel_id: str):
+    """
+    Extends the cart expiry to now + TTL.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param user_id: The user ID
+    :param channel_id: The shop channel ID
+    """
+    cart_id = build_cart_id(guild_id, user_id, channel_id)
+    now = datetime.now(timezone.utc)
+    expires_at = now + timedelta(minutes=CART_TTL_MINUTES)
+
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopCarts',
+        query={'_id': cart_id},
+        update_data={
+            '$set': {
+                'updatedAt': now.isoformat(),
+                'expiresAt': expires_at.isoformat()
+            }
+        },
+        cache_id=cart_id
+    )
+
+
+async def add_item_to_cart(bot, guild_id: int, user_id: int, channel_id: str,
+                           item: dict, option_index: int = 0) -> bool:
+    """
+    Adds an item to the cart and reserves stock if applicable.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param user_id: The user ID
+    :param channel_id: The shop channel ID
+    :param item: The item data dictionary
+    :param option_index: The cost option index
+
+    :return: True if successful, False if out of stock
+    """
+    item_name = item.get('name')
+    cart_key = f"{item_name}::{option_index}"
+
+    # Check if item has stock limit and reserve if needed
+    has_stock_limit = item.get('maxStock') is not None
+    if has_stock_limit:
+        success = await reserve_stock(bot, guild_id, channel_id, item_name, 1)
+        if not success:
+            return False
+
+    # Get or create cart
+    cart = await get_or_create_cart(bot, guild_id, user_id, channel_id)
+    cart_id = cart['_id']
+
+    now = datetime.now(timezone.utc)
+    expires_at = now + timedelta(minutes=CART_TTL_MINUTES)
+
+    # Check if item already in cart
+    existing_items = cart.get('items', {})
+    if cart_key in existing_items:
+        # Increment quantity
+        await update_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name='shopCarts',
+            query={'_id': cart_id},
+            update_data={
+                '$inc': {f'items.{cart_key}.quantity': 1},
+                '$set': {
+                    'updatedAt': now.isoformat(),
+                    'expiresAt': expires_at.isoformat()
+                }
+            },
+            cache_id=cart_id
+        )
+    else:
+        # Add new item
+        cart_item = {
+            'item': item,
+            'quantity': 1,
+            'optionIndex': option_index,
+            'reservedAt': now.isoformat()
+        }
+        await update_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name='shopCarts',
+            query={'_id': cart_id},
+            update_data={
+                '$set': {
+                    f'items.{cart_key}': cart_item,
+                    'updatedAt': now.isoformat(),
+                    'expiresAt': expires_at.isoformat()
+                }
+            },
+            cache_id=cart_id
+        )
+
+    return True
+
+
+async def remove_item_from_cart(bot, guild_id: int, user_id: int, channel_id: str,
+                                cart_key: str, quantity: int = 1):
+    """
+    Removes an item from the cart and releases reserved stock.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param user_id: The user ID
+    :param channel_id: The shop channel ID
+    :param cart_key: The cart item key (item_name::option_index)
+    :param quantity: The quantity to remove
+    """
+    cart = await get_cart(bot, guild_id, user_id, channel_id)
+    if not cart:
+        return
+
+    cart_id = cart['_id']
+    items = cart.get('items', {})
+
+    if cart_key not in items:
+        return
+
+    cart_item = items[cart_key]
+    item = cart_item['item']
+    current_quantity = cart_item['quantity']
+    item_name = item.get('name')
+
+    # Release stock if item has stock limit
+    has_stock_limit = item.get('maxStock') is not None
+    if has_stock_limit:
+        release_qty = min(quantity, current_quantity)
+        await release_stock(bot, guild_id, channel_id, item_name, release_qty)
+
+    now = datetime.now(timezone.utc)
+    expires_at = now + timedelta(minutes=CART_TTL_MINUTES)
+
+    if quantity >= current_quantity:
+        # Remove item entirely
+        await update_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name='shopCarts',
+            query={'_id': cart_id},
+            update_data={
+                '$unset': {f'items.{cart_key}': ''},
+                '$set': {
+                    'updatedAt': now.isoformat(),
+                    'expiresAt': expires_at.isoformat()
+                }
+            },
+            cache_id=cart_id
+        )
+    else:
+        # Decrement quantity
+        await update_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name='shopCarts',
+            query={'_id': cart_id},
+            update_data={
+                '$inc': {f'items.{cart_key}.quantity': -quantity},
+                '$set': {
+                    'updatedAt': now.isoformat(),
+                    'expiresAt': expires_at.isoformat()
+                }
+            },
+            cache_id=cart_id
+        )
+
+
+async def update_cart_item_quantity(bot, guild_id: int, user_id: int, channel_id: str,
+                                    cart_key: str, new_quantity: int) -> Tuple[bool, str]:
+    """
+    Updates the quantity of an item in the cart, handling stock reservations.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param user_id: The user ID
+    :param channel_id: The shop channel ID
+    :param cart_key: The cart item key (item_name::option_index)
+    :param new_quantity: The new quantity
+
+    :return: Tuple of (success, message)
+    """
+    cart = await get_cart(bot, guild_id, user_id, channel_id)
+    if not cart:
+        return False, "Cart not found."
+
+    items = cart.get('items', {})
+    if cart_key not in items:
+        return False, "Item not in cart."
+
+    cart_item = items[cart_key]
+    item = cart_item['item']
+    current_quantity = cart_item['quantity']
+    item_name = item.get('name')
+
+    if new_quantity <= 0:
+        # Remove item entirely
+        await remove_item_from_cart(bot, guild_id, user_id, channel_id, cart_key, current_quantity)
+        return True, "Item removed from cart."
+
+    quantity_diff = new_quantity - current_quantity
+    has_stock_limit = item.get('maxStock') is not None
+
+    if quantity_diff > 0:
+        # Trying to add more
+        if has_stock_limit:
+            # Need to reserve additional stock
+            success = await reserve_stock(bot, guild_id, channel_id, item_name, quantity_diff)
+            if not success:
+                return False, "Not enough stock available."
+
+        # Update quantity
+        now = datetime.now(timezone.utc)
+        expires_at = now + timedelta(minutes=CART_TTL_MINUTES)
+
+        cart_id = cart['_id']
+        await update_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name='shopCarts',
+            query={'_id': cart_id},
+            update_data={
+                '$set': {
+                    f'items.{cart_key}.quantity': new_quantity,
+                    'updatedAt': now.isoformat(),
+                    'expiresAt': expires_at.isoformat()
+                }
+            },
+            cache_id=cart_id
+        )
+    elif quantity_diff < 0:
+        # Reducing quantity, release stock
+        await remove_item_from_cart(bot, guild_id, user_id, channel_id, cart_key, abs(quantity_diff))
+
+    return True, "Cart updated."
+
+
+async def clear_cart_and_release_stock(bot, guild_id: int, user_id: int, channel_id: str):
+    """
+    Clears a cart and releases all reserved stock.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param user_id: The user ID
+    :param channel_id: The shop channel ID
+    """
+    cart = await get_cart(bot, guild_id, user_id, channel_id)
+    if not cart:
+        return
+
+    cart_id = cart['_id']
+    items = cart.get('items', {})
+
+    # Release all reserved stock
+    for cart_key, cart_item in items.items():
+        item = cart_item['item']
+        quantity = cart_item['quantity']
+        item_name = item.get('name')
+
+        has_stock_limit = item.get('maxStock') is not None
+        if has_stock_limit:
+            await release_stock(bot, guild_id, channel_id, item_name, quantity)
+
+    # Delete the cart
+    await delete_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopCarts',
+        search_filter={'_id': cart_id},
+        cache_id=cart_id
+    )
+
+
+async def finalize_cart_purchase(bot, guild_id: int, user_id: int, channel_id: str):
+    """
+    Finalizes a cart purchase by removing reserved stock counts and deleting the cart.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param user_id: The user ID
+    :param channel_id: The shop channel ID
+    """
+    cart = await get_cart(bot, guild_id, user_id, channel_id)
+    if not cart:
+        return
+
+    cart_id = cart['_id']
+    items = cart.get('items', {})
+
+    # Finalize stock (remove from reserved counts)
+    for cart_key, cart_item in items.items():
+        item = cart_item['item']
+        quantity = cart_item['quantity']
+        item_name = item.get('name')
+
+        has_stock_limit = item.get('maxStock') is not None
+        if has_stock_limit:
+            await finalize_stock(bot, guild_id, channel_id, item_name, quantity)
+
+    # Delete the cart
+    await delete_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopCarts',
+        search_filter={'_id': cart_id},
+        cache_id=cart_id
+    )
+
+
+async def cleanup_expired_carts(bot):
+    """
+    Finds and cleans up all expired carts, releasing reserved stock.
+
+    :param bot: The Discord bot instance
+    """
+    now = datetime.now(timezone.utc)
+
+    # Query all expired carts directly from MongoDB (bypass cache for cleanup)
+    collection = bot.gdb['shopCarts']
+    cursor = collection.find({
+        'expiresAt': {'$lt': now.isoformat()}
+    })
+
+    expired_carts = await cursor.to_list(length=None)
+
+    for cart in expired_carts:
+        guild_id = cart['guildId']
+        channel_id = cart['channelId']
+        items = cart.get('items', {})
+
+        # Release all reserved stock
+        for cart_key, cart_item in items.items():
+            item = cart_item['item']
+            quantity = cart_item['quantity']
+            item_name = item.get('name')
+
+            has_stock_limit = item.get('maxStock') is not None
+            if has_stock_limit:
+                await release_stock(bot, guild_id, channel_id, item_name, quantity)
+
+        # Delete the cart
+        cart_id = cart['_id']
+        await delete_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name='shopCarts',
+            search_filter={'_id': cart_id},
+            cache_id=cart_id
+        )
+
+    if expired_carts:
+        logger.info(f"Cleaned up {len(expired_carts)} expired shop carts.")
+
+
+# ----- Container Management -----
+
+
+MAX_CONTAINERS_PER_PLAYER = 50
+MAX_CONTAINER_NAME_LENGTH = 50
+
+
+def get_containers_sorted(character_data: dict) -> list[dict]:
+    """
+    Returns list of container dicts sorted by order.
+    First entry is always Loose Items.
+
+    Each dict: {'id': str|None, 'name': str, 'items': dict, 'count': int}
+    """
+    result = []
+
+    # Loose items (root inventory) is always first
+    loose_items = character_data['attributes'].get('inventory', {})
+    result.append({
+        'id': None,
+        'name': 'Loose Items',
+        'items': loose_items,
+        'count': len(loose_items)
+    })
+
+    # Get containers sorted by order
+    containers = character_data['attributes'].get('containers', {})
+    sorted_containers = sorted(
+        containers.items(),
+        key=lambda x: x[1].get('order', 0)
+    )
+
+    for container_id, container_data in sorted_containers:
+        items = container_data.get('items', {})
+        result.append({
+            'id': container_id,
+            'name': container_data.get('name', 'Unknown'),
+            'items': items,
+            'count': len(items)
+        })
+
+    return result
+
+
+def get_container_items(character_data: dict, container_id: str | None) -> dict:
+    """
+    Returns items dict for the specified container.
+    container_id=None returns root inventory (Loose Items).
+    """
+    if container_id is None:
+        return character_data['attributes'].get('inventory', {})
+
+    containers = character_data['attributes'].get('containers', {})
+    container = containers.get(container_id, {})
+    return container.get('items', {})
+
+
+def get_container_name(character_data: dict, container_id: str | None) -> str:
+    """Returns the name of a container. None returns 'Loose Items'."""
+    if container_id is None:
+        return 'Loose Items'
+
+    containers = character_data['attributes'].get('containers', {})
+    container = containers.get(container_id, {})
+    return container.get('name', 'Unknown')
+
+
+def get_total_item_quantity(character_data: dict, item_name: str) -> int:
+    """
+    Returns total quantity of item across ALL containers + loose items.
+    Useful for validating trades, quest requirements, etc.
+    """
+    item_name_lower = item_name.lower()
+    total = 0
+
+    # Check loose items
+    inventory = character_data['attributes'].get('inventory', {})
+    for name, qty in inventory.items():
+        if name.lower() == item_name_lower:
+            total += qty
+
+    # Check all containers
+    containers = character_data['attributes'].get('containers', {})
+    for container_data in containers.values():
+        items = container_data.get('items', {})
+        for name, qty in items.items():
+            if name.lower() == item_name_lower:
+                total += qty
+
+    return total
+
+
+def get_item_locations(character_data: dict, item_name: str) -> list[dict]:
+    """
+    Returns list of dicts for everywhere this item exists.
+    Each dict: {'id': str|None, 'name': str, 'quantity': int}
+    """
+    item_name_lower = item_name.lower()
+    locations = []
+
+    # Check loose items
+    inventory = character_data['attributes'].get('inventory', {})
+    for name, qty in inventory.items():
+        if name.lower() == item_name_lower and qty > 0:
+            locations.append({'id': None, 'name': 'Loose Items', 'quantity': qty})
+
+    # Check all containers
+    containers = character_data['attributes'].get('containers', {})
+    for container_id, container_data in containers.items():
+        items = container_data.get('items', {})
+        for name, qty in items.items():
+            if name.lower() == item_name_lower and qty > 0:
+                locations.append({
+                    'id': container_id,
+                    'name': container_data.get('name', 'Unknown'),
+                    'quantity': qty
+                })
+
+    return locations
+
+
+def get_container_count(character_data: dict) -> int:
+    """Returns the number of containers (excluding Loose Items)."""
+    return len(character_data['attributes'].get('containers', {}))
+
+
+def get_next_container_order(character_data: dict) -> int:
+    """Returns the next available order value for a new container."""
+    containers = character_data['attributes'].get('containers', {})
+    if not containers:
+        return 1
+    max_order = max(c.get('order', 0) for c in containers.values())
+    return max_order + 1
+
+
+def container_name_exists(character_data: dict, name: str, exclude_id: str | None = None) -> bool:
+    """Check if a container name already exists (case-insensitive)."""
+    name_lower = name.lower()
+
+    # Check against "Loose Items"
+    if name_lower == 'loose items':
+        return True
+
+    containers = character_data['attributes'].get('containers', {})
+    for container_id, container_data in containers.items():
+        if exclude_id and container_id == exclude_id:
+            continue
+        if container_data.get('name', '').lower() == name_lower:
+            return True
+
+    return False
+
+
+async def create_container(bot, player_id: int, character_id: str, name: str) -> str:
+    """
+    Creates a new container with the given name.
+    Returns the new container's UUID.
+    Raises UserFeedbackError if name already exists or max containers reached.
+    """
+    name = name.strip()
+
+    if not name:
+        raise UserFeedbackError('Container name cannot be empty.')
+
+    if len(name) > MAX_CONTAINER_NAME_LENGTH:
+        raise UserFeedbackError(f'Container name cannot exceed {MAX_CONTAINER_NAME_LENGTH} characters.')
+
+    player_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': player_id}
+    )
+    if not player_data:
+        raise UserFeedbackError('Player data not found.')
+
+    character_data = player_data['characters'].get(character_id)
+    if not character_data:
+        raise UserFeedbackError('Character not found.')
+
+    if get_container_count(character_data) >= MAX_CONTAINERS_PER_PLAYER:
+        raise UserFeedbackError(f'You cannot create more than {MAX_CONTAINERS_PER_PLAYER} containers.')
+
+    if container_name_exists(character_data, name):
+        raise UserFeedbackError(f'A container named "{name}" already exists.')
+
+    container_id = str(shortuuid.uuid())
+    order = get_next_container_order(character_data)
+
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': player_id},
+        update_data={'$set': {
+            f'characters.{character_id}.attributes.containers.{container_id}': {
+                'name': name,
+                'order': order,
+                'items': {}
+            }
+        }}
+    )
+
+    return container_id
+
+
+async def rename_container(bot, player_id: int, character_id: str,
+                           container_id: str, new_name: str) -> None:
+    """
+    Renames an existing container.
+    Raises UserFeedbackError if new_name already exists or container not found.
+    """
+    new_name = new_name.strip()
+
+    if not new_name:
+        raise UserFeedbackError('Container name cannot be empty.')
+
+    if len(new_name) > MAX_CONTAINER_NAME_LENGTH:
+        raise UserFeedbackError(f'Container name cannot exceed {MAX_CONTAINER_NAME_LENGTH} characters.')
+
+    player_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': player_id}
+    )
+    if not player_data:
+        raise UserFeedbackError('Player data not found.')
+
+    character_data = player_data['characters'].get(character_id)
+    if not character_data:
+        raise UserFeedbackError('Character not found.')
+
+    containers = character_data['attributes'].get('containers', {})
+    if container_id not in containers:
+        raise UserFeedbackError('Container not found.')
+
+    if container_name_exists(character_data, new_name, exclude_id=container_id):
+        raise UserFeedbackError(f'A container named "{new_name}" already exists.')
+
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': player_id},
+        update_data={'$set': {f'characters.{character_id}.attributes.containers.{container_id}.name': new_name}}
+    )
+
+
+async def delete_container(bot, player_id: int, character_id: str,
+                           container_id: str) -> int:
+    """
+    Deletes a container. Moves any items to root inventory.
+    Returns the number of unique items moved.
+
+    :param bot: The Discord bot instance
+    :param player_id: The player's Discord ID
+    :param character_id: The character's ID
+    :param container_id: The container's ID to delete
+
+    :return: Number of unique items moved to the root inventory
+    """
+    player_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': player_id}
+    )
+
+    if not player_data:
+        raise UserFeedbackError('Player data not found.')
+
+    character_data = player_data['characters'].get(character_id)
+    if not character_data:
+        raise UserFeedbackError('Character not found.')
+
+    containers = character_data['attributes'].get('containers', {})
+    if container_id not in containers:
+        raise UserFeedbackError('Container not found.')
+
+    container = containers[container_id]
+    items_to_move = container.get('items', {})
+    items_count = len(items_to_move)
+
+    # Move items to root inventory
+    if items_to_move:
+        current_inventory = character_data['attributes'].get('inventory', {})
+        # Normalize to lowercase for merging
+        inventory_lower = {k.lower(): (k, v) for k, v in current_inventory.items()}
+
+        for item_name, quantity in items_to_move.items():
+            item_lower = item_name.lower()
+            if item_lower in inventory_lower:
+                original_name, current_qty = inventory_lower[item_lower]
+                inventory_lower[item_lower] = (original_name, current_qty + quantity)
+            else:
+                inventory_lower[item_lower] = (titlecase(item_name), quantity)
+
+        # Rebuild inventory with titlecase keys
+        new_inventory = {name: qty for name, qty in inventory_lower.values()}
+
+        await update_cached_data(
+            bot=bot,
+            mongo_database=bot.mdb,
+            collection_name='characters',
+            query={'_id': player_id},
+            update_data={
+                '$set': {f'characters.{character_id}.attributes.inventory': new_inventory},
+                '$unset': {f'characters.{character_id}.attributes.containers.{container_id}': ''}
+            }
+        )
+    else:
+        await update_cached_data(
+            bot=bot,
+            mongo_database=bot.mdb,
+            collection_name='characters',
+            query={'_id': player_id},
+            update_data={'$unset': {f'characters.{character_id}.attributes.containers.{container_id}': ''}}
+        )
+
+    return items_count
+
+
+async def reorder_container(bot, player_id: int, character_id: str,
+                            container_id: str, direction: int) -> None:
+    """
+    Moves container up (direction=-1) or down (direction=1) in order.
+    Swaps order values with adjacent container.
+    """
+    player_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': player_id}
+    )
+
+    if not player_data:
+        raise UserFeedbackError('Player data not found.')
+    character_data = player_data['characters'].get(character_id)
+    if not character_data:
+        raise UserFeedbackError('Character not found.')
+
+    containers = character_data['attributes'].get('containers', {})
+    if container_id not in containers:
+        raise UserFeedbackError('Container not found.')
+
+    # Sort containers by order
+    sorted_containers = sorted(containers.items(), key=lambda x: x[1].get('order', 0))
+
+    current_index = None
+    for i, (cid, _) in enumerate(sorted_containers):
+        if cid == container_id:
+            current_index = i
+            break
+
+    if current_index is None:
+        raise UserFeedbackError('Container not found.')
+
+    target_index = current_index + direction
+
+    if target_index < 0 or target_index >= len(sorted_containers):
+        # Already at boundary, nothing to do
+        return
+
+    # Swap order values
+    current_container_id = sorted_containers[current_index][0]
+    target_container_id = sorted_containers[target_index][0]
+
+    current_order = containers[current_container_id].get('order', current_index)
+    target_order = containers[target_container_id].get('order', target_index)
+
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': player_id},
+        update_data={'$set': {
+            f'characters.{character_id}.attributes.containers.{current_container_id}.order': target_order,
+            f'characters.{character_id}.attributes.containers.{target_container_id}.order': current_order
+        }}
+    )
+
+
+async def move_item_between_containers(
+        bot, player_id: int, character_id: str,
+        item_name: str, quantity: int,
+        source_container_id: str | None,
+        dest_container_id: str | None
+) -> None:
+    """
+    Moves quantity of item from source to destination container.
+    None = Loose Items (root inventory).
+    Raises UserFeedbackError if insufficient quantity in source.
+    """
+    if source_container_id == dest_container_id:
+        raise UserFeedbackError('Item is already in this container.')
+
+    if quantity < 1:
+        raise UserFeedbackError('Quantity must be at least 1.')
+
+    player_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': player_id}
+    )
+    if not player_data:
+        raise UserFeedbackError('Player data not found.')
+
+    character_data = player_data['characters'].get(character_id)
+    if not character_data:
+        raise UserFeedbackError('Character not found.')
+
+    item_name_lower = item_name.lower()
+
+    # Get source items
+    if source_container_id is None:
+        source_items = character_data['attributes'].get('inventory', {})
+        source_path = f'characters.{character_id}.attributes.inventory'
+    else:
+        containers = character_data['attributes'].get('containers', {})
+        if source_container_id not in containers:
+            raise UserFeedbackError('Source container not found.')
+        source_items = containers[source_container_id].get('items', {})
+        source_path = f'characters.{character_id}.attributes.containers.{source_container_id}.items'
+
+    # Find item in source (case-insensitive)
+    source_key = None
+    source_qty = 0
+    for key, qty in source_items.items():
+        if key.lower() == item_name_lower:
+            source_key = key
+            source_qty = qty
+            break
+
+    if source_key is None:
+        raise UserFeedbackError(f'Item "{item_name}" not found in the source container.')
+
+    if source_qty < quantity:
+        raise UserFeedbackError(f'Insufficient quantity. You have {source_qty} in this container.')
+
+    # Get destination items
+    if dest_container_id is None:
+        dest_items = character_data['attributes'].get('inventory', {})
+        dest_path = f'characters.{character_id}.attributes.inventory'
+    else:
+        containers = character_data['attributes'].get('containers', {})
+        if dest_container_id not in containers:
+            raise UserFeedbackError('Destination container not found.')
+        dest_items = containers[dest_container_id].get('items', {})
+        dest_path = f'characters.{character_id}.attributes.containers.{dest_container_id}.items'
+
+    # Find existing item in destination (case-insensitive)
+    dest_key = None
+    dest_qty = 0
+    for key, qty in dest_items.items():
+        if key.lower() == item_name_lower:
+            dest_key = key
+            dest_qty = qty
+            break
+
+    # Use titlecase for the item name
+    display_name = titlecase(item_name)
+
+    # Prepare updates
+    updates = {}
+    unsets = {}
+
+    # Update source
+    new_source_qty = source_qty - quantity
+    if new_source_qty <= 0:
+        unsets[f'{source_path}.{source_key}'] = ''
+    else:
+        updates[f'{source_path}.{source_key}'] = new_source_qty
+
+    # Update destination
+    if dest_key:
+        updates[f'{dest_path}.{dest_key}'] = dest_qty + quantity
+    else:
+        updates[f'{dest_path}.{display_name}'] = quantity
+
+    # Execute updates
+    update_ops = {}
+    if updates:
+        update_ops['$set'] = updates
+    if unsets:
+        update_ops['$unset'] = unsets
+
+    if update_ops:
+        await update_cached_data(
+            bot=bot,
+            mongo_database=bot.mdb,
+            collection_name='characters',
+            query={'_id': player_id},
+            update_data=update_ops
+        )
+
+
+async def consume_item_from_container(
+        bot, player_id: int, character_id: str,
+        item_name: str, quantity: int,
+        container_id: str | None
+) -> None:
+    """
+    Removes quantity of item from specific container.
+    container_id=None targets Loose Items.
+    Raises UserFeedbackError if insufficient quantity.
+    """
+    if quantity < 1:
+        raise UserFeedbackError('Quantity must be at least 1.')
+
+    player_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': player_id}
+    )
+    if not player_data:
+        raise UserFeedbackError('Player data not found.')
+
+    character_data = player_data['characters'].get(character_id)
+    if not character_data:
+        raise UserFeedbackError('Character not found.')
+
+    item_name_lower = item_name.lower()
+
+    # Get container items
+    if container_id is None:
+        items = character_data['attributes'].get('inventory', {})
+        path = f'characters.{character_id}.attributes.inventory'
+    else:
+        containers = character_data['attributes'].get('containers', {})
+        if container_id not in containers:
+            raise UserFeedbackError('Container not found.')
+        items = containers[container_id].get('items', {})
+        path = f'characters.{character_id}.attributes.containers.{container_id}.items'
+
+    # Find item (case-insensitive)
+    item_key = None
+    current_qty = 0
+    for key, qty in items.items():
+        if key.lower() == item_name_lower:
+            item_key = key
+            current_qty = qty
+            break
+
+    if item_key is None:
+        raise UserFeedbackError(f'Item "{item_name}" not found in this container.')
+
+    if current_qty < quantity:
+        raise UserFeedbackError(f'You only have {current_qty} of this item in this container.')
+
+    new_qty = current_qty - quantity
+
+    if new_qty <= 0:
+        await update_cached_data(
+            bot=bot,
+            mongo_database=bot.mdb,
+            collection_name='characters',
+            query={'_id': player_id},
+            update_data={'$unset': {f'{path}.{item_key}': ''}}
+        )
+    else:
+        await update_cached_data(
+            bot=bot,
+            mongo_database=bot.mdb,
+            collection_name='characters',
+            query={'_id': player_id},
+            update_data={'$set': {f'{path}.{item_key}': new_qty}}
+        )
+
+
+def format_inventory_by_container(character_data: dict, currency_config: dict | None = None) -> str:
+    """
+    Formats the full inventory grouped by container for display/printing.
+    Returns a formatted string.
+    """
+    lines = []
+    containers = get_containers_sorted(character_data)
+
+    for container in containers:
+        items = container['items']
+        if not items:
+            continue  # Skip empty containers in print output
+
+        lines.append(f'**{container["name"]}**')
+        for item_name, quantity in sorted(items.items()):
+            lines.append(f'• {item_name}: **{quantity}**')
+        lines.append('')  # Blank line between containers
+
+    # Add currency section
+    player_currency = character_data['attributes'].get('currency', {})
+    if player_currency and currency_config:
+        currency_lines = format_currency_display(player_currency, currency_config)
+        if currency_lines:
+            lines.append('**Currency**')
+            for currency_line in currency_lines:
+                lines.append(currency_line)
+
+    return '\n'.join(lines) if lines else 'Inventory is empty.'

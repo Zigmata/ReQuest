@@ -16,7 +16,7 @@ from titlecase import titlecase
 
 from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
-from ReQuest.ui.player import buttons
+from ReQuest.ui.player import buttons, selects
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
@@ -30,7 +30,14 @@ from ReQuest.utilities.supportFunctions import (
     get_denomination_map,
     format_consolidated_totals,
     get_xp_config,
-    UserFeedbackError
+    UserFeedbackError,
+    get_cached_data,
+    update_cached_data,
+    build_cache_key,
+    format_complex_cost,
+    get_containers_sorted,
+    get_container_name,
+    get_container_items
 )
 
 logger = logging.getLogger(__name__)
@@ -57,7 +64,7 @@ class PlayerBaseView(LayoutView):
         ))
         container.add_item(character_section)
 
-        inventory_section = Section(accessory=MenuViewButton(InventoryBaseView, 'Inventory'))
+        inventory_section = Section(accessory=MenuViewButton(InventoryOverviewView, 'Inventory'))
         inventory_section.add_item(TextDisplay(
             'View your active character\'s inventory and spend currency.'
         ))
@@ -73,8 +80,12 @@ class PlayerBaseView(LayoutView):
 
     async def setup(self, bot, guild):
         try:
-            channel_collection = bot.gdb['playerBoardChannel']
-            channel_query = await channel_collection.find_one({'_id': guild.id})
+            channel_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='playerBoardChannel',
+                query={'_id': guild.id}
+            )
             if channel_query:
                 self.player_board_button.disabled = False
             else:
@@ -98,11 +109,17 @@ class CharacterBaseView(LayoutView):
 
     async def setup(self, interaction):
         try:
-            collection = interaction.client.mdb['characters']
-            query = await collection.find_one({'_id': interaction.user.id})
+            bot = interaction.client
+            query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.mdb,
+                collection_name='characters',
+                query={'_id': interaction.user.id}
+            )
 
             self.characters = query.get('characters', {}) if query else {}
-            self.active_character_id = query.get('activeCharacters', {}).get(str(interaction.guild_id)) if query else None
+            self.active_character_id = query.get('activeCharacters', {}).get(str(interaction.guild_id)) \
+                if query else None
 
             self.sorted_characters = sorted(self.characters.items(), key=lambda x: x[1].get('name', '').lower())
 
@@ -113,7 +130,7 @@ class CharacterBaseView(LayoutView):
             if self.current_page >= self.total_pages:
                 self.current_page = max(0, self.total_pages - 1)
 
-            self.xp_enabled = await get_xp_config(interaction.client.gdb, interaction.guild_id)
+            self.xp_enabled = await get_xp_config(interaction.client, interaction.guild_id)
 
             self.build_view()
         except Exception as e:
@@ -222,88 +239,56 @@ class CharacterBaseView(LayoutView):
             await log_exception(e, interaction)
 
 
-class InventoryBaseView(LayoutView):
+class InventoryOverviewView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         self.active_character = None
         self.active_character_id = None
-        self.items = []
+        self.containers = []
         self.currencies = []
-        self.spend_currency_button = buttons.SpendCurrencyButton(self)
-        self.consume_item_button = buttons.ConsumeItemButton(self)
-        self.print_inventory_button = buttons.PrintInventoryButton(self)
-        self.current_inventory_info = TextDisplay(
-            'No Inventory Available.'
-        )
-        self.header_info = TextDisplay(
-            '**Player Commands - Inventory**'
-        )
+        self.currency_config = None
 
-    def build_view(self):
-        container = Container()
-
-        header_section = Section(accessory=BackButton(PlayerBaseView))
-        header_section.add_item(self.header_info)
-        container.add_item(header_section)
-        container.add_item(Separator())
-
-        container.add_item(self.current_inventory_info)
-        container.add_item(Separator())
-
-        spend_currency_section = Section(accessory=self.spend_currency_button)
-        spend_currency_section.add_item(TextDisplay(
-            'Spend some currency.'
-        ))
-        container.add_item(spend_currency_section)
-
-        consume_item_section = Section(accessory=self.consume_item_button)
-        consume_item_section.add_item(TextDisplay(
-            'Consume or destroy an item from your inventory.'
-        ))
-        container.add_item(consume_item_section)
-
-        container.add_item(Separator())
-
-        print_inventory_section = Section(accessory=self.print_inventory_button)
-        print_inventory_section.add_item(TextDisplay(
-            'Print your current inventory to the channel.'
-        ))
-        container.add_item(print_inventory_section)
-
-        self.add_item(container)
+        # Pagination for containers
+        self.items_per_page = 25
+        self.current_page = 0
+        self.total_pages = 1
 
     async def setup(self, interaction: discord.Interaction):
-        self.clear_items()
-        collection = interaction.client.mdb['characters']
+        bot = interaction.client
         guild_id = interaction.guild_id
-        query = await collection.find_one({'_id': interaction.user.id})
+        query = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.mdb,
+            collection_name='characters',
+            query={'_id': interaction.user.id}
+        )
 
-        currency_config = await interaction.client.gdb['currency'].find_one({'_id': guild_id})
+        self.currency_config = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name='currency',
+            query={'_id': guild_id}
+        )
+
         if not query:
-            self.spend_currency_button.disabled = True
-            self.consume_item_button.disabled = True
-            self.current_inventory_info.content = 'No Characters: Register a character to use these menus.'
-        elif str(guild_id) not in query['activeCharacters']:
-            self.spend_currency_button.disabled = True
-            self.consume_item_button.disabled = True
-            self.current_inventory_info.content = (
-                'No Active Character: Activate a character for this server to use these menus.'
-            )
+            self.active_character = None
+            self.active_character_id = None
+        elif str(guild_id) not in query.get('activeCharacters', {}):
+            self.active_character = None
+            self.active_character_id = None
         else:
             self.active_character_id = query['activeCharacters'][str(guild_id)]
             self.active_character = query['characters'][self.active_character_id]
-            self.header_info.content = f'**Player Commands - {self.active_character['name']}\'s Inventory**'
 
             # Validate currencies in inventory and convert based on server config
-            inventory_keys_to_check = list(self.active_character['attributes']['inventory'].keys())
+            inventory_keys_to_check = list(self.active_character['attributes'].get('inventory', {}).keys())
 
-            if inventory_keys_to_check and currency_config:
+            if inventory_keys_to_check and self.currency_config:
                 conversion_occurred = False
 
                 for item_name_key in inventory_keys_to_check:
                     quantity = self.active_character['attributes']['inventory'].get(item_name_key)
-
-                    is_currency, _ = find_currency_or_denomination(currency_config, item_name_key)
+                    is_currency, _ = find_currency_or_denomination(self.currency_config, item_name_key)
 
                     if is_currency:
                         await update_character_inventory(
@@ -314,56 +299,631 @@ class InventoryBaseView(LayoutView):
                             float(quantity)
                         )
 
-                        await collection.update_one(
-                            {'_id': interaction.user.id},
-                            {'$unset': {
+                        # In the event a currency was given prior to being defined (and therefore stored as an item),
+                        # this second update removes the old entry from inventory
+                        await update_cached_data(
+                            bot=bot,
+                            mongo_database=bot.mdb,
+                            collection_name='characters',
+                            query={'_id': interaction.user.id},
+                            update_data={'$unset': {
                                 f'characters.{self.active_character_id}.attributes.inventory.{item_name_key}': ''
                             }}
                         )
-
                         conversion_occurred = True
 
                 if conversion_occurred:
-                    query = await collection.find_one({'_id': interaction.user.id})
+                    query = await get_cached_data(
+                        bot=bot,
+                        mongo_database=bot.mdb,
+                        collection_name='characters',
+                        query={'_id': interaction.user.id}
+                    )
                     self.active_character = query['characters'][self.active_character_id]
 
-            inventory = self.active_character['attributes']['inventory']
-            player_currencies = self.active_character['attributes']['currency']
-            items = []
-            currencies = format_currency_display(player_currencies, currency_config)
+            # Get containers
+            self.containers = get_containers_sorted(self.active_character)
 
-            for item in inventory:
-                pair = (str(item), f'**{inventory[item]}**')
-                value = ': '.join(pair)
-                items.append(value)
+            # Calculate pagination
+            self.total_pages = math.ceil(len(self.containers) / self.items_per_page)
+            if self.total_pages == 0:
+                self.total_pages = 1
+            if self.current_page >= self.total_pages:
+                self.current_page = max(0, self.total_pages - 1)
 
-            if items:
-                self.consume_item_button.disabled = False
-                self.items = items
-            else:
-                self.consume_item_button.disabled = True
-                self.items.clear()
-
-            if currencies:
-                self.spend_currency_button.disabled = False
-                self.currencies = currencies
-            else:
-                self.spend_currency_button.disabled = True
-                self.currencies.clear()
-
-            if not items and not currencies:
-                self.print_inventory_button.disabled = True
-            else:
-                self.print_inventory_button.disabled = False
-
-            self.current_inventory_info.content = (
-                f'**Items**\n'
-                f'{('\n'.join(items) or 'None')}\n\n'
-                f'**Currency**\n'
-                f'{('\n'.join(currencies) or 'None')}'
-            )
+            # Get currencies
+            player_currencies = self.active_character['attributes'].get('currency', {})
+            self.currencies = format_currency_display(player_currencies, self.currency_config)
 
         self.build_view()
+
+    def build_view(self):
+        self.clear_items()
+        container = Container()
+
+        header_section = Section(accessory=BackButton(PlayerBaseView))
+
+        if not self.active_character:
+            header_section.add_item(TextDisplay('**Player Commands - Inventory**'))
+            container.add_item(header_section)
+            container.add_item(Separator())
+
+            if self.active_character_id is None:
+                container.add_item(TextDisplay(
+                    'No Active Character: Activate a character for this server to use these menus.'
+                ))
+            else:
+                container.add_item(TextDisplay(
+                    'No Characters: Register a character to use these menus.'
+                ))
+
+            self.add_item(container)
+            return
+
+        header_section.add_item(TextDisplay(
+            f"**{self.active_character['name']}'s Inventory**"
+        ))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        # Build container summary
+        summary_lines = []
+        total_items = 0
+        for c in self.containers:
+            summary_lines.append(f"**{c['name']}** — {c['count']} items")
+            total_items += c['count']
+
+        if self.currencies:
+            summary_lines.append('')
+            summary_lines.append('**Currency**')
+            summary_lines.extend(self.currencies)
+
+        container.add_item(TextDisplay('\n'.join(summary_lines) if summary_lines else 'Inventory is empty.'))
+        container.add_item(Separator())
+
+        # Container select (paginated)
+        start = self.current_page * self.items_per_page
+        end = start + self.items_per_page
+        page_containers = self.containers[start:end]
+
+        container_select_row = ActionRow()
+        container_select = selects.ContainerOverviewSelect(self, page_containers, self.current_page)
+        container_select_row.add_item(container_select)
+        container.add_item(container_select_row)
+
+        self.add_item(container)
+
+        # Action buttons row
+        action_row = ActionRow()
+        action_row.add_item(buttons.ManageContainersButton(self))
+
+        spend_button = buttons.SpendCurrencyButton(self)
+        spend_button.disabled = not self.currencies
+        action_row.add_item(spend_button)
+
+        print_button = buttons.PrintInventoryButton(self)
+        print_button.disabled = (total_items == 0 and not self.currencies) or not self.active_character
+        action_row.add_item(print_button)
+
+        self.add_item(action_row)
+
+        # Pagination row (if needed)
+        if self.total_pages > 1:
+            nav_row = ActionRow()
+
+            prev_button = Button(
+                label='Previous',
+                style=discord.ButtonStyle.secondary,
+                custom_id='inv_overview_prev',
+                disabled=(self.current_page == 0)
+            )
+            prev_button.callback = self.prev_page
+            nav_row.add_item(prev_button)
+
+            page_button = Button(
+                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                style=discord.ButtonStyle.secondary,
+                custom_id='inv_overview_page'
+            )
+            page_button.callback = self.show_page_jump_modal
+            nav_row.add_item(page_button)
+
+            next_button = Button(
+                label='Next',
+                style=discord.ButtonStyle.secondary,
+                custom_id='inv_overview_next',
+                disabled=(self.current_page >= self.total_pages - 1)
+            )
+            next_button.callback = self.next_page
+            nav_row.add_item(next_button)
+
+            self.add_item(nav_row)
+
+    async def prev_page(self, interaction):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction):
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def show_page_jump_modal(self, interaction):
+        try:
+            await interaction.response.send_modal(common_modals.PageJumpModal(self))
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ContainerItemsView(LayoutView):
+    def __init__(self, character_id: str, character_data: dict, container_id: str | None):
+        super().__init__(timeout=None)
+        self.character_id = character_id
+        self.character_data = character_data
+        self.container_id = container_id
+        self.container_name = 'Loose Items'
+
+        self.selected_item = None
+        self.items = []
+
+        self.items_per_page = 25
+        self.current_page = 0
+        self.total_pages = 1
+
+    async def setup(self, interaction: discord.Interaction):
+        # Refresh character data
+        bot = interaction.client
+        player_data = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.mdb,
+            collection_name='characters',
+            query={'_id': interaction.user.id}
+        )
+
+        self.character_data = player_data['characters'][self.character_id]
+
+        self.container_name = get_container_name(self.character_data, self.container_id)
+        items_dict = get_container_items(self.character_data, self.container_id)
+
+        # Convert to sorted list of tuples
+        self.items = sorted(items_dict.items(), key=lambda x: x[0].lower())
+
+        self.total_pages = math.ceil(len(self.items) / self.items_per_page)
+        if self.total_pages == 0:
+            self.total_pages = 1
+        if self.current_page >= self.total_pages:
+            self.current_page = max(0, self.total_pages - 1)
+
+        # Clear selection if item no longer exists
+        if self.selected_item:
+            item_names_lower = [name.lower() for name, _ in self.items]
+            if self.selected_item.lower() not in item_names_lower:
+                self.selected_item = None
+
+        self.build_view()
+
+    def build_view(self):
+        self.clear_items()
+        container = Container()
+
+        header_section = Section(accessory=buttons.BackToInventoryOverviewButton())
+        header_section.add_item(TextDisplay(f'**{self.container_name}**'))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        if not self.items:
+            container.add_item(TextDisplay('This container is empty.'))
+        else:
+            # Display items on current page
+            start = self.current_page * self.items_per_page
+            end = start + self.items_per_page
+            page_items = self.items[start:end]
+
+            items_display = []
+            for item_name, quantity in page_items:
+                items_display.append(f'• {item_name}: **{quantity}**')
+
+            container.add_item(TextDisplay('\n'.join(items_display)))
+            container.add_item(Separator())
+
+            # Item select
+            item_select_row = ActionRow()
+            item_select = selects.ContainerItemSelect(self, page_items, self.current_page)
+            item_select_row.add_item(item_select)
+            container.add_item(item_select_row)
+
+            if self.selected_item:
+                container.add_item(TextDisplay(f'Selected: **{self.selected_item}**'))
+
+        self.add_item(container)
+
+        # Action buttons
+        action_row = ActionRow()
+
+        consume_button = buttons.ConsumeFromContainerButton(self)
+        consume_button.disabled = self.selected_item is None
+        action_row.add_item(consume_button)
+
+        move_button = buttons.MoveItemButton(self)
+        move_button.disabled = self.selected_item is None
+        action_row.add_item(move_button)
+
+        self.add_item(action_row)
+
+        # Pagination
+        if self.total_pages > 1:
+            nav_row = ActionRow()
+
+            prev_button = Button(
+                label='Previous',
+                style=discord.ButtonStyle.secondary,
+                custom_id='container_items_prev',
+                disabled=(self.current_page == 0)
+            )
+            prev_button.callback = self.prev_page
+            nav_row.add_item(prev_button)
+
+            page_button = Button(
+                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                style=discord.ButtonStyle.secondary,
+                custom_id='container_items_page'
+            )
+            page_button.callback = self.show_page_jump_modal
+            nav_row.add_item(page_button)
+
+            next_button = Button(
+                label='Next',
+                style=discord.ButtonStyle.secondary,
+                custom_id='container_items_next',
+                disabled=(self.current_page >= self.total_pages - 1)
+            )
+            next_button.callback = self.next_page
+            nav_row.add_item(next_button)
+
+            self.add_item(nav_row)
+
+    async def prev_page(self, interaction):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.selected_item = None
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction):
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.selected_item = None
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def show_page_jump_modal(self, interaction):
+        try:
+            await interaction.response.send_modal(common_modals.PageJumpModal(self))
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class MoveDestinationView(LayoutView):
+    def __init__(self, source_view: ContainerItemsView, item_name: str, available_quantity: int):
+        super().__init__(timeout=None)
+        self.source_view = source_view
+        self.source_container_id = source_view.container_id
+        self.item_name = item_name
+        self.available_quantity = available_quantity
+
+        self.selected_destination = None
+        self._loose_items_selected = False
+        self.containers = []
+
+        self.items_per_page = 25
+        self.current_page = 0
+        self.total_pages = 1
+
+    async def setup(self, interaction: discord.Interaction):
+        # Refresh character data
+        bot = interaction.client
+        player_data = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.mdb,
+            collection_name='characters',
+            query={'_id': interaction.user.id}
+        )
+
+        self.source_view.character_data = player_data['characters'][self.source_view.character_id]
+
+        all_containers = get_containers_sorted(self.source_view.character_data)
+
+        # Exclude source container
+        self.containers = [c for c in all_containers if c['id'] != self.source_container_id]
+
+        self.total_pages = math.ceil(len(self.containers) / self.items_per_page)
+        if self.total_pages == 0:
+            self.total_pages = 1
+        if self.current_page >= self.total_pages:
+            self.current_page = max(0, self.total_pages - 1)
+
+        self.build_view()
+
+    def build_view(self):
+        self.clear_items()
+        container = Container()
+
+        header_section = Section(accessory=buttons.CancelMoveButton(self.source_view))
+        header_section.add_item(TextDisplay(
+            f'**Move "{self.item_name}"** ({self.available_quantity} available)'
+        ))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        if not self.containers:
+            container.add_item(TextDisplay('No other containers available.'))
+        else:
+            container.add_item(TextDisplay('Select destination container:'))
+
+            # Destination select (paginated)
+            start = self.current_page * self.items_per_page
+            end = start + self.items_per_page
+            page_containers = self.containers[start:end]
+
+            destination_select_row = ActionRow()
+            destination_select = selects.DestinationContainerSelect(self, page_containers, self.current_page)
+            destination_select_row.add_item(destination_select)
+            container.add_item(destination_select_row)
+
+            if self.selected_destination is not None or self._loose_selected():
+                destination_name = None
+                # Find destination name
+                if self.selected_destination is None:
+                    destination_name = 'Loose Items'
+                else:
+                    for dest_container in self.containers:
+                        if dest_container['id'] == self.selected_destination:
+                            destination_name = dest_container['name']
+                            break
+
+                if destination_name is not None:
+                    container.add_item(TextDisplay(f'Destination: **{destination_name}**'))
+
+        self.add_item(container)
+
+        # Move action buttons
+        action_row = ActionRow()
+
+        # Check if we have a valid destination
+        loose_selected = self._loose_selected()
+        has_destination = loose_selected or self.selected_destination is not None
+
+        move_all_button = buttons.MoveAllButton(self)
+        move_all_button.disabled = not has_destination
+        action_row.add_item(move_all_button)
+
+        move_some_button = buttons.MoveSomeButton(self)
+        move_some_button.disabled = not has_destination
+        action_row.add_item(move_some_button)
+
+        self.add_item(action_row)
+
+        # Pagination
+        if self.total_pages > 1:
+            nav_row = ActionRow()
+
+            prev_button = Button(
+                label='Previous',
+                style=discord.ButtonStyle.secondary,
+                custom_id='move_dest_prev',
+                disabled=(self.current_page == 0)
+            )
+            prev_button.callback = self.prev_page
+            nav_row.add_item(prev_button)
+
+            page_button = Button(
+                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                style=discord.ButtonStyle.secondary,
+                custom_id='move_dest_page'
+            )
+            page_button.callback = self.show_page_jump_modal
+            nav_row.add_item(page_button)
+
+            next_button = Button(
+                label='Next',
+                style=discord.ButtonStyle.secondary,
+                custom_id='move_dest_next',
+                disabled=(self.current_page >= self.total_pages - 1)
+            )
+            next_button.callback = self.next_page
+            nav_row.add_item(next_button)
+
+            self.add_item(nav_row)
+
+    def _loose_selected(self) -> bool:
+        return self._loose_items_selected
+
+    async def prev_page(self, interaction):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction):
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def show_page_jump_modal(self, interaction):
+        try:
+            await interaction.response.send_modal(common_modals.PageJumpModal(self))
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ContainerManagementView(LayoutView):
+    def __init__(self, character_id: str, character_data: dict):
+        super().__init__(timeout=None)
+        self.character_id = character_id
+        self.character_data = character_data
+
+        self.selected_container_id = None  # None can mean Loose Items OR nothing selected
+        self.has_selection = False
+        self.containers = []
+
+        self.items_per_page = 25
+        self.current_page = 0
+        self.total_pages = 1
+
+    async def setup(self, interaction: discord.Interaction):
+        # Refresh character data
+        bot = interaction.client
+        player_data = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.mdb,
+            collection_name='characters',
+            query={'_id': interaction.user.id}
+        )
+        self.character_data = player_data['characters'][self.character_id]
+
+        self.containers = get_containers_sorted(self.character_data)
+
+        self.total_pages = math.ceil(len(self.containers) / self.items_per_page)
+        if self.total_pages == 0:
+            self.total_pages = 1
+        if self.current_page >= self.total_pages:
+            self.current_page = max(0, self.total_pages - 1)
+
+        self.build_view()
+
+    def build_view(self):
+        self.clear_items()
+        container = Container()
+
+        header_section = Section(accessory=buttons.BackToInventoryOverviewButton())
+        header_section.add_item(TextDisplay('**Manage Containers**'))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        # Container list
+        container_lines = []
+        for index, container_data in enumerate(self.containers):
+            prefix = f'{index + 1}. '
+            suffix = ' (default)' if container_data['id'] is None else ''
+            container_lines.append(f"{prefix}**{container_data['name']}** ({container_data['count']} items){suffix}")
+
+        container.add_item(TextDisplay('\n'.join(container_lines) if container_lines else 'No containers.'))
+        container.add_item(Separator())
+
+        # Container select (paginated)
+        start = self.current_page * self.items_per_page
+        end = start + self.items_per_page
+        page_containers = self.containers[start:end]
+
+        manage_select_row = ActionRow()
+        manage_select = selects.ManageContainerSelect(self, page_containers, self.current_page)
+        manage_select_row.add_item(manage_select)
+        container.add_item(manage_select_row)
+
+        if self.has_selection:
+            selected_name = 'Loose Items'
+            if self.selected_container_id is not None:
+                for container_data in self.containers:
+                    if container_data['id'] == self.selected_container_id:
+                        selected_name = container_data['name']
+                        break
+            container.add_item(TextDisplay(f'Selected: **{selected_name}**'))
+
+        self.add_item(container)
+
+        # Action buttons row 1: Create
+        create_row = ActionRow()
+        create_row.add_item(buttons.CreateContainerButton(self))
+        self.add_item(create_row)
+
+        # Action buttons row 2: Rename, Delete, Reorder
+        manage_row = ActionRow()
+
+        # These are disabled for Loose Items (selected_container_id is None)
+        has_valid_selection = self.has_selection and self.selected_container_id is not None
+
+        rename_button = buttons.RenameContainerButton(self)
+        rename_button.disabled = not has_valid_selection
+        manage_row.add_item(rename_button)
+
+        delete_button = buttons.DeleteContainerButton(self)
+        delete_button.disabled = not has_valid_selection
+        manage_row.add_item(delete_button)
+
+        # Reorder buttons - check boundaries
+        can_move_up = False
+        can_move_down = False
+        if has_valid_selection:
+            for index, container_data in enumerate(self.containers):
+                if container_data['id'] == self.selected_container_id:
+                    # Index 0 is Loose Items, so real containers start at 1
+                    can_move_up = index > 1  # Can't move above Loose Items
+                    can_move_down = index < len(self.containers) - 1
+                    break
+
+        up_button = buttons.MoveContainerUpButton(self)
+        up_button.disabled = not can_move_up
+        manage_row.add_item(up_button)
+
+        down_button = buttons.MoveContainerDownButton(self)
+        down_button.disabled = not can_move_down
+        manage_row.add_item(down_button)
+
+        self.add_item(manage_row)
+
+        # Pagination
+        if self.total_pages > 1:
+            nav_row = ActionRow()
+
+            prev_button = Button(
+                label='Previous',
+                style=discord.ButtonStyle.secondary,
+                custom_id='manage_containers_prev',
+                disabled=(self.current_page == 0)
+            )
+            prev_button.callback = self.prev_page
+            nav_row.add_item(prev_button)
+
+            page_button = Button(
+                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                style=discord.ButtonStyle.secondary,
+                custom_id='manage_containers_page'
+            )
+            page_button.callback = self.show_page_jump_modal
+            nav_row.add_item(page_button)
+
+            next_button = Button(
+                label='Next',
+                style=discord.ButtonStyle.secondary,
+                custom_id='manage_containers_next',
+                disabled=(self.current_page >= self.total_pages - 1)
+            )
+            next_button.callback = self.next_page
+            nav_row.add_item(next_button)
+
+            self.add_item(nav_row)
+
+    async def prev_page(self, interaction):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction):
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def show_page_jump_modal(self, interaction):
+        try:
+            await interaction.response.send_modal(common_modals.PageJumpModal(self))
+        except Exception as e:
+            await log_exception(e, interaction)
 
 
 class PlayerBoardView(LayoutView):
@@ -378,15 +938,24 @@ class PlayerBoardView(LayoutView):
 
     async def setup(self, bot, user, guild):
         try:
-            channel_collection = bot.gdb['playerBoardChannel']
-            channel_query = await channel_collection.find_one({'_id': guild.id})
+            channel_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='playerBoardChannel',
+                query={'_id': guild.id}
+            )
             self.player_board_channel_id = strip_id(channel_query['playerBoardChannel']) if channel_query else None
 
-            self.posts = []
-            post_collection = bot.gdb['playerBoard']
-            post_cursor = post_collection.find({'guildId': guild.id, 'playerId': user.id})
-            async for post in post_cursor:
-                self.posts.append(dict(post))
+            cache_id = f'{guild.id}:{user.id}'
+
+            self.posts = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='playerBoard',
+                query={'guildId': guild.id, 'playerId': user.id},
+                is_single=False,
+                cache_id=cache_id
+            )
 
             # Sort by newest first
             self.posts.sort(key=lambda x: x.get('timestamp', 0), reverse=True)
@@ -521,6 +1090,11 @@ class PlayerBoardView(LayoutView):
 
             await post_collection.insert_one(post)
 
+            cache_id = f'{interaction.guild_id}:{interaction.user.id}'
+            redis_key = build_cache_key(interaction.client.gdb.name, cache_id, 'playerBoard')
+
+            await interaction.client.rdb.delete(redis_key)
+
             await setup_view(self, interaction)
             await interaction.response.edit_message(view=self)
         except Exception as e:
@@ -528,10 +1102,14 @@ class PlayerBoardView(LayoutView):
 
     async def edit_post(self, post, new_title, new_content, interaction):
         try:
-            post_collection = interaction.client.gdb['playerBoard']
-            await post_collection.update_one(
-                {'guildId': interaction.guild_id, 'postId': post['postId']},
-                {'$set': {'title': new_title, 'content': new_content}}
+            bot = interaction.client
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='playerBoard',
+                query={'guildId': interaction.guild_id, 'postId': post['postId']},
+                update_data={'$set': {'title': new_title, 'content': new_content}},
+                cache_id=f'{interaction.guild_id}:{post["postId"]}'
             )
 
             channel_id = self.player_board_channel_id
@@ -555,6 +1133,11 @@ class PlayerBoardView(LayoutView):
                         logger.error("Player Board message not found for editing.")
                     except Exception as e:
                         logger.error(f"Failed to edit Player Board message: {e}")
+
+            cache_id = f'{interaction.guild_id}:{interaction.user.id}'
+            redis_key = build_cache_key(interaction.client.gdb.name, cache_id, 'playerBoard')
+
+            await interaction.client.rdb.delete(redis_key)
 
             await setup_view(self, interaction)
             await interaction.response.edit_message(view=self)
@@ -613,15 +1196,24 @@ class StaticKitSelectView(LayoutView):
 
     async def setup(self, interaction):
         bot = interaction.client
-        collection = bot.gdb['staticKits']
-        query = await collection.find_one({'_id': interaction.guild_id})
+        query = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name='staticKits',
+            query={'_id': interaction.guild_id}
+        )
         self.kits = query.get('kits', {}) if query else {}
 
         # Sort kits by name
         self.sorted_kits = sorted(self.kits.items(), key=lambda x: x[1].get('name', '').lower())
         self.total_pages = math.ceil(len(self.sorted_kits) / self.items_per_page)
 
-        self.currency_config = await bot.gdb['currency'].find_one({'_id': interaction.guild_id})
+        self.currency_config = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name='currency',
+            query={'_id': interaction.guild_id}
+        )
 
         self.build_view()
 
@@ -780,6 +1372,39 @@ class StaticKitConfirmView(LayoutView):
         await _handle_submission(interaction, self.character_id, self.character_name, items, currency)
 
 
+class NewCharacterComplexItemPurchaseView(LayoutView):
+    def __init__(self, parent_view, item):
+        super().__init__(timeout=None)
+        self.parent_view = parent_view
+        self.item = item
+        self.build_view()
+
+    def build_view(self):
+        self.clear_items()
+        container = Container()
+
+        header = Section(accessory=buttons.WizardKeepShoppingButton(self.parent_view))
+        header.add_item(TextDisplay(f"**Purchase Options: {self.item['name']}**"))
+        container.add_item(header)
+        container.add_item(Separator())
+
+        costs = self.item.get('costs', [])
+        currency_config = getattr(self.parent_view, 'currency_config', {})
+
+        if not costs:
+            container.add_item(TextDisplay("This item has no cost options available."))
+        else:
+            for index, cost_option in enumerate(costs):
+                cost_str = format_complex_cost([cost_option], currency_config)
+
+                select_button = buttons.WizardSelectCostOptionButton(self.parent_view, self.item, index)
+                section = Section(accessory=select_button)
+                section.add_item(TextDisplay(f"**Option {index + 1}:** {cost_str}"))
+                container.add_item(section)
+
+        self.add_item(container)
+
+
 class NewCharacterShopView(LayoutView):
     def __init__(self, character_id, character_name, inventory_type):
         super().__init__(timeout=None)
@@ -793,21 +1418,36 @@ class NewCharacterShopView(LayoutView):
         self.current_page = 0
         self.total_pages = 1
 
-        self.currency_config = None
+        self.currency_config = {}
         self.starting_wealth = None
 
     async def setup(self, interaction):
         guild_id = interaction.guild_id
         bot = interaction.client
 
-        shop_query = await bot.gdb['newCharacterShop'].find_one({'_id': guild_id})
+        shop_query = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name='newCharacterShop',
+            query={'_id': guild_id}
+        )
         self.shop_stock = shop_query.get('shopStock', []) if shop_query else []
         self.total_pages = math.ceil(len(self.shop_stock) / self.items_per_page)
 
-        self.currency_config = await bot.gdb['currency'].find_one({'_id': guild_id})
+        self.currency_config = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name='currency',
+            query={'_id': guild_id}
+        )
 
         if self.inventory_type == 'purchase':
-            inventory_config = await bot.gdb['inventoryConfig'].find_one({'_id': guild_id})
+            inventory_config = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='inventoryConfig',
+                query={'_id': guild_id}
+            )
             self.starting_wealth = inventory_config.get('newCharacterWealth') if inventory_config else None
 
         self.build_view()
@@ -831,15 +1471,25 @@ class NewCharacterShopView(LayoutView):
         stock_slice = self.shop_stock[start:end]
 
         for item in stock_slice:
-            section = Section(accessory=buttons.WizardItemButton(item, self.inventory_type))
+            cost_string = 'Free'
+            if self.inventory_type == 'purchase':
+                costs = item.get('costs', [])
+                cost_string = format_complex_cost(costs, self.currency_config)
+
+            section = Section(accessory=buttons.WizardItemButton(item, self.inventory_type, cost_string))
 
             display = f'**{item["name"]}**'
             if item.get('quantity', 1) > 1:
                 display += f'(x{item.get("quantity", 1)})'
 
             if item_name := item.get('name'):
-                if item_name in self.cart:
-                    display += f" **(In Cart: {self.cart[item_name]['quantity']})**"
+                item_quantity_in_cart = 0
+                for value in self.cart.values():
+                    if value['item']['name'] == item_name:
+                        item_quantity_in_cart += value['quantity']
+
+                if item_quantity_in_cart > 0:
+                    display += f" **(In Cart: {item_quantity_in_cart})**"
 
             if description := item.get('description'):
                 display += f"\n*{description}*"
@@ -883,6 +1533,17 @@ class NewCharacterShopView(LayoutView):
         self.build_view()
         await interaction.response.edit_message(view=self)
 
+    async def add_to_cart_with_option(self, interaction, item, option_index=0):
+        name = item['name']
+        key = f"{name}::{option_index}"
+
+        if key in self.cart:
+            self.cart[key]['quantity'] += 1
+        else:
+            self.cart[key] = {'item': item, 'quantity': 1, 'option_index': option_index}
+        self.build_view()
+        await interaction.response.edit_message(view=self)
+
     async def prev_page(self, interaction):
         self.current_page -= 1
         self.build_view()
@@ -918,19 +1579,22 @@ class NewCharacterCartView(LayoutView):
         total_cost_raw = {}
         self.cart_items = {}
 
-        for name, data in self.shop_view.cart.items():
+        for key, data in self.shop_view.cart.items():
             item = data['item']
             quantity = data['quantity']
+            option_index = data.get('option_index', 0)
             quantity_per_purchase = item.get('quantity', 1)
             total_quantity = quantity * quantity_per_purchase
 
-            self.cart_items[name] = total_quantity
+            name = item['name']
+            self.cart_items[name] = self.cart_items.get(name, 0) + total_quantity
 
             if self.shop_view.inventory_type == 'purchase':
-                cost = quantity * item.get('price', 0)
-                if cost > 0:
-                    currency = item.get('currency')
-                    total_cost_raw[currency] = total_cost_raw.get(currency, 0) + cost
+                costs = item.get('costs', [])
+                if 0 <= option_index < len(costs):
+                    selected_cost = costs[option_index]
+                    for currency, amount in selected_cost.items():
+                        total_cost_raw[currency] = total_cost_raw.get(currency, 0) + (amount * quantity)
 
         self.can_afford = True
         warnings = []
@@ -980,9 +1644,11 @@ class NewCharacterCartView(LayoutView):
             end = start + self.items_per_page
             page_items = cart_items[start:end]
 
-            for name, data in page_items:
+            for key, data in page_items:
                 item = data['item']
+                name = item.get('name')
                 quantity = data['quantity']
+                option_index = data.get('option_index', 0)
                 quantity_per_purchase = item.get('quantity', 1)
                 total_quantity = quantity * quantity_per_purchase
 
@@ -991,13 +1657,15 @@ class NewCharacterCartView(LayoutView):
                     display += f' (Total: {total_quantity})'
 
                 if self.shop_view.inventory_type == 'purchase':
-                    cost = quantity * float(item.get('price', 0))
-                    if cost > 0:
-                        currency = item.get('currency')
-                        price_label = format_price_string(cost, currency, self.shop_view.currency_config)
-                        display += f' - {price_label}'
+                    costs = item.get('costs', [])
+                    if 0 <= option_index < len(costs):
+                        selected_cost = costs[option_index]
+                        if selected_cost:
+                            total_line_cost = {k: v * quantity for k, v in selected_cost.items()}
+                            price_label = format_complex_cost([total_line_cost], self.shop_view.currency_config)
+                            display += f' - {price_label}'
 
-                edit_button = buttons.WizardEditCartItemButton(name, quantity)
+                edit_button = buttons.WizardEditCartItemButton(key, quantity)
                 section = Section(accessory=edit_button)
                 section.add_item(TextDisplay(display))
                 container.add_item(section)
@@ -1042,7 +1710,6 @@ class NewCharacterCartView(LayoutView):
             )
             next_button.callback = self.next_page
 
-
             nav_row.add_item(prev_button)
             nav_row.add_item(page_display)
             nav_row.add_item(next_button)
@@ -1083,9 +1750,20 @@ async def _handle_submission(interaction, character_id, character_name, items, c
     try:
         guild_id = interaction.guild_id
         bot = interaction.client
-        currency_config = await bot.gdb['currency'].find_one({'_id': guild_id})
+        currency_config = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name='currency',
+            query={'_id': guild_id}
+        )
 
-        approval_query = await bot.gdb['approvalQueueChannel'].find_one({'_id': guild_id})
+        approval_query = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name='approvalQueueChannel',
+            query={'_id': guild_id}
+        )
+
         channel_id = strip_id(approval_query['approvalQueueChannel']) if approval_query else None
         forum_channel = bot.get_channel(channel_id) if channel_id else None
 
@@ -1151,7 +1829,6 @@ async def _handle_submission(interaction, character_id, character_name, items, c
 
             for name, quantity in currency.items():
                 await update_character_inventory(interaction, interaction.user.id, character_id, name, quantity)
-
 
             report_embed = discord.Embed(title='Starting Inventory Applied', color=discord.Color.green())
             report_embed.description = (
