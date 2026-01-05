@@ -67,7 +67,7 @@ async def get_cached_data(bot, mongo_database, collection_name, query, is_single
             cursor = mongo_database[collection_name].find(query)
             data = await cursor.to_list(length=None)
 
-            if len(data) > 0:
+            if data:
                 try:
                     await bot.rdb.set(cache_key, json.dumps(data, default=str), ex=3600)
                 except Exception as e:
@@ -628,7 +628,7 @@ async def update_quest_embed(quest: dict) -> discord.Embed | None:
 
         formatted_party = []
         # Map int list to string for formatting, then format the list of users as user mentions
-        if len(party) > 0:
+        if party:
             for player in party:
                 for member_id in player:
                     for character_id in player[str(member_id)]:
@@ -637,7 +637,7 @@ async def update_quest_embed(quest: dict) -> discord.Embed | None:
 
         formatted_wait_list = []
         # Only format the wait list if there is one.
-        if len(wait_list) > 0:
+        if wait_list:
             for player in wait_list:
                 for member_id in player:
                     for character_id in player[str(member_id)]:
@@ -647,21 +647,22 @@ async def update_quest_embed(quest: dict) -> discord.Embed | None:
         # Set the embed fields and footer
         embed.title = title
         embed.description = post_description
-        if len(formatted_party) == 0:
-            embed.add_field(name=f'__Party ({current_party_size}/{max_party_size})__',
-                            value='None')
+        if formatted_party:
+            party_string = '\n'.join(formatted_party)
         else:
-            embed.add_field(name=f'__Party ({current_party_size}/{max_party_size})__',
-                            value='\n'.join(formatted_party))
+            party_string = 'None'
+        embed.add_field(name=f'__Party ({current_party_size}/{max_party_size})__',
+                        value=party_string)
 
         # Add a wait list field if one is present, unless the quest is being archived.
         if max_wait_list_size > 0:
-            if len(formatted_wait_list) == 0:
-                embed.add_field(name=f'__Wait List ({current_wait_list_size}/{max_wait_list_size})__',
-                                value='None')
+            if formatted_wait_list:
+                wait_list_string = '\n'.join(formatted_wait_list)
             else:
-                embed.add_field(name=f'__Wait List ({current_wait_list_size}/{max_wait_list_size})__',
-                                value='\n'.join(formatted_wait_list))
+                wait_list_string = 'None'
+
+            embed.add_field(name=f'__Wait List ({current_wait_list_size}/{max_wait_list_size})__',
+                            value=wait_list_string)
 
         embed.set_footer(text='Quest ID: ' + quest_id)
 

@@ -248,13 +248,13 @@ class ManageQuestsView(LayoutView):
         container.add_item(rewards_section)
 
         complete_quest_button = buttons.CompleteQuestButton(self)
-        complete_quest_button.disabled = not (quest.get('party') is not None and len(quest.get('party')) > 0)
+        complete_quest_button.disabled = not quest.get('party')
         complete_section = Section(accessory=complete_quest_button)
         complete_section.add_item(TextDisplay('Complete a quest. Issues rewards, if any, to party members.'))
         container.add_item(complete_section)
 
         remove_player_button = buttons.RemovePlayerButton(self)
-        remove_player_button.disabled = not (quest.get('party') is not None and len(quest.get('party')) > 0)
+        remove_player_button.disabled = not quest.get('party')
         remove_player_section = Section(accessory=remove_player_button)
         remove_player_section.add_item(TextDisplay('Remove a player from the quest roster and notify them.'))
         container.add_item(remove_player_section)
@@ -345,7 +345,7 @@ class ManageQuestsView(LayoutView):
 
                 await interaction.user.send('Quest roster has been unlocked.')
 
-            if len(tasks) > 0:
+            if tasks:
                 results = await asyncio.gather(*tasks, return_exceptions=True)
                 for result in results:
                     if isinstance(result, discord.errors.Forbidden):
@@ -901,7 +901,7 @@ class RemovePlayerView(LayoutView):
                         party.remove(player)
 
                         # If there is a wait list, promote the first entry into the party
-                        if max_wait_list_size > 0 and len(wait_list) > 0:
+                        if max_wait_list_size > 0 and wait_list:
                             new_player = wait_list.pop(0)
                             party.append(new_player)
 
@@ -1078,7 +1078,7 @@ class QuestPostView(View):
                 if str(user_id) in player:
                     in_party = True
             in_wait_list = False
-            if len(wait_list) > 0:
+            if wait_list:
                 for player in wait_list:
                     if str(user_id) in player:
                         in_wait_list = True
@@ -1097,7 +1097,7 @@ class QuestPostView(View):
 
                 new_member = None
                 # If there is a wait list, move the first entry into the party automatically
-                if max_wait_list_size > 0 and len(wait_list) > 0:
+                if max_wait_list_size > 0 and wait_list:
                     new_player = wait_list.pop(0)
                     party.append(new_player)
 

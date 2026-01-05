@@ -397,9 +397,9 @@ class ShopCartView(LayoutView):
                 nav_row.add_item(next_button)
 
             checkout_button = buttons.CartCheckoutButton(self)
-            checkout_button.disabled = not (can_afford_all and len(self.prev_view.cart) > 0)
+            checkout_button.disabled = not (can_afford_all and self.prev_view.cart)
             cart_clear_button = buttons.CartClearButton(self)
-            cart_clear_button.disabled = not len(self.prev_view.cart) > 0
+            cart_clear_button.disabled = not self.prev_view.cart
             nav_row.add_item(checkout_button)
             nav_row.add_item(cart_clear_button)
 

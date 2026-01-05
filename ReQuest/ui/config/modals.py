@@ -100,10 +100,9 @@ class AddCurrencyTextModal(Modal):
                 for currency in query['currencies']:
                     if currency['name'].lower() == self.text_input.value.lower():
                         matches += 1
-                    if currency['denominations'] and len(currency['denominations']) > 0:
-                        for denomination in currency['denominations']:
-                            if denomination['name'].lower() == self.text_input.value.lower():
-                                matches += 1
+                    for denomination in currency['denominations']:
+                        if denomination['name'].lower() == self.text_input.value.lower():
+                            matches += 1
 
             if matches > 0:
                 await interaction.response.defer(ephemeral=True, thinking=True)
