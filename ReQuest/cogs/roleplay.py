@@ -89,7 +89,14 @@ class Roleplay(Cog):
                 return
 
             allowed_channels = rp_config.get('channels', [])
-            if str(message.channel.id) not in allowed_channels:
+
+            # Check if message is in an allowed channel
+            # For threads, check if the parent channel is allowed
+            channel_to_check = message.channel
+            if isinstance(message.channel, discord.Thread):
+                channel_to_check = message.channel.parent
+
+            if not channel_to_check or str(channel_to_check.id) not in allowed_channels:
                 logger.debug(f'Message in channel {message.channel.id} not in allowed RP channels.')
                 return
 
