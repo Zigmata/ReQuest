@@ -301,15 +301,19 @@ class InventoryOverviewView(LayoutView):
 
                         # In the event a currency was given prior to being defined (and therefore stored as an item),
                         # this second update removes the old entry from inventory
-                        await update_cached_data(
-                            bot=bot,
-                            mongo_database=bot.mdb,
-                            collection_name='characters',
-                            query={'_id': interaction.user.id},
-                            update_data={'$unset': {
-                                f'characters.{self.active_character_id}.attributes.inventory.{item_name_key}': ''
-                            }}
-                        )
+                        # Modify dict directly to avoid dot-notation issues with item names containing dots
+                        inventory = self.active_character['attributes'].get('inventory', {})
+                        if item_name_key in inventory:
+                            del inventory[item_name_key]
+                            await update_cached_data(
+                                bot=bot,
+                                mongo_database=bot.mdb,
+                                collection_name='characters',
+                                query={'_id': interaction.user.id},
+                                update_data={'$set': {
+                                    f'characters.{self.active_character_id}.attributes.inventory': inventory
+                                }}
+                            )
                         conversion_occurred = True
 
                 if conversion_occurred:
