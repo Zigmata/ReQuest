@@ -218,6 +218,24 @@ def strip_id(mention: str) -> int:
     return parsed_id
 
 
+def escape_markdown(text: str) -> str:
+    """
+    Escapes Discord markdown special characters in text.
+
+    :param text: The text to escape
+
+    :return: Text with markdown characters escaped
+    """
+    if not text:
+        return text
+    # Escape backslash first to avoid double-escaping
+    text = text.replace('\\', '\\\\')
+    # Escape other markdown characters
+    for char in ('*', '_', '~', '`', '|'):
+        text = text.replace(char, f'\\{char}')
+    return text
+
+
 async def log_exception(exception, interaction=None):
     """
     Logs an exception and sends a user-friendly message if interaction is provided.

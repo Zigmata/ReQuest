@@ -31,7 +31,8 @@ from ReQuest.utilities.supportFunctions import (
     get_xp_config,
     get_cached_data,
     consolidate_currency_totals,
-    get_shop_stock
+    get_shop_stock,
+    escape_markdown
 )
 
 logger = logging.getLogger(__name__)
@@ -1593,7 +1594,7 @@ class ConfigNewCharacterShopView(LayoutView):
             container.add_item(TextDisplay("No items configured."))
         else:
             for item in current_stock:
-                item_name = item.get('name')
+                item_name = escape_markdown(item.get('name'))
                 item_description = item.get('description')
                 item_quantity = item.get('quantity', 1)
 
@@ -1605,7 +1606,7 @@ class ConfigNewCharacterShopView(LayoutView):
                     display_string += f' - {cost_string}'
 
                 if item_description:
-                    display_string += f"\n*{item_description}*"
+                    display_string += f"\n*{escape_markdown(item_description)}*"
 
                 container.add_item(TextDisplay(display_string))
 
@@ -2511,7 +2512,7 @@ class EditShopView(LayoutView):
         current_stock = self.all_stock[start_index:end_index]
 
         for item in current_stock:
-            item_name = item.get('name')
+            item_name = escape_markdown(item.get('name'))
             item_description = item.get('description', None)
             item_quantity = item.get('quantity', 1)
 
@@ -2526,7 +2527,7 @@ class EditShopView(LayoutView):
             display_string = f'**{item_text}** - {cost_string}'
 
             if item_description:
-                display_string += f'\n*{item_description}*'
+                display_string += f'\n*{escape_markdown(item_description)}*'
 
             container.add_item(TextDisplay(display_string))
 
@@ -2703,6 +2704,7 @@ class ConfigStockLimitsView(LayoutView):
 
             for item in page_items:
                 item_name = item.get('name', 'Unknown')
+                item_name_display = escape_markdown(item_name)
                 max_stock = item.get('maxStock')
 
                 # Get runtime stock info
@@ -2715,11 +2717,11 @@ class ConfigStockLimitsView(LayoutView):
 
                 if max_stock is not None:
                     if current_available is not None:
-                        stock_text = f'**{item_name}**\nMax: {max_stock} | Available: {current_available}'
+                        stock_text = f'**{item_name_display}**\nMax: {max_stock} | Available: {current_available}'
                         if reserved > 0:
                             stock_text += f' | Reserved: {reserved}'
                     else:
-                        stock_text = f'**{item_name}**\nMax: {max_stock} | Available: (not initialized)'
+                        stock_text = f'**{item_name_display}**\nMax: {max_stock} | Available: (not initialized)'
 
                     # Create button row with edit and remove buttons
                     item_row = ActionRow()
@@ -2729,7 +2731,7 @@ class ConfigStockLimitsView(LayoutView):
                     container.add_item(TextDisplay(stock_text))
                     container.add_item(item_row)
                 else:
-                    stock_text = f'**{item_name}**\nStock: Unlimited'
+                    stock_text = f'**{item_name_display}**\nStock: Unlimited'
                     item_section = Section(accessory=buttons.SetItemStockButton(item, self))
                     item_section.add_item(TextDisplay(stock_text))
                     container.add_item(item_section)
