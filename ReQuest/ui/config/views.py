@@ -2193,6 +2193,7 @@ class ConfigEditCurrencyView(LayoutView):
         toggle_double_button.label = f'Toggle Display (Current: {display_type})'
         actions.add_item(toggle_double_button)
         actions.add_item(buttons.AddDenominationButton(self))
+        actions.add_item(buttons.RenameCurrencyButton(self, self.currency_name))
         actions.add_item(buttons.RemoveCurrencyButton(self, self.currency_name))
         container.add_item(actions)
         container.add_item(Separator())
@@ -2209,10 +2210,12 @@ class ConfigEditCurrencyView(LayoutView):
                 denomination_value = denomination.get('value', 0)
 
                 info = f"**{titlecase(denomination_name)}** (Value: {denomination_value})"
+                container.add_item(TextDisplay(info))
 
-                section = Section(accessory=buttons.RemoveDenominationButton(self, denomination_name))
-                section.add_item(TextDisplay(info))
-                container.add_item(section)
+                denom_actions = ActionRow()
+                denom_actions.add_item(buttons.RenameDenominationButton(self, denomination_name))
+                denom_actions.add_item(buttons.RemoveDenominationButton(self, denomination_name))
+                container.add_item(denom_actions)
 
         self.add_item(container)
 

@@ -285,6 +285,29 @@ class RemoveDenominationButton(Button):
             await log_exception(e, interaction)
 
 
+class RenameDenominationButton(Button):
+    def __init__(self, calling_view, denomination_name):
+        super().__init__(
+            label='Rename',
+            style=ButtonStyle.secondary,
+            custom_id=f'rename_denomination_button_{denomination_name}'
+        )
+        self.calling_view = calling_view
+        self.denomination_name = denomination_name
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.send_modal(
+                modals.RenameDenominationModal(
+                    self.calling_view,
+                    self.calling_view.currency_name,
+                    self.denomination_name
+                )
+            )
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
 class AddCurrencyButton(Button):
     def __init__(self, calling_view):
         super().__init__(
@@ -359,6 +382,25 @@ class RemoveCurrencyButton(Button):
             view = ConfigCurrencyView()
             await setup_view(view, interaction)
             await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RenameCurrencyButton(Button):
+    def __init__(self, calling_view, currency_name):
+        super().__init__(
+            label='Rename',
+            style=ButtonStyle.secondary,
+            custom_id='rename_currency_button'
+        )
+        self.calling_view = calling_view
+        self.currency_name = currency_name
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.send_modal(
+                modals.RenameCurrencyModal(self.calling_view, self.currency_name)
+            )
         except Exception as e:
             await log_exception(e, interaction)
 

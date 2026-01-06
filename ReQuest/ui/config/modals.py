@@ -123,6 +123,131 @@ class AddCurrencyTextModal(Modal):
             await log_exception(e, interaction)
 
 
+class RenameCurrencyModal(Modal):
+    def __init__(self, calling_view, old_currency_name):
+        super().__init__(
+            title='Rename Currency',
+            timeout=180
+        )
+        self.calling_view = calling_view
+        self.old_currency_name = old_currency_name
+        self.text_input = discord.ui.TextInput(
+            label='New Currency Name',
+            required=True,
+            default=old_currency_name,
+            custom_id='rename_currency_text_input'
+        )
+        self.add_item(self.text_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            guild_id = interaction.guild_id
+            new_name = self.text_input.value.strip()
+
+            if new_name.lower() == self.old_currency_name.lower():
+                # No actual change, just refresh
+                await setup_view(self.calling_view, interaction)
+                await interaction.response.edit_message(view=self.calling_view)
+                return
+
+            # Check for duplicate names
+            query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='currency',
+                query={'_id': guild_id}
+            )
+
+            if query:
+                for currency in query.get('currencies', []):
+                    if currency['name'].lower() == new_name.lower():
+                        raise UserFeedbackError(f'A currency named "{new_name}" already exists.')
+                    for denomination in currency.get('denominations', []):
+                        if denomination['name'].lower() == new_name.lower():
+                            raise UserFeedbackError(f'A denomination named "{new_name}" already exists.')
+
+            # Update the currency name
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='currency',
+                query={'_id': guild_id, 'currencies.name': self.old_currency_name},
+                update_data={'$set': {'currencies.$.name': new_name}}
+            )
+
+            # Update the view with the new name and refresh
+            self.calling_view.currency_name = new_name
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RenameDenominationModal(Modal):
+    def __init__(self, calling_view, currency_name, old_denomination_name):
+        super().__init__(
+            title='Rename Denomination',
+            timeout=180
+        )
+        self.calling_view = calling_view
+        self.currency_name = currency_name
+        self.old_denomination_name = old_denomination_name
+        self.text_input = discord.ui.TextInput(
+            label='New Denomination Name',
+            required=True,
+            default=old_denomination_name,
+            custom_id='rename_denomination_text_input'
+        )
+        self.add_item(self.text_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            guild_id = interaction.guild_id
+            new_name = self.text_input.value.strip()
+
+            if new_name.lower() == self.old_denomination_name.lower():
+                # No actual change, just refresh
+                await setup_view(self.calling_view, interaction)
+                await interaction.response.edit_message(view=self.calling_view)
+                return
+
+            # Check for duplicate names
+            query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='currency',
+                query={'_id': guild_id}
+            )
+
+            if query:
+                for currency in query.get('currencies', []):
+                    if currency['name'].lower() == new_name.lower():
+                        raise UserFeedbackError(f'A currency named "{new_name}" already exists.')
+                    for denomination in currency.get('denominations', []):
+                        if denomination['name'].lower() == new_name.lower():
+                            raise UserFeedbackError(f'A denomination named "{new_name}" already exists.')
+
+            # Update the denomination name using arrayFilters
+            collection = bot.gdb['currency']
+            await collection.update_one(
+                {'_id': guild_id, 'currencies.name': self.currency_name},
+                {'$set': {'currencies.$.denominations.$[denom].name': new_name}},
+                array_filters=[{'denom.name': self.old_denomination_name}]
+            )
+
+            # Invalidate cache
+            from ReQuest.utilities.supportFunctions import build_cache_key
+            cache_key = build_cache_key(bot.gdb.name, guild_id, 'currency')
+            await bot.rdb.delete(cache_key)
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
 class AddCurrencyDenominationModal(Modal):
     def __init__(self, calling_view, base_currency_name):
         super().__init__(
