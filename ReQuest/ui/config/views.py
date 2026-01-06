@@ -551,7 +551,8 @@ class ConfigWizardView(LayoutView):
         return '\n'.join(report_lines)
 
     def validate_dashboard_settings(self, wait_list_query, quest_summary_query, gm_rewards_query,
-                                    player_xp_query, currency_config):
+                                    player_xp_query, currency_config, roleplay_config,
+                                    shops_config, inventory_config, new_char_shop, static_kits):
 
         # Fetch data
         wait_list_size = wait_list_query.get('questWaitList', 0) if wait_list_query else 0
@@ -592,6 +593,54 @@ class ConfigWizardView(LayoutView):
         components.append({
             'content': '\n'.join(currency_section_content),
             'shortcut_button': MenuViewButton(ConfigCurrencyView, 'Configure Currency')
+        })
+
+        # Roleplay Rewards Settings
+        rp_enabled = roleplay_config.get('enabled', False) if roleplay_config else False
+        rp_mode = roleplay_config.get('mode', 'scheduled') if roleplay_config else 'scheduled'
+        rp_channels = roleplay_config.get('channels', []) if roleplay_config else []
+        roleplay_section_content = [
+            '**Roleplay Rewards**',
+            f'- Status: {"Enabled" if rp_enabled else "Disabled"}',
+            f'- Mode: {rp_mode.capitalize()}',
+            f'- Monitored Channels: {len(rp_channels)}'
+        ]
+        components.append({
+            'content': '\n'.join(roleplay_section_content),
+            'shortcut_button': MenuViewButton(ConfigRoleplayView, 'Configure RP Rewards')
+        })
+
+        # Shops Settings
+        shop_channels = shops_config.get('shopChannels', {}) if shops_config else {}
+        shops_section_content = [
+            '**Shops**',
+            f'- Configured Shops: {len(shop_channels)}'
+        ]
+        if shop_channels:
+            shop_names = [data.get('shopName', 'Unnamed Shop') for data in shop_channels.values()]
+            shop_names.sort(key=str.lower)
+            for shop_name in shop_names[:3]:
+                shops_section_content.append(f'  - {shop_name}')
+            if len(shop_names) > 3:
+                shops_section_content.append(f'  - ...and {len(shop_names) - 3} more')
+        components.append({
+            'content': '\n'.join(shops_section_content),
+            'shortcut_button': MenuViewButton(ConfigShopsView, 'Configure Shops')
+        })
+
+        # New Character Setup
+        inv_type = inventory_config.get('inventoryType', 'none') if inventory_config else 'none'
+        shop_items = new_char_shop.get('stock', []) if new_char_shop else []
+        kits = static_kits.get('kits', []) if static_kits else []
+        new_char_section_content = [
+            '**New Character Setup**',
+            f'- Inventory Type: {inv_type.capitalize()}',
+            f'- New Character Shop Items: {len(shop_items)}',
+            f'- Static Kits: {len(kits)}'
+        ]
+        components.append({
+            'content': '\n'.join(new_char_section_content),
+            'shortcut_button': MenuViewButton(ConfigPlayersView, 'New Char Setup')
         })
 
         # Header
@@ -713,6 +762,20 @@ class ConfigWizardView(LayoutView):
                 }
             )
 
+            approval_queue_query = await get_cached_data(
+                bot=bot,
+                mongo_database=gdb,
+                collection_name='approvalQueueChannel',
+                query={'_id': guild.id}
+            )
+            channels.append(
+                {
+                    'name': 'Character Approval Queue',
+                    'mention': approval_queue_query['approvalQueueChannel'] if approval_queue_query else None,
+                    'required': False
+                }
+            )
+
             # Dashboard configs
             wait_list_query = await get_cached_data(
                 bot=bot,
@@ -745,6 +808,42 @@ class ConfigWizardView(LayoutView):
                 query={'_id': guild.id}
             )
 
+            # Roleplay config
+            roleplay_config_query = await get_cached_data(
+                bot=bot,
+                mongo_database=gdb,
+                collection_name='roleplayConfig',
+                query={'_id': guild.id}
+            )
+
+            # Shops config
+            shops_query = await get_cached_data(
+                bot=bot,
+                mongo_database=gdb,
+                collection_name='shops',
+                query={'_id': guild.id}
+            )
+
+            # New character setup configs
+            inventory_config_query = await get_cached_data(
+                bot=bot,
+                mongo_database=gdb,
+                collection_name='inventoryConfig',
+                query={'_id': guild.id}
+            )
+            new_char_shop_query = await get_cached_data(
+                bot=bot,
+                mongo_database=gdb,
+                collection_name='newCharacterShop',
+                query={'_id': guild.id}
+            )
+            static_kits_query = await get_cached_data(
+                bot=bot,
+                mongo_database=gdb,
+                collection_name='staticKits',
+                query={'_id': guild.id}
+            )
+
             # Role validation report
             role_text, role_has_warnings = self.validate_roles(guild, gm_roles_query, announcement_role_query)
             role_button = MenuViewButton(ConfigRolesView, 'Configure Roles')
@@ -755,7 +854,8 @@ class ConfigWizardView(LayoutView):
 
             # Dashboard settings report
             dashboard_data = self.validate_dashboard_settings(
-                wait_list_query, quest_summary_query, gm_rewards_query, player_xp_query, currency_config_query
+                wait_list_query, quest_summary_query, gm_rewards_query, player_xp_query, currency_config_query,
+                roleplay_config_query, shops_query, inventory_config_query, new_char_shop_query, static_kits_query
             )
 
             # Compile pages
