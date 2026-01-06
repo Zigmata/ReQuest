@@ -478,7 +478,7 @@ class ShopCartView(LayoutView):
                 total_qty = quantity * qty_per_item
 
                 character_data = apply_item_change_local(character_data, item['name'], total_qty)
-                summary_string = (f'{total_qty}x ' if total_qty > 1 else '') + titlecase(item["name"])
+                summary_string = (f'{total_qty}x ' if total_qty > 1 else '') + escape_markdown(titlecase(item["name"]))
                 added_items_summary.append(summary_string)
 
             await update_cached_data(

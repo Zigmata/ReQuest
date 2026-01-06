@@ -546,7 +546,7 @@ class ConfigWizardView(LayoutView):
         if items:
             report_lines.append('- Items:')
             for item_name, quantity in items.items():
-                report_lines.append(f'  - {titlecase(item_name)}: {quantity}')
+                report_lines.append(f'  - {escape_markdown(titlecase(item_name))}: {quantity}')
 
         return '\n'.join(report_lines)
 
@@ -1790,7 +1790,7 @@ class ConfigStaticKitsView(LayoutView):
                 contents = []
 
                 for item in items[:3]:
-                    contents.append(f"{item.get('quantity', 1)}x {titlecase(item.get('name', ''))}")
+                    contents.append(f"{item.get('quantity', 1)}x {escape_markdown(titlecase(item.get('name', '')))}")
                 if len(items) > 3:
                     contents.append(f"...and {len(items) - 3} more items")
 
@@ -1942,11 +1942,11 @@ class EditStaticKitView(LayoutView):
                     item_actions.add_item(buttons.EditKitItemButton(self, item_data, index))
                     item_actions.add_item(buttons.DeleteKitItemButton(self, index))
 
-                    display = f'**Item:** {titlecase(item_data["name"])}'
+                    display = f'**Item:** {escape_markdown(titlecase(item_data["name"]))}'
                     if item_data['quantity'] > 1:
                         display += f' (x{item_data["quantity"]})'
                     if item_data.get('description'):
-                        display += f'\n*{item_data["description"]}*'
+                        display += f'\n*{escape_markdown(item_data["description"])}*'
 
                     container.add_item(TextDisplay(display))
                     container.add_item(item_actions)
@@ -2955,7 +2955,7 @@ class ConfigRoleplayView(LayoutView):
             if xp := rewards_data.get('xp'):
                 rewards_text += f'**Experience:** {xp}\n'
             if items := rewards_data.get('items'):
-                item_lines = [f'- {titlecase(name)}: {quantity}' for name, quantity in items.items()]
+                item_lines = [f'- {escape_markdown(titlecase(name))}: {quantity}' for name, quantity in items.items()]
                 rewards_text += f'**Items:**\n{"\n".join(item_lines)}\n'
             if currency := rewards_data.get('currency'):
                 consolidated = consolidate_currency_totals(currency, self.currency_config)
