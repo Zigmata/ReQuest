@@ -1495,17 +1495,40 @@ CART_TTL_MINUTES = 10
 
 
 def encode_mongo_key(key: str) -> str:
-    """Encodes a string for safe use as a MongoDB field name (escapes dots)."""
+    """
+    Encodes a string for safe use as a MongoDB field name.
+
+    MongoDB field names cannot contain:
+    - '.' (dot) - interpreted as nested document path
+    - '$' (dollar) - reserved for operators
+    - null characters - not allowed in field names
+
+    Uses URL-encoding style. The '%' character is encoded first to ensure reversibility.
+    """
     if not key:
         return key
-    return key.replace('.', '%2E')
+    # Order matters: encode '%' first to avoid double-encoding
+    result = key.replace('%', '%25')
+    result = result.replace('.', '%2E')
+    result = result.replace('$', '%24')
+    # Strip null characters (invalid in MongoDB field names and have no display value)
+    result = result.replace('\x00', '')
+    return result
 
 
 def decode_mongo_key(key: str) -> str:
-    """Decodes a MongoDB field name back to its original form (unescapes dots)."""
+    """
+    Decodes a MongoDB field name back to its original form.
+
+    Reverses the encoding applied by encode_mongo_key().
+    """
     if not key:
         return key
-    return key.replace('%2E', '.')
+    # Order matters: decode '%' last to avoid incorrect decoding
+    result = key.replace('%2E', '.')
+    result = result.replace('%24', '$')
+    result = result.replace('%25', '%')
+    return result
 
 
 def build_cart_id(guild_id: int, user_id: int, channel_id: str) -> str:
