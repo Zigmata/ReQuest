@@ -38,7 +38,8 @@ from ReQuest.utilities.supportFunctions import (
     get_containers_sorted,
     get_container_name,
     get_container_items,
-    escape_markdown
+    escape_markdown,
+    decode_mongo_key
 )
 
 logger = logging.getLogger(__name__)
@@ -301,20 +302,36 @@ class InventoryOverviewView(LayoutView):
                         )
 
                         # In the event a currency was given prior to being defined (and therefore stored as an item),
-                        # this second update removes the old entry from inventory
-                        # Modify dict directly to avoid dot-notation issues with item names containing dots
+                        # this second update removes the old entry from inventory and updates the currency dict
                         inventory = self.active_character['attributes'].get('inventory', {})
                         if item_name_key in inventory:
-                            del inventory[item_name_key]
-                            await update_cached_data(
-                                bot=bot,
-                                mongo_database=bot.mdb,
-                                collection_name='characters',
-                                query={'_id': interaction.user.id},
-                                update_data={'$set': {
-                                    f'characters.{self.active_character_id}.attributes.inventory': inventory
-                                }}
+                            del inventory[item_name_key]  # Update local copy
+                            inv_path = f'characters.{self.active_character_id}.attributes.inventory'
+                            collection = bot.mdb['characters']
+                            await collection.update_one(
+                                {'_id': interaction.user.id},
+                                [
+                                    {
+                                        '$set': {
+                                            inv_path: {
+                                                '$arrayToObject': {
+                                                    '$filter': {
+                                                        'input': {'$objectToArray': f'${inv_path}'},
+                                                        'cond': {'$ne': ['$$this.k', item_name_key]}
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                ]
                             )
+
+                            # Invalidate cache after direct collection update
+                            cache_key = build_cache_key(bot.mdb.name, interaction.user.id, 'characters')
+                            try:
+                                await bot.rdb.delete(cache_key)
+                            except Exception as e:
+                                logger.error(f"Redis delete failed: {e}")
                         conversion_occurred = True
 
                 if conversion_occurred:
@@ -1249,7 +1266,8 @@ class StaticKitSelectView(LayoutView):
 
                 # Preview Contents
                 items = kit_data.get('items', [])
-                currency = kit_data.get('currency', {})
+                # Decode currency keys for display
+                currency = {decode_mongo_key(k): v for k, v in kit_data.get('currency', {}).items()}
 
                 preview_list = []
                 for item in items[:3]:  # Show first 3 items
@@ -1344,7 +1362,8 @@ class StaticKitConfirmView(LayoutView):
             container.add_item(Separator())
 
         items = self.kit_data.get('items', [])
-        currency = self.kit_data.get('currency', {})
+        # Decode currency keys for display
+        currency = {decode_mongo_key(k): v for k, v in self.kit_data.get('currency', {}).items()}
 
         details = []
         if items:
@@ -1373,7 +1392,8 @@ class StaticKitConfirmView(LayoutView):
 
     async def submit(self, interaction):
         items = {item['name']: item['quantity'] for item in self.kit_data.get('items', [])}
-        currency = self.kit_data.get('currency', {})
+        # Decode currency keys for display
+        currency = {decode_mongo_key(k): v for k, v in self.kit_data.get('currency', {}).items()}
         await _handle_submission(interaction, self.character_id, self.character_name, items, currency)
 
 

@@ -34,7 +34,8 @@ from ReQuest.utilities.supportFunctions import (
     finalize_cart_purchase,
     log_exception,
     UserFeedbackError,
-    escape_markdown
+    escape_markdown,
+    encode_mongo_key
 )
 
 logger = logging.getLogger(__name__)
@@ -135,7 +136,7 @@ class ShopBaseView(LayoutView):
                 item_name_display = escape_markdown(item_name)
 
                 # Get stock info for this item
-                item_stock_info = self.stock_info.get(item_name) if self.stock_info else None
+                item_stock_info = self.stock_info.get(encode_mongo_key(item_name)) if self.stock_info else None
 
                 buy_button = buttons.ShopItemButton(item, cost_string, item_stock_info)
                 section = Section(accessory=buy_button)

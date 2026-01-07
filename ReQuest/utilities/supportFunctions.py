@@ -1501,6 +1501,13 @@ def encode_mongo_key(key: str) -> str:
     return key.replace('.', '%2E')
 
 
+def decode_mongo_key(key: str) -> str:
+    """Decodes a MongoDB field name back to its original form (unescapes dots)."""
+    if not key:
+        return key
+    return key.replace('%2E', '.')
+
+
 def build_cart_id(guild_id: int, user_id: int, channel_id: str) -> str:
     """Builds the cart document ID."""
     return f"{guild_id}:{user_id}:{channel_id}"

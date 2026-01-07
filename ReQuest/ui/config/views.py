@@ -32,7 +32,9 @@ from ReQuest.utilities.supportFunctions import (
     get_cached_data,
     consolidate_currency_totals,
     get_shop_stock,
-    escape_markdown
+    escape_markdown,
+    encode_mongo_key,
+    decode_mongo_key
 )
 
 logger = logging.getLogger(__name__)
@@ -1984,8 +1986,10 @@ class EditStaticKitView(LayoutView):
 
         combined_list = []
 
-        for currency_name, amount in currencies.items():
-            combined_list.append({'type': 'currency', 'name': currency_name, 'amount': amount})
+        for encoded_currency_key, amount in currencies.items():
+            # Decode the key for display; original name is needed for lookups and formatting
+            decoded_name = decode_mongo_key(encoded_currency_key)
+            combined_list.append({'type': 'currency', 'name': decoded_name, 'amount': amount})
 
         for index, item in enumerate(self.items):
             combined_list.append({'type': 'item', 'index': index, 'data': item})
@@ -2811,7 +2815,7 @@ class ConfigStockLimitsView(LayoutView):
                 max_stock = item.get('maxStock')
 
                 # Get runtime stock info
-                runtime_stock = self.stock_info.get(item_name)
+                runtime_stock = self.stock_info.get(encode_mongo_key(item_name))
                 current_available = None
                 reserved = 0
                 if runtime_stock:
