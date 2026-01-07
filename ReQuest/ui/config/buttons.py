@@ -16,7 +16,8 @@ from ReQuest.utilities.supportFunctions import (
     delete_cached_data,
     update_cached_data,
     get_xp_config,
-    remove_item_stock_limit
+    remove_item_stock_limit,
+    encode_mongo_key
 )
 
 logger = logging.getLogger(__name__)
@@ -285,6 +286,29 @@ class RemoveDenominationButton(Button):
             await log_exception(e, interaction)
 
 
+class RenameDenominationButton(Button):
+    def __init__(self, calling_view, denomination_name):
+        super().__init__(
+            label='Rename',
+            style=ButtonStyle.secondary,
+            custom_id=f'rename_denomination_button_{denomination_name}'
+        )
+        self.calling_view = calling_view
+        self.denomination_name = denomination_name
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.send_modal(
+                modals.RenameDenominationModal(
+                    self.calling_view,
+                    self.calling_view.currency_name,
+                    self.denomination_name
+                )
+            )
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
 class AddCurrencyButton(Button):
     def __init__(self, calling_view):
         super().__init__(
@@ -359,6 +383,25 @@ class RemoveCurrencyButton(Button):
             view = ConfigCurrencyView()
             await setup_view(view, interaction)
             await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RenameCurrencyButton(Button):
+    def __init__(self, calling_view, currency_name):
+        super().__init__(
+            label='Rename',
+            style=ButtonStyle.secondary,
+            custom_id='rename_currency_button'
+        )
+        self.calling_view = calling_view
+        self.currency_name = currency_name
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.send_modal(
+                modals.RenameCurrencyModal(self.calling_view, self.currency_name)
+            )
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -1095,11 +1138,12 @@ class DeleteKitCurrencyButton(Button):
                 mongo_database=bot.gdb,
                 collection_name='staticKits',
                 query={'_id': interaction.guild_id},
-                update_data={'$unset': {f'kits.{kit_id}.currency.{self.currency_name}': ''}}
+                update_data={'$unset': {f'kits.{kit_id}.currency.{encode_mongo_key(self.currency_name)}': ''}}
             )
 
-            if self.currency_name in self.calling_view.kit_data.get('currency', {}):
-                del self.calling_view.kit_data['currency'][self.currency_name]
+            encoded_currency = encode_mongo_key(self.currency_name)
+            if encoded_currency in self.calling_view.kit_data.get('currency', {}):
+                del self.calling_view.kit_data['currency'][encoded_currency]
 
             self.calling_view.build_view()
             await interaction.response.edit_message(view=self.calling_view)

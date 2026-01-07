@@ -37,7 +37,9 @@ from ReQuest.utilities.supportFunctions import (
     format_complex_cost,
     get_containers_sorted,
     get_container_name,
-    get_container_items
+    get_container_items,
+    escape_markdown,
+    decode_mongo_key
 )
 
 logger = logging.getLogger(__name__)
@@ -300,16 +302,36 @@ class InventoryOverviewView(LayoutView):
                         )
 
                         # In the event a currency was given prior to being defined (and therefore stored as an item),
-                        # this second update removes the old entry from inventory
-                        await update_cached_data(
-                            bot=bot,
-                            mongo_database=bot.mdb,
-                            collection_name='characters',
-                            query={'_id': interaction.user.id},
-                            update_data={'$unset': {
-                                f'characters.{self.active_character_id}.attributes.inventory.{item_name_key}': ''
-                            }}
-                        )
+                        # this second update removes the old entry from inventory and updates the currency dict
+                        inventory = self.active_character['attributes'].get('inventory', {})
+                        if item_name_key in inventory:
+                            del inventory[item_name_key]  # Update local copy
+                            inv_path = f'characters.{self.active_character_id}.attributes.inventory'
+                            collection = bot.mdb['characters']
+                            await collection.update_one(
+                                {'_id': interaction.user.id},
+                                [
+                                    {
+                                        '$set': {
+                                            inv_path: {
+                                                '$arrayToObject': {
+                                                    '$filter': {
+                                                        'input': {'$objectToArray': f'${inv_path}'},
+                                                        'cond': {'$ne': ['$$this.k', item_name_key]}
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                ]
+                            )
+
+                            # Invalidate cache after direct collection update
+                            cache_key = build_cache_key(bot.mdb.name, interaction.user.id, 'characters')
+                            try:
+                                await bot.rdb.delete(cache_key)
+                            except Exception as e:
+                                logger.error(f"Redis delete failed: {e}")
                         conversion_occurred = True
 
                 if conversion_occurred:
@@ -1238,17 +1260,18 @@ class StaticKitSelectView(LayoutView):
                 kit_name = kit_data.get('name', 'Unknown Kit')
                 description = kit_data.get('description', '')
 
-                content_lines = [f'**{titlecase(kit_name)}**']
+                content_lines = [f'**{escape_markdown(titlecase(kit_name))}**']
                 if description:
-                    content_lines.append(f'*{description}*')
+                    content_lines.append(f'*{escape_markdown(description)}*')
 
                 # Preview Contents
                 items = kit_data.get('items', [])
-                currency = kit_data.get('currency', {})
+                # Decode currency keys for display
+                currency = {decode_mongo_key(k): v for k, v in kit_data.get('currency', {}).items()}
 
                 preview_list = []
                 for item in items[:3]:  # Show first 3 items
-                    preview_list.append(f'{item.get("quantity", 1)}x {titlecase(item.get("name", ""))}')
+                    preview_list.append(f'{item.get("quantity", 1)}x {escape_markdown(titlecase(item.get("name", "")))}')
                 if len(items) > 3:
                     preview_list.append(f'...and {len(items) - 3} more items')
 
@@ -1330,22 +1353,23 @@ class StaticKitConfirmView(LayoutView):
         self.clear_items()
         container = Container()
 
-        container.add_item(TextDisplay(f'**Confirm Selection: {titlecase(self.kit_data.get("name"))}**'))
+        container.add_item(TextDisplay(f'**Confirm Selection: {escape_markdown(titlecase(self.kit_data.get("name")))}**'))
         container.add_item(Separator())
 
         description = self.kit_data.get('description')
         if description:
-            container.add_item(TextDisplay(description))
+            container.add_item(TextDisplay(escape_markdown(description)))
             container.add_item(Separator())
 
         items = self.kit_data.get('items', [])
-        currency = self.kit_data.get('currency', {})
+        # Decode currency keys for display
+        currency = {decode_mongo_key(k): v for k, v in self.kit_data.get('currency', {}).items()}
 
         details = []
         if items:
             details.append('**Items:**')
             for item in items:
-                details.append(f'- {item.get("quantity", 1)}x {titlecase(item.get("name"))}')
+                details.append(f'- {item.get("quantity", 1)}x {escape_markdown(titlecase(item.get("name")))}')
 
         if currency:
             details.append('\n**Currency:**')
@@ -1368,7 +1392,8 @@ class StaticKitConfirmView(LayoutView):
 
     async def submit(self, interaction):
         items = {item['name']: item['quantity'] for item in self.kit_data.get('items', [])}
-        currency = self.kit_data.get('currency', {})
+        # Decode currency keys for display
+        currency = {decode_mongo_key(k): v for k, v in self.kit_data.get('currency', {}).items()}
         await _handle_submission(interaction, self.character_id, self.character_name, items, currency)
 
 
@@ -1582,7 +1607,7 @@ class NewCharacterCartView(LayoutView):
         for key, data in self.shop_view.cart.items():
             item = data['item']
             quantity = data['quantity']
-            option_index = data.get('option_index', 0)
+            option_index = data.get('optionIndex', 0)
             quantity_per_purchase = item.get('quantity', 1)
             total_quantity = quantity * quantity_per_purchase
 
@@ -1648,7 +1673,7 @@ class NewCharacterCartView(LayoutView):
                 item = data['item']
                 name = item.get('name')
                 quantity = data['quantity']
-                option_index = data.get('option_index', 0)
+                option_index = data.get('optionIndex', 0)
                 quantity_per_purchase = item.get('quantity', 1)
                 total_quantity = quantity * quantity_per_purchase
 
@@ -1838,7 +1863,7 @@ async def _handle_submission(interaction, character_id, character_name, items, c
             added_items_summary = []
             for name, quantity in items.items():
                 quantity_label = f'{quantity}x ' if quantity > 1 else ''
-                added_items_summary.append(f'{quantity_label}{titlecase(name)}')
+                added_items_summary.append(f'{quantity_label}{escape_markdown(titlecase(name))}')
 
             report_embed.add_field(name='Items Received', value='\n'.join(added_items_summary) or 'None', inline=False)
 

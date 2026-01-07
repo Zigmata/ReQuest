@@ -34,7 +34,9 @@ from ReQuest.utilities.supportFunctions import (
     get_cached_data,
     delete_cached_data,
     update_cached_data,
-    format_inventory_by_container, replace_cached_data
+    format_inventory_by_container,
+    replace_cached_data,
+    escape_markdown
 )
 
 logger = logging.getLogger(__name__)
@@ -581,7 +583,7 @@ class ManageQuestsView(LayoutView):
                 if items:
                     item_strings = []
                     for item_name, quantity in items.items():
-                        item_strings.append(f'{titlecase(item_name)}: {quantity}')
+                        item_strings.append(f'{escape_markdown(titlecase(item_name))}: {quantity}')
                     gm_rewards_embed.add_field(name='Items', value='\n'.join(item_strings))
 
                 try:

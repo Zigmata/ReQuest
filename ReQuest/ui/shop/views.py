@@ -33,7 +33,9 @@ from ReQuest.utilities.supportFunctions import (
     clear_cart_and_release_stock,
     finalize_cart_purchase,
     log_exception,
-    UserFeedbackError
+    UserFeedbackError,
+    escape_markdown,
+    encode_mongo_key
 )
 
 logger = logging.getLogger(__name__)
@@ -55,9 +57,10 @@ class ShopBaseView(LayoutView):
         self.user_id = None
         self.bot = None
 
-    async def setup(self, bot, guild):
+    async def setup(self, bot, guild, user):
         self.bot = bot
         self.guild_id = guild.id
+        self.user_id = user.id
 
         self.currency_config = await get_cached_data(
             bot=bot,
@@ -66,7 +69,13 @@ class ShopBaseView(LayoutView):
             query={'_id': guild.id}
         )
 
-        # Load stock info for limited items
+        # Load existing cart from database FIRST (may trigger expiry cleanup and stock release)
+        if self.user_id and self.channel_id:
+            db_cart = await get_cart(self.bot, self.guild_id, self.user_id, self.channel_id)
+            if db_cart:
+                self.cart = db_cart.get('items', {})
+
+        # Load stock info AFTER cart check (so any released stock is reflected)
         if self.channel_id:
             self.stock_info = await get_shop_stock(bot, guild.id, self.channel_id)
 
@@ -124,16 +133,17 @@ class ShopBaseView(LayoutView):
                 cost_string = format_complex_cost(costs, getattr(self, 'currency_config', {}))
 
                 item_name = item.get('name', 'Unknown Item')
+                item_name_display = escape_markdown(item_name)
 
                 # Get stock info for this item
-                item_stock_info = self.stock_info.get(item_name) if self.stock_info else None
+                item_stock_info = self.stock_info.get(encode_mongo_key(item_name)) if self.stock_info else None
 
                 buy_button = buttons.ShopItemButton(item, cost_string, item_stock_info)
                 section = Section(accessory=buy_button)
 
                 item_description = item.get('description', None)
                 item_quantity = item.get('quantity', 1)
-                item_display_name = f'{item_name} x{item_quantity}' if item_quantity > 1 else item_name
+                item_display_name = f'{item_name_display} x{item_quantity}' if item_quantity > 1 else item_name_display
 
                 cart_quantity = 0
                 for value in self.cart.values():
@@ -154,7 +164,7 @@ class ShopBaseView(LayoutView):
                         content += f'\n*Stock: {available}*'
 
                 if item_description:
-                    content += f'\n*{item_description}*'
+                    content += f'\n*{escape_markdown(item_description)}*'
 
                 section.add_item(TextDisplay(content))
                 container.add_item(section)
@@ -215,7 +225,7 @@ class ShopBaseView(LayoutView):
             )
 
             if not success:
-                raise UserFeedbackError(f'**{item_name}** is out of stock.')
+                raise UserFeedbackError(f'**{escape_markdown(item_name)}** is out of stock.')
 
             # Refresh local cart cache and stock info
             db_cart = await get_cart(self.bot, self.guild_id, self.user_id, self.channel_id)
@@ -297,7 +307,7 @@ class ShopCartView(LayoutView):
                 for item_key, data in self.prev_view.cart.items():
                     item = data['item']
                     quantity = data['quantity']
-                    option_index = data.get('option_index', 0)
+                    option_index = data.get('optionIndex', 0)
 
                     costs = item.get('costs', [])
                     if 0 <= option_index < len(costs):
@@ -328,7 +338,7 @@ class ShopCartView(LayoutView):
                     item = data['item']
                     quantity = data['quantity']
                     quantity_per_item = item.get('quantity', 1)
-                    option_index = data.get('option_index', 0)
+                    option_index = data.get('optionIndex', 0)
                     total_item_quantity = quantity * quantity_per_item
 
                     costs = item.get('costs', [])
@@ -346,7 +356,7 @@ class ShopCartView(LayoutView):
                     edit_button = buttons.EditCartItemButton(item_key, quantity)
                     section = Section(accessory=edit_button)
 
-                    item_line = (f'**{item["name"]}** x{quantity} '
+                    item_line = (f'**{escape_markdown(item["name"])}** x{quantity} '
                                  f'(Total: {total_item_quantity}) - {price_string}')
                     section.add_item(TextDisplay(item_line))
                     container.add_item(section)
@@ -469,7 +479,7 @@ class ShopCartView(LayoutView):
                 total_qty = quantity * qty_per_item
 
                 character_data = apply_item_change_local(character_data, item['name'], total_qty)
-                summary_string = (f'{total_qty}x ' if total_qty > 1 else '') + titlecase(item["name"])
+                summary_string = (f'{total_qty}x ' if total_qty > 1 else '') + escape_markdown(titlecase(item["name"]))
                 added_items_summary.append(summary_string)
 
             await update_cached_data(
@@ -532,7 +542,7 @@ class ComplexItemPurchaseView(LayoutView):
         container = Container()
 
         header = Section(accessory=buttons.CartBackButton(self.parent_view))
-        header.add_item(TextDisplay(f"**Purchase Options: {self.item['name']}**"))
+        header.add_item(TextDisplay(f"**Purchase Options: {escape_markdown(self.item['name'])}**"))
         container.add_item(header)
         container.add_item(Separator())
 

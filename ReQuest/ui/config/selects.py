@@ -193,7 +193,7 @@ class InventoryTypeSelect(Select):
 class RoleplayChannelSelect(ChannelSelect):
     def __init__(self, calling_view):
         super().__init__(
-            channel_types=[discord.ChannelType.text, discord.ChannelType.category],
+            channel_types=[discord.ChannelType.text, discord.ChannelType.forum, discord.ChannelType.category],
             placeholder='Select Eligible Channels',
             min_values=0,
             max_values=25,
@@ -208,7 +208,10 @@ class RoleplayChannelSelect(ChannelSelect):
             for selection in self.values:
                 if selection.type is discord.ChannelType.category:
                     category_channel = await selection.fetch()
-                    for channel in category_channel.text_channels:  # Only add text channels
+                    # Add both text and forum channels from category
+                    for channel in category_channel.text_channels:
+                        channel_ids.append(str(channel.id))
+                    for channel in category_channel.forums:
                         channel_ids.append(str(channel.id))
                 else:
                     channel_ids.append(str(selection.id))

@@ -218,6 +218,24 @@ def strip_id(mention: str) -> int:
     return parsed_id
 
 
+def escape_markdown(text: str) -> str:
+    """
+    Escapes Discord markdown special characters in text.
+
+    :param text: The text to escape
+
+    :return: Text with markdown characters escaped
+    """
+    if not text:
+        return text
+    # Escape backslash first to avoid double-escaping
+    text = text.replace('\\', '\\\\')
+    # Escape other markdown characters
+    for char in ('*', '_', '~', '`', '|', '>', '[', ']', '(', ')'):
+        text = text.replace(char, f'\\{char}')
+    return text
+
+
 async def log_exception(exception, interaction=None):
     """
     Logs an exception and sends a user-friendly message if interaction is provided.
@@ -437,41 +455,84 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
     receiver_character_id = receiver_data['activeCharacters'][str(guild_id)]
     receiver_character = receiver_data['characters'][receiver_character_id]
 
-    # Check if sender has enough items
-    sender_inventory = {k.lower(): v for k, v in sender_character['attributes']['inventory'].items()}
-    quantity_owned = sender_inventory.get(normalized_item_name, 0)
+    # Check if sender has enough items across all containers + loose items
+    quantity_owned = get_total_item_quantity(sender_character, item_name)
     if quantity_owned < quantity:
         raise UserFeedbackError(f'You have {quantity_owned}x {titlecase(normalized_item_name)} but are trying to give '
                                 f'{quantity}.')
 
-    # Perform the trade operation
-    sender_inventory[normalized_item_name] -= quantity
-    if sender_inventory[normalized_item_name] == 0:
-        del sender_inventory[normalized_item_name]
+    # Get item locations and remove items (loose items first, then containers)
+    locations = get_item_locations(sender_character, item_name)
+    # Sort so loose items (id=None) come first
+    locations.sort(key=lambda x: (x['id'] is not None, x['name']))
 
-    receiver_inventory = {k.lower(): v for k, v in receiver_character['attributes']['inventory'].items()}
-    receiver_inventory[normalized_item_name] = receiver_inventory.get(normalized_item_name, 0) + quantity
+    remaining_to_remove = quantity
+    for loc in locations:
+        if remaining_to_remove <= 0:
+            break
 
-    # Normalize the inventories for db update
-    sender_character['attributes']['inventory'] = {titlecase(k): v for k, v in sender_inventory.items()}
-    receiver_character['attributes']['inventory'] = {titlecase(k): v for k, v in receiver_inventory.items()}
+        container_id = loc['id']
+        loc_qty = loc['quantity']
+        remove_from_here = min(loc_qty, remaining_to_remove)
+
+        if container_id is None:
+            # Remove from loose items
+            inventory = sender_character['attributes'].get('inventory', {})
+            for key in list(inventory.keys()):
+                if key.lower() == normalized_item_name:
+                    inventory[key] -= remove_from_here
+                    if inventory[key] <= 0:
+                        del inventory[key]
+                    break
+        else:
+            # Remove from container
+            container_items = sender_character['attributes']['containers'][container_id].get('items', {})
+            for key in list(container_items.keys()):
+                if key.lower() == normalized_item_name:
+                    container_items[key] -= remove_from_here
+                    if container_items[key] <= 0:
+                        del container_items[key]
+                    break
+
+        remaining_to_remove -= remove_from_here
+
+    # Add items to receiver's loose inventory
+    receiver_inventory = receiver_character['attributes'].get('inventory', {})
+    # Find existing key (case-insensitive) or use titlecase
+    existing_key = None
+    for key in receiver_inventory:
+        if key.lower() == normalized_item_name:
+            existing_key = key
+            break
+
+    if existing_key:
+        receiver_inventory[existing_key] += quantity
+    else:
+        receiver_inventory[titlecase(item_name)] = quantity
+
+    # Update sender's character data
+    sender_update = {
+        f'characters.{sender_character_id}.attributes.inventory': sender_character['attributes'].get('inventory', {})
+    }
+    # Include container updates if containers exist
+    if sender_character['attributes'].get('containers'):
+        sender_update[f'characters.{sender_character_id}.attributes.containers'] = sender_character['attributes']['containers']
 
     await update_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
         collection_name='characters',
-        query={'_id': sending_member_id, f'characters.{sender_character_id}.attributes.inventory': {'$exists': True}},
-        update_data={'$set': {f'characters.{sender_character_id}.attributes.inventory':
-                              sender_character['attributes']['inventory']}}
+        query={'_id': sending_member_id},
+        update_data={'$set': sender_update}
     )
+
+    # Update receiver's inventory
     await update_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
         collection_name='characters',
-        query={'_id': receiving_member_id,
-               f'characters.{receiver_character_id}.attributes.inventory': {'$exists': True}},
-        update_data={'$set': {f'characters.{receiver_character_id}.attributes.inventory':
-                              receiver_character['attributes']['inventory']}}
+        query={'_id': receiving_member_id},
+        update_data={'$set': {f'characters.{receiver_character_id}.attributes.inventory': receiver_inventory}}
     )
 
 
@@ -1125,7 +1186,7 @@ async def get_item_stock(bot, guild_id: int, channel_id: str, item_name: str) ->
 
     shops = stock_data.get('shops', {})
     shop_stock = shops.get(str(channel_id), {})
-    item_stock = shop_stock.get(item_name)
+    item_stock = shop_stock.get(encode_mongo_key(item_name))
 
     if item_stock is None:
         return None
@@ -1182,7 +1243,7 @@ async def initialize_item_stock(bot, guild_id: int, channel_id: str, item_name: 
         query={'_id': guild_id},
         update_data={
             '$set': {
-                f'shops.{channel_id}.{item_name}': {
+                f'shops.{channel_id}.{encode_mongo_key(item_name)}': {
                     'available': current_stock,
                     'reserved': 0
                 }
@@ -1207,7 +1268,7 @@ async def remove_item_stock_limit(bot, guild_id: int, channel_id: str, item_name
         query={'_id': guild_id},
         update_data={
             '$unset': {
-                f'shops.{channel_id}.{item_name}': ''
+                f'shops.{channel_id}.{encode_mongo_key(item_name)}': ''
             }
         }
     )
@@ -1227,15 +1288,16 @@ async def reserve_stock(bot, guild_id: int, channel_id: str, item_name: str, qua
     """
     collection = bot.gdb['shopStock']
 
+    encoded_name = encode_mongo_key(item_name)
     result = await collection.find_one_and_update(
         {
             '_id': guild_id,
-            f'shops.{channel_id}.{item_name}.available': {'$gte': quantity}
+            f'shops.{channel_id}.{encoded_name}.available': {'$gte': quantity}
         },
         {
             '$inc': {
-                f'shops.{channel_id}.{item_name}.available': -quantity,
-                f'shops.{channel_id}.{item_name}.reserved': quantity
+                f'shops.{channel_id}.{encoded_name}.available': -quantity,
+                f'shops.{channel_id}.{encoded_name}.reserved': quantity
             }
         },
         return_document=True
@@ -1263,21 +1325,29 @@ async def release_stock(bot, guild_id: int, channel_id: str, item_name: str, qua
     :param item_name: The name of the item
     :param quantity: The quantity to release
     """
-    await update_cached_data(
-        bot=bot,
-        mongo_database=bot.gdb,
-        collection_name='shopStock',
-        query={'_id': guild_id},
-        update_data={
-            '$inc': {
-                f'shops.{channel_id}.{item_name}.available': quantity,
-                f'shops.{channel_id}.{item_name}.reserved': -quantity
-            },
-            '$max': {
-                f'shops.{channel_id}.{item_name}.reserved': 0  # Prevent negative reserved stock
+    collection = bot.gdb['shopStock']
+    encoded_name = encode_mongo_key(item_name)
+    path = f'shops.{channel_id}.{encoded_name}'
+
+    result = await collection.update_one(
+        {'_id': guild_id, f'{path}.reserved': {'$exists': True}},
+        [
+            {
+                '$set': {
+                    f'{path}.available': {'$add': [f'${path}.available', quantity]},
+                    f'{path}.reserved': {'$max': [0, {'$subtract': [f'${path}.reserved', quantity]}]}
+                }
             }
-        }
+        ]
     )
+
+    # Invalidate cache after update
+    if result.modified_count > 0:
+        cache_key = build_cache_key(bot.gdb.name, guild_id, 'shopStock')
+        try:
+            await bot.rdb.delete(cache_key)
+        except Exception as e:
+            logger.error(f"Redis delete failed: {e}")
 
 
 async def finalize_stock(bot, guild_id: int, channel_id: str, item_name: str, quantity: int = 1):
@@ -1290,20 +1360,28 @@ async def finalize_stock(bot, guild_id: int, channel_id: str, item_name: str, qu
     :param item_name: The name of the item
     :param quantity: The quantity to finalize
     """
-    await update_cached_data(
-        bot=bot,
-        mongo_database=bot.gdb,
-        collection_name='shopStock',
-        query={'_id': guild_id},
-        update_data={
-            '$inc': {
-                f'shops.{channel_id}.{item_name}.reserved': -quantity
-            },
-            '$max': {
-                f'shops.{channel_id}.{item_name}.reserved': 0  # Prevent negative reserved stock
+    collection = bot.gdb['shopStock']
+    encoded_name = encode_mongo_key(item_name)
+    path = f'shops.{channel_id}.{encoded_name}'
+
+    result = await collection.update_one(
+        {'_id': guild_id, f'{path}.reserved': {'$exists': True}},
+        [
+            {
+                '$set': {
+                    f'{path}.reserved': {'$max': [0, {'$subtract': [f'${path}.reserved', quantity]}]}
+                }
             }
-        }
+        ]
     )
+
+    # Invalidate cache after update
+    if result.modified_count > 0:
+        cache_key = build_cache_key(bot.gdb.name, guild_id, 'shopStock')
+        try:
+            await bot.rdb.delete(cache_key)
+        except Exception as e:
+            logger.error(f"Redis delete failed: {e}")
 
 
 async def set_available_stock(bot, guild_id: int, channel_id: str, item_name: str, amount: int):
@@ -1323,7 +1401,7 @@ async def set_available_stock(bot, guild_id: int, channel_id: str, item_name: st
         query={'_id': guild_id},
         update_data={
             '$set': {
-                f'shops.{channel_id}.{item_name}.available': amount
+                f'shops.{channel_id}.{encode_mongo_key(item_name)}.available': amount
             }
         }
     )
@@ -1341,28 +1419,28 @@ async def increment_available_stock(bot, guild_id: int, channel_id: str, item_na
     :param increment: The amount to add
     :param max_stock: The maximum stock allowed
     """
-    # Validate item exists in shop stock
-    current = await get_item_stock(bot, guild_id, channel_id, item_name)
-    if current is None:
-        return
+    collection = bot.gdb['shopStock']
+    encoded_name = encode_mongo_key(item_name)
+    path = f'shops.{channel_id}.{encoded_name}'
 
-    field_path = f'shops.{channel_id}.{item_name}.available'
-
-    # Increment stock but do not exceed max_stock
-    await update_cached_data(
-        bot=bot,
-        mongo_database=bot.gdb,
-        collection_name='shopStock',
-        query={'_id': guild_id},
-        update_data={
-            '$inc': {
-                field_path: increment
-            },
-            '$min': {
-                field_path: max_stock
+    result = await collection.update_one(
+        {'_id': guild_id, f'{path}.available': {'$exists': True}},
+        [
+            {
+                '$set': {
+                    f'{path}.available': {'$min': [max_stock, {'$add': [f'${path}.available', increment]}]}
+                }
             }
-        }
+        ]
     )
+
+    # Invalidate cache after update
+    if result.modified_count > 0:
+        cache_key = build_cache_key(bot.gdb.name, guild_id, 'shopStock')
+        try:
+            await bot.rdb.delete(cache_key)
+        except Exception as e:
+            logger.error(f"Redis delete failed: {e}")
 
 
 async def update_last_restock(bot, guild_id: int, channel_id: str, timestamp: str):
@@ -1414,6 +1492,43 @@ async def get_last_restock(bot, guild_id: int, channel_id: str) -> str | None:
 
 
 CART_TTL_MINUTES = 10
+
+
+def encode_mongo_key(key: str) -> str:
+    """
+    Encodes a string for safe use as a MongoDB field name.
+
+    MongoDB field names cannot contain:
+    - '.' (dot) - interpreted as nested document path
+    - '$' (dollar) - reserved for operators
+    - null characters - not allowed in field names
+
+    Uses URL-encoding style. The '%' character is encoded first to ensure reversibility.
+    """
+    if not key:
+        return key
+    # Order matters: encode '%' first to avoid double-encoding
+    result = key.replace('%', '%25')
+    result = result.replace('.', '%2E')
+    result = result.replace('$', '%24')
+    # Strip null characters (invalid in MongoDB field names and have no display value)
+    result = result.replace('\x00', '')
+    return result
+
+
+def decode_mongo_key(key: str) -> str:
+    """
+    Decodes a MongoDB field name back to its original form.
+
+    Reverses the encoding applied by encode_mongo_key().
+    """
+    if not key:
+        return key
+    # Order matters: decode '%' last to avoid incorrect decoding
+    result = key.replace('%2E', '.')
+    result = result.replace('%24', '$')
+    result = result.replace('%25', '%')
+    return result
 
 
 def build_cart_id(guild_id: int, user_id: int, channel_id: str) -> str:
@@ -1545,7 +1660,7 @@ async def add_item_to_cart(bot, guild_id: int, user_id: int, channel_id: str,
     :return: True if successful, False if out of stock
     """
     item_name = item.get('name')
-    cart_key = f"{item_name}::{option_index}"
+    cart_key = f"{encode_mongo_key(item_name)}::{option_index}"
 
     # Check if item has stock limit and reserve if needed
     has_stock_limit = item.get('maxStock') is not None
@@ -1753,11 +1868,17 @@ async def clear_cart_and_release_stock(bot, guild_id: int, user_id: int, channel
     :param user_id: The user ID
     :param channel_id: The shop channel ID
     """
-    cart = await get_cart(bot, guild_id, user_id, channel_id)
+    # Fetch cart directly to avoid recursion with get_cart's expiry check
+    cart_id = build_cart_id(guild_id, user_id, channel_id)
+    cart = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name='shopCarts',
+        query={'_id': cart_id},
+        cache_id=cart_id
+    )
     if not cart:
         return
-
-    cart_id = cart['_id']
     items = cart.get('items', {})
 
     # Release all reserved stock
@@ -2325,38 +2446,33 @@ async def move_item_between_containers(
     # Use titlecase for the item name
     display_name = titlecase(item_name)
 
-    # Prepare updates
-    updates = {}
-    unsets = {}
-
-    # Update source
+    # Modify source items dict (remove item)
     new_source_qty = source_qty - quantity
     if new_source_qty <= 0:
-        unsets[f'{source_path}.{source_key}'] = ''
+        del source_items[source_key]
     else:
-        updates[f'{source_path}.{source_key}'] = new_source_qty
+        source_items[source_key] = new_source_qty
 
-    # Update destination
+    # Modify destination items dict (add item)
     if dest_key:
-        updates[f'{dest_path}.{dest_key}'] = dest_qty + quantity
+        dest_items[dest_key] = dest_qty + quantity
     else:
-        updates[f'{dest_path}.{display_name}'] = quantity
+        dest_items[display_name] = quantity
 
-    # Execute updates
-    update_ops = {}
-    if updates:
-        update_ops['$set'] = updates
-    if unsets:
-        update_ops['$unset'] = unsets
-
-    if update_ops:
-        await update_cached_data(
-            bot=bot,
-            mongo_database=bot.mdb,
-            collection_name='characters',
-            query={'_id': player_id},
-            update_data=update_ops
-        )
+    # Update both containers at once using full path to items dict
+    # This avoids dot-notation issues with item names containing dots
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': player_id},
+        update_data={
+            '$set': {
+                source_path: source_items,
+                dest_path: dest_items
+            }
+        }
+    )
 
 
 async def consume_item_from_container(
@@ -2415,22 +2531,20 @@ async def consume_item_from_container(
 
     new_qty = current_qty - quantity
 
+    # Modify items dict in Python and set the entire container
+    # This avoids dot-notation issues with item names containing dots
     if new_qty <= 0:
-        await update_cached_data(
-            bot=bot,
-            mongo_database=bot.mdb,
-            collection_name='characters',
-            query={'_id': player_id},
-            update_data={'$unset': {f'{path}.{item_key}': ''}}
-        )
+        del items[item_key]
     else:
-        await update_cached_data(
-            bot=bot,
-            mongo_database=bot.mdb,
-            collection_name='characters',
-            query={'_id': player_id},
-            update_data={'$set': {f'{path}.{item_key}': new_qty}}
-        )
+        items[item_key] = new_qty
+
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name='characters',
+        query={'_id': player_id},
+        update_data={'$set': {path: items}}
+    )
 
 
 def format_inventory_by_container(character_data: dict, currency_config: dict | None = None) -> str:

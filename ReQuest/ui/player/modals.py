@@ -25,7 +25,8 @@ from ReQuest.utilities.supportFunctions import (
     rename_container,
     get_container_name,
     consume_item_from_container,
-    move_item_between_containers
+    move_item_between_containers,
+    escape_markdown
 )
 
 logger = logging.getLogger(__name__)
@@ -116,7 +117,7 @@ class TradeModal(Modal):
                                                                           member_id, target_id, guild_id)
                 sender_balance_str = '\n'.join(format_currency_display(sender_currency, currency_query)) or "None"
                 receiver_currency_str = '\n'.join(format_currency_display(receiver_currency, currency_query)) or "None"
-                trade_embed.add_field(name='Currency', value=titlecase(item_name))
+                trade_embed.add_field(name='Currency', value=escape_markdown(titlecase(item_name)))
                 trade_embed.add_field(name='Amount', value=quantity)
                 trade_embed.add_field(name=f'{member_active_character['name']}\'s Balance', value=sender_balance_str,
                                       inline=False)
@@ -125,7 +126,7 @@ class TradeModal(Modal):
             else:
                 quantity = int(quantity)
                 await trade_item(interaction.client, item_name, quantity, member_id, target_id, guild_id)
-                trade_embed.add_field(name='Item', value=titlecase(item_name))
+                trade_embed.add_field(name='Item', value=escape_markdown(titlecase(item_name)))
                 trade_embed.add_field(name='Quantity', value=quantity)
 
             trade_embed.set_footer(text=f'Transaction ID: {transaction_id}')
@@ -618,7 +619,7 @@ class ConsumeFromContainerModal(Modal):
             receipt_embed = discord.Embed(
                 title='Item Consumption Report',
                 description=f'Player: {interaction.user.mention } as `{self.calling_view.character_data["name"]}`\n'
-                            f'Removed: **{quantity}x {titlecase(self.item_name)}** from **{container_name}**',
+                            f'Removed: **{quantity}x {escape_markdown(titlecase(self.item_name))}** from **{container_name}**',
                 color=discord.Color.gold(),
                 type='rich'
             )

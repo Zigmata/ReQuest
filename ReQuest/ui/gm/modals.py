@@ -18,7 +18,8 @@ from ReQuest.utilities.supportFunctions import (
     UserFeedbackError,
     update_cached_data,
     get_cached_data,
-    build_cache_key
+    build_cache_key,
+    escape_markdown
 )
 
 logger = logging.getLogger(__name__)
@@ -510,14 +511,14 @@ class ModPlayerModal(Modal):
 
                 display_value = f"{total_value:.2f}" if isinstance(total_value,
                                                                    float) and total_value % 1 != 0 else str(total_value)
-                mod_summary_embed.add_field(name=titlecase(base_currency_name), value=display_value)
+                mod_summary_embed.add_field(name=escape_markdown(titlecase(base_currency_name)), value=display_value)
 
             for item_name, quantity in item_changes.items():
                 if quantity == 0:
                     continue
                 await update_character_inventory(interaction, self.member.id, self.character_id,
                                                  item_name.lower(), int(quantity))
-                mod_summary_embed.add_field(name=titlecase(item_name), value=int(quantity))
+                mod_summary_embed.add_field(name=escape_markdown(titlecase(item_name)), value=int(quantity))
 
             transaction_id = shortuuid.uuid()[:12]
             mod_summary_embed.set_footer(text=f'Transaction ID: {transaction_id}')

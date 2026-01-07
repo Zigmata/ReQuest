@@ -31,7 +31,10 @@ from ReQuest.utilities.supportFunctions import (
     get_xp_config,
     get_cached_data,
     consolidate_currency_totals,
-    get_shop_stock
+    get_shop_stock,
+    escape_markdown,
+    encode_mongo_key,
+    decode_mongo_key
 )
 
 logger = logging.getLogger(__name__)
@@ -545,12 +548,13 @@ class ConfigWizardView(LayoutView):
         if items:
             report_lines.append('- Items:')
             for item_name, quantity in items.items():
-                report_lines.append(f'  - {titlecase(item_name)}: {quantity}')
+                report_lines.append(f'  - {escape_markdown(titlecase(item_name))}: {quantity}')
 
         return '\n'.join(report_lines)
 
     def validate_dashboard_settings(self, wait_list_query, quest_summary_query, gm_rewards_query,
-                                    player_xp_query, currency_config):
+                                    player_xp_query, currency_config, roleplay_config,
+                                    shops_config, inventory_config, new_char_shop, static_kits):
 
         # Fetch data
         wait_list_size = wait_list_query.get('questWaitList', 0) if wait_list_query else 0
@@ -591,6 +595,54 @@ class ConfigWizardView(LayoutView):
         components.append({
             'content': '\n'.join(currency_section_content),
             'shortcut_button': MenuViewButton(ConfigCurrencyView, 'Configure Currency')
+        })
+
+        # Roleplay Rewards Settings
+        rp_enabled = roleplay_config.get('enabled', False) if roleplay_config else False
+        rp_mode = roleplay_config.get('mode', 'scheduled') if roleplay_config else 'scheduled'
+        rp_channels = roleplay_config.get('channels', []) if roleplay_config else []
+        roleplay_section_content = [
+            '**Roleplay Rewards**',
+            f'- Status: {"Enabled" if rp_enabled else "Disabled"}',
+            f'- Mode: {rp_mode.capitalize()}',
+            f'- Monitored Channels: {len(rp_channels)}'
+        ]
+        components.append({
+            'content': '\n'.join(roleplay_section_content),
+            'shortcut_button': MenuViewButton(ConfigRoleplayView, 'Configure RP Rewards')
+        })
+
+        # Shops Settings
+        shop_channels = shops_config.get('shopChannels', {}) if shops_config else {}
+        shops_section_content = [
+            '**Shops**',
+            f'- Configured Shops: {len(shop_channels)}'
+        ]
+        if shop_channels:
+            shop_names = [data.get('shopName', 'Unnamed Shop') for data in shop_channels.values()]
+            shop_names.sort(key=str.lower)
+            for shop_name in shop_names[:3]:
+                shops_section_content.append(f'  - {shop_name}')
+            if len(shop_names) > 3:
+                shops_section_content.append(f'  - ...and {len(shop_names) - 3} more')
+        components.append({
+            'content': '\n'.join(shops_section_content),
+            'shortcut_button': MenuViewButton(ConfigShopsView, 'Configure Shops')
+        })
+
+        # New Character Setup
+        inv_type = inventory_config.get('inventoryType', 'none') if inventory_config else 'none'
+        shop_items = new_char_shop.get('stock', []) if new_char_shop else []
+        kits = static_kits.get('kits', []) if static_kits else []
+        new_char_section_content = [
+            '**New Character Setup**',
+            f'- Inventory Type: {inv_type.capitalize()}',
+            f'- New Character Shop Items: {len(shop_items)}',
+            f'- Static Kits: {len(kits)}'
+        ]
+        components.append({
+            'content': '\n'.join(new_char_section_content),
+            'shortcut_button': MenuViewButton(ConfigPlayersView, 'New Char Setup')
         })
 
         # Header
@@ -712,6 +764,20 @@ class ConfigWizardView(LayoutView):
                 }
             )
 
+            approval_queue_query = await get_cached_data(
+                bot=bot,
+                mongo_database=gdb,
+                collection_name='approvalQueueChannel',
+                query={'_id': guild.id}
+            )
+            channels.append(
+                {
+                    'name': 'Character Approval Queue',
+                    'mention': approval_queue_query['approvalQueueChannel'] if approval_queue_query else None,
+                    'required': False
+                }
+            )
+
             # Dashboard configs
             wait_list_query = await get_cached_data(
                 bot=bot,
@@ -744,6 +810,42 @@ class ConfigWizardView(LayoutView):
                 query={'_id': guild.id}
             )
 
+            # Roleplay config
+            roleplay_config_query = await get_cached_data(
+                bot=bot,
+                mongo_database=gdb,
+                collection_name='roleplayConfig',
+                query={'_id': guild.id}
+            )
+
+            # Shops config
+            shops_query = await get_cached_data(
+                bot=bot,
+                mongo_database=gdb,
+                collection_name='shops',
+                query={'_id': guild.id}
+            )
+
+            # New character setup configs
+            inventory_config_query = await get_cached_data(
+                bot=bot,
+                mongo_database=gdb,
+                collection_name='inventoryConfig',
+                query={'_id': guild.id}
+            )
+            new_char_shop_query = await get_cached_data(
+                bot=bot,
+                mongo_database=gdb,
+                collection_name='newCharacterShop',
+                query={'_id': guild.id}
+            )
+            static_kits_query = await get_cached_data(
+                bot=bot,
+                mongo_database=gdb,
+                collection_name='staticKits',
+                query={'_id': guild.id}
+            )
+
             # Role validation report
             role_text, role_has_warnings = self.validate_roles(guild, gm_roles_query, announcement_role_query)
             role_button = MenuViewButton(ConfigRolesView, 'Configure Roles')
@@ -754,7 +856,8 @@ class ConfigWizardView(LayoutView):
 
             # Dashboard settings report
             dashboard_data = self.validate_dashboard_settings(
-                wait_list_query, quest_summary_query, gm_rewards_query, player_xp_query, currency_config_query
+                wait_list_query, quest_summary_query, gm_rewards_query, player_xp_query, currency_config_query,
+                roleplay_config_query, shops_query, inventory_config_query, new_char_shop_query, static_kits_query
             )
 
             # Compile pages
@@ -1593,7 +1696,7 @@ class ConfigNewCharacterShopView(LayoutView):
             container.add_item(TextDisplay("No items configured."))
         else:
             for item in current_stock:
-                item_name = item.get('name')
+                item_name = escape_markdown(item.get('name'))
                 item_description = item.get('description')
                 item_quantity = item.get('quantity', 1)
 
@@ -1605,7 +1708,7 @@ class ConfigNewCharacterShopView(LayoutView):
                     display_string += f' - {cost_string}'
 
                 if item_description:
-                    display_string += f"\n*{item_description}*"
+                    display_string += f"\n*{escape_markdown(item_description)}*"
 
                 container.add_item(TextDisplay(display_string))
 
@@ -1789,7 +1892,7 @@ class ConfigStaticKitsView(LayoutView):
                 contents = []
 
                 for item in items[:3]:
-                    contents.append(f"{item.get('quantity', 1)}x {titlecase(item.get('name', ''))}")
+                    contents.append(f"{item.get('quantity', 1)}x {escape_markdown(titlecase(item.get('name', '')))}")
                 if len(items) > 3:
                     contents.append(f"...and {len(items) - 3} more items")
 
@@ -1883,8 +1986,10 @@ class EditStaticKitView(LayoutView):
 
         combined_list = []
 
-        for currency_name, amount in currencies.items():
-            combined_list.append({'type': 'currency', 'name': currency_name, 'amount': amount})
+        for encoded_currency_key, amount in currencies.items():
+            # Decode the key for display; original name is needed for lookups and formatting
+            decoded_name = decode_mongo_key(encoded_currency_key)
+            combined_list.append({'type': 'currency', 'name': decoded_name, 'amount': amount})
 
         for index, item in enumerate(self.items):
             combined_list.append({'type': 'item', 'index': index, 'data': item})
@@ -1941,11 +2046,11 @@ class EditStaticKitView(LayoutView):
                     item_actions.add_item(buttons.EditKitItemButton(self, item_data, index))
                     item_actions.add_item(buttons.DeleteKitItemButton(self, index))
 
-                    display = f'**Item:** {titlecase(item_data["name"])}'
+                    display = f'**Item:** {escape_markdown(titlecase(item_data["name"]))}'
                     if item_data['quantity'] > 1:
                         display += f' (x{item_data["quantity"]})'
                     if item_data.get('description'):
-                        display += f'\n*{item_data["description"]}*'
+                        display += f'\n*{escape_markdown(item_data["description"])}*'
 
                     container.add_item(TextDisplay(display))
                     container.add_item(item_actions)
@@ -2192,6 +2297,7 @@ class ConfigEditCurrencyView(LayoutView):
         toggle_double_button.label = f'Toggle Display (Current: {display_type})'
         actions.add_item(toggle_double_button)
         actions.add_item(buttons.AddDenominationButton(self))
+        actions.add_item(buttons.RenameCurrencyButton(self, self.currency_name))
         actions.add_item(buttons.RemoveCurrencyButton(self, self.currency_name))
         container.add_item(actions)
         container.add_item(Separator())
@@ -2208,10 +2314,12 @@ class ConfigEditCurrencyView(LayoutView):
                 denomination_value = denomination.get('value', 0)
 
                 info = f"**{titlecase(denomination_name)}** (Value: {denomination_value})"
+                container.add_item(TextDisplay(info))
 
-                section = Section(accessory=buttons.RemoveDenominationButton(self, denomination_name))
-                section.add_item(TextDisplay(info))
-                container.add_item(section)
+                denom_actions = ActionRow()
+                denom_actions.add_item(buttons.RenameDenominationButton(self, denomination_name))
+                denom_actions.add_item(buttons.RemoveDenominationButton(self, denomination_name))
+                container.add_item(denom_actions)
 
         self.add_item(container)
 
@@ -2511,7 +2619,7 @@ class EditShopView(LayoutView):
         current_stock = self.all_stock[start_index:end_index]
 
         for item in current_stock:
-            item_name = item.get('name')
+            item_name = escape_markdown(item.get('name'))
             item_description = item.get('description', None)
             item_quantity = item.get('quantity', 1)
 
@@ -2526,7 +2634,7 @@ class EditShopView(LayoutView):
             display_string = f'**{item_text}** - {cost_string}'
 
             if item_description:
-                display_string += f'\n*{item_description}*'
+                display_string += f'\n*{escape_markdown(item_description)}*'
 
             container.add_item(TextDisplay(display_string))
 
@@ -2703,10 +2811,11 @@ class ConfigStockLimitsView(LayoutView):
 
             for item in page_items:
                 item_name = item.get('name', 'Unknown')
+                item_name_display = escape_markdown(item_name)
                 max_stock = item.get('maxStock')
 
                 # Get runtime stock info
-                runtime_stock = self.stock_info.get(item_name)
+                runtime_stock = self.stock_info.get(encode_mongo_key(item_name))
                 current_available = None
                 reserved = 0
                 if runtime_stock:
@@ -2715,11 +2824,11 @@ class ConfigStockLimitsView(LayoutView):
 
                 if max_stock is not None:
                     if current_available is not None:
-                        stock_text = f'**{item_name}**\nMax: {max_stock} | Available: {current_available}'
+                        stock_text = f'**{item_name_display}**\nMax: {max_stock} | Available: {current_available}'
                         if reserved > 0:
                             stock_text += f' | Reserved: {reserved}'
                     else:
-                        stock_text = f'**{item_name}**\nMax: {max_stock} | Available: (not initialized)'
+                        stock_text = f'**{item_name_display}**\nMax: {max_stock} | Available: (not initialized)'
 
                     # Create button row with edit and remove buttons
                     item_row = ActionRow()
@@ -2729,7 +2838,7 @@ class ConfigStockLimitsView(LayoutView):
                     container.add_item(TextDisplay(stock_text))
                     container.add_item(item_row)
                 else:
-                    stock_text = f'**{item_name}**\nStock: Unlimited'
+                    stock_text = f'**{item_name_display}**\nStock: Unlimited'
                     item_section = Section(accessory=buttons.SetItemStockButton(item, self))
                     item_section.add_item(TextDisplay(stock_text))
                     container.add_item(item_section)
@@ -2953,7 +3062,7 @@ class ConfigRoleplayView(LayoutView):
             if xp := rewards_data.get('xp'):
                 rewards_text += f'**Experience:** {xp}\n'
             if items := rewards_data.get('items'):
-                item_lines = [f'- {titlecase(name)}: {quantity}' for name, quantity in items.items()]
+                item_lines = [f'- {escape_markdown(titlecase(name))}: {quantity}' for name, quantity in items.items()]
                 rewards_text += f'**Items:**\n{"\n".join(item_lines)}\n'
             if currency := rewards_data.get('currency'):
                 consolidated = consolidate_currency_totals(currency, self.currency_config)
