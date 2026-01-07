@@ -1,16 +1,19 @@
 import logging
 from datetime import datetime, timezone
 
+import discord
 from discord.ext import commands, tasks
 from discord.ext.commands import Cog
 
 from ReQuest.utilities.supportFunctions import (
     cleanup_expired_carts,
     get_last_restock,
+    get_item_stock,
     set_available_stock,
     increment_available_stock,
     update_last_restock,
-    log_exception
+    log_exception,
+    escape_markdown
 )
 
 logger = logging.getLogger(__name__)
@@ -149,7 +152,7 @@ class Tasks(Cog):
 
     async def _restock_shop(self, guild_id: int, channel_id: str, shop_data: dict, restock_config: dict):
         """
-        Restock all limited items in a shop.
+        Restock all limited items in a shop and post a notification embed.
 
         :param guild_id: The guild ID
         :param channel_id: The shop channel ID
@@ -160,6 +163,7 @@ class Tasks(Cog):
         increment_amount = restock_config.get('incrementAmount', 1)
 
         shop_stock = shop_data.get('shopStock', [])
+        restocked_items = []  # List of (item_name, amount_added)
 
         for item in shop_stock:
             max_stock = item.get('maxStock')
@@ -168,13 +172,67 @@ class Tasks(Cog):
 
             item_name = item.get('name')
 
+            # Get current stock to calculate how much was added
+            current_stock = await get_item_stock(self.bot, guild_id, channel_id, item_name)
+            current_available = current_stock['available'] if current_stock else 0
+
             if mode == 'full':
                 # Set available to maxStock
                 await set_available_stock(self.bot, guild_id, channel_id, item_name, max_stock)
+                amount_added = max_stock - current_available
             else:
                 # Increment available up to maxStock
                 await increment_available_stock(self.bot, guild_id, channel_id, item_name,
                                                 increment_amount, max_stock)
+                amount_added = min(increment_amount, max_stock - current_available)
+
+            if amount_added > 0:
+                restocked_items.append((item_name, amount_added))
+
+        # Post restock notification to the shop channel
+        if restocked_items:
+            await self._post_restock_notification(guild_id, channel_id, restocked_items)
+
+    async def _post_restock_notification(self, guild_id: int, channel_id: str, restocked_items: list):
+        """
+        Posts a restock notification embed to the shop channel.
+
+        :param guild_id: The guild ID
+        :param channel_id: The shop channel ID
+        :param restocked_items: List of (item_name, amount_added) tuples
+        """
+        try:
+            guild = self.bot.get_guild(guild_id)
+            if not guild:
+                return
+
+            channel = guild.get_channel(int(channel_id))
+            if not channel:
+                return
+
+            # Build the item list (cap at 20 items)
+            max_display = 20
+            item_lines = []
+            for item_name, amount in restocked_items[:max_display]:
+                item_lines.append(f"- **{escape_markdown(item_name)}**: +{amount}")
+
+            if len(restocked_items) > max_display:
+                remaining = len(restocked_items) - max_display
+                item_lines.append(f". . . and {remaining} more.")
+
+            description = "\n".join(item_lines)
+
+            embed = discord.Embed(
+                title="Shop Restocked!",
+                description=description,
+                color=discord.Color.green(),
+                timestamp=datetime.now(timezone.utc)
+            )
+            embed.set_footer(text=f"{len(restocked_items)} item{'s' if len(restocked_items) != 1 else ''} restocked")
+
+            await channel.send(embed=embed)
+        except Exception as e:
+            logger.error(f"Failed to post restock notification: {e}")
 
 
 async def setup(bot):
