@@ -16,7 +16,8 @@ from ReQuest.utilities.supportFunctions import (
     delete_cached_data,
     update_cached_data,
     get_xp_config,
-    remove_item_stock_limit
+    remove_item_stock_limit,
+    encode_mongo_key
 )
 
 logger = logging.getLogger(__name__)
@@ -1137,11 +1138,12 @@ class DeleteKitCurrencyButton(Button):
                 mongo_database=bot.gdb,
                 collection_name='staticKits',
                 query={'_id': interaction.guild_id},
-                update_data={'$unset': {f'kits.{kit_id}.currency.{self.currency_name}': ''}}
+                update_data={'$unset': {f'kits.{kit_id}.currency.{encode_mongo_key(self.currency_name)}': ''}}
             )
 
-            if self.currency_name in self.calling_view.kit_data.get('currency', {}):
-                del self.calling_view.kit_data['currency'][self.currency_name]
+            encoded_currency = encode_mongo_key(self.currency_name)
+            if encoded_currency in self.calling_view.kit_data.get('currency', {}):
+                del self.calling_view.kit_data['currency'][encoded_currency]
 
             self.calling_view.build_view()
             await interaction.response.edit_message(view=self.calling_view)

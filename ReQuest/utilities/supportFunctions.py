@@ -231,7 +231,7 @@ def escape_markdown(text: str) -> str:
     # Escape backslash first to avoid double-escaping
     text = text.replace('\\', '\\\\')
     # Escape other markdown characters
-    for char in ('*', '_', '~', '`', '|'):
+    for char in ('*', '_', '~', '`', '|', '>', '[', ']', '(', ')'):
         text = text.replace(char, f'\\{char}')
     return text
 
@@ -1186,7 +1186,7 @@ async def get_item_stock(bot, guild_id: int, channel_id: str, item_name: str) ->
 
     shops = stock_data.get('shops', {})
     shop_stock = shops.get(str(channel_id), {})
-    item_stock = shop_stock.get(item_name)
+    item_stock = shop_stock.get(encode_mongo_key(item_name))
 
     if item_stock is None:
         return None
@@ -1243,7 +1243,7 @@ async def initialize_item_stock(bot, guild_id: int, channel_id: str, item_name: 
         query={'_id': guild_id},
         update_data={
             '$set': {
-                f'shops.{channel_id}.{item_name}': {
+                f'shops.{channel_id}.{encode_mongo_key(item_name)}': {
                     'available': current_stock,
                     'reserved': 0
                 }
@@ -1268,7 +1268,7 @@ async def remove_item_stock_limit(bot, guild_id: int, channel_id: str, item_name
         query={'_id': guild_id},
         update_data={
             '$unset': {
-                f'shops.{channel_id}.{item_name}': ''
+                f'shops.{channel_id}.{encode_mongo_key(item_name)}': ''
             }
         }
     )
@@ -1288,15 +1288,16 @@ async def reserve_stock(bot, guild_id: int, channel_id: str, item_name: str, qua
     """
     collection = bot.gdb['shopStock']
 
+    encoded_name = encode_mongo_key(item_name)
     result = await collection.find_one_and_update(
         {
             '_id': guild_id,
-            f'shops.{channel_id}.{item_name}.available': {'$gte': quantity}
+            f'shops.{channel_id}.{encoded_name}.available': {'$gte': quantity}
         },
         {
             '$inc': {
-                f'shops.{channel_id}.{item_name}.available': -quantity,
-                f'shops.{channel_id}.{item_name}.reserved': quantity
+                f'shops.{channel_id}.{encoded_name}.available': -quantity,
+                f'shops.{channel_id}.{encoded_name}.reserved': quantity
             }
         },
         return_document=True
@@ -1324,26 +1325,29 @@ async def release_stock(bot, guild_id: int, channel_id: str, item_name: str, qua
     :param item_name: The name of the item
     :param quantity: The quantity to release
     """
-    # Fetch current stock to calculate new values (avoids $inc/$max conflict)
-    current_stock = await get_item_stock(bot, guild_id, channel_id, item_name)
-    if not current_stock:
-        return
+    collection = bot.gdb['shopStock']
+    encoded_name = encode_mongo_key(item_name)
+    path = f'shops.{channel_id}.{encoded_name}'
 
-    new_available = current_stock['available'] + quantity
-    new_reserved = max(0, current_stock['reserved'] - quantity)
-
-    await update_cached_data(
-        bot=bot,
-        mongo_database=bot.gdb,
-        collection_name='shopStock',
-        query={'_id': guild_id},
-        update_data={
-            '$set': {
-                f'shops.{channel_id}.{item_name}.available': new_available,
-                f'shops.{channel_id}.{item_name}.reserved': new_reserved
+    result = await collection.update_one(
+        {'_id': guild_id, f'{path}.reserved': {'$exists': True}},
+        [
+            {
+                '$set': {
+                    f'{path}.available': {'$add': [f'${path}.available', quantity]},
+                    f'{path}.reserved': {'$max': [0, {'$subtract': [f'${path}.reserved', quantity]}]}
+                }
             }
-        }
+        ]
     )
+
+    # Invalidate cache after update
+    if result.modified_count > 0:
+        cache_key = build_cache_key(bot.gdb.name, guild_id, 'shopStock')
+        try:
+            await bot.rdb.delete(cache_key)
+        except Exception as e:
+            logger.error(f"Redis delete failed: {e}")
 
 
 async def finalize_stock(bot, guild_id: int, channel_id: str, item_name: str, quantity: int = 1):
@@ -1356,24 +1360,28 @@ async def finalize_stock(bot, guild_id: int, channel_id: str, item_name: str, qu
     :param item_name: The name of the item
     :param quantity: The quantity to finalize
     """
-    # Fetch current stock to calculate new value (avoids $inc/$max conflict)
-    current_stock = await get_item_stock(bot, guild_id, channel_id, item_name)
-    if not current_stock:
-        return
+    collection = bot.gdb['shopStock']
+    encoded_name = encode_mongo_key(item_name)
+    path = f'shops.{channel_id}.{encoded_name}'
 
-    new_reserved = max(0, current_stock['reserved'] - quantity)
-
-    await update_cached_data(
-        bot=bot,
-        mongo_database=bot.gdb,
-        collection_name='shopStock',
-        query={'_id': guild_id},
-        update_data={
-            '$set': {
-                f'shops.{channel_id}.{item_name}.reserved': new_reserved
+    result = await collection.update_one(
+        {'_id': guild_id, f'{path}.reserved': {'$exists': True}},
+        [
+            {
+                '$set': {
+                    f'{path}.reserved': {'$max': [0, {'$subtract': [f'${path}.reserved', quantity]}]}
+                }
             }
-        }
+        ]
     )
+
+    # Invalidate cache after update
+    if result.modified_count > 0:
+        cache_key = build_cache_key(bot.gdb.name, guild_id, 'shopStock')
+        try:
+            await bot.rdb.delete(cache_key)
+        except Exception as e:
+            logger.error(f"Redis delete failed: {e}")
 
 
 async def set_available_stock(bot, guild_id: int, channel_id: str, item_name: str, amount: int):
@@ -1393,7 +1401,7 @@ async def set_available_stock(bot, guild_id: int, channel_id: str, item_name: st
         query={'_id': guild_id},
         update_data={
             '$set': {
-                f'shops.{channel_id}.{item_name}.available': amount
+                f'shops.{channel_id}.{encode_mongo_key(item_name)}.available': amount
             }
         }
     )
@@ -1411,25 +1419,28 @@ async def increment_available_stock(bot, guild_id: int, channel_id: str, item_na
     :param increment: The amount to add
     :param max_stock: The maximum stock allowed
     """
-    # Fetch current stock to calculate new value (avoids $inc/$min conflict)
-    current = await get_item_stock(bot, guild_id, channel_id, item_name)
-    if current is None:
-        return
+    collection = bot.gdb['shopStock']
+    encoded_name = encode_mongo_key(item_name)
+    path = f'shops.{channel_id}.{encoded_name}'
 
-    # Increment but cap at max_stock
-    new_available = min(current['available'] + increment, max_stock)
-
-    await update_cached_data(
-        bot=bot,
-        mongo_database=bot.gdb,
-        collection_name='shopStock',
-        query={'_id': guild_id},
-        update_data={
-            '$set': {
-                f'shops.{channel_id}.{item_name}.available': new_available
+    result = await collection.update_one(
+        {'_id': guild_id, f'{path}.available': {'$exists': True}},
+        [
+            {
+                '$set': {
+                    f'{path}.available': {'$min': [max_stock, {'$add': [f'${path}.available', increment]}]}
+                }
             }
-        }
+        ]
     )
+
+    # Invalidate cache after update
+    if result.modified_count > 0:
+        cache_key = build_cache_key(bot.gdb.name, guild_id, 'shopStock')
+        try:
+            await bot.rdb.delete(cache_key)
+        except Exception as e:
+            logger.error(f"Redis delete failed: {e}")
 
 
 async def update_last_restock(bot, guild_id: int, channel_id: str, timestamp: str):

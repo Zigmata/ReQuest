@@ -20,7 +20,8 @@ from ReQuest.utilities.supportFunctions import (
     UserFeedbackError,
     delete_cached_data,
     strip_id,
-    initialize_item_stock
+    initialize_item_stock,
+    encode_mongo_key
 )
 
 logger = logging.getLogger(__name__)
@@ -1424,8 +1425,9 @@ class StaticKitCurrencyModal(Modal):
 
             existing_amount = 0
 
+            encoded_currency = encode_mongo_key(parent_name)
             if query and 'kits' in query:
-                existing_amount = query['kits'].get(kit_id, {}).get('currency', {}).get(parent_name, 0)
+                existing_amount = query['kits'].get(kit_id, {}).get('currency', {}).get(encoded_currency, 0)
 
             final_amount = existing_amount + converted_amount
 
@@ -1434,13 +1436,13 @@ class StaticKitCurrencyModal(Modal):
                 mongo_database=bot.gdb,
                 collection_name='staticKits',
                 query={'_id': interaction.guild_id},
-                update_data={'$set': {f'kits.{kit_id}.currency.{parent_name}': final_amount}}
+                update_data={'$set': {f'kits.{kit_id}.currency.{encoded_currency}': final_amount}}
             )
 
             if 'currency' not in self.calling_view.kit_data:
                 self.calling_view.kit_data['currency'] = {}
 
-            self.calling_view.kit_data['currency'][parent_name] = final_amount
+            self.calling_view.kit_data['currency'][encoded_currency] = final_amount
 
             self.calling_view.build_view()
             await interaction.response.edit_message(view=self.calling_view)
