@@ -68,15 +68,15 @@ class ShopBaseView(LayoutView):
             query={'_id': guild.id}
         )
 
-        # Load stock info for limited items
-        if self.channel_id:
-            self.stock_info = await get_shop_stock(bot, guild.id, self.channel_id)
-
-        # Load existing cart from database
+        # Load existing cart from database FIRST (may trigger expiry cleanup and stock release)
         if self.user_id and self.channel_id:
             db_cart = await get_cart(self.bot, self.guild_id, self.user_id, self.channel_id)
             if db_cart:
                 self.cart = db_cart.get('items', {})
+
+        # Load stock info AFTER cart check (so any released stock is reflected)
+        if self.channel_id:
+            self.stock_info = await get_shop_stock(bot, guild.id, self.channel_id)
 
         self.build_view()
 
@@ -306,7 +306,7 @@ class ShopCartView(LayoutView):
                 for item_key, data in self.prev_view.cart.items():
                     item = data['item']
                     quantity = data['quantity']
-                    option_index = data.get('option_index', 0)
+                    option_index = data.get('optionIndex', 0)
 
                     costs = item.get('costs', [])
                     if 0 <= option_index < len(costs):
@@ -337,7 +337,7 @@ class ShopCartView(LayoutView):
                     item = data['item']
                     quantity = data['quantity']
                     quantity_per_item = item.get('quantity', 1)
-                    option_index = data.get('option_index', 0)
+                    option_index = data.get('optionIndex', 0)
                     total_item_quantity = quantity * quantity_per_item
 
                     costs = item.get('costs', [])

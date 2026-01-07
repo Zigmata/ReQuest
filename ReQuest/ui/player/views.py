@@ -1587,7 +1587,7 @@ class NewCharacterCartView(LayoutView):
         for key, data in self.shop_view.cart.items():
             item = data['item']
             quantity = data['quantity']
-            option_index = data.get('option_index', 0)
+            option_index = data.get('optionIndex', 0)
             quantity_per_purchase = item.get('quantity', 1)
             total_quantity = quantity * quantity_per_purchase
 
@@ -1653,7 +1653,7 @@ class NewCharacterCartView(LayoutView):
                 item = data['item']
                 name = item.get('name')
                 quantity = data['quantity']
-                option_index = data.get('option_index', 0)
+                option_index = data.get('optionIndex', 0)
                 quantity_per_purchase = item.get('quantity', 1)
                 total_quantity = quantity * quantity_per_purchase
 
