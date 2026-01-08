@@ -9,6 +9,7 @@ from ReQuest.utilities.supportFunctions import (
     cleanup_expired_carts,
     get_last_restock,
     get_item_stock,
+    get_shop_channel,
     set_available_stock,
     increment_available_stock,
     update_last_restock,
@@ -195,18 +196,15 @@ class Tasks(Cog):
 
     async def _post_restock_notification(self, guild_id: int, channel_id: str, restocked_items: list):
         """
-        Posts a restock notification embed to the shop channel.
+        Posts a restock notification embed to the shop channel or forum thread.
 
         :param guild_id: The guild ID
-        :param channel_id: The shop channel ID
+        :param channel_id: The shop channel ID (or thread ID for forum shops)
         :param restocked_items: List of (item_name, amount_added) tuples
         """
         try:
-            guild = self.bot.get_guild(guild_id)
-            if not guild:
-                return
-
-            channel = guild.get_channel(int(channel_id))
+            # Use helper to find channel (handles both text channels and forum threads)
+            channel = await get_shop_channel(self.bot, guild_id, channel_id)
             if not channel:
                 return
 

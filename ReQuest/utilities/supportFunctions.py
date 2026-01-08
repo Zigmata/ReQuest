@@ -1163,6 +1163,42 @@ def format_complex_cost(costs: list, currency_config: dict) -> str:
 # ----- Shop Stock Management -----
 
 
+async def get_shop_channel(bot, guild_id: int, channel_id: str) -> discord.abc.Messageable | None:
+    """
+    Retrieves a shop channel, handling both text channels and forum threads.
+
+    Discord threads require different lookup methods than regular channels.
+    This helper provides unified access for both channel types.
+
+    :param bot: The Discord bot instance
+    :param guild_id: The guild ID
+    :param channel_id: The channel or thread ID (as string)
+    :return: The channel/thread object or None if not found
+    """
+    guild = bot.get_guild(guild_id)
+    if not guild:
+        return None
+
+    # Try direct channel lookup first (works for text channels and cached threads)
+    channel = guild.get_channel(int(channel_id))
+    if channel:
+        return channel
+
+    # Try to find as thread in text channels
+    for text_channel in guild.text_channels:
+        thread = text_channel.get_thread(int(channel_id))
+        if thread:
+            return thread
+
+    # Try to find as thread in forum channels
+    for forum in guild.forums:
+        thread = forum.get_thread(int(channel_id))
+        if thread:
+            return thread
+
+    return None
+
+
 async def get_item_stock(bot, guild_id: int, channel_id: str, item_name: str) -> dict | None:
     """
     Retrieves stock information for a specific item in a shop.

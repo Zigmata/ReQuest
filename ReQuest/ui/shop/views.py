@@ -155,8 +155,8 @@ class ShopBaseView(LayoutView):
                 if cart_quantity > 0:
                     content += f' (In Cart: {cart_quantity})'
 
-                # Show stock info if item has limits
-                if item_stock_info is not None:
+                # Show stock info if item has limits (and data is valid)
+                if item_stock_info is not None and 'available' in item_stock_info:
                     available = item_stock_info.get('available', 0)
                     if available == 0:
                         content += f'\n**OUT OF STOCK**'

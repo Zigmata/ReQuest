@@ -2448,8 +2448,10 @@ class ConfigShopsView(LayoutView):
             for shop in page_items:
                 shop_name = shop['data'].get('shopName', 'Unknown Shop')
                 channel_id = shop['id']
+                channel_type = shop['data'].get('channelType', 'text')
+                type_indicator = ' (Forum)' if channel_type == 'forum_thread' else ''
 
-                info = f"**{shop_name}**\nChannel: <#{channel_id}>"
+                info = f"**{shop_name}**{type_indicator}\nChannel: <#{channel_id}>"
 
                 section = Section(accessory=buttons.ManageShopNavButton(channel_id, shop['data'], 'Manage'))
                 section.add_item(TextDisplay(info))
@@ -2506,6 +2508,127 @@ class ConfigShopsView(LayoutView):
             await log_exception(e, interaction)
 
 
+class ShopChannelTypeSelectionView(LayoutView):
+    """Allows user to choose between text channel or forum thread for a new shop."""
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.build_view()
+
+    def build_view(self):
+        self.clear_items()
+        container = Container()
+
+        header_section = Section(accessory=BackButton(ConfigShopsView))
+        header_section.add_item(TextDisplay('**Add Shop - Choose Location Type**'))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        text_section = Section(accessory=buttons.TextChannelShopButton(self))
+        text_section.add_item(TextDisplay(
+            '**Text Channel**\n'
+            'Create a shop in a standard text channel.'
+        ))
+        container.add_item(text_section)
+
+        forum_section = Section(accessory=buttons.ForumThreadShopButton(self))
+        forum_section.add_item(TextDisplay(
+            '**Forum Thread**\n'
+            'Create a shop in a forum thread (new or existing).'
+        ))
+        container.add_item(forum_section)
+
+        self.add_item(container)
+
+
+class ForumShopSetupView(LayoutView):
+    """Allows user to configure a forum thread shop - new or existing thread."""
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.selected_forum = None
+        self.create_new_thread = True  # Default to creating new thread
+        self.selected_thread = None
+        self.forum_threads = []
+
+    async def setup(self, bot, guild):
+        """Populate available forums."""
+        self.build_view()
+
+    def build_view(self):
+        self.clear_items()
+        container = Container()
+
+        header_section = Section(accessory=BackButton(ShopChannelTypeSelectionView))
+        header_section.add_item(TextDisplay('**Add Shop - Forum Thread Setup**'))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        # Forum selection
+        container.add_item(TextDisplay('**Step 1: Select a Forum Channel**'))
+        forum_select_row = ActionRow()
+        forum_select_row.add_item(selects.ForumChannelSelect(self))
+        container.add_item(forum_select_row)
+        container.add_item(Separator())
+
+        if self.selected_forum:
+            # Thread creation mode selection
+            container.add_item(TextDisplay('**Step 2: Choose Thread Option**'))
+
+            new_thread_row = ActionRow()
+            new_thread_btn = Button(
+                label='Create New Thread',
+                style=ButtonStyle.primary if self.create_new_thread else ButtonStyle.secondary,
+                custom_id='forum_new_thread_toggle'
+            )
+            new_thread_btn.callback = self._toggle_new_thread
+            new_thread_row.add_item(new_thread_btn)
+
+            existing_thread_btn = Button(
+                label='Use Existing Thread',
+                style=ButtonStyle.primary if not self.create_new_thread else ButtonStyle.secondary,
+                custom_id='forum_existing_thread_toggle'
+            )
+            existing_thread_btn.callback = self._toggle_existing_thread
+            new_thread_row.add_item(existing_thread_btn)
+            container.add_item(new_thread_row)
+            container.add_item(Separator())
+
+            if self.create_new_thread:
+                # Show button to proceed with new thread creation
+                proceed_section = Section(accessory=buttons.CreateNewForumThreadButton(self))
+                proceed_section.add_item(TextDisplay(
+                    '**Create New Thread**\n'
+                    'Opens a form to create a new thread and configure the shop.'
+                ))
+                container.add_item(proceed_section)
+            else:
+                # Show thread select for existing threads
+                container.add_item(TextDisplay('**Step 3: Select an Existing Thread**'))
+                thread_select_row = ActionRow()
+                thread_select_row.add_item(selects.ForumThreadSelect(self))
+                container.add_item(thread_select_row)
+
+                if self.selected_thread:
+                    proceed_section = Section(accessory=buttons.UseExistingThreadButton(self))
+                    proceed_section.add_item(TextDisplay(
+                        f'**Selected Thread:** {self.selected_thread.name}\n'
+                        'Click to configure the shop in this thread.'
+                    ))
+                    container.add_item(proceed_section)
+
+        self.add_item(container)
+
+    async def _toggle_new_thread(self, interaction: discord.Interaction):
+        self.create_new_thread = True
+        self.selected_thread = None
+        self.build_view()
+        await interaction.response.edit_message(view=self)
+
+    async def _toggle_existing_thread(self, interaction: discord.Interaction):
+        self.create_new_thread = False
+        self.build_view()
+        await interaction.response.edit_message(view=self)
+
+
 class ManageShopView(LayoutView):
     def __init__(self, channel_id, shop_data):
         super().__init__(timeout=None)
@@ -2527,7 +2650,15 @@ class ManageShopView(LayoutView):
 
         shop_keeper = self.shop_data.get('shopKeeper', 'None')
         shop_description = self.shop_data.get('shopDescription', 'None')
-        info_text = f"**Shopkeeper:** {shop_keeper}\n**Description:** {shop_description}"
+        channel_type = self.shop_data.get('channelType', 'text')
+        channel_type_display = 'Forum Thread' if channel_type == 'forum_thread' else 'Text Channel'
+
+        info_text = (
+            f"**Channel:** <#{self.selected_channel_id}>\n"
+            f"**Type:** {channel_type_display}\n"
+            f"**Shopkeeper:** {shop_keeper}\n"
+            f"**Description:** {shop_description}"
+        )
         container.add_item(TextDisplay(info_text))
         container.add_item(Separator())
 
@@ -2814,11 +2945,11 @@ class ConfigStockLimitsView(LayoutView):
                 item_name_display = escape_markdown(item_name)
                 max_stock = item.get('maxStock')
 
-                # Get runtime stock info
+                # Get runtime stock info (only if data is valid with 'available' key)
                 runtime_stock = self.stock_info.get(encode_mongo_key(item_name))
                 current_available = None
                 reserved = 0
-                if runtime_stock:
+                if runtime_stock and 'available' in runtime_stock:
                     current_available = runtime_stock.get('available', 0)
                     reserved = runtime_stock.get('reserved', 0)
 

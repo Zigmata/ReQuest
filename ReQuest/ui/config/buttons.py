@@ -502,7 +502,105 @@ class AddShopWizardButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            await interaction.response.send_modal(modals.ConfigShopDetailsModal(self.calling_view))
+            from ReQuest.ui.config.views import ShopChannelTypeSelectionView
+            view = ShopChannelTypeSelectionView()
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class TextChannelShopButton(Button):
+    """Opens the existing text channel shop modal."""
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Select',
+            style=ButtonStyle.primary,
+            custom_id='text_channel_shop_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.send_modal(
+                modals.ConfigShopDetailsModal(self.calling_view, channel_type='text')
+            )
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ForumThreadShopButton(Button):
+    """Opens the forum thread shop setup view."""
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Select',
+            style=ButtonStyle.primary,
+            custom_id='forum_thread_shop_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            from ReQuest.ui.config.views import ForumShopSetupView
+            view = ForumShopSetupView()
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class CreateNewForumThreadButton(Button):
+    """Opens modal to create a new forum thread for the shop."""
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Continue',
+            style=ButtonStyle.success,
+            custom_id='create_new_forum_thread_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            if not self.calling_view.selected_forum:
+                await interaction.response.send_message(
+                    'Please select a forum channel first.',
+                    ephemeral=True
+                )
+                return
+
+            await interaction.response.send_modal(
+                modals.ForumThreadShopModal(self.calling_view, self.calling_view.selected_forum)
+            )
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class UseExistingThreadButton(Button):
+    """Opens modal to configure shop in an existing forum thread."""
+    def __init__(self, calling_view):
+        super().__init__(
+            label='Continue',
+            style=ButtonStyle.success,
+            custom_id='use_existing_thread_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            if not self.calling_view.selected_thread:
+                await interaction.response.send_message(
+                    'Please select a thread first.',
+                    ephemeral=True
+                )
+                return
+
+            await interaction.response.send_modal(
+                modals.ConfigShopDetailsModal(
+                    self.calling_view,
+                    channel_type='forum_thread',
+                    parent_forum_id=str(self.calling_view.selected_forum.id),
+                    preselected_channel=self.calling_view.selected_thread
+                )
+            )
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -604,6 +702,26 @@ class RemoveShopButton(Button):
             bot = interaction.client
             guild_id = interaction.guild_id
             channel_id = view.selected_channel_id
+
+            # Get shop data to check if it's a forum thread
+            shop_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='shops',
+                query={'_id': guild_id}
+            )
+
+            shop_data = shop_query.get('shopChannels', {}).get(channel_id, {})
+            channel_type = shop_data.get('channelType', 'text')
+
+            # Archive and lock if forum thread
+            if channel_type == 'forum_thread':
+                try:
+                    thread = bot.get_channel(int(channel_id))
+                    if thread and isinstance(thread, discord.Thread):
+                        await thread.edit(archived=True, locked=True)
+                except Exception as e:
+                    logger.warning(f"Could not archive thread {channel_id}: {e}")
 
             await update_cached_data(
                 bot=bot,
