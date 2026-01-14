@@ -6,7 +6,16 @@ import discord
 import discord.ui
 import jsonschema
 import shortuuid
-from discord.ui import Modal, Label
+from discord.ui import (
+    Modal,
+    Label,
+    LayoutView,
+    Container,
+    Section,
+    TextDisplay,
+    Separator,
+    Thumbnail
+)
 from jsonschema import validate
 from titlecase import titlecase
 
@@ -21,6 +30,7 @@ from ReQuest.utilities.supportFunctions import (
     delete_cached_data,
     strip_id,
     initialize_item_stock,
+    get_item_stock,
     encode_mongo_key
 )
 
@@ -450,14 +460,23 @@ class GMRewardsModal(Modal):
             bot = interaction.client
             experience = None
             if self.xp_enabled and hasattr(self, 'experience_text_input') and self.experience_text_input.value:
-                experience = int(self.experience_text_input.value)
+                try:
+                    experience = int(self.experience_text_input.value)
+                except ValueError:
+                    raise UserFeedbackError('Experience must be a valid integer (e.g. 2000).')
 
             items = None
             if self.items_text_input.value:
                 items = {}
                 for item in self.items_text_input.value.strip().split('\n'):
-                    item_name, quantity = item.split(':', 1)
-                    items[titlecase(item_name.strip())] = int(quantity.strip())
+                    try:
+                        item_name, quantity = item.split(':', 1)
+                        items[titlecase(item_name.strip())] = int(quantity.strip())
+                    except ValueError:
+                        raise UserFeedbackError(
+                            f'Invalid item format: "{item}". Each item must be on a new line, and in the format '
+                            f'"Name: Quantity".'
+                        )
 
             await update_cached_data(
                 bot=bot,
@@ -482,13 +501,17 @@ class GMRewardsModal(Modal):
 
 
 class ConfigShopDetailsModal(Modal):
-    def __init__(self, calling_view, existing_shop_data=None, existing_channel_id=None):
+    def __init__(self, calling_view, existing_shop_data=None, existing_channel_id=None,
+                 channel_type='text', parent_forum_id=None, preselected_channel=None):
         super().__init__(
             title='Add/Edit Shop Details',
             timeout=600
         )
         self.calling_view = calling_view
         self.existing_channel_id = existing_channel_id
+        self.channel_type = channel_type
+        self.parent_forum_id = parent_forum_id
+        self.preselected_channel = preselected_channel
 
         self.shop_channel_select = None
 
@@ -497,7 +520,8 @@ class ConfigShopDetailsModal(Modal):
         description_default = existing_shop_data.get('shopDescription', '') if existing_shop_data else ''
         image_default = existing_shop_data.get('shopImage', '') if existing_shop_data else ''
 
-        if not self.existing_channel_id:
+        # Only show channel select if no existing channel AND no preselected channel (forum thread)
+        if not self.existing_channel_id and not self.preselected_channel:
             self.shop_channel_select = discord.ui.ChannelSelect(
                 channel_types=[discord.ChannelType.text],
                 placeholder='Select the channel for this shop',
@@ -550,6 +574,9 @@ class ConfigShopDetailsModal(Modal):
 
             if self.existing_channel_id:
                 channel_id = self.existing_channel_id
+            elif self.preselected_channel:
+                # Forum thread case - channel already selected
+                channel_id = str(self.preselected_channel.id)
             else:
                 if not self.shop_channel_select or not self.shop_channel_select.values:
                     raise UserFeedbackError('No channel selected for the shop.')
@@ -573,8 +600,13 @@ class ConfigShopDetailsModal(Modal):
                 'shopKeeper': self.shop_keeper_text_input.value,
                 'shopDescription': self.shop_description_text_input.value,
                 'shopImage': self.shop_image_text_input.value,
-                'shopStock': []
+                'shopStock': [],
+                'channelType': self.channel_type
             }
+
+            # Add parent forum ID for forum thread shops
+            if self.channel_type == 'forum_thread' and self.parent_forum_id:
+                shop_data['parentForumId'] = self.parent_forum_id
 
             if self.existing_channel_id:
                 existing_query = await get_cached_data(
@@ -601,6 +633,154 @@ class ConfigShopDetailsModal(Modal):
             else:
                 await setup_view(self.calling_view, interaction)
                 await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+def build_shop_header_view(shop_data: dict) -> LayoutView:
+    """
+    Builds a static LayoutView displaying shop header information.
+
+    :param shop_data: The shop configuration data
+    :return: A LayoutView with the shop header
+    """
+    view = LayoutView(timeout=None)
+    container = Container()
+    header_items = []
+
+    if shop_name := shop_data.get('shopName'):
+        header_items.append(TextDisplay(f'# {shop_name}'))
+    if shop_keeper := shop_data.get('shopKeeper'):
+        header_items.append(TextDisplay(f'**Shopkeeper:** {shop_keeper}'))
+    if shop_description := shop_data.get('shopDescription'):
+        header_items.append(TextDisplay(f'*{shop_description}*'))
+
+    if shop_image := shop_data.get('shopImage'):
+        thumbnail = Thumbnail(media=shop_image)
+        shop_header = Section(accessory=thumbnail)
+        for item in header_items:
+            shop_header.add_item(item)
+        container.add_item(shop_header)
+    else:
+        for item in header_items:
+            container.add_item(item)
+
+    container.add_item(Separator())
+    container.add_item(TextDisplay('Use the `/shop` command to browse and purchase items.'))
+
+    view.add_item(container)
+    return view
+
+
+class ForumThreadShopModal(Modal):
+    """Modal for creating a shop in a new forum thread."""
+    def __init__(self, calling_view, forum_channel):
+        super().__init__(
+            title='Create Forum Thread Shop',
+            timeout=600
+        )
+        self.calling_view = calling_view
+        self.forum_channel = forum_channel
+
+        self.thread_name_input = discord.ui.TextInput(
+            label='Thread Name',
+            custom_id='thread_name_input',
+            placeholder='Enter the name for the shop thread',
+            required=True
+        )
+        self.shop_name_input = discord.ui.TextInput(
+            label='Shop Name',
+            custom_id='shop_name_input',
+            placeholder='Enter the name of the shop',
+            required=True
+        )
+        self.shop_keeper_input = discord.ui.TextInput(
+            label='Shopkeeper Name',
+            custom_id='shop_keeper_input',
+            placeholder='Enter the name of the shopkeeper',
+            required=False
+        )
+        self.shop_description_input = discord.ui.TextInput(
+            label='Shop Description',
+            style=discord.TextStyle.paragraph,
+            custom_id='shop_description_input',
+            placeholder='Enter a description for the shop',
+            required=False
+        )
+        self.shop_image_input = discord.ui.TextInput(
+            label='Shop Image URL',
+            custom_id='shop_image_input',
+            placeholder='Enter a URL for the shop image',
+            required=False
+        )
+
+        self.add_item(self.thread_name_input)
+        self.add_item(self.shop_name_input)
+        self.add_item(self.shop_keeper_input)
+        self.add_item(self.shop_description_input)
+        self.add_item(self.shop_image_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            guild_id = interaction.guild_id
+
+            # Fetch the actual ForumChannel object (self.forum_channel is an AppCommandChannel)
+            forum = interaction.guild.get_channel(self.forum_channel.id)
+            if not forum:
+                raise UserFeedbackError('Could not find the selected forum channel.')
+
+            # Build shop data first so we can create the header view
+            thread_name = self.thread_name_input.value
+            shop_data = {
+                'shopName': self.shop_name_input.value,
+                'shopKeeper': self.shop_keeper_input.value,
+                'shopDescription': self.shop_description_input.value,
+                'shopImage': self.shop_image_input.value,
+                'shopStock': [],
+                'channelType': 'forum_thread',
+                'parentForumId': str(self.forum_channel.id)
+            }
+
+            # Create the shop header view for the initial post
+            header_view = build_shop_header_view(shop_data)
+
+            # Create the forum thread with the shop header view
+            thread_with_message = await forum.create_thread(
+                name=thread_name,
+                view=header_view
+            )
+
+            # Get the thread ID (create_thread returns a ThreadWithMessage)
+            thread = thread_with_message.thread
+            channel_id = str(thread.id)
+
+            # Check if a shop already exists for this thread (shouldn't happen for new thread, but safety check)
+            query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='shops',
+                query={'_id': guild_id}
+            )
+            if query and channel_id in query.get('shopChannels', {}):
+                raise UserFeedbackError(
+                    'A shop is already registered in this thread. This should not happen for a new thread.'
+                )
+
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name='shops',
+                query={'_id': guild_id},
+                update_data={'$set': {f'shopChannels.{channel_id}': shop_data}}
+            )
+
+            # Navigate back to shop config view
+            from ReQuest.ui.config.views import ConfigShopsView
+            new_view = ConfigShopsView()
+            await setup_view(new_view, interaction)
+            await interaction.response.edit_message(view=new_view)
+
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -678,6 +858,15 @@ class ConfigShopJSONModal(Modal):
                 query={'_id': guild_id},
                 update_data={'$set': {f'shopChannels.{channel_id}': shop_data}}
             )
+
+            # Initialize runtime stock for items with maxStock
+            shop_stock = shop_data.get('shopStock', [])
+            for item in shop_stock:
+                max_stock = item.get('maxStock')
+                if max_stock is not None:
+                    item_name = item.get('name')
+                    # Initialize with max stock as available
+                    await initialize_item_stock(bot, guild_id, channel_id, item_name, max_stock, max_stock)
 
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
@@ -907,6 +1096,18 @@ class ConfigUpdateShopJSONModal(Modal):
                 query={'_id': guild_id},
                 update_data={'$set': {f'shopChannels.{channel_id}': shop_data}}
             )
+
+            # Initialize runtime stock for items with maxStock that don't have stock entries yet
+            shop_stock = shop_data.get('shopStock', [])
+            for item in shop_stock:
+                max_stock = item.get('maxStock')
+                if max_stock is not None:
+                    item_name = item.get('name')
+                    # Check if stock already exists for this item
+                    existing_stock = await get_item_stock(bot, guild_id, channel_id, item_name)
+                    if existing_stock is None or 'available' not in existing_stock:
+                        # Initialize with max stock as available
+                        await initialize_item_stock(bot, guild_id, channel_id, item_name, max_stock, max_stock)
 
             if hasattr(self.calling_view, 'update_details'):
                 self.calling_view.update_details(shop_data)

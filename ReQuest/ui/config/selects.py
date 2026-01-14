@@ -354,3 +354,102 @@ class RoleplayResetTimeSelect(Select):
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
+
+
+class ForumChannelSelect(ChannelSelect):
+    """Select for choosing a forum channel for shop setup."""
+    def __init__(self, calling_view):
+        super().__init__(
+            channel_types=[discord.ChannelType.forum],
+            placeholder='Select a forum channel',
+            custom_id='forum_channel_select'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            self.calling_view.selected_forum = self.values[0]
+            self.calling_view.selected_thread = None  # Reset thread selection
+            self.calling_view.build_view()
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ForumThreadSelect(Select):
+    """Select for choosing an existing thread within a forum channel."""
+    def __init__(self, calling_view):
+        options = []
+
+        if calling_view.selected_forum:
+            # Get threads from the forum (archived and active)
+            # Note: We can only access cached/active threads here
+            # For a full list, the bot would need to fetch them
+            forum = calling_view.selected_forum
+            threads = []
+
+            # Get active threads
+            if hasattr(forum, 'threads'):
+                threads = list(forum.threads)[:25]  # Discord limits select to 25 options
+
+            if threads:
+                for thread in threads:
+                    options.append(discord.SelectOption(
+                        label=thread.name[:100],  # Discord label limit
+                        value=str(thread.id),
+                        description=f'Thread ID: {thread.id}'
+                    ))
+            else:
+                # Provide a placeholder option if no threads found
+                options.append(discord.SelectOption(
+                    label='No active threads found',
+                    value='none',
+                    description='Create a new thread or check archived threads'
+                ))
+
+        if not options:
+            options.append(discord.SelectOption(
+                label='Select a forum first',
+                value='none',
+                description='Please select a forum channel above'
+            ))
+
+        super().__init__(
+            placeholder='Select a thread',
+            options=options,
+            custom_id='forum_thread_select'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            selected_value = self.values[0]
+            if selected_value == 'none':
+                await interaction.response.send_message(
+                    'Please select a valid thread or create a new one.',
+                    ephemeral=True
+                )
+                return
+
+            # Get the thread object
+            thread_id = int(selected_value)
+            guild = interaction.guild
+            thread = guild.get_thread(thread_id)
+
+            if not thread:
+                # Try to fetch from the forum
+                forum = self.calling_view.selected_forum
+                if forum:
+                    thread = forum.get_thread(thread_id)
+
+            if thread:
+                self.calling_view.selected_thread = thread
+                self.calling_view.build_view()
+                await interaction.response.edit_message(view=self.calling_view)
+            else:
+                await interaction.response.send_message(
+                    'Could not find the selected thread. It may have been deleted or archived.',
+                    ephemeral=True
+                )
+        except Exception as e:
+            await log_exception(e, interaction)

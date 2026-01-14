@@ -25,9 +25,9 @@ class ShopItemButton(Button):
         """
         costs = item.get('costs', [])
 
-        # Check if out of stock
+        # Check if out of stock (only if stock data is valid)
         is_out_of_stock = False
-        if stock_info is not None:
+        if stock_info is not None and 'available' in stock_info:
             available = stock_info.get('available', 0)
             if available <= 0:
                 is_out_of_stock = True
@@ -58,9 +58,11 @@ class ShopItemButton(Button):
         try:
             # Double-check stock availability (in case UI is stale)
             item_name = self.item['name']
-            channel_id = str(interaction.channel_id)
+            # Use view's channel_id to ensure consistency with shop lookup
+            channel_id = self.view.channel_id or str(interaction.channel_id)
             self.stock_info = await get_item_stock(interaction.client, interaction.guild_id, channel_id, item_name)
-            if self.stock_info is not None and self.stock_info.get('available', 0) <= 0:
+            # Only check stock if data is valid (has 'available' key)
+            if self.stock_info is not None and 'available' in self.stock_info and self.stock_info.get('available', 0) <= 0:
                 raise UserFeedbackError(f'**{self.item["name"]}** is out of stock.')
 
             costs = self.item.get('costs', [])
