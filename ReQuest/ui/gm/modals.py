@@ -168,8 +168,13 @@ class CreateQuestModal(Modal):
 
             # If an announcement role is set, ping it and then delete the message.
             if announce_role != 0:
-                ping_msg = await quest_channel.send(f'{announce_role} **NEW QUEST!**')
-                await ping_msg.delete()
+                try:
+                    ping_msg = await quest_channel.send(f'{announce_role} **NEW QUEST!**')
+                    await ping_msg.delete()
+                except discord.errors.Forbidden:
+                    raise UserFeedbackError(
+                        f'Could not ping announce role {announce_role} in channel {quest_channel.mention}. Check '
+                        f'channel and ReQuest role permissions with your server admin(s).')
 
             quest = {
                 'guildId': guild_id,

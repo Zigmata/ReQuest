@@ -6,7 +6,16 @@ import discord
 import discord.ui
 import jsonschema
 import shortuuid
-from discord.ui import Modal, Label
+from discord.ui import (
+    Modal,
+    Label,
+    LayoutView,
+    Container,
+    Section,
+    TextDisplay,
+    Separator,
+    Thumbnail
+)
 from jsonschema import validate
 from titlecase import titlecase
 
@@ -451,14 +460,23 @@ class GMRewardsModal(Modal):
             bot = interaction.client
             experience = None
             if self.xp_enabled and hasattr(self, 'experience_text_input') and self.experience_text_input.value:
-                experience = int(self.experience_text_input.value)
+                try:
+                    experience = int(self.experience_text_input.value)
+                except ValueError:
+                    raise UserFeedbackError('Experience must be a valid integer (e.g. 2000).')
 
             items = None
             if self.items_text_input.value:
                 items = {}
                 for item in self.items_text_input.value.strip().split('\n'):
-                    item_name, quantity = item.split(':', 1)
-                    items[titlecase(item_name.strip())] = int(quantity.strip())
+                    try:
+                        item_name, quantity = item.split(':', 1)
+                        items[titlecase(item_name.strip())] = int(quantity.strip())
+                    except ValueError:
+                        raise UserFeedbackError(
+                            f'Invalid item format: "{item}". Each item must be on a new line, and in the format '
+                            f'"Name: Quantity".'
+                        )
 
             await update_cached_data(
                 bot=bot,
@@ -619,6 +637,41 @@ class ConfigShopDetailsModal(Modal):
             await log_exception(e, interaction)
 
 
+def build_shop_header_view(shop_data: dict) -> LayoutView:
+    """
+    Builds a static LayoutView displaying shop header information.
+
+    :param shop_data: The shop configuration data
+    :return: A LayoutView with the shop header
+    """
+    view = LayoutView(timeout=None)
+    container = Container()
+    header_items = []
+
+    if shop_name := shop_data.get('shopName'):
+        header_items.append(TextDisplay(f'# {shop_name}'))
+    if shop_keeper := shop_data.get('shopKeeper'):
+        header_items.append(TextDisplay(f'**Shopkeeper:** {shop_keeper}'))
+    if shop_description := shop_data.get('shopDescription'):
+        header_items.append(TextDisplay(f'*{shop_description}*'))
+
+    if shop_image := shop_data.get('shopImage'):
+        thumbnail = Thumbnail(media=shop_image)
+        shop_header = Section(accessory=thumbnail)
+        for item in header_items:
+            shop_header.add_item(item)
+        container.add_item(shop_header)
+    else:
+        for item in header_items:
+            container.add_item(item)
+
+    container.add_item(Separator())
+    container.add_item(TextDisplay('Use the `/shop` command to browse and purchase items.'))
+
+    view.add_item(container)
+    return view
+
+
 class ForumThreadShopModal(Modal):
     """Modal for creating a shop in a new forum thread."""
     def __init__(self, calling_view, forum_channel):
@@ -677,13 +730,25 @@ class ForumThreadShopModal(Modal):
             if not forum:
                 raise UserFeedbackError('Could not find the selected forum channel.')
 
-            # Create the forum thread with a welcome message
-            shop_name = self.shop_name_input.value
+            # Build shop data first so we can create the header view
             thread_name = self.thread_name_input.value
+            shop_data = {
+                'shopName': self.shop_name_input.value,
+                'shopKeeper': self.shop_keeper_input.value,
+                'shopDescription': self.shop_description_input.value,
+                'shopImage': self.shop_image_input.value,
+                'shopStock': [],
+                'channelType': 'forum_thread',
+                'parentForumId': str(self.forum_channel.id)
+            }
 
+            # Create the shop header view for the initial post
+            header_view = build_shop_header_view(shop_data)
+
+            # Create the forum thread with the shop header view
             thread_with_message = await forum.create_thread(
                 name=thread_name,
-                content=f'Welcome to **{shop_name}**!\n\nUse the `/shop` command to browse and purchase items.'
+                view=header_view
             )
 
             # Get the thread ID (create_thread returns a ThreadWithMessage)
@@ -701,16 +766,6 @@ class ForumThreadShopModal(Modal):
                 raise UserFeedbackError(
                     'A shop is already registered in this thread. This should not happen for a new thread.'
                 )
-
-            shop_data = {
-                'shopName': shop_name,
-                'shopKeeper': self.shop_keeper_input.value,
-                'shopDescription': self.shop_description_input.value,
-                'shopImage': self.shop_image_input.value,
-                'shopStock': [],
-                'channelType': 'forum_thread',
-                'parentForumId': str(self.forum_channel.id)
-            }
 
             await update_cached_data(
                 bot=bot,

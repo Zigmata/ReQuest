@@ -1196,7 +1196,17 @@ async def get_shop_channel(bot, guild_id: int, channel_id: str) -> discord.abc.M
         if thread:
             return thread
 
-    return None
+    try:
+        channel = await bot.fetch_channel(int(channel_id))
+        return channel
+    except discord.NotFound:
+        return None
+    except discord.Forbidden:
+        logger.warning(f"No permission to access channel {channel_id}")
+        return None
+    except Exception as e:
+        logger.warning(f"Failed to fetch channel {channel_id}: {e}")
+        return None
 
 
 async def get_item_stock(bot, guild_id: int, channel_id: str, item_name: str) -> dict | None:

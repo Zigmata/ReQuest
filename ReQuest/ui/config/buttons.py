@@ -718,8 +718,12 @@ class RemoveShopButton(Button):
             if channel_type == 'forum_thread':
                 try:
                     thread = bot.get_channel(int(channel_id))
+                    if not thread:
+                        thread = await bot.fetch_channel(int(channel_id))
                     if thread and isinstance(thread, discord.Thread):
                         await thread.edit(archived=True, locked=True)
+                except discord.NotFound:
+                    logger.warning(f"Thread {channel_id} not found - may have been deleted already")
                 except Exception as e:
                     logger.warning(f"Could not archive thread {channel_id}: {e}")
 
