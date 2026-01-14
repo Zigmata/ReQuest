@@ -118,7 +118,11 @@ class ReQuest(commands.Bot):
         for document in await cursor.to_list(length=None):
             quests.append(document)
         for quest in quests:
-            self.add_view(view=QuestPostView(quest), message_id=quest['messageId'])
+            try:
+                self.add_view(view=QuestPostView(quest), message_id=quest['messageId'])
+            except (KeyError, TypeError) as e:
+                quest_id = quest.get('questId', 'unknown')
+                logger.error(f'Failed to load view for quest {quest_id}: {e}')
 
     async def close(self):
         await super().close()
