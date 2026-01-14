@@ -711,7 +711,9 @@ class RemoveShopButton(Button):
                 query={'_id': guild_id}
             )
 
-            shop_data = shop_query.get('shopChannels', {}).get(channel_id, {})
+            shop_data = {}
+            if shop_query:
+                shop_data = shop_query.get('shopChannels', {}).get(channel_id, {})
             channel_type = shop_data.get('channelType', 'text')
 
             # Archive and lock if forum thread
