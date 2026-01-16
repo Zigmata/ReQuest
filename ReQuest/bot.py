@@ -34,8 +34,8 @@ class ReQuest(commands.Bot):
         self.allow_list_enabled = False
         intents = discord.Intents.default()
         intents.members = True  # Subscribe to the privileged members intent.
-        intents.presences = True  # Subscribe to the privileged presences intent.
-        intents.message_content = True  # Subscribe to the privileged message content intent.
+        # intents.presences = True  # Subscribe to the privileged presences intent.
+        # intents.message_content = True  # Subscribe to the privileged message content intent.
         allowed_mentions = discord.AllowedMentions(roles=True, everyone=False, users=True)
         activity = discord.CustomActivity(
             name=os.getenv('BOT_ACTIVITY', 'Playing by Post')

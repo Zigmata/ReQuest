@@ -715,13 +715,12 @@ class RemoveShopButton(Button):
             if shop_query:
                 shop_data = shop_query.get('shopChannels', {}).get(channel_id, {})
             channel_type = shop_data.get('channelType', 'text')
+            logger.info(f'Channel type for shop removal: {channel_type}')
 
             # Archive and lock if forum thread
             if channel_type == 'forum_thread':
                 try:
-                    thread = bot.get_channel(int(channel_id))
-                    if not thread:
-                        thread = await bot.fetch_channel(int(channel_id))
+                    thread = await bot.fetch_channel(int(channel_id))
                     if thread and isinstance(thread, discord.Thread):
                         await thread.edit(archived=True, locked=True)
                 except discord.NotFound:
