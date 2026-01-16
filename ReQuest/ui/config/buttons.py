@@ -504,6 +504,7 @@ class AddShopWizardButton(Button):
         try:
             from ReQuest.ui.config.views import ShopChannelTypeSelectionView
             view = ShopChannelTypeSelectionView()
+            await setup_view(view, interaction)
             await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
