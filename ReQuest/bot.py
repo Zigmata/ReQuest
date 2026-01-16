@@ -33,9 +33,11 @@ class ReQuest(commands.Bot):
         self.session = None
         self.allow_list_enabled = False
         intents = discord.Intents.default()
-        intents.members = True  # Subscribe to the privileged members intent.
-        # intents.presences = True  # Subscribe to the privileged presences intent.
-        # intents.message_content = True  # Subscribe to the privileged message content intent.
+        # Privileged members intent is required for role management and some retrieval of guild members from cache.
+        intents.members = True
+        # Privileged message_content intent is required for role-play rewards to function, due to the dependency on
+        # the on_message events.
+        intents.message_content = True
         allowed_mentions = discord.AllowedMentions(roles=True, everyone=False, users=True)
         activity = discord.CustomActivity(
             name=os.getenv('BOT_ACTIVITY', 'Playing by Post')
@@ -45,7 +47,9 @@ class ReQuest(commands.Bot):
             allowed_mentions=allowed_mentions,
             case_insensitive=True,
             command_prefix='rq!',
-            intents=intents)
+            intents=intents,
+            chunk_guilds_at_startup=False
+        )
 
         # Open the config file and load it to the bot
         self.allow_list = []
@@ -161,15 +165,6 @@ class ReQuest(commands.Bot):
         elif ctx.invoked_with:
             exc = errors.CommandNotFound('Command "{}" is not found'.format(ctx.invoked_with))
             self.dispatch('command_error', ctx, exc)
-
-    async def on_message(self, message):
-        if message.author.bot:
-            return
-        else:
-            try:
-                await self.process_commands(message)
-            except discord.ext.commands.CommandError as command_error:
-                await message.channel.send(f'{command_error}')
 
     @staticmethod
     async def on_ready():

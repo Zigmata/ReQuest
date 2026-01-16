@@ -36,7 +36,8 @@ from ReQuest.utilities.supportFunctions import (
     update_cached_data,
     format_inventory_by_container,
     replace_cached_data,
-    escape_markdown
+    escape_markdown,
+    get_guild_member
 )
 
 logger = logging.getLogger(__name__)
@@ -318,7 +319,7 @@ class ManageQuestsView(LayoutView):
                 # Notify each party member that the quest is ready
                 for player in party:
                     for key in player:
-                        member = guild.get_member(int(key))
+                        member = await get_guild_member(guild, int(key))
                         # If the quest has a party role configured, assign it to each party member
                         if role:
                             tasks.append(member.add_roles(role))
@@ -331,7 +332,7 @@ class ManageQuestsView(LayoutView):
                 if role:
                     for player in party:
                         for key in player:
-                            member = guild.get_member(int(key))
+                            member = await get_guild_member(guild, int(key))
                             tasks.append(member.remove_roles(role))
 
                 # Unlock the quest
@@ -428,7 +429,7 @@ class ManageQuestsView(LayoutView):
             for entry in party:
                 for player_id, character_info in entry.items():
                     # If the player left the server, this will return None
-                    member = guild.get_member(int(player_id))
+                    member = await get_guild_member(guild, int(player_id))
                     if not member:
                         continue  # Skip the player if they left.
 
@@ -863,7 +864,7 @@ class RemovePlayerView(LayoutView):
             removed_member_id = self.selected_member_id
             guild_id = interaction.guild_id
             guild = interaction.guild
-            member = guild.get_member(int(removed_member_id))
+            member = await get_guild_member(guild, int(removed_member_id))
 
             # Fetch the quest channel to retrieve the message object
             channel_id_query = await get_cached_data(
@@ -911,7 +912,7 @@ class RemovePlayerView(LayoutView):
                             party.append(new_player)
 
                             for key in new_player:
-                                new_member = guild.get_member(int(key))
+                                new_member = await get_guild_member(guild, int(key))
                                 try:
                                     await new_member.send(f'You have been added to the party for **{quest["title"]}**, '
                                                           f'due to a player dropping!')
@@ -937,7 +938,7 @@ class RemovePlayerView(LayoutView):
             )
 
             # Give the GM some feedback that the changes applied
-            gm_member = guild.get_member(interaction.user.id)
+            gm_member = await get_guild_member(guild, interaction.user.id)
             await gm_member.send(f'Player removed and quest roster updated!')
 
             # Refresh the views with the updated local quest object
@@ -1116,7 +1117,7 @@ class QuestPostView(View):
                     party.append(new_player)
 
                     for key in new_player:
-                        new_member = guild.get_member(int(key))
+                        new_member = await get_guild_member(guild, int(key))
 
                     # Notify the member they have been moved into the main party
                     try:
@@ -1131,7 +1132,7 @@ class QuestPostView(View):
                     role = guild.get_role(party_role_id)
 
                     # Get the member object and remove the role
-                    member = guild.get_member(user_id)
+                    member = await get_guild_member(guild, user_id)
                     await member.remove_roles(role)
                     if new_member:
                         await new_member.add_roles(role)
