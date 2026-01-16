@@ -153,11 +153,11 @@ class CancelQuestButton(Button):
                             try:
                                 await member.send(f'Quest **{title}** was cancelled by the GM.')
                             except discord.errors.Forbidden as e:
-                                logger.warning(f'Could not DM {member.id} about quest cancellation: {e}')
+                                logger.warning(f'Could not DM {member_id} about quest cancellation: {e}')
                             except Exception as e:
-                                logger.warning(f'Unexpected error while attempting to DM {member.id}: {e}')
+                                logger.warning(f'Unexpected error while attempting to DM {member_id}: {e}')
                         else:
-                            logger.warning(f'Could not find member {member.id} in guild {guild_id}.')
+                            logger.warning(f'Could not find member {member_id} in guild {guild_id}.')
 
             # Remove the party role, if applicable
             party_role_id = quest['partyRoleId']
