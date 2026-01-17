@@ -504,6 +504,7 @@ class AddShopWizardButton(Button):
         try:
             from ReQuest.ui.config.views import ShopChannelTypeSelectionView
             view = ShopChannelTypeSelectionView()
+            await setup_view(view, interaction)
             await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
@@ -715,6 +716,7 @@ class RemoveShopButton(Button):
             if shop_query:
                 shop_data = shop_query.get('shopChannels', {}).get(channel_id, {})
             channel_type = shop_data.get('channelType', 'text')
+            logger.info(f'Channel type for shop removal: {channel_type}')
 
             # Archive and lock if forum thread
             if channel_type == 'forum_thread':

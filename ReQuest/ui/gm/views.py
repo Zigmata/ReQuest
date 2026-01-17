@@ -36,7 +36,8 @@ from ReQuest.utilities.supportFunctions import (
     update_cached_data,
     format_inventory_by_container,
     replace_cached_data,
-    escape_markdown
+    escape_markdown,
+    get_guild_member
 )
 
 logger = logging.getLogger(__name__)
@@ -318,12 +319,16 @@ class ManageQuestsView(LayoutView):
                 # Notify each party member that the quest is ready
                 for player in party:
                     for key in player:
-                        member = guild.get_member(int(key))
-                        # If the quest has a party role configured, assign it to each party member
-                        if role:
-                            tasks.append(member.add_roles(role))
-                        tasks.append(member.send(f'Game Master <@{user_id}> has marked your quest, **"{title}"**, '
-                                                 f'ready to start!'))
+                        member = await get_guild_member(guild, int(key))
+                        if member:
+                            # If the quest has a party role configured, assign it to each party member
+                            if role:
+                                tasks.append(member.add_roles(role))
+                            tasks.append(member.send(f'Game Master <@{user_id}> has marked your quest, **"{title}"**, '
+                                                     f'ready to start!'))
+                        else:
+                            logger.warning(f'Could not find member {key} in guild {guild_id} to notify about quest '
+                                           f'ready state.')
                 await interaction.user.send('Quest roster locked and party notified!')
             # Unlocks a quest if members are not ready
             else:
@@ -331,8 +336,11 @@ class ManageQuestsView(LayoutView):
                 if role:
                     for player in party:
                         for key in player:
-                            member = guild.get_member(int(key))
-                            tasks.append(member.remove_roles(role))
+                            member = await get_guild_member(guild, int(key))
+                            if member:
+                                tasks.append(member.remove_roles(role))
+                            else:
+                                logger.warning(f'Could not find member {key} in guild {guild_id} to remove quest role.')
 
                 # Unlock the quest
                 await update_cached_data(
@@ -428,7 +436,7 @@ class ManageQuestsView(LayoutView):
             for entry in party:
                 for player_id, character_info in entry.items():
                     # If the player left the server, this will return None
-                    member = guild.get_member(int(player_id))
+                    member = await get_guild_member(guild, int(player_id))
                     if not member:
                         continue  # Skip the player if they left.
 
@@ -863,7 +871,7 @@ class RemovePlayerView(LayoutView):
             removed_member_id = self.selected_member_id
             guild_id = interaction.guild_id
             guild = interaction.guild
-            member = guild.get_member(int(removed_member_id))
+            member = await get_guild_member(guild, int(removed_member_id))
 
             # Fetch the quest channel to retrieve the message object
             channel_id_query = await get_cached_data(
@@ -876,8 +884,6 @@ class RemovePlayerView(LayoutView):
             channel = interaction.client.get_channel(channel_id)
             message = channel.get_partial_message(message_id)
 
-            quest_collection = interaction.client.gdb['quests']
-
             party_role_id = quest['partyRoleId']
 
             # If the quest list is locked and a party role exists, fetch the role.
@@ -886,7 +892,11 @@ class RemovePlayerView(LayoutView):
                 role = guild.get_role(party_role_id)
 
                 # Remove the role from the member
-                await member.remove_roles(role)
+                if member:
+                    await member.remove_roles(role)
+                else:
+                    logger.warning(f'Could not find member {removed_member_id} in guild {guild_id} to remove quest '
+                                   f'role.')
 
             removal_message = ''
             player_found = False
@@ -911,16 +921,22 @@ class RemovePlayerView(LayoutView):
                             party.append(new_player)
 
                             for key in new_player:
-                                new_member = guild.get_member(int(key))
-                                try:
-                                    await new_member.send(f'You have been added to the party for **{quest["title"]}**, '
-                                                          f'due to a player dropping!')
-                                except discord.errors.Forbidden as e:
-                                    logger.warning(f'Could not DM {new_member.id} about party promotion: {e}')
+                                new_member = await get_guild_member(guild, int(key))
+                                if new_member:
+                                    try:
+                                        await new_member.send(f'You have been added to the party for '
+                                                              f'**{quest["title"]}**, due to a player dropping!')
 
-                                # If a role is set, assign it to the player
-                                if role and lock_state:
-                                    await new_member.add_roles(role)
+                                        # If a role is set, assign it to the player
+                                        if role and lock_state:
+                                            await new_member.add_roles(role)
+                                    except discord.errors.Forbidden as e:
+                                        logger.warning(f'Could not DM {new_member.id} about party promotion: {e}')
+                                    except Exception as e:
+                                        logger.warning(f'Unhandled exception when attempting to DM '
+                                                       f'{new_member.id}: {e}')
+                                else:
+                                    logger.warning(f'Could not find member ID {key} in guild {guild.id}.')
 
                         if rewards:
                             if self.selected_character_id in rewards:
@@ -937,8 +953,12 @@ class RemovePlayerView(LayoutView):
             )
 
             # Give the GM some feedback that the changes applied
-            gm_member = guild.get_member(interaction.user.id)
-            await gm_member.send(f'Player removed and quest roster updated!')
+            gm_member = await get_guild_member(guild, interaction.user.id)
+            if gm_member:
+                await gm_member.send(f'Player removed and quest roster updated!')
+            else:
+                logger.warning(f'Could not find GM member {interaction.user.id} in guild {guild_id} to notify about '
+                               f'player removal from quest.')
 
             # Refresh the views with the updated local quest object
             quest_view = QuestPostView(self.quest)
@@ -950,10 +970,16 @@ class RemovePlayerView(LayoutView):
             await interaction.response.edit_message(view=self)
 
             # Notify the player they have been removed.
-            try:
-                await member.send(removal_message)
-            except discord.errors.Forbidden as e:
-                logger.warning(f'Could not DM {member.id} about removal from quest: {e}')
+            if member:
+                try:
+                    await member.send(removal_message)
+                except discord.errors.Forbidden as e:
+                    logger.warning(f'Could not DM {member.id} about removal from quest: {e}')
+                except Exception as e:
+                    logger.error(f'Error sending removal DM to {member.id}: {e}')
+            else:
+                logger.warning(f'Could not find member {removed_member_id} in guild {guild_id} to notify about removal '
+                               f'from quest.')
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -1116,14 +1142,19 @@ class QuestPostView(View):
                     party.append(new_player)
 
                     for key in new_player:
-                        new_member = guild.get_member(int(key))
+                        new_member = await get_guild_member(guild, int(key))
 
                     # Notify the member they have been moved into the main party
-                    try:
-                        await new_member.send(f'You have been added to the party for '
-                                              f'**{quest["title"]}**, due to a player dropping!')
-                    except discord.errors.Forbidden as e:
-                        logger.warning(f'Could not DM {new_member.id} about party promotion: {e}')
+                    if new_member:
+                        try:
+                            await new_member.send(f'You have been added to the party for '
+                                                  f'**{quest["title"]}**, due to a player dropping!')
+                        except discord.errors.Forbidden as e:
+                            logger.warning(f'Could not DM {new_member.id} about party promotion: {e}')
+                        except Exception as e:
+                            logger.warning(f'Unhandled exception when attempting to DM {new_member.id}: {e}')
+                    else:
+                        logger.warning(f'Could not find member ID {key} in guild {guild.id}.')
 
                 # If the quest list is locked and a party role exists, fetch the role.
                 party_role_id = quest['partyRoleId']
@@ -1131,8 +1162,9 @@ class QuestPostView(View):
                     role = guild.get_role(party_role_id)
 
                     # Get the member object and remove the role
-                    member = guild.get_member(user_id)
-                    await member.remove_roles(role)
+                    member = await get_guild_member(guild, user_id)
+                    if member:
+                        await member.remove_roles(role)
                     if new_member:
                         await new_member.add_roles(role)
 

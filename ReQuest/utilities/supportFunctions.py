@@ -1196,8 +1196,9 @@ async def get_shop_channel(bot, guild_id: int, channel_id: str) -> discord.abc.M
         if thread:
             return thread
 
+    # Fall back to fetch if not found in cache
     try:
-        channel = await bot.fetch_channel(int(channel_id))
+        channel = bot.fetch_channel(int(channel_id))
         return channel
     except discord.NotFound:
         return None
@@ -2621,3 +2622,19 @@ def format_inventory_by_container(character_data: dict, currency_config: dict | 
                 lines.append(currency_line)
 
     return '\n'.join(lines) if lines else 'Inventory is empty.'
+
+
+async def get_guild_member(guild: discord.Guild, user_id: int) -> discord.Member | None:
+    """
+    Retrieves a guild member object, chunking the guild if it is not cached already.
+
+    :param guild: The Discord guild object
+    :param user_id: The user ID
+
+    :return: discord.Member object or None if not found
+    """
+    if not guild.chunked:
+        await guild.chunk()
+
+    member = guild.get_member(user_id)
+    return member

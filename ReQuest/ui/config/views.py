@@ -2512,6 +2512,8 @@ class ShopChannelTypeSelectionView(LayoutView):
     """Allows user to choose between text channel or forum thread for a new shop."""
     def __init__(self):
         super().__init__(timeout=None)
+
+    async def setup(self):
         self.build_view()
 
     def build_view(self):
@@ -2549,7 +2551,7 @@ class ForumShopSetupView(LayoutView):
         self.selected_thread = None
         self.forum_threads = []
 
-    async def setup(self, bot, guild):
+    async def setup(self):
         """Populate available forums."""
         self.build_view()
 

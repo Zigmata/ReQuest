@@ -15,7 +15,8 @@ from ReQuest.utilities.supportFunctions import (
     get_cached_data,
     update_cached_data,
     delete_cached_data,
-    build_cache_key
+    build_cache_key,
+    get_guild_member
 )
 
 logger = logging.getLogger(__name__)
@@ -147,11 +148,16 @@ class CancelQuestButton(Button):
                 for player in party:
                     for member_id in player:
                         # Message the player that the quest was canceled.
-                        member = await guild.fetch_member(int(member_id))
-                        try:
-                            await member.send(f'Quest **{title}** was cancelled by the GM.')
-                        except discord.errors.Forbidden as e:
-                            logger.warning(f'Could not DM {member.id} about quest cancellation: {e}')
+                        member = await get_guild_member(guild, int(member_id))
+                        if member:
+                            try:
+                                await member.send(f'Quest **{title}** was cancelled by the GM.')
+                            except discord.errors.Forbidden as e:
+                                logger.warning(f'Could not DM {member_id} about quest cancellation: {e}')
+                            except Exception as e:
+                                logger.warning(f'Unexpected error while attempting to DM {member_id}: {e}')
+                        else:
+                            logger.warning(f'Could not find member {member_id} in guild {guild_id}.')
 
             # Remove the party role, if applicable
             party_role_id = quest['partyRoleId']
