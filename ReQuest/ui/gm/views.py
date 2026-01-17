@@ -926,6 +926,10 @@ class RemovePlayerView(LayoutView):
                                     try:
                                         await new_member.send(f'You have been added to the party for '
                                                               f'**{quest["title"]}**, due to a player dropping!')
+
+                                        # If a role is set, assign it to the player
+                                        if role and lock_state:
+                                            await new_member.add_roles(role)
                                     except discord.errors.Forbidden as e:
                                         logger.warning(f'Could not DM {new_member.id} about party promotion: {e}')
                                     except Exception as e:
@@ -933,11 +937,6 @@ class RemovePlayerView(LayoutView):
                                                        f'{new_member.id}: {e}')
                                 else:
                                     logger.warning(f'Could not find member ID {key} in guild {guild.id}.')
-                                    continue
-
-                                # If a role is set, assign it to the player
-                                if role and lock_state:
-                                    await new_member.add_roles(role)
 
                         if rewards:
                             if self.selected_character_id in rewards:
