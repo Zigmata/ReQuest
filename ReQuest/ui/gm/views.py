@@ -37,7 +37,8 @@ from ReQuest.utilities.supportFunctions import (
     format_inventory_by_container,
     replace_cached_data,
     escape_markdown,
-    get_guild_member
+    get_guild_member,
+    build_cache_key
 )
 
 logger = logging.getLogger(__name__)
@@ -377,6 +378,9 @@ class ManageQuestsView(LayoutView):
 
     async def complete_quest(self, interaction: discord.Interaction, summary=None):
         try:
+            # Defer immediately to allow operations without timing out
+            await interaction.response.defer(ephemeral=True, thinking=True)
+
             bot = interaction.client
             guild_id = interaction.guild_id
             guild = interaction.guild
@@ -532,10 +536,10 @@ class ManageQuestsView(LayoutView):
                 cache_id=f'{guild_id}:{quest_id}'
             )
 
-            admin_list_key = f'guild_quests:{guild_id}'
+            admin_list_key = build_cache_key(bot.gdb.name, f'guild_quests:{guild_id}', 'quests')
             await bot.rdb.delete(admin_list_key)
 
-            gm_list_key = f'gm_quests:{guild_id}:{gm}'
+            gm_list_key = build_cache_key(bot.gdb.name, f'gm_quests:{guild_id}:{gm}', 'quests')
             await bot.rdb.delete(gm_list_key)
 
             # Message feedback to the GM
@@ -602,7 +606,7 @@ class ManageQuestsView(LayoutView):
             # Reset the view and handle the interaction response
             view = GMQuestMenuView()
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
