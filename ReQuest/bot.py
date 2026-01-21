@@ -50,8 +50,6 @@ class ReQuest(commands.Bot):
             intents=intents,
             chunk_guilds_at_startup=False
         )
-
-        # Open the config file and load it to the bot
         self.allow_list = []
         self.version = os.getenv('VERSION')
 
@@ -127,6 +125,9 @@ class ReQuest(commands.Bot):
             except (KeyError, TypeError) as e:
                 quest_id = quest.get('questId', 'unknown')
                 logger.error(f'Failed to load view for quest {quest_id}: {e}')
+            except Exception as e:
+                quest_id = quest.get('questId', 'unknown')
+                logger.error(f'Unexpected error loading view for quest {quest_id}: {e}')
 
     async def close(self):
         await super().close()
