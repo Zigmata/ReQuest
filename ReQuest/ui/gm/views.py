@@ -272,6 +272,7 @@ class ManageQuestsView(LayoutView):
 
     async def quest_ready_toggle(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             quest = self.selected_quest
             guild_id = interaction.guild_id
@@ -372,14 +373,14 @@ class ManageQuestsView(LayoutView):
             await message.edit(embed=quest_view.embed, view=quest_view)
 
             await setup_view(self, interaction)
-            await interaction.response.edit_message(view=self)
+            await interaction.followup.edit_message(message_id=interaction.message.id, view=self)
         except Exception as e:
             await log_exception(e, interaction)
 
     async def complete_quest(self, interaction: discord.Interaction, summary=None):
         try:
             # Defer immediately to allow operations without timing out
-            await interaction.response.defer(ephemeral=True, thinking=True)
+            await interaction.response.defer()
 
             bot = interaction.client
             guild_id = interaction.guild_id
@@ -606,7 +607,7 @@ class ManageQuestsView(LayoutView):
             # Reset the view and handle the interaction response
             view = GMQuestMenuView()
             await setup_view(view, interaction)
-            await interaction.edit_original_response(view=view)
+            await interaction.followup.edit_message(message_id=interaction.message.id, view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
