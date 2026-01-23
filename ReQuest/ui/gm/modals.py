@@ -357,8 +357,8 @@ class RewardsModal(Modal):
             label='Items',
             style=discord.TextStyle.paragraph,
             custom_id='items_text_input',
-            placeholder='{item}: {quantity}\n'
-                        '{item2}: {quantity}\n'
+            placeholder='item: quantity\n'
+                        'item2: quantity\n'
                         'etc.',
             default=items_default,
             required=False
@@ -377,8 +377,14 @@ class RewardsModal(Modal):
                 else:
                     items = {}
                     for item in self.item_input.value.strip().split('\n'):
-                        item_name, quantity = item.split(':', 1)
-                        items[titlecase(item_name.strip())] = int(quantity.strip())
+                        try:
+                            item_name, quantity = item.split(':', 1)
+                            items[titlecase(item_name.strip())] = int(quantity.strip())
+                        except ValueError:
+                            raise UserFeedbackError(
+                                f'Invalid item format: "{item}". Each item must be on a new line, and in the format '
+                                f'"Name: Quantity".'
+                            )
 
             await self.caller.modal_callback(interaction, xp, items)
         except Exception as e:
@@ -430,8 +436,8 @@ class ModPlayerModal(Modal):
         self.inventory_text_input = discord.ui.TextInput(
             label='Inventory',
             style=discord.TextStyle.paragraph,
-            placeholder='{item}: {quantity}\n'
-                        '{item2}: {quantity}\n'
+            placeholder='item: quantity\n'
+                        'item2: quantity\n'
                         'etc.',
             custom_id='inventory_text_input',
             required=False
