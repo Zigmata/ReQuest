@@ -175,7 +175,7 @@ services:
       GUILD_DB: guilds
       MEMBER_DB: members
       CONFIG_DB: config
-      VERSION: 1.3.4 # Doesn't affect functionality, just for info with the `/support` command
+      VERSION: 1.3.5 # Doesn't affect functionality, just for info with the `/support` command
       LOAD_EXTENSIONS: >-
         admin,
         config,
