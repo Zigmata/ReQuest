@@ -7,6 +7,8 @@ from discord.ext import commands
 from discord.ext.commands import Cog
 from pymongo import ReturnDocument
 
+from ReQuest.ui.common.enums import ScheduleType, RoleplayMode, DayOfWeek
+from ReQuest.utilities.constants import CharacterFields, RoleplayFields, CommonFields
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     get_cached_data,
@@ -37,7 +39,7 @@ class Roleplay(Cog):
         """
         Calculates the current cycle key for Scheduled mode based on the reset time.
         """
-        reset_time = config.get('resetTime', 0)
+        reset_time = config.get(RoleplayFields.RESET_TIME, 0)
 
         reset_time_today = now.replace(hour=reset_time, minute=0, second=0, microsecond=0)
 
@@ -46,13 +48,13 @@ class Roleplay(Cog):
         else:
             target_date = now
 
-        reset_period = config.get('resetPeriod', 'hourly')
+        reset_period = config.get(RoleplayFields.RESET_PERIOD, ScheduleType.HOURLY.value)
 
-        if reset_period == 'hourly':
+        if reset_period == ScheduleType.HOURLY.value:
             return now.strftime('%Y-%m-%d-%H')
-        elif reset_period == 'weekly':
-            reset_day_str = config.get('resetDay', 'monday').lower()
-            days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+        elif reset_period == ScheduleType.WEEKLY.value:
+            reset_day_str = config.get(RoleplayFields.RESET_DAY, DayOfWeek.MONDAY.value).lower()
+            days = [d.value for d in DayOfWeek]
             target_weekday = days.index(reset_day_str) if reset_day_str in days else 0
 
             current_weekday = target_date.weekday()
@@ -82,13 +84,13 @@ class Roleplay(Cog):
             if not rp_config:
                 logger.debug(f'No roleplay configuration found for guild {guild_id}.')
                 return
-            rp_settings = rp_config.get('config', {})
+            rp_settings = rp_config.get(RoleplayFields.CONFIG, {})
 
             if not rp_config or not rp_config.get('enabled'):
                 logger.debug(f'Roleplay not enabled in guild {guild_id}.')
                 return
 
-            allowed_channels = rp_config.get('channels', [])
+            allowed_channels = rp_config.get(RoleplayFields.CHANNELS, [])
 
             # Check if message is in an allowed channel
             # For threads, check if the parent channel is allowed
@@ -100,7 +102,7 @@ class Roleplay(Cog):
                 logger.debug(f'Message in channel {message.channel.id} not in allowed RP channels.')
                 return
 
-            min_length = rp_settings.get('minLength', 0)
+            min_length = rp_settings.get(RoleplayFields.MIN_LENGTH, 0)
             if len(message.content) < min_length:
                 logger.debug(f'Message length {len(message.content)} is below minimum {min_length}.')
                 return
@@ -112,16 +114,16 @@ class Roleplay(Cog):
                 query={'_id': user_id}
             )
 
-            if not character_data or str(guild_id) not in character_data.get('activeCharacters', {}):
+            if not character_data or str(guild_id) not in character_data.get(CharacterFields.ACTIVE_CHARACTERS, {}):
                 logger.debug(f'User {user_id} has no active character in guild {guild_id}.')
                 return
 
-            active_char_id = character_data['activeCharacters'][str(guild_id)]
+            active_char_id = character_data[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
 
-            mode = rp_config.get('mode', 'scheduled')
-            config_data = rp_config.get('config', {})
+            mode = rp_config.get(RoleplayFields.MODE, RoleplayMode.SCHEDULED.value)
+            config_data = rp_config.get(RoleplayFields.CONFIG, {})
 
-            cooldown_time = int(config_data.get('cooldown', 20))
+            cooldown_time = int(config_data.get(RoleplayFields.COOLDOWN, 20))
 
             cooldown_state_key = f"rp:{guild_id}:{user_id}:cooldown"
             if await bot.rdb.exists(cooldown_state_key):
@@ -137,7 +139,7 @@ class Roleplay(Cog):
             trigger_reward = False
             reset_count = False
 
-            if mode == 'scheduled':
+            if mode == RoleplayMode.SCHEDULED.value:
                 now = datetime.datetime.now(timezone.utc)
                 current_cycle = self._get_cycle_key(config_data, now)
 
@@ -170,7 +172,7 @@ class Roleplay(Cog):
                     current_count = result.get('message_count', 1)
                     claimed = result.get('claimed', False)
 
-                threshold = int(config_data.get('threshold', 20))
+                threshold = int(config_data.get(RoleplayFields.THRESHOLD, 20))
                 if current_count >= threshold and not claimed:
                     trigger_reward = True
 
@@ -180,7 +182,7 @@ class Roleplay(Cog):
                     )
 
             else:
-                frequency = int(config_data.get('frequency', 5))
+                frequency = int(config_data.get(RoleplayFields.FREQUENCY, 5))
 
                 result = await collection.find_one_and_update(
                     {'_id': db_key},
@@ -201,10 +203,10 @@ class Roleplay(Cog):
                         {'$set': {'message_count': 0}}
                     )
 
-                rewards = rp_config.get('rewards', {})
-                xp_amount = rewards.get('xp')
-                items = rewards.get('items', {})
-                currency = rewards.get('currency', {})
+                rewards = rp_config.get(RoleplayFields.REWARDS, {})
+                xp_amount = rewards.get(RoleplayFields.XP)
+                items = rewards.get(CharacterFields.ITEMS, {})
+                currency = rewards.get(CharacterFields.CURRENCY, {})
 
                 xp_enabled = await get_xp_config(bot, guild_id)
 

@@ -7,6 +7,7 @@ import shortuuid
 from discord.ui import Modal
 
 from ReQuest.ui.common.enums import RewardType
+from ReQuest.utilities.constants import QuestFields, ConfigFields, CommonFields
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
@@ -98,8 +99,8 @@ class CreateQuestModal(Modal):
                     collection_name='forbiddenRoles',
                     query={'_id': guild_id}
                 )
-                if config_query and config_query['forbiddenRoles']:
-                    for name in config_query['forbiddenRoles']:
+                if config_query and config_query[ConfigFields.FORBIDDEN_ROLES]:
+                    for name in config_query[ConfigFields.FORBIDDEN_ROLES]:
                         custom_forbidden_names.append(name)
 
                 if (party_role_name.lower() in default_forbidden_names or
@@ -125,7 +126,7 @@ class CreateQuestModal(Modal):
                 query={'_id': guild_id}
             )
             if wait_list_query:
-                max_wait_list_size = wait_list_query['questWaitList']
+                max_wait_list_size = wait_list_query[ConfigFields.QUEST_WAIT_LIST]
 
             # Query the collection to see if a channel is set
             quest_channel_query = await get_cached_data(
@@ -142,7 +143,7 @@ class CreateQuestModal(Modal):
                     'Quest Channel.'
                 )
             else:
-                quest_channel_mention = quest_channel_query['questChannel']
+                quest_channel_mention = quest_channel_query[ConfigFields.QUEST_CHANNEL]
 
             # Query the collection to see if a role is set
             announce_role_query = await get_cached_data(
@@ -155,7 +156,7 @@ class CreateQuestModal(Modal):
             # Grab the announcement role, if configured.
             announce_role = None
             if announce_role_query:
-                announce_role = announce_role_query['announceRole']
+                announce_role = announce_role_query[ConfigFields.ANNOUNCE_ROLE]
 
             # Get the channel object.
             quest_channel = bot.get_channel(strip_id(quest_channel_mention))
@@ -197,7 +198,7 @@ class CreateQuestModal(Modal):
             view = QuestPostView(quest)
             await view.setup()
             msg = await quest_channel.send(embed=view.embed, view=view)
-            quest['messageId'] = msg.id
+            quest[QuestFields.MESSAGE_ID] = msg.id
 
             quest_collection = bot.gdb['quests']
             await quest_collection.insert_one(quest)
@@ -217,7 +218,7 @@ class CreateQuestModal(Modal):
 
 class EditQuestModal(Modal):
     def __init__(self, calling_view, quest):
-        header = f'Editing {quest["title"]}'
+        header = f'Editing {quest[QuestFields.TITLE]}'
         if len(header) > 45:
             header = header[:42] + '...'
         super().__init__(
@@ -228,10 +229,10 @@ class EditQuestModal(Modal):
         # Get the current quest's values
         self.calling_view = calling_view
         self.quest = quest
-        title = quest['title']
-        restrictions = quest['restrictions']
-        max_party_size = quest['maxPartySize']
-        description = quest['description']
+        title = quest[QuestFields.TITLE]
+        restrictions = quest[QuestFields.RESTRICTIONS]
+        max_party_size = quest[QuestFields.MAX_PARTY_SIZE]
+        description = quest[QuestFields.DESCRIPTION]
 
         # Build the text inputs w/ the existing values
         self.title_text_input = discord.ui.TextInput(
@@ -283,9 +284,9 @@ class EditQuestModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='quests',
-                query={'guildId': guild_id, 'questId': self.quest['questId']},
+                query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: self.quest[QuestFields.QUEST_ID]},
                 update_data={'$set': updates},
-                cache_id=f'{guild_id}:{self.quest["questId"]}'
+                cache_id=f'{guild_id}:{self.quest[QuestFields.QUEST_ID]}'
             )
 
             # Get the updated quest
@@ -298,12 +299,12 @@ class EditQuestModal(Modal):
                 collection_name='questChannel',
                 query={'_id': guild_id}
             )
-            quest_channel_id = strip_id(quest_channel_query['questChannel'])
+            quest_channel_id = strip_id(quest_channel_query[ConfigFields.QUEST_CHANNEL])
             guild = interaction.client.get_guild(guild_id)
             quest_channel = guild.get_channel(quest_channel_id)
 
             # Get the original quest post message object and create a new embed
-            message = quest_channel.get_partial_message(self.quest['messageId'])
+            message = quest_channel.get_partial_message(self.quest[QuestFields.MESSAGE_ID])
 
             # Create a fresh quest view, and update the original post message
             from ReQuest.ui.gm.views import QuestPostView
@@ -463,7 +464,7 @@ class ModPlayerModal(Modal):
             )
             log_channel = None
             if log_channel_config:
-                log_channel_id = strip_id(log_channel_config['gmTransactionLogChannel'])
+                log_channel_id = strip_id(log_channel_config[ConfigFields.GM_TRANSACTION_LOG_CHANNEL])
                 log_channel = interaction.client.get_channel(log_channel_id)
 
             item_changes = {}
@@ -505,7 +506,7 @@ class ModPlayerModal(Modal):
                 title=f'GM Player Modification Report',
                 description=(
                     f'Game Master: {interaction.user.mention}\n'
-                    f'Recipient: {self.member.mention} as `{self.character_data['name']}`'
+                    f'Recipient: {self.member.mention} as `{self.character_data[CommonFields.NAME]}`'
                 ),
                 type='rich'
             )

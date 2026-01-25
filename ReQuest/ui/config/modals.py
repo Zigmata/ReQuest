@@ -19,6 +19,10 @@ from discord.ui import (
 from jsonschema import validate
 from titlecase import titlecase
 
+from ReQuest.ui.common.enums import ShopChannelType, RestockMode, ScheduleType
+from ReQuest.utilities.constants import (
+    ConfigFields, CurrencyFields, ShopFields, RoleplayFields, CommonFields
+)
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     setup_view,
@@ -108,11 +112,11 @@ class AddCurrencyTextModal(Modal):
             )
             matches = 0
             if query:
-                for currency in query['currencies']:
-                    if currency['name'].lower() == self.text_input.value.lower():
+                for currency in query[CurrencyFields.CURRENCIES]:
+                    if currency[CommonFields.NAME].lower() == self.text_input.value.lower():
                         matches += 1
-                    for denomination in currency['denominations']:
-                        if denomination['name'].lower() == self.text_input.value.lower():
+                    for denomination in currency[CurrencyFields.DENOMINATIONS]:
+                        if denomination[CommonFields.NAME].lower() == self.text_input.value.lower():
                             matches += 1
 
             if matches > 0:
@@ -172,10 +176,10 @@ class RenameCurrencyModal(Modal):
 
             if query:
                 for currency in query.get('currencies', []):
-                    if currency['name'].lower() == new_name.lower():
+                    if currency[CommonFields.NAME].lower() == new_name.lower():
                         raise UserFeedbackError(f'A currency named "{new_name}" already exists.')
                     for denomination in currency.get('denominations', []):
-                        if denomination['name'].lower() == new_name.lower():
+                        if denomination[CommonFields.NAME].lower() == new_name.lower():
                             raise UserFeedbackError(f'A denomination named "{new_name}" already exists.')
 
             # Update the currency name
@@ -234,10 +238,10 @@ class RenameDenominationModal(Modal):
 
             if query:
                 for currency in query.get('currencies', []):
-                    if currency['name'].lower() == new_name.lower():
+                    if currency[CommonFields.NAME].lower() == new_name.lower():
                         raise UserFeedbackError(f'A currency named "{new_name}" already exists.')
                     for denomination in currency.get('denominations', []):
-                        if denomination['name'].lower() == new_name.lower():
+                        if denomination[CommonFields.NAME].lower() == new_name.lower():
                             raise UserFeedbackError(f'A denomination named "{new_name}" already exists.')
 
             # Update the denomination name using arrayFilters
@@ -293,25 +297,25 @@ class AddCurrencyDenominationModal(Modal):
                 collection_name='currency',
                 query={'_id': guild_id}
             )
-            for currency in query['currencies']:
-                if new_name.lower() == currency['name'].lower():
+            for currency in query[CurrencyFields.CURRENCIES]:
+                if new_name.lower() == currency[CommonFields.NAME].lower():
                     raise UserFeedbackError(
                         f'New denomination name cannot match an existing currency on this server! Found existing '
-                        f'currency named \"{currency['name']}\".'
+                        f'currency named \"{currency[CommonFields.NAME]}\".'
                     )
-                for denomination in currency['denominations']:
-                    if new_name.lower() == denomination['name'].lower():
+                for denomination in currency[CurrencyFields.DENOMINATIONS]:
+                    if new_name.lower() == denomination[CommonFields.NAME].lower():
                         raise UserFeedbackError(
                             f'New denomination name cannot match an existing denomination on this server! Found '
-                            f'existing denomination named \"{denomination['name']}\" under the currency named '
-                            f'\"{currency['name']}\".'
+                            f'existing denomination named \"{denomination[CommonFields.NAME]}\" under the currency named '
+                            f'\"{currency[CommonFields.NAME]}\".'
                         )
-            base_currency = next((item for item in query['currencies'] if item['name'] == self.base_currency_name),
+            base_currency = next((item for item in query[CurrencyFields.CURRENCIES] if item[CommonFields.NAME] == self.base_currency_name),
                                  None)
             if base_currency:
-                for denomination in base_currency['denominations']:
-                    if float(self.denomination_value_text_input.value) == denomination['value']:
-                        using_name = denomination['name']
+                for denomination in base_currency[CurrencyFields.DENOMINATIONS]:
+                    if float(self.denomination_value_text_input.value) == denomination[CurrencyFields.VALUE]:
+                        using_name = denomination[CommonFields.NAME]
                         raise UserFeedbackError(
                             f'Denominations under a single currency must have unique values! {using_name} already has '
                             f'this value assigned.'
@@ -410,7 +414,7 @@ class PlayerBoardPurgeModal(Modal):
                 collection_name='playerBoardChannel',
                 query={'_id': interaction.guild_id}
             )
-            channel_id = strip_id(config_query['playerBoardChannel'])
+            channel_id = strip_id(config_query[ConfigFields.PLAYER_BOARD_CHANNEL])
             channel = interaction.guild.get_channel(channel_id)
             await channel.purge(before=cutoff_date)
 
@@ -605,8 +609,8 @@ class ConfigShopDetailsModal(Modal):
             }
 
             # Add parent forum ID for forum thread shops
-            if self.channel_type == 'forum_thread' and self.parent_forum_id:
-                shop_data['parentForumId'] = self.parent_forum_id
+            if self.channel_type == ShopChannelType.FORUM_THREAD.value and self.parent_forum_id:
+                shop_data[ShopFields.PARENT_FORUM_ID] = self.parent_forum_id
 
             if self.existing_channel_id:
                 existing_query = await get_cached_data(
@@ -616,7 +620,7 @@ class ConfigShopDetailsModal(Modal):
                     query={'_id': guild_id}
                 )
                 existing_shop_data = existing_query.get('shopChannels', {}).get(channel_id, {})
-                shop_data['shopStock'] = existing_shop_data.get('shopStock', [])
+                shop_data[ShopFields.SHOP_STOCK] = existing_shop_data.get('shopStock', [])
 
             await update_cached_data(
                 bot=bot,
@@ -738,7 +742,7 @@ class ForumThreadShopModal(Modal):
                 'shopDescription': self.shop_description_input.value,
                 'shopImage': self.shop_image_input.value,
                 'shopStock': [],
-                'channelType': 'forum_thread',
+                'channelType': ShopChannelType.FORUM_THREAD.value,
                 'parentForumId': str(self.forum_channel.id)
             }
 
@@ -864,7 +868,7 @@ class ConfigShopJSONModal(Modal):
             for item in shop_stock:
                 max_stock = item.get('maxStock')
                 if max_stock is not None:
-                    item_name = item.get('name')
+                    item_name = item.get(CommonFields.NAME)
                     # Initialize with max stock as available
                     await initialize_item_stock(bot, guild_id, channel_id, item_name, max_stock, max_stock)
 
@@ -881,9 +885,9 @@ class ShopItemModal(Modal):
             timeout=600
         )
         self.calling_view = calling_view
-        self.existing_item_name = existing_item.get('name') if existing_item else None
+        self.existing_item_name = existing_item.get(CommonFields.NAME) if existing_item else None
 
-        name_default = existing_item.get('name', '') if existing_item else ''
+        name_default = existing_item.get(CommonFields.NAME, '') if existing_item else ''
         description_default = existing_item.get('description', '') if existing_item else ''
         quantity_default = str(existing_item.get('quantity', '1')) if existing_item else '1'
 
@@ -1015,19 +1019,19 @@ class ShopItemModal(Modal):
                 new_stock = []
                 found = False
                 for item in shop_stock:
-                    if item.get('name') == self.existing_item_name:
+                    if item.get(CommonFields.NAME) == self.existing_item_name:
                         new_stock.append(new_item)
                         found = True
                     else:
                         new_stock.append(item)
                 if not found:
                     raise Exception('Existing item not found in shop stock.')
-                shop_data['shopStock'] = new_stock
+                shop_data[ShopFields.SHOP_STOCK] = new_stock
             else:
                 for item in shop_stock:
-                    if item.get('name').lower() == new_item['name'].lower():
+                    if item.get(CommonFields.NAME).lower() == new_item[CommonFields.NAME].lower():
                         raise UserFeedbackError(f'An item named {new_item["name"]} already exists in this shop.')
-                shop_data['shopStock'].append(new_item)
+                shop_data[ShopFields.SHOP_STOCK].append(new_item)
 
             await update_cached_data(
                 bot=bot,
@@ -1037,7 +1041,7 @@ class ShopItemModal(Modal):
                 update_data={'$set': {f'shopChannels.{channel_id}': shop_data}}
             )
 
-            self.calling_view.update_stock(shop_data['shopStock'])
+            self.calling_view.update_stock(shop_data[ShopFields.SHOP_STOCK])
             self.calling_view.build_view()
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
@@ -1102,7 +1106,7 @@ class ConfigUpdateShopJSONModal(Modal):
             for item in shop_stock:
                 max_stock = item.get('maxStock')
                 if max_stock is not None:
-                    item_name = item.get('name')
+                    item_name = item.get(CommonFields.NAME)
                     # Check if stock already exists for this item
                     existing_stock = await get_item_stock(bot, guild_id, channel_id, item_name)
                     if existing_stock is None or 'available' not in existing_stock:
@@ -1125,9 +1129,9 @@ class NewCharacterShopItemModal(Modal):
         )
         self.calling_view = calling_view
         self.inventory_type = inventory_type
-        self.existing_item_name = existing_item.get('name') if existing_item else None
+        self.existing_item_name = existing_item.get(CommonFields.NAME) if existing_item else None
 
-        name_default = existing_item.get('name', '') if existing_item else ''
+        name_default = existing_item.get(CommonFields.NAME, '') if existing_item else ''
         description_default = existing_item.get('description', '') if existing_item else ''
         quantity_default = str(existing_item.get('quantity', '1')) if existing_item else '1'
 
@@ -1253,7 +1257,7 @@ class NewCharacterShopItemModal(Modal):
                 new_stock = []
                 found = False
                 for item in shop_stock:
-                    if item.get('name') == self.existing_item_name:
+                    if item.get(CommonFields.NAME) == self.existing_item_name:
                         new_stock.append(new_item)
                         found = True
                     else:
@@ -1263,7 +1267,7 @@ class NewCharacterShopItemModal(Modal):
                 shop_stock = new_stock
             else:
                 for item in shop_stock:
-                    if item.get('name').lower() == new_item['name'].lower():
+                    if item.get(CommonFields.NAME).lower() == new_item[CommonFields.NAME].lower():
                         raise UserFeedbackError(
                             f'An item named {new_item["name"]} already exists in the New Character shop.'
                         )
@@ -1321,10 +1325,10 @@ class NewCharacterShopJSONModal(Modal):
             except json.JSONDecodeError as jde:
                 raise UserFeedbackError(f'Invalid JSON format: {str(jde)}')
 
-            if 'shopStock' not in shop_data or not isinstance(shop_data['shopStock'], list):
+            if 'shopStock' not in shop_data or not isinstance(shop_data[ShopFields.SHOP_STOCK], list):
                 raise UserFeedbackError("JSON must contain a 'shopStock' array.")
 
-            for item in shop_data['shopStock']:
+            for item in shop_data[ShopFields.SHOP_STOCK]:
                 if 'name' not in item or 'price' not in item:
                     raise UserFeedbackError("All items must have 'name' and 'price'.")
 
@@ -1333,10 +1337,10 @@ class NewCharacterShopJSONModal(Modal):
                 mongo_database=bot.gdb,
                 collection_name='newCharacterShop',
                 query={'_id': guild_id},
-                update_data={'$set': {'shopStock': shop_data['shopStock']}}
+                update_data={'$set': {'shopStock': shop_data[ShopFields.SHOP_STOCK]}}
             )
 
-            self.calling_view.update_stock(shop_data['shopStock'])
+            self.calling_view.update_stock(shop_data[ShopFields.SHOP_STOCK])
             self.calling_view.build_view()
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
@@ -1490,7 +1494,7 @@ class StaticKitItemModal(Modal):
         self.calling_view = calling_view
         self.index = index
 
-        name_default = existing_item.get('name', '') if existing_item else ''
+        name_default = existing_item.get(CommonFields.NAME, '') if existing_item else ''
         description_default = existing_item.get('description', '') if existing_item else ''
         quantity_default = str(existing_item.get('quantity', '1')) if existing_item else '1'
 
@@ -1708,7 +1712,7 @@ class RoleplaySettingsModal(Modal):
             except ValueError:
                 raise UserFeedbackError('Minimum Message Length must be a non-negative integer.')
 
-            new_config['minLength'] = minimum_length
+            new_config[RoleplayFields.MIN_LENGTH] = minimum_length
 
             # Cooldown
             try:
@@ -1718,7 +1722,7 @@ class RoleplaySettingsModal(Modal):
             except ValueError:
                 raise UserFeedbackError('Cooldown must be a non-negative integer.')
 
-            new_config['cooldown'] = cooldown_seconds
+            new_config[RoleplayFields.COOLDOWN] = cooldown_seconds
 
             # Validate and add scheduled settings
             if self.mode == 'scheduled':
@@ -1729,7 +1733,7 @@ class RoleplaySettingsModal(Modal):
                 except ValueError:
                     raise UserFeedbackError('Message Threshold must be a positive integer.')
 
-                new_config['threshold'] = threshold
+                new_config[RoleplayFields.THRESHOLD] = threshold
 
             # Validate and add accrued settings
             elif self.mode == 'accrued':
@@ -1740,7 +1744,7 @@ class RoleplaySettingsModal(Modal):
                 except ValueError:
                     raise UserFeedbackError('Frequency must be a positive integer.')
 
-                new_config['frequency'] = frequency
+                new_config[RoleplayFields.FREQUENCY] = frequency
 
             # Push updates to db
             await update_cached_data(
@@ -1928,8 +1932,8 @@ class SetItemStockModal(Modal):
             # Find and update the item
             item_found = False
             for item in shop_stock:
-                if item.get('name') == self.item_name:
-                    item['maxStock'] = max_stock
+                if item.get(CommonFields.NAME) == self.item_name:
+                    item[ShopFields.MAX_STOCK] = max_stock
                     item_found = True
                     break
 
@@ -1972,7 +1976,7 @@ class RestockScheduleModal(Modal):
         hour = current_config.get('hour', 0)
         minute = current_config.get('minute', 0)
         day = current_config.get('dayOfWeek', 0)
-        mode = current_config.get('mode', 'full')
+        mode = current_config.get('mode', RestockMode.FULL.value)
         increment = current_config.get('incrementAmount', 1)
 
         self.schedule_text_input = discord.ui.TextInput(
@@ -2033,7 +2037,8 @@ class RestockScheduleModal(Modal):
             channel_id = self.calling_view.channel_id
 
             schedule = self.schedule_text_input.value.strip().lower()
-            if schedule not in ['hourly', 'daily', 'weekly', 'none', '']:
+            valid_schedules = [s.value for s in ScheduleType] + ['none', '']
+            if schedule not in valid_schedules:
                 raise UserFeedbackError('Schedule must be one of: hourly, daily, weekly, or none.')
 
             # Parse time
@@ -2051,7 +2056,7 @@ class RestockScheduleModal(Modal):
 
             # Parse day of week
             day = 0
-            if schedule == 'weekly':
+            if schedule == ScheduleType.WEEKLY.value:
                 day_str = self.day_text_input.value.strip()
                 try:
                     day = int(day_str)
@@ -2062,12 +2067,13 @@ class RestockScheduleModal(Modal):
 
             # Parse mode
             mode = self.mode_text_input.value.strip().lower()
-            if mode not in ['full', 'incremental']:
+            valid_modes = [m.value for m in RestockMode]
+            if mode not in valid_modes:
                 raise UserFeedbackError('Mode must be either "full" or "incremental".')
 
             # Parse increment amount
             increment_amount = 1
-            if mode == 'incremental':
+            if mode == RestockMode.INCREMENTAL.value:
                 increment_str = self.increment_text_input.value.strip()
                 if increment_str:
                     try:
@@ -2099,7 +2105,7 @@ class RestockScheduleModal(Modal):
                 query={'_id': guild_id}
             )
             shop_data = shop_query.get('shopChannels', {}).get(channel_id, {})
-            shop_data['restockConfig'] = restock_config
+            shop_data[ShopFields.RESTOCK_CONFIG] = restock_config
 
             await update_cached_data(
                 bot=bot,

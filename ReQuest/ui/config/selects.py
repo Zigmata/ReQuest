@@ -3,6 +3,8 @@ import logging
 import discord
 from discord.ui import Select, RoleSelect, ChannelSelect
 
+from ReQuest.ui.common.enums import InventoryType, RoleplayMode, ScheduleType, DayOfWeek
+from ReQuest.utilities.constants import ConfigFields, CommonFields
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     setup_view,
@@ -100,8 +102,8 @@ class AddGMRoleSelect(RoleSelect):
             else:
                 for value in self.values:
                     matches = 0
-                    for role in query['gmRoles']:
-                        if value.mention in role['mention']:
+                    for role in query[ConfigFields.GM_ROLES]:
+                        if value.mention in role[CommonFields.MENTION]:
                             matches += 1
 
                     if matches == 0:
@@ -158,16 +160,16 @@ class InventoryTypeSelect(Select):
         super().__init__(
             placeholder='Select Inventory Mode',
             options=[
-                discord.SelectOption(label='Disabled', value='disabled',
+                discord.SelectOption(label='Disabled', value=InventoryType.DISABLED.value,
                                      description='Players start with empty inventories.'),
-                discord.SelectOption(label='Selection', value='selection',
+                discord.SelectOption(label='Selection', value=InventoryType.SELECTION.value,
                                      description='Players choose items freely from the New Character Shop.'),
-                discord.SelectOption(label='Purchase', value='purchase',
+                discord.SelectOption(label='Purchase', value=InventoryType.PURCHASE.value,
                                      description='Players purchase items from the New Character Shop with a given '
                                                  'amount of currency.'),
-                discord.SelectOption(label='Open', value='open',
+                discord.SelectOption(label='Open', value=InventoryType.OPEN.value,
                                      description='Players manually input their own inventories.'),
-                discord.SelectOption(label='Static', value='static',
+                discord.SelectOption(label='Static', value=InventoryType.STATIC.value,
                                      description='Players are given a predefined starting inventory.')
             ],
             custom_id='inventory_type_select'
@@ -236,12 +238,12 @@ class RoleplayModeSelect(Select):
             options=[
                 discord.SelectOption(
                     label='Scheduled',
-                    value='scheduled',
+                    value=RoleplayMode.SCHEDULED.value,
                     description='Rewards are granted once within a specified reset period.'
                 ),
                 discord.SelectOption(
                     label='Accrued',
-                    value='accrued',
+                    value=RoleplayMode.ACCRUED.value,
                     description='Rewards are repeatedly granted based on specified activity levels.'
                 )
             ],
@@ -270,9 +272,9 @@ class RoleplayResetSelect(Select):
         super().__init__(
             placeholder='Select Reset Period',
             options=[
-                discord.SelectOption(label='Hourly', value='hourly', description='Resets every hour.'),
-                discord.SelectOption(label='Daily', value='daily', description='Resets every 24 hours.'),
-                discord.SelectOption(label='Weekly', value='weekly', description='Resets every 7 days.')
+                discord.SelectOption(label='Hourly', value=ScheduleType.HOURLY.value, description='Resets every hour.'),
+                discord.SelectOption(label='Daily', value=ScheduleType.DAILY.value, description='Resets every 24 hours.'),
+                discord.SelectOption(label='Weekly', value=ScheduleType.WEEKLY.value, description='Resets every 7 days.')
             ],
             custom_id='rp_reset_select'
         )
@@ -299,13 +301,13 @@ class RoleplayResetDaySelect(Select):
         super().__init__(
             placeholder='Select Reset Day',
             options=[
-                discord.SelectOption(label='Monday', value='monday'),
-                discord.SelectOption(label='Tuesday', value='tuesday'),
-                discord.SelectOption(label='Wednesday', value='wednesday'),
-                discord.SelectOption(label='Thursday', value='thursday'),
-                discord.SelectOption(label='Friday', value='friday'),
-                discord.SelectOption(label='Saturday', value='saturday'),
-                discord.SelectOption(label='Sunday', value='sunday')
+                discord.SelectOption(label='Monday', value=DayOfWeek.MONDAY.value),
+                discord.SelectOption(label='Tuesday', value=DayOfWeek.TUESDAY.value),
+                discord.SelectOption(label='Wednesday', value=DayOfWeek.WEDNESDAY.value),
+                discord.SelectOption(label='Thursday', value=DayOfWeek.THURSDAY.value),
+                discord.SelectOption(label='Friday', value=DayOfWeek.FRIDAY.value),
+                discord.SelectOption(label='Saturday', value=DayOfWeek.SATURDAY.value),
+                discord.SelectOption(label='Sunday', value=DayOfWeek.SUNDAY.value)
             ],
             custom_id='rp_reset_day_select'
         )

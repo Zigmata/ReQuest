@@ -5,6 +5,7 @@ from discord.ext.commands import Cog
 
 from ReQuest.ui.gm import views, modals
 from ReQuest.utilities.checks import has_gm_or_mod
+from ReQuest.utilities.constants import CharacterFields
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     get_cached_data,
@@ -63,11 +64,11 @@ class GameMaster(Cog):
             if not player_query:
                 raise UserFeedbackError('The target player does not have any registered characters.')
 
-            if guild_id not in player_query['activeCharacters']:
+            if guild_id not in player_query[CharacterFields.ACTIVE_CHARACTERS]:
                 raise UserFeedbackError('The target player does not have a character activated on this server.')
 
-            active_character_id = player_query['activeCharacters'][guild_id]
-            character_data = player_query['characters'][active_character_id]
+            active_character_id = player_query[CharacterFields.ACTIVE_CHARACTERS][guild_id]
+            character_data = player_query[CharacterFields.CHARACTERS][active_character_id]
             xp_enabled = await get_xp_config(interaction.client, interaction.guild_id)
             modal = modals.ModPlayerModal(member, active_character_id, character_data, xp_enabled)
             await interaction.response.send_modal(modal)
@@ -92,11 +93,11 @@ class GameMaster(Cog):
             if not player_query:
                 raise UserFeedbackError('The target player does not have any registered characters.')
 
-            if guild_id not in player_query['activeCharacters']:
+            if guild_id not in player_query[CharacterFields.ACTIVE_CHARACTERS]:
                 raise UserFeedbackError('The target player does not have a character activated on this server.')
 
-            active_character_id = player_query['activeCharacters'][guild_id]
-            character_data = player_query['characters'][active_character_id]
+            active_character_id = player_query[CharacterFields.ACTIVE_CHARACTERS][guild_id]
+            character_data = player_query[CharacterFields.CHARACTERS][active_character_id]
 
             currency_config = await get_cached_data(
                 bot=bot,

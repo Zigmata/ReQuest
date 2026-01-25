@@ -11,6 +11,11 @@ from discord import app_commands
 from titlecase import titlecase
 from datetime import datetime, timezone, timedelta
 
+from ReQuest.utilities.constants import (
+    CharacterFields, QuestFields, ShopFields, CurrencyFields,
+    ConfigFields, RoleplayFields, RestockFields, CartFields, ContainerFields, CommonFields
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -307,13 +312,13 @@ def find_currency_or_denomination(currency_def_query, search_name) -> Tuple[str 
     if not currency_def_query:
         return None, None
     search_name = search_name.lower()
-    for currency in currency_def_query['currencies']:
-        if currency['name'].lower() == search_name:
-            return currency['name'], currency['name']
-        if 'denominations' in currency:
-            for denomination in currency['denominations']:
-                if denomination['name'].lower() == search_name:
-                    return denomination['name'], currency['name']
+    for currency in currency_def_query[CurrencyFields.CURRENCIES]:
+        if currency[CommonFields.NAME].lower() == search_name:
+            return currency[CommonFields.NAME], currency[CommonFields.NAME]
+        if CurrencyFields.DENOMINATIONS in currency:
+            for denomination in currency[CurrencyFields.DENOMINATIONS]:
+                if denomination[CommonFields.NAME].lower() == search_name:
+                    return denomination[CommonFields.NAME], currency[CommonFields.NAME]
     return None, None
 
 
@@ -331,15 +336,15 @@ def format_currency_display(player_currency: dict, currency_config: dict) -> lis
 
     :return: A list of formatted currency strings
     """
-    if not player_currency or not currency_config or 'currencies' not in currency_config:
+    if not player_currency or not currency_config or CurrencyFields.CURRENCIES not in currency_config:
         return []
 
     output_lines = []
     processed_denominations = set()
     norm_player_wallet = normalize_currency_keys(player_currency)
 
-    for currency in currency_config['currencies']:
-        base_name = currency['name']
+    for currency in currency_config[CurrencyFields.CURRENCIES]:
+        base_name = currency[CommonFields.NAME]
         denomination_map, _ = get_denomination_map(currency_config, base_name)
 
         if not denomination_map:
@@ -350,7 +355,7 @@ def format_currency_display(player_currency: dict, currency_config: dict) -> lis
             continue
 
         # Display as double
-        if currency.get('isDouble', False):
+        if currency.get(CurrencyFields.IS_DOUBLE, False):
             total_value = 0.0
             for denom_name_lower in denominations_in_wallet:
                 quantity = norm_player_wallet.get(denom_name_lower, 0)
@@ -392,9 +397,9 @@ async def trade_currency(interaction, currency_name, amount, sending_member_id, 
         collection_name='characters',
         query={'_id': receiving_member_id}
     )
-    sender_character_id = sender_data['activeCharacters'][str(guild_id)]
-    sender_currency = sender_data['characters'][sender_character_id]['attributes'].get('currency', {})
-    receiver_character_id = receiver_data['activeCharacters'][str(guild_id)]
+    sender_character_id = sender_data[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
+    sender_currency = sender_data[CharacterFields.CHARACTERS][sender_character_id][CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {})
+    receiver_character_id = receiver_data[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
 
     currency_config = await get_cached_data(
         bot=bot,
@@ -425,8 +430,8 @@ async def trade_currency(interaction, currency_name, amount, sending_member_id, 
         collection_name='characters',
         query={'_id': receiving_member_id}
     )
-    updated_sender_currency = updated_sender_data['characters'][sender_character_id]['attributes'].get('currency')
-    updated_receiver_currency = updated_receiver_data['characters'][receiver_character_id]['attributes'].get('currency')
+    updated_sender_currency = updated_sender_data[CharacterFields.CHARACTERS][sender_character_id][CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY)
+    updated_receiver_currency = updated_receiver_data[CharacterFields.CHARACTERS][receiver_character_id][CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY)
 
     return updated_sender_currency, updated_receiver_currency
 
@@ -442,8 +447,8 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
         collection_name='characters',
         query={'_id': sending_member_id}
     )
-    sender_character_id = sender_data['activeCharacters'][str(guild_id)]
-    sender_character = sender_data['characters'][sender_character_id]
+    sender_character_id = sender_data[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
+    sender_character = sender_data[CharacterFields.CHARACTERS][sender_character_id]
 
     # Fetch receiving character
     receiver_data = await get_cached_data(
@@ -452,8 +457,8 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
         collection_name='characters',
         query={'_id': receiving_member_id}
     )
-    receiver_character_id = receiver_data['activeCharacters'][str(guild_id)]
-    receiver_character = receiver_data['characters'][receiver_character_id]
+    receiver_character_id = receiver_data[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
+    receiver_character = receiver_data[CharacterFields.CHARACTERS][receiver_character_id]
 
     # Check if sender has enough items across all containers + loose items
     quantity_owned = get_total_item_quantity(sender_character, item_name)
@@ -471,13 +476,13 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
         if remaining_to_remove <= 0:
             break
 
-        container_id = loc['id']
-        loc_qty = loc['quantity']
+        container_id = loc[CommonFields.ID]
+        loc_qty = loc[CommonFields.QUANTITY]
         remove_from_here = min(loc_qty, remaining_to_remove)
 
         if container_id is None:
             # Remove from loose items
-            inventory = sender_character['attributes'].get('inventory', {})
+            inventory = sender_character[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
             for key in list(inventory.keys()):
                 if key.lower() == normalized_item_name:
                     inventory[key] -= remove_from_here
@@ -486,7 +491,7 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
                     break
         else:
             # Remove from container
-            container_items = sender_character['attributes']['containers'][container_id].get('items', {})
+            container_items = sender_character[CharacterFields.ATTRIBUTES][CharacterFields.CONTAINERS][container_id].get(CharacterFields.ITEMS, {})
             for key in list(container_items.keys()):
                 if key.lower() == normalized_item_name:
                     container_items[key] -= remove_from_here
@@ -497,7 +502,7 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
         remaining_to_remove -= remove_from_here
 
     # Add items to receiver's loose inventory
-    receiver_inventory = receiver_character['attributes'].get('inventory', {})
+    receiver_inventory = receiver_character[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
     # Find existing key (case-insensitive) or use titlecase
     existing_key = None
     for key in receiver_inventory:
@@ -512,11 +517,11 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
 
     # Update sender's character data
     sender_update = {
-        f'characters.{sender_character_id}.attributes.inventory': sender_character['attributes'].get('inventory', {})
+        f'characters.{sender_character_id}.attributes.inventory': sender_character[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
     }
     # Include container updates if containers exist
-    if sender_character['attributes'].get('containers'):
-        sender_update[f'characters.{sender_character_id}.attributes.containers'] = sender_character['attributes']['containers']
+    if sender_character[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS):
+        sender_update[f'characters.{sender_character_id}.attributes.containers'] = sender_character[CharacterFields.ATTRIBUTES][CharacterFields.CONTAINERS]
 
     await update_cached_data(
         bot=bot,
@@ -551,7 +556,7 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
         if not player_data:
             raise UserFeedbackError('Player data not found.')
 
-        character_data = player_data['characters'].get(character_id)
+        character_data = player_data[CharacterFields.CHARACTERS].get(character_id)
         if not character_data:
             raise UserFeedbackError('Character data not found.')
 
@@ -575,7 +580,7 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
             if min_value <= 0:
                 raise Exception(f"Currency {currency_parent_name} has a non-positive denomination value.")
 
-            character_currency = normalize_currency_keys(character_data['attributes'].get('currency', {}))
+            character_currency = normalize_currency_keys(character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {}))
 
             total_in_lowest_denom = 0.0
             for denom, value in denomination_map.items():
@@ -600,7 +605,7 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
                     new_character_currency[denom] = qty
                     total_in_lowest_denom %= denom_value_in_lowest
 
-            final_wallet = normalize_currency_keys(character_data['attributes'].get('currency', {}))
+            final_wallet = normalize_currency_keys(character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {}))
 
             for denom_name in denomination_map.keys():
                 if denom_name in new_character_currency:
@@ -618,7 +623,7 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
                 update_data={'$set': {f'characters.{character_id}.attributes.currency': character_currency_db}}
             )
         else:
-            character_inventory = normalize_currency_keys(character_data['attributes'].get('inventory', {}))
+            character_inventory = normalize_currency_keys(character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {}))
             found_key = normalized_item_name
 
             if found_key in character_inventory:
@@ -656,14 +661,14 @@ async def update_character_experience(interaction, player_id: int, character_id:
         if not player_data:
             raise UserFeedbackError('Player data not found.')
 
-        character_data = player_data['characters'].get(character_id)
+        character_data = player_data[CharacterFields.CHARACTERS].get(character_id)
         if not character_data:
             raise UserFeedbackError('Character data not found.')
 
-        if character_data['attributes']['experience']:
-            character_data['attributes']['experience'] += amount
+        if character_data[CharacterFields.ATTRIBUTES][CharacterFields.EXPERIENCE]:
+            character_data[CharacterFields.ATTRIBUTES][CharacterFields.EXPERIENCE] += amount
         else:
-            character_data['attributes']['experience'] = amount
+            character_data[CharacterFields.ATTRIBUTES][CharacterFields.EXPERIENCE] = amount
 
         await update_cached_data(
             bot=bot,
@@ -688,16 +693,16 @@ async def update_quest_embed(quest: dict) -> discord.Embed | None:
         embed = discord.Embed()
 
         # Initialize all the current quest values
-        quest_id = quest['questId']
-        title = quest['title']
-        description = quest['description']
-        max_party_size = quest['maxPartySize']
-        restrictions = quest['restrictions']
-        gm = quest['gm']
-        party = quest['party']
-        wait_list = quest['waitList']
-        max_wait_list_size = quest['maxWaitListSize']
-        lock_state = quest['lockState']
+        quest_id = quest[QuestFields.QUEST_ID]
+        title = quest[QuestFields.TITLE]
+        description = quest[QuestFields.DESCRIPTION]
+        max_party_size = quest[QuestFields.MAX_PARTY_SIZE]
+        restrictions = quest[QuestFields.RESTRICTIONS]
+        gm = quest[QuestFields.GM]
+        party = quest[QuestFields.PARTY]
+        wait_list = quest[QuestFields.WAIT_LIST]
+        max_wait_list_size = quest[QuestFields.MAX_WAIT_LIST_SIZE]
+        lock_state = quest[QuestFields.LOCK_STATE]
 
         # Format the main embed body
         if restrictions:
@@ -729,7 +734,7 @@ async def update_quest_embed(quest: dict) -> discord.Embed | None:
                 for member_id in player:
                     for character_id in player[str(member_id)]:
                         character = player[str(member_id)][str(character_id)]
-                        formatted_party.append(f'- <@!{member_id}> as {character['name']}')
+                        formatted_party.append(f'- <@!{member_id}> as {character[CharacterFields.NAME]}')
 
         formatted_wait_list = []
         # Only format the wait list if there is one.
@@ -738,7 +743,7 @@ async def update_quest_embed(quest: dict) -> discord.Embed | None:
                 for member_id in player:
                     for character_id in player[str(member_id)]:
                         character = player[str(member_id)][str(character_id)]
-                        formatted_wait_list.append(f'- <@!{member_id}> as {character['name']}')
+                        formatted_wait_list.append(f'- <@!{member_id}> as {character[CharacterFields.NAME]}')
 
         # Set the embed fields and footer
         embed.title = title
@@ -809,7 +814,7 @@ def get_denomination_map(currency_config: dict, currency_name: str) -> Tuple[dic
              - A dict mapping denomination names (lowercase) to their float values, or None if not found
              - The parent currency name, or None if not found
     """
-    if not currency_config or 'currencies' not in currency_config:
+    if not currency_config or CurrencyFields.CURRENCIES not in currency_config:
         return None, None
 
     _denom_name, parent_name = find_currency_or_denomination(currency_config, currency_name)
@@ -818,7 +823,7 @@ def get_denomination_map(currency_config: dict, currency_name: str) -> Tuple[dic
         return None, None
 
     parent_currency_config = next(
-        (currency for currency in currency_config['currencies'] if currency['name'].lower() == parent_name.lower()),
+        (currency for currency in currency_config[CurrencyFields.CURRENCIES] if currency[CommonFields.NAME].lower() == parent_name.lower()),
         None
     )
 
@@ -826,8 +831,8 @@ def get_denomination_map(currency_config: dict, currency_name: str) -> Tuple[dic
         return None, None  # Config is inconsistent
 
     denomination_map = {parent_name.lower(): 1.0}
-    for denom in parent_currency_config.get('denominations', []):
-        denomination_map[denom['name'].lower()] = float(denom['value'])
+    for denom in parent_currency_config.get(CurrencyFields.DENOMINATIONS, []):
+        denomination_map[denom[CommonFields.NAME].lower()] = float(denom[CurrencyFields.VALUE])
 
     return denomination_map, parent_name
 
@@ -894,7 +899,7 @@ def apply_item_change_local(character_data: dict, item_name: str, quantity: int)
 
     :return: The updated character data dictionary
     """
-    inventory = normalize_currency_keys(character_data['attributes'].get('inventory', {}))
+    inventory = normalize_currency_keys(character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {}))
     item_name_lower = item_name.lower()
 
     found_key = item_name_lower
@@ -908,7 +913,7 @@ def apply_item_change_local(character_data: dict, item_name: str, quantity: int)
     elif quantity < 0:
         raise UserFeedbackError(f"Insufficient item(s): {titlecase(item_name)}")
 
-    character_data['attributes']['inventory'] = {titlecase(k): v for k, v in inventory.items()}
+    character_data[CharacterFields.ATTRIBUTES][CharacterFields.INVENTORY] = {titlecase(k): v for k, v in inventory.items()}
     return character_data
 
 
@@ -937,7 +942,7 @@ def apply_currency_change_local(character_data: dict, currency_config: dict, ite
     if min_value <= 0:
         raise Exception(f'Currency {currency_parent_name} has a non-positive denomination value.')
 
-    character_currency = normalize_currency_keys(character_data['attributes'].get('currency', {}))
+    character_currency = normalize_currency_keys(character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {}))
 
     total_in_lowest_denom = 0.0
     for denom, value in denomination_map.items():
@@ -961,14 +966,14 @@ def apply_currency_change_local(character_data: dict, currency_config: dict, ite
             new_character_currency[denom] = qty
             total_in_lowest_denom %= denom_value_in_lowest
 
-    final_wallet = normalize_currency_keys(character_data['attributes'].get('currency', {}))
+    final_wallet = normalize_currency_keys(character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {}))
     for denom_name in denomination_map.keys():
         if denom_name in new_character_currency:
             final_wallet[denom_name] = new_character_currency[denom_name]
         elif denom_name in final_wallet:
             del final_wallet[denom_name]
 
-    character_data['attributes']['currency'] = {titlecase(k): v for k, v in final_wallet.items() if v > 0}
+    character_data[CharacterFields.ATTRIBUTES][CharacterFields.CURRENCY] = {titlecase(k): v for k, v in final_wallet.items() if v > 0}
     return character_data
 
 
@@ -994,9 +999,9 @@ def get_base_currency_info(currency_config: dict, currency_name: str):
     multiplier = denomination_map.get(normalized_name, 0)
 
     is_double = False
-    for currency in currency_config.get('currencies'):
-        if currency['name'].lower() == base_name.lower():
-            is_double = currency.get('isDouble', False)
+    for currency in currency_config.get(CurrencyFields.CURRENCIES):
+        if currency[CommonFields.NAME].lower() == base_name.lower():
+            is_double = currency.get(CurrencyFields.IS_DOUBLE, False)
             break
 
     return base_name, multiplier, is_double
@@ -1044,8 +1049,8 @@ def format_consolidated_totals(base_totals: dict, currency_config: dict) -> list
     for base_name, total_value in base_totals.items():
         curr_conf = None
         if currency_config:
-            for c in currency_config.get('currencies', []):
-                if c['name'].lower() == base_name.lower():
+            for c in currency_config.get(CurrencyFields.CURRENCIES, []):
+                if c[CommonFields.NAME].lower() == base_name.lower():
                     curr_conf = c
                     break
 
@@ -1053,14 +1058,14 @@ def format_consolidated_totals(base_totals: dict, currency_config: dict) -> list
             output.append(f"{titlecase(base_name)}: {total_value}")
             continue
 
-        base_display_name = curr_conf['name']
+        base_display_name = curr_conf[CommonFields.NAME]
 
-        if curr_conf.get('isDouble', False):
+        if curr_conf.get(CurrencyFields.IS_DOUBLE, False):
             output.append(f"{titlecase(base_display_name)}: {total_value:.2f}")
         else:
-            denoms = curr_conf.get('denominations', [])
-            all_denoms = [{'name': curr_conf['name'], 'value': 1.0}] + denoms
-            all_denoms.sort(key=lambda x: float(x['value']), reverse=True)
+            denoms = curr_conf.get(CurrencyFields.DENOMINATIONS, [])
+            all_denoms = [{CommonFields.NAME: curr_conf[CommonFields.NAME], CurrencyFields.VALUE: 1.0}] + denoms
+            all_denoms.sort(key=lambda x: float(x[CurrencyFields.VALUE]), reverse=True)
 
             parts = []
             remaining_val = total_value
@@ -1068,11 +1073,11 @@ def format_consolidated_totals(base_totals: dict, currency_config: dict) -> list
             tolerance = 1e-9
 
             for d in all_denoms:
-                d_val = float(d['value'])
+                d_val = float(d[CurrencyFields.VALUE])
                 if remaining_val + tolerance >= d_val:
                     count = int(remaining_val / d_val + tolerance)
                     if count > 0:
-                        parts.append(f'{count} {titlecase(d["name"])}')
+                        parts.append(f'{count} {titlecase(d[CommonFields.NAME])}')
                         remaining_val -= count * d_val
 
             if parts:
@@ -1126,7 +1131,7 @@ async def get_xp_config(bot, guild_id) -> bool:
         )
         if query is None:
             return True  # Default to XP enabled if no config found
-        return query.get('playerExperience', True)
+        return query.get(ConfigFields.PLAYER_EXPERIENCE, True)
     except Exception as e:
         logger.error(f"Error retrieving XP config: {e}")
         await log_exception(e)
@@ -1231,7 +1236,7 @@ async def get_item_stock(bot, guild_id: int, channel_id: str, item_name: str) ->
     if not stock_data:
         return None
 
-    shops = stock_data.get('shops', {})
+    shops = stock_data.get(ShopFields.SHOPS, {})
     shop_stock = shops.get(str(channel_id), {})
     item_stock = shop_stock.get(encode_mongo_key(item_name))
 
@@ -1239,8 +1244,8 @@ async def get_item_stock(bot, guild_id: int, channel_id: str, item_name: str) ->
         return None
 
     return {
-        'available': item_stock.get('available', 0),
-        'reserved': item_stock.get('reserved', 0)
+        ShopFields.AVAILABLE: item_stock.get(ShopFields.AVAILABLE, 0),
+        ShopFields.RESERVED: item_stock.get(ShopFields.RESERVED, 0)
     }
 
 
@@ -1264,7 +1269,7 @@ async def get_shop_stock(bot, guild_id: int, channel_id: str) -> dict:
     if not stock_data:
         return {}
 
-    shops = stock_data.get('shops', {})
+    shops = stock_data.get(ShopFields.SHOPS, {})
     return shops.get(str(channel_id), {})
 
 
@@ -1532,7 +1537,7 @@ async def get_last_restock(bot, guild_id: int, channel_id: str) -> str | None:
     if not stock_data:
         return None
 
-    return stock_data.get('lastRestock', {}).get(str(channel_id))
+    return stock_data.get(RestockFields.LAST_RESTOCK, {}).get(str(channel_id))
 
 
 # ----- Shop Cart Management -----
@@ -1608,7 +1613,7 @@ async def get_cart(bot, guild_id: int, user_id: int, channel_id: str) -> dict | 
         return None
 
     # Check if cart has expired
-    expires_at = cart.get('expiresAt')
+    expires_at = cart.get(CartFields.EXPIRES_AT)
     if expires_at:
         if isinstance(expires_at, str):
             expires_at = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
@@ -1642,14 +1647,14 @@ async def get_or_create_cart(bot, guild_id: int, user_id: int, channel_id: str) 
     expires_at = now + timedelta(minutes=CART_TTL_MINUTES)
 
     new_cart = {
-        '_id': cart_id,
-        'guildId': guild_id,
-        'userId': user_id,
-        'channelId': channel_id,
-        'items': {},
-        'createdAt': now.isoformat(),
-        'updatedAt': now.isoformat(),
-        'expiresAt': expires_at.isoformat()
+        CommonFields.ID: cart_id,
+        CartFields.GUILD_ID: guild_id,
+        CartFields.USER_ID: user_id,
+        CartFields.CHANNEL_ID: channel_id,
+        CartFields.ITEMS: {},
+        CartFields.CREATED_AT: now.isoformat(),
+        CartFields.UPDATED_AT: now.isoformat(),
+        CartFields.EXPIRES_AT: expires_at.isoformat()
     }
 
     await update_cached_data(
@@ -1684,8 +1689,8 @@ async def update_cart_expiry(bot, guild_id: int, user_id: int, channel_id: str):
         query={'_id': cart_id},
         update_data={
             '$set': {
-                'updatedAt': now.isoformat(),
-                'expiresAt': expires_at.isoformat()
+                CartFields.UPDATED_AT: now.isoformat(),
+                CartFields.EXPIRES_AT: expires_at.isoformat()
             }
         },
         cache_id=cart_id
@@ -1706,11 +1711,11 @@ async def add_item_to_cart(bot, guild_id: int, user_id: int, channel_id: str,
 
     :return: True if successful, False if out of stock
     """
-    item_name = item.get('name')
+    item_name = item.get(CommonFields.NAME)
     cart_key = f"{encode_mongo_key(item_name)}::{option_index}"
 
     # Check if item has stock limit and reserve if needed
-    has_stock_limit = item.get('maxStock') is not None
+    has_stock_limit = item.get(ShopFields.MAX_STOCK) is not None
     if has_stock_limit:
         success = await reserve_stock(bot, guild_id, channel_id, item_name, 1)
         if not success:
@@ -1718,13 +1723,13 @@ async def add_item_to_cart(bot, guild_id: int, user_id: int, channel_id: str,
 
     # Get or create cart
     cart = await get_or_create_cart(bot, guild_id, user_id, channel_id)
-    cart_id = cart['_id']
+    cart_id = cart[CommonFields.ID]
 
     now = datetime.now(timezone.utc)
     expires_at = now + timedelta(minutes=CART_TTL_MINUTES)
 
     # Check if item already in cart
-    existing_items = cart.get('items', {})
+    existing_items = cart.get(CartFields.ITEMS, {})
     if cart_key in existing_items:
         # Increment quantity
         await update_cached_data(
@@ -1735,8 +1740,8 @@ async def add_item_to_cart(bot, guild_id: int, user_id: int, channel_id: str,
             update_data={
                 '$inc': {f'items.{cart_key}.quantity': 1},
                 '$set': {
-                    'updatedAt': now.isoformat(),
-                    'expiresAt': expires_at.isoformat()
+                    CartFields.UPDATED_AT: now.isoformat(),
+                    CartFields.EXPIRES_AT: expires_at.isoformat()
                 }
             },
             cache_id=cart_id
@@ -1744,10 +1749,10 @@ async def add_item_to_cart(bot, guild_id: int, user_id: int, channel_id: str,
     else:
         # Add new item
         cart_item = {
-            'item': item,
-            'quantity': 1,
-            'optionIndex': option_index,
-            'reservedAt': now.isoformat()
+            CartFields.ITEM: item,
+            CartFields.QUANTITY: 1,
+            CartFields.OPTION_INDEX: option_index,
+            CartFields.RESERVED_AT: now.isoformat()
         }
         await update_cached_data(
             bot=bot,
@@ -1757,8 +1762,8 @@ async def add_item_to_cart(bot, guild_id: int, user_id: int, channel_id: str,
             update_data={
                 '$set': {
                     f'items.{cart_key}': cart_item,
-                    'updatedAt': now.isoformat(),
-                    'expiresAt': expires_at.isoformat()
+                    CartFields.UPDATED_AT: now.isoformat(),
+                    CartFields.EXPIRES_AT: expires_at.isoformat()
                 }
             },
             cache_id=cart_id
@@ -1783,19 +1788,19 @@ async def remove_item_from_cart(bot, guild_id: int, user_id: int, channel_id: st
     if not cart:
         return
 
-    cart_id = cart['_id']
-    items = cart.get('items', {})
+    cart_id = cart[CommonFields.ID]
+    items = cart.get(CartFields.ITEMS, {})
 
     if cart_key not in items:
         return
 
     cart_item = items[cart_key]
-    item = cart_item['item']
-    current_quantity = cart_item['quantity']
-    item_name = item.get('name')
+    item = cart_item[CartFields.ITEM]
+    current_quantity = cart_item[CartFields.QUANTITY]
+    item_name = item.get(CommonFields.NAME)
 
     # Release stock if item has stock limit
-    has_stock_limit = item.get('maxStock') is not None
+    has_stock_limit = item.get(ShopFields.MAX_STOCK) is not None
     if has_stock_limit:
         release_qty = min(quantity, current_quantity)
         await release_stock(bot, guild_id, channel_id, item_name, release_qty)
@@ -1813,8 +1818,8 @@ async def remove_item_from_cart(bot, guild_id: int, user_id: int, channel_id: st
             update_data={
                 '$unset': {f'items.{cart_key}': ''},
                 '$set': {
-                    'updatedAt': now.isoformat(),
-                    'expiresAt': expires_at.isoformat()
+                    CartFields.UPDATED_AT: now.isoformat(),
+                    CartFields.EXPIRES_AT: expires_at.isoformat()
                 }
             },
             cache_id=cart_id
@@ -1829,8 +1834,8 @@ async def remove_item_from_cart(bot, guild_id: int, user_id: int, channel_id: st
             update_data={
                 '$inc': {f'items.{cart_key}.quantity': -quantity},
                 '$set': {
-                    'updatedAt': now.isoformat(),
-                    'expiresAt': expires_at.isoformat()
+                    CartFields.UPDATED_AT: now.isoformat(),
+                    CartFields.EXPIRES_AT: expires_at.isoformat()
                 }
             },
             cache_id=cart_id
@@ -1855,14 +1860,14 @@ async def update_cart_item_quantity(bot, guild_id: int, user_id: int, channel_id
     if not cart:
         return False, "Cart not found."
 
-    items = cart.get('items', {})
+    items = cart.get(CartFields.ITEMS, {})
     if cart_key not in items:
         return False, "Item not in cart."
 
     cart_item = items[cart_key]
-    item = cart_item['item']
-    current_quantity = cart_item['quantity']
-    item_name = item.get('name')
+    item = cart_item[CartFields.ITEM]
+    current_quantity = cart_item[CartFields.QUANTITY]
+    item_name = item.get(CommonFields.NAME)
 
     if new_quantity <= 0:
         # Remove item entirely
@@ -1870,7 +1875,7 @@ async def update_cart_item_quantity(bot, guild_id: int, user_id: int, channel_id
         return True, "Item removed from cart."
 
     quantity_diff = new_quantity - current_quantity
-    has_stock_limit = item.get('maxStock') is not None
+    has_stock_limit = item.get(ShopFields.MAX_STOCK) is not None
 
     if quantity_diff > 0:
         # Trying to add more
@@ -1884,7 +1889,7 @@ async def update_cart_item_quantity(bot, guild_id: int, user_id: int, channel_id
         now = datetime.now(timezone.utc)
         expires_at = now + timedelta(minutes=CART_TTL_MINUTES)
 
-        cart_id = cart['_id']
+        cart_id = cart[CommonFields.ID]
         await update_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
@@ -1893,8 +1898,8 @@ async def update_cart_item_quantity(bot, guild_id: int, user_id: int, channel_id
             update_data={
                 '$set': {
                     f'items.{cart_key}.quantity': new_quantity,
-                    'updatedAt': now.isoformat(),
-                    'expiresAt': expires_at.isoformat()
+                    CartFields.UPDATED_AT: now.isoformat(),
+                    CartFields.EXPIRES_AT: expires_at.isoformat()
                 }
             },
             cache_id=cart_id
@@ -1926,15 +1931,15 @@ async def clear_cart_and_release_stock(bot, guild_id: int, user_id: int, channel
     )
     if not cart:
         return
-    items = cart.get('items', {})
+    items = cart.get(CartFields.ITEMS, {})
 
     # Release all reserved stock
     for cart_key, cart_item in items.items():
-        item = cart_item['item']
-        quantity = cart_item['quantity']
-        item_name = item.get('name')
+        item = cart_item[CartFields.ITEM]
+        quantity = cart_item[CartFields.QUANTITY]
+        item_name = item.get(CommonFields.NAME)
 
-        has_stock_limit = item.get('maxStock') is not None
+        has_stock_limit = item.get(ShopFields.MAX_STOCK) is not None
         if has_stock_limit:
             await release_stock(bot, guild_id, channel_id, item_name, quantity)
 
@@ -1961,16 +1966,16 @@ async def finalize_cart_purchase(bot, guild_id: int, user_id: int, channel_id: s
     if not cart:
         return
 
-    cart_id = cart['_id']
-    items = cart.get('items', {})
+    cart_id = cart[CommonFields.ID]
+    items = cart.get(CartFields.ITEMS, {})
 
     # Finalize stock (remove from reserved counts)
     for cart_key, cart_item in items.items():
-        item = cart_item['item']
-        quantity = cart_item['quantity']
-        item_name = item.get('name')
+        item = cart_item[CartFields.ITEM]
+        quantity = cart_item[CartFields.QUANTITY]
+        item_name = item.get(CommonFields.NAME)
 
-        has_stock_limit = item.get('maxStock') is not None
+        has_stock_limit = item.get(ShopFields.MAX_STOCK) is not None
         if has_stock_limit:
             await finalize_stock(bot, guild_id, channel_id, item_name, quantity)
 
@@ -1995,28 +2000,28 @@ async def cleanup_expired_carts(bot):
     # Query all expired carts directly from MongoDB (bypass cache for cleanup)
     collection = bot.gdb['shopCarts']
     cursor = collection.find({
-        'expiresAt': {'$lt': now.isoformat()}
+        CartFields.EXPIRES_AT: {'$lt': now.isoformat()}
     })
 
     expired_carts = await cursor.to_list(length=None)
 
     for cart in expired_carts:
-        guild_id = cart['guildId']
-        channel_id = cart['channelId']
-        items = cart.get('items', {})
+        guild_id = cart[CartFields.GUILD_ID]
+        channel_id = cart[CartFields.CHANNEL_ID]
+        items = cart.get(CartFields.ITEMS, {})
 
         # Release all reserved stock
         for cart_key, cart_item in items.items():
-            item = cart_item['item']
-            quantity = cart_item['quantity']
-            item_name = item.get('name')
+            item = cart_item[CartFields.ITEM]
+            quantity = cart_item[CartFields.QUANTITY]
+            item_name = item.get(CommonFields.NAME)
 
-            has_stock_limit = item.get('maxStock') is not None
+            has_stock_limit = item.get(ShopFields.MAX_STOCK) is not None
             if has_stock_limit:
                 await release_stock(bot, guild_id, channel_id, item_name, quantity)
 
         # Delete the cart
-        cart_id = cart['_id']
+        cart_id = cart[CommonFields.ID]
         await delete_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
@@ -2046,7 +2051,7 @@ def get_containers_sorted(character_data: dict) -> list[dict]:
     result = []
 
     # Loose items (root inventory) is always first
-    loose_items = character_data['attributes'].get('inventory', {})
+    loose_items = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
     result.append({
         'id': None,
         'name': 'Loose Items',
@@ -2055,17 +2060,17 @@ def get_containers_sorted(character_data: dict) -> list[dict]:
     })
 
     # Get containers sorted by order
-    containers = character_data['attributes'].get('containers', {})
+    containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
     sorted_containers = sorted(
         containers.items(),
-        key=lambda x: x[1].get('order', 0)
+        key=lambda x: x[1].get(ContainerFields.ORDER, 0)
     )
 
     for container_id, container_data in sorted_containers:
-        items = container_data.get('items', {})
+        items = container_data.get(ContainerFields.ITEMS, {})
         result.append({
             'id': container_id,
-            'name': container_data.get('name', 'Unknown'),
+            'name': container_data.get(ContainerFields.NAME, 'Unknown'),
             'items': items,
             'count': len(items)
         })
@@ -2079,11 +2084,11 @@ def get_container_items(character_data: dict, container_id: str | None) -> dict:
     container_id=None returns root inventory (Loose Items).
     """
     if container_id is None:
-        return character_data['attributes'].get('inventory', {})
+        return character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
 
-    containers = character_data['attributes'].get('containers', {})
+    containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
     container = containers.get(container_id, {})
-    return container.get('items', {})
+    return container.get(ContainerFields.ITEMS, {})
 
 
 def get_container_name(character_data: dict, container_id: str | None) -> str:
@@ -2091,9 +2096,9 @@ def get_container_name(character_data: dict, container_id: str | None) -> str:
     if container_id is None:
         return 'Loose Items'
 
-    containers = character_data['attributes'].get('containers', {})
+    containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
     container = containers.get(container_id, {})
-    return container.get('name', 'Unknown')
+    return container.get(ContainerFields.NAME, 'Unknown')
 
 
 def get_total_item_quantity(character_data: dict, item_name: str) -> int:
@@ -2105,15 +2110,15 @@ def get_total_item_quantity(character_data: dict, item_name: str) -> int:
     total = 0
 
     # Check loose items
-    inventory = character_data['attributes'].get('inventory', {})
+    inventory = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
     for name, qty in inventory.items():
         if name.lower() == item_name_lower:
             total += qty
 
     # Check all containers
-    containers = character_data['attributes'].get('containers', {})
+    containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
     for container_data in containers.values():
-        items = container_data.get('items', {})
+        items = container_data.get(ContainerFields.ITEMS, {})
         for name, qty in items.items():
             if name.lower() == item_name_lower:
                 total += qty
@@ -2130,20 +2135,20 @@ def get_item_locations(character_data: dict, item_name: str) -> list[dict]:
     locations = []
 
     # Check loose items
-    inventory = character_data['attributes'].get('inventory', {})
+    inventory = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
     for name, qty in inventory.items():
         if name.lower() == item_name_lower and qty > 0:
             locations.append({'id': None, 'name': 'Loose Items', 'quantity': qty})
 
     # Check all containers
-    containers = character_data['attributes'].get('containers', {})
+    containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
     for container_id, container_data in containers.items():
-        items = container_data.get('items', {})
+        items = container_data.get(ContainerFields.ITEMS, {})
         for name, qty in items.items():
             if name.lower() == item_name_lower and qty > 0:
                 locations.append({
                     'id': container_id,
-                    'name': container_data.get('name', 'Unknown'),
+                    'name': container_data.get(ContainerFields.NAME, 'Unknown'),
                     'quantity': qty
                 })
 
@@ -2152,15 +2157,15 @@ def get_item_locations(character_data: dict, item_name: str) -> list[dict]:
 
 def get_container_count(character_data: dict) -> int:
     """Returns the number of containers (excluding Loose Items)."""
-    return len(character_data['attributes'].get('containers', {}))
+    return len(character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {}))
 
 
 def get_next_container_order(character_data: dict) -> int:
     """Returns the next available order value for a new container."""
-    containers = character_data['attributes'].get('containers', {})
+    containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
     if not containers:
         return 1
-    max_order = max(c.get('order', 0) for c in containers.values())
+    max_order = max(c.get(ContainerFields.ORDER, 0) for c in containers.values())
     return max_order + 1
 
 
@@ -2172,11 +2177,11 @@ def container_name_exists(character_data: dict, name: str, exclude_id: str | Non
     if name_lower == 'loose items':
         return True
 
-    containers = character_data['attributes'].get('containers', {})
+    containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
     for container_id, container_data in containers.items():
         if exclude_id and container_id == exclude_id:
             continue
-        if container_data.get('name', '').lower() == name_lower:
+        if container_data.get(ContainerFields.NAME, '').lower() == name_lower:
             return True
 
     return False
@@ -2205,7 +2210,7 @@ async def create_container(bot, player_id: int, character_id: str, name: str) ->
     if not player_data:
         raise UserFeedbackError('Player data not found.')
 
-    character_data = player_data['characters'].get(character_id)
+    character_data = player_data[CharacterFields.CHARACTERS].get(character_id)
     if not character_data:
         raise UserFeedbackError('Character not found.')
 
@@ -2225,9 +2230,9 @@ async def create_container(bot, player_id: int, character_id: str, name: str) ->
         query={'_id': player_id},
         update_data={'$set': {
             f'characters.{character_id}.attributes.containers.{container_id}': {
-                'name': name,
-                'order': order,
-                'items': {}
+                ContainerFields.NAME: name,
+                ContainerFields.ORDER: order,
+                ContainerFields.ITEMS: {}
             }
         }}
     )
@@ -2258,11 +2263,11 @@ async def rename_container(bot, player_id: int, character_id: str,
     if not player_data:
         raise UserFeedbackError('Player data not found.')
 
-    character_data = player_data['characters'].get(character_id)
+    character_data = player_data[CharacterFields.CHARACTERS].get(character_id)
     if not character_data:
         raise UserFeedbackError('Character not found.')
 
-    containers = character_data['attributes'].get('containers', {})
+    containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
     if container_id not in containers:
         raise UserFeedbackError('Container not found.')
 
@@ -2301,21 +2306,21 @@ async def delete_container(bot, player_id: int, character_id: str,
     if not player_data:
         raise UserFeedbackError('Player data not found.')
 
-    character_data = player_data['characters'].get(character_id)
+    character_data = player_data[CharacterFields.CHARACTERS].get(character_id)
     if not character_data:
         raise UserFeedbackError('Character not found.')
 
-    containers = character_data['attributes'].get('containers', {})
+    containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
     if container_id not in containers:
         raise UserFeedbackError('Container not found.')
 
     container = containers[container_id]
-    items_to_move = container.get('items', {})
+    items_to_move = container.get(ContainerFields.ITEMS, {})
     items_count = len(items_to_move)
 
     # Move items to root inventory
     if items_to_move:
-        current_inventory = character_data['attributes'].get('inventory', {})
+        current_inventory = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
         # Normalize to lowercase for merging
         inventory_lower = {k.lower(): (k, v) for k, v in current_inventory.items()}
 
@@ -2367,16 +2372,16 @@ async def reorder_container(bot, player_id: int, character_id: str,
 
     if not player_data:
         raise UserFeedbackError('Player data not found.')
-    character_data = player_data['characters'].get(character_id)
+    character_data = player_data[CharacterFields.CHARACTERS].get(character_id)
     if not character_data:
         raise UserFeedbackError('Character not found.')
 
-    containers = character_data['attributes'].get('containers', {})
+    containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
     if container_id not in containers:
         raise UserFeedbackError('Container not found.')
 
     # Sort containers by order
-    sorted_containers = sorted(containers.items(), key=lambda x: x[1].get('order', 0))
+    sorted_containers = sorted(containers.items(), key=lambda x: x[1].get(ContainerFields.ORDER, 0))
 
     current_index = None
     for i, (cid, _) in enumerate(sorted_containers):
@@ -2397,8 +2402,8 @@ async def reorder_container(bot, player_id: int, character_id: str,
     current_container_id = sorted_containers[current_index][0]
     target_container_id = sorted_containers[target_index][0]
 
-    current_order = containers[current_container_id].get('order', current_index)
-    target_order = containers[target_container_id].get('order', target_index)
+    current_order = containers[current_container_id].get(ContainerFields.ORDER, current_index)
+    target_order = containers[target_container_id].get(ContainerFields.ORDER, target_index)
 
     await update_cached_data(
         bot=bot,
@@ -2438,7 +2443,7 @@ async def move_item_between_containers(
     if not player_data:
         raise UserFeedbackError('Player data not found.')
 
-    character_data = player_data['characters'].get(character_id)
+    character_data = player_data[CharacterFields.CHARACTERS].get(character_id)
     if not character_data:
         raise UserFeedbackError('Character not found.')
 
@@ -2446,13 +2451,13 @@ async def move_item_between_containers(
 
     # Get source items
     if source_container_id is None:
-        source_items = character_data['attributes'].get('inventory', {})
+        source_items = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
         source_path = f'characters.{character_id}.attributes.inventory'
     else:
-        containers = character_data['attributes'].get('containers', {})
+        containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
         if source_container_id not in containers:
             raise UserFeedbackError('Source container not found.')
-        source_items = containers[source_container_id].get('items', {})
+        source_items = containers[source_container_id].get(ContainerFields.ITEMS, {})
         source_path = f'characters.{character_id}.attributes.containers.{source_container_id}.items'
 
     # Find item in source (case-insensitive)
@@ -2472,13 +2477,13 @@ async def move_item_between_containers(
 
     # Get destination items
     if dest_container_id is None:
-        dest_items = character_data['attributes'].get('inventory', {})
+        dest_items = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
         dest_path = f'characters.{character_id}.attributes.inventory'
     else:
-        containers = character_data['attributes'].get('containers', {})
+        containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
         if dest_container_id not in containers:
             raise UserFeedbackError('Destination container not found.')
-        dest_items = containers[dest_container_id].get('items', {})
+        dest_items = containers[dest_container_id].get(ContainerFields.ITEMS, {})
         dest_path = f'characters.{character_id}.attributes.containers.{dest_container_id}.items'
 
     # Find existing item in destination (case-insensitive)
@@ -2544,7 +2549,7 @@ async def consume_item_from_container(
     if not player_data:
         raise UserFeedbackError('Player data not found.')
 
-    character_data = player_data['characters'].get(character_id)
+    character_data = player_data[CharacterFields.CHARACTERS].get(character_id)
     if not character_data:
         raise UserFeedbackError('Character not found.')
 
@@ -2552,13 +2557,13 @@ async def consume_item_from_container(
 
     # Get container items
     if container_id is None:
-        items = character_data['attributes'].get('inventory', {})
+        items = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
         path = f'characters.{character_id}.attributes.inventory'
     else:
-        containers = character_data['attributes'].get('containers', {})
+        containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
         if container_id not in containers:
             raise UserFeedbackError('Container not found.')
-        items = containers[container_id].get('items', {})
+        items = containers[container_id].get(ContainerFields.ITEMS, {})
         path = f'characters.{character_id}.attributes.containers.{container_id}.items'
 
     # Find item (case-insensitive)
@@ -2613,7 +2618,7 @@ def format_inventory_by_container(character_data: dict, currency_config: dict | 
         lines.append('')  # Blank line between containers
 
     # Add currency section
-    player_currency = character_data['attributes'].get('currency', {})
+    player_currency = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {})
     if player_currency and currency_config:
         currency_lines = format_currency_display(player_currency, currency_config)
         if currency_lines:

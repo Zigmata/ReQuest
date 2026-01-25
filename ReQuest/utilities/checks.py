@@ -1,5 +1,6 @@
 from discord import app_commands, Interaction
 
+from ReQuest.utilities.constants import ConfigFields, CharacterFields, CommonFields
 from ReQuest.utilities.supportFunctions import get_cached_data
 
 
@@ -27,9 +28,9 @@ def has_gm_or_mod():
             )
             if query:
                 gm_role_mentions = []
-                gm_roles = query['gmRoles']
+                gm_roles = query[ConfigFields.GM_ROLES]
                 for item in gm_roles:
-                    gm_role_mentions.append(item['mention'])
+                    gm_role_mentions.append(item[CommonFields.MENTION])
                 for role in interaction.user.roles:
                     if role.mention in gm_role_mentions:
                         return True
@@ -51,7 +52,7 @@ def has_active_character():
         )
 
         if query:
-            if str(guild_id) in query['activeCharacters']:
+            if str(guild_id) in query[CharacterFields.ACTIVE_CHARACTERS]:
                 return True
             else:
                 raise app_commands.CheckFailure("You do not have an active character on this server!")

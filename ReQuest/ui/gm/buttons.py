@@ -7,6 +7,7 @@ from discord.ui import Button
 from ReQuest.ui.common.modals import ConfirmModal
 from ReQuest.ui.gm import modals
 from ReQuest.ui.common.enums import RewardType
+from ReQuest.utilities.constants import QuestFields, ConfigFields
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     setup_view,
@@ -141,8 +142,8 @@ class CancelQuestButton(Button):
             guild = interaction.guild
 
             # If a party exists
-            party = quest['party']
-            title = quest['title']
+            party = quest[QuestFields.PARTY]
+            title = quest[QuestFields.TITLE]
             if party:
                 # Get party members and message them with results
                 for player in party:
@@ -160,25 +161,25 @@ class CancelQuestButton(Button):
                             logger.warning(f'Could not find member {member_id} in guild {guild_id}.')
 
             # Remove the party role, if applicable
-            party_role_id = quest['partyRoleId']
+            party_role_id = quest[QuestFields.PARTY_ROLE_ID]
             if party_role_id:
                 party_role = guild.get_role(party_role_id)
-                await party_role.delete(reason=f'Quest {quest['questId']} cancelled by {interaction.user.mention}.')
+                await party_role.delete(reason=f'Quest {quest[QuestFields.QUEST_ID]} cancelled by {interaction.user.mention}.')
 
             # Delete the quest from the database
             await delete_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='quests',
-                search_filter={'guildId': guild_id, 'questId': quest['questId']},
-                cache_id=f'{guild_id}:{quest["questId"]}'
+                search_filter={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest[QuestFields.QUEST_ID]},
+                cache_id=f'{guild_id}:{quest[QuestFields.QUEST_ID]}'
             )
 
             # Delete the quest from the redis cache
             admin_list_key = build_cache_key(bot.gdb.name, f'guild_quests:{guild_id}', 'quests')
             await bot.rdb.delete(admin_list_key)
 
-            gm_list_key = build_cache_key(bot.gdb.name, f'gm_quests:{guild_id}:{quest["gm"]}', 'quests')
+            gm_list_key = build_cache_key(bot.gdb.name, f'gm_quests:{guild_id}:{quest[QuestFields.GM]}', 'quests')
             await bot.rdb.delete(gm_list_key)
 
             # Delete the quest from the quest channel
@@ -188,9 +189,9 @@ class CancelQuestButton(Button):
                 collection_name='questChannel',
                 query={'_id': guild_id}
             )
-            channel_id = strip_id(channel_query['questChannel'])
+            channel_id = strip_id(channel_query[ConfigFields.QUEST_CHANNEL])
             quest_channel = guild.get_channel(channel_id)
-            message_id = quest['messageId']
+            message_id = quest[QuestFields.MESSAGE_ID]
             message = quest_channel.get_partial_message(message_id)
             await attempt_delete(message)
 
@@ -251,9 +252,9 @@ class PartyRewardsButton(Button):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='quests',
-                query={'guildId': quest['guildId'], 'questId': quest['questId']},
+                query={QuestFields.GUILD_ID: quest[QuestFields.GUILD_ID], QuestFields.QUEST_ID: quest[QuestFields.QUEST_ID]},
                 update_data={'$set': updates},
-                cache_id=f'{quest["guildId"]}:{quest["questId"]}'
+                cache_id=f'{quest[QuestFields.GUILD_ID]}:{quest[QuestFields.QUEST_ID]}'
             )
 
             party_rewards['xp'] = xp_val
@@ -316,9 +317,9 @@ class IndividualRewardsButton(Button):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='quests',
-                query={'guildId': quest['guildId'], 'questId': quest['questId']},
+                query={QuestFields.GUILD_ID: quest[QuestFields.GUILD_ID], QuestFields.QUEST_ID: quest[QuestFields.QUEST_ID]},
                 update_data={'$set': updates},
-                cache_id=f'{quest["guildId"]}:{quest["questId"]}'
+                cache_id=f'{quest[QuestFields.GUILD_ID]}:{quest[QuestFields.QUEST_ID]}'
             )
 
             char_rewards['xp'] = xp_val
@@ -423,7 +424,7 @@ class ManageQuestRowButton(Button):
         super().__init__(
             label='Manage',
             style=ButtonStyle.secondary,
-            custom_id=f'manage_quest_{quest["questId"]}'
+            custom_id=f'manage_quest_{quest[QuestFields.QUEST_ID]}'
         )
         self.quest = quest
 

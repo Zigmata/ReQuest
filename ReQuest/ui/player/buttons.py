@@ -5,7 +5,9 @@ from discord import ButtonStyle
 from discord.ui import Button
 
 from ReQuest.ui.common import modals as common_modals
+from ReQuest.ui.common.enums import InventoryType
 from ReQuest.ui.player import modals
+from ReQuest.utilities.constants import CharacterFields, CommonFields
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     setup_view,
@@ -90,7 +92,7 @@ class RemoveCharacterButton(Button):
             )
             if character_query and 'activeCharacters' in character_query:
                 updates = {}
-                for guild_id, active_character_id in character_query['activeCharacters'].items():
+                for guild_id, active_character_id in character_query[CharacterFields.ACTIVE_CHARACTERS].items():
                     if active_character_id == self.character_id:
                         updates[f'activeCharacters.{guild_id}'] = ''
 
@@ -303,7 +305,7 @@ class WizardItemButton(Button):
         label = f'Add to Cart'
         costs = item.get('costs', [])
 
-        if inventory_type == 'purchase':
+        if inventory_type == InventoryType.PURCHASE.value:
             if len(costs) > 1:
                 label = 'View Purchase Options'
             else:
@@ -319,7 +321,7 @@ class WizardItemButton(Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             costs = self.item.get('costs', [])
-            if len(costs) > 1 and self.view.inventory_type == 'purchase':
+            if len(costs) > 1 and self.view.inventory_type == InventoryType.PURCHASE.value:
                 from ReQuest.ui.player.views import NewCharacterComplexItemPurchaseView
                 view = NewCharacterComplexItemPurchaseView(self.view, self.item)
                 await interaction.response.edit_message(view=view)
@@ -529,7 +531,7 @@ class PrintInventoryButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            character_name = self.calling_view.active_character['name']
+            character_name = self.calling_view.active_character[CommonFields.NAME]
             formatted = format_inventory_by_container(
                 self.calling_view.active_character,
                 self.calling_view.currency_config
@@ -604,7 +606,7 @@ class RenameContainerButton(Button):
                 raise UserFeedbackError('Cannot rename Loose Items.')
 
             # Get current name
-            containers = self.calling_view.character_data['attributes'].get('containers', {})
+            containers = self.calling_view.character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
             current_name = containers.get(container_id, {}).get('name', '')
 
             modal = modals.RenameContainerModal(self.calling_view, container_id, current_name)
@@ -632,7 +634,7 @@ class DeleteContainerButton(Button):
             items = get_container_items(self.calling_view.character_data, container_id)
             item_count = len(items)
 
-            containers = self.calling_view.character_data['attributes'].get('containers', {})
+            containers = self.calling_view.character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
             container_name = containers.get(container_id, {}).get('name', 'Unknown')
 
             if item_count > 0:

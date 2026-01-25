@@ -5,6 +5,8 @@ import discord
 from discord.ext import commands, tasks
 from discord.ext.commands import Cog
 
+from ReQuest.ui.common.enums import ScheduleType, RestockMode
+from ReQuest.utilities.constants import CommonFields, ShopFields, RestockFields
 from ReQuest.utilities.supportFunctions import (
     cleanup_expired_carts,
     get_last_restock,
@@ -80,12 +82,12 @@ class Tasks(Cog):
         all_shops = await cursor.to_list(length=None)
 
         for guild_doc in all_shops:
-            guild_id = guild_doc['_id']
-            shop_channels = guild_doc.get('shopChannels', {})
+            guild_id = guild_doc[CommonFields.ID]
+            shop_channels = guild_doc.get(ShopFields.SHOP_CHANNELS, {})
 
             for channel_id, shop_data in shop_channels.items():
-                restock_config = shop_data.get('restockConfig')
-                if not restock_config or not restock_config.get('enabled'):
+                restock_config = shop_data.get(ShopFields.RESTOCK_CONFIG)
+                if not restock_config or not restock_config.get(ShopFields.ENABLED):
                     continue
 
                 # Check if restock is due
@@ -113,12 +115,12 @@ class Tasks(Cog):
 
         :return: True if restock is due
         """
-        schedule = restock_config.get('schedule')
-        target_minute = restock_config.get('minute', 0)
-        target_hour = restock_config.get('hour', 0)
-        target_day = restock_config.get('dayOfWeek', 0)  # 0 = Monday
+        schedule = restock_config.get(RestockFields.SCHEDULE)
+        target_minute = restock_config.get(RestockFields.MINUTE, 0)
+        target_hour = restock_config.get(RestockFields.HOUR, 0)
+        target_day = restock_config.get(RestockFields.DAY_OF_WEEK, 0)  # 0 = Monday
 
-        if schedule == 'hourly':
+        if schedule == ScheduleType.HOURLY.value:
             # Check time with a tolerance of 1 minute
             minute_diff = (now.minute - target_minute) % 60
             if minute_diff in (0, 1):
@@ -130,7 +132,7 @@ class Tasks(Cog):
                 if time_diff.total_seconds() >= 3600 - 60:
                     return True
 
-        elif schedule == 'daily':
+        elif schedule == ScheduleType.DAILY.value:
             # Check if we're at target hour:minute
             if now.hour == target_hour and now.minute == target_minute:
                 if last_restock is None:
@@ -139,7 +141,7 @@ class Tasks(Cog):
                 if now.date() > last_restock.date():
                     return True
 
-        elif schedule == 'weekly':
+        elif schedule == ScheduleType.WEEKLY.value:
             # Check if correct day, hour, minute
             if now.weekday() == target_day and now.hour == target_hour and now.minute == target_minute:
                 if last_restock is None:
@@ -160,24 +162,24 @@ class Tasks(Cog):
         :param shop_data: The shop configuration data
         :param restock_config: The restocking configuration
         """
-        mode = restock_config.get('mode', 'full')
-        increment_amount = restock_config.get('incrementAmount', 1)
+        mode = restock_config.get(RestockFields.MODE, RestockMode.FULL.value)
+        increment_amount = restock_config.get(RestockFields.INCREMENT_AMOUNT, 1)
 
-        shop_stock = shop_data.get('shopStock', [])
+        shop_stock = shop_data.get(ShopFields.SHOP_STOCK, [])
         restocked_items = []  # List of (item_name, amount_added)
 
         for item in shop_stock:
-            max_stock = item.get('maxStock')
+            max_stock = item.get(ShopFields.MAX_STOCK)
             if max_stock is None:
                 continue  # Unlimited item
 
-            item_name = item.get('name')
+            item_name = item.get(CommonFields.NAME)
 
             # Get current stock to calculate how much was added
             current_stock = await get_item_stock(self.bot, guild_id, channel_id, item_name)
-            current_available = current_stock['available'] if current_stock else 0
+            current_available = current_stock[ShopFields.AVAILABLE] if current_stock else 0
 
-            if mode == 'full':
+            if mode == RestockMode.FULL.value:
                 # Set available to maxStock
                 await set_available_stock(self.bot, guild_id, channel_id, item_name, max_stock)
                 amount_added = max_stock - current_available

@@ -7,6 +7,8 @@ import discord.ui
 import shortuuid
 from discord.ui import Modal
 
+from ReQuest.ui.common.enums import InventoryType
+from ReQuest.utilities.constants import CharacterFields, ConfigFields, CommonFields
 from ReQuest.utilities.supportFunctions import (
     find_currency_or_denomination,
     log_exception,
@@ -65,8 +67,8 @@ class TradeModal(Modal):
                 query={'_id': member_id}
             )
 
-            member_active_character_id = member_query['activeCharacters'][str(guild_id)]
-            member_active_character = member_query['characters'][member_active_character_id]
+            member_active_character_id = member_query[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
+            member_active_character = member_query[CharacterFields.CHARACTERS][member_active_character_id]
 
             log_channel = None
             log_channel_query = await get_cached_data(
@@ -76,7 +78,7 @@ class TradeModal(Modal):
                 query={'_id': guild_id}
             )
             if log_channel_query:
-                log_channel_id = strip_id(log_channel_query['playerTransactionLogChannel'])
+                log_channel_id = strip_id(log_channel_query[ConfigFields.PLAYER_TRANSACTION_LOG_CHANNEL])
                 log_channel = interaction.guild.get_channel(log_channel_id)
 
             target_query = await get_cached_data(
@@ -87,12 +89,12 @@ class TradeModal(Modal):
             )
             if not target_query:
                 raise UserFeedbackError('The player you are attempting to trade with has no characters!')
-            elif str(guild_id) not in target_query['activeCharacters']:
+            elif str(guild_id) not in target_query[CharacterFields.ACTIVE_CHARACTERS]:
                 raise UserFeedbackError(
                     'The player you are attempting to trade with does not have an active character on this server!'
                 )
-            target_active_character_id = target_query['activeCharacters'][str(guild_id)]
-            target_active_character = target_query['characters'][target_active_character_id]
+            target_active_character_id = target_query[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
+            target_active_character = target_query[CharacterFields.CHARACTERS][target_active_character_id]
 
             currency_query = await get_cached_data(
                 bot=bot,
@@ -106,8 +108,8 @@ class TradeModal(Modal):
             trade_embed = discord.Embed(
                 title=f'Trade Report',
                 description=(
-                    f'Sender: {interaction.user.mention} as `{member_active_character['name']}`\n'
-                    f'Recipient: {self.target.mention} as `{target_active_character['name']}`\n'
+                    f'Sender: {interaction.user.mention} as `{member_active_character[CharacterFields.NAME]}`\n'
+                    f'Recipient: {self.target.mention} as `{target_active_character[CharacterFields.NAME]}`\n'
                 ),
                 type='rich'
             )
@@ -119,9 +121,9 @@ class TradeModal(Modal):
                 receiver_currency_str = '\n'.join(format_currency_display(receiver_currency, currency_query)) or "None"
                 trade_embed.add_field(name='Currency', value=escape_markdown(titlecase(item_name)))
                 trade_embed.add_field(name='Amount', value=quantity)
-                trade_embed.add_field(name=f'{member_active_character['name']}\'s Balance', value=sender_balance_str,
+                trade_embed.add_field(name=f'{member_active_character[CharacterFields.NAME]}\'s Balance', value=sender_balance_str,
                                       inline=False)
-                trade_embed.add_field(name=f'{target_active_character['name']}\'s Balance', value=receiver_currency_str,
+                trade_embed.add_field(name=f'{target_active_character[CharacterFields.NAME]}\'s Balance', value=receiver_currency_str,
                                       inline=False)
             else:
                 quantity = int(quantity)
@@ -199,9 +201,9 @@ class CharacterRegisterModal(Modal):
                 collection_name='inventoryConfig',
                 query={'_id': guild_id}
             )
-            inventory_type = inventory_config.get('inventoryType', 'disabled') if inventory_config else 'disabled'
+            inventory_type = inventory_config.get('inventoryType', InventoryType.DISABLED.value) if inventory_config else InventoryType.DISABLED.value
 
-            if inventory_type == 'disabled':
+            if inventory_type == InventoryType.DISABLED.value:
                 await setup_view(self.calling_view, interaction)
                 await interaction.response.edit_message(view=self.calling_view)
             else:
@@ -316,12 +318,12 @@ class SpendCurrencyModal(Modal):
                 collection_name='characters',
                 query={'_id': member_id}
             )
-            if not character_query or str(guild_id) not in character_query['activeCharacters']:
+            if not character_query or str(guild_id) not in character_query[CharacterFields.ACTIVE_CHARACTERS]:
                 raise UserFeedbackError("You do not have an active character on this server.")
 
-            active_character_id = character_query['activeCharacters'][str(guild_id)]
-            character_data = character_query['characters'][active_character_id]
-            current_wallet = character_data['attributes'].get('currency', {})
+            active_character_id = character_query[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
+            character_data = character_query[CharacterFields.CHARACTERS][active_character_id]
+            current_wallet = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {})
 
             currency_config = await get_cached_data(
                 bot=bot,
@@ -345,13 +347,13 @@ class SpendCurrencyModal(Modal):
                 query={'_id': member_id}
             )
 
-            new_wallet = updated_query['characters'][active_character_id]['attributes'].get('currency', {})
+            new_wallet = updated_query[CharacterFields.CHARACTERS][active_character_id][CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {})
 
             formatted_amount = format_price_string(amount, currency_name, currency_config)
             balance_lines = format_currency_display(new_wallet, currency_config)
             balance_str = '\n'.join(balance_lines) or "None"
 
-            character_name = character_data['name']
+            character_name = character_data[CharacterFields.NAME]
             trade_embed = discord.Embed(
                 title=f'Player Transaction Report',
                 description=(
@@ -379,7 +381,7 @@ class SpendCurrencyModal(Modal):
                 query={'_id': guild_id}
             )
             if log_channel_query:
-                log_channel_id = strip_id(log_channel_query['playerTransactionLogChannel'])
+                log_channel_id = strip_id(log_channel_query[ConfigFields.PLAYER_TRANSACTION_LOG_CHANNEL])
                 log_channel = interaction.guild.get_channel(log_channel_id)
                 if log_channel:
                     channel_mention = interaction.channel.mention
@@ -491,7 +493,7 @@ class WizardEditCartItemModal(Modal):
                     del cart[self.item_key]
             else:
                 if self.item_key in cart:
-                    cart[self.item_key]['quantity'] = new_quantity
+                    cart[self.item_key][CommonFields.QUANTITY] = new_quantity
 
             self.cart_view.build_view()
             await interaction.response.edit_message(view=self.cart_view)
@@ -642,7 +644,7 @@ class ConsumeFromContainerModal(Modal):
                 query={'_id': guild_id}
             )
             if log_channel_query:
-                log_channel_id = strip_id(log_channel_query['playerTransactionLogChannel'])
+                log_channel_id = strip_id(log_channel_query[ConfigFields.PLAYER_TRANSACTION_LOG_CHANNEL])
                 log_channel = interaction.guild.get_channel(log_channel_id)
                 if log_channel:
                     receipt_embed.add_field(name='Channel', value=interaction.channel.mention)

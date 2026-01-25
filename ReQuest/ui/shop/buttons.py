@@ -3,6 +3,7 @@ from discord import ButtonStyle
 from discord.ui import Button
 
 from ReQuest.ui.shop import modals
+from ReQuest.utilities.constants import CharacterFields, ShopFields, CommonFields
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     get_cached_data,
@@ -21,14 +22,14 @@ class ShopItemButton(Button):
 
         :param item: The item dictionary
         :param cost_string: Formatted cost string for display
-        :param stock_info: Dict with 'available' and 'reserved' counts, or None if unlimited
+        :param stock_info: Dict with ShopFields.AVAILABLE and 'reserved' counts, or None if unlimited
         """
         costs = item.get('costs', [])
 
         # Check if out of stock (only if stock data is valid)
         is_out_of_stock = False
-        if stock_info is not None and 'available' in stock_info:
-            available = stock_info.get('available', 0)
+        if stock_info is not None and ShopFields.AVAILABLE in stock_info:
+            available = stock_info.get(ShopFields.AVAILABLE, 0)
             if available <= 0:
                 is_out_of_stock = True
 
@@ -57,12 +58,12 @@ class ShopItemButton(Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             # Double-check stock availability (in case UI is stale)
-            item_name = self.item['name']
+            item_name = self.item[CommonFields.NAME]
             # Use view's channel_id to ensure consistency with shop lookup
             channel_id = self.view.channel_id or str(interaction.channel_id)
             self.stock_info = await get_item_stock(interaction.client, interaction.guild_id, channel_id, item_name)
-            # Only check stock if data is valid (has 'available' key)
-            if self.stock_info is not None and 'available' in self.stock_info and self.stock_info.get('available', 0) <= 0:
+            # Only check stock if data is valid (has ShopFields.AVAILABLE key)
+            if self.stock_info is not None and ShopFields.AVAILABLE in self.stock_info and self.stock_info.get(ShopFields.AVAILABLE, 0) <= 0:
                 raise UserFeedbackError(f'**{self.item["name"]}** is out of stock.')
 
             costs = self.item.get('costs', [])
@@ -130,8 +131,8 @@ class ViewCartButton(Button):
             )
             active_character = None
             if character_query and str(guild_id) in character_query.get('activeCharacters', {}):
-                character_id = character_query['activeCharacters'][str(guild_id)]
-                active_character = character_query['characters'].get(character_id)
+                character_id = character_query[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
+                active_character = character_query[CharacterFields.CHARACTERS].get(character_id)
 
             # Load cart from database
             channel_id = self.calling_view.channel_id

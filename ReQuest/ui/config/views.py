@@ -20,8 +20,12 @@ from titlecase import titlecase
 
 from ReQuest.ui.common import modals as common_modals, views as common_views
 from ReQuest.ui.common.buttons import MenuViewButton, BackButton
+from ReQuest.ui.common.enums import ShopChannelType, RestockMode, ScheduleType
 from ReQuest.ui.config import buttons, selects
 from ReQuest.ui.config.buttons import AddShopJSONButton
+from ReQuest.utilities.constants import (
+    ConfigFields, CurrencyFields, ShopFields, RestockFields, RoleplayFields, CommonFields
+)
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
@@ -345,12 +349,12 @@ class ConfigWizardView(LayoutView):
             report_lines.append('**Default Role:**\n- ✅ @everyone: OK')
 
         # Validate at least one GM role is configured, and does not extend permissions of the default role
-        if not gm_roles_config or not gm_roles_config.get('gmRoles'):
+        if not gm_roles_config or not gm_roles_config.get(ConfigFields.GM_ROLES):
             has_warnings = True
             report_lines.append('\n**GM Roles:**\n- ⚠️ No GM Roles Configured')
         else:
             report_lines.append('\n**GM Roles:**')
-            for role_data in gm_roles_config['gmRoles']:
+            for role_data in gm_roles_config[ConfigFields.GM_ROLES]:
                 try:
                     role_id = strip_id(role_data['mention'])
                     role = guild.get_role(role_id)
@@ -373,12 +377,12 @@ class ConfigWizardView(LayoutView):
                     report_lines.append(f'- Error validating {role_data["name"]}')
 
         # Validate announcement role
-        if not announcement_role_config or not announcement_role_config.get('announceRole'):
+        if not announcement_role_config or not announcement_role_config.get(ConfigFields.ANNOUNCE_ROLE):
             has_warnings = True
             report_lines.append('\n**Announcement Role:**\n- ℹ️ No Announcement Role Configured')
         else:
             try:
-                role_id = strip_id(announcement_role_config['announceRole'])
+                role_id = strip_id(announcement_role_config[ConfigFields.ANNOUNCE_ROLE])
                 role = guild.get_role(role_id)
 
                 if not role:
@@ -506,12 +510,12 @@ class ConfigWizardView(LayoutView):
     @staticmethod
     def _format_currency_report(currency_config):
         report_lines = []
-        if not currency_config or not currency_config.get('currencies'):
+        if not currency_config or not currency_config.get(CurrencyFields.CURRENCIES):
             report_lines.append('- ℹ️ No Currencies Configured')
             return '\n'.join(report_lines)
 
         report_lines.append('**Configured Currencies:**')
-        for currency in currency_config['currencies']:
+        for currency in currency_config[CurrencyFields.CURRENCIES]:
             name = currency['name']
             denominations = currency.get('denominations', {})
 
@@ -559,7 +563,7 @@ class ConfigWizardView(LayoutView):
         # Fetch data
         wait_list_size = wait_list_query.get('questWaitList', 0) if wait_list_query else 0
         summary_enabled = quest_summary_query.get('questSummary', False) if quest_summary_query else False
-        xp_enabled = player_xp_query.get('playerExperience', False) if player_xp_query else False
+        xp_enabled = player_xp_query.get(ConfigFields.PLAYER_EXPERIENCE, False) if player_xp_query else False
 
         # Define different sections/components
         components = []
@@ -598,9 +602,9 @@ class ConfigWizardView(LayoutView):
         })
 
         # Roleplay Rewards Settings
-        rp_enabled = roleplay_config.get('enabled', False) if roleplay_config else False
-        rp_mode = roleplay_config.get('mode', 'scheduled') if roleplay_config else 'scheduled'
-        rp_channels = roleplay_config.get('channels', []) if roleplay_config else []
+        rp_enabled = roleplay_config.get(ShopFields.ENABLED, False) if roleplay_config else False
+        rp_mode = roleplay_config.get(RestockFields.MODE, 'scheduled') if roleplay_config else 'scheduled'
+        rp_channels = roleplay_config.get(RoleplayFields.CHANNELS, []) if roleplay_config else []
         roleplay_section_content = [
             '**Roleplay Rewards**',
             f'- Status: {"Enabled" if rp_enabled else "Disabled"}',
@@ -619,7 +623,7 @@ class ConfigWizardView(LayoutView):
             f'- Configured Shops: {len(shop_channels)}'
         ]
         if shop_channels:
-            shop_names = [data.get('shopName', 'Unnamed Shop') for data in shop_channels.values()]
+            shop_names = [data.get(ShopFields.SHOP_NAME, 'Unnamed Shop') for data in shop_channels.values()]
             shop_names.sort(key=str.lower)
             for shop_name in shop_names[:3]:
                 shops_section_content.append(f'  - {shop_name}')
@@ -631,7 +635,7 @@ class ConfigWizardView(LayoutView):
         })
 
         # New Character Setup
-        inv_type = inventory_config.get('inventoryType', 'none') if inventory_config else 'none'
+        inv_type = inventory_config.get(ConfigFields.INVENTORY_TYPE, 'none') if inventory_config else 'none'
         shop_items = new_char_shop.get('stock', []) if new_char_shop else []
         kits = static_kits.get('kits', []) if static_kits else []
         new_char_section_content = [
@@ -690,7 +694,7 @@ class ConfigWizardView(LayoutView):
             channels.append(
                 {
                     'name': 'Quest Board',
-                    'mention': quest_channel_query['questChannel'] if quest_channel_query else None,
+                    'mention': quest_channel_query[ConfigFields.QUEST_CHANNEL] if quest_channel_query else None,
                     'required': True}
             )
 
@@ -703,7 +707,7 @@ class ConfigWizardView(LayoutView):
             channels.append(
                 {
                     'name': 'Player Board',
-                    'mention': player_channel_query['playerBoardChannel'] if player_channel_query else None,
+                    'mention': player_channel_query[ConfigFields.PLAYER_BOARD_CHANNEL] if player_channel_query else None,
                     'required': False}
             )
 
@@ -716,7 +720,7 @@ class ConfigWizardView(LayoutView):
             channels.append(
                 {
                     'name': 'Quest Archive',
-                    'mention': archive_channel_query['archiveChannel'] if archive_channel_query else None,
+                    'mention': archive_channel_query[ConfigFields.ARCHIVE_CHANNEL] if archive_channel_query else None,
                     'required': False
                 }
             )
@@ -730,7 +734,7 @@ class ConfigWizardView(LayoutView):
             channels.append(
                 {
                     'name': 'GM Transaction Log',
-                    'mention': gm_log_query['gmTransactionLogChannel'] if gm_log_query else None,
+                    'mention': gm_log_query[ConfigFields.GM_TRANSACTION_LOG_CHANNEL] if gm_log_query else None,
                     'required': False
                 }
             )
@@ -744,7 +748,7 @@ class ConfigWizardView(LayoutView):
             channels.append(
                 {
                     'name': 'Player Transaction Log',
-                    'mention': player_transaction_log_query['playerTransactionLogChannel']
+                    'mention': player_transaction_log_query[ConfigFields.PLAYER_TRANSACTION_LOG_CHANNEL]
                     if player_transaction_log_query else None,
                     'required': False
                 }
@@ -759,7 +763,7 @@ class ConfigWizardView(LayoutView):
             channels.append(
                 {
                     'name': 'Shop Log',
-                    'mention': shop_log_query['shopLogChannel'] if shop_log_query else None,
+                    'mention': shop_log_query[ConfigFields.SHOP_LOG_CHANNEL] if shop_log_query else None,
                     'required': False
                 }
             )
@@ -773,7 +777,7 @@ class ConfigWizardView(LayoutView):
             channels.append(
                 {
                     'name': 'Character Approval Queue',
-                    'mention': approval_queue_query['approvalQueueChannel'] if approval_queue_query else None,
+                    'mention': approval_queue_query[ConfigFields.APPROVAL_QUEUE_CHANNEL] if approval_queue_query else None,
                     'required': False
                 }
             )
@@ -953,7 +957,7 @@ class ConfigRolesView(LayoutView):
                 collection_name='announceRole',
                 query={'_id': guild.id}
             )
-            announcement_role = announcement_role_query.get('announceRole') if announcement_role_query else None
+            announcement_role = announcement_role_query.get(ConfigFields.ANNOUNCE_ROLE) if announcement_role_query else None
             gm_role_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -1575,8 +1579,8 @@ class ConfigNewCharacterView(LayoutView):
                 collection_name='inventoryConfig',
                 query={'_id': guild.id}
             )
-            inventory_type = inventory_config.get('inventoryType', 'disabled') if inventory_config else 'disabled'
-            new_character_wealth = inventory_config.get('newCharacterWealth', None) if inventory_config else None
+            inventory_type = inventory_config.get(ConfigFields.INVENTORY_TYPE, 'disabled') if inventory_config else 'disabled'
+            new_character_wealth = inventory_config.get(ConfigFields.NEW_CHARACTER_WEALTH, None) if inventory_config else None
 
             type_description = {
                 'disabled': 'Players start with empty inventories.',
@@ -1647,7 +1651,7 @@ class ConfigNewCharacterView(LayoutView):
                 collection_name='approvalQueueChannel',
                 query={'_id': guild.id}
             )
-            approval_channel = approval_query['approvalQueueChannel'] if approval_query else 'Not Configured'
+            approval_channel = approval_query[ConfigFields.APPROVAL_QUEUE_CHANNEL] if approval_query else 'Not Configured'
 
             self.approval_queue_info.content = (
                 f'**Approval Queue:** {approval_channel}\n'
@@ -1758,7 +1762,7 @@ class ConfigNewCharacterShopView(LayoutView):
                 collection_name='inventoryConfig',
                 query={'_id': guild.id}
             )
-            self.inventory_type = inventory_config.get('inventoryType', 'disabled') if inventory_config else 'disabled'
+            self.inventory_type = inventory_config.get(ConfigFields.INVENTORY_TYPE, 'disabled') if inventory_config else 'disabled'
 
             if self.inventory_type == 'selection':
                 self.mode_description = (
@@ -1783,7 +1787,7 @@ class ConfigNewCharacterShopView(LayoutView):
                 query={'_id': guild.id}
             )
             if query and 'shopStock' in query:
-                self.update_stock(query['shopStock'])
+                self.update_stock(query[ShopFields.SHOP_STOCK])
             else:
                 self.update_stock([])
 
@@ -2394,14 +2398,14 @@ class ConfigShopsView(LayoutView):
             )
 
             unsorted_shops = []
-            if query and query.get('shopChannels'):
-                for channel_id, shop_data in query['shopChannels'].items():
+            if query and query.get(ShopFields.SHOP_CHANNELS):
+                for channel_id, shop_data in query[ShopFields.SHOP_CHANNELS].items():
                     unsorted_shops.append({
                         'id': channel_id,
                         'data': shop_data
                     })
 
-            self.shops = sorted(unsorted_shops, key=lambda x: x['data'].get('shopName', '').lower())
+            self.shops = sorted(unsorted_shops, key=lambda x: x['data'].get(ShopFields.SHOP_NAME, '').lower())
 
             self.total_pages = math.ceil(len(self.shops) / self.items_per_page)
             if self.total_pages == 0:
@@ -2446,10 +2450,10 @@ class ConfigShopsView(LayoutView):
             page_items = self.shops[start:end]
 
             for shop in page_items:
-                shop_name = shop['data'].get('shopName', 'Unknown Shop')
+                shop_name = shop['data'].get(ShopFields.SHOP_NAME, 'Unknown Shop')
                 channel_id = shop['id']
-                channel_type = shop['data'].get('channelType', 'text')
-                type_indicator = ' (Forum)' if channel_type == 'forum_thread' else ''
+                channel_type = shop['data'].get(ShopFields.CHANNEL_TYPE, 'text')
+                type_indicator = ' (Forum)' if channel_type == ShopChannelType.FORUM_THREAD.value else ''
 
                 info = f"**{shop_name}**{type_indicator}\nChannel: <#{channel_id}>"
 
@@ -2643,17 +2647,17 @@ class ManageShopView(LayoutView):
         self.clear_items()
         container = Container()
 
-        shop_name = self.shop_data.get('shopName', 'Unknown')
+        shop_name = self.shop_data.get(ShopFields.SHOP_NAME, 'Unknown')
 
         header_section = Section(accessory=BackButton(ConfigShopsView))
         header_section.add_item(TextDisplay(f'**Manage Shop: {shop_name}**'))
         container.add_item(header_section)
         container.add_item(Separator())
 
-        shop_keeper = self.shop_data.get('shopKeeper', 'None')
-        shop_description = self.shop_data.get('shopDescription', 'None')
-        channel_type = self.shop_data.get('channelType', 'text')
-        channel_type_display = 'Forum Thread' if channel_type == 'forum_thread' else 'Text Channel'
+        shop_keeper = self.shop_data.get(ShopFields.SHOP_KEEPER, 'None')
+        shop_description = self.shop_data.get(ShopFields.SHOP_DESCRIPTION, 'None')
+        channel_type = self.shop_data.get(ShopFields.CHANNEL_TYPE, 'text')
+        channel_type_display = 'Forum Thread' if channel_type == ShopChannelType.FORUM_THREAD.value else 'Text Channel'
 
         info_text = (
             f"**Channel:** <#{self.selected_channel_id}>\n"
@@ -2723,12 +2727,12 @@ class EditShopView(LayoutView):
         container = Container()
         header_items = [TextDisplay(f'**Editing Shop: {self.shop_data.get("shopName")}**')]
 
-        if shop_keeper := self.shop_data.get('shopKeeper'):
+        if shop_keeper := self.shop_data.get(ShopFields.SHOP_KEEPER):
             header_items.append(TextDisplay(f'Shopkeeper: **{shop_keeper}**'))
-        if shop_description := self.shop_data.get('shopDescription'):
+        if shop_description := self.shop_data.get(ShopFields.SHOP_DESCRIPTION):
             header_items.append(TextDisplay(f'*{shop_description}*'))
 
-        if shop_image := self.shop_data.get('shopImage'):
+        if shop_image := self.shop_data.get(ShopFields.SHOP_IMAGE):
             shop_image = Thumbnail(media=f'{shop_image}')
             shop_header = Section(accessory=shop_image)
 
@@ -2837,14 +2841,14 @@ class EditShopView(LayoutView):
 
     def update_stock(self, new_stock: list):
         self.all_stock = new_stock
-        self.shop_data['shopStock'] = new_stock
+        self.shop_data[ShopFields.SHOP_STOCK] = new_stock
 
         self.total_pages = math.ceil(len(self.all_stock) / self.items_per_page)
         if self.current_page >= self.total_pages:
             self.current_page = max(0, self.total_pages - 1)
 
     def update_details(self, new_shop_data: dict):
-        new_shop_data['shopStock'] = self.all_stock
+        new_shop_data[ShopFields.SHOP_STOCK] = self.all_stock
         self.shop_data = new_shop_data
 
 
@@ -2889,7 +2893,7 @@ class ConfigStockLimitsView(LayoutView):
         container = Container()
 
         # Header
-        shop_name = self.shop_data.get('shopName', 'Unknown Shop')
+        shop_name = self.shop_data.get(ShopFields.SHOP_NAME, 'Unknown Shop')
         header_section = Section(accessory=buttons.BackToEditShopButton(self.channel_id, self.shop_data))
         header_section.add_item(TextDisplay(f'**Stock Configuration: {shop_name}**'))
         container.add_item(header_section)
@@ -2902,27 +2906,27 @@ class ConfigStockLimitsView(LayoutView):
         container.add_item(Separator())
 
         # Restock schedule section
-        restock_config = self.shop_data.get('restockConfig', {})
-        if restock_config.get('enabled'):
-            schedule = restock_config.get('schedule', 'none')
-            hour = restock_config.get('hour', 0)
-            minute = restock_config.get('minute', 0)
-            day_of_week = restock_config.get('dayOfWeek', 0)
-            mode = restock_config.get('mode', 'full')
-            increment = restock_config.get('incrementAmount', 1)
+        restock_config = self.shop_data.get(ShopFields.RESTOCK_CONFIG, {})
+        if restock_config.get(ShopFields.ENABLED):
+            schedule = restock_config.get(RestockFields.SCHEDULE, 'none')
+            hour = restock_config.get(RestockFields.HOUR, 0)
+            minute = restock_config.get(RestockFields.MINUTE, 0)
+            day_of_week = restock_config.get(RestockFields.DAY_OF_WEEK, 0)
+            mode = restock_config.get(RestockFields.MODE, RestockMode.FULL.value)
+            increment = restock_config.get(RestockFields.INCREMENT_AMOUNT, 1)
 
             day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
             day_name = day_names[day_of_week] if 0 <= day_of_week <= 6 else 'Unknown'
 
             schedule_text = f'**Restock Schedule:** {schedule.capitalize()}'
-            if schedule == 'hourly':
+            if schedule == ScheduleType.HOURLY.value:
                 schedule_text += f' at minute :{minute:02d}'
-            elif schedule == 'daily':
+            elif schedule == ScheduleType.DAILY.value:
                 schedule_text += f' at {hour:02d}:{minute:02d} UTC'
-            elif schedule == 'weekly':
+            elif schedule == ScheduleType.WEEKLY.value:
                 schedule_text += f' on {day_name} at {hour:02d}:{minute:02d} UTC'
 
-            mode_text = 'Full restock' if mode == 'full' else f'Add {increment} per cycle (up to max)'
+            mode_text = 'Full restock' if mode == RestockMode.FULL.value else f'Add {increment} per cycle (up to max)'
             schedule_text += f'\n**Mode:** {mode_text}'
         else:
             schedule_text = '**Restock Schedule:** Disabled'
@@ -2945,15 +2949,15 @@ class ConfigStockLimitsView(LayoutView):
             for item in page_items:
                 item_name = item.get('name', 'Unknown')
                 item_name_display = escape_markdown(item_name)
-                max_stock = item.get('maxStock')
+                max_stock = item.get(ShopFields.MAX_STOCK)
 
                 # Get runtime stock info (only if data is valid with 'available' key)
                 runtime_stock = self.stock_info.get(encode_mongo_key(item_name))
                 current_available = None
                 reserved = 0
                 if runtime_stock and 'available' in runtime_stock:
-                    current_available = runtime_stock.get('available', 0)
-                    reserved = runtime_stock.get('reserved', 0)
+                    current_available = runtime_stock.get(ShopFields.AVAILABLE, 0)
+                    reserved = runtime_stock.get(ShopFields.RESERVED, 0)
 
                 if max_stock is not None:
                     if current_available is not None:
@@ -3070,8 +3074,8 @@ class ConfigRoleplayView(LayoutView):
         container.add_item(Separator())
 
         # Status & Time
-        enabled = self.config.get('enabled', False)
-        mode = self.config.get('mode', 'scheduled')
+        enabled = self.config.get(ShopFields.ENABLED, False)
+        mode = self.config.get(RestockFields.MODE, 'scheduled')
 
         now = datetime.now(timezone.utc)
         time_str = now.strftime('%H:%M UTC')
@@ -3101,9 +3105,9 @@ class ConfigRoleplayView(LayoutView):
             )
 
         # Settings
-        settings_config = self.config.get('config', {})
-        min_length = settings_config.get('minLength', 20)
-        cooldown = settings_config.get('cooldown', 30)
+        settings_config = self.config.get(RoleplayFields.CONFIG, {})
+        min_length = settings_config.get(RoleplayFields.MIN_LENGTH, 20)
+        cooldown = settings_config.get(RoleplayFields.COOLDOWN, 30)
         setting_details = (
             f'**Configuration Details:**\n\n'
             f'**Mode:** {mode.capitalize()}\n'
@@ -3114,7 +3118,7 @@ class ConfigRoleplayView(LayoutView):
 
         if mode == 'scheduled':
             frequency = 'hour'
-            frequency_config = settings_config.get('resetPeriod', 'hourly')
+            frequency_config = settings_config.get(RoleplayFields.RESET_PERIOD, 'hourly')
             if frequency_config == 'daily':
                 frequency = 'day'
             elif frequency_config == 'weekly':
@@ -3122,21 +3126,21 @@ class ConfigRoleplayView(LayoutView):
             setting_details += f'**Frequency:** Once per {frequency}\n'
 
             if frequency_config in ['daily', 'weekly']:
-                reset_time = settings_config.get('resetTime', 0)
+                reset_time = settings_config.get(RoleplayFields.RESET_TIME, 0)
                 formatted_time = time(hour=reset_time, minute=0, tzinfo=timezone.utc).strftime('%H:%M')
 
                 formatted_day = ''
                 if frequency_config == 'weekly':
-                    reset_day = settings_config.get('resetDay', 'monday')
+                    reset_day = settings_config.get(RoleplayFields.RESET_DAY, 'monday')
                     formatted_day = f'{reset_day.capitalize()}s at '
 
                 setting_details += f'**Reset Time:** {formatted_day}{formatted_time} UTC\n'
 
-            message_threshold = settings_config.get('threshold', 20)
+            message_threshold = settings_config.get(RoleplayFields.THRESHOLD, 20)
 
             setting_details += f'**Threshold:** {message_threshold} eligible messages'
         else:
-            frequency = settings_config.get('frequency', 20)
+            frequency = settings_config.get(RoleplayFields.FREQUENCY, 20)
             setting_details += f'**Frequency:** Every {frequency} eligible messages'
 
         settings_section = Section(accessory=buttons.RoleplaySettingsButton(self))
@@ -3152,12 +3156,12 @@ class ConfigRoleplayView(LayoutView):
             frequency_select_row.add_item(selects.RoleplayResetSelect(self))
             container.add_item(frequency_select_row)
 
-        if mode == 'scheduled' and settings_config.get('resetPeriod') in ['daily', 'weekly']:
+        if mode == 'scheduled' and settings_config.get(RoleplayFields.RESET_PERIOD) in ['daily', 'weekly']:
             reset_time_action_row = ActionRow()
             reset_time_action_row.add_item(selects.RoleplayResetTimeSelect(self))
             container.add_item(reset_time_action_row)
 
-        if mode == 'scheduled' and settings_config.get('resetPeriod') == 'weekly':
+        if mode == 'scheduled' and settings_config.get(RoleplayFields.RESET_PERIOD) == 'weekly':
             reset_day_action_row = ActionRow()
             reset_day_action_row.add_item(selects.RoleplayResetDaySelect(self))
             container.add_item(reset_day_action_row)
@@ -3165,7 +3169,7 @@ class ConfigRoleplayView(LayoutView):
         container.add_item(Separator())
 
         # Channels
-        channels = self.config.get('channels', [])
+        channels = self.config.get(RoleplayFields.CHANNELS, [])
         if not channels:
             channel_lines = 'None configured.'
         else:
@@ -3188,11 +3192,11 @@ class ConfigRoleplayView(LayoutView):
 
         # Rewards
         rewards_text = '**Rewards:**\n'
-        rewards_data = self.config.get('rewards', {})
+        rewards_data = self.config.get(RoleplayFields.REWARDS, {})
         if not rewards_data:
             rewards_text += "None configured."
         else:
-            if xp := rewards_data.get('xp'):
+            if xp := rewards_data.get(RoleplayFields.XP):
                 rewards_text += f'**Experience:** {xp}\n'
             if items := rewards_data.get('items'):
                 item_lines = [f'- {escape_markdown(titlecase(name))}: {quantity}' for name, quantity in items.items()]

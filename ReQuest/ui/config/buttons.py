@@ -9,6 +9,10 @@ from discord.ui import Button
 from ReQuest.ui.config import modals
 from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.common.buttons import BaseViewButton
+from ReQuest.ui.common.enums import ShopChannelType
+from ReQuest.utilities.constants import (
+    ConfigFields, ShopFields, CommonFields
+)
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     setup_view,
@@ -127,7 +131,7 @@ class QuestSummaryToggleButton(Button):
                     update_data={'$set': {'questSummary': True}}
                 )
             else:
-                if query['questSummary']:
+                if query.get('questSummary'):
                     await update_cached_data(
                         bot=bot,
                         mongo_database=bot.gdb,
@@ -169,7 +173,7 @@ class PlayerExperienceToggleButton(Button):
                 collection_name='playerExperience',
                 query={'_id': guild_id}
             )
-            xp_state = query['playerExperience'] if query else True
+            xp_state = query[ConfigFields.PLAYER_EXPERIENCE] if query else True
             if xp_state:
                 await update_cached_data(
                     bot=bot,
@@ -450,8 +454,8 @@ class ForbiddenRolesButton(Button):
                 collection_name='forbiddenRoles',
                 query={'_id': interaction.guild_id}
             )
-            if config_query and config_query['forbiddenRoles']:
-                current_roles = config_query['forbiddenRoles']
+            if config_query and config_query[ConfigFields.FORBIDDEN_ROLES]:
+                current_roles = config_query[ConfigFields.FORBIDDEN_ROLES]
             modal = modals.ForbiddenRolesModal(current_roles)
             await interaction.response.send_modal(modal)
         except Exception as e:
@@ -597,7 +601,7 @@ class UseExistingThreadButton(Button):
             await interaction.response.send_modal(
                 modals.ConfigShopDetailsModal(
                     self.calling_view,
-                    channel_type='forum_thread',
+                    channel_type=ShopChannelType.FORUM_THREAD.value,
                     parent_forum_id=str(self.calling_view.selected_forum.id),
                     preselected_channel=self.calling_view.selected_thread
                 )
@@ -718,7 +722,7 @@ class RemoveShopButton(Button):
             channel_type = shop_data.get('channelType', 'text')
 
             # Archive and lock if forum thread
-            if channel_type == 'forum_thread':
+            if channel_type == ShopChannelType.FORUM_THREAD.value:
                 try:
                     thread = bot.get_channel(int(channel_id))
                     if not thread:
@@ -751,7 +755,7 @@ class EditShopItemButton(Button):
         super().__init__(
             label='Edit',
             style=ButtonStyle.primary,
-            custom_id=f"edit_shop_item_{item['name']}"
+            custom_id=f"edit_shop_item_{item[CommonFields.NAME]}"
         )
         self.item = item
         self.calling_view = calling_view
@@ -772,7 +776,7 @@ class DeleteShopItemButton(Button):
         super().__init__(
             label='Delete',
             style=ButtonStyle.danger,
-            custom_id=f"delete_shop_item_{item['name']}"
+            custom_id=f"delete_shop_item_{item[CommonFields.NAME]}"
         )
         self.item = item
         self.calling_view = calling_view
@@ -782,7 +786,7 @@ class DeleteShopItemButton(Button):
             bot = interaction.client
             guild_id = interaction.guild_id
             channel_id = self.calling_view.channel_id
-            item_name = self.item['name']
+            item_name = self.item[CommonFields.NAME]
 
             await update_cached_data(
                 bot=bot,
@@ -792,7 +796,7 @@ class DeleteShopItemButton(Button):
                 update_data={'$pull': {f'shopChannels.{channel_id}.shopStock': {'name': item_name}}}
             )
 
-            new_stock = [item for item in self.calling_view.all_stock if item['name'] != item_name]
+            new_stock = [item for item in self.calling_view.all_stock if item[CommonFields.NAME] != item_name]
             self.calling_view.update_stock(new_stock)
 
             self.calling_view.build_view()
@@ -939,7 +943,7 @@ class EditNewCharacterShopItemButton(Button):
         super().__init__(
             label='Edit',
             style=ButtonStyle.primary,
-            custom_id=f"edit_new_character_shop_item_{item['name']}"
+            custom_id=f"edit_new_character_shop_item_{item[CommonFields.NAME]}"
         )
         self.item = item
         self.calling_view = calling_view
@@ -958,7 +962,7 @@ class DeleteNewCharacterShopItemButton(Button):
         super().__init__(
             label='Delete',
             style=ButtonStyle.danger,
-            custom_id=f"delete_new_character_shop_item_{item['name']}"
+            custom_id=f"delete_new_character_shop_item_{item[CommonFields.NAME]}"
         )
         self.item = item
         self.calling_view = calling_view
@@ -967,7 +971,7 @@ class DeleteNewCharacterShopItemButton(Button):
         try:
             bot = interaction.client
             guild_id = interaction.guild_id
-            item_name = self.item['name']
+            item_name = self.item[CommonFields.NAME]
 
             await update_cached_data(
                 bot=bot,
@@ -977,7 +981,7 @@ class DeleteNewCharacterShopItemButton(Button):
                 update_data={'$pull': {'shopStock': {'name': item_name}}}
             )
 
-            new_stock = [item for item in self.calling_view.all_stock if item['name'] != item_name]
+            new_stock = [item for item in self.calling_view.all_stock if item[CommonFields.NAME] != item_name]
             self.calling_view.update_stock(new_stock)
             self.calling_view.build_view()
             await interaction.response.edit_message(view=self.calling_view)
@@ -1391,7 +1395,7 @@ class SetItemStockButton(Button):
         super().__init__(
             label=label,
             style=ButtonStyle.primary,
-            custom_id=f"set_stock_{item['name']}"
+            custom_id=f"set_stock_{item[CommonFields.NAME]}"
         )
         self.item = item
         self.calling_view = calling_view
@@ -1401,7 +1405,7 @@ class SetItemStockButton(Button):
         try:
             modal = modals.SetItemStockModal(
                 calling_view=self.calling_view,
-                item_name=self.item['name'],
+                item_name=self.item[CommonFields.NAME],
                 current_max=self.item.get('maxStock'),
                 current_stock=self.current_stock
             )
@@ -1415,7 +1419,7 @@ class RemoveItemStockLimitButton(Button):
         super().__init__(
             label='Remove Limit',
             style=ButtonStyle.danger,
-            custom_id=f"remove_stock_limit_{item['name']}"
+            custom_id=f"remove_stock_limit_{item[CommonFields.NAME]}"
         )
         self.item = item
         self.calling_view = calling_view
@@ -1437,7 +1441,7 @@ class RemoveItemStockLimitButton(Button):
             bot = interaction.client
             guild_id = interaction.guild_id
             channel_id = self.calling_view.channel_id
-            item_name = self.item['name']
+            item_name = self.item[CommonFields.NAME]
 
             # Update shop config to remove maxStock from item
             shop_query = await get_cached_data(
@@ -1453,7 +1457,7 @@ class RemoveItemStockLimitButton(Button):
             for item in shop_stock:
                 if item.get('name') == item_name:
                     if 'maxStock' in item:
-                        del item['maxStock']
+                        del item[ShopFields.MAX_STOCK]
                     break
 
             # Save shop config
