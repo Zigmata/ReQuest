@@ -1,11 +1,3 @@
-"""
-Database field name constants for ReQuest.
-
-This module provides centralized constants for MongoDB document field names
-to prevent typos and enable IDE autocomplete throughout the codebase.
-"""
-
-
 class CharacterFields:
     """Character document field names."""
     CHARACTERS = 'characters'
@@ -85,6 +77,7 @@ class ConfigFields:
 
 class RoleplayFields:
     """Roleplay configuration field names."""
+    ENABLED = 'enabled'
     CHANNELS = 'channels'
     MODE = 'mode'
     CONFIG = 'config'
@@ -96,11 +89,14 @@ class RoleplayFields:
     COOLDOWN = 'cooldown'
     MIN_LENGTH = 'minLength'
     REWARDS = 'rewards'
+    ITEMS = 'items'
+    CURRENCY = 'currency'
     XP = 'xp'
 
 
 class RestockFields:
     """Restock configuration field names."""
+    ENABLED = 'enabled'
     SCHEDULE = 'schedule'
     HOUR = 'hour'
     MINUTE = 'minute'

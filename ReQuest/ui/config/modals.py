@@ -21,7 +21,7 @@ from titlecase import titlecase
 
 from ReQuest.ui.common.enums import ShopChannelType, RestockMode, ScheduleType
 from ReQuest.utilities.constants import (
-    ConfigFields, CurrencyFields, ShopFields, RoleplayFields, CommonFields
+    ConfigFields, CurrencyFields, ShopFields, RestockFields, RoleplayFields, CommonFields
 )
 from ReQuest.utilities.supportFunctions import (
     log_exception,
@@ -2097,16 +2097,16 @@ class RestockScheduleModal(Modal):
 
             # Build restock config
             if schedule in ['none', '']:
-                restock_config = {'enabled': False}
+                restock_config = {RestockFields.ENABLED: False}
             else:
                 restock_config = {
-                    'enabled': True,
-                    'schedule': schedule,
-                    'hour': hour,
-                    'minute': minute,
-                    'dayOfWeek': day,
-                    'mode': mode,
-                    'incrementAmount': increment_amount
+                    RestockFields.ENABLED: True,
+                    RestockFields.SCHEDULE: schedule,
+                    RestockFields.HOUR: hour,
+                    RestockFields.MINUTE: minute,
+                    RestockFields.DAY_OF_WEEK: day,
+                    RestockFields.MODE: mode,
+                    RestockFields.INCREMENT_AMOUNT: increment_amount
                 }
 
             # Update shop config

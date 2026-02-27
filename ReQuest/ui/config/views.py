@@ -602,8 +602,8 @@ class ConfigWizardView(LayoutView):
         })
 
         # Roleplay Rewards Settings
-        rp_enabled = roleplay_config.get(ShopFields.ENABLED, False) if roleplay_config else False
-        rp_mode = roleplay_config.get(RestockFields.MODE, 'scheduled') if roleplay_config else 'scheduled'
+        rp_enabled = roleplay_config.get(RoleplayFields.ENABLED, False) if roleplay_config else False
+        rp_mode = roleplay_config.get(RoleplayFields.MODE, 'scheduled') if roleplay_config else 'scheduled'
         rp_channels = roleplay_config.get(RoleplayFields.CHANNELS, []) if roleplay_config else []
         roleplay_section_content = [
             '**Roleplay Rewards**',
@@ -2911,7 +2911,7 @@ class ConfigStockLimitsView(LayoutView):
 
         # Restock schedule section
         restock_config = self.shop_data.get(ShopFields.RESTOCK_CONFIG, {})
-        if restock_config.get(ShopFields.ENABLED):
+        if restock_config.get(RestockFields.ENABLED):
             schedule = restock_config.get(RestockFields.SCHEDULE, 'none')
             hour = restock_config.get(RestockFields.HOUR, 0)
             minute = restock_config.get(RestockFields.MINUTE, 0)
@@ -3055,7 +3055,7 @@ class ConfigRoleplayView(LayoutView):
                 query={'_id': guild.id}
             )
             if not self.config:
-                self.config = {'enabled': False, 'mode': 'scheduled'}
+                self.config = {RoleplayFields.ENABLED: False, RoleplayFields.MODE: 'scheduled'}
 
             self.currency_config = await get_cached_data(
                 bot=bot,
@@ -3078,8 +3078,8 @@ class ConfigRoleplayView(LayoutView):
         container.add_item(Separator())
 
         # Status & Time
-        enabled = self.config.get(ShopFields.ENABLED, False)
-        mode = self.config.get(RestockFields.MODE, 'scheduled')
+        enabled = self.config.get(RoleplayFields.ENABLED, False)
+        mode = self.config.get(RoleplayFields.MODE, 'scheduled')
 
         now = datetime.now(timezone.utc)
         time_str = now.strftime('%H:%M UTC')

@@ -87,7 +87,7 @@ class Tasks(Cog):
 
             for channel_id, shop_data in shop_channels.items():
                 restock_config = shop_data.get(ShopFields.RESTOCK_CONFIG)
-                if not restock_config or not restock_config.get(ShopFields.ENABLED):
+                if not restock_config or not restock_config.get(RestockFields.ENABLED):
                     continue
 
                 # Check if restock is due

@@ -86,7 +86,7 @@ class Roleplay(Cog):
                 return
             rp_settings = rp_config.get(RoleplayFields.CONFIG, {})
 
-            if not rp_config or not rp_config.get('enabled'):
+            if not rp_config or not rp_config.get(RoleplayFields.ENABLED):
                 logger.debug(f'Roleplay not enabled in guild {guild_id}.')
                 return
 
@@ -205,8 +205,8 @@ class Roleplay(Cog):
 
                 rewards = rp_config.get(RoleplayFields.REWARDS, {})
                 xp_amount = rewards.get(RoleplayFields.XP)
-                items = rewards.get(CharacterFields.ITEMS, {})
-                currency = rewards.get(CharacterFields.CURRENCY, {})
+                items = rewards.get(RoleplayFields.ITEMS, {})
+                currency = rewards.get(RoleplayFields.CURRENCY, {})
 
                 xp_enabled = await get_xp_config(bot, guild_id)
 

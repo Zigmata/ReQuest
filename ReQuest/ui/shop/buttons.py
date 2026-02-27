@@ -22,7 +22,7 @@ class ShopItemButton(Button):
 
         :param item: The item dictionary
         :param cost_string: Formatted cost string for display
-        :param stock_info: Dict with ShopFields.AVAILABLE and 'reserved' counts, or None if unlimited
+        :param stock_info: Dict with ShopFields.AVAILABLE and ShopFields.RESERVED counts, or None if unlimited
         """
         costs = item.get('costs', [])
 

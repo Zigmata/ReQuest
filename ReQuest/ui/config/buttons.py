@@ -11,7 +11,7 @@ from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.common.buttons import BaseViewButton
 from ReQuest.ui.common.enums import ShopChannelType
 from ReQuest.utilities.constants import (
-    ConfigFields, ShopFields, CommonFields
+    ConfigFields, ShopFields, CommonFields, RoleplayFields
 )
 from ReQuest.utilities.supportFunctions import (
     log_exception,
@@ -174,7 +174,7 @@ class PlayerExperienceToggleButton(Button):
                 collection_name='playerExperience',
                 query={'_id': guild_id}
             )
-            xp_state = query[ConfigFields.PLAYER_EXPERIENCE] if query else True
+            xp_state = query.get(ConfigFields.PLAYER_EXPERIENCE, True) if query else True
             if xp_state:
                 await update_cached_data(
                     bot=bot,
@@ -1305,13 +1305,13 @@ class RoleplayToggleEnableButton(Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             bot = interaction.client
-            current_state = self.calling_view.config.get('enabled', False)
+            current_state = self.calling_view.config.get(RoleplayFields.ENABLED, False)
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name='roleplayConfig',
                 query={'_id': interaction.guild_id},
-                update_data={'$set': {'enabled': not current_state}}
+                update_data={'$set': {RoleplayFields.ENABLED: not current_state}}
             )
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
