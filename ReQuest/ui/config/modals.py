@@ -35,7 +35,8 @@ from ReQuest.utilities.supportFunctions import (
     strip_id,
     initialize_item_stock,
     get_item_stock,
-    encode_mongo_key
+    encode_mongo_key,
+    format_currency_amount
 )
 
 logger = logging.getLogger(__name__)
@@ -635,8 +636,10 @@ class ConfigShopDetailsModal(Modal):
                 self.calling_view.build_view()
                 await interaction.response.edit_message(view=self.calling_view)
             else:
-                await setup_view(self.calling_view, interaction)
-                await interaction.response.edit_message(view=self.calling_view)
+                from ReQuest.ui.config.views import ConfigShopsView
+                shops_view = ConfigShopsView()
+                await setup_view(shops_view, interaction)
+                await interaction.response.edit_message(view=shops_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -1348,7 +1351,7 @@ class NewCharacterShopJSONModal(Modal):
 
 
 class ConfigNewCharacterWealthModal(Modal):
-    def __init__(self, calling_view):
+    def __init__(self, calling_view, current_amount=None, current_currency=None):
         super().__init__(
             title='Set New Character Wealth',
             timeout=600
@@ -1356,12 +1359,14 @@ class ConfigNewCharacterWealthModal(Modal):
         self.amount_text_input = discord.ui.TextInput(
             label='Amount',
             custom_id='amount_text_input',
-            placeholder='Enter the amount of this currency.'
+            placeholder='Enter the amount of this currency.',
+            default=current_amount if current_amount is not None else ''
         )
         self.currency_name_text_input = discord.ui.TextInput(
             label='Currency Name',
             custom_id='currency_name_text_input',
-            placeholder='Enter the name of a currency defined on this server'
+            placeholder='Enter the name of a currency defined on this server',
+            default=current_currency or ''
         )
         self.calling_view = calling_view
         self.add_item(self.amount_text_input)
@@ -1396,9 +1401,9 @@ class ConfigNewCharacterWealthModal(Modal):
                 if not currency_config:
                     raise UserFeedbackError('No currencies are configured on this server.')
 
-                is_currency, parent_name = find_currency_or_denomination(currency_config, currency_input)
+                found_name, parent_name = find_currency_or_denomination(currency_config, currency_input)
 
-                if not is_currency:
+                if not found_name:
                     raise UserFeedbackError(
                         f'Currency or denomination named {currency_input} not found. Please use a valid currency.'
                     )
@@ -1408,7 +1413,7 @@ class ConfigNewCharacterWealthModal(Modal):
                     mongo_database=bot.gdb,
                     collection_name='inventoryConfig',
                     query={'_id': guild_id},
-                    update_data={'$set': {'newCharacterWealth': {'currency': parent_name, 'amount': amount}}}
+                    update_data={'$set': {'newCharacterWealth': {'currency': found_name, 'amount': amount}}}
                 )
 
             await setup_view(self.calling_view, interaction)
@@ -1790,7 +1795,14 @@ class RoleplayRewardsModal(Modal):
 
         currency_display = ''
         if currency := rewards.get('currency'):
-            currency_display = '\n'.join([f'{k}: {v}' for k, v in currency.items()])
+            currency_config = getattr(calling_view, 'currency_config', None)
+            formatted_lines = []
+            for k, v in currency.items():
+                if currency_config:
+                    formatted_lines.append(f'{k}: {format_currency_amount(v, k, currency_config)}')
+                else:
+                    formatted_lines.append(f'{k}: {v}')
+            currency_display = '\n'.join(formatted_lines)
 
         self.currency = discord.ui.TextInput(
             label='Currency (Name: Amount)',

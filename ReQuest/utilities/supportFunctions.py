@@ -1090,6 +1090,27 @@ def format_consolidated_totals(base_totals: dict, currency_config: dict) -> list
     return output
 
 
+def format_currency_amount(amount, currency_name, currency_config) -> str:
+    """
+    Formats a currency amount as a string, respecting the currency's display type (integer vs double).
+
+    :param amount: The amount of currency
+    :param currency_name: The name of the currency or denomination
+    :param currency_config: The server's currency config dict
+
+    :return: A formatted amount string (e.g. '50' for integer, '2.50' for double)
+    """
+    _, _, is_double = get_base_currency_info(currency_config, currency_name)
+
+    if is_double:
+        return f'{amount:.2f}'
+    else:
+        if amount % 1 == 0:
+            return str(int(amount))
+        else:
+            return f'{amount:.2f}'
+
+
 def format_price_string(amount, currency_name, currency_config) -> str:
     """
     Formats a single price/cost string.
@@ -1100,17 +1121,9 @@ def format_price_string(amount, currency_name, currency_config) -> str:
 
     :return: A formatted price string
     """
-    base_name, _, is_double = get_base_currency_info(currency_config, currency_name)
-
     display_name = titlecase(currency_name)
-
-    if is_double:
-        return f'{amount:.2f} {display_name}'
-    else:
-        if amount % 1 == 0:
-            return f'{int(amount)} {display_name}'
-        else:
-            return f'{amount:.2f} {display_name}'
+    formatted_amount = format_currency_amount(amount, currency_name, currency_config)
+    return f'{formatted_amount} {display_name}'
 
 
 async def get_xp_config(bot, guild_id) -> bool:
@@ -1367,26 +1380,32 @@ async def reserve_stock(bot, guild_id: int, channel_id: str, item_name: str, qua
     return False
 
 
-async def release_stock(bot, guild_id: int, channel_id: str, item_name: str, quantity: int = 1):
+async def release_stock(bot, guild_id: int, channel_id: str, item_name: str,
+                        quantity: int = 1, max_stock: int | None = None):
     """
-    Releases reserved stock back to available.
+    Releases reserved stock back to available, capped at max_stock.
 
     :param bot: The Discord bot instance
     :param guild_id: The guild ID
     :param channel_id: The shop channel ID
     :param item_name: The name of the item
     :param quantity: The quantity to release
+    :param max_stock: The maximum stock for this item (caps available to prevent overflow)
     """
     collection = bot.gdb['shopStock']
     encoded_name = encode_mongo_key(item_name)
     path = f'shops.{channel_id}.{encoded_name}'
+
+    new_available = {'$add': [f'${path}.available', quantity]}
+    if max_stock is not None:
+        new_available = {'$min': [max_stock, new_available]}
 
     result = await collection.update_one(
         {'_id': guild_id, f'{path}.reserved': {'$exists': True}},
         [
             {
                 '$set': {
-                    f'{path}.available': {'$add': [f'${path}.available', quantity]},
+                    f'{path}.available': new_available,
                     f'{path}.reserved': {'$max': [0, {'$subtract': [f'${path}.reserved', quantity]}]}
                 }
             }
@@ -1717,7 +1736,8 @@ async def add_item_to_cart(bot, guild_id: int, user_id: int, channel_id: str,
     # Check if item has stock limit and reserve if needed
     has_stock_limit = item.get(ShopFields.MAX_STOCK) is not None
     if has_stock_limit:
-        success = await reserve_stock(bot, guild_id, channel_id, item_name, 1)
+        item_quantity = item.get(CommonFields.QUANTITY, 1)
+        success = await reserve_stock(bot, guild_id, channel_id, item_name, item_quantity)
         if not success:
             return False
 
@@ -1800,10 +1820,11 @@ async def remove_item_from_cart(bot, guild_id: int, user_id: int, channel_id: st
     item_name = item.get(CommonFields.NAME)
 
     # Release stock if item has stock limit
-    has_stock_limit = item.get(ShopFields.MAX_STOCK) is not None
-    if has_stock_limit:
-        release_qty = min(quantity, current_quantity)
-        await release_stock(bot, guild_id, channel_id, item_name, release_qty)
+    max_stock = item.get(ShopFields.MAX_STOCK)
+    if max_stock is not None:
+        item_quantity = item.get(CommonFields.QUANTITY, 1)
+        release_qty = min(quantity, current_quantity) * item_quantity
+        await release_stock(bot, guild_id, channel_id, item_name, release_qty, max_stock)
 
     now = datetime.now(timezone.utc)
     expires_at = now + timedelta(minutes=CART_TTL_MINUTES)
@@ -1881,7 +1902,8 @@ async def update_cart_item_quantity(bot, guild_id: int, user_id: int, channel_id
         # Trying to add more
         if has_stock_limit:
             # Need to reserve additional stock
-            success = await reserve_stock(bot, guild_id, channel_id, item_name, quantity_diff)
+            item_quantity = item.get(CommonFields.QUANTITY, 1)
+            success = await reserve_stock(bot, guild_id, channel_id, item_name, quantity_diff * item_quantity)
             if not success:
                 return False, "Not enough stock available."
 
@@ -1939,9 +1961,10 @@ async def clear_cart_and_release_stock(bot, guild_id: int, user_id: int, channel
         quantity = cart_item[CartFields.QUANTITY]
         item_name = item.get(CommonFields.NAME)
 
-        has_stock_limit = item.get(ShopFields.MAX_STOCK) is not None
-        if has_stock_limit:
-            await release_stock(bot, guild_id, channel_id, item_name, quantity)
+        max_stock = item.get(ShopFields.MAX_STOCK)
+        if max_stock is not None:
+            item_quantity = item.get(CommonFields.QUANTITY, 1)
+            await release_stock(bot, guild_id, channel_id, item_name, quantity * item_quantity, max_stock)
 
     # Delete the cart
     await delete_cached_data(
@@ -1977,7 +2000,8 @@ async def finalize_cart_purchase(bot, guild_id: int, user_id: int, channel_id: s
 
         has_stock_limit = item.get(ShopFields.MAX_STOCK) is not None
         if has_stock_limit:
-            await finalize_stock(bot, guild_id, channel_id, item_name, quantity)
+            item_quantity = item.get(CommonFields.QUANTITY, 1)
+            await finalize_stock(bot, guild_id, channel_id, item_name, quantity * item_quantity)
 
     # Delete the cart
     await delete_cached_data(
@@ -2016,9 +2040,10 @@ async def cleanup_expired_carts(bot):
             quantity = cart_item[CartFields.QUANTITY]
             item_name = item.get(CommonFields.NAME)
 
-            has_stock_limit = item.get(ShopFields.MAX_STOCK) is not None
-            if has_stock_limit:
-                await release_stock(bot, guild_id, channel_id, item_name, quantity)
+            max_stock = item.get(ShopFields.MAX_STOCK)
+            if max_stock is not None:
+                item_quantity = item.get(CommonFields.QUANTITY, 1)
+                await release_stock(bot, guild_id, channel_id, item_name, quantity * item_quantity, max_stock)
 
         # Delete the cart
         cart_id = cart[CommonFields.ID]

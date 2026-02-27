@@ -21,7 +21,8 @@ from ReQuest.utilities.supportFunctions import (
     update_cached_data,
     get_xp_config,
     remove_item_stock_limit,
-    encode_mongo_key
+    encode_mongo_key,
+    format_currency_amount
 )
 
 logger = logging.getLogger(__name__)
@@ -1056,7 +1057,20 @@ class ConfigNewCharacterWealthButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            modal = modals.ConfigNewCharacterWealthModal(self.calling_view)
+            current_wealth = self.calling_view.new_character_wealth
+            current_currency = current_wealth.get('currency') if current_wealth else None
+            formatted_amount = None
+            if current_wealth and current_currency:
+                raw_amount = current_wealth.get('amount')
+                if raw_amount is not None:
+                    formatted_amount = format_currency_amount(
+                        raw_amount, current_currency, self.calling_view.currency_config
+                    )
+            modal = modals.ConfigNewCharacterWealthModal(
+                self.calling_view,
+                current_amount=formatted_amount,
+                current_currency=current_currency
+            )
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)

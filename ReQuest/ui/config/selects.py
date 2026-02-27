@@ -372,6 +372,10 @@ class ForumChannelSelect(ChannelSelect):
         try:
             self.calling_view.selected_forum = self.values[0]
             self.calling_view.selected_thread = None  # Reset thread selection
+
+            forum = interaction.guild.get_channel(self.values[0].id)
+            self.calling_view.forum_threads = [t for t in forum.threads if not t.archived and not t.locked][:25]
+
             self.calling_view.build_view()
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
@@ -384,15 +388,7 @@ class ForumThreadSelect(Select):
         options = []
 
         if calling_view.selected_forum:
-            # Get threads from the forum (archived and active)
-            # Note: We can only access cached/active threads here
-            # For a full list, the bot would need to fetch them
-            forum = calling_view.selected_forum
-            threads = []
-
-            # Get active threads
-            if hasattr(forum, 'threads'):
-                threads = list(forum.threads)[:25]  # Discord limits select to 25 options
+            threads = calling_view.forum_threads or []
 
             if threads:
                 for thread in threads:

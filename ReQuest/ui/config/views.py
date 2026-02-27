@@ -1534,6 +1534,8 @@ class ConfigNewCharacterView(LayoutView):
         )
         self.approval_queue_clear_button = buttons.ClearChannelButton(self, 'approvalQueueChannel')
 
+        self.new_character_wealth = None
+        self.currency_config = {}
         self.new_character_shop_button = MenuViewButton(ConfigNewCharacterShopView, 'Configure New Character Shop')
         self.new_character_wealth_button = buttons.ConfigNewCharacterWealthButton(self)
         self.static_kits_button = MenuViewButton(ConfigStaticKitsView, 'Configure Static Kits')
@@ -1581,6 +1583,7 @@ class ConfigNewCharacterView(LayoutView):
             )
             inventory_type = inventory_config.get(ConfigFields.INVENTORY_TYPE, 'disabled') if inventory_config else 'disabled'
             new_character_wealth = inventory_config.get(ConfigFields.NEW_CHARACTER_WEALTH, None) if inventory_config else None
+            self.new_character_wealth = new_character_wealth
 
             type_description = {
                 'disabled': 'Players start with empty inventories.',
@@ -1602,6 +1605,7 @@ class ConfigNewCharacterView(LayoutView):
                 collection_name='currency',
                 query={'_id': guild.id}
             )
+            self.currency_config = currency_config
 
             self.new_character_shop_button.disabled = True
             self.new_character_shop_button.label = 'Configure New Character Shop'
