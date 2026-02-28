@@ -13,7 +13,8 @@ from datetime import datetime, timezone, timedelta
 
 from ReQuest.utilities.constants import (
     CharacterFields, QuestFields, ShopFields, CurrencyFields,
-    ConfigFields, RoleplayFields, RestockFields, CartFields, ContainerFields, CommonFields
+    ConfigFields, RoleplayFields, RestockFields, CartFields, ContainerFields, CommonFields,
+    DatabaseCollections
 )
 
 logger = logging.getLogger(__name__)
@@ -388,13 +389,13 @@ async def trade_currency(interaction, currency_name, amount, sending_member_id, 
     sender_data = await get_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
-        collection_name='characters',
+        collection_name=DatabaseCollections.CHARACTERS,
         query={'_id': sending_member_id}
     )
     receiver_data = await get_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
-        collection_name='characters',
+        collection_name=DatabaseCollections.CHARACTERS,
         query={'_id': receiving_member_id}
     )
     sender_character_id = sender_data[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
@@ -404,7 +405,7 @@ async def trade_currency(interaction, currency_name, amount, sending_member_id, 
     currency_config = await get_cached_data(
         bot=bot,
         mongo_database=bot.gdb,
-        collection_name='currency',
+        collection_name=DatabaseCollections.CURRENCY,
         query={'_id': guild_id}
     )
 
@@ -421,13 +422,13 @@ async def trade_currency(interaction, currency_name, amount, sending_member_id, 
     updated_sender_data = await get_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
-        collection_name='characters',
+        collection_name=DatabaseCollections.CHARACTERS,
         query={'_id': sending_member_id}
     )
     updated_receiver_data = await get_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
-        collection_name='characters',
+        collection_name=DatabaseCollections.CHARACTERS,
         query={'_id': receiving_member_id}
     )
     updated_sender_currency = updated_sender_data[CharacterFields.CHARACTERS][sender_character_id][CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY)
@@ -444,7 +445,7 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
     sender_data = await get_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
-        collection_name='characters',
+        collection_name=DatabaseCollections.CHARACTERS,
         query={'_id': sending_member_id}
     )
     sender_character_id = sender_data[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
@@ -454,7 +455,7 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
     receiver_data = await get_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
-        collection_name='characters',
+        collection_name=DatabaseCollections.CHARACTERS,
         query={'_id': receiving_member_id}
     )
     receiver_character_id = receiver_data[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
@@ -526,7 +527,7 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
     await update_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
-        collection_name='characters',
+        collection_name=DatabaseCollections.CHARACTERS,
         query={'_id': sending_member_id},
         update_data={'$set': sender_update}
     )
@@ -535,7 +536,7 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
     await update_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
-        collection_name='characters',
+        collection_name=DatabaseCollections.CHARACTERS,
         query={'_id': receiving_member_id},
         update_data={'$set': {f'characters.{receiver_character_id}.attributes.inventory': receiver_inventory}}
     )
@@ -550,7 +551,7 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
         player_data = await get_cached_data(
             bot=bot,
             mongo_database=bot.mdb,
-            collection_name='characters',
+            collection_name=DatabaseCollections.CHARACTERS,
             query={'_id': player_id}
         )
         if not player_data:
@@ -563,7 +564,7 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
         currency_query = await get_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
-            collection_name='currency',
+            collection_name=DatabaseCollections.CURRENCY,
             query={'_id': interaction.guild_id}
         )
 
@@ -618,7 +619,7 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
-                collection_name='characters',
+                collection_name=DatabaseCollections.CHARACTERS,
                 query={'_id': player_id},
                 update_data={'$set': {f'characters.{character_id}.attributes.currency': character_currency_db}}
             )
@@ -640,7 +641,7 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
-                collection_name='characters',
+                collection_name=DatabaseCollections.CHARACTERS,
                 query={'_id': player_id},
                 update_data={'$set': {f'characters.{character_id}.attributes.inventory': inventory_for_db}}
             )
@@ -655,7 +656,7 @@ async def update_character_experience(interaction, player_id: int, character_id:
         player_data = await get_cached_data(
             bot=bot,
             mongo_database=bot.mdb,
-            collection_name='characters',
+            collection_name=DatabaseCollections.CHARACTERS,
             query={'_id': player_id}
         )
         if not player_data:
@@ -673,7 +674,7 @@ async def update_character_experience(interaction, player_id: int, character_id:
         await update_cached_data(
             bot=bot,
             mongo_database=bot.mdb,
-            collection_name='characters',
+            collection_name=DatabaseCollections.CHARACTERS,
             query={'_id': player_id},
             update_data={'$set': {f'characters.{character_id}': character_data}}
         )
@@ -1139,7 +1140,7 @@ async def get_xp_config(bot, guild_id) -> bool:
         query = await get_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
-            collection_name='playerExperience',
+            collection_name=DatabaseCollections.PLAYER_EXPERIENCE,
             query={'_id': guild_id}
         )
         if query is None:
@@ -1242,7 +1243,7 @@ async def get_item_stock(bot, guild_id: int, channel_id: str, item_name: str) ->
     stock_data = await get_cached_data(
         bot=bot,
         mongo_database=bot.gdb,
-        collection_name='shopStock',
+        collection_name=DatabaseCollections.SHOP_STOCK,
         query={'_id': guild_id}
     )
 
@@ -1275,7 +1276,7 @@ async def get_shop_stock(bot, guild_id: int, channel_id: str) -> dict:
     stock_data = await get_cached_data(
         bot=bot,
         mongo_database=bot.gdb,
-        collection_name='shopStock',
+        collection_name=DatabaseCollections.SHOP_STOCK,
         query={'_id': guild_id}
     )
 
@@ -1304,7 +1305,7 @@ async def initialize_item_stock(bot, guild_id: int, channel_id: str, item_name: 
     await update_cached_data(
         bot=bot,
         mongo_database=bot.gdb,
-        collection_name='shopStock',
+        collection_name=DatabaseCollections.SHOP_STOCK,
         query={'_id': guild_id},
         update_data={
             '$set': {
@@ -1329,7 +1330,7 @@ async def remove_item_stock_limit(bot, guild_id: int, channel_id: str, item_name
     await update_cached_data(
         bot=bot,
         mongo_database=bot.gdb,
-        collection_name='shopStock',
+        collection_name=DatabaseCollections.SHOP_STOCK,
         query={'_id': guild_id},
         update_data={
             '$unset': {
@@ -1351,7 +1352,7 @@ async def reserve_stock(bot, guild_id: int, channel_id: str, item_name: str, qua
 
     :return: True if reservation succeeded, False if insufficient stock
     """
-    collection = bot.gdb['shopStock']
+    collection = bot.gdb[DatabaseCollections.SHOP_STOCK]
 
     encoded_name = encode_mongo_key(item_name)
     result = await collection.find_one_and_update(
@@ -1370,7 +1371,7 @@ async def reserve_stock(bot, guild_id: int, channel_id: str, item_name: str, qua
 
     # Invalidate cache after update
     if result:
-        cache_key = build_cache_key(bot.gdb.name, guild_id, 'shopStock')
+        cache_key = build_cache_key(bot.gdb.name, guild_id, DatabaseCollections.SHOP_STOCK)
         try:
             await bot.rdb.delete(cache_key)
         except Exception as e:
@@ -1392,7 +1393,7 @@ async def release_stock(bot, guild_id: int, channel_id: str, item_name: str,
     :param quantity: The quantity to release
     :param max_stock: The maximum stock for this item (caps available to prevent overflow)
     """
-    collection = bot.gdb['shopStock']
+    collection = bot.gdb[DatabaseCollections.SHOP_STOCK]
     encoded_name = encode_mongo_key(item_name)
     path = f'shops.{channel_id}.{encoded_name}'
 
@@ -1414,7 +1415,7 @@ async def release_stock(bot, guild_id: int, channel_id: str, item_name: str,
 
     # Invalidate cache after update
     if result.modified_count > 0:
-        cache_key = build_cache_key(bot.gdb.name, guild_id, 'shopStock')
+        cache_key = build_cache_key(bot.gdb.name, guild_id, DatabaseCollections.SHOP_STOCK)
         try:
             await bot.rdb.delete(cache_key)
         except Exception as e:
@@ -1431,7 +1432,7 @@ async def finalize_stock(bot, guild_id: int, channel_id: str, item_name: str, qu
     :param item_name: The name of the item
     :param quantity: The quantity to finalize
     """
-    collection = bot.gdb['shopStock']
+    collection = bot.gdb[DatabaseCollections.SHOP_STOCK]
     encoded_name = encode_mongo_key(item_name)
     path = f'shops.{channel_id}.{encoded_name}'
 
@@ -1448,7 +1449,7 @@ async def finalize_stock(bot, guild_id: int, channel_id: str, item_name: str, qu
 
     # Invalidate cache after update
     if result.modified_count > 0:
-        cache_key = build_cache_key(bot.gdb.name, guild_id, 'shopStock')
+        cache_key = build_cache_key(bot.gdb.name, guild_id, DatabaseCollections.SHOP_STOCK)
         try:
             await bot.rdb.delete(cache_key)
         except Exception as e:
@@ -1468,7 +1469,7 @@ async def set_available_stock(bot, guild_id: int, channel_id: str, item_name: st
     await update_cached_data(
         bot=bot,
         mongo_database=bot.gdb,
-        collection_name='shopStock',
+        collection_name=DatabaseCollections.SHOP_STOCK,
         query={'_id': guild_id},
         update_data={
             '$set': {
@@ -1490,7 +1491,7 @@ async def increment_available_stock(bot, guild_id: int, channel_id: str, item_na
     :param increment: The amount to add
     :param max_stock: The maximum stock allowed
     """
-    collection = bot.gdb['shopStock']
+    collection = bot.gdb[DatabaseCollections.SHOP_STOCK]
     encoded_name = encode_mongo_key(item_name)
     path = f'shops.{channel_id}.{encoded_name}'
 
@@ -1507,7 +1508,7 @@ async def increment_available_stock(bot, guild_id: int, channel_id: str, item_na
 
     # Invalidate cache after update
     if result.modified_count > 0:
-        cache_key = build_cache_key(bot.gdb.name, guild_id, 'shopStock')
+        cache_key = build_cache_key(bot.gdb.name, guild_id, DatabaseCollections.SHOP_STOCK)
         try:
             await bot.rdb.delete(cache_key)
         except Exception as e:
@@ -1526,7 +1527,7 @@ async def update_last_restock(bot, guild_id: int, channel_id: str, timestamp: st
     await update_cached_data(
         bot=bot,
         mongo_database=bot.gdb,
-        collection_name='shopStock',
+        collection_name=DatabaseCollections.SHOP_STOCK,
         query={'_id': guild_id},
         update_data={
             '$set': {
@@ -1549,7 +1550,7 @@ async def get_last_restock(bot, guild_id: int, channel_id: str) -> str | None:
     stock_data = await get_cached_data(
         bot=bot,
         mongo_database=bot.gdb,
-        collection_name='shopStock',
+        collection_name=DatabaseCollections.SHOP_STOCK,
         query={'_id': guild_id}
     )
 
@@ -1623,7 +1624,7 @@ async def get_cart(bot, guild_id: int, user_id: int, channel_id: str) -> dict | 
     cart = await get_cached_data(
         bot=bot,
         mongo_database=bot.gdb,
-        collection_name='shopCarts',
+        collection_name=DatabaseCollections.SHOP_CARTS,
         query={'_id': cart_id},
         cache_id=cart_id
     )
@@ -1679,7 +1680,7 @@ async def get_or_create_cart(bot, guild_id: int, user_id: int, channel_id: str) 
     await update_cached_data(
         bot=bot,
         mongo_database=bot.gdb,
-        collection_name='shopCarts',
+        collection_name=DatabaseCollections.SHOP_CARTS,
         query={'_id': cart_id},
         update_data={'$set': new_cart},
         cache_id=cart_id
@@ -1704,7 +1705,7 @@ async def update_cart_expiry(bot, guild_id: int, user_id: int, channel_id: str):
     await update_cached_data(
         bot=bot,
         mongo_database=bot.gdb,
-        collection_name='shopCarts',
+        collection_name=DatabaseCollections.SHOP_CARTS,
         query={'_id': cart_id},
         update_data={
             '$set': {
@@ -1755,7 +1756,7 @@ async def add_item_to_cart(bot, guild_id: int, user_id: int, channel_id: str,
         await update_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
-            collection_name='shopCarts',
+            collection_name=DatabaseCollections.SHOP_CARTS,
             query={'_id': cart_id},
             update_data={
                 '$inc': {f'items.{cart_key}.quantity': 1},
@@ -1777,7 +1778,7 @@ async def add_item_to_cart(bot, guild_id: int, user_id: int, channel_id: str,
         await update_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
-            collection_name='shopCarts',
+            collection_name=DatabaseCollections.SHOP_CARTS,
             query={'_id': cart_id},
             update_data={
                 '$set': {
@@ -1834,7 +1835,7 @@ async def remove_item_from_cart(bot, guild_id: int, user_id: int, channel_id: st
         await update_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
-            collection_name='shopCarts',
+            collection_name=DatabaseCollections.SHOP_CARTS,
             query={'_id': cart_id},
             update_data={
                 '$unset': {f'items.{cart_key}': ''},
@@ -1850,7 +1851,7 @@ async def remove_item_from_cart(bot, guild_id: int, user_id: int, channel_id: st
         await update_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
-            collection_name='shopCarts',
+            collection_name=DatabaseCollections.SHOP_CARTS,
             query={'_id': cart_id},
             update_data={
                 '$inc': {f'items.{cart_key}.quantity': -quantity},
@@ -1915,7 +1916,7 @@ async def update_cart_item_quantity(bot, guild_id: int, user_id: int, channel_id
         await update_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
-            collection_name='shopCarts',
+            collection_name=DatabaseCollections.SHOP_CARTS,
             query={'_id': cart_id},
             update_data={
                 '$set': {
@@ -1947,7 +1948,7 @@ async def clear_cart_and_release_stock(bot, guild_id: int, user_id: int, channel
     cart = await get_cached_data(
         bot=bot,
         mongo_database=bot.gdb,
-        collection_name='shopCarts',
+        collection_name=DatabaseCollections.SHOP_CARTS,
         query={'_id': cart_id},
         cache_id=cart_id
     )
@@ -1970,7 +1971,7 @@ async def clear_cart_and_release_stock(bot, guild_id: int, user_id: int, channel
     await delete_cached_data(
         bot=bot,
         mongo_database=bot.gdb,
-        collection_name='shopCarts',
+        collection_name=DatabaseCollections.SHOP_CARTS,
         search_filter={'_id': cart_id},
         cache_id=cart_id
     )
@@ -2007,7 +2008,7 @@ async def finalize_cart_purchase(bot, guild_id: int, user_id: int, channel_id: s
     await delete_cached_data(
         bot=bot,
         mongo_database=bot.gdb,
-        collection_name='shopCarts',
+        collection_name=DatabaseCollections.SHOP_CARTS,
         search_filter={'_id': cart_id},
         cache_id=cart_id
     )
@@ -2022,7 +2023,7 @@ async def cleanup_expired_carts(bot):
     now = datetime.now(timezone.utc)
 
     # Query all expired carts directly from MongoDB (bypass cache for cleanup)
-    collection = bot.gdb['shopCarts']
+    collection = bot.gdb[DatabaseCollections.SHOP_CARTS]
     cursor = collection.find({
         CartFields.EXPIRES_AT: {'$lt': now.isoformat()}
     })
@@ -2050,7 +2051,7 @@ async def cleanup_expired_carts(bot):
         await delete_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
-            collection_name='shopCarts',
+            collection_name=DatabaseCollections.SHOP_CARTS,
             search_filter={'_id': cart_id},
             cache_id=cart_id
         )
@@ -2229,7 +2230,7 @@ async def create_container(bot, player_id: int, character_id: str, name: str) ->
     player_data = await get_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
-        collection_name='characters',
+        collection_name=DatabaseCollections.CHARACTERS,
         query={'_id': player_id}
     )
     if not player_data:
@@ -2251,7 +2252,7 @@ async def create_container(bot, player_id: int, character_id: str, name: str) ->
     await update_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
-        collection_name='characters',
+        collection_name=DatabaseCollections.CHARACTERS,
         query={'_id': player_id},
         update_data={'$set': {
             f'characters.{character_id}.attributes.containers.{container_id}': {
@@ -2282,7 +2283,7 @@ async def rename_container(bot, player_id: int, character_id: str,
     player_data = await get_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
-        collection_name='characters',
+        collection_name=DatabaseCollections.CHARACTERS,
         query={'_id': player_id}
     )
     if not player_data:
@@ -2302,7 +2303,7 @@ async def rename_container(bot, player_id: int, character_id: str,
     await update_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
-        collection_name='characters',
+        collection_name=DatabaseCollections.CHARACTERS,
         query={'_id': player_id},
         update_data={'$set': {f'characters.{character_id}.attributes.containers.{container_id}.name': new_name}}
     )
@@ -2324,7 +2325,7 @@ async def delete_container(bot, player_id: int, character_id: str,
     player_data = await get_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
-        collection_name='characters',
+        collection_name=DatabaseCollections.CHARACTERS,
         query={'_id': player_id}
     )
 
@@ -2363,7 +2364,7 @@ async def delete_container(bot, player_id: int, character_id: str,
         await update_cached_data(
             bot=bot,
             mongo_database=bot.mdb,
-            collection_name='characters',
+            collection_name=DatabaseCollections.CHARACTERS,
             query={'_id': player_id},
             update_data={
                 '$set': {f'characters.{character_id}.attributes.inventory': new_inventory},
@@ -2374,7 +2375,7 @@ async def delete_container(bot, player_id: int, character_id: str,
         await update_cached_data(
             bot=bot,
             mongo_database=bot.mdb,
-            collection_name='characters',
+            collection_name=DatabaseCollections.CHARACTERS,
             query={'_id': player_id},
             update_data={'$unset': {f'characters.{character_id}.attributes.containers.{container_id}': ''}}
         )
@@ -2391,7 +2392,7 @@ async def reorder_container(bot, player_id: int, character_id: str,
     player_data = await get_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
-        collection_name='characters',
+        collection_name=DatabaseCollections.CHARACTERS,
         query={'_id': player_id}
     )
 
@@ -2433,7 +2434,7 @@ async def reorder_container(bot, player_id: int, character_id: str,
     await update_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
-        collection_name='characters',
+        collection_name=DatabaseCollections.CHARACTERS,
         query={'_id': player_id},
         update_data={'$set': {
             f'characters.{character_id}.attributes.containers.{current_container_id}.order': target_order,
@@ -2462,7 +2463,7 @@ async def move_item_between_containers(
     player_data = await get_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
-        collection_name='characters',
+        collection_name=DatabaseCollections.CHARACTERS,
         query={'_id': player_id}
     )
     if not player_data:
@@ -2541,7 +2542,7 @@ async def move_item_between_containers(
     await update_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
-        collection_name='characters',
+        collection_name=DatabaseCollections.CHARACTERS,
         query={'_id': player_id},
         update_data={
             '$set': {
@@ -2568,7 +2569,7 @@ async def consume_item_from_container(
     player_data = await get_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
-        collection_name='characters',
+        collection_name=DatabaseCollections.CHARACTERS,
         query={'_id': player_id}
     )
     if not player_data:
@@ -2618,7 +2619,7 @@ async def consume_item_from_container(
     await update_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
-        collection_name='characters',
+        collection_name=DatabaseCollections.CHARACTERS,
         query={'_id': player_id},
         update_data={'$set': {path: items}}
     )

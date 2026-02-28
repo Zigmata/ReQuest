@@ -4,7 +4,7 @@ import discord
 from discord.ui import Select, RoleSelect, ChannelSelect
 
 from ReQuest.ui.common.enums import InventoryType, RoleplayMode, ScheduleType, DayOfWeek
-from ReQuest.utilities.constants import ConfigFields, CommonFields
+from ReQuest.utilities.constants import ConfigFields, CommonFields, DatabaseCollections
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     setup_view,
@@ -61,7 +61,7 @@ class QuestAnnounceRoleSelect(RoleSelect):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='announceRole',
+                collection_name=DatabaseCollections.ANNOUNCE_ROLE,
                 query={'_id': interaction.guild_id},
                 update_data=update_data
             )
@@ -86,7 +86,7 @@ class AddGMRoleSelect(RoleSelect):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='gmRoles',
+                collection_name=DatabaseCollections.GM_ROLES,
                 query={'_id': interaction.guild_id}
             )
             if not query:
@@ -95,7 +95,7 @@ class AddGMRoleSelect(RoleSelect):
                     await update_cached_data(
                         bot=bot,
                         mongo_database=bot.gdb,
-                        collection_name='gmRoles',
+                        collection_name=DatabaseCollections.GM_ROLES,
                         query={'_id': interaction.guild_id},
                         update_data=update_data
                     )
@@ -111,7 +111,7 @@ class AddGMRoleSelect(RoleSelect):
                         await update_cached_data(
                             bot=bot,
                             mongo_database=bot.gdb,
-                            collection_name='gmRoles',
+                            collection_name=DatabaseCollections.GM_ROLES,
                             query={'_id': interaction.guild_id},
                             update_data=update_data
                         )
@@ -145,7 +145,7 @@ class ConfigWaitListSelect(Select):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='questWaitList',
+                collection_name=DatabaseCollections.QUEST_WAIT_LIST,
                 query={'_id': interaction.guild_id},
                 update_data=update_data
             )
@@ -182,7 +182,7 @@ class InventoryTypeSelect(Select):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='inventoryConfig',
+                collection_name=DatabaseCollections.INVENTORY_CONFIG,
                 query={'_id': interaction.guild_id},
                 update_data={'$set': {'inventoryType': self.values[0]}}
             )
@@ -221,7 +221,7 @@ class RoleplayChannelSelect(ChannelSelect):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='roleplayConfig',
+                collection_name=DatabaseCollections.ROLEPLAY_CONFIG,
                 query={'_id': interaction.guild_id},
                 update_data={'$addToSet': {'channels': {'$each': channel_ids}}}
             )
@@ -257,7 +257,7 @@ class RoleplayModeSelect(Select):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='roleplayConfig',
+                collection_name=DatabaseCollections.ROLEPLAY_CONFIG,
                 query={'_id': interaction.guild_id},
                 update_data={'$set': {'mode': self.values[0]}}
             )
@@ -286,7 +286,7 @@ class RoleplayResetSelect(Select):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='roleplayConfig',
+                collection_name=DatabaseCollections.ROLEPLAY_CONFIG,
                 query={'_id': interaction.guild_id},
                 update_data={'$set': {'config.resetPeriod': self.values[0]}}
             )
@@ -319,7 +319,7 @@ class RoleplayResetDaySelect(Select):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='roleplayConfig',
+                collection_name=DatabaseCollections.ROLEPLAY_CONFIG,
                 query={'_id': interaction.guild_id},
                 update_data={'$set': {'config.resetDay': self.values[0]}}
             )
@@ -348,7 +348,7 @@ class RoleplayResetTimeSelect(Select):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='roleplayConfig',
+                collection_name=DatabaseCollections.ROLEPLAY_CONFIG,
                 query={'_id': interaction.guild_id},
                 update_data={'$set': {'config.resetTime': int(self.values[0])}}
             )

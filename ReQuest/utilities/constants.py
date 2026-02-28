@@ -1,5 +1,4 @@
 class CharacterFields:
-    """Character document field names."""
     CHARACTERS = 'characters'
     ACTIVE_CHARACTERS = 'activeCharacters'
     ATTRIBUTES = 'attributes'
@@ -12,7 +11,6 @@ class CharacterFields:
 
 
 class QuestFields:
-    """Quest document field names."""
     QUEST_ID = 'questId'
     GUILD_ID = 'guildId'
     MESSAGE_ID = 'messageId'
@@ -31,7 +29,6 @@ class QuestFields:
 
 
 class ShopFields:
-    """Shop document field names."""
     SHOP_CHANNELS = 'shopChannels'
     SHOP_STOCK = 'shopStock'
     SHOPS = 'shops'
@@ -50,7 +47,6 @@ class ShopFields:
 
 
 class CurrencyFields:
-    """Currency document field names."""
     CURRENCIES = 'currencies'
     DENOMINATIONS = 'denominations'
     VALUE = 'value'
@@ -58,7 +54,6 @@ class CurrencyFields:
 
 
 class ConfigFields:
-    """Guild configuration field names."""
     QUEST_CHANNEL = 'questChannel'
     PLAYER_BOARD_CHANNEL = 'playerBoardChannel'
     PLAYER_TRANSACTION_LOG_CHANNEL = 'playerTransactionLogChannel'
@@ -76,7 +71,6 @@ class ConfigFields:
 
 
 class RoleplayFields:
-    """Roleplay configuration field names."""
     ENABLED = 'enabled'
     CHANNELS = 'channels'
     MODE = 'mode'
@@ -95,7 +89,6 @@ class RoleplayFields:
 
 
 class RestockFields:
-    """Restock configuration field names."""
     ENABLED = 'enabled'
     SCHEDULE = 'schedule'
     HOUR = 'hour'
@@ -107,7 +100,6 @@ class RestockFields:
 
 
 class CartFields:
-    """Shopping cart field names."""
     GUILD_ID = 'guildId'
     USER_ID = 'userId'
     CHANNEL_ID = 'channelId'
@@ -122,17 +114,46 @@ class CartFields:
 
 
 class ContainerFields:
-    """Container field names for character inventory containers."""
     NAME = 'name'
     ITEMS = 'items'
     ORDER = 'order'
 
 
 class CommonFields:
-    """Commonly used field names across multiple domains."""
     ID = '_id'
     NAME = 'name'
     QUANTITY = 'quantity'
     MENTION = 'mention'
     AMOUNT = 'amount'
     ITEMS = 'items'
+
+
+class DatabaseCollections:
+    SERVER_ALLOWLIST = 'serverAllowlist'
+    ANNOUNCE_ROLE = 'announceRole'
+    APPROVAL_QUEUE_CHANNEL = 'approvalQueueChannel'
+    APPROVALS = 'approvals'
+    ARCHIVE_CHANNEL = 'archiveChannel'
+    CURRENCY = 'currency'
+    FORBIDDEN_ROLES = 'forbiddenRoles'
+    GM_REWARDS = 'gmRewards'
+    GM_ROLES = 'gmRoles'
+    GM_TRANSACTION_LOG_CHANNEL = 'gmTransactionLogChannel'
+    INVENTORY_CONFIG = 'inventoryConfig'
+    NEW_CHARACTER_SHOP = 'newCharacterShop'
+    PLAYER_BOARD = 'playerBoard'
+    PLAYER_BOARD_CHANNEL = 'playerBoardChannel'
+    PLAYER_EXPERIENCE = 'playerExperience'
+    PLAYER_TRANSACTION_LOG_CHANNEL = 'playerTransactionLogChannel'
+    QUEST_CHANNEL = 'questChannel'
+    QUEST_SUMMARY = 'questSummary'
+    QUEST_WAIT_LIST = 'questWaitList'
+    QUESTS = 'quests'
+    ROLEPLAY_CONFIG = 'roleplayConfig'
+    ROLEPLAY_DATA = 'roleplayData'
+    SHOP_CARTS = 'shopCarts'
+    SHOP_LOG_CHANNEL = 'shopLogChannel'
+    SHOP_STOCK = 'shopStock'
+    SHOPS = 'shops'
+    STATIC_KITS = 'staticKits'
+    CHARACTERS = 'characters'

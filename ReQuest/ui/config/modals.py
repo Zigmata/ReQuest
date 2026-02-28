@@ -21,7 +21,8 @@ from titlecase import titlecase
 
 from ReQuest.ui.common.enums import ShopChannelType, RestockMode, ScheduleType
 from ReQuest.utilities.constants import (
-    ConfigFields, CurrencyFields, ShopFields, RestockFields, RoleplayFields, CommonFields
+    ConfigFields, CurrencyFields, ShopFields, RestockFields, RoleplayFields, CommonFields,
+    DatabaseCollections
 )
 from ReQuest.utilities.supportFunctions import (
     log_exception,
@@ -108,7 +109,7 @@ class AddCurrencyTextModal(Modal):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
+                collection_name=DatabaseCollections.CURRENCY,
                 query={'_id': guild_id}
             )
             matches = 0
@@ -128,7 +129,7 @@ class AddCurrencyTextModal(Modal):
                 await update_cached_data(
                     bot=bot,
                     mongo_database=bot.gdb,
-                    collection_name='currency',
+                    collection_name=DatabaseCollections.CURRENCY,
                     query={'_id': guild_id},
                     update_data={'$push': {'currencies': {'name': self.text_input.value,
                                                           'isDouble': False, 'denominations': []}}}
@@ -171,7 +172,7 @@ class RenameCurrencyModal(Modal):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
+                collection_name=DatabaseCollections.CURRENCY,
                 query={'_id': guild_id}
             )
 
@@ -187,7 +188,7 @@ class RenameCurrencyModal(Modal):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
+                collection_name=DatabaseCollections.CURRENCY,
                 query={'_id': guild_id, 'currencies.name': self.old_currency_name},
                 update_data={'$set': {'currencies.$.name': new_name}}
             )
@@ -233,7 +234,7 @@ class RenameDenominationModal(Modal):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
+                collection_name=DatabaseCollections.CURRENCY,
                 query={'_id': guild_id}
             )
 
@@ -246,7 +247,7 @@ class RenameDenominationModal(Modal):
                             raise UserFeedbackError(f'A denomination named "{new_name}" already exists.')
 
             # Update the denomination name using arrayFilters
-            collection = bot.gdb['currency']
+            collection = bot.gdb[DatabaseCollections.CURRENCY]
             await collection.update_one(
                 {'_id': guild_id, 'currencies.name': self.currency_name},
                 {'$set': {'currencies.$.denominations.$[denom].name': new_name}},
@@ -255,7 +256,7 @@ class RenameDenominationModal(Modal):
 
             # Invalidate cache
             from ReQuest.utilities.supportFunctions import build_cache_key
-            cache_key = build_cache_key(bot.gdb.name, guild_id, 'currency')
+            cache_key = build_cache_key(bot.gdb.name, guild_id, DatabaseCollections.CURRENCY)
             await bot.rdb.delete(cache_key)
 
             await setup_view(self.calling_view, interaction)
@@ -295,7 +296,7 @@ class AddCurrencyDenominationModal(Modal):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
+                collection_name=DatabaseCollections.CURRENCY,
                 query={'_id': guild_id}
             )
             for currency in query[CurrencyFields.CURRENCIES]:
@@ -325,7 +326,7 @@ class AddCurrencyDenominationModal(Modal):
                 await update_cached_data(
                     bot=bot,
                     mongo_database=bot.gdb,
-                    collection_name='currency',
+                    collection_name=DatabaseCollections.CURRENCY,
                     query={'_id': guild_id, 'currencies.name': self.base_currency_name},
                     update_data={
                         '$push': {'currencies.$.denominations': {
@@ -366,7 +367,7 @@ class ForbiddenRolesModal(Modal):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='forbiddenRoles',
+                collection_name=DatabaseCollections.FORBIDDEN_ROLES,
                 query={'_id': interaction.guild_id},
                 update_data={'$set': {'forbiddenRoles': names}}
             )
@@ -402,7 +403,7 @@ class PlayerBoardPurgeModal(Modal):
             await delete_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='playerBoard',
+                collection_name=DatabaseCollections.PLAYER_BOARD,
                 search_filter={'guildId': interaction.guild_id, 'timestamp': {'$lt': cutoff_date}},
                 is_single=False,
                 cache_id=interaction.guild_id
@@ -412,7 +413,7 @@ class PlayerBoardPurgeModal(Modal):
             config_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='playerBoardChannel',
+                collection_name=DatabaseCollections.PLAYER_BOARD_CHANNEL,
                 query={'_id': interaction.guild_id}
             )
             channel_id = strip_id(config_query[ConfigFields.PLAYER_BOARD_CHANNEL])
@@ -486,7 +487,7 @@ class GMRewardsModal(Modal):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='gmRewards',
+                collection_name=DatabaseCollections.GM_REWARDS,
                 query={'_id': interaction.guild_id},
                 update_data={'$set': {'experience': experience, 'items': items}}
             )
@@ -591,7 +592,7 @@ class ConfigShopDetailsModal(Modal):
                 query = await get_cached_data(
                     bot=bot,
                     mongo_database=bot.gdb,
-                    collection_name='shops',
+                    collection_name=DatabaseCollections.SHOPS,
                     query={'_id': guild_id}
                 )
                 if query and channel_id in query.get('shopChannels', {}):
@@ -617,7 +618,7 @@ class ConfigShopDetailsModal(Modal):
                 existing_query = await get_cached_data(
                     bot=bot,
                     mongo_database=bot.gdb,
-                    collection_name='shops',
+                    collection_name=DatabaseCollections.SHOPS,
                     query={'_id': guild_id}
                 )
                 existing_shop_data = existing_query.get('shopChannels', {}).get(channel_id, {})
@@ -626,7 +627,7 @@ class ConfigShopDetailsModal(Modal):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='shops',
+                collection_name=DatabaseCollections.SHOPS,
                 query={'_id': guild_id},
                 update_data={'$set': {f'shopChannels.{channel_id}': shop_data}}
             )
@@ -766,7 +767,7 @@ class ForumThreadShopModal(Modal):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='shops',
+                collection_name=DatabaseCollections.SHOPS,
                 query={'_id': guild_id}
             )
             if query and channel_id in query.get('shopChannels', {}):
@@ -777,7 +778,7 @@ class ForumThreadShopModal(Modal):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='shops',
+                collection_name=DatabaseCollections.SHOPS,
                 query={'_id': guild_id},
                 update_data={'$set': {f'shopChannels.{channel_id}': shop_data}}
             )
@@ -828,7 +829,7 @@ class ConfigShopJSONModal(Modal):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='shops',
+                collection_name=DatabaseCollections.SHOPS,
                 query={'_id': guild_id}
             )
             if query and channel_id in query.get('shopChannels', {}):
@@ -861,7 +862,7 @@ class ConfigShopJSONModal(Modal):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='shops',
+                collection_name=DatabaseCollections.SHOPS,
                 query={'_id': guild_id},
                 update_data={'$set': {f'shopChannels.{channel_id}': shop_data}}
             )
@@ -986,7 +987,7 @@ class ShopItemModal(Modal):
                         currency_config = await get_cached_data(
                             bot=bot,
                             mongo_database=bot.gdb,
-                            collection_name='currency',
+                            collection_name=DatabaseCollections.CURRENCY,
                             query={'_id': guild_id}
                         )
                         currency_config_entry = find_currency_or_denomination(currency_config, currency_key)
@@ -1012,7 +1013,7 @@ class ShopItemModal(Modal):
             shop_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='shops',
+                collection_name=DatabaseCollections.SHOPS,
                 query={'_id': guild_id}
             )
             shop_data = shop_query.get('shopChannels', {}).get(channel_id, {})
@@ -1039,7 +1040,7 @@ class ShopItemModal(Modal):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='shops',
+                collection_name=DatabaseCollections.SHOPS,
                 query={'_id': guild_id},
                 update_data={'$set': {f'shopChannels.{channel_id}': shop_data}}
             )
@@ -1099,7 +1100,7 @@ class ConfigUpdateShopJSONModal(Modal):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='shops',
+                collection_name=DatabaseCollections.SHOPS,
                 query={'_id': guild_id},
                 update_data={'$set': {f'shopChannels.{channel_id}': shop_data}}
             )
@@ -1225,7 +1226,7 @@ class NewCharacterShopItemModal(Modal):
                             currency_config = await get_cached_data(
                                 bot=bot,
                                 mongo_database=bot.gdb,
-                                collection_name='currency',
+                                collection_name=DatabaseCollections.CURRENCY,
                                 query={'_id': guild_id}
                             )
                             currency_config_entry = find_currency_or_denomination(currency_config, currency_key)
@@ -1251,7 +1252,7 @@ class NewCharacterShopItemModal(Modal):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='newCharacterShop',
+                collection_name=DatabaseCollections.NEW_CHARACTER_SHOP,
                 query={'_id': guild_id}
             )
             shop_stock = query.get('shopStock', []) if query else []
@@ -1279,7 +1280,7 @@ class NewCharacterShopItemModal(Modal):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='newCharacterShop',
+                collection_name=DatabaseCollections.NEW_CHARACTER_SHOP,
                 query={'_id': guild_id},
                 update_data={'$set': {'shopStock': shop_stock}}
             )
@@ -1338,7 +1339,7 @@ class NewCharacterShopJSONModal(Modal):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='newCharacterShop',
+                collection_name=DatabaseCollections.NEW_CHARACTER_SHOP,
                 query={'_id': guild_id},
                 update_data={'$set': {'shopStock': shop_data[ShopFields.SHOP_STOCK]}}
             )
@@ -1385,16 +1386,16 @@ class ConfigNewCharacterWealthModal(Modal):
                 await update_cached_data(
                     bot=bot,
                     mongo_database=bot.gdb,
-                    collection_name='inventoryConfig',
+                    collection_name=DatabaseCollections.INVENTORY_CONFIG,
                     query={'_id': guild_id},
-                    update_data={'$unset': {'newCharacterWealth': ''}}
+                    update_data={'$unset': {ConfigFields.NEW_CHARACTER_WEALTH: ''}}
                 )
             else:
                 currency_input = self.currency_name_text_input.value.strip()
                 currency_config = await get_cached_data(
                     bot=bot,
                     mongo_database=bot.gdb,
-                    collection_name='currency',
+                    collection_name=DatabaseCollections.CURRENCY,
                     query={'_id': guild_id}
                 )
 
@@ -1411,9 +1412,9 @@ class ConfigNewCharacterWealthModal(Modal):
                 await update_cached_data(
                     bot=bot,
                     mongo_database=bot.gdb,
-                    collection_name='inventoryConfig',
+                    collection_name=DatabaseCollections.INVENTORY_CONFIG,
                     query={'_id': guild_id},
-                    update_data={'$set': {'newCharacterWealth': {'currency': found_name, 'amount': amount}}}
+                    update_data={'$set': {ConfigFields.NEW_CHARACTER_WEALTH: {'currency': found_name, 'amount': amount}}}
                 )
 
             await setup_view(self.calling_view, interaction)
@@ -1457,7 +1458,7 @@ class CreateStaticKitModal(Modal):
             kit_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='staticKits',
+                collection_name=DatabaseCollections.STATIC_KITS,
                 query={'_id': guild_id}
             )
             existing_kits = kit_query.get('kits', {}) if kit_query else {}
@@ -1479,7 +1480,7 @@ class CreateStaticKitModal(Modal):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='staticKits',
+                collection_name=DatabaseCollections.STATIC_KITS,
                 query={'_id': guild_id},
                 update_data={'$set': {f'kits.{kit_id}': kit_data}}
             )
@@ -1544,7 +1545,7 @@ class StaticKitItemModal(Modal):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='staticKits',
+                collection_name=DatabaseCollections.STATIC_KITS,
                 query={'_id': interaction.guild_id}
             )
             kits = query.get('kits', {})
@@ -1563,7 +1564,7 @@ class StaticKitItemModal(Modal):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='staticKits',
+                collection_name=DatabaseCollections.STATIC_KITS,
                 query={'_id': interaction.guild_id},
                 update_data={'$set': {f'kits.{kit_id}.items': items}}
             )
@@ -1607,7 +1608,7 @@ class StaticKitCurrencyModal(Modal):
             currency_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
+                collection_name=DatabaseCollections.CURRENCY,
                 query={'_id': interaction.guild_id}
             )
             if not currency_config:
@@ -1629,7 +1630,7 @@ class StaticKitCurrencyModal(Modal):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='staticKits',
+                collection_name=DatabaseCollections.STATIC_KITS,
                 query={'_id': interaction.guild_id}
             )
 
@@ -1644,7 +1645,7 @@ class StaticKitCurrencyModal(Modal):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='staticKits',
+                collection_name=DatabaseCollections.STATIC_KITS,
                 query={'_id': interaction.guild_id},
                 update_data={'$set': {f'kits.{kit_id}.currency.{encoded_currency}': final_amount}}
             )
@@ -1755,7 +1756,7 @@ class RoleplaySettingsModal(Modal):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='roleplayConfig',
+                collection_name=DatabaseCollections.ROLEPLAY_CONFIG,
                 query={'_id': interaction.guild_id},
                 update_data={'$set': {'config': new_config}}
             )
@@ -1858,7 +1859,7 @@ class RoleplayRewardsModal(Modal):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='roleplayConfig',
+                collection_name=DatabaseCollections.ROLEPLAY_CONFIG,
                 query={'_id': interaction.guild_id},
                 update_data={'$set': {'rewards': new_rewards}}
             )
@@ -1935,7 +1936,7 @@ class SetItemStockModal(Modal):
             shop_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='shops',
+                collection_name=DatabaseCollections.SHOPS,
                 query={'_id': guild_id}
             )
             shop_data = shop_query.get('shopChannels', {}).get(channel_id, {})
@@ -1956,7 +1957,7 @@ class SetItemStockModal(Modal):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='shops',
+                collection_name=DatabaseCollections.SHOPS,
                 query={'_id': guild_id},
                 update_data={'$set': {f'shopChannels.{channel_id}': shop_data}}
             )
@@ -2113,7 +2114,7 @@ class RestockScheduleModal(Modal):
             shop_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='shops',
+                collection_name=DatabaseCollections.SHOPS,
                 query={'_id': guild_id}
             )
             shop_data = shop_query.get('shopChannels', {}).get(channel_id, {})
@@ -2122,7 +2123,7 @@ class RestockScheduleModal(Modal):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='shops',
+                collection_name=DatabaseCollections.SHOPS,
                 query={'_id': guild_id},
                 update_data={'$set': {f'shopChannels.{channel_id}': shop_data}}
             )

@@ -19,7 +19,7 @@ from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
 from ReQuest.ui.common.enums import InventoryType
 from ReQuest.ui.player import buttons, selects
 from ReQuest.utilities.constants import (
-    CharacterFields, ConfigFields, CommonFields
+    CharacterFields, ConfigFields, CommonFields, DatabaseCollections
 )
 from ReQuest.utilities.supportFunctions import (
     log_exception,
@@ -89,7 +89,7 @@ class PlayerBaseView(LayoutView):
             channel_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='playerBoardChannel',
+                collection_name=DatabaseCollections.PLAYER_BOARD_CHANNEL,
                 query={'_id': guild.id}
             )
             if channel_query:
@@ -119,7 +119,7 @@ class CharacterBaseView(LayoutView):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
-                collection_name='characters',
+                collection_name=DatabaseCollections.CHARACTERS,
                 query={'_id': interaction.user.id}
             )
 
@@ -265,14 +265,14 @@ class InventoryOverviewView(LayoutView):
         query = await get_cached_data(
             bot=bot,
             mongo_database=bot.mdb,
-            collection_name='characters',
+            collection_name=DatabaseCollections.CHARACTERS,
             query={'_id': interaction.user.id}
         )
 
         self.currency_config = await get_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
-            collection_name='currency',
+            collection_name=DatabaseCollections.CURRENCY,
             query={'_id': guild_id}
         )
 
@@ -311,7 +311,7 @@ class InventoryOverviewView(LayoutView):
                         if item_name_key in inventory:
                             del inventory[item_name_key]  # Update local copy
                             inv_path = f'characters.{self.active_character_id}.attributes.inventory'
-                            collection = bot.mdb[CharacterFields.CHARACTERS]
+                            collection = bot.mdb[DatabaseCollections.CHARACTERS]
                             await collection.update_one(
                                 {'_id': interaction.user.id},
                                 [
@@ -331,7 +331,7 @@ class InventoryOverviewView(LayoutView):
                             )
 
                             # Invalidate cache after direct collection update
-                            cache_key = build_cache_key(bot.mdb.name, interaction.user.id, 'characters')
+                            cache_key = build_cache_key(bot.mdb.name, interaction.user.id, DatabaseCollections.CHARACTERS)
                             try:
                                 await bot.rdb.delete(cache_key)
                             except Exception as e:
@@ -342,7 +342,7 @@ class InventoryOverviewView(LayoutView):
                     query = await get_cached_data(
                         bot=bot,
                         mongo_database=bot.mdb,
-                        collection_name='characters',
+                        collection_name=DatabaseCollections.CHARACTERS,
                         query={'_id': interaction.user.id}
                     )
                     self.active_character = query[CharacterFields.CHARACTERS][self.active_character_id]
@@ -505,7 +505,7 @@ class ContainerItemsView(LayoutView):
         player_data = await get_cached_data(
             bot=bot,
             mongo_database=bot.mdb,
-            collection_name='characters',
+            collection_name=DatabaseCollections.CHARACTERS,
             query={'_id': interaction.user.id}
         )
 
@@ -654,7 +654,7 @@ class MoveDestinationView(LayoutView):
         player_data = await get_cached_data(
             bot=bot,
             mongo_database=bot.mdb,
-            collection_name='characters',
+            collection_name=DatabaseCollections.CHARACTERS,
             query={'_id': interaction.user.id}
         )
 
@@ -806,7 +806,7 @@ class ContainerManagementView(LayoutView):
         player_data = await get_cached_data(
             bot=bot,
             mongo_database=bot.mdb,
-            collection_name='characters',
+            collection_name=DatabaseCollections.CHARACTERS,
             query={'_id': interaction.user.id}
         )
         self.character_data = player_data[CharacterFields.CHARACTERS][self.character_id]
@@ -967,7 +967,7 @@ class PlayerBoardView(LayoutView):
             channel_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='playerBoardChannel',
+                collection_name=DatabaseCollections.PLAYER_BOARD_CHANNEL,
                 query={'_id': guild.id}
             )
             self.player_board_channel_id = strip_id(channel_query[ConfigFields.PLAYER_BOARD_CHANNEL]) if channel_query else None
@@ -977,7 +977,7 @@ class PlayerBoardView(LayoutView):
             self.posts = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='playerBoard',
+                collection_name=DatabaseCollections.PLAYER_BOARD,
                 query={'guildId': guild.id, 'playerId': user.id},
                 is_single=False,
                 cache_id=cache_id
@@ -1087,7 +1087,7 @@ class PlayerBoardView(LayoutView):
 
     async def create_post(self, title, content, interaction):
         try:
-            post_collection = interaction.client.gdb['playerBoard']
+            post_collection = interaction.client.gdb[DatabaseCollections.PLAYER_BOARD]
             post_id = str(shortuuid.uuid()[:8])
 
             post_embed = discord.Embed(
@@ -1117,7 +1117,7 @@ class PlayerBoardView(LayoutView):
             await post_collection.insert_one(post)
 
             cache_id = f'{interaction.guild_id}:{interaction.user.id}'
-            redis_key = build_cache_key(interaction.client.gdb.name, cache_id, 'playerBoard')
+            redis_key = build_cache_key(interaction.client.gdb.name, cache_id, DatabaseCollections.PLAYER_BOARD)
 
             await interaction.client.rdb.delete(redis_key)
 
@@ -1132,7 +1132,7 @@ class PlayerBoardView(LayoutView):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='playerBoard',
+                collection_name=DatabaseCollections.PLAYER_BOARD,
                 query={'guildId': interaction.guild_id, 'postId': post['postId']},
                 update_data={'$set': {'title': new_title, 'content': new_content}},
                 cache_id=f'{interaction.guild_id}:{post["postId"]}'
@@ -1161,7 +1161,7 @@ class PlayerBoardView(LayoutView):
                         logger.error(f"Failed to edit Player Board message: {e}")
 
             cache_id = f'{interaction.guild_id}:{interaction.user.id}'
-            redis_key = build_cache_key(interaction.client.gdb.name, cache_id, 'playerBoard')
+            redis_key = build_cache_key(interaction.client.gdb.name, cache_id, DatabaseCollections.PLAYER_BOARD)
 
             await interaction.client.rdb.delete(redis_key)
 
@@ -1225,7 +1225,7 @@ class StaticKitSelectView(LayoutView):
         query = await get_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
-            collection_name='staticKits',
+            collection_name=DatabaseCollections.STATIC_KITS,
             query={'_id': interaction.guild_id}
         )
         self.kits = query.get('kits', {}) if query else {}
@@ -1237,7 +1237,7 @@ class StaticKitSelectView(LayoutView):
         self.currency_config = await get_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
-            collection_name='currency',
+            collection_name=DatabaseCollections.CURRENCY,
             query={'_id': interaction.guild_id}
         )
 
@@ -1457,7 +1457,7 @@ class NewCharacterShopView(LayoutView):
         shop_query = await get_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
-            collection_name='newCharacterShop',
+            collection_name=DatabaseCollections.NEW_CHARACTER_SHOP,
             query={'_id': guild_id}
         )
         self.shop_stock = shop_query.get('shopStock', []) if shop_query else []
@@ -1466,7 +1466,7 @@ class NewCharacterShopView(LayoutView):
         self.currency_config = await get_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
-            collection_name='currency',
+            collection_name=DatabaseCollections.CURRENCY,
             query={'_id': guild_id}
         )
 
@@ -1474,10 +1474,10 @@ class NewCharacterShopView(LayoutView):
             inventory_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='inventoryConfig',
+                collection_name=DatabaseCollections.INVENTORY_CONFIG,
                 query={'_id': guild_id}
             )
-            self.starting_wealth = inventory_config.get('newCharacterWealth') if inventory_config else None
+            self.starting_wealth = inventory_config.get(ConfigFields.NEW_CHARACTER_WEALTH) if inventory_config else None
 
         self.build_view()
 
@@ -1782,14 +1782,14 @@ async def _handle_submission(interaction, character_id, character_name, items, c
         currency_config = await get_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
-            collection_name='currency',
+            collection_name=DatabaseCollections.CURRENCY,
             query={'_id': guild_id}
         )
 
         approval_query = await get_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
-            collection_name='approvalQueueChannel',
+            collection_name=DatabaseCollections.APPROVAL_QUEUE_CHANNEL,
             query={'_id': guild_id}
         )
 
@@ -1834,7 +1834,7 @@ async def _handle_submission(interaction, character_id, character_name, items, c
             submission_data['thread_id'] = thread_message.thread.id
             submission_data['submission_id'] = submission_id
 
-            await bot.gdb['approvals'].insert_one(submission_data)
+            await bot.gdb[DatabaseCollections.APPROVALS].insert_one(submission_data)
 
             # Reset the view to Character Base View
             new_view = CharacterBaseView()

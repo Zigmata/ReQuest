@@ -3,6 +3,7 @@ import logging
 import discord
 from discord.ui import Select
 
+from ReQuest.utilities.constants import DatabaseCollections
 from ReQuest.utilities.supportFunctions import log_exception, setup_view, update_cached_data
 from ReQuest.ui.common import modals
 
@@ -27,7 +28,7 @@ class ActiveCharacterSelect(Select):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
-                collection_name='characters',
+                collection_name=DatabaseCollections.CHARACTERS,
                 query={'_id': interaction.user.id},
                 update_data={'$set': {f'activeCharacters.{interaction.guild_id}': selected_character_id}}
             )

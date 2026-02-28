@@ -1,6 +1,6 @@
 from discord import app_commands, Interaction
 
-from ReQuest.utilities.constants import ConfigFields, CharacterFields, CommonFields
+from ReQuest.utilities.constants import ConfigFields, CharacterFields, CommonFields, DatabaseCollections
 from ReQuest.utilities.supportFunctions import get_cached_data
 
 
@@ -23,7 +23,7 @@ def has_gm_or_mod():
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='gmRoles',
+                collection_name=DatabaseCollections.GM_ROLES,
                 query={'_id': interaction.guild.id}
             )
             if query:
@@ -47,7 +47,7 @@ def has_active_character():
         query = await get_cached_data(
             bot=interaction.client,
             mongo_database=interaction.client.mdb,
-            collection_name='characters',
+            collection_name=DatabaseCollections.CHARACTERS,
             query={'_id': member_id}
         )
 

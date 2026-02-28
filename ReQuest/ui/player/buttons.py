@@ -7,7 +7,7 @@ from discord.ui import Button
 from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.common.enums import InventoryType
 from ReQuest.ui.player import modals
-from ReQuest.utilities.constants import CharacterFields, CommonFields
+from ReQuest.utilities.constants import CharacterFields, CommonFields, DatabaseCollections
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     setup_view,
@@ -78,7 +78,7 @@ class RemoveCharacterButton(Button):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
-                collection_name='characters',
+                collection_name=DatabaseCollections.CHARACTERS,
                 query={'_id': member_id},
                 update_data={'$unset': {f'characters.{self.character_id}': ''}}
             )
@@ -87,7 +87,7 @@ class RemoveCharacterButton(Button):
             character_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
-                collection_name='characters',
+                collection_name=DatabaseCollections.CHARACTERS,
                 query={'_id': member_id}
             )
             if character_query and 'activeCharacters' in character_query:
@@ -100,7 +100,7 @@ class RemoveCharacterButton(Button):
                     await update_cached_data(
                         bot=bot,
                         mongo_database=bot.mdb,
-                        collection_name='characters',
+                        collection_name=DatabaseCollections.CHARACTERS,
                         query={'_id': member_id},
                         update_data={'$unset': updates}
                     )
@@ -129,7 +129,7 @@ class ActivateCharacterButton(Button):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
-                collection_name='characters',
+                collection_name=DatabaseCollections.CHARACTERS,
                 query={'_id': interaction.user.id},
                 update_data={'$set': {f'activeCharacters.{interaction.guild_id}': self.character_id}}
             )
@@ -192,7 +192,7 @@ class RemovePlayerPostButton(Button):
             await delete_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='playerBoard',
+                collection_name=DatabaseCollections.PLAYER_BOARD,
                 search_filter={'guildId': guild_id, 'postId': post_id},
                 cache_id=f'{guild_id}:{post_id}'
             )
@@ -212,7 +212,7 @@ class RemovePlayerPostButton(Button):
 
             # Invalidate the cached list
             cache_id = f'{guild_id}:{interaction.user.id}'
-            redis_key = build_cache_key(interaction.client.gdb.name, cache_id, 'playerBoard')
+            redis_key = build_cache_key(interaction.client.gdb.name, cache_id, DatabaseCollections.PLAYER_BOARD)
 
             await interaction.client.rdb.delete(redis_key)
 

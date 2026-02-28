@@ -16,6 +16,7 @@ from ReQuest.ui.admin import buttons
 from ReQuest.ui.common import buttons as common_buttons
 from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.common.buttons import MenuDoneButton, MenuViewButton
+from ReQuest.utilities.constants import DatabaseCollections
 from ReQuest.utilities.supportFunctions import log_exception, get_cached_data
 
 logger = logging.getLogger(__name__)
@@ -65,7 +66,7 @@ class AdminAllowlistView(LayoutView):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.cdb,
-                collection_name='serverAllowlist',
+                collection_name=DatabaseCollections.SERVER_ALLOWLIST,
                 query={'servers': {'$exists': True}},
                 cache_id='admin_allowlist_servers'
             )

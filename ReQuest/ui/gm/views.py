@@ -20,7 +20,7 @@ from ReQuest.ui.common.buttons import MenuDoneButton, BackButton
 from ReQuest.ui.common.modals import PageJumpModal
 from ReQuest.ui.common.views import MenuBaseView
 from ReQuest.ui.gm import buttons, selects
-from ReQuest.utilities.constants import CharacterFields, QuestFields, ConfigFields, CommonFields
+from ReQuest.utilities.constants import CharacterFields, QuestFields, ConfigFields, CommonFields, DatabaseCollections
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
@@ -92,7 +92,7 @@ class GMQuestMenuView(LayoutView):
             self.quests = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='quests',
+                collection_name=DatabaseCollections.QUESTS,
                 query=query,
                 is_single=False,
                 cache_id=cache_id
@@ -208,7 +208,7 @@ class ManageQuestsView(LayoutView):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='quests',
+                collection_name=DatabaseCollections.QUESTS,
                 query={QuestFields.GUILD_ID: self.selected_quest[QuestFields.GUILD_ID], QuestFields.QUEST_ID: self.selected_quest[QuestFields.QUEST_ID]},
                 cache_id=f"{self.selected_quest[QuestFields.GUILD_ID]}:{self.selected_quest[QuestFields.QUEST_ID]}"
             )
@@ -284,7 +284,7 @@ class ManageQuestsView(LayoutView):
             channel_id_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='questChannel',
+                collection_name=DatabaseCollections.QUEST_CHANNEL,
                 query={'_id': guild_id}
             )
             if not channel_id_query:
@@ -312,7 +312,7 @@ class ManageQuestsView(LayoutView):
                 await update_cached_data(
                     bot=bot,
                     mongo_database=bot.gdb,
-                    collection_name='quests',
+                    collection_name=DatabaseCollections.QUESTS,
                     query={QuestFields.QUEST_ID: quest_id},
                     update_data={'$set': {QuestFields.LOCK_STATE: True}},
                     cache_id=f'{guild_id}:{quest_id}'
@@ -349,7 +349,7 @@ class ManageQuestsView(LayoutView):
                 await update_cached_data(
                     bot=bot,
                     mongo_database=bot.gdb,
-                    collection_name='quests',
+                    collection_name=DatabaseCollections.QUESTS,
                     query={QuestFields.QUEST_ID: quest_id},
                     update_data={'$set': {QuestFields.LOCK_STATE: False}},
                     cache_id=f'{guild_id}:{quest_id}'
@@ -391,7 +391,7 @@ class ManageQuestsView(LayoutView):
             refreshed_quest = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='quests',
+                collection_name=DatabaseCollections.QUESTS,
                 query={'guildId': guild_id, QuestFields.QUEST_ID: self.selected_quest[QuestFields.QUEST_ID]},
                 cache_id=f'{guild_id}:{self.selected_quest[QuestFields.QUEST_ID]}'
             )
@@ -419,7 +419,7 @@ class ManageQuestsView(LayoutView):
             archive_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='archiveChannel',
+                collection_name=DatabaseCollections.ARCHIVE_CHANNEL,
                 query={'_id': guild_id}
             )
             if archive_query:
@@ -519,7 +519,7 @@ class ManageQuestsView(LayoutView):
             quest_channel_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='questChannel',
+                collection_name=DatabaseCollections.QUEST_CHANNEL,
                 query={'_id': guild_id}
             )
 
@@ -533,7 +533,7 @@ class ManageQuestsView(LayoutView):
             await delete_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='quests',
+                collection_name=DatabaseCollections.QUESTS,
                 search_filter={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
                 cache_id=f'{guild_id}:{quest_id}'
             )
@@ -551,7 +551,7 @@ class ManageQuestsView(LayoutView):
             gm_rewards_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='gmRewards',
+                collection_name=DatabaseCollections.GM_REWARDS,
                 query={'_id': guild_id}
             )
             if gm_rewards_query:
@@ -561,7 +561,7 @@ class ManageQuestsView(LayoutView):
                 character_query = await get_cached_data(
                     bot=bot,
                     mongo_database=bot.mdb,
-                    collection_name='characters',
+                    collection_name=DatabaseCollections.CHARACTERS,
                     query={'_id': interaction.user.id}
                 )
 
@@ -883,7 +883,7 @@ class RemovePlayerView(LayoutView):
             channel_id_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='questChannel',
+                collection_name=DatabaseCollections.QUEST_CHANNEL,
                 query={'_id': guild_id}
             )
             channel_id = strip_id(channel_id_query[ConfigFields.QUEST_CHANNEL])
@@ -952,7 +952,7 @@ class RemovePlayerView(LayoutView):
             await replace_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='quests',
+                collection_name=DatabaseCollections.QUESTS,
                 query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
                 new_data=self.quest,
                 cache_id=f'{guild_id}:{quest_id}'
@@ -1020,7 +1020,7 @@ class QuestPostView(View):
             quest = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='quests',
+                collection_name=DatabaseCollections.QUESTS,
                 query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
                 cache_id=f'{guild_id}:{quest_id}'
             )
@@ -1037,7 +1037,7 @@ class QuestPostView(View):
             player_characters = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
-                collection_name='characters',
+                collection_name=DatabaseCollections.CHARACTERS,
                 query={'_id': user_id}
             )
             if (not player_characters or
@@ -1063,7 +1063,7 @@ class QuestPostView(View):
                         await update_cached_data(
                             bot=bot,
                             mongo_database=bot.gdb,
-                            collection_name='quests',
+                            collection_name=DatabaseCollections.QUESTS,
                             query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
                             update_data={'$push': {QuestFields.PARTY: new_player_entry}},
                             cache_id=f'{guild_id}:{quest_id}'
@@ -1074,7 +1074,7 @@ class QuestPostView(View):
                         await update_cached_data(
                             bot=bot,
                             mongo_database=bot.gdb,
-                            collection_name='quests',
+                            collection_name=DatabaseCollections.QUESTS,
                             query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
                             update_data={'$push': {QuestFields.WAIT_LIST: new_player_entry}},
                             cache_id=f'{guild_id}:{quest_id}'
@@ -1091,7 +1091,7 @@ class QuestPostView(View):
                         await update_cached_data(
                             bot=bot,
                             mongo_database=bot.gdb,
-                            collection_name='quests',
+                            collection_name=DatabaseCollections.QUESTS,
                             query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
                             update_data={'$push': {QuestFields.PARTY: new_player_entry}},
                             cache_id=f'{guild_id}:{quest_id}'
@@ -1178,7 +1178,7 @@ class QuestPostView(View):
             await replace_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='quests',
+                collection_name=DatabaseCollections.QUESTS,
                 query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
                 new_data=self.quest,
                 cache_id=f'{guild_id}:{quest_id}'
@@ -1285,7 +1285,7 @@ class ReviewSubmissionView(LayoutView):
             await delete_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='approvals',
+                collection_name=DatabaseCollections.APPROVALS,
                 search_filter={'submission_id': submission_id},
                 cache_id=f'approval_submission:{submission_id}'
             )
@@ -1327,7 +1327,7 @@ class ReviewSubmissionView(LayoutView):
             await delete_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='approvals',
+                collection_name=DatabaseCollections.APPROVALS,
                 search_filter={'submission_id': submission_id},
                 cache_id=f'approval_submission:{submission_id}'
             )

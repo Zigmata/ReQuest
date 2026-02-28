@@ -11,7 +11,7 @@ from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.common.buttons import BaseViewButton
 from ReQuest.ui.common.enums import ShopChannelType
 from ReQuest.utilities.constants import (
-    ConfigFields, ShopFields, CommonFields, RoleplayFields
+    ConfigFields, ShopFields, CommonFields, RoleplayFields, DatabaseCollections
 )
 from ReQuest.utilities.supportFunctions import (
     log_exception,
@@ -43,7 +43,7 @@ class QuestAnnounceRoleRemoveButton(Button):
             await delete_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='announceRole',
+                collection_name=DatabaseCollections.ANNOUNCE_ROLE,
                 search_filter={'_id': interaction.guild_id}
             )
 
@@ -91,7 +91,7 @@ class RemoveGMRoleButton(Button):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='gmRoles',
+                collection_name=DatabaseCollections.GM_ROLES,
                 query={'_id': interaction.guild_id},
                 update_data={'$pull': {'gmRoles': {'name': self.role_name}}}
             )
@@ -119,7 +119,7 @@ class QuestSummaryToggleButton(Button):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='questSummary',
+                collection_name=DatabaseCollections.QUEST_SUMMARY,
                 query={'_id': guild_id}
             )
 
@@ -127,7 +127,7 @@ class QuestSummaryToggleButton(Button):
                 await update_cached_data(
                     bot=bot,
                     mongo_database=bot.gdb,
-                    collection_name='questSummary',
+                    collection_name=DatabaseCollections.QUEST_SUMMARY,
                     query={'_id': guild_id},
                     update_data={'$set': {'questSummary': True}}
                 )
@@ -136,7 +136,7 @@ class QuestSummaryToggleButton(Button):
                     await update_cached_data(
                         bot=bot,
                         mongo_database=bot.gdb,
-                        collection_name='questSummary',
+                        collection_name=DatabaseCollections.QUEST_SUMMARY,
                         query={'_id': guild_id},
                         update_data={'$set': {'questSummary': False}}
                     )
@@ -144,7 +144,7 @@ class QuestSummaryToggleButton(Button):
                     await update_cached_data(
                         bot=bot,
                         mongo_database=bot.gdb,
-                        collection_name='questSummary',
+                        collection_name=DatabaseCollections.QUEST_SUMMARY,
                         query={'_id': guild_id},
                         update_data={'$set': {'questSummary': True}}
                     )
@@ -171,7 +171,7 @@ class PlayerExperienceToggleButton(Button):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='playerExperience',
+                collection_name=DatabaseCollections.PLAYER_EXPERIENCE,
                 query={'_id': guild_id}
             )
             xp_state = query.get(ConfigFields.PLAYER_EXPERIENCE, True) if query else True
@@ -179,7 +179,7 @@ class PlayerExperienceToggleButton(Button):
                 await update_cached_data(
                     bot=bot,
                     mongo_database=bot.gdb,
-                    collection_name='playerExperience',
+                    collection_name=DatabaseCollections.PLAYER_EXPERIENCE,
                     query={'_id': guild_id},
                     update_data={'$set': {'playerExperience': False}}
                 )
@@ -187,7 +187,7 @@ class PlayerExperienceToggleButton(Button):
                 await update_cached_data(
                     bot=bot,
                     mongo_database=bot.gdb,
-                    collection_name='playerExperience',
+                    collection_name=DatabaseCollections.PLAYER_EXPERIENCE,
                     query={'_id': guild_id},
                     update_data={'$set': {'playerExperience': True}}
                 )
@@ -218,7 +218,7 @@ class ToggleDoubleButton(Button):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
+                collection_name=DatabaseCollections.CURRENCY,
                 query={'_id': interaction.guild_id, 'currencies.name': currency_name},
                 update_data={'$set': {'currencies.$.isDouble': new_value}}
             )
@@ -280,7 +280,7 @@ class RemoveDenominationButton(Button):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
+                collection_name=DatabaseCollections.CURRENCY,
                 query={'_id': interaction.guild_id, 'currencies.name': currency_name},
                 update_data={'$pull': {f'currencies.$.denominations': {'name': denomination_name}}}
             )
@@ -379,7 +379,7 @@ class RemoveCurrencyButton(Button):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
+                collection_name=DatabaseCollections.CURRENCY,
                 query={'_id': interaction.guild_id},
                 update_data={'$pull': {'currencies': {'name': currency_name}}}
             )
@@ -452,7 +452,7 @@ class ForbiddenRolesButton(Button):
             config_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='forbiddenRoles',
+                collection_name=DatabaseCollections.FORBIDDEN_ROLES,
                 query={'_id': interaction.guild_id}
             )
             if config_query and config_query[ConfigFields.FORBIDDEN_ROLES]:
@@ -662,7 +662,7 @@ class EditShopButton(Button):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='shops',
+                collection_name=DatabaseCollections.SHOPS,
                 query={'_id': interaction.guild_id}
             )
             shop_data = query.get('shopChannels', {}).get(self.calling_view.selected_channel_id)
@@ -713,7 +713,7 @@ class RemoveShopButton(Button):
             shop_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='shops',
+                collection_name=DatabaseCollections.SHOPS,
                 query={'_id': guild_id}
             )
 
@@ -738,7 +738,7 @@ class RemoveShopButton(Button):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='shops',
+                collection_name=DatabaseCollections.SHOPS,
                 query={'_id': guild_id},
                 update_data={'$unset': {f'shopChannels.{channel_id}': ''}}
             )
@@ -792,7 +792,7 @@ class DeleteShopItemButton(Button):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='shops',
+                collection_name=DatabaseCollections.SHOPS,
                 query={'_id': guild_id},
                 update_data={'$pull': {f'shopChannels.{channel_id}.shopStock': {'name': item_name}}}
             )
@@ -861,7 +861,7 @@ class DownloadShopJSONButton(Button):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='shops',
+                collection_name=DatabaseCollections.SHOPS,
                 query={'_id': guild_id}
             )
             shop_data = query.get('shopChannels', {}).get(channel_id)
@@ -977,7 +977,7 @@ class DeleteNewCharacterShopItemButton(Button):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='newCharacterShop',
+                collection_name=DatabaseCollections.NEW_CHARACTER_SHOP,
                 query={'_id': guild_id},
                 update_data={'$pull': {'shopStock': {'name': item_name}}}
             )
@@ -1025,7 +1025,7 @@ class DownloadNewCharacterShopJSONButton(Button):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='newCharacterShop',
+                collection_name=DatabaseCollections.NEW_CHARACTER_SHOP,
                 query={'_id': guild_id}
             )
 
@@ -1115,7 +1115,7 @@ class EditStaticKitButton(Button):
                 currency_config = await get_cached_data(
                     bot=bot,
                     mongo_database=bot.gdb,
-                    collection_name='currency',
+                    collection_name=DatabaseCollections.CURRENCY,
                     query={'_id': interaction.guild_id}
                 )
 
@@ -1154,7 +1154,7 @@ class RemoveStaticKitButton(Button):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='staticKits',
+                collection_name=DatabaseCollections.STATIC_KITS,
                 query={'_id': interaction.guild_id},
                 update_data={'$unset': {f'kits.{self.kit_id}': ''}}
             )
@@ -1221,7 +1221,7 @@ class DeleteKitItemButton(Button):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='staticKits',
+                collection_name=DatabaseCollections.STATIC_KITS,
                 query={'_id': interaction.guild_id}
             )
             items = query['kits'][kit_id].get('items', [])
@@ -1232,7 +1232,7 @@ class DeleteKitItemButton(Button):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='staticKits',
+                collection_name=DatabaseCollections.STATIC_KITS,
                 query={'_id': interaction.guild_id},
                 update_data={'$set': {f'kits.{kit_id}.items': items}}
             )
@@ -1279,7 +1279,7 @@ class DeleteKitCurrencyButton(Button):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='staticKits',
+                collection_name=DatabaseCollections.STATIC_KITS,
                 query={'_id': interaction.guild_id},
                 update_data={'$unset': {f'kits.{kit_id}.currency.{encode_mongo_key(self.currency_name)}': ''}}
             )
@@ -1309,7 +1309,7 @@ class RoleplayToggleEnableButton(Button):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='roleplayConfig',
+                collection_name=DatabaseCollections.ROLEPLAY_CONFIG,
                 query={'_id': interaction.guild_id},
                 update_data={'$set': {RoleplayFields.ENABLED: not current_state}}
             )
@@ -1334,7 +1334,7 @@ class RoleplayClearChannelsButton(Button):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='roleplayConfig',
+                collection_name=DatabaseCollections.ROLEPLAY_CONFIG,
                 query={'_id': interaction.guild_id},
                 update_data={'$set': {'channels': []}}
             )
@@ -1461,7 +1461,7 @@ class RemoveItemStockLimitButton(Button):
             shop_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='shops',
+                collection_name=DatabaseCollections.SHOPS,
                 query={'_id': guild_id}
             )
             shop_data = shop_query.get('shopChannels', {}).get(channel_id, {})
@@ -1478,7 +1478,7 @@ class RemoveItemStockLimitButton(Button):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='shops',
+                collection_name=DatabaseCollections.SHOPS,
                 query={'_id': guild_id},
                 update_data={'$set': {f'shopChannels.{channel_id}': shop_data}}
             )

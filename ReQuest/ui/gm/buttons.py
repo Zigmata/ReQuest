@@ -7,7 +7,7 @@ from discord.ui import Button
 from ReQuest.ui.common.modals import ConfirmModal
 from ReQuest.ui.gm import modals
 from ReQuest.ui.common.enums import RewardType
-from ReQuest.utilities.constants import QuestFields, ConfigFields
+from ReQuest.utilities.constants import QuestFields, ConfigFields, DatabaseCollections
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     setup_view,
@@ -170,7 +170,7 @@ class CancelQuestButton(Button):
             await delete_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='quests',
+                collection_name=DatabaseCollections.QUESTS,
                 search_filter={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest[QuestFields.QUEST_ID]},
                 cache_id=f'{guild_id}:{quest[QuestFields.QUEST_ID]}'
             )
@@ -186,7 +186,7 @@ class CancelQuestButton(Button):
             channel_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='questChannel',
+                collection_name=DatabaseCollections.QUEST_CHANNEL,
                 query={'_id': guild_id}
             )
             channel_id = strip_id(channel_query[ConfigFields.QUEST_CHANNEL])
@@ -251,7 +251,7 @@ class PartyRewardsButton(Button):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='quests',
+                collection_name=DatabaseCollections.QUESTS,
                 query={QuestFields.GUILD_ID: quest[QuestFields.GUILD_ID], QuestFields.QUEST_ID: quest[QuestFields.QUEST_ID]},
                 update_data={'$set': updates},
                 cache_id=f'{quest[QuestFields.GUILD_ID]}:{quest[QuestFields.QUEST_ID]}'
@@ -316,7 +316,7 @@ class IndividualRewardsButton(Button):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='quests',
+                collection_name=DatabaseCollections.QUESTS,
                 query={QuestFields.GUILD_ID: quest[QuestFields.GUILD_ID], QuestFields.QUEST_ID: quest[QuestFields.QUEST_ID]},
                 update_data={'$set': updates},
                 cache_id=f'{quest[QuestFields.GUILD_ID]}:{quest[QuestFields.QUEST_ID]}'
@@ -380,7 +380,7 @@ class CompleteQuestButton(Button):
             quest_summary_config_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='questSummary',
+                collection_name=DatabaseCollections.QUEST_SUMMARY,
                 query={'_id': interaction.guild_id}
             )
 

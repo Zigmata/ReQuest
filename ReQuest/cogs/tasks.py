@@ -6,7 +6,7 @@ from discord.ext import commands, tasks
 from discord.ext.commands import Cog
 
 from ReQuest.ui.common.enums import ScheduleType, RestockMode
-from ReQuest.utilities.constants import CommonFields, ShopFields, RestockFields
+from ReQuest.utilities.constants import CommonFields, ShopFields, RestockFields, DatabaseCollections
 from ReQuest.utilities.supportFunctions import (
     cleanup_expired_carts,
     get_last_restock,
@@ -77,7 +77,7 @@ class Tasks(Cog):
         now = datetime.now(timezone.utc)
 
         # Query all guilds with shops
-        collection = self.bot.gdb['shops']
+        collection = self.bot.gdb[DatabaseCollections.SHOPS]
         cursor = collection.find({})
         all_shops = await cursor.to_list(length=None)
 

@@ -18,7 +18,7 @@ from titlecase import titlecase
 from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.shop import buttons
 from ReQuest.utilities.constants import (
-    CharacterFields, ConfigFields, ShopFields, CommonFields, CartFields
+    CharacterFields, ConfigFields, ShopFields, CommonFields, CartFields, DatabaseCollections
 )
 from ReQuest.utilities.supportFunctions import (
     check_sufficient_funds,
@@ -68,7 +68,7 @@ class ShopBaseView(LayoutView):
         self.currency_config = await get_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
-            collection_name='currency',
+            collection_name=DatabaseCollections.CURRENCY,
             query={'_id': guild.id}
         )
 
@@ -310,9 +310,9 @@ class ShopCartView(LayoutView):
                 for item_key, data in self.prev_view.cart.items():
                     item = data[CartFields.ITEM]
                     quantity = data[CartFields.QUANTITY]
-                    option_index = data.get('optionIndex', 0)
+                    option_index = data.get(CartFields.OPTION_INDEX, 0)
 
-                    costs = item.get('costs', [])
+                    costs = item.get(ShopFields.COSTS, [])
                     if 0 <= option_index < len(costs):
                         selected_cost = costs[option_index]
                         for currency_name, amount in selected_cost.items():
@@ -450,7 +450,7 @@ class ShopCartView(LayoutView):
             character_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
-                collection_name='characters',
+                collection_name=DatabaseCollections.CHARACTERS,
                 query={'_id': user_id}
             )
 
@@ -488,7 +488,7 @@ class ShopCartView(LayoutView):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
-                collection_name='characters',
+                collection_name=DatabaseCollections.CHARACTERS,
                 query={'_id': user_id},
                 update_data={'$set': {f'characters.{active_char_id}': character_data}}
             )
@@ -500,7 +500,7 @@ class ShopCartView(LayoutView):
             log_channel_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='shopLogChannel',
+                collection_name=DatabaseCollections.SHOP_LOG_CHANNEL,
                 query={'_id': guild_id}
             )
             if log_channel_query:

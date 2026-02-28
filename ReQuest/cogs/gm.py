@@ -5,7 +5,7 @@ from discord.ext.commands import Cog
 
 from ReQuest.ui.gm import views, modals
 from ReQuest.utilities.checks import has_gm_or_mod
-from ReQuest.utilities.constants import CharacterFields
+from ReQuest.utilities.constants import CharacterFields, DatabaseCollections
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     get_cached_data,
@@ -58,7 +58,7 @@ class GameMaster(Cog):
             player_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
-                collection_name='characters',
+                collection_name=DatabaseCollections.CHARACTERS,
                 query={'_id': member.id}
             )
             if not player_query:
@@ -87,7 +87,7 @@ class GameMaster(Cog):
             player_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
-                collection_name='characters',
+                collection_name=DatabaseCollections.CHARACTERS,
                 query={'_id': member.id}
             )
             if not player_query:
@@ -102,7 +102,7 @@ class GameMaster(Cog):
             currency_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
+                collection_name=DatabaseCollections.CURRENCY,
                 query={'_id': interaction.guild_id}
             )
             xp_enabled = await get_xp_config(interaction.client, interaction.guild_id)

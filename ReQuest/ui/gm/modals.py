@@ -7,7 +7,7 @@ import shortuuid
 from discord.ui import Modal
 
 from ReQuest.ui.common.enums import RewardType
-from ReQuest.utilities.constants import QuestFields, ConfigFields, CommonFields
+from ReQuest.utilities.constants import QuestFields, ConfigFields, CommonFields, DatabaseCollections
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
@@ -96,7 +96,7 @@ class CreateQuestModal(Modal):
                 config_query = await get_cached_data(
                     bot=bot,
                     mongo_database=bot.gdb,
-                    collection_name='forbiddenRoles',
+                    collection_name=DatabaseCollections.FORBIDDEN_ROLES,
                     query={'_id': guild_id}
                 )
                 if config_query and config_query[ConfigFields.FORBIDDEN_ROLES]:
@@ -122,7 +122,7 @@ class CreateQuestModal(Modal):
             wait_list_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='questWaitList',
+                collection_name=DatabaseCollections.QUEST_WAIT_LIST,
                 query={'_id': guild_id}
             )
             if wait_list_query:
@@ -132,7 +132,7 @@ class CreateQuestModal(Modal):
             quest_channel_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='questChannel',
+                collection_name=DatabaseCollections.QUEST_CHANNEL,
                 query={'_id': guild_id}
             )
 
@@ -149,7 +149,7 @@ class CreateQuestModal(Modal):
             announce_role_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='announceRole',
+                collection_name=DatabaseCollections.ANNOUNCE_ROLE,
                 query={'_id': guild_id}
             )
 
@@ -200,7 +200,7 @@ class CreateQuestModal(Modal):
             msg = await quest_channel.send(embed=view.embed, view=view)
             quest[QuestFields.MESSAGE_ID] = msg.id
 
-            quest_collection = bot.gdb['quests']
+            quest_collection = bot.gdb[DatabaseCollections.QUESTS]
             await quest_collection.insert_one(quest)
 
             # Clear the cached guild quests for the GM
@@ -283,7 +283,7 @@ class EditQuestModal(Modal):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='quests',
+                collection_name=DatabaseCollections.QUESTS,
                 query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: self.quest[QuestFields.QUEST_ID]},
                 update_data={'$set': updates},
                 cache_id=f'{guild_id}:{self.quest[QuestFields.QUEST_ID]}'
@@ -296,7 +296,7 @@ class EditQuestModal(Modal):
             quest_channel_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='questChannel',
+                collection_name=DatabaseCollections.QUEST_CHANNEL,
                 query={'_id': guild_id}
             )
             quest_channel_id = strip_id(quest_channel_query[ConfigFields.QUEST_CHANNEL])
@@ -453,13 +453,13 @@ class ModPlayerModal(Modal):
             currency_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
+                collection_name=DatabaseCollections.CURRENCY,
                 query={'_id': guild_id}
             )
             log_channel_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='gmTransactionLogChannel',
+                collection_name=DatabaseCollections.GM_TRANSACTION_LOG_CHANNEL,
                 query={'_id': guild_id}
             )
             log_channel = None
@@ -567,7 +567,7 @@ class ReviewSubmissionInputModal(Modal):
             data = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='approvals',
+                collection_name=DatabaseCollections.APPROVALS,
                 query={'submission_id': submission_id},
                 cache_id=f'approval_submission:{submission_id}'
             )
@@ -579,7 +579,7 @@ class ReviewSubmissionInputModal(Modal):
             currency_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
+                collection_name=DatabaseCollections.CURRENCY,
                 query={'_id': interaction.guild_id}
             )
 

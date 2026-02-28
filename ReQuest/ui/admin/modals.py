@@ -4,6 +4,7 @@ import discord
 import discord.ui
 from discord.ui import Modal
 
+from ReQuest.utilities.constants import DatabaseCollections
 from ReQuest.utilities.supportFunctions import log_exception, update_cached_data
 
 logger = logging.getLogger(__name__)
@@ -38,7 +39,7 @@ class AllowServerModal(Modal):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.cdb,
-                collection_name='serverAllowlist',
+                collection_name=DatabaseCollections.SERVER_ALLOWLIST,
                 query={'servers': {'$exists': True}},
                 update_data={'$push': {'servers': {'name': input_name, 'id': guild_id}}},
                 cache_id=f'{guild_id}'

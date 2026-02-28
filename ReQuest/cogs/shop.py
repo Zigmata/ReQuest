@@ -3,6 +3,7 @@ from discord.ext import commands
 from discord.ext.commands import Cog
 
 from ReQuest.ui.shop import views
+from ReQuest.utilities.constants import DatabaseCollections
 from ReQuest.utilities.supportFunctions import log_exception, get_cached_data, UserFeedbackError, setup_view
 
 
@@ -22,7 +23,7 @@ class Shop(Cog):
             shop_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='shops',
+                collection_name=DatabaseCollections.SHOPS,
                 query={'_id': interaction.guild_id}
             )
             if not shop_query:

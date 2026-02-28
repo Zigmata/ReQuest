@@ -8,7 +8,7 @@ import shortuuid
 from discord.ui import Modal
 
 from ReQuest.ui.common.enums import InventoryType
-from ReQuest.utilities.constants import CharacterFields, ConfigFields, CommonFields
+from ReQuest.utilities.constants import CharacterFields, ConfigFields, CommonFields, DatabaseCollections
 from ReQuest.utilities.supportFunctions import (
     find_currency_or_denomination,
     log_exception,
@@ -63,7 +63,7 @@ class TradeModal(Modal):
             member_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
-                collection_name='characters',
+                collection_name=DatabaseCollections.CHARACTERS,
                 query={'_id': member_id}
             )
 
@@ -74,7 +74,7 @@ class TradeModal(Modal):
             log_channel_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='playerTransactionLogChannel',
+                collection_name=DatabaseCollections.PLAYER_TRANSACTION_LOG_CHANNEL,
                 query={'_id': guild_id}
             )
             if log_channel_query:
@@ -84,7 +84,7 @@ class TradeModal(Modal):
             target_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
-                collection_name='characters',
+                collection_name=DatabaseCollections.CHARACTERS,
                 query={'_id': target_id}
             )
             if not target_query:
@@ -99,7 +99,7 @@ class TradeModal(Modal):
             currency_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
+                collection_name=DatabaseCollections.CURRENCY,
                 query={'_id': guild_id}
             )
 
@@ -180,7 +180,7 @@ class CharacterRegisterModal(Modal):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
-                collection_name='characters',
+                collection_name=DatabaseCollections.CHARACTERS,
                 query={'_id': member_id},
                 update_data={'$set': {f'activeCharacters.{guild_id}': character_id,
                                       f'characters.{character_id}': {
@@ -198,7 +198,7 @@ class CharacterRegisterModal(Modal):
             inventory_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='inventoryConfig',
+                collection_name=DatabaseCollections.INVENTORY_CONFIG,
                 query={'_id': guild_id}
             )
             inventory_type = inventory_config.get('inventoryType', InventoryType.DISABLED.value) if inventory_config else InventoryType.DISABLED.value
@@ -315,7 +315,7 @@ class SpendCurrencyModal(Modal):
             character_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
-                collection_name='characters',
+                collection_name=DatabaseCollections.CHARACTERS,
                 query={'_id': member_id}
             )
             if not character_query or str(guild_id) not in character_query[CharacterFields.ACTIVE_CHARACTERS]:
@@ -328,7 +328,7 @@ class SpendCurrencyModal(Modal):
             currency_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
+                collection_name=DatabaseCollections.CURRENCY,
                 query={'_id': guild_id}
             )
             if not currency_config:
@@ -343,7 +343,7 @@ class SpendCurrencyModal(Modal):
             updated_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
-                collection_name='characters',
+                collection_name=DatabaseCollections.CHARACTERS,
                 query={'_id': member_id}
             )
 
@@ -377,7 +377,7 @@ class SpendCurrencyModal(Modal):
             log_channel_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='playerTransactionLogChannel',
+                collection_name=DatabaseCollections.PLAYER_TRANSACTION_LOG_CHANNEL,
                 query={'_id': guild_id}
             )
             if log_channel_query:
@@ -640,7 +640,7 @@ class ConsumeFromContainerModal(Modal):
             log_channel_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='playerTransactionLogChannel',
+                collection_name=DatabaseCollections.PLAYER_TRANSACTION_LOG_CHANNEL,
                 query={'_id': guild_id}
             )
             if log_channel_query:

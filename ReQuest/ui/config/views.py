@@ -24,7 +24,8 @@ from ReQuest.ui.common.enums import ShopChannelType, RestockMode, ScheduleType
 from ReQuest.ui.config import buttons, selects
 from ReQuest.ui.config.buttons import AddShopJSONButton
 from ReQuest.utilities.constants import (
-    ConfigFields, CurrencyFields, ShopFields, RestockFields, RoleplayFields, CommonFields
+    ConfigFields, CurrencyFields, ShopFields, RestockFields, RoleplayFields, CommonFields,
+    DatabaseCollections
 )
 from ReQuest.utilities.supportFunctions import (
     log_exception,
@@ -673,13 +674,13 @@ class ConfigWizardView(LayoutView):
             announcement_role_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='announceRole',
+                collection_name=DatabaseCollections.ANNOUNCE_ROLE,
                 query={'_id': guild.id}
             )
             gm_roles_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='gmRoles',
+                collection_name=DatabaseCollections.GM_ROLES,
                 query={'_id': guild.id}
             )
 
@@ -688,7 +689,7 @@ class ConfigWizardView(LayoutView):
             quest_channel_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='questChannel',
+                collection_name=DatabaseCollections.QUEST_CHANNEL,
                 query={'_id': guild.id}
             )
             channels.append(
@@ -701,7 +702,7 @@ class ConfigWizardView(LayoutView):
             player_channel_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='playerBoardChannel',
+                collection_name=DatabaseCollections.PLAYER_BOARD_CHANNEL,
                 query={'_id': guild.id}
             )
             channels.append(
@@ -714,7 +715,7 @@ class ConfigWizardView(LayoutView):
             archive_channel_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='archiveChannel',
+                collection_name=DatabaseCollections.ARCHIVE_CHANNEL,
                 query={'_id': guild.id}
             )
             channels.append(
@@ -728,7 +729,7 @@ class ConfigWizardView(LayoutView):
             gm_log_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='gmTransactionLogChannel',
+                collection_name=DatabaseCollections.GM_TRANSACTION_LOG_CHANNEL,
                 query={'_id': guild.id}
             )
             channels.append(
@@ -742,7 +743,7 @@ class ConfigWizardView(LayoutView):
             player_transaction_log_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='playerTransactionLogChannel',
+                collection_name=DatabaseCollections.PLAYER_TRANSACTION_LOG_CHANNEL,
                 query={'_id': guild.id}
             )
             channels.append(
@@ -757,7 +758,7 @@ class ConfigWizardView(LayoutView):
             shop_log_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='shopLogChannel',
+                collection_name=DatabaseCollections.SHOP_LOG_CHANNEL,
                 query={'_id': guild.id}
             )
             channels.append(
@@ -771,7 +772,7 @@ class ConfigWizardView(LayoutView):
             approval_queue_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='approvalQueueChannel',
+                collection_name=DatabaseCollections.APPROVAL_QUEUE_CHANNEL,
                 query={'_id': guild.id}
             )
             channels.append(
@@ -786,31 +787,31 @@ class ConfigWizardView(LayoutView):
             wait_list_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='questWaitList',
+                collection_name=DatabaseCollections.QUEST_WAIT_LIST,
                 query={'_id': guild.id}
             )
             quest_summary_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='questSummary',
+                collection_name=DatabaseCollections.QUEST_SUMMARY,
                 query={'_id': guild.id}
             )
             gm_rewards_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='gmRewards',
+                collection_name=DatabaseCollections.GM_REWARDS,
                 query={'_id': guild.id}
             )
             player_xp_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='playerExperience',
+                collection_name=DatabaseCollections.PLAYER_EXPERIENCE,
                 query={'_id': guild.id}
             )
             currency_config_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='currency',
+                collection_name=DatabaseCollections.CURRENCY,
                 query={'_id': guild.id}
             )
 
@@ -818,7 +819,7 @@ class ConfigWizardView(LayoutView):
             roleplay_config_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='roleplayConfig',
+                collection_name=DatabaseCollections.ROLEPLAY_CONFIG,
                 query={'_id': guild.id}
             )
 
@@ -826,7 +827,7 @@ class ConfigWizardView(LayoutView):
             shops_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='shops',
+                collection_name=DatabaseCollections.SHOPS,
                 query={'_id': guild.id}
             )
 
@@ -834,19 +835,19 @@ class ConfigWizardView(LayoutView):
             inventory_config_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='inventoryConfig',
+                collection_name=DatabaseCollections.INVENTORY_CONFIG,
                 query={'_id': guild.id}
             )
             new_char_shop_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='newCharacterShop',
+                collection_name=DatabaseCollections.NEW_CHARACTER_SHOP,
                 query={'_id': guild.id}
             )
             static_kits_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='staticKits',
+                collection_name=DatabaseCollections.STATIC_KITS,
                 query={'_id': guild.id}
             )
 
@@ -954,14 +955,14 @@ class ConfigRolesView(LayoutView):
             announcement_role_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='announceRole',
+                collection_name=DatabaseCollections.ANNOUNCE_ROLE,
                 query={'_id': guild.id}
             )
             announcement_role = announcement_role_query.get(ConfigFields.ANNOUNCE_ROLE) if announcement_role_query else None
             gm_role_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='gmRoles',
+                collection_name=DatabaseCollections.GM_ROLES,
                 query={'_id': guild.id}
             )
             gm_roles = gm_role_query.get('gmRoles', []) if gm_role_query else []
@@ -1014,7 +1015,7 @@ class ConfigGMRoleRemoveView(LayoutView):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='gmRoles',
+                collection_name=DatabaseCollections.GM_ROLES,
                 query={'_id': guild.id}
             )
 
@@ -1231,7 +1232,7 @@ class ConfigChannelsView(LayoutView):
             player_board_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='playerBoardChannel',
+                collection_name=DatabaseCollections.PLAYER_BOARD_CHANNEL,
                 query={'_id': guild.id}
             )
             player_board = player_board_query.get('playerBoardChannel') if player_board_query else None
@@ -1239,7 +1240,7 @@ class ConfigChannelsView(LayoutView):
             quest_board_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='questChannel',
+                collection_name=DatabaseCollections.QUEST_CHANNEL,
                 query={'_id': guild.id}
             )
             quest_board = quest_board_query.get('questChannel') if quest_board_query else None
@@ -1247,7 +1248,7 @@ class ConfigChannelsView(LayoutView):
             quest_archive_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='archiveChannel',
+                collection_name=DatabaseCollections.ARCHIVE_CHANNEL,
                 query={'_id': guild.id}
             )
             quest_archive = quest_archive_query.get('archiveChannel') if quest_archive_query else None
@@ -1255,7 +1256,7 @@ class ConfigChannelsView(LayoutView):
             gm_log_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='gmTransactionLogChannel',
+                collection_name=DatabaseCollections.GM_TRANSACTION_LOG_CHANNEL,
                 query={'_id': guild.id}
             )
             gm_transaction_log = gm_log_query.get('gmTransactionLogChannel') if gm_log_query else None
@@ -1263,7 +1264,7 @@ class ConfigChannelsView(LayoutView):
             player_log_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='playerTransactionLogChannel',
+                collection_name=DatabaseCollections.PLAYER_TRANSACTION_LOG_CHANNEL,
                 query={'_id': guild.id}
             )
             player_transaction_log = player_log_query.get('playerTransactionLogChannel') if player_log_query else None
@@ -1271,7 +1272,7 @@ class ConfigChannelsView(LayoutView):
             shop_log_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='shopLogChannel',
+                collection_name=DatabaseCollections.SHOP_LOG_CHANNEL,
                 query={'_id': guild.id}
             )
             shop_log = shop_log_query.get('shopLogChannel') if shop_log_query else None
@@ -1358,7 +1359,7 @@ class ConfigQuestsView(LayoutView):
             quest_summary_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='questSummary',
+                collection_name=DatabaseCollections.QUEST_SUMMARY,
                 query={'_id': guild.id}
             )
             quest_summary = quest_summary_query.get('questSummary') if quest_summary_query else False
@@ -1366,7 +1367,7 @@ class ConfigQuestsView(LayoutView):
             wait_list_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='questWaitList',
+                collection_name=DatabaseCollections.QUEST_WAIT_LIST,
                 query={'_id': guild.id}
             )
             wait_list = wait_list_query.get('questWaitList', 0) if wait_list_query else 0
@@ -1426,7 +1427,7 @@ class GMRewardsView(LayoutView):
             gm_rewards_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='gmRewards',
+                collection_name=DatabaseCollections.GM_REWARDS,
                 query={'_id': guild.id}
             )
             experience = None
@@ -1578,7 +1579,7 @@ class ConfigNewCharacterView(LayoutView):
             inventory_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='inventoryConfig',
+                collection_name=DatabaseCollections.INVENTORY_CONFIG,
                 query={'_id': guild.id}
             )
             inventory_type = inventory_config.get(ConfigFields.INVENTORY_TYPE, 'disabled') if inventory_config else 'disabled'
@@ -1602,7 +1603,7 @@ class ConfigNewCharacterView(LayoutView):
             currency_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
+                collection_name=DatabaseCollections.CURRENCY,
                 query={'_id': guild.id}
             )
             self.currency_config = currency_config
@@ -1652,7 +1653,7 @@ class ConfigNewCharacterView(LayoutView):
             approval_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='approvalQueueChannel',
+                collection_name=DatabaseCollections.APPROVAL_QUEUE_CHANNEL,
                 query={'_id': guild.id}
             )
             approval_channel = approval_query[ConfigFields.APPROVAL_QUEUE_CHANNEL] if approval_query else 'Not Configured'
@@ -1763,7 +1764,7 @@ class ConfigNewCharacterShopView(LayoutView):
             inventory_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='inventoryConfig',
+                collection_name=DatabaseCollections.INVENTORY_CONFIG,
                 query={'_id': guild.id}
             )
             self.inventory_type = inventory_config.get(ConfigFields.INVENTORY_TYPE, 'disabled') if inventory_config else 'disabled'
@@ -1787,7 +1788,7 @@ class ConfigNewCharacterShopView(LayoutView):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='newCharacterShop',
+                collection_name=DatabaseCollections.NEW_CHARACTER_SHOP,
                 query={'_id': guild.id}
             )
             if query and 'shopStock' in query:
@@ -1798,7 +1799,7 @@ class ConfigNewCharacterShopView(LayoutView):
             self.currency_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
+                collection_name=DatabaseCollections.CURRENCY,
                 query={'_id': guild.id}
             )
 
@@ -1841,7 +1842,7 @@ class ConfigStaticKitsView(LayoutView):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='staticKits',
+                collection_name=DatabaseCollections.STATIC_KITS,
                 query={'_id': guild.id}
             )
             self.kits = query.get('kits', {}) if query else {}
@@ -1858,7 +1859,7 @@ class ConfigStaticKitsView(LayoutView):
             self.currency_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
+                collection_name=DatabaseCollections.CURRENCY,
                 query={'_id': guild.id}
             )
 
@@ -2131,7 +2132,7 @@ class ConfigCurrencyView(LayoutView):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
+                collection_name=DatabaseCollections.CURRENCY,
                 query={'_id': guild.id}
             )
 
@@ -2252,7 +2253,7 @@ class ConfigEditCurrencyView(LayoutView):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
+                collection_name=DatabaseCollections.CURRENCY,
                 query={'_id': guild.id}
             )
 
@@ -2397,7 +2398,7 @@ class ConfigShopsView(LayoutView):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='shops',
+                collection_name=DatabaseCollections.SHOPS,
                 query={'_id': guild.id}
             )
 
@@ -2718,7 +2719,7 @@ class EditShopView(LayoutView):
             self.currency_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
+                collection_name=DatabaseCollections.CURRENCY,
                 query={'_id': guild.id}
             )
 
@@ -2874,7 +2875,7 @@ class ConfigStockLimitsView(LayoutView):
             shop_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='shops',
+                collection_name=DatabaseCollections.SHOPS,
                 query={'_id': guild.id}
             )
             if shop_query:
@@ -3051,7 +3052,7 @@ class ConfigRoleplayView(LayoutView):
             self.config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='roleplayConfig',
+                collection_name=DatabaseCollections.ROLEPLAY_CONFIG,
                 query={'_id': guild.id}
             )
             if not self.config:
@@ -3060,7 +3061,7 @@ class ConfigRoleplayView(LayoutView):
             self.currency_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
+                collection_name=DatabaseCollections.CURRENCY,
                 query={'_id': guild.id}
             )
 

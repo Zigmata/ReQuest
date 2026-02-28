@@ -8,7 +8,7 @@ from discord.ext.commands import Cog
 from pymongo import ReturnDocument
 
 from ReQuest.ui.common.enums import ScheduleType, RoleplayMode, DayOfWeek
-from ReQuest.utilities.constants import CharacterFields, RoleplayFields, CommonFields
+from ReQuest.utilities.constants import CharacterFields, RoleplayFields, CommonFields, DatabaseCollections
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     get_cached_data,
@@ -78,7 +78,7 @@ class Roleplay(Cog):
             rp_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='roleplayConfig',
+                collection_name=DatabaseCollections.ROLEPLAY_CONFIG,
                 query={'_id': guild_id}
             )
             if not rp_config:
@@ -110,7 +110,7 @@ class Roleplay(Cog):
             character_data = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
-                collection_name='characters',
+                collection_name=DatabaseCollections.CHARACTERS,
                 query={'_id': user_id}
             )
 
@@ -133,7 +133,7 @@ class Roleplay(Cog):
             if cooldown_time > 0:
                 await bot.rdb.set(cooldown_state_key, "1", ex=cooldown_time)
 
-            collection = bot.gdb['roleplayData']
+            collection = bot.gdb[DatabaseCollections.ROLEPLAY_DATA]
             db_key = f"{guild_id}:{user_id}"
 
             trigger_reward = False
