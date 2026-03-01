@@ -369,7 +369,7 @@ class ShopCartView(LayoutView):
                 total_strings = format_consolidated_totals(self.base_totals, self.currency_config)
                 cost_string = f'**Total Cost:**'
                 if total_strings:
-                    cost_string += f'\n{', '.join(total_strings)}'
+                    cost_string += f'\n{", ".join(total_strings)}'
                 else:
                     cost_string += '\nFree'
                 if warnings:

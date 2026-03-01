@@ -637,7 +637,7 @@ class ConfigWizardView(LayoutView):
 
         # New Character Setup
         inv_type = inventory_config.get(ConfigFields.INVENTORY_TYPE, 'none') if inventory_config else 'none'
-        shop_items = new_char_shop.get('stock', []) if new_char_shop else []
+        shop_items = new_char_shop.get(ShopFields.SHOP_STOCK, []) if new_char_shop else []
         kits = static_kits.get('kits', []) if static_kits else []
         new_char_section_content = [
             '**New Character Setup**',
@@ -989,7 +989,7 @@ class ConfigRolesView(LayoutView):
                 for role in gm_roles:
                     role_mentions.append(role[CommonFields.MENTION])
 
-                gm_roles_string = (f'**GM Role(s):** {', '.join(role_mentions)}\n'
+                gm_roles_string = (f'**GM Role(s):** {", ".join(role_mentions)}\n'
                                    f'These roles will grant access to Game Master commands and features.')
                 self.gm_role_remove_view_button.disabled = False
 
