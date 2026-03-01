@@ -97,7 +97,7 @@ class CreateQuestModal(Modal):
                     bot=bot,
                     mongo_database=bot.gdb,
                     collection_name=DatabaseCollections.FORBIDDEN_ROLES,
-                    query={'_id': guild_id}
+                    query={CommonFields.ID: guild_id}
                 )
                 if config_query and config_query[ConfigFields.FORBIDDEN_ROLES]:
                     for name in config_query[ConfigFields.FORBIDDEN_ROLES]:
@@ -123,7 +123,7 @@ class CreateQuestModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.QUEST_WAIT_LIST,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
             if wait_list_query:
                 max_wait_list_size = wait_list_query[ConfigFields.QUEST_WAIT_LIST]
@@ -133,7 +133,7 @@ class CreateQuestModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.QUEST_CHANNEL,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
 
             # Inform user if quest channel is not set. Otherwise, get the channel string
@@ -150,7 +150,7 @@ class CreateQuestModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.ANNOUNCE_ROLE,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
 
             # Grab the announcement role, if configured.
@@ -178,20 +178,20 @@ class CreateQuestModal(Modal):
                         f'channel and ReQuest role permissions with your server admin(s).')
 
             quest = {
-                'guildId': guild_id,
-                'questId': quest_id,
-                'messageId': 0,
-                'title': title,
-                'description': description,
-                'maxPartySize': max_party_size,
-                'restrictions': restrictions,
-                'gm': author_id,
-                'party': party,
-                'partyRoleId': party_role_id,
-                'waitList': wait_list,
-                'maxWaitListSize': max_wait_list_size,
-                'lockState': lock_state,
-                'rewards': {}
+                QuestFields.GUILD_ID: guild_id,
+                QuestFields.QUEST_ID: quest_id,
+                QuestFields.MESSAGE_ID: 0,
+                QuestFields.TITLE: title,
+                QuestFields.DESCRIPTION: description,
+                QuestFields.MAX_PARTY_SIZE: max_party_size,
+                QuestFields.RESTRICTIONS: restrictions,
+                QuestFields.GM: author_id,
+                QuestFields.PARTY: party,
+                QuestFields.PARTY_ROLE_ID: party_role_id,
+                QuestFields.WAIT_LIST: wait_list,
+                QuestFields.MAX_WAIT_LIST_SIZE: max_wait_list_size,
+                QuestFields.LOCK_STATE: lock_state,
+                QuestFields.REWARDS: {}
             }
 
             from ReQuest.ui.gm.views import QuestPostView
@@ -274,10 +274,10 @@ class EditQuestModal(Modal):
             bot = interaction.client
             guild_id = interaction.guild_id
             updates = {
-                'title': self.title_text_input.value,
-                'restrictions': self.restrictions_text_input.value,
-                'maxPartySize': int(self.max_party_size_text_input.value),
-                'description': self.description_text_input.value
+                QuestFields.TITLE: self.title_text_input.value,
+                QuestFields.RESTRICTIONS: self.restrictions_text_input.value,
+                QuestFields.MAX_PARTY_SIZE: int(self.max_party_size_text_input.value),
+                QuestFields.DESCRIPTION: self.description_text_input.value
             }
 
             await update_cached_data(
@@ -297,7 +297,7 @@ class EditQuestModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.QUEST_CHANNEL,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
             quest_channel_id = strip_id(quest_channel_query[ConfigFields.QUEST_CHANNEL])
             guild = interaction.client.get_guild(guild_id)
@@ -337,7 +337,7 @@ class RewardsModal(Modal):
             rewards = calling_view.current_individual_rewards
 
         if self.xp_enabled:
-            xp_value = rewards.get('xp')
+            xp_value = rewards.get(QuestFields.XP)
             xp_default = str(xp_value) if xp_value is not None else '0'
             self.xp_input = discord.ui.TextInput(
                 label='Experience Points',
@@ -350,8 +350,8 @@ class RewardsModal(Modal):
             self.add_item(self.xp_input)
 
         items_default = ''
-        if rewards.get('items'):
-            lines = [f'{name}: {quantity}' for name, quantity in rewards['items'].items()]
+        if rewards.get(CommonFields.ITEMS):
+            lines = [f'{name}: {quantity}' for name, quantity in rewards[CommonFields.ITEMS].items()]
             items_default = '\n'.join(lines)
 
         self.item_input = discord.ui.TextInput(
@@ -454,13 +454,13 @@ class ModPlayerModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.CURRENCY,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
             log_channel_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.GM_TRANSACTION_LOG_CHANNEL,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
             log_channel = None
             if log_channel_config:
@@ -580,7 +580,7 @@ class ReviewSubmissionInputModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.CURRENCY,
-                query={'_id': interaction.guild_id}
+                query={CommonFields.ID: interaction.guild_id}
             )
 
             from ReQuest.ui.gm.views import ReviewSubmissionView

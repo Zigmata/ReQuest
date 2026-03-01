@@ -21,7 +21,7 @@ from titlecase import titlecase
 
 from ReQuest.ui.common.enums import ShopChannelType, RestockMode, ScheduleType
 from ReQuest.utilities.constants import (
-    ConfigFields, CurrencyFields, ShopFields, RestockFields, RoleplayFields, CommonFields,
+    CharacterFields, ConfigFields, CurrencyFields, QuestFields, ShopFields, RestockFields, RoleplayFields, CommonFields,
     DatabaseCollections
 )
 from ReQuest.utilities.supportFunctions import (
@@ -110,7 +110,7 @@ class AddCurrencyTextModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.CURRENCY,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
             matches = 0
             if query:
@@ -130,9 +130,9 @@ class AddCurrencyTextModal(Modal):
                     bot=bot,
                     mongo_database=bot.gdb,
                     collection_name=DatabaseCollections.CURRENCY,
-                    query={'_id': guild_id},
-                    update_data={'$push': {'currencies': {'name': self.text_input.value,
-                                                          'isDouble': False, 'denominations': []}}}
+                    query={CommonFields.ID: guild_id},
+                    update_data={'$push': {CurrencyFields.CURRENCIES: {CommonFields.NAME: self.text_input.value,
+                                                          CurrencyFields.IS_DOUBLE: False, CurrencyFields.DENOMINATIONS: []}}}
                 )
                 await setup_view(view, interaction)
                 await interaction.response.edit_message(view=view)
@@ -173,14 +173,14 @@ class RenameCurrencyModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.CURRENCY,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
 
             if query:
-                for currency in query.get('currencies', []):
+                for currency in query.get(CurrencyFields.CURRENCIES, []):
                     if currency[CommonFields.NAME].lower() == new_name.lower():
                         raise UserFeedbackError(f'A currency named "{new_name}" already exists.')
-                    for denomination in currency.get('denominations', []):
+                    for denomination in currency.get(CurrencyFields.DENOMINATIONS, []):
                         if denomination[CommonFields.NAME].lower() == new_name.lower():
                             raise UserFeedbackError(f'A denomination named "{new_name}" already exists.')
 
@@ -189,8 +189,8 @@ class RenameCurrencyModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.CURRENCY,
-                query={'_id': guild_id, 'currencies.name': self.old_currency_name},
-                update_data={'$set': {'currencies.$.name': new_name}}
+                query={CommonFields.ID: guild_id, f'{CurrencyFields.CURRENCIES}.{CommonFields.NAME}': self.old_currency_name},
+                update_data={'$set': {f'{CurrencyFields.CURRENCIES}.$.{CommonFields.NAME}': new_name}}
             )
 
             # Update the view with the new name and refresh
@@ -235,23 +235,23 @@ class RenameDenominationModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.CURRENCY,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
 
             if query:
-                for currency in query.get('currencies', []):
+                for currency in query.get(CurrencyFields.CURRENCIES, []):
                     if currency[CommonFields.NAME].lower() == new_name.lower():
                         raise UserFeedbackError(f'A currency named "{new_name}" already exists.')
-                    for denomination in currency.get('denominations', []):
+                    for denomination in currency.get(CurrencyFields.DENOMINATIONS, []):
                         if denomination[CommonFields.NAME].lower() == new_name.lower():
                             raise UserFeedbackError(f'A denomination named "{new_name}" already exists.')
 
             # Update the denomination name using arrayFilters
             collection = bot.gdb[DatabaseCollections.CURRENCY]
             await collection.update_one(
-                {'_id': guild_id, 'currencies.name': self.currency_name},
-                {'$set': {'currencies.$.denominations.$[denom].name': new_name}},
-                array_filters=[{'denom.name': self.old_denomination_name}]
+                {CommonFields.ID: guild_id, f'{CurrencyFields.CURRENCIES}.{CommonFields.NAME}': self.currency_name},
+                {'$set': {f'{CurrencyFields.CURRENCIES}.$.{CurrencyFields.DENOMINATIONS}.$[denom].{CommonFields.NAME}': new_name}},
+                array_filters=[{f'denom.{CommonFields.NAME}': self.old_denomination_name}]
             )
 
             # Invalidate cache
@@ -297,7 +297,7 @@ class AddCurrencyDenominationModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.CURRENCY,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
             for currency in query[CurrencyFields.CURRENCIES]:
                 if new_name.lower() == currency[CommonFields.NAME].lower():
@@ -327,11 +327,11 @@ class AddCurrencyDenominationModal(Modal):
                     bot=bot,
                     mongo_database=bot.gdb,
                     collection_name=DatabaseCollections.CURRENCY,
-                    query={'_id': guild_id, 'currencies.name': self.base_currency_name},
+                    query={CommonFields.ID: guild_id, f'{CurrencyFields.CURRENCIES}.{CommonFields.NAME}': self.base_currency_name},
                     update_data={
-                        '$push': {'currencies.$.denominations': {
-                            'name': new_name,
-                            'value': float(self.denomination_value_text_input.value)}
+                        '$push': {f'{CurrencyFields.CURRENCIES}.$.{CurrencyFields.DENOMINATIONS}': {
+                            CommonFields.NAME: new_name,
+                            CurrencyFields.VALUE: float(self.denomination_value_text_input.value)}
                         }
                     }
                 )
@@ -368,8 +368,8 @@ class ForbiddenRolesModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.FORBIDDEN_ROLES,
-                query={'_id': interaction.guild_id},
-                update_data={'$set': {'forbiddenRoles': names}}
+                query={CommonFields.ID: interaction.guild_id},
+                update_data={'$set': {ConfigFields.FORBIDDEN_ROLES: names}}
             )
             await interaction.response.send_message('Forbidden roles updated!', ephemeral=True)
         except Exception as e:
@@ -404,7 +404,7 @@ class PlayerBoardPurgeModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.PLAYER_BOARD,
-                search_filter={'guildId': interaction.guild_id, 'timestamp': {'$lt': cutoff_date}},
+                search_filter={QuestFields.GUILD_ID: interaction.guild_id, 'timestamp': {'$lt': cutoff_date}},
                 is_single=False,
                 cache_id=interaction.guild_id
             )
@@ -414,7 +414,7 @@ class PlayerBoardPurgeModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.PLAYER_BOARD_CHANNEL,
-                query={'_id': interaction.guild_id}
+                query={CommonFields.ID: interaction.guild_id}
             )
             channel_id = strip_id(config_query[ConfigFields.PLAYER_BOARD_CHANNEL])
             channel = interaction.guild.get_channel(channel_id)
@@ -442,7 +442,7 @@ class GMRewardsModal(Modal):
                 label='Experience',
                 custom_id='experience_text_input',
                 placeholder='Enter a number',
-                default=current_rewards['experience'] if current_rewards and current_rewards['experience'] else None,
+                default=current_rewards[CharacterFields.EXPERIENCE] if current_rewards and current_rewards[CharacterFields.EXPERIENCE] else None,
                 required=False
             )
             self.add_item(self.experience_text_input)
@@ -454,8 +454,8 @@ class GMRewardsModal(Modal):
             placeholder='Name: Quantity\n'
                         'Name2: Quantity\n'
                         'etc.',
-            default=(self.parse_items_to_string(current_rewards['items'])
-                     if current_rewards and current_rewards['items']
+            default=(self.parse_items_to_string(current_rewards[CommonFields.ITEMS])
+                     if current_rewards and current_rewards[CommonFields.ITEMS]
                      else None),
             required=False
         )
@@ -488,8 +488,8 @@ class GMRewardsModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.GM_REWARDS,
-                query={'_id': interaction.guild_id},
-                update_data={'$set': {'experience': experience, 'items': items}}
+                query={CommonFields.ID: interaction.guild_id},
+                update_data={'$set': {CharacterFields.EXPERIENCE: experience, CommonFields.ITEMS: items}}
             )
 
             await setup_view(self.calling_view, interaction)
@@ -521,10 +521,10 @@ class ConfigShopDetailsModal(Modal):
 
         self.shop_channel_select = None
 
-        name_default = existing_shop_data.get('shopName', '') if existing_shop_data else ''
-        keeper_default = existing_shop_data.get('shopKeeper', '') if existing_shop_data else ''
-        description_default = existing_shop_data.get('shopDescription', '') if existing_shop_data else ''
-        image_default = existing_shop_data.get('shopImage', '') if existing_shop_data else ''
+        name_default = existing_shop_data.get(ShopFields.SHOP_NAME, '') if existing_shop_data else ''
+        keeper_default = existing_shop_data.get(ShopFields.SHOP_KEEPER, '') if existing_shop_data else ''
+        description_default = existing_shop_data.get(ShopFields.SHOP_DESCRIPTION, '') if existing_shop_data else ''
+        image_default = existing_shop_data.get(ShopFields.SHOP_IMAGE, '') if existing_shop_data else ''
 
         # Only show channel select if no existing channel AND no preselected channel (forum thread)
         if not self.existing_channel_id and not self.preselected_channel:
@@ -593,21 +593,21 @@ class ConfigShopDetailsModal(Modal):
                     bot=bot,
                     mongo_database=bot.gdb,
                     collection_name=DatabaseCollections.SHOPS,
-                    query={'_id': guild_id}
+                    query={CommonFields.ID: guild_id}
                 )
-                if query and channel_id in query.get('shopChannels', {}):
+                if query and channel_id in query.get(ShopFields.SHOP_CHANNELS, {}):
                     raise UserFeedbackError(
                         'A shop is already registered in the selected channel. Please choose a different channel or '
                         'edit the existing shop.'
                     )
 
             shop_data = {
-                'shopName': self.shop_name_text_input.value,
-                'shopKeeper': self.shop_keeper_text_input.value,
-                'shopDescription': self.shop_description_text_input.value,
-                'shopImage': self.shop_image_text_input.value,
-                'shopStock': [],
-                'channelType': self.channel_type
+                ShopFields.SHOP_NAME: self.shop_name_text_input.value,
+                ShopFields.SHOP_KEEPER: self.shop_keeper_text_input.value,
+                ShopFields.SHOP_DESCRIPTION: self.shop_description_text_input.value,
+                ShopFields.SHOP_IMAGE: self.shop_image_text_input.value,
+                ShopFields.SHOP_STOCK: [],
+                ShopFields.CHANNEL_TYPE: self.channel_type
             }
 
             # Add parent forum ID for forum thread shops
@@ -619,17 +619,17 @@ class ConfigShopDetailsModal(Modal):
                     bot=bot,
                     mongo_database=bot.gdb,
                     collection_name=DatabaseCollections.SHOPS,
-                    query={'_id': guild_id}
+                    query={CommonFields.ID: guild_id}
                 )
-                existing_shop_data = existing_query.get('shopChannels', {}).get(channel_id, {})
-                shop_data[ShopFields.SHOP_STOCK] = existing_shop_data.get('shopStock', [])
+                existing_shop_data = existing_query.get(ShopFields.SHOP_CHANNELS, {}).get(channel_id, {})
+                shop_data[ShopFields.SHOP_STOCK] = existing_shop_data.get(ShopFields.SHOP_STOCK, [])
 
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.SHOPS,
-                query={'_id': guild_id},
-                update_data={'$set': {f'shopChannels.{channel_id}': shop_data}}
+                query={CommonFields.ID: guild_id},
+                update_data={'$set': {f'{ShopFields.SHOP_CHANNELS}.{channel_id}': shop_data}}
             )
 
             if hasattr(self.calling_view, 'update_details'):
@@ -656,14 +656,14 @@ def build_shop_header_view(shop_data: dict) -> LayoutView:
     container = Container()
     header_items = []
 
-    if shop_name := shop_data.get('shopName'):
+    if shop_name := shop_data.get(ShopFields.SHOP_NAME):
         header_items.append(TextDisplay(f'# {shop_name}'))
-    if shop_keeper := shop_data.get('shopKeeper'):
+    if shop_keeper := shop_data.get(ShopFields.SHOP_KEEPER):
         header_items.append(TextDisplay(f'**Shopkeeper:** {shop_keeper}'))
-    if shop_description := shop_data.get('shopDescription'):
+    if shop_description := shop_data.get(ShopFields.SHOP_DESCRIPTION):
         header_items.append(TextDisplay(f'*{shop_description}*'))
 
-    if shop_image := shop_data.get('shopImage'):
+    if shop_image := shop_data.get(ShopFields.SHOP_IMAGE):
         thumbnail = Thumbnail(media=shop_image)
         shop_header = Section(accessory=thumbnail)
         for item in header_items:
@@ -741,13 +741,13 @@ class ForumThreadShopModal(Modal):
             # Build shop data first so we can create the header view
             thread_name = self.thread_name_input.value
             shop_data = {
-                'shopName': self.shop_name_input.value,
-                'shopKeeper': self.shop_keeper_input.value,
-                'shopDescription': self.shop_description_input.value,
-                'shopImage': self.shop_image_input.value,
-                'shopStock': [],
-                'channelType': ShopChannelType.FORUM_THREAD.value,
-                'parentForumId': str(self.forum_channel.id)
+                ShopFields.SHOP_NAME: self.shop_name_input.value,
+                ShopFields.SHOP_KEEPER: self.shop_keeper_input.value,
+                ShopFields.SHOP_DESCRIPTION: self.shop_description_input.value,
+                ShopFields.SHOP_IMAGE: self.shop_image_input.value,
+                ShopFields.SHOP_STOCK: [],
+                ShopFields.CHANNEL_TYPE: ShopChannelType.FORUM_THREAD.value,
+                ShopFields.PARENT_FORUM_ID: str(self.forum_channel.id)
             }
 
             # Create the shop header view for the initial post
@@ -768,9 +768,9 @@ class ForumThreadShopModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.SHOPS,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
-            if query and channel_id in query.get('shopChannels', {}):
+            if query and channel_id in query.get(ShopFields.SHOP_CHANNELS, {}):
                 raise UserFeedbackError(
                     'A shop is already registered in this thread. This should not happen for a new thread.'
                 )
@@ -779,8 +779,8 @@ class ForumThreadShopModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.SHOPS,
-                query={'_id': guild_id},
-                update_data={'$set': {f'shopChannels.{channel_id}': shop_data}}
+                query={CommonFields.ID: guild_id},
+                update_data={'$set': {f'{ShopFields.SHOP_CHANNELS}.{channel_id}': shop_data}}
             )
 
             # Navigate back to shop config view
@@ -830,9 +830,9 @@ class ConfigShopJSONModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.SHOPS,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
-            if query and channel_id in query.get('shopChannels', {}):
+            if query and channel_id in query.get(ShopFields.SHOP_CHANNELS, {}):
                 raise UserFeedbackError(
                     'A shop is already registered in the selected channel. Please choose a different channel or edit '
                     'the existing shop.'
@@ -863,14 +863,14 @@ class ConfigShopJSONModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.SHOPS,
-                query={'_id': guild_id},
-                update_data={'$set': {f'shopChannels.{channel_id}': shop_data}}
+                query={CommonFields.ID: guild_id},
+                update_data={'$set': {f'{ShopFields.SHOP_CHANNELS}.{channel_id}': shop_data}}
             )
 
             # Initialize runtime stock for items with maxStock
-            shop_stock = shop_data.get('shopStock', [])
+            shop_stock = shop_data.get(ShopFields.SHOP_STOCK, [])
             for item in shop_stock:
-                max_stock = item.get('maxStock')
+                max_stock = item.get(ShopFields.MAX_STOCK)
                 if max_stock is not None:
                     item_name = item.get(CommonFields.NAME)
                     # Initialize with max stock as available
@@ -893,12 +893,12 @@ class ShopItemModal(Modal):
 
         name_default = existing_item.get(CommonFields.NAME, '') if existing_item else ''
         description_default = existing_item.get('description', '') if existing_item else ''
-        quantity_default = str(existing_item.get('quantity', '1')) if existing_item else '1'
+        quantity_default = str(existing_item.get(CommonFields.QUANTITY, '1')) if existing_item else '1'
 
         costs_default = ''
-        if existing_item and 'costs' in existing_item:
+        if existing_item and ShopFields.COSTS in existing_item:
             lines = []
-            for option in existing_item['costs']:
+            for option in existing_item[ShopFields.COSTS]:
                 components = [f'{amount} {currency}' for currency, amount in option.items()]
                 lines.append(' + '.join(components))
             costs_default = '\n'.join(lines)
@@ -988,7 +988,7 @@ class ShopItemModal(Modal):
                             bot=bot,
                             mongo_database=bot.gdb,
                             collection_name=DatabaseCollections.CURRENCY,
-                            query={'_id': guild_id}
+                            query={CommonFields.ID: guild_id}
                         )
                         currency_config_entry = find_currency_or_denomination(currency_config, currency_key)
 
@@ -1004,20 +1004,20 @@ class ShopItemModal(Modal):
                         parsed_costs.append(current_options)
 
             new_item = {
-                'name': self.item_name_text_input.value,
+                CommonFields.NAME: self.item_name_text_input.value,
                 'description': self.item_description_text_input.value,
-                'quantity': int(self.item_quantity_text_input.value),
-                'costs': parsed_costs
+                CommonFields.QUANTITY: int(self.item_quantity_text_input.value),
+                ShopFields.COSTS: parsed_costs
             }
 
             shop_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.SHOPS,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
-            shop_data = shop_query.get('shopChannels', {}).get(channel_id, {})
-            shop_stock = shop_data.get('shopStock', [])
+            shop_data = shop_query.get(ShopFields.SHOP_CHANNELS, {}).get(channel_id, {})
+            shop_stock = shop_data.get(ShopFields.SHOP_STOCK, [])
 
             if self.existing_item_name:
                 new_stock = []
@@ -1034,15 +1034,15 @@ class ShopItemModal(Modal):
             else:
                 for item in shop_stock:
                     if item.get(CommonFields.NAME).lower() == new_item[CommonFields.NAME].lower():
-                        raise UserFeedbackError(f'An item named {new_item["name"]} already exists in this shop.')
+                        raise UserFeedbackError(f'An item named {new_item[CommonFields.NAME]} already exists in this shop.')
                 shop_data[ShopFields.SHOP_STOCK].append(new_item)
 
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.SHOPS,
-                query={'_id': guild_id},
-                update_data={'$set': {f'shopChannels.{channel_id}': shop_data}}
+                query={CommonFields.ID: guild_id},
+                update_data={'$set': {f'{ShopFields.SHOP_CHANNELS}.{channel_id}': shop_data}}
             )
 
             self.calling_view.update_stock(shop_data[ShopFields.SHOP_STOCK])
@@ -1101,19 +1101,19 @@ class ConfigUpdateShopJSONModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.SHOPS,
-                query={'_id': guild_id},
-                update_data={'$set': {f'shopChannels.{channel_id}': shop_data}}
+                query={CommonFields.ID: guild_id},
+                update_data={'$set': {f'{ShopFields.SHOP_CHANNELS}.{channel_id}': shop_data}}
             )
 
             # Initialize runtime stock for items with maxStock that don't have stock entries yet
-            shop_stock = shop_data.get('shopStock', [])
+            shop_stock = shop_data.get(ShopFields.SHOP_STOCK, [])
             for item in shop_stock:
-                max_stock = item.get('maxStock')
+                max_stock = item.get(ShopFields.MAX_STOCK)
                 if max_stock is not None:
                     item_name = item.get(CommonFields.NAME)
                     # Check if stock already exists for this item
                     existing_stock = await get_item_stock(bot, guild_id, channel_id, item_name)
-                    if existing_stock is None or 'available' not in existing_stock:
+                    if existing_stock is None or ShopFields.AVAILABLE not in existing_stock:
                         # Initialize with max stock as available
                         await initialize_item_stock(bot, guild_id, channel_id, item_name, max_stock, max_stock)
 
@@ -1137,12 +1137,12 @@ class NewCharacterShopItemModal(Modal):
 
         name_default = existing_item.get(CommonFields.NAME, '') if existing_item else ''
         description_default = existing_item.get('description', '') if existing_item else ''
-        quantity_default = str(existing_item.get('quantity', '1')) if existing_item else '1'
+        quantity_default = str(existing_item.get(CommonFields.QUANTITY, '1')) if existing_item else '1'
 
         costs_default = ''
-        if existing_item and 'costs' in existing_item:
+        if existing_item and ShopFields.COSTS in existing_item:
             lines = []
-            for option in existing_item['costs']:
+            for option in existing_item[ShopFields.COSTS]:
                 components = [f'{amount} {currency}' for currency, amount in option.items()]
                 lines.append(' + '.join(components))
             costs_default = '\n'.join(lines)
@@ -1227,7 +1227,7 @@ class NewCharacterShopItemModal(Modal):
                                 bot=bot,
                                 mongo_database=bot.gdb,
                                 collection_name=DatabaseCollections.CURRENCY,
-                                query={'_id': guild_id}
+                                query={CommonFields.ID: guild_id}
                             )
                             currency_config_entry = find_currency_or_denomination(currency_config, currency_key)
 
@@ -1243,19 +1243,19 @@ class NewCharacterShopItemModal(Modal):
                             parsed_costs.append(current_option_dict)
 
             new_item = {
-                'name': self.item_name_text_input.value,
+                CommonFields.NAME: self.item_name_text_input.value,
                 'description': self.item_description_text_input.value,
-                'quantity': int(self.item_quantity_text_input.value),
-                'costs': parsed_costs
+                CommonFields.QUANTITY: int(self.item_quantity_text_input.value),
+                ShopFields.COSTS: parsed_costs
             }
 
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.NEW_CHARACTER_SHOP,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
-            shop_stock = query.get('shopStock', []) if query else []
+            shop_stock = query.get(ShopFields.SHOP_STOCK, []) if query else []
 
             if self.existing_item_name:
                 new_stock = []
@@ -1273,7 +1273,7 @@ class NewCharacterShopItemModal(Modal):
                 for item in shop_stock:
                     if item.get(CommonFields.NAME).lower() == new_item[CommonFields.NAME].lower():
                         raise UserFeedbackError(
-                            f'An item named {new_item["name"]} already exists in the New Character shop.'
+                            f'An item named {new_item[CommonFields.NAME]} already exists in the New Character shop.'
                         )
                 shop_stock.append(new_item)
 
@@ -1281,8 +1281,8 @@ class NewCharacterShopItemModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.NEW_CHARACTER_SHOP,
-                query={'_id': guild_id},
-                update_data={'$set': {'shopStock': shop_stock}}
+                query={CommonFields.ID: guild_id},
+                update_data={'$set': {ShopFields.SHOP_STOCK: shop_stock}}
             )
 
             self.calling_view.update_stock(shop_stock)
@@ -1329,19 +1329,19 @@ class NewCharacterShopJSONModal(Modal):
             except json.JSONDecodeError as jde:
                 raise UserFeedbackError(f'Invalid JSON format: {str(jde)}')
 
-            if 'shopStock' not in shop_data or not isinstance(shop_data[ShopFields.SHOP_STOCK], list):
+            if ShopFields.SHOP_STOCK not in shop_data or not isinstance(shop_data[ShopFields.SHOP_STOCK], list):
                 raise UserFeedbackError("JSON must contain a 'shopStock' array.")
 
             for item in shop_data[ShopFields.SHOP_STOCK]:
-                if 'name' not in item or 'price' not in item:
+                if CommonFields.NAME not in item or 'price' not in item:
                     raise UserFeedbackError("All items must have 'name' and 'price'.")
 
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.NEW_CHARACTER_SHOP,
-                query={'_id': guild_id},
-                update_data={'$set': {'shopStock': shop_data[ShopFields.SHOP_STOCK]}}
+                query={CommonFields.ID: guild_id},
+                update_data={'$set': {ShopFields.SHOP_STOCK: shop_data[ShopFields.SHOP_STOCK]}}
             )
 
             self.calling_view.update_stock(shop_data[ShopFields.SHOP_STOCK])
@@ -1387,7 +1387,7 @@ class ConfigNewCharacterWealthModal(Modal):
                     bot=bot,
                     mongo_database=bot.gdb,
                     collection_name=DatabaseCollections.INVENTORY_CONFIG,
-                    query={'_id': guild_id},
+                    query={CommonFields.ID: guild_id},
                     update_data={'$unset': {ConfigFields.NEW_CHARACTER_WEALTH: ''}}
                 )
             else:
@@ -1396,7 +1396,7 @@ class ConfigNewCharacterWealthModal(Modal):
                     bot=bot,
                     mongo_database=bot.gdb,
                     collection_name=DatabaseCollections.CURRENCY,
-                    query={'_id': guild_id}
+                    query={CommonFields.ID: guild_id}
                 )
 
                 if not currency_config:
@@ -1413,8 +1413,8 @@ class ConfigNewCharacterWealthModal(Modal):
                     bot=bot,
                     mongo_database=bot.gdb,
                     collection_name=DatabaseCollections.INVENTORY_CONFIG,
-                    query={'_id': guild_id},
-                    update_data={'$set': {ConfigFields.NEW_CHARACTER_WEALTH: {'currency': found_name, 'amount': amount}}}
+                    query={CommonFields.ID: guild_id},
+                    update_data={'$set': {ConfigFields.NEW_CHARACTER_WEALTH: {CharacterFields.CURRENCY: found_name, CommonFields.AMOUNT: amount}}}
                 )
 
             await setup_view(self.calling_view, interaction)
@@ -1459,29 +1459,29 @@ class CreateStaticKitModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.STATIC_KITS,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
             existing_kits = kit_query.get('kits', {}) if kit_query else {}
             if existing_kits:
                 for kit_data in existing_kits.values():
-                    if kit_name.lower() == kit_data['name'].lower():
+                    if kit_name.lower() == kit_data[CommonFields.NAME].lower():
                         raise UserFeedbackError(
                             f'A static kit named "{titlecase(kit_name)}" already exists. Please choose a '
                             f'different name.'
                         )
 
             kit_data = {
-                'name': titlecase(kit_name),
+                CommonFields.NAME: titlecase(kit_name),
                 'description': self.kit_description_text_input.value.strip(),
-                'items': [],
-                'currency': {}
+                CommonFields.ITEMS: [],
+                CharacterFields.CURRENCY: {}
             }
 
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.STATIC_KITS,
-                query={'_id': guild_id},
+                query={CommonFields.ID: guild_id},
                 update_data={'$set': {f'kits.{kit_id}': kit_data}}
             )
 
@@ -1502,7 +1502,7 @@ class StaticKitItemModal(Modal):
 
         name_default = existing_item.get(CommonFields.NAME, '') if existing_item else ''
         description_default = existing_item.get('description', '') if existing_item else ''
-        quantity_default = str(existing_item.get('quantity', '1')) if existing_item else '1'
+        quantity_default = str(existing_item.get(CommonFields.QUANTITY, '1')) if existing_item else '1'
 
         self.item_name_text_input = discord.ui.TextInput(
             label='Item Name',
@@ -1534,9 +1534,9 @@ class StaticKitItemModal(Modal):
                 raise ValueError("Quantity must be a positive integer.")
 
             item_data = {
-                'name': self.item_name_text_input.value,
+                CommonFields.NAME: self.item_name_text_input.value,
                 'description': self.description_text_input.value,
-                'quantity': int(self.item_quantity_text_input.value)
+                CommonFields.QUANTITY: int(self.item_quantity_text_input.value)
             }
 
             bot = interaction.client
@@ -1546,7 +1546,7 @@ class StaticKitItemModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.STATIC_KITS,
-                query={'_id': interaction.guild_id}
+                query={CommonFields.ID: interaction.guild_id}
             )
             kits = query.get('kits', {})
             current_kit = kits.get(kit_id)
@@ -1554,7 +1554,7 @@ class StaticKitItemModal(Modal):
             if not current_kit:
                 raise Exception("Kit not found.")
 
-            items = current_kit.get('items', [])
+            items = current_kit.get(CommonFields.ITEMS, [])
 
             if self.index is not None:
                 items[self.index] = item_data
@@ -1565,11 +1565,11 @@ class StaticKitItemModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.STATIC_KITS,
-                query={'_id': interaction.guild_id},
+                query={CommonFields.ID: interaction.guild_id},
                 update_data={'$set': {f'kits.{kit_id}.items': items}}
             )
 
-            self.calling_view.kit_data['items'] = items
+            self.calling_view.kit_data[CommonFields.ITEMS] = items
             self.calling_view.items = items
             self.calling_view.build_view()
             await interaction.response.edit_message(view=self.calling_view)
@@ -1609,7 +1609,7 @@ class StaticKitCurrencyModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.CURRENCY,
-                query={'_id': interaction.guild_id}
+                query={CommonFields.ID: interaction.guild_id}
             )
             if not currency_config:
                 raise UserFeedbackError("No currencies configured on server.")
@@ -1631,14 +1631,14 @@ class StaticKitCurrencyModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.STATIC_KITS,
-                query={'_id': interaction.guild_id}
+                query={CommonFields.ID: interaction.guild_id}
             )
 
             existing_amount = 0
 
             encoded_currency = encode_mongo_key(parent_name)
             if query and 'kits' in query:
-                existing_amount = query['kits'].get(kit_id, {}).get('currency', {}).get(encoded_currency, 0)
+                existing_amount = query['kits'].get(kit_id, {}).get(CharacterFields.CURRENCY, {}).get(encoded_currency, 0)
 
             final_amount = existing_amount + converted_amount
 
@@ -1646,14 +1646,14 @@ class StaticKitCurrencyModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.STATIC_KITS,
-                query={'_id': interaction.guild_id},
+                query={CommonFields.ID: interaction.guild_id},
                 update_data={'$set': {f'kits.{kit_id}.currency.{encoded_currency}': final_amount}}
             )
 
-            if 'currency' not in self.calling_view.kit_data:
-                self.calling_view.kit_data['currency'] = {}
+            if CharacterFields.CURRENCY not in self.calling_view.kit_data:
+                self.calling_view.kit_data[CharacterFields.CURRENCY] = {}
 
-            self.calling_view.kit_data['currency'][encoded_currency] = final_amount
+            self.calling_view.kit_data[CharacterFields.CURRENCY][encoded_currency] = final_amount
 
             self.calling_view.build_view()
             await interaction.response.edit_message(view=self.calling_view)
@@ -1668,13 +1668,13 @@ class RoleplaySettingsModal(Modal):
         )
         self.calling_view = calling_view
         config = calling_view.config
-        mode_config = config.get('config', {})
-        self.mode = config.get('mode', 'accrued')
+        mode_config = config.get(RoleplayFields.CONFIG, {})
+        self.mode = config.get(RoleplayFields.MODE, 'accrued')
 
         self.minimum_length_text_input = discord.ui.TextInput(
             label='Minimum Message Length (characters)',
             placeholder='# of characters required for a message to be eligible. 0 for no limit',
-            default=str(mode_config.get('minLength', 0)),
+            default=str(mode_config.get(RoleplayFields.MIN_LENGTH, 0)),
             max_length=4
         )
         self.add_item(self.minimum_length_text_input)
@@ -1682,7 +1682,7 @@ class RoleplaySettingsModal(Modal):
         self.cooldown_text_input = discord.ui.TextInput(
             label='Cooldown (seconds)',
             placeholder='Wait time, in seconds, between counting messages as eligible for rewards',
-            default=str(mode_config.get('cooldown', 30)),
+            default=str(mode_config.get(RoleplayFields.COOLDOWN, 30)),
             max_length=4
         )
         self.add_item(self.cooldown_text_input)
@@ -1691,7 +1691,7 @@ class RoleplaySettingsModal(Modal):
             self.threshold_text_input = discord.ui.TextInput(
                 label='Message Threshold',
                 placeholder='Number of messages required to trigger reward',
-                default=str(mode_config.get('threshold', 20)),
+                default=str(mode_config.get(RoleplayFields.THRESHOLD, 20)),
                 max_length=4
             )
             self.add_item(self.threshold_text_input)
@@ -1700,7 +1700,7 @@ class RoleplaySettingsModal(Modal):
             self.frequency_text_input = discord.ui.TextInput(
                 label='Frequency (# of messages)',
                 placeholder='Number of eligible messages required to earn rewards',
-                default=str(mode_config.get('frequency', 20)),
+                default=str(mode_config.get(RoleplayFields.FREQUENCY, 20)),
                 max_length=4
             )
             self.add_item(self.frequency_text_input)
@@ -1708,7 +1708,7 @@ class RoleplaySettingsModal(Modal):
     async def on_submit(self, interaction: discord.Interaction):
         try:
             bot = interaction.client
-            new_config = self.calling_view.config.get('config', {})
+            new_config = self.calling_view.config.get(RoleplayFields.CONFIG, {})
 
             # Minimum Length
             try:
@@ -1757,8 +1757,8 @@ class RoleplaySettingsModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.ROLEPLAY_CONFIG,
-                query={'_id': interaction.guild_id},
-                update_data={'$set': {'config': new_config}}
+                query={CommonFields.ID: interaction.guild_id},
+                update_data={'$set': {RoleplayFields.CONFIG: new_config}}
             )
 
             await setup_view(self.calling_view, interaction)
@@ -1771,19 +1771,19 @@ class RoleplayRewardsModal(Modal):
     def __init__(self, calling_view, xp_enabled):
         super().__init__(title='Configure Roleplay Rewards')
         self.calling_view = calling_view
-        rewards = calling_view.config.get('rewards', {})
+        rewards = calling_view.config.get(RoleplayFields.REWARDS, {})
 
         self.xp_enabled = xp_enabled
         if self.xp_enabled:
             self.experience_text_input = discord.ui.TextInput(
                 label='Experience',
-                default=str(rewards.get('xp', 0)),
+                default=str(rewards.get(RoleplayFields.XP, 0)),
                 required=False
             )
             self.add_item(self.experience_text_input)
 
         item_display = ''
-        if items := rewards.get('items'):
+        if items := rewards.get(RoleplayFields.ITEMS):
             item_display = '\n'.join([f'{k}: {v}' for k, v in sorted(items.items())])
 
         self.items = discord.ui.TextInput(
@@ -1795,7 +1795,7 @@ class RoleplayRewardsModal(Modal):
         self.add_item(self.items)
 
         currency_display = ''
-        if currency := rewards.get('currency'):
+        if currency := rewards.get(RoleplayFields.CURRENCY):
             currency_config = getattr(calling_view, 'currency_config', None)
             formatted_lines = []
             for k, v in currency.items():
@@ -1851,17 +1851,17 @@ class RoleplayRewardsModal(Modal):
                             raise UserFeedbackError(f'Currency amount for "{k.strip()}" must be a positive number.')
 
             new_rewards = {
-                'xp': xp,
-                'items': items,
-                'currency': currency
+                RoleplayFields.XP: xp,
+                RoleplayFields.ITEMS: items,
+                RoleplayFields.CURRENCY: currency
             }
 
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.ROLEPLAY_CONFIG,
-                query={'_id': interaction.guild_id},
-                update_data={'$set': {'rewards': new_rewards}}
+                query={CommonFields.ID: interaction.guild_id},
+                update_data={'$set': {RoleplayFields.REWARDS: new_rewards}}
             )
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
@@ -1937,10 +1937,10 @@ class SetItemStockModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.SHOPS,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
-            shop_data = shop_query.get('shopChannels', {}).get(channel_id, {})
-            shop_stock = shop_data.get('shopStock', [])
+            shop_data = shop_query.get(ShopFields.SHOP_CHANNELS, {}).get(channel_id, {})
+            shop_stock = shop_data.get(ShopFields.SHOP_STOCK, [])
 
             # Find and update the item
             item_found = False
@@ -1958,8 +1958,8 @@ class SetItemStockModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.SHOPS,
-                query={'_id': guild_id},
-                update_data={'$set': {f'shopChannels.{channel_id}': shop_data}}
+                query={CommonFields.ID: guild_id},
+                update_data={'$set': {f'{ShopFields.SHOP_CHANNELS}.{channel_id}': shop_data}}
             )
 
             # Initialize/update the runtime stock tracking
@@ -1985,12 +1985,12 @@ class RestockScheduleModal(Modal):
         utc_time_str = now.strftime('%Y-%m-%d %H:%M UTC')
 
         current_config = current_config or {}
-        schedule = current_config.get('schedule', '')
-        hour = current_config.get('hour', 0)
-        minute = current_config.get('minute', 0)
-        day = current_config.get('dayOfWeek', 0)
-        mode = current_config.get('mode', RestockMode.FULL.value)
-        increment = current_config.get('incrementAmount', 1)
+        schedule = current_config.get(RestockFields.SCHEDULE, '')
+        hour = current_config.get(RestockFields.HOUR, 0)
+        minute = current_config.get(RestockFields.MINUTE, 0)
+        day = current_config.get(RestockFields.DAY_OF_WEEK, 0)
+        mode = current_config.get(RestockFields.MODE, RestockMode.FULL.value)
+        increment = current_config.get(RestockFields.INCREMENT_AMOUNT, 1)
 
         self.schedule_text_input = discord.ui.TextInput(
             label='Schedule (hourly/daily/weekly/none)',
@@ -2115,17 +2115,17 @@ class RestockScheduleModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.SHOPS,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
-            shop_data = shop_query.get('shopChannels', {}).get(channel_id, {})
+            shop_data = shop_query.get(ShopFields.SHOP_CHANNELS, {}).get(channel_id, {})
             shop_data[ShopFields.RESTOCK_CONFIG] = restock_config
 
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.SHOPS,
-                query={'_id': guild_id},
-                update_data={'$set': {f'shopChannels.{channel_id}': shop_data}}
+                query={CommonFields.ID: guild_id},
+                update_data={'$set': {f'{ShopFields.SHOP_CHANNELS}.{channel_id}': shop_data}}
             )
 
             # Refresh the view

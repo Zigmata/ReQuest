@@ -64,7 +64,7 @@ class TradeModal(Modal):
                 bot=bot,
                 mongo_database=bot.mdb,
                 collection_name=DatabaseCollections.CHARACTERS,
-                query={'_id': member_id}
+                query={CommonFields.ID: member_id}
             )
 
             member_active_character_id = member_query[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
@@ -75,7 +75,7 @@ class TradeModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.PLAYER_TRANSACTION_LOG_CHANNEL,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
             if log_channel_query:
                 log_channel_id = strip_id(log_channel_query[ConfigFields.PLAYER_TRANSACTION_LOG_CHANNEL])
@@ -85,7 +85,7 @@ class TradeModal(Modal):
                 bot=bot,
                 mongo_database=bot.mdb,
                 collection_name=DatabaseCollections.CHARACTERS,
-                query={'_id': target_id}
+                query={CommonFields.ID: target_id}
             )
             if not target_query:
                 raise UserFeedbackError('The player you are attempting to trade with has no characters!')
@@ -100,7 +100,7 @@ class TradeModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.CURRENCY,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
 
             is_currency, _ = find_currency_or_denomination(currency_query, item_name)
@@ -181,17 +181,17 @@ class CharacterRegisterModal(Modal):
                 bot=bot,
                 mongo_database=bot.mdb,
                 collection_name=DatabaseCollections.CHARACTERS,
-                query={'_id': member_id},
-                update_data={'$set': {f'activeCharacters.{guild_id}': character_id,
-                                      f'characters.{character_id}': {
-                                          'name': character_name,
+                query={CommonFields.ID: member_id},
+                update_data={'$set': {f'{CharacterFields.ACTIVE_CHARACTERS}.{guild_id}': character_id,
+                                      f'{CharacterFields.CHARACTERS}.{character_id}': {
+                                          CharacterFields.NAME: character_name,
                                           'note': character_note,
                                           'registeredDate': date,
-                                          'attributes': {
+                                          CharacterFields.ATTRIBUTES: {
                                               'level': None,
-                                              'experience': None,
-                                              'inventory': {},
-                                              'currency': {}
+                                              CharacterFields.EXPERIENCE: None,
+                                              CharacterFields.INVENTORY: {},
+                                              CharacterFields.CURRENCY: {}
                                           }}}}
             )
 
@@ -199,9 +199,9 @@ class CharacterRegisterModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.INVENTORY_CONFIG,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
-            inventory_type = inventory_config.get('inventoryType', InventoryType.DISABLED.value) if inventory_config else InventoryType.DISABLED.value
+            inventory_type = inventory_config.get(ConfigFields.INVENTORY_TYPE, InventoryType.DISABLED.value) if inventory_config else InventoryType.DISABLED.value
 
             if inventory_type == InventoryType.DISABLED.value:
                 await setup_view(self.calling_view, interaction)
@@ -316,7 +316,7 @@ class SpendCurrencyModal(Modal):
                 bot=bot,
                 mongo_database=bot.mdb,
                 collection_name=DatabaseCollections.CHARACTERS,
-                query={'_id': member_id}
+                query={CommonFields.ID: member_id}
             )
             if not character_query or str(guild_id) not in character_query[CharacterFields.ACTIVE_CHARACTERS]:
                 raise UserFeedbackError("You do not have an active character on this server.")
@@ -329,7 +329,7 @@ class SpendCurrencyModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.CURRENCY,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
             if not currency_config:
                 raise UserFeedbackError("A currency configuration was not found for this server.")
@@ -344,7 +344,7 @@ class SpendCurrencyModal(Modal):
                 bot=bot,
                 mongo_database=bot.mdb,
                 collection_name=DatabaseCollections.CHARACTERS,
-                query={'_id': member_id}
+                query={CommonFields.ID: member_id}
             )
 
             new_wallet = updated_query[CharacterFields.CHARACTERS][active_character_id][CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {})
@@ -378,7 +378,7 @@ class SpendCurrencyModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.PLAYER_TRANSACTION_LOG_CHANNEL,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
             if log_channel_query:
                 log_channel_id = strip_id(log_channel_query[ConfigFields.PLAYER_TRANSACTION_LOG_CHANNEL])
@@ -620,7 +620,7 @@ class ConsumeFromContainerModal(Modal):
             # Send receipt
             receipt_embed = discord.Embed(
                 title='Item Consumption Report',
-                description=f'Player: {interaction.user.mention } as `{self.calling_view.character_data["name"]}`\n'
+                description=f'Player: {interaction.user.mention } as `{self.calling_view.character_data[CharacterFields.NAME]}`\n'
                             f'Removed: **{quantity}x {escape_markdown(titlecase(self.item_name))}** from **{container_name}**',
                 color=discord.Color.gold(),
                 type='rich'
@@ -641,7 +641,7 @@ class ConsumeFromContainerModal(Modal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.PLAYER_TRANSACTION_LOG_CHANNEL,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
             if log_channel_query:
                 log_channel_id = strip_id(log_channel_query[ConfigFields.PLAYER_TRANSACTION_LOG_CHANNEL])

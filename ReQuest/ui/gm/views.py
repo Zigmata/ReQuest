@@ -285,7 +285,7 @@ class ManageQuestsView(LayoutView):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.QUEST_CHANNEL,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
             if not channel_id_query:
                 raise UserFeedbackError('Quest channel has not been set!')
@@ -392,7 +392,7 @@ class ManageQuestsView(LayoutView):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.QUESTS,
-                query={'guildId': guild_id, QuestFields.QUEST_ID: self.selected_quest[QuestFields.QUEST_ID]},
+                query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: self.selected_quest[QuestFields.QUEST_ID]},
                 cache_id=f'{guild_id}:{self.selected_quest[QuestFields.QUEST_ID]}'
             )
 
@@ -420,7 +420,7 @@ class ManageQuestsView(LayoutView):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.ARCHIVE_CHANNEL,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
             if archive_query:
                 archive_channel = guild.get_channel(strip_id(archive_query[ConfigFields.ARCHIVE_CHANNEL]))
@@ -520,7 +520,7 @@ class ManageQuestsView(LayoutView):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.QUEST_CHANNEL,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
 
             quest_channel_id = quest_channel_query[ConfigFields.QUEST_CHANNEL]
@@ -552,7 +552,7 @@ class ManageQuestsView(LayoutView):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.GM_REWARDS,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
             if gm_rewards_query:
                 experience = gm_rewards_query.get(CharacterFields.EXPERIENCE)
@@ -562,7 +562,7 @@ class ManageQuestsView(LayoutView):
                     bot=bot,
                     mongo_database=bot.mdb,
                     collection_name=DatabaseCollections.CHARACTERS,
-                    query={'_id': interaction.user.id}
+                    query={CommonFields.ID: interaction.user.id}
                 )
 
                 if not character_query:
@@ -577,7 +577,7 @@ class ManageQuestsView(LayoutView):
                     else:
                         active_character_id = character_query[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
                         character_string = (f'The following has been awarded to your active character, '
-                                            f'{character_query["characters"][active_character_id]["name"]}')
+                                            f'{character_query[CharacterFields.CHARACTERS][active_character_id][CharacterFields.NAME]}')
                         if experience and xp_enabled:
                             await update_character_experience(interaction, interaction.user.id, active_character_id,
                                                               experience)
@@ -641,7 +641,7 @@ class RewardsMenuView(LayoutView):
         )
 
         self.individual_rewards_button = buttons.IndividualRewardsButton(self)
-        self.current_individual_rewards = {'xp': None, 'items': {}}
+        self.current_individual_rewards = {QuestFields.XP: None, CommonFields.ITEMS: {}}
         self.current_individual_rewards_info = TextDisplay(
             '**Individual Rewards**'
         )
@@ -708,7 +708,7 @@ class RewardsMenuView(LayoutView):
                     f'{self._format_rewards_field(individual_rewards, xp_enabled)}'
                 )
             else:
-                self.current_individual_rewards = {"xp": None, "items": {}}
+                self.current_individual_rewards = {QuestFields.XP: None, CommonFields.ITEMS: {}}
                 self.current_individual_rewards_info.content = (
                     '**Individual Rewards**'
                 )
@@ -747,7 +747,7 @@ class RewardsMenuView(LayoutView):
             xp if isinstance(xp, int) else None)
         items_val = dict(items) if isinstance(items, dict) else {}
 
-        return {"xp": xp_val, "items": items_val}
+        return {QuestFields.XP: xp_val, CommonFields.ITEMS: items_val}
 
     @staticmethod
     def _extract_individual_rewards(quest: Dict[str, Any], character_id: str) -> Dict[str, Any]:
@@ -759,7 +759,7 @@ class RewardsMenuView(LayoutView):
             xp if isinstance(xp, int) else None)
         items_val = dict(items) if isinstance(items, dict) else {}
 
-        return {"xp": xp_val, "items": items_val}
+        return {QuestFields.XP: xp_val, CommonFields.ITEMS: items_val}
 
     @staticmethod
     def _format_rewards_field(rewards: Dict[str, Any], xp_enabled=True) -> str:
@@ -884,7 +884,7 @@ class RemovePlayerView(LayoutView):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.QUEST_CHANNEL,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
             channel_id = strip_id(channel_id_query[ConfigFields.QUEST_CHANNEL])
             channel = interaction.client.get_channel(channel_id)
@@ -911,14 +911,14 @@ class RemovePlayerView(LayoutView):
                 if removed_member_id in waiting_player:
                     wait_list.remove(waiting_player)
                     player_found = True
-                    removal_message = f'The Game Master for **{quest["title"]}** has removed you from the wait list.'
+                    removal_message = f'The Game Master for **{quest[QuestFields.TITLE]}** has removed you from the wait list.'
                     break
 
             # If they're not in the wait list, they must be in the party
             if not player_found:
                 for player in party:
                     if removed_member_id in player:
-                        removal_message = f'The Game Master for **{quest["title"]}** has removed you from the party.'
+                        removal_message = f'The Game Master for **{quest[QuestFields.TITLE]}** has removed you from the party.'
                         party.remove(player)
 
                         # If there is a wait list, promote the first entry into the party
@@ -931,7 +931,7 @@ class RemovePlayerView(LayoutView):
                                 if new_member:
                                     try:
                                         await new_member.send(f'You have been added to the party for '
-                                                              f'**{quest["title"]}**, due to a player dropping!')
+                                                              f'**{quest[QuestFields.TITLE]}**, due to a player dropping!')
 
                                         # If a role is set, assign it to the player
                                         if role and lock_state:
@@ -1038,10 +1038,10 @@ class QuestPostView(View):
                 bot=bot,
                 mongo_database=bot.mdb,
                 collection_name=DatabaseCollections.CHARACTERS,
-                query={'_id': user_id}
+                query={CommonFields.ID: user_id}
             )
             if (not player_characters or
-                    'activeCharacters' not in player_characters or
+                    CharacterFields.ACTIVE_CHARACTERS not in player_characters or
                     str(guild_id) not in player_characters[CharacterFields.ACTIVE_CHARACTERS]):
                 raise UserFeedbackError(
                     'You do not have an active character on this server. Use the `/player` menus to create a new '
@@ -1052,7 +1052,7 @@ class QuestPostView(View):
 
             if quest[QuestFields.LOCK_STATE]:
                 raise UserFeedbackError(
-                    f'Error joining quest **{quest["title"]}**: The quest is locked and not accepting new players.'
+                    f'Error joining quest **{quest[QuestFields.TITLE]}**: The quest is locked and not accepting new players.'
                 )
             else:
                 new_player_entry = {f'{user_id}': {f'{active_character_id}': active_character}}
@@ -1083,7 +1083,7 @@ class QuestPostView(View):
 
                     # Otherwise, inform the user that the party/wait list is full
                     else:
-                        raise UserFeedbackError(f'Error joining quest **{quest["title"]}**: The quest roster is full!')
+                        raise UserFeedbackError(f'Error joining quest **{quest[QuestFields.TITLE]}**: The quest roster is full!')
                 # If there is no wait list, this section formats the embed without it
                 else:
                     # If there is room in the party, add the user.
@@ -1098,7 +1098,7 @@ class QuestPostView(View):
                         )
                         self.quest[QuestFields.PARTY].append(new_player_entry)
                     else:
-                        raise UserFeedbackError(f'Error joining quest **{quest["title"]}**: The quest roster is full!')
+                        raise UserFeedbackError(f'Error joining quest **{quest[QuestFields.TITLE]}**: The quest roster is full!')
 
                 await setup_view(self, interaction)
                 await interaction.response.edit_message(embed=self.embed, view=self)
@@ -1154,7 +1154,7 @@ class QuestPostView(View):
                     if new_member:
                         try:
                             await new_member.send(f'You have been added to the party for '
-                                                  f'**{quest["title"]}**, due to a player dropping!')
+                                                  f'**{quest[QuestFields.TITLE]}**, due to a player dropping!')
                         except discord.errors.Forbidden as e:
                             logger.warning(f'Could not DM {new_member.id} about party promotion: {e}')
                         except Exception as e:

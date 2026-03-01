@@ -11,7 +11,7 @@ from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.common.buttons import BaseViewButton
 from ReQuest.ui.common.enums import ShopChannelType
 from ReQuest.utilities.constants import (
-    ConfigFields, ShopFields, CommonFields, RoleplayFields, DatabaseCollections
+    ConfigFields, ShopFields, CommonFields, RoleplayFields, CurrencyFields, DatabaseCollections
 )
 from ReQuest.utilities.supportFunctions import (
     log_exception,
@@ -93,7 +93,7 @@ class RemoveGMRoleButton(Button):
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.GM_ROLES,
                 query={'_id': interaction.guild_id},
-                update_data={'$pull': {'gmRoles': {'name': self.role_name}}}
+                update_data={'$pull': {ConfigFields.GM_ROLES: {CommonFields.NAME: self.role_name}}}
             )
 
             await setup_view(self.calling_view, interaction)
@@ -181,7 +181,7 @@ class PlayerExperienceToggleButton(Button):
                     mongo_database=bot.gdb,
                     collection_name=DatabaseCollections.PLAYER_EXPERIENCE,
                     query={'_id': guild_id},
-                    update_data={'$set': {'playerExperience': False}}
+                    update_data={'$set': {ConfigFields.PLAYER_EXPERIENCE: False}}
                 )
             else:
                 await update_cached_data(
@@ -189,7 +189,7 @@ class PlayerExperienceToggleButton(Button):
                     mongo_database=bot.gdb,
                     collection_name=DatabaseCollections.PLAYER_EXPERIENCE,
                     query={'_id': guild_id},
-                    update_data={'$set': {'playerExperience': True}}
+                    update_data={'$set': {ConfigFields.PLAYER_EXPERIENCE: True}}
                 )
 
             await setup_view(self.calling_view, interaction)
@@ -213,14 +213,14 @@ class ToggleDoubleButton(Button):
             view = self.calling_view
             currency_name = view.currency_name
 
-            new_value = not view.currency_data.get('isDouble', False)
+            new_value = not view.currency_data.get(CurrencyFields.IS_DOUBLE, False)
 
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.CURRENCY,
-                query={'_id': interaction.guild_id, 'currencies.name': currency_name},
-                update_data={'$set': {'currencies.$.isDouble': new_value}}
+                query={'_id': interaction.guild_id, f'{CurrencyFields.CURRENCIES}.{CommonFields.NAME}': currency_name},
+                update_data={'$set': {f'{CurrencyFields.CURRENCIES}.$.{CurrencyFields.IS_DOUBLE}': new_value}}
             )
 
             await setup_view(view, interaction)
@@ -281,8 +281,8 @@ class RemoveDenominationButton(Button):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.CURRENCY,
-                query={'_id': interaction.guild_id, 'currencies.name': currency_name},
-                update_data={'$pull': {f'currencies.$.denominations': {'name': denomination_name}}}
+                query={'_id': interaction.guild_id, f'{CurrencyFields.CURRENCIES}.{CommonFields.NAME}': currency_name},
+                update_data={'$pull': {f'{CurrencyFields.CURRENCIES}.$.{CurrencyFields.DENOMINATIONS}': {CommonFields.NAME: denomination_name}}}
             )
 
             await setup_view(self.calling_view, interaction)
@@ -381,7 +381,7 @@ class RemoveCurrencyButton(Button):
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.CURRENCY,
                 query={'_id': interaction.guild_id},
-                update_data={'$pull': {'currencies': {'name': currency_name}}}
+                update_data={'$pull': {CurrencyFields.CURRENCIES: {CommonFields.NAME: currency_name}}}
             )
 
             from ReQuest.ui.config.views import ConfigCurrencyView
@@ -665,7 +665,7 @@ class EditShopButton(Button):
                 collection_name=DatabaseCollections.SHOPS,
                 query={'_id': interaction.guild_id}
             )
-            shop_data = query.get('shopChannels', {}).get(self.calling_view.selected_channel_id)
+            shop_data = query.get(ShopFields.SHOP_CHANNELS, {}).get(self.calling_view.selected_channel_id)
 
             if not shop_data:
                 await interaction.response.send_message('Error: Could not find that shop\'s data.', ephemeral=True)
@@ -719,8 +719,8 @@ class RemoveShopButton(Button):
 
             shop_data = {}
             if shop_query:
-                shop_data = shop_query.get('shopChannels', {}).get(channel_id, {})
-            channel_type = shop_data.get('channelType', 'text')
+                shop_data = shop_query.get(ShopFields.SHOP_CHANNELS, {}).get(channel_id, {})
+            channel_type = shop_data.get(ShopFields.CHANNEL_TYPE, 'text')
 
             # Archive and lock if forum thread
             if channel_type == ShopChannelType.FORUM_THREAD.value:
@@ -740,7 +740,7 @@ class RemoveShopButton(Button):
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.SHOPS,
                 query={'_id': guild_id},
-                update_data={'$unset': {f'shopChannels.{channel_id}': ''}}
+                update_data={'$unset': {f'{ShopFields.SHOP_CHANNELS}.{channel_id}': ''}}
             )
 
             from ReQuest.ui.config.views import ConfigShopsView
@@ -794,7 +794,7 @@ class DeleteShopItemButton(Button):
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.SHOPS,
                 query={'_id': guild_id},
-                update_data={'$pull': {f'shopChannels.{channel_id}.shopStock': {'name': item_name}}}
+                update_data={'$pull': {f'{ShopFields.SHOP_CHANNELS}.{channel_id}.{ShopFields.SHOP_STOCK}': {CommonFields.NAME: item_name}}}
             )
 
             new_stock = [item for item in self.calling_view.all_stock if item[CommonFields.NAME] != item_name]
@@ -864,12 +864,12 @@ class DownloadShopJSONButton(Button):
                 collection_name=DatabaseCollections.SHOPS,
                 query={'_id': guild_id}
             )
-            shop_data = query.get('shopChannels', {}).get(channel_id)
+            shop_data = query.get(ShopFields.SHOP_CHANNELS, {}).get(channel_id)
 
             if not shop_data:
                 raise Exception('Shop data not found.')
 
-            shop_name = shop_data.get("shopName", "shop")
+            shop_name = shop_data.get(ShopFields.SHOP_NAME, "shop")
             file_name = f"{shop_name.replace(' ', '_')}_{channel_id}.json"
 
             json_string = json.dumps(shop_data, indent=4)
@@ -979,7 +979,7 @@ class DeleteNewCharacterShopItemButton(Button):
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.NEW_CHARACTER_SHOP,
                 query={'_id': guild_id},
-                update_data={'$pull': {'shopStock': {'name': item_name}}}
+                update_data={'$pull': {ShopFields.SHOP_STOCK: {CommonFields.NAME: item_name}}}
             )
 
             new_stock = [item for item in self.calling_view.all_stock if item[CommonFields.NAME] != item_name]
@@ -1029,7 +1029,7 @@ class DownloadNewCharacterShopJSONButton(Button):
                 query={'_id': guild_id}
             )
 
-            shop_data = {'shopStock': query.get('shopStock', []) if query else []}
+            shop_data = {ShopFields.SHOP_STOCK: query.get(ShopFields.SHOP_STOCK, []) if query else []}
 
             file_name = f"new_character_shop_{guild_id}.json"
             json_string = json.dumps(shop_data, indent=4)
@@ -1224,7 +1224,7 @@ class DeleteKitItemButton(Button):
                 collection_name=DatabaseCollections.STATIC_KITS,
                 query={'_id': interaction.guild_id}
             )
-            items = query['kits'][kit_id].get('items', [])
+            items = query['kits'][kit_id].get(CommonFields.ITEMS, [])
 
             if 0 <= self.index < len(items):
                 del items[self.index]
@@ -1234,10 +1234,10 @@ class DeleteKitItemButton(Button):
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.STATIC_KITS,
                 query={'_id': interaction.guild_id},
-                update_data={'$set': {f'kits.{kit_id}.items': items}}
+                update_data={'$set': {f'kits.{kit_id}.{CommonFields.ITEMS}': items}}
             )
 
-            self.calling_view.kit_data['items'] = items
+            self.calling_view.kit_data[CommonFields.ITEMS] = items
             self.calling_view.items = items
             self.calling_view.build_view()
             await interaction.response.edit_message(view=self.calling_view)
@@ -1336,7 +1336,7 @@ class RoleplayClearChannelsButton(Button):
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.ROLEPLAY_CONFIG,
                 query={'_id': interaction.guild_id},
-                update_data={'$set': {'channels': []}}
+                update_data={'$set': {RoleplayFields.CHANNELS: []}}
             )
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
@@ -1403,7 +1403,7 @@ class ConfigStockLimitsButton(Button):
 class SetItemStockButton(Button):
     def __init__(self, item: dict, calling_view, current_stock: int | None = None):
         # Determine label based on whether limit exists
-        has_limit = item.get('maxStock') is not None
+        has_limit = item.get(ShopFields.MAX_STOCK) is not None
         label = 'Edit Limit' if has_limit else 'Set Limit'
 
         super().__init__(
@@ -1420,7 +1420,7 @@ class SetItemStockButton(Button):
             modal = modals.SetItemStockModal(
                 calling_view=self.calling_view,
                 item_name=self.item[CommonFields.NAME],
-                current_max=self.item.get('maxStock'),
+                current_max=self.item.get(ShopFields.MAX_STOCK),
                 current_stock=self.current_stock
             )
             await interaction.response.send_modal(modal)
@@ -1464,13 +1464,13 @@ class RemoveItemStockLimitButton(Button):
                 collection_name=DatabaseCollections.SHOPS,
                 query={'_id': guild_id}
             )
-            shop_data = shop_query.get('shopChannels', {}).get(channel_id, {})
-            shop_stock = shop_data.get('shopStock', [])
+            shop_data = shop_query.get(ShopFields.SHOP_CHANNELS, {}).get(channel_id, {})
+            shop_stock = shop_data.get(ShopFields.SHOP_STOCK, [])
 
             # Find and update the item
             for item in shop_stock:
-                if item.get('name') == item_name:
-                    if 'maxStock' in item:
+                if item.get(CommonFields.NAME) == item_name:
+                    if ShopFields.MAX_STOCK in item:
                         del item[ShopFields.MAX_STOCK]
                     break
 
@@ -1480,7 +1480,7 @@ class RemoveItemStockLimitButton(Button):
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.SHOPS,
                 query={'_id': guild_id},
-                update_data={'$set': {f'shopChannels.{channel_id}': shop_data}}
+                update_data={'$set': {f'{ShopFields.SHOP_CHANNELS}.{channel_id}': shop_data}}
             )
 
             # Remove from runtime stock tracking
@@ -1504,7 +1504,7 @@ class RestockScheduleButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            current_config = self.calling_view.shop_data.get('restockConfig')
+            current_config = self.calling_view.shop_data.get(ShopFields.RESTOCK_CONFIG)
             modal = modals.RestockScheduleModal(
                 calling_view=self.calling_view,
                 current_config=current_config

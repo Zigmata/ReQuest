@@ -24,7 +24,7 @@ def has_gm_or_mod():
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.GM_ROLES,
-                query={'_id': interaction.guild.id}
+                query={CommonFields.ID: interaction.guild.id}
             )
             if query:
                 gm_role_mentions = []
@@ -48,7 +48,7 @@ def has_active_character():
             bot=interaction.client,
             mongo_database=interaction.client.mdb,
             collection_name=DatabaseCollections.CHARACTERS,
-            query={'_id': member_id}
+            query={CommonFields.ID: member_id}
         )
 
         if query:

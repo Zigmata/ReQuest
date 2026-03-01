@@ -7,7 +7,7 @@ from discord.ui import Button
 from ReQuest.ui.common.modals import ConfirmModal
 from ReQuest.ui.gm import modals
 from ReQuest.ui.common.enums import RewardType
-from ReQuest.utilities.constants import QuestFields, ConfigFields, DatabaseCollections
+from ReQuest.utilities.constants import QuestFields, ConfigFields, CommonFields, DatabaseCollections
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     setup_view,
@@ -187,7 +187,7 @@ class CancelQuestButton(Button):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.QUEST_CHANNEL,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
             channel_id = strip_id(channel_query[ConfigFields.QUEST_CHANNEL])
             quest_channel = guild.get_channel(channel_id)
@@ -225,8 +225,8 @@ class PartyRewardsButton(Button):
             view = self.calling_view
             quest = view.quest
 
-            rewards = quest.setdefault('rewards', {})
-            party_rewards = rewards.setdefault('party', {})
+            rewards = quest.setdefault(QuestFields.REWARDS, {})
+            party_rewards = rewards.setdefault(QuestFields.PARTY, {})
 
             xp_val = None
             if xp is not None:
@@ -244,8 +244,8 @@ class PartyRewardsButton(Button):
             else:
                 items_val = {}
             updates = {
-                'rewards.party.xp': xp_val,
-                'rewards.party.items': items_val
+                f'{QuestFields.REWARDS}.{QuestFields.PARTY}.{QuestFields.XP}': xp_val,
+                f'{QuestFields.REWARDS}.{QuestFields.PARTY}.{CommonFields.ITEMS}': items_val
             }
 
             await update_cached_data(
@@ -257,8 +257,8 @@ class PartyRewardsButton(Button):
                 cache_id=f'{quest[QuestFields.GUILD_ID]}:{quest[QuestFields.QUEST_ID]}'
             )
 
-            party_rewards['xp'] = xp_val
-            party_rewards['items'] = items_val
+            party_rewards[QuestFields.XP] = xp_val
+            party_rewards[CommonFields.ITEMS] = items_val
 
             await setup_view(view, interaction)
             await interaction.response.edit_message(view=view)
@@ -290,7 +290,7 @@ class IndividualRewardsButton(Button):
             quest = view.quest
             character_id = view.selected_character_id
 
-            rewards = quest.setdefault('rewards', {})
+            rewards = quest.setdefault(QuestFields.REWARDS, {})
             char_rewards = rewards.setdefault(character_id, {})
 
             xp_val = None
@@ -309,8 +309,8 @@ class IndividualRewardsButton(Button):
             else:
                 items_val = {}
             updates = {
-                f'rewards.{character_id}.xp': xp_val,
-                f'rewards.{character_id}.items': items_val
+                f'{QuestFields.REWARDS}.{character_id}.{QuestFields.XP}': xp_val,
+                f'{QuestFields.REWARDS}.{character_id}.{CommonFields.ITEMS}': items_val
             }
 
             await update_cached_data(
@@ -322,8 +322,8 @@ class IndividualRewardsButton(Button):
                 cache_id=f'{quest[QuestFields.GUILD_ID]}:{quest[QuestFields.QUEST_ID]}'
             )
 
-            char_rewards['xp'] = xp_val
-            char_rewards['items'] = items_val
+            char_rewards[QuestFields.XP] = xp_val
+            char_rewards[CommonFields.ITEMS] = items_val
 
             await setup_view(view, interaction)
             await interaction.response.edit_message(view=view)
@@ -381,7 +381,7 @@ class CompleteQuestButton(Button):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.QUEST_SUMMARY,
-                query={'_id': interaction.guild_id}
+                query={CommonFields.ID: interaction.guild_id}
             )
 
             if quest_summary_config_query and quest_summary_config_query['questSummary']:

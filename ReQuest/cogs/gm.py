@@ -5,7 +5,7 @@ from discord.ext.commands import Cog
 
 from ReQuest.ui.gm import views, modals
 from ReQuest.utilities.checks import has_gm_or_mod
-from ReQuest.utilities.constants import CharacterFields, DatabaseCollections
+from ReQuest.utilities.constants import CharacterFields, CommonFields, DatabaseCollections
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     get_cached_data,
@@ -59,7 +59,7 @@ class GameMaster(Cog):
                 bot=bot,
                 mongo_database=bot.mdb,
                 collection_name=DatabaseCollections.CHARACTERS,
-                query={'_id': member.id}
+                query={CommonFields.ID: member.id}
             )
             if not player_query:
                 raise UserFeedbackError('The target player does not have any registered characters.')
@@ -88,7 +88,7 @@ class GameMaster(Cog):
                 bot=bot,
                 mongo_database=bot.mdb,
                 collection_name=DatabaseCollections.CHARACTERS,
-                query={'_id': member.id}
+                query={CommonFields.ID: member.id}
             )
             if not player_query:
                 raise UserFeedbackError('The target player does not have any registered characters.')
@@ -103,7 +103,7 @@ class GameMaster(Cog):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.CURRENCY,
-                query={'_id': interaction.guild_id}
+                query={CommonFields.ID: interaction.guild_id}
             )
             xp_enabled = await get_xp_config(interaction.client, interaction.guild_id)
             view = views.ViewCharacterView(member.id, character_data, currency_config, xp_enabled)

@@ -45,8 +45,8 @@ async def get_cached_data(bot, mongo_database, collection_name, query, is_single
     :return: the fetched document(s) or None if not found
     """
     if cache_id is None:
-        if '_id' in query:
-            cache_id = query['_id']
+        if CommonFields.ID in query:
+            cache_id = query[CommonFields.ID]
         else:
             raise ValueError('cache_id must be provided if "_id" is not in the query.')
 
@@ -99,8 +99,8 @@ async def update_cached_data(bot, mongo_database, collection_name, query, update
     :param cache_id: identifier for redis; if not provided, uses the '_id' from the query
     """
     if cache_id is None:
-        if '_id' in query:
-            cache_id = query['_id']
+        if CommonFields.ID in query:
+            cache_id = query[CommonFields.ID]
         else:
             raise ValueError('cache_id must be provided if "_id" is not in the query.')
 
@@ -141,8 +141,8 @@ async def replace_cached_data(bot, mongo_database, collection_name, query, new_d
     :param cache_id: identifier for redis; if not provided, uses the '_id' from the query
     """
     if cache_id is None:
-        if '_id' in query:
-            cache_id = query['_id']
+        if CommonFields.ID in query:
+            cache_id = query[CommonFields.ID]
         else:
             raise ValueError('cache_id must be provided if "_id" is not in the query.')
 
@@ -177,8 +177,8 @@ async def delete_cached_data(bot, mongo_database, collection_name, search_filter
     :param cache_id: identifier for redis; if not provided, uses the '_id' from the query
     """
     if cache_id is None:
-        if '_id' in search_filter:
-            cache_id = search_filter['_id']
+        if CommonFields.ID in search_filter:
+            cache_id = search_filter[CommonFields.ID]
         else:
             raise ValueError('cache_id must be provided if "_id" is not in the query.')
 
@@ -390,13 +390,13 @@ async def trade_currency(interaction, currency_name, amount, sending_member_id, 
         bot=bot,
         mongo_database=bot.mdb,
         collection_name=DatabaseCollections.CHARACTERS,
-        query={'_id': sending_member_id}
+        query={CommonFields.ID: sending_member_id}
     )
     receiver_data = await get_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
         collection_name=DatabaseCollections.CHARACTERS,
-        query={'_id': receiving_member_id}
+        query={CommonFields.ID: receiving_member_id}
     )
     sender_character_id = sender_data[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
     sender_currency = sender_data[CharacterFields.CHARACTERS][sender_character_id][CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {})
@@ -406,7 +406,7 @@ async def trade_currency(interaction, currency_name, amount, sending_member_id, 
         bot=bot,
         mongo_database=bot.gdb,
         collection_name=DatabaseCollections.CURRENCY,
-        query={'_id': guild_id}
+        query={CommonFields.ID: guild_id}
     )
 
     if not currency_config:
@@ -423,13 +423,13 @@ async def trade_currency(interaction, currency_name, amount, sending_member_id, 
         bot=bot,
         mongo_database=bot.mdb,
         collection_name=DatabaseCollections.CHARACTERS,
-        query={'_id': sending_member_id}
+        query={CommonFields.ID: sending_member_id}
     )
     updated_receiver_data = await get_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
         collection_name=DatabaseCollections.CHARACTERS,
-        query={'_id': receiving_member_id}
+        query={CommonFields.ID: receiving_member_id}
     )
     updated_sender_currency = updated_sender_data[CharacterFields.CHARACTERS][sender_character_id][CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY)
     updated_receiver_currency = updated_receiver_data[CharacterFields.CHARACTERS][receiver_character_id][CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY)
@@ -446,7 +446,7 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
         bot=bot,
         mongo_database=bot.mdb,
         collection_name=DatabaseCollections.CHARACTERS,
-        query={'_id': sending_member_id}
+        query={CommonFields.ID: sending_member_id}
     )
     sender_character_id = sender_data[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
     sender_character = sender_data[CharacterFields.CHARACTERS][sender_character_id]
@@ -456,7 +456,7 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
         bot=bot,
         mongo_database=bot.mdb,
         collection_name=DatabaseCollections.CHARACTERS,
-        query={'_id': receiving_member_id}
+        query={CommonFields.ID: receiving_member_id}
     )
     receiver_character_id = receiver_data[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
     receiver_character = receiver_data[CharacterFields.CHARACTERS][receiver_character_id]
@@ -518,17 +518,17 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
 
     # Update sender's character data
     sender_update = {
-        f'characters.{sender_character_id}.attributes.inventory': sender_character[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
+        f'{CharacterFields.CHARACTERS}.{sender_character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}': sender_character[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
     }
     # Include container updates if containers exist
     if sender_character[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS):
-        sender_update[f'characters.{sender_character_id}.attributes.containers'] = sender_character[CharacterFields.ATTRIBUTES][CharacterFields.CONTAINERS]
+        sender_update[f'{CharacterFields.CHARACTERS}.{sender_character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}'] = sender_character[CharacterFields.ATTRIBUTES][CharacterFields.CONTAINERS]
 
     await update_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
         collection_name=DatabaseCollections.CHARACTERS,
-        query={'_id': sending_member_id},
+        query={CommonFields.ID: sending_member_id},
         update_data={'$set': sender_update}
     )
 
@@ -537,8 +537,8 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
         bot=bot,
         mongo_database=bot.mdb,
         collection_name=DatabaseCollections.CHARACTERS,
-        query={'_id': receiving_member_id},
-        update_data={'$set': {f'characters.{receiver_character_id}.attributes.inventory': receiver_inventory}}
+        query={CommonFields.ID: receiving_member_id},
+        update_data={'$set': {f'{CharacterFields.CHARACTERS}.{receiver_character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}': receiver_inventory}}
     )
 
 
@@ -552,7 +552,7 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
             bot=bot,
             mongo_database=bot.mdb,
             collection_name=DatabaseCollections.CHARACTERS,
-            query={'_id': player_id}
+            query={CommonFields.ID: player_id}
         )
         if not player_data:
             raise UserFeedbackError('Player data not found.')
@@ -565,7 +565,7 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
             bot=bot,
             mongo_database=bot.gdb,
             collection_name=DatabaseCollections.CURRENCY,
-            query={'_id': interaction.guild_id}
+            query={CommonFields.ID: interaction.guild_id}
         )
 
         is_currency, currency_parent_name = None, None
@@ -620,8 +620,8 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
                 bot=bot,
                 mongo_database=bot.mdb,
                 collection_name=DatabaseCollections.CHARACTERS,
-                query={'_id': player_id},
-                update_data={'$set': {f'characters.{character_id}.attributes.currency': character_currency_db}}
+                query={CommonFields.ID: player_id},
+                update_data={'$set': {f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CURRENCY}': character_currency_db}}
             )
         else:
             character_inventory = normalize_currency_keys(character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {}))
@@ -642,8 +642,8 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
                 bot=bot,
                 mongo_database=bot.mdb,
                 collection_name=DatabaseCollections.CHARACTERS,
-                query={'_id': player_id},
-                update_data={'$set': {f'characters.{character_id}.attributes.inventory': inventory_for_db}}
+                query={CommonFields.ID: player_id},
+                update_data={'$set': {f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}': inventory_for_db}}
             )
     except Exception as e:
         await log_exception(e, interaction)
@@ -657,7 +657,7 @@ async def update_character_experience(interaction, player_id: int, character_id:
             bot=bot,
             mongo_database=bot.mdb,
             collection_name=DatabaseCollections.CHARACTERS,
-            query={'_id': player_id}
+            query={CommonFields.ID: player_id}
         )
         if not player_data:
             raise UserFeedbackError('Player data not found.')
@@ -675,8 +675,8 @@ async def update_character_experience(interaction, player_id: int, character_id:
             bot=bot,
             mongo_database=bot.mdb,
             collection_name=DatabaseCollections.CHARACTERS,
-            query={'_id': player_id},
-            update_data={'$set': {f'characters.{character_id}': character_data}}
+            query={CommonFields.ID: player_id},
+            update_data={'$set': {f'{CharacterFields.CHARACTERS}.{character_id}': character_data}}
         )
     except Exception as e:
         await log_exception(e, interaction)
@@ -1141,7 +1141,7 @@ async def get_xp_config(bot, guild_id) -> bool:
             bot=bot,
             mongo_database=bot.gdb,
             collection_name=DatabaseCollections.PLAYER_EXPERIENCE,
-            query={'_id': guild_id}
+            query={CommonFields.ID: guild_id}
         )
         if query is None:
             return True  # Default to XP enabled if no config found
@@ -1244,7 +1244,7 @@ async def get_item_stock(bot, guild_id: int, channel_id: str, item_name: str) ->
         bot=bot,
         mongo_database=bot.gdb,
         collection_name=DatabaseCollections.SHOP_STOCK,
-        query={'_id': guild_id}
+        query={CommonFields.ID: guild_id}
     )
 
     if not stock_data:
@@ -1277,7 +1277,7 @@ async def get_shop_stock(bot, guild_id: int, channel_id: str) -> dict:
         bot=bot,
         mongo_database=bot.gdb,
         collection_name=DatabaseCollections.SHOP_STOCK,
-        query={'_id': guild_id}
+        query={CommonFields.ID: guild_id}
     )
 
     if not stock_data:
@@ -1306,12 +1306,12 @@ async def initialize_item_stock(bot, guild_id: int, channel_id: str, item_name: 
         bot=bot,
         mongo_database=bot.gdb,
         collection_name=DatabaseCollections.SHOP_STOCK,
-        query={'_id': guild_id},
+        query={CommonFields.ID: guild_id},
         update_data={
             '$set': {
-                f'shops.{channel_id}.{encode_mongo_key(item_name)}': {
-                    'available': current_stock,
-                    'reserved': 0
+                f'{ShopFields.SHOPS}.{channel_id}.{encode_mongo_key(item_name)}': {
+                    ShopFields.AVAILABLE: current_stock,
+                    ShopFields.RESERVED: 0
                 }
             }
         }
@@ -1331,10 +1331,10 @@ async def remove_item_stock_limit(bot, guild_id: int, channel_id: str, item_name
         bot=bot,
         mongo_database=bot.gdb,
         collection_name=DatabaseCollections.SHOP_STOCK,
-        query={'_id': guild_id},
+        query={CommonFields.ID: guild_id},
         update_data={
             '$unset': {
-                f'shops.{channel_id}.{encode_mongo_key(item_name)}': ''
+                f'{ShopFields.SHOPS}.{channel_id}.{encode_mongo_key(item_name)}': ''
             }
         }
     )
@@ -1357,13 +1357,13 @@ async def reserve_stock(bot, guild_id: int, channel_id: str, item_name: str, qua
     encoded_name = encode_mongo_key(item_name)
     result = await collection.find_one_and_update(
         {
-            '_id': guild_id,
-            f'shops.{channel_id}.{encoded_name}.available': {'$gte': quantity}
+            CommonFields.ID: guild_id,
+            f'{ShopFields.SHOPS}.{channel_id}.{encoded_name}.{ShopFields.AVAILABLE}': {'$gte': quantity}
         },
         {
             '$inc': {
-                f'shops.{channel_id}.{encoded_name}.available': -quantity,
-                f'shops.{channel_id}.{encoded_name}.reserved': quantity
+                f'{ShopFields.SHOPS}.{channel_id}.{encoded_name}.{ShopFields.AVAILABLE}': -quantity,
+                f'{ShopFields.SHOPS}.{channel_id}.{encoded_name}.{ShopFields.RESERVED}': quantity
             }
         },
         return_document=True
@@ -1395,19 +1395,19 @@ async def release_stock(bot, guild_id: int, channel_id: str, item_name: str,
     """
     collection = bot.gdb[DatabaseCollections.SHOP_STOCK]
     encoded_name = encode_mongo_key(item_name)
-    path = f'shops.{channel_id}.{encoded_name}'
+    path = f'{ShopFields.SHOPS}.{channel_id}.{encoded_name}'
 
-    new_available = {'$add': [f'${path}.available', quantity]}
+    new_available = {'$add': [f'${path}.{ShopFields.AVAILABLE}', quantity]}
     if max_stock is not None:
         new_available = {'$min': [max_stock, new_available]}
 
     result = await collection.update_one(
-        {'_id': guild_id, f'{path}.reserved': {'$exists': True}},
+        {CommonFields.ID: guild_id, f'{path}.{ShopFields.RESERVED}': {'$exists': True}},
         [
             {
                 '$set': {
-                    f'{path}.available': new_available,
-                    f'{path}.reserved': {'$max': [0, {'$subtract': [f'${path}.reserved', quantity]}]}
+                    f'{path}.{ShopFields.AVAILABLE}': new_available,
+                    f'{path}.{ShopFields.RESERVED}': {'$max': [0, {'$subtract': [f'${path}.{ShopFields.RESERVED}', quantity]}]}
                 }
             }
         ]
@@ -1434,14 +1434,14 @@ async def finalize_stock(bot, guild_id: int, channel_id: str, item_name: str, qu
     """
     collection = bot.gdb[DatabaseCollections.SHOP_STOCK]
     encoded_name = encode_mongo_key(item_name)
-    path = f'shops.{channel_id}.{encoded_name}'
+    path = f'{ShopFields.SHOPS}.{channel_id}.{encoded_name}'
 
     result = await collection.update_one(
-        {'_id': guild_id, f'{path}.reserved': {'$exists': True}},
+        {CommonFields.ID: guild_id, f'{path}.{ShopFields.RESERVED}': {'$exists': True}},
         [
             {
                 '$set': {
-                    f'{path}.reserved': {'$max': [0, {'$subtract': [f'${path}.reserved', quantity]}]}
+                    f'{path}.{ShopFields.RESERVED}': {'$max': [0, {'$subtract': [f'${path}.{ShopFields.RESERVED}', quantity]}]}
                 }
             }
         ]
@@ -1470,10 +1470,10 @@ async def set_available_stock(bot, guild_id: int, channel_id: str, item_name: st
         bot=bot,
         mongo_database=bot.gdb,
         collection_name=DatabaseCollections.SHOP_STOCK,
-        query={'_id': guild_id},
+        query={CommonFields.ID: guild_id},
         update_data={
             '$set': {
-                f'shops.{channel_id}.{encode_mongo_key(item_name)}.available': amount
+                f'{ShopFields.SHOPS}.{channel_id}.{encode_mongo_key(item_name)}.{ShopFields.AVAILABLE}': amount
             }
         }
     )
@@ -1493,14 +1493,14 @@ async def increment_available_stock(bot, guild_id: int, channel_id: str, item_na
     """
     collection = bot.gdb[DatabaseCollections.SHOP_STOCK]
     encoded_name = encode_mongo_key(item_name)
-    path = f'shops.{channel_id}.{encoded_name}'
+    path = f'{ShopFields.SHOPS}.{channel_id}.{encoded_name}'
 
     result = await collection.update_one(
-        {'_id': guild_id, f'{path}.available': {'$exists': True}},
+        {CommonFields.ID: guild_id, f'{path}.{ShopFields.AVAILABLE}': {'$exists': True}},
         [
             {
                 '$set': {
-                    f'{path}.available': {'$min': [max_stock, {'$add': [f'${path}.available', increment]}]}
+                    f'{path}.{ShopFields.AVAILABLE}': {'$min': [max_stock, {'$add': [f'${path}.{ShopFields.AVAILABLE}', increment]}]}
                 }
             }
         ]
@@ -1528,10 +1528,10 @@ async def update_last_restock(bot, guild_id: int, channel_id: str, timestamp: st
         bot=bot,
         mongo_database=bot.gdb,
         collection_name=DatabaseCollections.SHOP_STOCK,
-        query={'_id': guild_id},
+        query={CommonFields.ID: guild_id},
         update_data={
             '$set': {
-                f'lastRestock.{channel_id}': timestamp
+                f'{RestockFields.LAST_RESTOCK}.{channel_id}': timestamp
             }
         }
     )
@@ -1551,7 +1551,7 @@ async def get_last_restock(bot, guild_id: int, channel_id: str) -> str | None:
         bot=bot,
         mongo_database=bot.gdb,
         collection_name=DatabaseCollections.SHOP_STOCK,
-        query={'_id': guild_id}
+        query={CommonFields.ID: guild_id}
     )
 
     if not stock_data:
@@ -1625,7 +1625,7 @@ async def get_cart(bot, guild_id: int, user_id: int, channel_id: str) -> dict | 
         bot=bot,
         mongo_database=bot.gdb,
         collection_name=DatabaseCollections.SHOP_CARTS,
-        query={'_id': cart_id},
+        query={CommonFields.ID: cart_id},
         cache_id=cart_id
     )
 
@@ -1681,7 +1681,7 @@ async def get_or_create_cart(bot, guild_id: int, user_id: int, channel_id: str) 
         bot=bot,
         mongo_database=bot.gdb,
         collection_name=DatabaseCollections.SHOP_CARTS,
-        query={'_id': cart_id},
+        query={CommonFields.ID: cart_id},
         update_data={'$set': new_cart},
         cache_id=cart_id
     )
@@ -1706,7 +1706,7 @@ async def update_cart_expiry(bot, guild_id: int, user_id: int, channel_id: str):
         bot=bot,
         mongo_database=bot.gdb,
         collection_name=DatabaseCollections.SHOP_CARTS,
-        query={'_id': cart_id},
+        query={CommonFields.ID: cart_id},
         update_data={
             '$set': {
                 CartFields.UPDATED_AT: now.isoformat(),
@@ -1757,9 +1757,9 @@ async def add_item_to_cart(bot, guild_id: int, user_id: int, channel_id: str,
             bot=bot,
             mongo_database=bot.gdb,
             collection_name=DatabaseCollections.SHOP_CARTS,
-            query={'_id': cart_id},
+            query={CommonFields.ID: cart_id},
             update_data={
-                '$inc': {f'items.{cart_key}.quantity': 1},
+                '$inc': {f'{CartFields.ITEMS}.{cart_key}.{CartFields.QUANTITY}': 1},
                 '$set': {
                     CartFields.UPDATED_AT: now.isoformat(),
                     CartFields.EXPIRES_AT: expires_at.isoformat()
@@ -1779,10 +1779,10 @@ async def add_item_to_cart(bot, guild_id: int, user_id: int, channel_id: str,
             bot=bot,
             mongo_database=bot.gdb,
             collection_name=DatabaseCollections.SHOP_CARTS,
-            query={'_id': cart_id},
+            query={CommonFields.ID: cart_id},
             update_data={
                 '$set': {
-                    f'items.{cart_key}': cart_item,
+                    f'{CartFields.ITEMS}.{cart_key}': cart_item,
                     CartFields.UPDATED_AT: now.isoformat(),
                     CartFields.EXPIRES_AT: expires_at.isoformat()
                 }
@@ -1836,9 +1836,9 @@ async def remove_item_from_cart(bot, guild_id: int, user_id: int, channel_id: st
             bot=bot,
             mongo_database=bot.gdb,
             collection_name=DatabaseCollections.SHOP_CARTS,
-            query={'_id': cart_id},
+            query={CommonFields.ID: cart_id},
             update_data={
-                '$unset': {f'items.{cart_key}': ''},
+                '$unset': {f'{CartFields.ITEMS}.{cart_key}': ''},
                 '$set': {
                     CartFields.UPDATED_AT: now.isoformat(),
                     CartFields.EXPIRES_AT: expires_at.isoformat()
@@ -1852,9 +1852,9 @@ async def remove_item_from_cart(bot, guild_id: int, user_id: int, channel_id: st
             bot=bot,
             mongo_database=bot.gdb,
             collection_name=DatabaseCollections.SHOP_CARTS,
-            query={'_id': cart_id},
+            query={CommonFields.ID: cart_id},
             update_data={
-                '$inc': {f'items.{cart_key}.quantity': -quantity},
+                '$inc': {f'{CartFields.ITEMS}.{cart_key}.{CartFields.QUANTITY}': -quantity},
                 '$set': {
                     CartFields.UPDATED_AT: now.isoformat(),
                     CartFields.EXPIRES_AT: expires_at.isoformat()
@@ -1917,10 +1917,10 @@ async def update_cart_item_quantity(bot, guild_id: int, user_id: int, channel_id
             bot=bot,
             mongo_database=bot.gdb,
             collection_name=DatabaseCollections.SHOP_CARTS,
-            query={'_id': cart_id},
+            query={CommonFields.ID: cart_id},
             update_data={
                 '$set': {
-                    f'items.{cart_key}.quantity': new_quantity,
+                    f'{CartFields.ITEMS}.{cart_key}.{CartFields.QUANTITY}': new_quantity,
                     CartFields.UPDATED_AT: now.isoformat(),
                     CartFields.EXPIRES_AT: expires_at.isoformat()
                 }
@@ -1949,7 +1949,7 @@ async def clear_cart_and_release_stock(bot, guild_id: int, user_id: int, channel
         bot=bot,
         mongo_database=bot.gdb,
         collection_name=DatabaseCollections.SHOP_CARTS,
-        query={'_id': cart_id},
+        query={CommonFields.ID: cart_id},
         cache_id=cart_id
     )
     if not cart:
@@ -1972,7 +1972,7 @@ async def clear_cart_and_release_stock(bot, guild_id: int, user_id: int, channel
         bot=bot,
         mongo_database=bot.gdb,
         collection_name=DatabaseCollections.SHOP_CARTS,
-        search_filter={'_id': cart_id},
+        search_filter={CommonFields.ID: cart_id},
         cache_id=cart_id
     )
 
@@ -2009,7 +2009,7 @@ async def finalize_cart_purchase(bot, guild_id: int, user_id: int, channel_id: s
         bot=bot,
         mongo_database=bot.gdb,
         collection_name=DatabaseCollections.SHOP_CARTS,
-        search_filter={'_id': cart_id},
+        search_filter={CommonFields.ID: cart_id},
         cache_id=cart_id
     )
 
@@ -2052,7 +2052,7 @@ async def cleanup_expired_carts(bot):
             bot=bot,
             mongo_database=bot.gdb,
             collection_name=DatabaseCollections.SHOP_CARTS,
-            search_filter={'_id': cart_id},
+            search_filter={CommonFields.ID: cart_id},
             cache_id=cart_id
         )
 
@@ -2231,7 +2231,7 @@ async def create_container(bot, player_id: int, character_id: str, name: str) ->
         bot=bot,
         mongo_database=bot.mdb,
         collection_name=DatabaseCollections.CHARACTERS,
-        query={'_id': player_id}
+        query={CommonFields.ID: player_id}
     )
     if not player_data:
         raise UserFeedbackError('Player data not found.')
@@ -2253,9 +2253,9 @@ async def create_container(bot, player_id: int, character_id: str, name: str) ->
         bot=bot,
         mongo_database=bot.mdb,
         collection_name=DatabaseCollections.CHARACTERS,
-        query={'_id': player_id},
+        query={CommonFields.ID: player_id},
         update_data={'$set': {
-            f'characters.{character_id}.attributes.containers.{container_id}': {
+            f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}.{container_id}': {
                 ContainerFields.NAME: name,
                 ContainerFields.ORDER: order,
                 ContainerFields.ITEMS: {}
@@ -2284,7 +2284,7 @@ async def rename_container(bot, player_id: int, character_id: str,
         bot=bot,
         mongo_database=bot.mdb,
         collection_name=DatabaseCollections.CHARACTERS,
-        query={'_id': player_id}
+        query={CommonFields.ID: player_id}
     )
     if not player_data:
         raise UserFeedbackError('Player data not found.')
@@ -2304,8 +2304,8 @@ async def rename_container(bot, player_id: int, character_id: str,
         bot=bot,
         mongo_database=bot.mdb,
         collection_name=DatabaseCollections.CHARACTERS,
-        query={'_id': player_id},
-        update_data={'$set': {f'characters.{character_id}.attributes.containers.{container_id}.name': new_name}}
+        query={CommonFields.ID: player_id},
+        update_data={'$set': {f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}.{container_id}.{ContainerFields.NAME}': new_name}}
     )
 
 
@@ -2326,7 +2326,7 @@ async def delete_container(bot, player_id: int, character_id: str,
         bot=bot,
         mongo_database=bot.mdb,
         collection_name=DatabaseCollections.CHARACTERS,
-        query={'_id': player_id}
+        query={CommonFields.ID: player_id}
     )
 
     if not player_data:
@@ -2365,10 +2365,10 @@ async def delete_container(bot, player_id: int, character_id: str,
             bot=bot,
             mongo_database=bot.mdb,
             collection_name=DatabaseCollections.CHARACTERS,
-            query={'_id': player_id},
+            query={CommonFields.ID: player_id},
             update_data={
-                '$set': {f'characters.{character_id}.attributes.inventory': new_inventory},
-                '$unset': {f'characters.{character_id}.attributes.containers.{container_id}': ''}
+                '$set': {f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}': new_inventory},
+                '$unset': {f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}.{container_id}': ''}
             }
         )
     else:
@@ -2376,8 +2376,8 @@ async def delete_container(bot, player_id: int, character_id: str,
             bot=bot,
             mongo_database=bot.mdb,
             collection_name=DatabaseCollections.CHARACTERS,
-            query={'_id': player_id},
-            update_data={'$unset': {f'characters.{character_id}.attributes.containers.{container_id}': ''}}
+            query={CommonFields.ID: player_id},
+            update_data={'$unset': {f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}.{container_id}': ''}}
         )
 
     return items_count
@@ -2393,7 +2393,7 @@ async def reorder_container(bot, player_id: int, character_id: str,
         bot=bot,
         mongo_database=bot.mdb,
         collection_name=DatabaseCollections.CHARACTERS,
-        query={'_id': player_id}
+        query={CommonFields.ID: player_id}
     )
 
     if not player_data:
@@ -2435,10 +2435,10 @@ async def reorder_container(bot, player_id: int, character_id: str,
         bot=bot,
         mongo_database=bot.mdb,
         collection_name=DatabaseCollections.CHARACTERS,
-        query={'_id': player_id},
+        query={CommonFields.ID: player_id},
         update_data={'$set': {
-            f'characters.{character_id}.attributes.containers.{current_container_id}.order': target_order,
-            f'characters.{character_id}.attributes.containers.{target_container_id}.order': current_order
+            f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}.{current_container_id}.{ContainerFields.ORDER}': target_order,
+            f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}.{target_container_id}.{ContainerFields.ORDER}': current_order
         }}
     )
 
@@ -2464,7 +2464,7 @@ async def move_item_between_containers(
         bot=bot,
         mongo_database=bot.mdb,
         collection_name=DatabaseCollections.CHARACTERS,
-        query={'_id': player_id}
+        query={CommonFields.ID: player_id}
     )
     if not player_data:
         raise UserFeedbackError('Player data not found.')
@@ -2478,13 +2478,13 @@ async def move_item_between_containers(
     # Get source items
     if source_container_id is None:
         source_items = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
-        source_path = f'characters.{character_id}.attributes.inventory'
+        source_path = f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}'
     else:
         containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
         if source_container_id not in containers:
             raise UserFeedbackError('Source container not found.')
         source_items = containers[source_container_id].get(ContainerFields.ITEMS, {})
-        source_path = f'characters.{character_id}.attributes.containers.{source_container_id}.items'
+        source_path = f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}.{source_container_id}.{ContainerFields.ITEMS}'
 
     # Find item in source (case-insensitive)
     source_key = None
@@ -2504,13 +2504,13 @@ async def move_item_between_containers(
     # Get destination items
     if dest_container_id is None:
         dest_items = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
-        dest_path = f'characters.{character_id}.attributes.inventory'
+        dest_path = f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}'
     else:
         containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
         if dest_container_id not in containers:
             raise UserFeedbackError('Destination container not found.')
         dest_items = containers[dest_container_id].get(ContainerFields.ITEMS, {})
-        dest_path = f'characters.{character_id}.attributes.containers.{dest_container_id}.items'
+        dest_path = f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}.{dest_container_id}.{ContainerFields.ITEMS}'
 
     # Find existing item in destination (case-insensitive)
     dest_key = None
@@ -2543,7 +2543,7 @@ async def move_item_between_containers(
         bot=bot,
         mongo_database=bot.mdb,
         collection_name=DatabaseCollections.CHARACTERS,
-        query={'_id': player_id},
+        query={CommonFields.ID: player_id},
         update_data={
             '$set': {
                 source_path: source_items,
@@ -2570,7 +2570,7 @@ async def consume_item_from_container(
         bot=bot,
         mongo_database=bot.mdb,
         collection_name=DatabaseCollections.CHARACTERS,
-        query={'_id': player_id}
+        query={CommonFields.ID: player_id}
     )
     if not player_data:
         raise UserFeedbackError('Player data not found.')
@@ -2584,13 +2584,13 @@ async def consume_item_from_container(
     # Get container items
     if container_id is None:
         items = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
-        path = f'characters.{character_id}.attributes.inventory'
+        path = f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}'
     else:
         containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
         if container_id not in containers:
             raise UserFeedbackError('Container not found.')
         items = containers[container_id].get(ContainerFields.ITEMS, {})
-        path = f'characters.{character_id}.attributes.containers.{container_id}.items'
+        path = f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}.{container_id}.{ContainerFields.ITEMS}'
 
     # Find item (case-insensitive)
     item_key = None
@@ -2620,7 +2620,7 @@ async def consume_item_from_container(
         bot=bot,
         mongo_database=bot.mdb,
         collection_name=DatabaseCollections.CHARACTERS,
-        query={'_id': player_id},
+        query={CommonFields.ID: player_id},
         update_data={'$set': {path: items}}
     )
 

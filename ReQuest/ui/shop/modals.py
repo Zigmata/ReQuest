@@ -1,6 +1,7 @@
 import discord
 from discord.ui import Modal
 
+from ReQuest.utilities.constants import CartFields
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     update_cart_item_quantity,
@@ -53,7 +54,7 @@ class EditCartItemModal(Modal):
             # Refresh local cart cache from database
             db_cart = await get_cart(bot, guild_id, user_id, channel_id)
             if db_cart:
-                prev_view.cart = db_cart.get('items', {})
+                prev_view.cart = db_cart.get(CartFields.ITEMS, {})
             else:
                 prev_view.cart = {}
 

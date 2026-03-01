@@ -4,7 +4,7 @@ import discord
 from discord.ui import Select, RoleSelect, ChannelSelect
 
 from ReQuest.ui.common.enums import InventoryType, RoleplayMode, ScheduleType, DayOfWeek
-from ReQuest.utilities.constants import ConfigFields, CommonFields, DatabaseCollections
+from ReQuest.utilities.constants import ConfigFields, CommonFields, RoleplayFields, DatabaseCollections
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     setup_view,
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class SingleChannelConfigSelect(ChannelSelect):
     def __init__(self, calling_view, config_type, config_name):
         channel_types = [discord.ChannelType.text]
-        if config_type == 'approvalQueueChannel':
+        if config_type == ConfigFields.APPROVAL_QUEUE_CHANNEL:
             channel_types = [discord.ChannelType.forum]
 
         super().__init__(
@@ -57,7 +57,7 @@ class QuestAnnounceRoleSelect(RoleSelect):
     async def callback(self, interaction: discord.Interaction):
         try:
             bot = interaction.client
-            update_data = {'$set': {'announceRole': self.values[0].mention}}
+            update_data = {'$set': {ConfigFields.ANNOUNCE_ROLE: self.values[0].mention}}
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -91,7 +91,7 @@ class AddGMRoleSelect(RoleSelect):
             )
             if not query:
                 for value in self.values:
-                    update_data = {'$push': {'gmRoles': {'mention': value.mention, 'name': value.name}}}
+                    update_data = {'$push': {ConfigFields.GM_ROLES: {CommonFields.MENTION: value.mention, CommonFields.NAME: value.name}}}
                     await update_cached_data(
                         bot=bot,
                         mongo_database=bot.gdb,
@@ -107,7 +107,7 @@ class AddGMRoleSelect(RoleSelect):
                             matches += 1
 
                     if matches == 0:
-                        update_data = {'$push': {'gmRoles': {'mention': value.mention, 'name': value.name}}}
+                        update_data = {'$push': {ConfigFields.GM_ROLES: {CommonFields.MENTION: value.mention, CommonFields.NAME: value.name}}}
                         await update_cached_data(
                             bot=bot,
                             mongo_database=bot.gdb,
@@ -141,7 +141,7 @@ class ConfigWaitListSelect(Select):
     async def callback(self, interaction: discord.Interaction):
         try:
             bot = interaction.client
-            update_data = {'$set': {'questWaitList': int(self.values[0])}}
+            update_data = {'$set': {ConfigFields.QUEST_WAIT_LIST: int(self.values[0])}}
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -184,7 +184,7 @@ class InventoryTypeSelect(Select):
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.INVENTORY_CONFIG,
                 query={'_id': interaction.guild_id},
-                update_data={'$set': {'inventoryType': self.values[0]}}
+                update_data={'$set': {ConfigFields.INVENTORY_TYPE: self.values[0]}}
             )
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
@@ -223,7 +223,7 @@ class RoleplayChannelSelect(ChannelSelect):
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.ROLEPLAY_CONFIG,
                 query={'_id': interaction.guild_id},
-                update_data={'$addToSet': {'channels': {'$each': channel_ids}}}
+                update_data={'$addToSet': {RoleplayFields.CHANNELS: {'$each': channel_ids}}}
             )
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
@@ -259,7 +259,7 @@ class RoleplayModeSelect(Select):
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.ROLEPLAY_CONFIG,
                 query={'_id': interaction.guild_id},
-                update_data={'$set': {'mode': self.values[0]}}
+                update_data={'$set': {RoleplayFields.MODE: self.values[0]}}
             )
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
@@ -288,7 +288,7 @@ class RoleplayResetSelect(Select):
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.ROLEPLAY_CONFIG,
                 query={'_id': interaction.guild_id},
-                update_data={'$set': {'config.resetPeriod': self.values[0]}}
+                update_data={'$set': {f'{RoleplayFields.CONFIG}.{RoleplayFields.RESET_PERIOD}': self.values[0]}}
             )
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
@@ -321,7 +321,7 @@ class RoleplayResetDaySelect(Select):
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.ROLEPLAY_CONFIG,
                 query={'_id': interaction.guild_id},
-                update_data={'$set': {'config.resetDay': self.values[0]}}
+                update_data={'$set': {f'{RoleplayFields.CONFIG}.{RoleplayFields.RESET_DAY}': self.values[0]}}
             )
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
@@ -350,7 +350,7 @@ class RoleplayResetTimeSelect(Select):
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.ROLEPLAY_CONFIG,
                 query={'_id': interaction.guild_id},
-                update_data={'$set': {'config.resetTime': int(self.values[0])}}
+                update_data={'$set': {f'{RoleplayFields.CONFIG}.{RoleplayFields.RESET_TIME}': int(self.values[0])}}
             )
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)

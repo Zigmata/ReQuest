@@ -19,7 +19,7 @@ from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
 from ReQuest.ui.common.enums import InventoryType
 from ReQuest.ui.player import buttons, selects
 from ReQuest.utilities.constants import (
-    CharacterFields, ConfigFields, CommonFields, DatabaseCollections
+    CharacterFields, ConfigFields, CommonFields, ShopFields, DatabaseCollections
 )
 from ReQuest.utilities.supportFunctions import (
     log_exception,
@@ -90,7 +90,7 @@ class PlayerBaseView(LayoutView):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.PLAYER_BOARD_CHANNEL,
-                query={'_id': guild.id}
+                query={CommonFields.ID: guild.id}
             )
             if channel_query:
                 self.player_board_button.disabled = False
@@ -120,14 +120,14 @@ class CharacterBaseView(LayoutView):
                 bot=bot,
                 mongo_database=bot.mdb,
                 collection_name=DatabaseCollections.CHARACTERS,
-                query={'_id': interaction.user.id}
+                query={CommonFields.ID: interaction.user.id}
             )
 
-            self.characters = query.get('characters', {}) if query else {}
-            self.active_character_id = query.get('activeCharacters', {}).get(str(interaction.guild_id)) \
+            self.characters = query.get(CharacterFields.CHARACTERS, {}) if query else {}
+            self.active_character_id = query.get(CharacterFields.ACTIVE_CHARACTERS, {}).get(str(interaction.guild_id)) \
                 if query else None
 
-            self.sorted_characters = sorted(self.characters.items(), key=lambda x: x[1].get('name', '').lower())
+            self.sorted_characters = sorted(self.characters.items(), key=lambda x: x[1].get(CharacterFields.NAME, '').lower())
 
             self.total_pages = math.ceil(len(self.sorted_characters) / self.items_per_page)
             if self.total_pages == 0:
@@ -166,9 +166,9 @@ class CharacterBaseView(LayoutView):
             for character_id, character_data in page_items:
                 is_active = (character_id == self.active_character_id)
 
-                name = character_data.get('name')
+                name = character_data.get(CharacterFields.NAME)
                 note = character_data.get('note', '')
-                xp = character_data.get('attributes', {}).get('experience', 0)
+                xp = character_data.get(CharacterFields.ATTRIBUTES, {}).get(CharacterFields.EXPERIENCE, 0)
 
                 display_name = f"**{name}**"
                 if is_active:
@@ -266,20 +266,20 @@ class InventoryOverviewView(LayoutView):
             bot=bot,
             mongo_database=bot.mdb,
             collection_name=DatabaseCollections.CHARACTERS,
-            query={'_id': interaction.user.id}
+            query={CommonFields.ID: interaction.user.id}
         )
 
         self.currency_config = await get_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
             collection_name=DatabaseCollections.CURRENCY,
-            query={'_id': guild_id}
+            query={CommonFields.ID: guild_id}
         )
 
         if not query:
             self.active_character = None
             self.active_character_id = None
-        elif str(guild_id) not in query.get('activeCharacters', {}):
+        elif str(guild_id) not in query.get(CharacterFields.ACTIVE_CHARACTERS, {}):
             self.active_character = None
             self.active_character_id = None
         else:
@@ -310,10 +310,10 @@ class InventoryOverviewView(LayoutView):
                         inventory = self.active_character[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
                         if item_name_key in inventory:
                             del inventory[item_name_key]  # Update local copy
-                            inv_path = f'characters.{self.active_character_id}.attributes.inventory'
+                            inv_path = f'{CharacterFields.CHARACTERS}.{self.active_character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}'
                             collection = bot.mdb[DatabaseCollections.CHARACTERS]
                             await collection.update_one(
-                                {'_id': interaction.user.id},
+                                {CommonFields.ID: interaction.user.id},
                                 [
                                     {
                                         '$set': {
@@ -343,7 +343,7 @@ class InventoryOverviewView(LayoutView):
                         bot=bot,
                         mongo_database=bot.mdb,
                         collection_name=DatabaseCollections.CHARACTERS,
-                        query={'_id': interaction.user.id}
+                        query={CommonFields.ID: interaction.user.id}
                     )
                     self.active_character = query[CharacterFields.CHARACTERS][self.active_character_id]
 
@@ -387,7 +387,7 @@ class InventoryOverviewView(LayoutView):
             return
 
         header_section.add_item(TextDisplay(
-            f"**{self.active_character['name']}'s Inventory**"
+            f"**{self.active_character[CharacterFields.NAME]}'s Inventory**"
         ))
         container.add_item(header_section)
         container.add_item(Separator())
@@ -506,7 +506,7 @@ class ContainerItemsView(LayoutView):
             bot=bot,
             mongo_database=bot.mdb,
             collection_name=DatabaseCollections.CHARACTERS,
-            query={'_id': interaction.user.id}
+            query={CommonFields.ID: interaction.user.id}
         )
 
         self.character_data = player_data[CharacterFields.CHARACTERS][self.character_id]
@@ -655,7 +655,7 @@ class MoveDestinationView(LayoutView):
             bot=bot,
             mongo_database=bot.mdb,
             collection_name=DatabaseCollections.CHARACTERS,
-            query={'_id': interaction.user.id}
+            query={CommonFields.ID: interaction.user.id}
         )
 
         self.source_view.character_data = player_data[CharacterFields.CHARACTERS][self.source_view.character_id]
@@ -807,7 +807,7 @@ class ContainerManagementView(LayoutView):
             bot=bot,
             mongo_database=bot.mdb,
             collection_name=DatabaseCollections.CHARACTERS,
-            query={'_id': interaction.user.id}
+            query={CommonFields.ID: interaction.user.id}
         )
         self.character_data = player_data[CharacterFields.CHARACTERS][self.character_id]
 
@@ -968,7 +968,7 @@ class PlayerBoardView(LayoutView):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.PLAYER_BOARD_CHANNEL,
-                query={'_id': guild.id}
+                query={CommonFields.ID: guild.id}
             )
             self.player_board_channel_id = strip_id(channel_query[ConfigFields.PLAYER_BOARD_CHANNEL]) if channel_query else None
 
@@ -1226,19 +1226,19 @@ class StaticKitSelectView(LayoutView):
             bot=bot,
             mongo_database=bot.gdb,
             collection_name=DatabaseCollections.STATIC_KITS,
-            query={'_id': interaction.guild_id}
+            query={CommonFields.ID: interaction.guild_id}
         )
         self.kits = query.get('kits', {}) if query else {}
 
         # Sort kits by name
-        self.sorted_kits = sorted(self.kits.items(), key=lambda x: x[1].get('name', '').lower())
+        self.sorted_kits = sorted(self.kits.items(), key=lambda x: x[1].get(CommonFields.NAME, '').lower())
         self.total_pages = math.ceil(len(self.sorted_kits) / self.items_per_page)
 
         self.currency_config = await get_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
             collection_name=DatabaseCollections.CURRENCY,
-            query={'_id': interaction.guild_id}
+            query={CommonFields.ID: interaction.guild_id}
         )
 
         self.build_view()
@@ -1261,7 +1261,7 @@ class StaticKitSelectView(LayoutView):
                 select_button = buttons.SelectKitOptionButton(kit_id, kit_data)
                 section = Section(accessory=select_button)
 
-                kit_name = kit_data.get('name', 'Unknown Kit')
+                kit_name = kit_data.get(CommonFields.NAME, 'Unknown Kit')
                 description = kit_data.get('description', '')
 
                 content_lines = [f'**{escape_markdown(titlecase(kit_name))}**']
@@ -1269,13 +1269,13 @@ class StaticKitSelectView(LayoutView):
                     content_lines.append(f'*{escape_markdown(description)}*')
 
                 # Preview Contents
-                items = kit_data.get('items', [])
+                items = kit_data.get(CommonFields.ITEMS, [])
                 # Decode currency keys for display
                 currency = {decode_mongo_key(k): v for k, v in kit_data.get(CharacterFields.CURRENCY, {}).items()}
 
                 preview_list = []
                 for item in items[:3]:  # Show first 3 items
-                    preview_list.append(f'{item.get("quantity", 1)}x {escape_markdown(titlecase(item.get("name", "")))}')
+                    preview_list.append(f'{item.get(CommonFields.QUANTITY, 1)}x {escape_markdown(titlecase(item.get(CommonFields.NAME, "")))}')
                 if len(items) > 3:
                     preview_list.append(f'...and {len(items) - 3} more items')
 
@@ -1357,7 +1357,7 @@ class StaticKitConfirmView(LayoutView):
         self.clear_items()
         container = Container()
 
-        container.add_item(TextDisplay(f'**Confirm Selection: {escape_markdown(titlecase(self.kit_data.get("name")))}**'))
+        container.add_item(TextDisplay(f'**Confirm Selection: {escape_markdown(titlecase(self.kit_data.get(CommonFields.NAME)))}**'))
         container.add_item(Separator())
 
         description = self.kit_data.get('description')
@@ -1365,7 +1365,7 @@ class StaticKitConfirmView(LayoutView):
             container.add_item(TextDisplay(escape_markdown(description)))
             container.add_item(Separator())
 
-        items = self.kit_data.get('items', [])
+        items = self.kit_data.get(CommonFields.ITEMS, [])
         # Decode currency keys for display
         currency = {decode_mongo_key(k): v for k, v in self.kit_data.get(CharacterFields.CURRENCY, {}).items()}
 
@@ -1373,7 +1373,7 @@ class StaticKitConfirmView(LayoutView):
         if items:
             details.append('**Items:**')
             for item in items:
-                details.append(f'- {item.get("quantity", 1)}x {escape_markdown(titlecase(item.get("name")))}')
+                details.append(f'- {item.get(CommonFields.QUANTITY, 1)}x {escape_markdown(titlecase(item.get(CommonFields.NAME)))}')
 
         if currency:
             details.append('\n**Currency:**')
@@ -1395,7 +1395,7 @@ class StaticKitConfirmView(LayoutView):
         self.add_item(container)
 
     async def submit(self, interaction):
-        items = {item[CommonFields.NAME]: item[CommonFields.QUANTITY] for item in self.kit_data.get('items', [])}
+        items = {item[CommonFields.NAME]: item[CommonFields.QUANTITY] for item in self.kit_data.get(CommonFields.ITEMS, [])}
         # Decode currency keys for display
         currency = {decode_mongo_key(k): v for k, v in self.kit_data.get(CharacterFields.CURRENCY, {}).items()}
         await _handle_submission(interaction, self.character_id, self.character_name, items, currency)
@@ -1417,7 +1417,7 @@ class NewCharacterComplexItemPurchaseView(LayoutView):
         container.add_item(header)
         container.add_item(Separator())
 
-        costs = self.item.get('costs', [])
+        costs = self.item.get(ShopFields.COSTS, [])
         currency_config = getattr(self.parent_view, 'currency_config', {})
 
         if not costs:
@@ -1458,16 +1458,16 @@ class NewCharacterShopView(LayoutView):
             bot=bot,
             mongo_database=bot.gdb,
             collection_name=DatabaseCollections.NEW_CHARACTER_SHOP,
-            query={'_id': guild_id}
+            query={CommonFields.ID: guild_id}
         )
-        self.shop_stock = shop_query.get('shopStock', []) if shop_query else []
+        self.shop_stock = shop_query.get(ShopFields.SHOP_STOCK, []) if shop_query else []
         self.total_pages = math.ceil(len(self.shop_stock) / self.items_per_page)
 
         self.currency_config = await get_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
             collection_name=DatabaseCollections.CURRENCY,
-            query={'_id': guild_id}
+            query={CommonFields.ID: guild_id}
         )
 
         if self.inventory_type == InventoryType.PURCHASE.value:
@@ -1475,7 +1475,7 @@ class NewCharacterShopView(LayoutView):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.INVENTORY_CONFIG,
-                query={'_id': guild_id}
+                query={CommonFields.ID: guild_id}
             )
             self.starting_wealth = inventory_config.get(ConfigFields.NEW_CHARACTER_WEALTH) if inventory_config else None
 
@@ -1487,7 +1487,7 @@ class NewCharacterShopView(LayoutView):
 
         title = f'**Starting Shop ({self.inventory_type.capitalize()})**'
         if self.starting_wealth:
-            amount = self.starting_wealth.get('amount', 0)
+            amount = self.starting_wealth.get(CommonFields.AMOUNT, 0)
             currency = self.starting_wealth.get(CharacterFields.CURRENCY, '')
             formatted_currency = format_price_string(amount, currency, self.currency_config)
             title += f'\nStarting Wealth: {formatted_currency}'
@@ -1502,20 +1502,20 @@ class NewCharacterShopView(LayoutView):
         for item in stock_slice:
             cost_string = 'Free'
             if self.inventory_type == InventoryType.PURCHASE.value:
-                costs = item.get('costs', [])
+                costs = item.get(ShopFields.COSTS, [])
                 cost_string = format_complex_cost(costs, self.currency_config)
 
             section = Section(accessory=buttons.WizardItemButton(item, self.inventory_type, cost_string))
 
-            display = f'**{item["name"]}**'
-            if item.get('quantity', 1) > 1:
-                display += f'(x{item.get("quantity", 1)})'
+            display = f'**{item[CommonFields.NAME]}**'
+            if item.get(CommonFields.QUANTITY, 1) > 1:
+                display += f'(x{item.get(CommonFields.QUANTITY, 1)})'
 
-            if item_name := item.get('name'):
+            if item_name := item.get(CommonFields.NAME):
                 item_quantity_in_cart = 0
                 for value in self.cart.values():
-                    if value['item']['name'] == item_name:
-                        item_quantity_in_cart += value['quantity']
+                    if value['item'][CommonFields.NAME] == item_name:
+                        item_quantity_in_cart += value[CommonFields.QUANTITY]
 
                 if item_quantity_in_cart > 0:
                     display += f" **(In Cart: {item_quantity_in_cart})**"
@@ -1612,14 +1612,14 @@ class NewCharacterCartView(LayoutView):
             item = data['item']
             quantity = data['quantity']
             option_index = data.get('optionIndex', 0)
-            quantity_per_purchase = item.get('quantity', 1)
+            quantity_per_purchase = item.get(CommonFields.QUANTITY, 1)
             total_quantity = quantity * quantity_per_purchase
 
             name = item[CommonFields.NAME]
             self.cart_items[name] = self.cart_items.get(name, 0) + total_quantity
 
             if self.shop_view.inventory_type == InventoryType.PURCHASE.value:
-                costs = item.get('costs', [])
+                costs = item.get(ShopFields.COSTS, [])
                 if 0 <= option_index < len(costs):
                     selected_cost = costs[option_index]
                     for currency, amount in selected_cost.items():
@@ -1635,7 +1635,7 @@ class NewCharacterCartView(LayoutView):
             starting_wealth = self.shop_view.starting_wealth or {}
             wallet = {}
             if starting_wealth:
-                wallet[starting_wealth.get(CharacterFields.CURRENCY)] = starting_wealth.get('amount', 0)
+                wallet[starting_wealth.get(CharacterFields.CURRENCY)] = starting_wealth.get(CommonFields.AMOUNT, 0)
 
             for base_currency, amount in consolidated_costs.items():
                 is_ok, _ = check_sufficient_funds(wallet, self.shop_view.currency_config, base_currency, amount)
@@ -1647,7 +1647,7 @@ class NewCharacterCartView(LayoutView):
 
             if starting_wealth:
                 starting_currency = starting_wealth.get(CharacterFields.CURRENCY)
-                starting_amount = starting_wealth.get('amount', 0)
+                starting_amount = starting_wealth.get(CommonFields.AMOUNT, 0)
 
                 denomination_map, base = get_denomination_map(self.shop_view.currency_config, starting_currency)
                 value_in_base = starting_amount * denomination_map.get(starting_currency.lower(), 1)
@@ -1675,10 +1675,10 @@ class NewCharacterCartView(LayoutView):
 
             for key, data in page_items:
                 item = data['item']
-                name = item.get('name')
+                name = item.get(CommonFields.NAME)
                 quantity = data['quantity']
                 option_index = data.get('optionIndex', 0)
-                quantity_per_purchase = item.get('quantity', 1)
+                quantity_per_purchase = item.get(CommonFields.QUANTITY, 1)
                 total_quantity = quantity * quantity_per_purchase
 
                 display = f'**{name}** x{quantity}'
@@ -1686,7 +1686,7 @@ class NewCharacterCartView(LayoutView):
                     display += f' (Total: {total_quantity})'
 
                 if self.shop_view.inventory_type == InventoryType.PURCHASE.value:
-                    costs = item.get('costs', [])
+                    costs = item.get(ShopFields.COSTS, [])
                     if 0 <= option_index < len(costs):
                         selected_cost = costs[option_index]
                         if selected_cost:
@@ -1783,14 +1783,14 @@ async def _handle_submission(interaction, character_id, character_name, items, c
             bot=bot,
             mongo_database=bot.gdb,
             collection_name=DatabaseCollections.CURRENCY,
-            query={'_id': guild_id}
+            query={CommonFields.ID: guild_id}
         )
 
         approval_query = await get_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
             collection_name=DatabaseCollections.APPROVAL_QUEUE_CHANNEL,
-            query={'_id': guild_id}
+            query={CommonFields.ID: guild_id}
         )
 
         channel_id = strip_id(approval_query[ConfigFields.APPROVAL_QUEUE_CHANNEL]) if approval_query else None
