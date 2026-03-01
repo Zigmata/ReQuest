@@ -137,7 +137,7 @@ class ReQuest(commands.Bot):
         if self.mongo_client:
             await self.mongo_client.close()
         if self.rdb:
-            await self.rdb.close()
+            await self.rdb.aclose()
 
     async def load_allow_list(self):
         collection_list = await self.cdb.list_collection_names()
