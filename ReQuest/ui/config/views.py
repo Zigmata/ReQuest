@@ -20,7 +20,7 @@ from titlecase import titlecase
 
 from ReQuest.ui.common import modals as common_modals, views as common_views
 from ReQuest.ui.common.buttons import MenuViewButton, BackButton
-from ReQuest.ui.common.enums import ShopChannelType, RestockMode, ScheduleType
+from ReQuest.ui.common.enums import ShopChannelType, RestockMode, ScheduleType, RoleplayMode
 from ReQuest.ui.config import buttons, selects
 from ReQuest.ui.config.buttons import AddShopJSONButton
 from ReQuest.utilities.constants import (
@@ -3056,7 +3056,7 @@ class ConfigRoleplayView(LayoutView):
                 query={CommonFields.ID: guild.id}
             )
             if not self.config:
-                self.config = {RoleplayFields.ENABLED: False, RoleplayFields.MODE: 'scheduled'}
+                self.config = {RoleplayFields.ENABLED: False, RoleplayFields.MODE: RoleplayMode.SCHEDULED.value}
 
             self.currency_config = await get_cached_data(
                 bot=bot,
