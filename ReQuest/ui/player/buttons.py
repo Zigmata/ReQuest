@@ -5,7 +5,9 @@ from discord import ButtonStyle
 from discord.ui import Button
 
 from ReQuest.ui.common import modals as common_modals
+from ReQuest.ui.common.enums import InventoryType
 from ReQuest.ui.player import modals
+from ReQuest.utilities.constants import CharacterFields, CommonFields, ContainerFields, ShopFields, DatabaseCollections
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     setup_view,
@@ -76,30 +78,30 @@ class RemoveCharacterButton(Button):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
-                collection_name='characters',
-                query={'_id': member_id},
-                update_data={'$unset': {f'characters.{self.character_id}': ''}}
+                collection_name=DatabaseCollections.CHARACTERS,
+                query={CommonFields.ID: member_id},
+                update_data={'$unset': {f'{CharacterFields.CHARACTERS}.{self.character_id}': ''}}
             )
 
             # Unset active character if it was the one removed
             character_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
-                collection_name='characters',
-                query={'_id': member_id}
+                collection_name=DatabaseCollections.CHARACTERS,
+                query={CommonFields.ID: member_id}
             )
-            if character_query and 'activeCharacters' in character_query:
+            if character_query and CharacterFields.ACTIVE_CHARACTERS in character_query:
                 updates = {}
-                for guild_id, active_character_id in character_query['activeCharacters'].items():
+                for guild_id, active_character_id in character_query[CharacterFields.ACTIVE_CHARACTERS].items():
                     if active_character_id == self.character_id:
-                        updates[f'activeCharacters.{guild_id}'] = ''
+                        updates[f'{CharacterFields.ACTIVE_CHARACTERS}.{guild_id}'] = ''
 
                 if updates:
                     await update_cached_data(
                         bot=bot,
                         mongo_database=bot.mdb,
-                        collection_name='characters',
-                        query={'_id': member_id},
+                        collection_name=DatabaseCollections.CHARACTERS,
+                        query={CommonFields.ID: member_id},
                         update_data={'$unset': updates}
                     )
 
@@ -127,9 +129,9 @@ class ActivateCharacterButton(Button):
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
-                collection_name='characters',
-                query={'_id': interaction.user.id},
-                update_data={'$set': {f'activeCharacters.{interaction.guild_id}': self.character_id}}
+                collection_name=DatabaseCollections.CHARACTERS,
+                query={CommonFields.ID: interaction.user.id},
+                update_data={'$set': {f'{CharacterFields.ACTIVE_CHARACTERS}.{interaction.guild_id}': self.character_id}}
             )
 
             await setup_view(self.calling_view, interaction)
@@ -190,7 +192,7 @@ class RemovePlayerPostButton(Button):
             await delete_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='playerBoard',
+                collection_name=DatabaseCollections.PLAYER_BOARD,
                 search_filter={'guildId': guild_id, 'postId': post_id},
                 cache_id=f'{guild_id}:{post_id}'
             )
@@ -210,7 +212,7 @@ class RemovePlayerPostButton(Button):
 
             # Invalidate the cached list
             cache_id = f'{guild_id}:{interaction.user.id}'
-            redis_key = build_cache_key(interaction.client.gdb.name, cache_id, 'playerBoard')
+            redis_key = build_cache_key(interaction.client.gdb.name, cache_id, DatabaseCollections.PLAYER_BOARD)
 
             await interaction.client.rdb.delete(redis_key)
 
@@ -301,9 +303,9 @@ class OpenInventoryInputButton(Button):
 class WizardItemButton(Button):
     def __init__(self, item, inventory_type, cost_string='Free'):
         label = f'Add to Cart'
-        costs = item.get('costs', [])
+        costs = item.get(ShopFields.COSTS, [])
 
-        if inventory_type == 'purchase':
+        if inventory_type == InventoryType.PURCHASE.value:
             if len(costs) > 1:
                 label = 'View Purchase Options'
             else:
@@ -312,14 +314,14 @@ class WizardItemButton(Button):
         super().__init__(
             label=label,
             style=ButtonStyle.success,
-            custom_id=f'wiz_item_{item["name"]}'
+            custom_id=f'wiz_item_{item[CommonFields.NAME]}'
         )
         self.item = item
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            costs = self.item.get('costs', [])
-            if len(costs) > 1 and self.view.inventory_type == 'purchase':
+            costs = self.item.get(ShopFields.COSTS, [])
+            if len(costs) > 1 and self.view.inventory_type == InventoryType.PURCHASE.value:
                 from ReQuest.ui.player.views import NewCharacterComplexItemPurchaseView
                 view = NewCharacterComplexItemPurchaseView(self.view, self.item)
                 await interaction.response.edit_message(view=view)
@@ -334,7 +336,7 @@ class WizardSelectCostOptionButton(Button):
         super().__init__(
             label="Select",
             style=ButtonStyle.primary,
-            custom_id=f'wiz_sel_opt_{item["name"]}_{index}'
+            custom_id=f'wiz_sel_opt_{item[CommonFields.NAME]}_{index}'
         )
         self.shop_view = shop_view
         self.item = item
@@ -529,7 +531,7 @@ class PrintInventoryButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            character_name = self.calling_view.active_character['name']
+            character_name = self.calling_view.active_character[CommonFields.NAME]
             formatted = format_inventory_by_container(
                 self.calling_view.active_character,
                 self.calling_view.currency_config
@@ -604,8 +606,8 @@ class RenameContainerButton(Button):
                 raise UserFeedbackError('Cannot rename Loose Items.')
 
             # Get current name
-            containers = self.calling_view.character_data['attributes'].get('containers', {})
-            current_name = containers.get(container_id, {}).get('name', '')
+            containers = self.calling_view.character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
+            current_name = containers.get(container_id, {}).get(ContainerFields.NAME, '')
 
             modal = modals.RenameContainerModal(self.calling_view, container_id, current_name)
             await interaction.response.send_modal(modal)
@@ -632,8 +634,8 @@ class DeleteContainerButton(Button):
             items = get_container_items(self.calling_view.character_data, container_id)
             item_count = len(items)
 
-            containers = self.calling_view.character_data['attributes'].get('containers', {})
-            container_name = containers.get(container_id, {}).get('name', 'Unknown')
+            containers = self.calling_view.character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
+            container_name = containers.get(container_id, {}).get(ContainerFields.NAME, 'Unknown')
 
             if item_count > 0:
                 prompt_label = f'Has {item_count} items. Will move to Loose Items.'

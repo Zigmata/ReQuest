@@ -12,6 +12,7 @@ from pymongo import AsyncMongoClient as MongoClient
 import redis.asyncio as redis
 
 from ReQuest.ui.gm.views import QuestPostView
+from ReQuest.utilities.constants import QuestFields
 from ReQuest.utilities.supportFunctions import attempt_delete, log_exception
 
 log_level = os.getenv('LOG_LEVEL', 'INFO').upper()
@@ -121,12 +122,12 @@ class ReQuest(commands.Bot):
             quests.append(document)
         for quest in quests:
             try:
-                self.add_view(view=QuestPostView(quest), message_id=quest['messageId'])
+                self.add_view(view=QuestPostView(quest), message_id=quest[QuestFields.MESSAGE_ID])
             except (KeyError, TypeError) as e:
-                quest_id = quest.get('questId', 'unknown')
+                quest_id = quest.get(QuestFields.QUEST_ID, 'unknown')
                 logger.error(f'Failed to load view for quest {quest_id}: {e}')
             except Exception as e:
-                quest_id = quest.get('questId', 'unknown')
+                quest_id = quest.get(QuestFields.QUEST_ID, 'unknown')
                 logger.error(f'Unexpected error loading view for quest {quest_id}: {e}')
 
     async def close(self):

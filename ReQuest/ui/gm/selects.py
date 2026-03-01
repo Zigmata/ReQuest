@@ -3,6 +3,7 @@ import logging
 import discord
 from discord.ui import Select
 
+from ReQuest.utilities.constants import QuestFields
 from ReQuest.utilities.supportFunctions import log_exception, find_member_and_character_id_in_lists, setup_view
 from ReQuest.ui.common import modals as common_modals
 
@@ -25,7 +26,7 @@ class PartyMemberSelect(Select):
             character_id = self.values[0]
             view = self.calling_view
             quest = view.quest
-            for player in quest['party']:
+            for player in quest[QuestFields.PARTY]:
                 for member_id in player:
                     for character_id_key in player[str(member_id)]:
                         if character_id_key == character_id:
@@ -53,8 +54,8 @@ class RemovePlayerSelect(Select):
     async def callback(self, interaction: discord.Interaction):
         try:
             view = self.calling_view
-            party = view.quest['party']
-            wait_list = view.quest['waitList']
+            party = view.quest[QuestFields.PARTY]
+            wait_list = view.quest[QuestFields.WAIT_LIST]
             member_id, character_id = find_member_and_character_id_in_lists([party, wait_list], self.values[0])
             view.selected_character_id = character_id
             view.selected_member_id = member_id
