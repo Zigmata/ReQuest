@@ -20,8 +20,13 @@ from titlecase import titlecase
 
 from ReQuest.ui.common import modals as common_modals, views as common_views
 from ReQuest.ui.common.buttons import MenuViewButton, BackButton
+from ReQuest.ui.common.enums import ShopChannelType, RestockMode, ScheduleType, RoleplayMode
 from ReQuest.ui.config import buttons, selects
 from ReQuest.ui.config.buttons import AddShopJSONButton
+from ReQuest.utilities.constants import (
+    ConfigFields, CurrencyFields, ShopFields, RestockFields, RoleplayFields, CommonFields,
+    DatabaseCollections
+)
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
@@ -345,19 +350,19 @@ class ConfigWizardView(LayoutView):
             report_lines.append('**Default Role:**\n- ✅ @everyone: OK')
 
         # Validate at least one GM role is configured, and does not extend permissions of the default role
-        if not gm_roles_config or not gm_roles_config.get('gmRoles'):
+        if not gm_roles_config or not gm_roles_config.get(ConfigFields.GM_ROLES):
             has_warnings = True
             report_lines.append('\n**GM Roles:**\n- ⚠️ No GM Roles Configured')
         else:
             report_lines.append('\n**GM Roles:**')
-            for role_data in gm_roles_config['gmRoles']:
+            for role_data in gm_roles_config[ConfigFields.GM_ROLES]:
                 try:
-                    role_id = strip_id(role_data['mention'])
+                    role_id = strip_id(role_data[CommonFields.MENTION])
                     role = guild.get_role(role_id)
 
                     if not role:
                         has_warnings = True
-                        report_lines.append(f'- ⚠️ **{role_data["name"]}:** Configured Role Not Found/Deleted '
+                        report_lines.append(f'- ⚠️ **{role_data[CommonFields.NAME]}:** Configured Role Not Found/Deleted '
                                             f'from Server')
                         continue
 
@@ -370,15 +375,15 @@ class ConfigWizardView(LayoutView):
                         report_lines.append(f'- ✅ {role.mention}: OK')
                 except Exception as e:
                     logger.error(f'Error validating role {role_data}: {e}')
-                    report_lines.append(f'- Error validating {role_data["name"]}')
+                    report_lines.append(f'- Error validating {role_data[CommonFields.NAME]}')
 
         # Validate announcement role
-        if not announcement_role_config or not announcement_role_config.get('announceRole'):
+        if not announcement_role_config or not announcement_role_config.get(ConfigFields.ANNOUNCE_ROLE):
             has_warnings = True
             report_lines.append('\n**Announcement Role:**\n- ℹ️ No Announcement Role Configured')
         else:
             try:
-                role_id = strip_id(announcement_role_config['announceRole'])
+                role_id = strip_id(announcement_role_config[ConfigFields.ANNOUNCE_ROLE])
                 role = guild.get_role(role_id)
 
                 if not role:
@@ -506,22 +511,22 @@ class ConfigWizardView(LayoutView):
     @staticmethod
     def _format_currency_report(currency_config):
         report_lines = []
-        if not currency_config or not currency_config.get('currencies'):
+        if not currency_config or not currency_config.get(CurrencyFields.CURRENCIES):
             report_lines.append('- ℹ️ No Currencies Configured')
             return '\n'.join(report_lines)
 
         report_lines.append('**Configured Currencies:**')
-        for currency in currency_config['currencies']:
-            name = currency['name']
-            denominations = currency.get('denominations', {})
+        for currency in currency_config[CurrencyFields.CURRENCIES]:
+            name = currency[CommonFields.NAME]
+            denominations = currency.get(CurrencyFields.DENOMINATIONS, {})
 
             lines = [f'- **{name}**']
 
             if denominations:
                 denomination_list = []
                 for denomination in denominations:
-                    denom_name = denomination['name']
-                    denom_value = denomination['value']
+                    denom_name = denomination[CommonFields.NAME]
+                    denom_value = denomination[CurrencyFields.VALUE]
                     denomination_list.append(f'  - {denom_name}: {denom_value}')
                 lines.extend(denomination_list)
             else:
@@ -534,13 +539,13 @@ class ConfigWizardView(LayoutView):
     @staticmethod
     def _format_gm_rewards_report(gm_rewards_query):
         report_lines = []
-        if not gm_rewards_query or (not gm_rewards_query.get('experience') and not gm_rewards_query.get('items')):
+        if not gm_rewards_query or (not gm_rewards_query.get('experience') and not gm_rewards_query.get(CommonFields.ITEMS)):
             report_lines.append('**Status:** Disabled')
             return '\n'.join(report_lines)
 
         report_lines.append('**Status:** Enabled')
         experience = gm_rewards_query.get('experience')
-        items = gm_rewards_query.get('items')
+        items = gm_rewards_query.get(CommonFields.ITEMS)
 
         if experience and experience > 0:
             report_lines.append(f'- Experience: {experience}')
@@ -557,9 +562,9 @@ class ConfigWizardView(LayoutView):
                                     shops_config, inventory_config, new_char_shop, static_kits):
 
         # Fetch data
-        wait_list_size = wait_list_query.get('questWaitList', 0) if wait_list_query else 0
+        wait_list_size = wait_list_query.get(ConfigFields.QUEST_WAIT_LIST, 0) if wait_list_query else 0
         summary_enabled = quest_summary_query.get('questSummary', False) if quest_summary_query else False
-        xp_enabled = player_xp_query.get('playerExperience', False) if player_xp_query else False
+        xp_enabled = player_xp_query.get(ConfigFields.PLAYER_EXPERIENCE, False) if player_xp_query else False
 
         # Define different sections/components
         components = []
@@ -598,9 +603,9 @@ class ConfigWizardView(LayoutView):
         })
 
         # Roleplay Rewards Settings
-        rp_enabled = roleplay_config.get('enabled', False) if roleplay_config else False
-        rp_mode = roleplay_config.get('mode', 'scheduled') if roleplay_config else 'scheduled'
-        rp_channels = roleplay_config.get('channels', []) if roleplay_config else []
+        rp_enabled = roleplay_config.get(RoleplayFields.ENABLED, False) if roleplay_config else False
+        rp_mode = roleplay_config.get(RoleplayFields.MODE, 'scheduled') if roleplay_config else 'scheduled'
+        rp_channels = roleplay_config.get(RoleplayFields.CHANNELS, []) if roleplay_config else []
         roleplay_section_content = [
             '**Roleplay Rewards**',
             f'- Status: {"Enabled" if rp_enabled else "Disabled"}',
@@ -613,13 +618,13 @@ class ConfigWizardView(LayoutView):
         })
 
         # Shops Settings
-        shop_channels = shops_config.get('shopChannels', {}) if shops_config else {}
+        shop_channels = shops_config.get(ShopFields.SHOP_CHANNELS, {}) if shops_config else {}
         shops_section_content = [
             '**Shops**',
             f'- Configured Shops: {len(shop_channels)}'
         ]
         if shop_channels:
-            shop_names = [data.get('shopName', 'Unnamed Shop') for data in shop_channels.values()]
+            shop_names = [data.get(ShopFields.SHOP_NAME, 'Unnamed Shop') for data in shop_channels.values()]
             shop_names.sort(key=str.lower)
             for shop_name in shop_names[:3]:
                 shops_section_content.append(f'  - {shop_name}')
@@ -631,8 +636,8 @@ class ConfigWizardView(LayoutView):
         })
 
         # New Character Setup
-        inv_type = inventory_config.get('inventoryType', 'none') if inventory_config else 'none'
-        shop_items = new_char_shop.get('stock', []) if new_char_shop else []
+        inv_type = inventory_config.get(ConfigFields.INVENTORY_TYPE, 'none') if inventory_config else 'none'
+        shop_items = new_char_shop.get(ShopFields.SHOP_STOCK, []) if new_char_shop else []
         kits = static_kits.get('kits', []) if static_kits else []
         new_char_section_content = [
             '**New Character Setup**',
@@ -669,14 +674,14 @@ class ConfigWizardView(LayoutView):
             announcement_role_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='announceRole',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.ANNOUNCE_ROLE,
+                query={CommonFields.ID: guild.id}
             )
             gm_roles_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='gmRoles',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.GM_ROLES,
+                query={CommonFields.ID: guild.id}
             )
 
             # Channel configs
@@ -684,39 +689,39 @@ class ConfigWizardView(LayoutView):
             quest_channel_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='questChannel',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.QUEST_CHANNEL,
+                query={CommonFields.ID: guild.id}
             )
             channels.append(
                 {
                     'name': 'Quest Board',
-                    'mention': quest_channel_query['questChannel'] if quest_channel_query else None,
+                    'mention': quest_channel_query[ConfigFields.QUEST_CHANNEL] if quest_channel_query else None,
                     'required': True}
             )
 
             player_channel_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='playerBoardChannel',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.PLAYER_BOARD_CHANNEL,
+                query={CommonFields.ID: guild.id}
             )
             channels.append(
                 {
                     'name': 'Player Board',
-                    'mention': player_channel_query['playerBoardChannel'] if player_channel_query else None,
+                    'mention': player_channel_query[ConfigFields.PLAYER_BOARD_CHANNEL] if player_channel_query else None,
                     'required': False}
             )
 
             archive_channel_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='archiveChannel',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.ARCHIVE_CHANNEL,
+                query={CommonFields.ID: guild.id}
             )
             channels.append(
                 {
                     'name': 'Quest Archive',
-                    'mention': archive_channel_query['archiveChannel'] if archive_channel_query else None,
+                    'mention': archive_channel_query[ConfigFields.ARCHIVE_CHANNEL] if archive_channel_query else None,
                     'required': False
                 }
             )
@@ -724,13 +729,13 @@ class ConfigWizardView(LayoutView):
             gm_log_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='gmTransactionLogChannel',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.GM_TRANSACTION_LOG_CHANNEL,
+                query={CommonFields.ID: guild.id}
             )
             channels.append(
                 {
                     'name': 'GM Transaction Log',
-                    'mention': gm_log_query['gmTransactionLogChannel'] if gm_log_query else None,
+                    'mention': gm_log_query[ConfigFields.GM_TRANSACTION_LOG_CHANNEL] if gm_log_query else None,
                     'required': False
                 }
             )
@@ -738,13 +743,13 @@ class ConfigWizardView(LayoutView):
             player_transaction_log_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='playerTransactionLogChannel',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.PLAYER_TRANSACTION_LOG_CHANNEL,
+                query={CommonFields.ID: guild.id}
             )
             channels.append(
                 {
                     'name': 'Player Transaction Log',
-                    'mention': player_transaction_log_query['playerTransactionLogChannel']
+                    'mention': player_transaction_log_query[ConfigFields.PLAYER_TRANSACTION_LOG_CHANNEL]
                     if player_transaction_log_query else None,
                     'required': False
                 }
@@ -753,13 +758,13 @@ class ConfigWizardView(LayoutView):
             shop_log_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='shopLogChannel',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.SHOP_LOG_CHANNEL,
+                query={CommonFields.ID: guild.id}
             )
             channels.append(
                 {
                     'name': 'Shop Log',
-                    'mention': shop_log_query['shopLogChannel'] if shop_log_query else None,
+                    'mention': shop_log_query[ConfigFields.SHOP_LOG_CHANNEL] if shop_log_query else None,
                     'required': False
                 }
             )
@@ -767,13 +772,13 @@ class ConfigWizardView(LayoutView):
             approval_queue_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='approvalQueueChannel',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.APPROVAL_QUEUE_CHANNEL,
+                query={CommonFields.ID: guild.id}
             )
             channels.append(
                 {
                     'name': 'Character Approval Queue',
-                    'mention': approval_queue_query['approvalQueueChannel'] if approval_queue_query else None,
+                    'mention': approval_queue_query[ConfigFields.APPROVAL_QUEUE_CHANNEL] if approval_queue_query else None,
                     'required': False
                 }
             )
@@ -782,68 +787,68 @@ class ConfigWizardView(LayoutView):
             wait_list_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='questWaitList',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.QUEST_WAIT_LIST,
+                query={CommonFields.ID: guild.id}
             )
             quest_summary_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='questSummary',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.QUEST_SUMMARY,
+                query={CommonFields.ID: guild.id}
             )
             gm_rewards_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='gmRewards',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.GM_REWARDS,
+                query={CommonFields.ID: guild.id}
             )
             player_xp_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='playerExperience',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.PLAYER_EXPERIENCE,
+                query={CommonFields.ID: guild.id}
             )
             currency_config_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='currency',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.CURRENCY,
+                query={CommonFields.ID: guild.id}
             )
 
             # Roleplay config
             roleplay_config_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='roleplayConfig',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.ROLEPLAY_CONFIG,
+                query={CommonFields.ID: guild.id}
             )
 
             # Shops config
             shops_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='shops',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.SHOPS,
+                query={CommonFields.ID: guild.id}
             )
 
             # New character setup configs
             inventory_config_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='inventoryConfig',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.INVENTORY_CONFIG,
+                query={CommonFields.ID: guild.id}
             )
             new_char_shop_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='newCharacterShop',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.NEW_CHARACTER_SHOP,
+                query={CommonFields.ID: guild.id}
             )
             static_kits_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
-                collection_name='staticKits',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.STATIC_KITS,
+                query={CommonFields.ID: guild.id}
             )
 
             # Role validation report
@@ -950,17 +955,17 @@ class ConfigRolesView(LayoutView):
             announcement_role_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='announceRole',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.ANNOUNCE_ROLE,
+                query={CommonFields.ID: guild.id}
             )
-            announcement_role = announcement_role_query.get('announceRole') if announcement_role_query else None
+            announcement_role = announcement_role_query.get(ConfigFields.ANNOUNCE_ROLE) if announcement_role_query else None
             gm_role_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='gmRoles',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.GM_ROLES,
+                query={CommonFields.ID: guild.id}
             )
-            gm_roles = gm_role_query.get('gmRoles', []) if gm_role_query else []
+            gm_roles = gm_role_query.get(ConfigFields.GM_ROLES, []) if gm_role_query else []
 
             if not announcement_role:
                 announcement_role_string = (
@@ -982,9 +987,9 @@ class ConfigRolesView(LayoutView):
             else:
                 role_mentions = []
                 for role in gm_roles:
-                    role_mentions.append(role['mention'])
+                    role_mentions.append(role[CommonFields.MENTION])
 
-                gm_roles_string = (f'**GM Role(s):** {', '.join(role_mentions)}\n'
+                gm_roles_string = (f'**GM Role(s):** {", ".join(role_mentions)}\n'
                                    f'These roles will grant access to Game Master commands and features.')
                 self.gm_role_remove_view_button.disabled = False
 
@@ -1010,12 +1015,12 @@ class ConfigGMRoleRemoveView(LayoutView):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='gmRoles',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.GM_ROLES,
+                query={CommonFields.ID: guild.id}
             )
 
-            self.roles = query.get('gmRoles', []) if query else []
-            self.roles.sort(key=lambda x: x.get('name', '').lower())
+            self.roles = query.get(ConfigFields.GM_ROLES, []) if query else []
+            self.roles.sort(key=lambda x: x.get(CommonFields.NAME, '').lower())
 
             self.total_pages = math.ceil(len(self.roles) / self.items_per_page)
             if self.total_pages == 0:
@@ -1045,8 +1050,8 @@ class ConfigGMRoleRemoveView(LayoutView):
             page_roles = self.roles[start:end]
 
             for role in page_roles:
-                name = role.get('name', 'Unknown')
-                mention = role.get('mention', '')
+                name = role.get(CommonFields.NAME, 'Unknown')
+                mention = role.get(CommonFields.MENTION, '')
 
                 info = f"{mention}"
 
@@ -1138,32 +1143,32 @@ class ConfigChannelsView(LayoutView):
         )
         self.quest_channel_select = selects.SingleChannelConfigSelect(
             calling_view=self,
-            config_type='questChannel',
+            config_type=ConfigFields.QUEST_CHANNEL,
             config_name='Quest Board'
         )
         self.player_board_channel_select = selects.SingleChannelConfigSelect(
             calling_view=self,
-            config_type='playerBoardChannel',
+            config_type=ConfigFields.PLAYER_BOARD_CHANNEL,
             config_name='Player Board'
         )
         self.archive_channel_select = selects.SingleChannelConfigSelect(
             calling_view=self,
-            config_type='archiveChannel',
+            config_type=ConfigFields.ARCHIVE_CHANNEL,
             config_name='Quest Archive'
         )
         self.gm_transaction_log_channel_select = selects.SingleChannelConfigSelect(
             calling_view=self,
-            config_type='gmTransactionLogChannel',
+            config_type=ConfigFields.GM_TRANSACTION_LOG_CHANNEL,
             config_name='GM Transaction Log'
         )
         self.player_transaction_log_channel_select = selects.SingleChannelConfigSelect(
             calling_view=self,
-            config_type='playerTransactionLogChannel',
+            config_type=ConfigFields.PLAYER_TRANSACTION_LOG_CHANNEL,
             config_name='Player Transaction Log'
         )
         self.shop_log_channel_select = selects.SingleChannelConfigSelect(
             calling_view=self,
-            config_type='shopLogChannel',
+            config_type=ConfigFields.SHOP_LOG_CHANNEL,
             config_name='Shop Log'
         )
 
@@ -1177,21 +1182,21 @@ class ConfigChannelsView(LayoutView):
         container.add_item(header_section)
         container.add_item(Separator())
 
-        quest_board_section = Section(accessory=buttons.ClearChannelButton(self, 'questChannel'))
+        quest_board_section = Section(accessory=buttons.ClearChannelButton(self, ConfigFields.QUEST_CHANNEL))
         quest_board_section.add_item(self.quest_board_info)
         container.add_item(quest_board_section)
         quest_board_select_row = ActionRow(self.quest_channel_select)
         container.add_item(quest_board_select_row)
         container.add_item(Separator())
 
-        player_board_section = Section(accessory=buttons.ClearChannelButton(self, 'playerBoardChannel'))
+        player_board_section = Section(accessory=buttons.ClearChannelButton(self, ConfigFields.PLAYER_BOARD_CHANNEL))
         player_board_section.add_item(self.player_board_info)
         container.add_item(player_board_section)
         player_board_select_row = ActionRow(self.player_board_channel_select)
         container.add_item(player_board_select_row)
         container.add_item(Separator())
 
-        quest_archive_section = Section(accessory=buttons.ClearChannelButton(self, 'archiveChannel'))
+        quest_archive_section = Section(accessory=buttons.ClearChannelButton(self, ConfigFields.ARCHIVE_CHANNEL))
         quest_archive_section.add_item(self.quest_archive_info)
         container.add_item(quest_archive_section)
         quest_archive_select_row = ActionRow(self.archive_channel_select)
@@ -1199,7 +1204,7 @@ class ConfigChannelsView(LayoutView):
         container.add_item(Separator())
 
         gm_transaction_log_section = Section(accessory=buttons.ClearChannelButton(self,
-                                                                                  'gmTransactionLogChannel'))
+                                                                                  ConfigFields.GM_TRANSACTION_LOG_CHANNEL))
         gm_transaction_log_section.add_item(self.gm_transaction_log_info)
         container.add_item(gm_transaction_log_section)
         gm_transaction_log_select_row = ActionRow(self.gm_transaction_log_channel_select)
@@ -1207,14 +1212,14 @@ class ConfigChannelsView(LayoutView):
         container.add_item(Separator())
 
         player_transaction_log_section = Section(accessory=buttons.ClearChannelButton(self,
-                                                                                      'playerTransactionLogChannel'))
+                                                                                      ConfigFields.PLAYER_TRANSACTION_LOG_CHANNEL))
         player_transaction_log_section.add_item(self.player_transaction_log_info)
         container.add_item(player_transaction_log_section)
         player_transaction_log_select_row = ActionRow(self.player_transaction_log_channel_select)
         container.add_item(player_transaction_log_select_row)
         container.add_item(Separator())
 
-        shop_log_section = Section(accessory=buttons.ClearChannelButton(self, 'shopLogChannel'))
+        shop_log_section = Section(accessory=buttons.ClearChannelButton(self, ConfigFields.SHOP_LOG_CHANNEL))
         shop_log_section.add_item(self.shop_log_info)
         container.add_item(shop_log_section)
         shop_log_select_row = ActionRow(self.shop_log_channel_select)
@@ -1227,50 +1232,50 @@ class ConfigChannelsView(LayoutView):
             player_board_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='playerBoardChannel',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.PLAYER_BOARD_CHANNEL,
+                query={CommonFields.ID: guild.id}
             )
-            player_board = player_board_query.get('playerBoardChannel') if player_board_query else None
+            player_board = player_board_query.get(ConfigFields.PLAYER_BOARD_CHANNEL) if player_board_query else None
 
             quest_board_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='questChannel',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.QUEST_CHANNEL,
+                query={CommonFields.ID: guild.id}
             )
-            quest_board = quest_board_query.get('questChannel') if quest_board_query else None
+            quest_board = quest_board_query.get(ConfigFields.QUEST_CHANNEL) if quest_board_query else None
 
             quest_archive_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='archiveChannel',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.ARCHIVE_CHANNEL,
+                query={CommonFields.ID: guild.id}
             )
-            quest_archive = quest_archive_query.get('archiveChannel') if quest_archive_query else None
+            quest_archive = quest_archive_query.get(ConfigFields.ARCHIVE_CHANNEL) if quest_archive_query else None
 
             gm_log_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='gmTransactionLogChannel',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.GM_TRANSACTION_LOG_CHANNEL,
+                query={CommonFields.ID: guild.id}
             )
-            gm_transaction_log = gm_log_query.get('gmTransactionLogChannel') if gm_log_query else None
+            gm_transaction_log = gm_log_query.get(ConfigFields.GM_TRANSACTION_LOG_CHANNEL) if gm_log_query else None
 
             player_log_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='playerTransactionLogChannel',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.PLAYER_TRANSACTION_LOG_CHANNEL,
+                query={CommonFields.ID: guild.id}
             )
-            player_transaction_log = player_log_query.get('playerTransactionLogChannel') if player_log_query else None
+            player_transaction_log = player_log_query.get(ConfigFields.PLAYER_TRANSACTION_LOG_CHANNEL) if player_log_query else None
 
             shop_log_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='shopLogChannel',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.SHOP_LOG_CHANNEL,
+                query={CommonFields.ID: guild.id}
             )
-            shop_log = shop_log_query.get('shopLogChannel') if shop_log_query else None
+            shop_log = shop_log_query.get(ConfigFields.SHOP_LOG_CHANNEL) if shop_log_query else None
 
             self.quest_board_info.content = (
                 f'**Quest Board:** {quest_board}\n'
@@ -1354,18 +1359,18 @@ class ConfigQuestsView(LayoutView):
             quest_summary_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='questSummary',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.QUEST_SUMMARY,
+                query={CommonFields.ID: guild.id}
             )
             quest_summary = quest_summary_query.get('questSummary') if quest_summary_query else False
 
             wait_list_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='questWaitList',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.QUEST_WAIT_LIST,
+                query={CommonFields.ID: guild.id}
             )
-            wait_list = wait_list_query.get('questWaitList', 0) if wait_list_query else 0
+            wait_list = wait_list_query.get(ConfigFields.QUEST_WAIT_LIST, 0) if wait_list_query else 0
 
             wait_list_display = wait_list if isinstance(wait_list, int) and wait_list > 0 else 'Disabled'
             quest_summary_display = "Enabled" if quest_summary is True else "Disabled"
@@ -1422,15 +1427,15 @@ class GMRewardsView(LayoutView):
             gm_rewards_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='gmRewards',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.GM_REWARDS,
+                query={CommonFields.ID: guild.id}
             )
             experience = None
             items = None
             if gm_rewards_query:
                 self.current_rewards = gm_rewards_query
                 experience = gm_rewards_query['experience']
-                items = gm_rewards_query['items']
+                items = gm_rewards_query[CommonFields.ITEMS]
 
             xp_info = ''
             item_info = ''
@@ -1526,10 +1531,12 @@ class ConfigNewCharacterView(LayoutView):
         )
         self.inventory_type_select = selects.InventoryTypeSelect(self)
         self.approval_queue_select = selects.SingleChannelConfigSelect(
-            self, 'approvalQueueChannel', 'Approval Queue'
+            self, ConfigFields.APPROVAL_QUEUE_CHANNEL, 'Approval Queue'
         )
-        self.approval_queue_clear_button = buttons.ClearChannelButton(self, 'approvalQueueChannel')
+        self.approval_queue_clear_button = buttons.ClearChannelButton(self, ConfigFields.APPROVAL_QUEUE_CHANNEL)
 
+        self.new_character_wealth = None
+        self.currency_config = {}
         self.new_character_shop_button = MenuViewButton(ConfigNewCharacterShopView, 'Configure New Character Shop')
         self.new_character_wealth_button = buttons.ConfigNewCharacterWealthButton(self)
         self.static_kits_button = MenuViewButton(ConfigStaticKitsView, 'Configure Static Kits')
@@ -1572,11 +1579,12 @@ class ConfigNewCharacterView(LayoutView):
             inventory_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='inventoryConfig',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.INVENTORY_CONFIG,
+                query={CommonFields.ID: guild.id}
             )
-            inventory_type = inventory_config.get('inventoryType', 'disabled') if inventory_config else 'disabled'
-            new_character_wealth = inventory_config.get('newCharacterWealth', None) if inventory_config else None
+            inventory_type = inventory_config.get(ConfigFields.INVENTORY_TYPE, 'disabled') if inventory_config else 'disabled'
+            new_character_wealth = inventory_config.get(ConfigFields.NEW_CHARACTER_WEALTH, None) if inventory_config else None
+            self.new_character_wealth = new_character_wealth
 
             type_description = {
                 'disabled': 'Players start with empty inventories.',
@@ -1595,9 +1603,10 @@ class ConfigNewCharacterView(LayoutView):
             currency_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.CURRENCY,
+                query={CommonFields.ID: guild.id}
             )
+            self.currency_config = currency_config
 
             self.new_character_shop_button.disabled = True
             self.new_character_shop_button.label = 'Configure New Character Shop'
@@ -1627,7 +1636,7 @@ class ConfigNewCharacterView(LayoutView):
                 self.static_kits_button.disabled = False
 
             if new_character_wealth:
-                amount = new_character_wealth.get('amount', 0)
+                amount = new_character_wealth.get(CommonFields.AMOUNT, 0)
                 currency_name = new_character_wealth.get('currency', '')
 
                 formatted_wealth = format_price_string(amount, currency_name, currency_config)
@@ -1644,10 +1653,10 @@ class ConfigNewCharacterView(LayoutView):
             approval_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='approvalQueueChannel',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.APPROVAL_QUEUE_CHANNEL,
+                query={CommonFields.ID: guild.id}
             )
-            approval_channel = approval_query['approvalQueueChannel'] if approval_query else 'Not Configured'
+            approval_channel = approval_query[ConfigFields.APPROVAL_QUEUE_CHANNEL] if approval_query else 'Not Configured'
 
             self.approval_queue_info.content = (
                 f'**Approval Queue:** {approval_channel}\n'
@@ -1696,11 +1705,11 @@ class ConfigNewCharacterShopView(LayoutView):
             container.add_item(TextDisplay("No items configured."))
         else:
             for item in current_stock:
-                item_name = escape_markdown(item.get('name'))
+                item_name = escape_markdown(item.get(CommonFields.NAME))
                 item_description = item.get('description')
-                item_quantity = item.get('quantity', 1)
+                item_quantity = item.get(CommonFields.QUANTITY, 1)
 
-                costs = item.get('costs', [])
+                costs = item.get(ShopFields.COSTS, [])
                 cost_string = format_complex_cost(costs, getattr(self, 'currency_config', {}))
 
                 display_string = f'**{item_name}** (x{item_quantity})'
@@ -1755,10 +1764,10 @@ class ConfigNewCharacterShopView(LayoutView):
             inventory_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='inventoryConfig',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.INVENTORY_CONFIG,
+                query={CommonFields.ID: guild.id}
             )
-            self.inventory_type = inventory_config.get('inventoryType', 'disabled') if inventory_config else 'disabled'
+            self.inventory_type = inventory_config.get(ConfigFields.INVENTORY_TYPE, 'disabled') if inventory_config else 'disabled'
 
             if self.inventory_type == 'selection':
                 self.mode_description = (
@@ -1779,19 +1788,19 @@ class ConfigNewCharacterShopView(LayoutView):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='newCharacterShop',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.NEW_CHARACTER_SHOP,
+                query={CommonFields.ID: guild.id}
             )
-            if query and 'shopStock' in query:
-                self.update_stock(query['shopStock'])
+            if query and ShopFields.SHOP_STOCK in query:
+                self.update_stock(query[ShopFields.SHOP_STOCK])
             else:
                 self.update_stock([])
 
             self.currency_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.CURRENCY,
+                query={CommonFields.ID: guild.id}
             )
 
             self.build_view()
@@ -1833,12 +1842,12 @@ class ConfigStaticKitsView(LayoutView):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='staticKits',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.STATIC_KITS,
+                query={CommonFields.ID: guild.id}
             )
             self.kits = query.get('kits', {}) if query else {}
 
-            self.sorted_kits = sorted(self.kits.items(), key=lambda x: x[1].get('name', '').lower())
+            self.sorted_kits = sorted(self.kits.items(), key=lambda x: x[1].get(CommonFields.NAME, '').lower())
 
             self.total_pages = math.ceil(len(self.sorted_kits) / self.items_per_page)
             if self.total_pages == 0:
@@ -1850,8 +1859,8 @@ class ConfigStaticKitsView(LayoutView):
             self.currency_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.CURRENCY,
+                query={CommonFields.ID: guild.id}
             )
 
             self.build_view()
@@ -1880,19 +1889,19 @@ class ConfigStaticKitsView(LayoutView):
             page_items = self.sorted_kits[start:end]
 
             for kit_id, kit_data in page_items:
-                kit_name = kit_data.get('name', 'Unknown')
+                kit_name = kit_data.get(CommonFields.NAME, 'Unknown')
                 description = kit_data.get('description', '')
 
                 info_text = f"**{titlecase(kit_name)}**"
                 if description:
                     info_text += f"\n*{description}*"
 
-                items = kit_data.get('items', [])
+                items = kit_data.get(CommonFields.ITEMS, [])
                 currency = kit_data.get('currency', {})
                 contents = []
 
                 for item in items[:3]:
-                    contents.append(f"{item.get('quantity', 1)}x {escape_markdown(titlecase(item.get('name', '')))}")
+                    contents.append(f"{item.get(CommonFields.QUANTITY, 1)}x {escape_markdown(titlecase(item.get(CommonFields.NAME, '')))}")
                 if len(items) > 3:
                     contents.append(f"...and {len(items) - 3} more items")
 
@@ -1974,14 +1983,14 @@ class EditStaticKitView(LayoutView):
         self.current_page = 0
         self.total_pages = 0
 
-        self.items = self.kit_data.get('items', [])
+        self.items = self.kit_data.get(CommonFields.ITEMS, [])
 
         self.build_view()
 
     def build_view(self):
         self.clear_items()
 
-        self.items = self.kit_data.get('items', [])
+        self.items = self.kit_data.get(CommonFields.ITEMS, [])
         currencies = self.kit_data.get('currency', {})
 
         combined_list = []
@@ -2004,7 +2013,7 @@ class EditStaticKitView(LayoutView):
         container = Container()
 
         header_section = Section(accessory=BackButton(ConfigStaticKitsView))
-        header_section.add_item(TextDisplay(f'**Editing Kit: {titlecase(self.kit_data["name"])}**'))
+        header_section.add_item(TextDisplay(f'**Editing Kit: {titlecase(self.kit_data[CommonFields.NAME])}**'))
         container.add_item(header_section)
 
         if description := self.kit_data.get('description'):
@@ -2046,9 +2055,9 @@ class EditStaticKitView(LayoutView):
                     item_actions.add_item(buttons.EditKitItemButton(self, item_data, index))
                     item_actions.add_item(buttons.DeleteKitItemButton(self, index))
 
-                    display = f'**Item:** {escape_markdown(titlecase(item_data["name"]))}'
-                    if item_data['quantity'] > 1:
-                        display += f' (x{item_data["quantity"]})'
+                    display = f'**Item:** {escape_markdown(titlecase(item_data[CommonFields.NAME]))}'
+                    if item_data[CommonFields.QUANTITY] > 1:
+                        display += f' (x{item_data[CommonFields.QUANTITY]})'
                     if item_data.get('description'):
                         display += f'\n*{escape_markdown(item_data["description"])}*'
 
@@ -2123,12 +2132,12 @@ class ConfigCurrencyView(LayoutView):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.CURRENCY,
+                query={CommonFields.ID: guild.id}
             )
 
-            self.currencies = query.get('currencies', []) if query else []
-            self.currencies.sort(key=lambda x: x.get('name', '').lower())
+            self.currencies = query.get(CurrencyFields.CURRENCIES, []) if query else []
+            self.currencies.sort(key=lambda x: x.get(CommonFields.NAME, '').lower())
 
             self.total_pages = math.ceil(len(self.currencies) / self.items_per_page)
             if self.total_pages == 0:
@@ -2162,9 +2171,9 @@ class ConfigCurrencyView(LayoutView):
             page_items = self.currencies[start:end]
 
             for currency in page_items:
-                currency_name = currency.get('name', 'Unknown')
-                is_double = currency.get('isDouble', False)
-                denominations = currency.get('denominations', [])
+                currency_name = currency.get(CommonFields.NAME, 'Unknown')
+                is_double = currency.get(CurrencyFields.IS_DOUBLE, False)
+                denominations = currency.get(CurrencyFields.DENOMINATIONS, [])
 
                 currency_type = 'Double' if is_double else 'Integer'
                 denomination_count = len(denominations)
@@ -2244,17 +2253,17 @@ class ConfigEditCurrencyView(LayoutView):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.CURRENCY,
+                query={CommonFields.ID: guild.id}
             )
 
             if query:
-                self.currency_data = next((c for c in query.get('currencies', [])
-                                           if c['name'] == self.currency_name), {})
+                self.currency_data = next((c for c in query.get(CurrencyFields.CURRENCIES, [])
+                                           if c[CommonFields.NAME] == self.currency_name), {})
 
-            self.denominations = self.currency_data.get('denominations', [])
+            self.denominations = self.currency_data.get(CurrencyFields.DENOMINATIONS, [])
             # Sort denominations by value descending
-            self.denominations.sort(key=lambda x: x.get('value', 0), reverse=True)
+            self.denominations.sort(key=lambda x: x.get(CurrencyFields.VALUE, 0), reverse=True)
 
             self.total_pages = math.ceil(len(self.denominations) / self.items_per_page)
             if self.total_pages == 0:
@@ -2269,7 +2278,7 @@ class ConfigEditCurrencyView(LayoutView):
     def build_view(self):
         self.clear_items()
         container = Container()
-        display_type = 'Double' if self.currency_data.get('isDouble') else 'Integer'
+        display_type = 'Double' if self.currency_data.get(CurrencyFields.IS_DOUBLE) else 'Integer'
 
         header_section = Section(accessory=BackButton(ConfigCurrencyView))
         header_section.add_item(TextDisplay(f'**Manage Currency: {titlecase(self.currency_name)}**'))
@@ -2310,8 +2319,8 @@ class ConfigEditCurrencyView(LayoutView):
             page_items = self.denominations[start:end]
 
             for denomination in page_items:
-                denomination_name = denomination.get('name', 'Unknown')
-                denomination_value = denomination.get('value', 0)
+                denomination_name = denomination.get(CommonFields.NAME, 'Unknown')
+                denomination_value = denomination.get(CurrencyFields.VALUE, 0)
 
                 info = f"**{titlecase(denomination_name)}** (Value: {denomination_value})"
                 container.add_item(TextDisplay(info))
@@ -2389,19 +2398,19 @@ class ConfigShopsView(LayoutView):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='shops',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.SHOPS,
+                query={CommonFields.ID: guild.id}
             )
 
             unsorted_shops = []
-            if query and query.get('shopChannels'):
-                for channel_id, shop_data in query['shopChannels'].items():
+            if query and query.get(ShopFields.SHOP_CHANNELS):
+                for channel_id, shop_data in query[ShopFields.SHOP_CHANNELS].items():
                     unsorted_shops.append({
                         'id': channel_id,
                         'data': shop_data
                     })
 
-            self.shops = sorted(unsorted_shops, key=lambda x: x['data'].get('shopName', '').lower())
+            self.shops = sorted(unsorted_shops, key=lambda x: x['data'].get(ShopFields.SHOP_NAME, '').lower())
 
             self.total_pages = math.ceil(len(self.shops) / self.items_per_page)
             if self.total_pages == 0:
@@ -2446,10 +2455,10 @@ class ConfigShopsView(LayoutView):
             page_items = self.shops[start:end]
 
             for shop in page_items:
-                shop_name = shop['data'].get('shopName', 'Unknown Shop')
+                shop_name = shop['data'].get(ShopFields.SHOP_NAME, 'Unknown Shop')
                 channel_id = shop['id']
-                channel_type = shop['data'].get('channelType', 'text')
-                type_indicator = ' (Forum)' if channel_type == 'forum_thread' else ''
+                channel_type = shop['data'].get(ShopFields.CHANNEL_TYPE, 'text')
+                type_indicator = ' (Forum)' if channel_type == ShopChannelType.FORUM_THREAD.value else ''
 
                 info = f"**{shop_name}**{type_indicator}\nChannel: <#{channel_id}>"
 
@@ -2643,17 +2652,17 @@ class ManageShopView(LayoutView):
         self.clear_items()
         container = Container()
 
-        shop_name = self.shop_data.get('shopName', 'Unknown')
+        shop_name = self.shop_data.get(ShopFields.SHOP_NAME, 'Unknown')
 
         header_section = Section(accessory=BackButton(ConfigShopsView))
         header_section.add_item(TextDisplay(f'**Manage Shop: {shop_name}**'))
         container.add_item(header_section)
         container.add_item(Separator())
 
-        shop_keeper = self.shop_data.get('shopKeeper', 'None')
-        shop_description = self.shop_data.get('shopDescription', 'None')
-        channel_type = self.shop_data.get('channelType', 'text')
-        channel_type_display = 'Forum Thread' if channel_type == 'forum_thread' else 'Text Channel'
+        shop_keeper = self.shop_data.get(ShopFields.SHOP_KEEPER, 'None')
+        shop_description = self.shop_data.get(ShopFields.SHOP_DESCRIPTION, 'None')
+        channel_type = self.shop_data.get(ShopFields.CHANNEL_TYPE, 'text')
+        channel_type_display = 'Forum Thread' if channel_type == ShopChannelType.FORUM_THREAD.value else 'Text Channel'
 
         info_text = (
             f"**Channel:** <#{self.selected_channel_id}>\n"
@@ -2692,7 +2701,7 @@ class EditShopView(LayoutView):
         super().__init__(timeout=None)
         self.channel_id = channel_id
         self.shop_data = shop_data
-        self.all_stock = self.shop_data.get('shopStock', [])
+        self.all_stock = self.shop_data.get(ShopFields.SHOP_STOCK, [])
 
         self.items_per_page = 6
         self.current_page = 0
@@ -2710,8 +2719,8 @@ class EditShopView(LayoutView):
             self.currency_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.CURRENCY,
+                query={CommonFields.ID: guild.id}
             )
 
             self.build_view()
@@ -2721,14 +2730,14 @@ class EditShopView(LayoutView):
     def build_view(self):
         self.clear_items()
         container = Container()
-        header_items = [TextDisplay(f'**Editing Shop: {self.shop_data.get("shopName")}**')]
+        header_items = [TextDisplay(f'**Editing Shop: {self.shop_data.get(ShopFields.SHOP_NAME)}**')]
 
-        if shop_keeper := self.shop_data.get('shopKeeper'):
+        if shop_keeper := self.shop_data.get(ShopFields.SHOP_KEEPER):
             header_items.append(TextDisplay(f'Shopkeeper: **{shop_keeper}**'))
-        if shop_description := self.shop_data.get('shopDescription'):
+        if shop_description := self.shop_data.get(ShopFields.SHOP_DESCRIPTION):
             header_items.append(TextDisplay(f'*{shop_description}*'))
 
-        if shop_image := self.shop_data.get('shopImage'):
+        if shop_image := self.shop_data.get(ShopFields.SHOP_IMAGE):
             shop_image = Thumbnail(media=f'{shop_image}')
             shop_header = Section(accessory=shop_image)
 
@@ -2752,11 +2761,11 @@ class EditShopView(LayoutView):
         current_stock = self.all_stock[start_index:end_index]
 
         for item in current_stock:
-            item_name = escape_markdown(item.get('name'))
+            item_name = escape_markdown(item.get(CommonFields.NAME))
             item_description = item.get('description', None)
-            item_quantity = item.get('quantity', 1)
+            item_quantity = item.get(CommonFields.QUANTITY, 1)
 
-            costs = item.get('costs', [])
+            costs = item.get(ShopFields.COSTS, [])
             cost_string = format_complex_cost(costs, getattr(self, 'currency_config', {}))
 
             if item_quantity > 1:
@@ -2837,14 +2846,14 @@ class EditShopView(LayoutView):
 
     def update_stock(self, new_stock: list):
         self.all_stock = new_stock
-        self.shop_data['shopStock'] = new_stock
+        self.shop_data[ShopFields.SHOP_STOCK] = new_stock
 
         self.total_pages = math.ceil(len(self.all_stock) / self.items_per_page)
         if self.current_page >= self.total_pages:
             self.current_page = max(0, self.total_pages - 1)
 
     def update_details(self, new_shop_data: dict):
-        new_shop_data['shopStock'] = self.all_stock
+        new_shop_data[ShopFields.SHOP_STOCK] = self.all_stock
         self.shop_data = new_shop_data
 
 
@@ -2853,7 +2862,7 @@ class ConfigStockLimitsView(LayoutView):
         super().__init__(timeout=None)
         self.channel_id = channel_id
         self.shop_data = shop_data
-        self.all_stock = self.shop_data.get('shopStock', [])
+        self.all_stock = self.shop_data.get(ShopFields.SHOP_STOCK, [])
         self.stock_info = {}
 
         self.items_per_page = 6
@@ -2866,12 +2875,12 @@ class ConfigStockLimitsView(LayoutView):
             shop_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='shops',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.SHOPS,
+                query={CommonFields.ID: guild.id}
             )
             if shop_query:
-                self.shop_data = shop_query.get('shopChannels', {}).get(self.channel_id, self.shop_data)
-                self.all_stock = self.shop_data.get('shopStock', [])
+                self.shop_data = shop_query.get(ShopFields.SHOP_CHANNELS, {}).get(self.channel_id, self.shop_data)
+                self.all_stock = self.shop_data.get(ShopFields.SHOP_STOCK, [])
 
             # Get runtime stock info
             self.stock_info = await get_shop_stock(bot, guild.id, self.channel_id)
@@ -2889,7 +2898,7 @@ class ConfigStockLimitsView(LayoutView):
         container = Container()
 
         # Header
-        shop_name = self.shop_data.get('shopName', 'Unknown Shop')
+        shop_name = self.shop_data.get(ShopFields.SHOP_NAME, 'Unknown Shop')
         header_section = Section(accessory=buttons.BackToEditShopButton(self.channel_id, self.shop_data))
         header_section.add_item(TextDisplay(f'**Stock Configuration: {shop_name}**'))
         container.add_item(header_section)
@@ -2902,27 +2911,27 @@ class ConfigStockLimitsView(LayoutView):
         container.add_item(Separator())
 
         # Restock schedule section
-        restock_config = self.shop_data.get('restockConfig', {})
-        if restock_config.get('enabled'):
-            schedule = restock_config.get('schedule', 'none')
-            hour = restock_config.get('hour', 0)
-            minute = restock_config.get('minute', 0)
-            day_of_week = restock_config.get('dayOfWeek', 0)
-            mode = restock_config.get('mode', 'full')
-            increment = restock_config.get('incrementAmount', 1)
+        restock_config = self.shop_data.get(ShopFields.RESTOCK_CONFIG, {})
+        if restock_config.get(RestockFields.ENABLED):
+            schedule = restock_config.get(RestockFields.SCHEDULE, 'none')
+            hour = restock_config.get(RestockFields.HOUR, 0)
+            minute = restock_config.get(RestockFields.MINUTE, 0)
+            day_of_week = restock_config.get(RestockFields.DAY_OF_WEEK, 0)
+            mode = restock_config.get(RestockFields.MODE, RestockMode.FULL.value)
+            increment = restock_config.get(RestockFields.INCREMENT_AMOUNT, 1)
 
             day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
             day_name = day_names[day_of_week] if 0 <= day_of_week <= 6 else 'Unknown'
 
             schedule_text = f'**Restock Schedule:** {schedule.capitalize()}'
-            if schedule == 'hourly':
+            if schedule == ScheduleType.HOURLY.value:
                 schedule_text += f' at minute :{minute:02d}'
-            elif schedule == 'daily':
+            elif schedule == ScheduleType.DAILY.value:
                 schedule_text += f' at {hour:02d}:{minute:02d} UTC'
-            elif schedule == 'weekly':
+            elif schedule == ScheduleType.WEEKLY.value:
                 schedule_text += f' on {day_name} at {hour:02d}:{minute:02d} UTC'
 
-            mode_text = 'Full restock' if mode == 'full' else f'Add {increment} per cycle (up to max)'
+            mode_text = 'Full restock' if mode == RestockMode.FULL.value else f'Add {increment} per cycle (up to max)'
             schedule_text += f'\n**Mode:** {mode_text}'
         else:
             schedule_text = '**Restock Schedule:** Disabled'
@@ -2943,17 +2952,17 @@ class ConfigStockLimitsView(LayoutView):
             page_items = self.all_stock[start_index:end_index]
 
             for item in page_items:
-                item_name = item.get('name', 'Unknown')
+                item_name = item.get(CommonFields.NAME, 'Unknown')
                 item_name_display = escape_markdown(item_name)
-                max_stock = item.get('maxStock')
+                max_stock = item.get(ShopFields.MAX_STOCK)
 
                 # Get runtime stock info (only if data is valid with 'available' key)
                 runtime_stock = self.stock_info.get(encode_mongo_key(item_name))
                 current_available = None
                 reserved = 0
-                if runtime_stock and 'available' in runtime_stock:
-                    current_available = runtime_stock.get('available', 0)
-                    reserved = runtime_stock.get('reserved', 0)
+                if runtime_stock and ShopFields.AVAILABLE in runtime_stock:
+                    current_available = runtime_stock.get(ShopFields.AVAILABLE, 0)
+                    reserved = runtime_stock.get(ShopFields.RESERVED, 0)
 
                 if max_stock is not None:
                     if current_available is not None:
@@ -3043,17 +3052,17 @@ class ConfigRoleplayView(LayoutView):
             self.config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='roleplayConfig',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.ROLEPLAY_CONFIG,
+                query={CommonFields.ID: guild.id}
             )
             if not self.config:
-                self.config = {'enabled': False, 'mode': 'scheduled'}
+                self.config = {RoleplayFields.ENABLED: False, RoleplayFields.MODE: RoleplayMode.SCHEDULED.value}
 
             self.currency_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
-                query={'_id': guild.id}
+                collection_name=DatabaseCollections.CURRENCY,
+                query={CommonFields.ID: guild.id}
             )
 
             self.build_view()
@@ -3070,8 +3079,8 @@ class ConfigRoleplayView(LayoutView):
         container.add_item(Separator())
 
         # Status & Time
-        enabled = self.config.get('enabled', False)
-        mode = self.config.get('mode', 'scheduled')
+        enabled = self.config.get(RoleplayFields.ENABLED, False)
+        mode = self.config.get(RoleplayFields.MODE, 'scheduled')
 
         now = datetime.now(timezone.utc)
         time_str = now.strftime('%H:%M UTC')
@@ -3101,9 +3110,9 @@ class ConfigRoleplayView(LayoutView):
             )
 
         # Settings
-        settings_config = self.config.get('config', {})
-        min_length = settings_config.get('minLength', 20)
-        cooldown = settings_config.get('cooldown', 30)
+        settings_config = self.config.get(RoleplayFields.CONFIG, {})
+        min_length = settings_config.get(RoleplayFields.MIN_LENGTH, 20)
+        cooldown = settings_config.get(RoleplayFields.COOLDOWN, 30)
         setting_details = (
             f'**Configuration Details:**\n\n'
             f'**Mode:** {mode.capitalize()}\n'
@@ -3114,7 +3123,7 @@ class ConfigRoleplayView(LayoutView):
 
         if mode == 'scheduled':
             frequency = 'hour'
-            frequency_config = settings_config.get('resetPeriod', 'hourly')
+            frequency_config = settings_config.get(RoleplayFields.RESET_PERIOD, 'hourly')
             if frequency_config == 'daily':
                 frequency = 'day'
             elif frequency_config == 'weekly':
@@ -3122,21 +3131,21 @@ class ConfigRoleplayView(LayoutView):
             setting_details += f'**Frequency:** Once per {frequency}\n'
 
             if frequency_config in ['daily', 'weekly']:
-                reset_time = settings_config.get('resetTime', 0)
+                reset_time = settings_config.get(RoleplayFields.RESET_TIME, 0)
                 formatted_time = time(hour=reset_time, minute=0, tzinfo=timezone.utc).strftime('%H:%M')
 
                 formatted_day = ''
                 if frequency_config == 'weekly':
-                    reset_day = settings_config.get('resetDay', 'monday')
+                    reset_day = settings_config.get(RoleplayFields.RESET_DAY, 'monday')
                     formatted_day = f'{reset_day.capitalize()}s at '
 
                 setting_details += f'**Reset Time:** {formatted_day}{formatted_time} UTC\n'
 
-            message_threshold = settings_config.get('threshold', 20)
+            message_threshold = settings_config.get(RoleplayFields.THRESHOLD, 20)
 
             setting_details += f'**Threshold:** {message_threshold} eligible messages'
         else:
-            frequency = settings_config.get('frequency', 20)
+            frequency = settings_config.get(RoleplayFields.FREQUENCY, 20)
             setting_details += f'**Frequency:** Every {frequency} eligible messages'
 
         settings_section = Section(accessory=buttons.RoleplaySettingsButton(self))
@@ -3152,12 +3161,12 @@ class ConfigRoleplayView(LayoutView):
             frequency_select_row.add_item(selects.RoleplayResetSelect(self))
             container.add_item(frequency_select_row)
 
-        if mode == 'scheduled' and settings_config.get('resetPeriod') in ['daily', 'weekly']:
+        if mode == 'scheduled' and settings_config.get(RoleplayFields.RESET_PERIOD) in ['daily', 'weekly']:
             reset_time_action_row = ActionRow()
             reset_time_action_row.add_item(selects.RoleplayResetTimeSelect(self))
             container.add_item(reset_time_action_row)
 
-        if mode == 'scheduled' and settings_config.get('resetPeriod') == 'weekly':
+        if mode == 'scheduled' and settings_config.get(RoleplayFields.RESET_PERIOD) == 'weekly':
             reset_day_action_row = ActionRow()
             reset_day_action_row.add_item(selects.RoleplayResetDaySelect(self))
             container.add_item(reset_day_action_row)
@@ -3165,7 +3174,7 @@ class ConfigRoleplayView(LayoutView):
         container.add_item(Separator())
 
         # Channels
-        channels = self.config.get('channels', [])
+        channels = self.config.get(RoleplayFields.CHANNELS, [])
         if not channels:
             channel_lines = 'None configured.'
         else:
@@ -3188,16 +3197,16 @@ class ConfigRoleplayView(LayoutView):
 
         # Rewards
         rewards_text = '**Rewards:**\n'
-        rewards_data = self.config.get('rewards', {})
+        rewards_data = self.config.get(RoleplayFields.REWARDS, {})
         if not rewards_data:
             rewards_text += "None configured."
         else:
-            if xp := rewards_data.get('xp'):
+            if xp := rewards_data.get(RoleplayFields.XP):
                 rewards_text += f'**Experience:** {xp}\n'
-            if items := rewards_data.get('items'):
+            if items := rewards_data.get(RoleplayFields.ITEMS):
                 item_lines = [f'- {escape_markdown(titlecase(name))}: {quantity}' for name, quantity in items.items()]
                 rewards_text += f'**Items:**\n{"\n".join(item_lines)}\n'
-            if currency := rewards_data.get('currency'):
+            if currency := rewards_data.get(RoleplayFields.CURRENCY):
                 consolidated = consolidate_currency_totals(currency, self.currency_config)
                 currency_lines = format_consolidated_totals(consolidated, self.currency_config)
                 formatted_lines = [f'- {line}' for line in currency_lines]

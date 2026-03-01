@@ -17,6 +17,9 @@ from titlecase import titlecase
 
 from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.shop import buttons
+from ReQuest.utilities.constants import (
+    CharacterFields, ConfigFields, ShopFields, CommonFields, CartFields, DatabaseCollections
+)
 from ReQuest.utilities.supportFunctions import (
     check_sufficient_funds,
     apply_currency_change_local,
@@ -46,7 +49,7 @@ class ShopBaseView(LayoutView):
         super().__init__(timeout=600)
         self.shop_data = shop_data
         self.channel_id = channel_id
-        self.all_stock = self.shop_data.get('shopStock', [])
+        self.all_stock = self.shop_data.get(ShopFields.SHOP_STOCK, [])
         self.items_per_page = 9
         self.current_page = 0
         self.total_pages = math.ceil(len(self.all_stock) / self.items_per_page) if self.all_stock else 1
@@ -65,7 +68,7 @@ class ShopBaseView(LayoutView):
         self.currency_config = await get_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
-            collection_name='currency',
+            collection_name=DatabaseCollections.CURRENCY,
             query={'_id': guild.id}
         )
 
@@ -73,7 +76,7 @@ class ShopBaseView(LayoutView):
         if self.user_id and self.channel_id:
             db_cart = await get_cart(self.bot, self.guild_id, self.user_id, self.channel_id)
             if db_cart:
-                self.cart = db_cart.get('items', {})
+                self.cart = db_cart.get(CartFields.ITEMS, {})
 
         # Load stock info AFTER cart check (so any released stock is reflected)
         if self.channel_id:
@@ -92,7 +95,7 @@ class ShopBaseView(LayoutView):
         if self.user_id and self.channel_id:
             db_cart = await get_cart(self.bot, self.guild_id, self.user_id, self.channel_id)
             if db_cart:
-                self.cart = db_cart.get('items', {})
+                self.cart = db_cart.get(CartFields.ITEMS, {})
 
         # Refresh stock info
         self.stock_info = await get_shop_stock(self.bot, self.guild_id, self.channel_id)
@@ -103,14 +106,14 @@ class ShopBaseView(LayoutView):
             container = Container()
             header_items = []
 
-            if shop_name := self.shop_data.get('shopName'):
+            if shop_name := self.shop_data.get(ShopFields.SHOP_NAME):
                 header_items.append(TextDisplay(f'**{shop_name}**'))
-            if shop_keeper := self.shop_data.get('shopKeeper'):
+            if shop_keeper := self.shop_data.get(ShopFields.SHOP_KEEPER):
                 header_items.append(TextDisplay(f'Shopkeeper: **{shop_keeper}**'))
-            if shop_description := self.shop_data.get('shopDescription'):
+            if shop_description := self.shop_data.get(ShopFields.SHOP_DESCRIPTION):
                 header_items.append(TextDisplay(f'*{shop_description}*'))
 
-            if shop_image := self.shop_data.get('shopImage'):
+            if shop_image := self.shop_data.get(ShopFields.SHOP_IMAGE):
                 shop_image = Thumbnail(media=f'{shop_image}')
                 shop_header = Section(accessory=shop_image)
 
@@ -129,10 +132,10 @@ class ShopBaseView(LayoutView):
             current_stock = self.all_stock[start_index:end_index]
 
             for item in current_stock:
-                costs = item.get('costs', [])
+                costs = item.get(ShopFields.COSTS, [])
                 cost_string = format_complex_cost(costs, getattr(self, 'currency_config', {}))
 
-                item_name = item.get('name', 'Unknown Item')
+                item_name = item.get(CommonFields.NAME, 'Unknown Item')
                 item_name_display = escape_markdown(item_name)
 
                 # Get stock info for this item
@@ -142,22 +145,22 @@ class ShopBaseView(LayoutView):
                 section = Section(accessory=buy_button)
 
                 item_description = item.get('description', None)
-                item_quantity = item.get('quantity', 1)
+                item_quantity = item.get(CommonFields.QUANTITY, 1)
                 item_display_name = f'{item_name_display} x{item_quantity}' if item_quantity > 1 else item_name_display
 
                 cart_quantity = 0
                 for value in self.cart.values():
-                    cart_item = value.get('item', value)  # Handle both DB and local formats
-                    if cart_item.get('name') == item_name:
-                        cart_quantity += value.get('quantity', 0)
+                    cart_item = value.get(CartFields.ITEM, value)  # Handle both DB and local formats
+                    if cart_item.get(CommonFields.NAME) == item_name:
+                        cart_quantity += value.get(CartFields.QUANTITY, 0)
 
                 content = item_display_name
                 if cart_quantity > 0:
                     content += f' (In Cart: {cart_quantity})'
 
                 # Show stock info if item has limits (and data is valid)
-                if item_stock_info is not None and 'available' in item_stock_info:
-                    available = item_stock_info.get('available', 0)
+                if item_stock_info is not None and ShopFields.AVAILABLE in item_stock_info:
+                    available = item_stock_info.get(ShopFields.AVAILABLE, 0)
                     if available == 0:
                         content += f'\n**OUT OF STOCK**'
                     else:
@@ -201,7 +204,7 @@ class ShopBaseView(LayoutView):
                 nav_row.add_item(page_display)
                 nav_row.add_item(next_button)
 
-            cart_item_count = sum(item.get('quantity', 0) for item in self.cart.values())
+            cart_item_count = sum(item.get(CartFields.QUANTITY, 0) for item in self.cart.values())
             view_cart_button = buttons.ViewCartButton(self)
             view_cart_button.label = f'View Cart ({cart_item_count})' if cart_item_count > 0 else 'View Cart'
 
@@ -217,7 +220,7 @@ class ShopBaseView(LayoutView):
             if not self.user_id:
                 await self.setup_for_user(interaction)
 
-            item_name = item.get('name')
+            item_name = item.get(CommonFields.NAME)
 
             # Use database-backed cart with reservation
             success = await add_item_to_cart(
@@ -230,7 +233,7 @@ class ShopBaseView(LayoutView):
             # Refresh local cart cache and stock info
             db_cart = await get_cart(self.bot, self.guild_id, self.user_id, self.channel_id)
             if db_cart:
-                self.cart = db_cart.get('items', {})
+                self.cart = db_cart.get(CartFields.ITEMS, {})
 
             # Refresh stock info after reservation
             self.stock_info = await get_shop_stock(self.bot, self.guild_id, self.channel_id)
@@ -305,11 +308,11 @@ class ShopCartView(LayoutView):
                 container.add_item(TextDisplay('Your cart is empty.'))
             else:
                 for item_key, data in self.prev_view.cart.items():
-                    item = data['item']
-                    quantity = data['quantity']
-                    option_index = data.get('optionIndex', 0)
+                    item = data[CartFields.ITEM]
+                    quantity = data[CartFields.QUANTITY]
+                    option_index = data.get(CartFields.OPTION_INDEX, 0)
 
-                    costs = item.get('costs', [])
+                    costs = item.get(ShopFields.COSTS, [])
                     if 0 <= option_index < len(costs):
                         selected_cost = costs[option_index]
                         for currency_name, amount in selected_cost.items():
@@ -321,7 +324,7 @@ class ShopCartView(LayoutView):
                     warnings.append("⚠️ No active character found. Cannot verify funds.")
                     can_afford_all = False
                 else:
-                    player_wallet = self.character_data['attributes'].get('currency', {})
+                    player_wallet = self.character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {})
                     for base_currency, amount in self.base_totals.items():
                         is_ok, _ = check_sufficient_funds(player_wallet, self.currency_config, base_currency, amount)
                         if not is_ok:
@@ -335,13 +338,13 @@ class ShopCartView(LayoutView):
                 current_cart = all_cart_items[start_index:end_index]
 
                 for item_key, data in current_cart:
-                    item = data['item']
-                    quantity = data['quantity']
-                    quantity_per_item = item.get('quantity', 1)
-                    option_index = data.get('optionIndex', 0)
+                    item = data[CartFields.ITEM]
+                    quantity = data[CartFields.QUANTITY]
+                    quantity_per_item = item.get(CommonFields.QUANTITY, 1)
+                    option_index = data.get(CartFields.OPTION_INDEX, 0)
                     total_item_quantity = quantity * quantity_per_item
 
-                    costs = item.get('costs', [])
+                    costs = item.get(ShopFields.COSTS, [])
                     price_string = 'Invalid Cost'
                     if not costs:
                         price_string = 'Free'
@@ -356,7 +359,7 @@ class ShopCartView(LayoutView):
                     edit_button = buttons.EditCartItemButton(item_key, quantity)
                     section = Section(accessory=edit_button)
 
-                    item_line = (f'**{escape_markdown(item["name"])}** x{quantity} '
+                    item_line = (f'**{escape_markdown(item[CommonFields.NAME])}** x{quantity} '
                                  f'(Total: {total_item_quantity}) - {price_string}')
                     section.add_item(TextDisplay(item_line))
                     container.add_item(section)
@@ -366,7 +369,7 @@ class ShopCartView(LayoutView):
                 total_strings = format_consolidated_totals(self.base_totals, self.currency_config)
                 cost_string = f'**Total Cost:**'
                 if total_strings:
-                    cost_string += f'\n{', '.join(total_strings)}'
+                    cost_string += f'\n{", ".join(total_strings)}'
                 else:
                     cost_string += '\nFree'
                 if warnings:
@@ -447,20 +450,20 @@ class ShopCartView(LayoutView):
             character_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
-                collection_name='characters',
+                collection_name=DatabaseCollections.CHARACTERS,
                 query={'_id': user_id}
             )
 
-            if not character_query or str(guild_id) not in character_query['activeCharacters']:
+            if not character_query or str(guild_id) not in character_query[CharacterFields.ACTIVE_CHARACTERS]:
                 await interaction.response.send_message("You do not have an active character on this server.",
                                                         ephemeral=True)
                 return
 
-            active_char_id = character_query['activeCharacters'][str(guild_id)]
-            character_data = character_query['characters'][active_char_id]
+            active_char_id = character_query[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
+            character_data = character_query[CharacterFields.CHARACTERS][active_char_id]
 
             for base_currency, amount in self.base_totals.items():
-                is_ok, msg = check_sufficient_funds(character_data['attributes'].get('currency', {}),
+                is_ok, msg = check_sufficient_funds(character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {}),
                                                     self.currency_config, base_currency, amount)
                 if not is_ok:
                     await interaction.response.send_message(
@@ -473,19 +476,19 @@ class ShopCartView(LayoutView):
 
             added_items_summary = []
             for item_key, data in self.prev_view.cart.items():
-                item = data.get('item', data)  # Handle both DB and local formats
-                quantity = data.get('quantity', 0)
-                qty_per_item = item.get('quantity', 1)
+                item = data.get(CartFields.ITEM, data)  # Handle both DB and local formats
+                quantity = data.get(CartFields.QUANTITY, 0)
+                qty_per_item = item.get(CommonFields.QUANTITY, 1)
                 total_qty = quantity * qty_per_item
 
-                character_data = apply_item_change_local(character_data, item['name'], total_qty)
-                summary_string = (f'{total_qty}x ' if total_qty > 1 else '') + escape_markdown(titlecase(item["name"]))
+                character_data = apply_item_change_local(character_data, item[CommonFields.NAME], total_qty)
+                summary_string = (f'{total_qty}x ' if total_qty > 1 else '') + escape_markdown(titlecase(item[CommonFields.NAME]))
                 added_items_summary.append(summary_string)
 
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
-                collection_name='characters',
+                collection_name=DatabaseCollections.CHARACTERS,
                 query={'_id': user_id},
                 update_data={'$set': {f'characters.{active_char_id}': character_data}}
             )
@@ -497,17 +500,17 @@ class ShopCartView(LayoutView):
             log_channel_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='shopLogChannel',
+                collection_name=DatabaseCollections.SHOP_LOG_CHANNEL,
                 query={'_id': guild_id}
             )
             if log_channel_query:
-                log_channel_id = strip_id(log_channel_query['shopLogChannel'])
+                log_channel_id = strip_id(log_channel_query[ConfigFields.SHOP_LOG_CHANNEL])
                 log_channel = interaction.guild.get_channel(log_channel_id)
 
             receipt_embed = discord.Embed(title="Shopping Report", color=discord.Color.gold())
             receipt_embed.description = (
-                f'Player: {interaction.user.mention} as `{character_data["name"]}`\n'
-                f'Shop: {self.prev_view.shop_data.get("shopName", "Unknown Shop")}'
+                f'Player: {interaction.user.mention} as `{character_data[CharacterFields.NAME]}`\n'
+                f'Shop: {self.prev_view.shop_data.get(ShopFields.SHOP_NAME, "Unknown Shop")}'
             )
             receipt_embed.add_field(name="Purchased", value="\n".join(added_items_summary) or 'No Items', inline=False)
 
@@ -542,11 +545,11 @@ class ComplexItemPurchaseView(LayoutView):
         container = Container()
 
         header = Section(accessory=buttons.CartBackButton(self.parent_view))
-        header.add_item(TextDisplay(f"**Purchase Options: {escape_markdown(self.item['name'])}**"))
+        header.add_item(TextDisplay(f"**Purchase Options: {escape_markdown(self.item[CommonFields.NAME])}**"))
         container.add_item(header)
         container.add_item(Separator())
 
-        costs = self.item.get('costs', [])
+        costs = self.item.get(ShopFields.COSTS, [])
         currency_config = getattr(self.parent_view, 'currency_config', {})
 
         if not costs:

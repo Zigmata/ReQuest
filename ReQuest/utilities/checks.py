@@ -1,5 +1,6 @@
 from discord import app_commands, Interaction
 
+from ReQuest.utilities.constants import ConfigFields, CharacterFields, CommonFields, DatabaseCollections
 from ReQuest.utilities.supportFunctions import get_cached_data
 
 
@@ -22,14 +23,14 @@ def has_gm_or_mod():
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='gmRoles',
-                query={'_id': interaction.guild.id}
+                collection_name=DatabaseCollections.GM_ROLES,
+                query={CommonFields.ID: interaction.guild.id}
             )
             if query:
                 gm_role_mentions = []
-                gm_roles = query['gmRoles']
+                gm_roles = query[ConfigFields.GM_ROLES]
                 for item in gm_roles:
-                    gm_role_mentions.append(item['mention'])
+                    gm_role_mentions.append(item[CommonFields.MENTION])
                 for role in interaction.user.roles:
                     if role.mention in gm_role_mentions:
                         return True
@@ -46,12 +47,12 @@ def has_active_character():
         query = await get_cached_data(
             bot=interaction.client,
             mongo_database=interaction.client.mdb,
-            collection_name='characters',
-            query={'_id': member_id}
+            collection_name=DatabaseCollections.CHARACTERS,
+            query={CommonFields.ID: member_id}
         )
 
         if query:
-            if str(guild_id) in query['activeCharacters']:
+            if str(guild_id) in query[CharacterFields.ACTIVE_CHARACTERS]:
                 return True
             else:
                 raise app_commands.CheckFailure("You do not have an active character on this server!")

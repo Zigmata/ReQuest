@@ -3,6 +3,7 @@ from discord import ButtonStyle
 from discord.ui import Button
 
 from ReQuest.ui.shop import modals
+from ReQuest.utilities.constants import CharacterFields, ShopFields, CommonFields, CartFields, DatabaseCollections
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     get_cached_data,
@@ -21,14 +22,14 @@ class ShopItemButton(Button):
 
         :param item: The item dictionary
         :param cost_string: Formatted cost string for display
-        :param stock_info: Dict with 'available' and 'reserved' counts, or None if unlimited
+        :param stock_info: Dict with ShopFields.AVAILABLE and ShopFields.RESERVED counts, or None if unlimited
         """
-        costs = item.get('costs', [])
+        costs = item.get(ShopFields.COSTS, [])
 
         # Check if out of stock (only if stock data is valid)
         is_out_of_stock = False
-        if stock_info is not None and 'available' in stock_info:
-            available = stock_info.get('available', 0)
+        if stock_info is not None and ShopFields.AVAILABLE in stock_info:
+            available = stock_info.get(ShopFields.AVAILABLE, 0)
             if available <= 0:
                 is_out_of_stock = True
 
@@ -57,15 +58,15 @@ class ShopItemButton(Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             # Double-check stock availability (in case UI is stale)
-            item_name = self.item['name']
+            item_name = self.item[CommonFields.NAME]
             # Use view's channel_id to ensure consistency with shop lookup
             channel_id = self.view.channel_id or str(interaction.channel_id)
             self.stock_info = await get_item_stock(interaction.client, interaction.guild_id, channel_id, item_name)
-            # Only check stock if data is valid (has 'available' key)
-            if self.stock_info is not None and 'available' in self.stock_info and self.stock_info.get('available', 0) <= 0:
-                raise UserFeedbackError(f'**{self.item["name"]}** is out of stock.')
+            # Only check stock if data is valid (has ShopFields.AVAILABLE key)
+            if self.stock_info is not None and ShopFields.AVAILABLE in self.stock_info and self.stock_info.get(ShopFields.AVAILABLE, 0) <= 0:
+                raise UserFeedbackError(f'**{self.item[CommonFields.NAME]}** is out of stock.')
 
-            costs = self.item.get('costs', [])
+            costs = self.item.get(ShopFields.COSTS, [])
             if len(costs) > 1:
                 from ReQuest.ui.shop.views import ComplexItemPurchaseView
                 view = ComplexItemPurchaseView(self.view, self.item)
@@ -118,26 +119,26 @@ class ViewCartButton(Button):
             currency_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='currency',
+                collection_name=DatabaseCollections.CURRENCY,
                 query={'_id': guild_id}
             )
 
             character_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
-                collection_name='characters',
+                collection_name=DatabaseCollections.CHARACTERS,
                 query={'_id': user_id}
             )
             active_character = None
-            if character_query and str(guild_id) in character_query.get('activeCharacters', {}):
-                character_id = character_query['activeCharacters'][str(guild_id)]
-                active_character = character_query['characters'].get(character_id)
+            if character_query and str(guild_id) in character_query.get(CharacterFields.ACTIVE_CHARACTERS, {}):
+                character_id = character_query[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
+                active_character = character_query[CharacterFields.CHARACTERS].get(character_id)
 
             # Load cart from database
             channel_id = self.calling_view.channel_id
             db_cart = await get_cart(bot, guild_id, user_id, channel_id)
             if db_cart:
-                self.calling_view.cart = db_cart.get('items', {})
+                self.calling_view.cart = db_cart.get(CartFields.ITEMS, {})
 
             view = ShopCartView(self.calling_view, currency_config, active_character)
             await interaction.response.edit_message(view=view)

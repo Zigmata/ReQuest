@@ -20,6 +20,7 @@ from ReQuest.ui.common.buttons import MenuDoneButton, BackButton
 from ReQuest.ui.common.modals import PageJumpModal
 from ReQuest.ui.common.views import MenuBaseView
 from ReQuest.ui.gm import buttons, selects
+from ReQuest.utilities.constants import CharacterFields, QuestFields, ConfigFields, CommonFields, DatabaseCollections
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
@@ -82,16 +83,16 @@ class GMQuestMenuView(LayoutView):
         try:
             # Check to see if the user has guild admin privileges. This lets them view any quest in the guild.
             if user.guild_permissions.manage_guild:
-                query = {'guildId': guild.id}
+                query = {QuestFields.GUILD_ID: guild.id}
                 cache_id = f'guild_quests:{guild.id}'
             else:
-                query = {'guildId': guild.id, 'gm': user.id}
+                query = {QuestFields.GUILD_ID: guild.id, QuestFields.GM: user.id}
                 cache_id = f'gm_quests:{guild.id}:{user.id}'
 
             self.quests = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='quests',
+                collection_name=DatabaseCollections.QUESTS,
                 query=query,
                 is_single=False,
                 cache_id=cache_id
@@ -100,7 +101,7 @@ class GMQuestMenuView(LayoutView):
             if self.quests is None:
                 self.quests = []
 
-            self.quests.sort(key=lambda x: x.get('title', '').lower())
+            self.quests.sort(key=lambda x: x.get(QuestFields.TITLE, '').lower())
 
             self.total_pages = math.ceil(len(self.quests) / self.items_per_page)
             if self.total_pages == 0:
@@ -134,9 +135,9 @@ class GMQuestMenuView(LayoutView):
             page_items = self.quests[start:end]
 
             for quest in page_items:
-                title = quest.get('title', 'Untitled')
-                quest_id = quest.get('questId', 'Unknown')
-                lock_state = " (Locked)" if quest.get('lockState') else ""
+                title = quest.get(QuestFields.TITLE, 'Untitled')
+                quest_id = quest.get(QuestFields.QUEST_ID, 'Unknown')
+                lock_state = " (Locked)" if quest.get(QuestFields.LOCK_STATE) else ""
 
                 info_text = f"**{title}**{lock_state}\nID: `{quest_id}`"
 
@@ -207,14 +208,14 @@ class ManageQuestsView(LayoutView):
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='quests',
-                query={'guildId': self.selected_quest['guildId'], 'questId': self.selected_quest['questId']},
-                cache_id=f"{self.selected_quest['guildId']}:{self.selected_quest['questId']}"
+                collection_name=DatabaseCollections.QUESTS,
+                query={QuestFields.GUILD_ID: self.selected_quest[QuestFields.GUILD_ID], QuestFields.QUEST_ID: self.selected_quest[QuestFields.QUEST_ID]},
+                cache_id=f"{self.selected_quest[QuestFields.GUILD_ID]}:{self.selected_quest[QuestFields.QUEST_ID]}"
             )
             if query:
                 self.selected_quest = query
 
-            self.xp_enabled = await get_xp_config(bot, self.selected_quest['guildId'])
+            self.xp_enabled = await get_xp_config(bot, self.selected_quest[QuestFields.GUILD_ID])
 
             self.build_view()
         except Exception as e:
@@ -225,8 +226,8 @@ class ManageQuestsView(LayoutView):
         container = Container()
 
         quest = self.selected_quest
-        title = quest.get('title', 'Unknown')
-        quest_id = quest.get('questId', 'Unknown')
+        title = quest.get(QuestFields.TITLE, 'Unknown')
+        quest_id = quest.get(QuestFields.QUEST_ID, 'Unknown')
 
         header_section = Section(accessory=BackButton(GMQuestMenuView))
         header_section.add_item(TextDisplay(f'**Manage Quest - {title}** `{quest_id}`'))
@@ -237,7 +238,7 @@ class ManageQuestsView(LayoutView):
         edit_section.add_item(TextDisplay('Edit quest details such as title, description, and party size.'))
         container.add_item(edit_section)
 
-        ready_status = "Locked/Ready" if quest.get('lockState') else "Open"
+        ready_status = "Locked/Ready" if quest.get(QuestFields.LOCK_STATE) else "Open"
         toggle_section = Section(accessory=buttons.ToggleReadyButton(self))
         toggle_section.add_item(TextDisplay(
             f'Toggle ready state (Current: **{ready_status}**)\n'
@@ -252,13 +253,13 @@ class ManageQuestsView(LayoutView):
         container.add_item(rewards_section)
 
         complete_quest_button = buttons.CompleteQuestButton(self)
-        complete_quest_button.disabled = not quest.get('party')
+        complete_quest_button.disabled = not quest.get(QuestFields.PARTY)
         complete_section = Section(accessory=complete_quest_button)
         complete_section.add_item(TextDisplay('Complete a quest. Issues rewards, if any, to party members.'))
         container.add_item(complete_section)
 
         remove_player_button = buttons.RemovePlayerButton(self)
-        remove_player_button.disabled = not quest.get('party')
+        remove_player_button.disabled = not quest.get(QuestFields.PARTY)
         remove_player_section = Section(accessory=remove_player_button)
         remove_player_section.add_item(TextDisplay('Remove a player from the quest roster and notify them.'))
         container.add_item(remove_player_section)
@@ -283,40 +284,40 @@ class ManageQuestsView(LayoutView):
             channel_id_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='questChannel',
-                query={'_id': guild_id}
+                collection_name=DatabaseCollections.QUEST_CHANNEL,
+                query={CommonFields.ID: guild_id}
             )
             if not channel_id_query:
                 raise UserFeedbackError('Quest channel has not been set!')
-            channel_id = strip_id(channel_id_query['questChannel'])
+            channel_id = strip_id(channel_id_query[ConfigFields.QUEST_CHANNEL])
             channel = interaction.client.get_channel(channel_id)
 
             # Retrieve the message object
-            message_id = quest['messageId']
+            message_id = quest[QuestFields.MESSAGE_ID]
             message = channel.get_partial_message(message_id)
 
             # Check to see if the quest has a party role configured
             role = None
-            if quest['partyRoleId']:
-                role_id = quest['partyRoleId']
+            if quest[QuestFields.PARTY_ROLE_ID]:
+                role_id = quest[QuestFields.PARTY_ROLE_ID]
                 role = guild.get_role(role_id)
 
-            party = quest['party']
-            title = quest['title']
-            quest_id = quest['questId']
+            party = quest[QuestFields.PARTY]
+            title = quest[QuestFields.TITLE]
+            quest_id = quest[QuestFields.QUEST_ID]
             tasks = []
 
             # Locks the quest roster and alerts party members that the quest is ready.
-            if not quest['lockState']:
+            if not quest[QuestFields.LOCK_STATE]:
                 await update_cached_data(
                     bot=bot,
                     mongo_database=bot.gdb,
-                    collection_name='quests',
-                    query={'questId': quest_id},
-                    update_data={'$set': {'lockState': True}},
+                    collection_name=DatabaseCollections.QUESTS,
+                    query={QuestFields.QUEST_ID: quest_id},
+                    update_data={'$set': {QuestFields.LOCK_STATE: True}},
                     cache_id=f'{guild_id}:{quest_id}'
                 )
-                quest['lockState'] = True
+                quest[QuestFields.LOCK_STATE] = True
 
                 # Notify each party member that the quest is ready
                 for player in party:
@@ -348,12 +349,12 @@ class ManageQuestsView(LayoutView):
                 await update_cached_data(
                     bot=bot,
                     mongo_database=bot.gdb,
-                    collection_name='quests',
-                    query={'questId': quest_id},
-                    update_data={'$set': {'lockState': False}},
+                    collection_name=DatabaseCollections.QUESTS,
+                    query={QuestFields.QUEST_ID: quest_id},
+                    update_data={'$set': {QuestFields.LOCK_STATE: False}},
                     cache_id=f'{guild_id}:{quest_id}'
                 )
-                quest['lockState'] = False
+                quest[QuestFields.LOCK_STATE] = False
 
                 await interaction.user.send('Quest roster has been unlocked.')
 
@@ -390,9 +391,9 @@ class ManageQuestsView(LayoutView):
             refreshed_quest = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='quests',
-                query={'guildId': guild_id, 'questId': self.selected_quest['questId']},
-                cache_id=f'{guild_id}:{self.selected_quest["questId"]}'
+                collection_name=DatabaseCollections.QUESTS,
+                query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: self.selected_quest[QuestFields.QUEST_ID]},
+                cache_id=f'{guild_id}:{self.selected_quest[QuestFields.QUEST_ID]}'
             )
 
             if not refreshed_quest:
@@ -403,13 +404,13 @@ class ManageQuestsView(LayoutView):
             xp_enabled = await get_xp_config(interaction.client, guild_id)
 
             # Setup quest variables
-            quest_id = quest['questId']
-            message_id = quest['messageId']
-            title = quest['title']
-            description = quest['description']
-            gm = quest['gm']
-            party = quest['party']
-            rewards = quest['rewards']
+            quest_id = quest[QuestFields.QUEST_ID]
+            message_id = quest[QuestFields.MESSAGE_ID]
+            title = quest[QuestFields.TITLE]
+            description = quest[QuestFields.DESCRIPTION]
+            gm = quest[QuestFields.GM]
+            party = quest[QuestFields.PARTY]
+            rewards = quest[QuestFields.REWARDS]
 
             if not party:
                 raise UserFeedbackError('You cannot complete a quest with an empty roster. Try cancelling instead.')
@@ -418,25 +419,25 @@ class ManageQuestsView(LayoutView):
             archive_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='archiveChannel',
-                query={'_id': guild_id}
+                collection_name=DatabaseCollections.ARCHIVE_CHANNEL,
+                query={CommonFields.ID: guild_id}
             )
             if archive_query:
-                archive_channel = guild.get_channel(strip_id(archive_query['archiveChannel']))
+                archive_channel = guild.get_channel(strip_id(archive_query[ConfigFields.ARCHIVE_CHANNEL]))
 
             # Check if a party role was configured, and delete it
-            party_role_id = quest['partyRoleId']
+            party_role_id = quest[QuestFields.PARTY_ROLE_ID]
             if party_role_id:
                 role = guild.get_role(party_role_id)
                 if role:
                     await role.delete(
-                        reason=f'Quest ID {quest['questId']} was completed by {interaction.user.mention}.')
+                        reason=f'Quest ID {quest[QuestFields.QUEST_ID]} was completed by {interaction.user.mention}.')
 
             # Get party members and message them with results
             reward_summary = []
-            party_xp = rewards.get('party', {}).get('xp', 0)
+            party_xp = rewards.get(QuestFields.PARTY, {}).get(QuestFields.XP, 0)
             xp_per_member = party_xp // len(party) if party else 0
-            party_items = rewards.get('party', {}).get('items', {})
+            party_items = rewards.get(QuestFields.PARTY, {}).get(CommonFields.ITEMS, {})
 
             for entry in party:
                 for player_id, character_info in entry.items():
@@ -448,7 +449,7 @@ class ManageQuestsView(LayoutView):
                     # Get character data
                     character_id = next(iter(character_info))
                     character = character_info[character_id]
-                    reward_summary.append(f'<@!{player_id}> as {character["name"]}:')
+                    reward_summary.append(f'<@!{player_id}> as {character[CommonFields.NAME]}:')
 
                     # Prep reward data
                     total_xp = xp_per_member
@@ -460,10 +461,10 @@ class ManageQuestsView(LayoutView):
                     if character_id in rewards:
                         individual_rewards = rewards[character_id]
                         if xp_enabled:
-                            total_xp += individual_rewards.get('xp', 0)
+                            total_xp += individual_rewards.get(QuestFields.XP, 0)
 
                         # Merge individual items with party items
-                        for item, quantity in (individual_rewards.get('items') or {}).items():
+                        for item, quantity in (individual_rewards.get(CommonFields.ITEMS) or {}).items():
                             combined_items[item] = combined_items.get(item, 0) + quantity
 
                     # Update the character's XP and inventory
@@ -500,7 +501,7 @@ class ManageQuestsView(LayoutView):
                 for member_id in player:
                     for character_id in player[str(member_id)]:
                         character = player[str(member_id)][str(character_id)]
-                        formatted_party.append(f'- <@!{member_id}> as {character["name"]}')
+                        formatted_party.append(f'- <@!{member_id}> as {character[CommonFields.NAME]}')
 
             quest_embed.add_field(name=f'__Party__', value='\n'.join(formatted_party))
             quest_embed.set_footer(text='Quest ID: ' + quest_id)
@@ -518,11 +519,11 @@ class ManageQuestsView(LayoutView):
             quest_channel_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='questChannel',
-                query={'_id': guild_id}
+                collection_name=DatabaseCollections.QUEST_CHANNEL,
+                query={CommonFields.ID: guild_id}
             )
 
-            quest_channel_id = quest_channel_query['questChannel']
+            quest_channel_id = quest_channel_query[ConfigFields.QUEST_CHANNEL]
             quest_channel = interaction.client.get_channel(strip_id(quest_channel_id))
             if quest_channel:
                 quest_message = quest_channel.get_partial_message(message_id)
@@ -532,8 +533,8 @@ class ManageQuestsView(LayoutView):
             await delete_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='quests',
-                search_filter={'guildId': guild_id, 'questId': quest_id},
+                collection_name=DatabaseCollections.QUESTS,
+                search_filter={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
                 cache_id=f'{guild_id}:{quest_id}'
             )
 
@@ -550,18 +551,18 @@ class ManageQuestsView(LayoutView):
             gm_rewards_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='gmRewards',
-                query={'_id': guild_id}
+                collection_name=DatabaseCollections.GM_REWARDS,
+                query={CommonFields.ID: guild_id}
             )
             if gm_rewards_query:
-                experience = gm_rewards_query.get('experience')
-                items = gm_rewards_query.get('items')
+                experience = gm_rewards_query.get(CharacterFields.EXPERIENCE)
+                items = gm_rewards_query.get(CommonFields.ITEMS)
 
                 character_query = await get_cached_data(
                     bot=bot,
                     mongo_database=bot.mdb,
-                    collection_name='characters',
-                    query={'_id': interaction.user.id}
+                    collection_name=DatabaseCollections.CHARACTERS,
+                    query={CommonFields.ID: interaction.user.id}
                 )
 
                 if not character_query:
@@ -569,14 +570,14 @@ class ManageQuestsView(LayoutView):
                                         'quests. However, since you have no registered characters, your rewards could '
                                         'not be automatically issued at this time.')
                 else:
-                    if str(guild_id) not in character_query.get('activeCharacters', {}):
+                    if str(guild_id) not in character_query.get(CharacterFields.ACTIVE_CHARACTERS, {}):
                         character_string = ('Your server admin has configured rewards for Game Masters when they '
                                             'complete quests. However, since you have no active character on this '
                                             'server, your rewards could not be automatically issued at this time.')
                     else:
-                        active_character_id = character_query['activeCharacters'][str(guild_id)]
+                        active_character_id = character_query[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
                         character_string = (f'The following has been awarded to your active character, '
-                                            f'{character_query["characters"][active_character_id]["name"]}')
+                                            f'{character_query[CharacterFields.CHARACTERS][active_character_id][CharacterFields.NAME]}')
                         if experience and xp_enabled:
                             await update_character_experience(interaction, interaction.user.id, active_character_id,
                                                               experience)
@@ -640,7 +641,7 @@ class RewardsMenuView(LayoutView):
         )
 
         self.individual_rewards_button = buttons.IndividualRewardsButton(self)
-        self.current_individual_rewards = {'xp': None, 'items': {}}
+        self.current_individual_rewards = {QuestFields.XP: None, CommonFields.ITEMS: {}}
         self.current_individual_rewards_info = TextDisplay(
             '**Individual Rewards**'
         )
@@ -654,7 +655,7 @@ class RewardsMenuView(LayoutView):
         container = Container()
 
         header_section = Section(accessory=buttons.BackToManageQuestButton(self.quest))
-        header_section.add_item(TextDisplay(f'**Quest Rewards - {self.quest['title']}**'))
+        header_section.add_item(TextDisplay(f'**Quest Rewards - {self.quest[QuestFields.TITLE]}**'))
         container.add_item(header_section)
         container.add_item(Separator())
 
@@ -701,13 +702,13 @@ class RewardsMenuView(LayoutView):
                 individual_rewards = self._extract_individual_rewards(self.quest, self.selected_character_id)
                 self.current_individual_rewards = individual_rewards
 
-                char_name = self.selected_character.get('name', 'Selected Character')
+                char_name = self.selected_character.get(CommonFields.NAME, 'Selected Character')
                 self.current_individual_rewards_info.content = (
                     f'**Additional rewards for {char_name}**\n'
                     f'{self._format_rewards_field(individual_rewards, xp_enabled)}'
                 )
             else:
-                self.current_individual_rewards = {"xp": None, "items": {}}
+                self.current_individual_rewards = {QuestFields.XP: None, CommonFields.ITEMS: {}}
                 self.current_individual_rewards_info.content = (
                     '**Individual Rewards**'
                 )
@@ -716,10 +717,10 @@ class RewardsMenuView(LayoutView):
 
     def _build_party_member_options(self, quest: Dict[str, Any]) -> list[discord.SelectOption]:
         options: list[discord.SelectOption] = []
-        party = quest.get('party') or []
+        party = quest.get(QuestFields.PARTY) or []
 
         for member_id, character_id, character in self._iter_party_members(party):
-            name = character.get('name', f'Character {character_id}')
+            name = character.get(CommonFields.NAME, f'Character {character_id}')
             options.append(discord.SelectOption(label=name, value=str(character_id)))
 
         return options
@@ -738,37 +739,37 @@ class RewardsMenuView(LayoutView):
 
     @staticmethod
     def _extract_party_rewards(quest: Dict[str, Any]) -> Dict[str, Any]:
-        rewards = (quest.get('rewards') or {}).get('party') or {}
-        xp = rewards.get('xp')
-        items = rewards.get('items') or {}
+        rewards = (quest.get(QuestFields.REWARDS) or {}).get(QuestFields.PARTY) or {}
+        xp = rewards.get(QuestFields.XP)
+        items = rewards.get(CommonFields.ITEMS) or {}
 
         xp_val = int(xp) if isinstance(xp, (int, float, str)) and str(xp).isdigit() else (
             xp if isinstance(xp, int) else None)
         items_val = dict(items) if isinstance(items, dict) else {}
 
-        return {"xp": xp_val, "items": items_val}
+        return {QuestFields.XP: xp_val, CommonFields.ITEMS: items_val}
 
     @staticmethod
     def _extract_individual_rewards(quest: Dict[str, Any], character_id: str) -> Dict[str, Any]:
-        rewards = (quest.get('rewards') or {}).get(character_id) or {}
-        xp = rewards.get('xp')
-        items = rewards.get('items') or {}
+        rewards = (quest.get(QuestFields.REWARDS) or {}).get(character_id) or {}
+        xp = rewards.get(QuestFields.XP)
+        items = rewards.get(CommonFields.ITEMS) or {}
 
         xp_val = int(xp) if isinstance(xp, (int, float, str)) and str(xp).isdigit() else (
             xp if isinstance(xp, int) else None)
         items_val = dict(items) if isinstance(items, dict) else {}
 
-        return {"xp": xp_val, "items": items_val}
+        return {QuestFields.XP: xp_val, CommonFields.ITEMS: items_val}
 
     @staticmethod
     def _format_rewards_field(rewards: Dict[str, Any], xp_enabled=True) -> str:
         lines: list[str] = []
 
-        xp = rewards.get('xp')
+        xp = rewards.get(QuestFields.XP)
         if xp_enabled and isinstance(xp, int) and xp > 0:
             lines.append(f'Experience: {xp}')
 
-        items = rewards.get('items') or {}
+        items = rewards.get(CommonFields.ITEMS) or {}
         if isinstance(items, dict) and items:
             for item_name, qty in items.items():
                 pretty = str(item_name).capitalize()
@@ -814,7 +815,7 @@ class RemovePlayerView(LayoutView):
         container = Container()
 
         header_section = Section(accessory=buttons.BackToManageQuestButton(self.quest))
-        header_section.add_item(TextDisplay(f'**Remove Player from Quest - {self.quest['title']}**'))
+        header_section.add_item(TextDisplay(f'**Remove Player from Quest - {self.quest[QuestFields.TITLE]}**'))
         container.add_item(header_section)
         container.add_item(Separator())
 
@@ -837,20 +838,20 @@ class RemovePlayerView(LayoutView):
             self.remove_player_select.options.clear()
 
             options = []
-            party = self.quest['party']
-            wait_list = self.quest['waitList']
+            party = self.quest[QuestFields.PARTY]
+            wait_list = self.quest[QuestFields.WAIT_LIST]
             if party:
                 for player in party:
                     for member_id in player:
                         for character_id in player[str(member_id)]:
                             character = player[str(member_id)][str(character_id)]
-                            options.append(discord.SelectOption(label=f'{character['name']}', value=member_id))
+                            options.append(discord.SelectOption(label=f'{character[CommonFields.NAME]}', value=member_id))
             if wait_list:
                 for player in wait_list:
                     for member_id in player:
                         for character_id in player[str(member_id)]:
                             character = player[str(member_id)][str(character_id)]
-                            options.append(discord.SelectOption(label=f'{character['name']}', value=member_id))
+                            options.append(discord.SelectOption(label=f'{character[CommonFields.NAME]}', value=member_id))
             if not party and not wait_list:
                 options.append(discord.SelectOption(label='No players in quest roster', value='None'))
                 self.remove_player_select.placeholder = 'No players in quest roster'
@@ -865,13 +866,13 @@ class RemovePlayerView(LayoutView):
             bot = interaction.client
 
             quest = self.quest
-            quest_id = quest['questId']
-            message_id = quest['messageId']
-            party = quest['party']
-            wait_list = quest['waitList']
-            max_wait_list_size = quest['maxWaitListSize']
-            lock_state = quest['lockState']
-            rewards = quest['rewards']
+            quest_id = quest[QuestFields.QUEST_ID]
+            message_id = quest[QuestFields.MESSAGE_ID]
+            party = quest[QuestFields.PARTY]
+            wait_list = quest[QuestFields.WAIT_LIST]
+            max_wait_list_size = quest[QuestFields.MAX_WAIT_LIST_SIZE]
+            lock_state = quest[QuestFields.LOCK_STATE]
+            rewards = quest[QuestFields.REWARDS]
 
             removed_member_id = self.selected_member_id
             guild_id = interaction.guild_id
@@ -882,14 +883,14 @@ class RemovePlayerView(LayoutView):
             channel_id_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='questChannel',
-                query={'_id': guild_id}
+                collection_name=DatabaseCollections.QUEST_CHANNEL,
+                query={CommonFields.ID: guild_id}
             )
-            channel_id = strip_id(channel_id_query['questChannel'])
+            channel_id = strip_id(channel_id_query[ConfigFields.QUEST_CHANNEL])
             channel = interaction.client.get_channel(channel_id)
             message = channel.get_partial_message(message_id)
 
-            party_role_id = quest['partyRoleId']
+            party_role_id = quest[QuestFields.PARTY_ROLE_ID]
 
             # If the quest list is locked and a party role exists, fetch the role.
             role = None
@@ -910,14 +911,14 @@ class RemovePlayerView(LayoutView):
                 if removed_member_id in waiting_player:
                     wait_list.remove(waiting_player)
                     player_found = True
-                    removal_message = f'The Game Master for **{quest["title"]}** has removed you from the wait list.'
+                    removal_message = f'The Game Master for **{quest[QuestFields.TITLE]}** has removed you from the wait list.'
                     break
 
             # If they're not in the wait list, they must be in the party
             if not player_found:
                 for player in party:
                     if removed_member_id in player:
-                        removal_message = f'The Game Master for **{quest["title"]}** has removed you from the party.'
+                        removal_message = f'The Game Master for **{quest[QuestFields.TITLE]}** has removed you from the party.'
                         party.remove(player)
 
                         # If there is a wait list, promote the first entry into the party
@@ -930,7 +931,7 @@ class RemovePlayerView(LayoutView):
                                 if new_member:
                                     try:
                                         await new_member.send(f'You have been added to the party for '
-                                                              f'**{quest["title"]}**, due to a player dropping!')
+                                                              f'**{quest[QuestFields.TITLE]}**, due to a player dropping!')
 
                                         # If a role is set, assign it to the player
                                         if role and lock_state:
@@ -951,8 +952,8 @@ class RemovePlayerView(LayoutView):
             await replace_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='quests',
-                query={'guildId': guild_id, 'questId': quest_id},
+                collection_name=DatabaseCollections.QUESTS,
+                query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
                 new_data=self.quest,
                 cache_id=f'{guild_id}:{quest_id}'
             )
@@ -1014,44 +1015,44 @@ class QuestPostView(View):
             bot = interaction.client
             guild_id = interaction.guild_id
             user_id = interaction.user.id
-            quest_id = self.quest['questId']
+            quest_id = self.quest[QuestFields.QUEST_ID]
 
             quest = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='quests',
-                query={'guildId': guild_id, 'questId': quest_id},
+                collection_name=DatabaseCollections.QUESTS,
+                query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
                 cache_id=f'{guild_id}:{quest_id}'
             )
 
-            current_party = quest['party']
-            current_wait_list = quest['waitList']
+            current_party = quest[QuestFields.PARTY]
+            current_wait_list = quest[QuestFields.WAIT_LIST]
             for player in current_party:
                 if str(user_id) in player:
                     for character_id, character_data in player[str(user_id)].items():
-                        raise UserFeedbackError(f'You are already on this quest as {character_data['name']}')
-            max_wait_list_size = quest['maxWaitListSize']
-            max_party_size = quest['maxPartySize']
+                        raise UserFeedbackError(f'You are already on this quest as {character_data[CommonFields.NAME]}')
+            max_wait_list_size = quest[QuestFields.MAX_WAIT_LIST_SIZE]
+            max_party_size = quest[QuestFields.MAX_PARTY_SIZE]
 
             player_characters = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
-                collection_name='characters',
-                query={'_id': user_id}
+                collection_name=DatabaseCollections.CHARACTERS,
+                query={CommonFields.ID: user_id}
             )
             if (not player_characters or
-                    'activeCharacters' not in player_characters or
-                    str(guild_id) not in player_characters['activeCharacters']):
+                    CharacterFields.ACTIVE_CHARACTERS not in player_characters or
+                    str(guild_id) not in player_characters[CharacterFields.ACTIVE_CHARACTERS]):
                 raise UserFeedbackError(
                     'You do not have an active character on this server. Use the `/player` menus to create a new '
                     'character, or activate an existing one on this server.'
                 )
-            active_character_id = player_characters['activeCharacters'][str(guild_id)]
-            active_character = player_characters['characters'][active_character_id]
+            active_character_id = player_characters[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
+            active_character = player_characters[CharacterFields.CHARACTERS][active_character_id]
 
-            if quest['lockState']:
+            if quest[QuestFields.LOCK_STATE]:
                 raise UserFeedbackError(
-                    f'Error joining quest **{quest["title"]}**: The quest is locked and not accepting new players.'
+                    f'Error joining quest **{quest[QuestFields.TITLE]}**: The quest is locked and not accepting new players.'
                 )
             else:
                 new_player_entry = {f'{user_id}': {f'{active_character_id}': active_character}}
@@ -1062,27 +1063,27 @@ class QuestPostView(View):
                         await update_cached_data(
                             bot=bot,
                             mongo_database=bot.gdb,
-                            collection_name='quests',
-                            query={'guildId': guild_id, 'questId': quest_id},
-                            update_data={'$push': {'party': new_player_entry}},
+                            collection_name=DatabaseCollections.QUESTS,
+                            query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
+                            update_data={'$push': {QuestFields.PARTY: new_player_entry}},
                             cache_id=f'{guild_id}:{quest_id}'
                         )
-                        self.quest['party'].append(new_player_entry)
+                        self.quest[QuestFields.PARTY].append(new_player_entry)
                     # If the party is full but the wait list is not, add the user to wait list.
                     elif len(current_party) >= max_party_size and len(current_wait_list) < max_wait_list_size:
                         await update_cached_data(
                             bot=bot,
                             mongo_database=bot.gdb,
-                            collection_name='quests',
-                            query={'guildId': guild_id, 'questId': quest_id},
-                            update_data={'$push': {'waitList': new_player_entry}},
+                            collection_name=DatabaseCollections.QUESTS,
+                            query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
+                            update_data={'$push': {QuestFields.WAIT_LIST: new_player_entry}},
                             cache_id=f'{guild_id}:{quest_id}'
                         )
-                        self.quest['waitList'].append(new_player_entry)
+                        self.quest[QuestFields.WAIT_LIST].append(new_player_entry)
 
                     # Otherwise, inform the user that the party/wait list is full
                     else:
-                        raise UserFeedbackError(f'Error joining quest **{quest["title"]}**: The quest roster is full!')
+                        raise UserFeedbackError(f'Error joining quest **{quest[QuestFields.TITLE]}**: The quest roster is full!')
                 # If there is no wait list, this section formats the embed without it
                 else:
                     # If there is room in the party, add the user.
@@ -1090,14 +1091,14 @@ class QuestPostView(View):
                         await update_cached_data(
                             bot=bot,
                             mongo_database=bot.gdb,
-                            collection_name='quests',
-                            query={'guildId': guild_id, 'questId': quest_id},
-                            update_data={'$push': {'party': new_player_entry}},
+                            collection_name=DatabaseCollections.QUESTS,
+                            query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
+                            update_data={'$push': {QuestFields.PARTY: new_player_entry}},
                             cache_id=f'{guild_id}:{quest_id}'
                         )
-                        self.quest['party'].append(new_player_entry)
+                        self.quest[QuestFields.PARTY].append(new_player_entry)
                     else:
-                        raise UserFeedbackError(f'Error joining quest **{quest["title"]}**: The quest roster is full!')
+                        raise UserFeedbackError(f'Error joining quest **{quest[QuestFields.TITLE]}**: The quest roster is full!')
 
                 await setup_view(self, interaction)
                 await interaction.response.edit_message(embed=self.embed, view=self)
@@ -1112,11 +1113,11 @@ class QuestPostView(View):
             guild = interaction.client.get_guild(guild_id)
 
             quest = self.quest
-            quest_id = quest['questId']
-            party = quest['party']
-            wait_list = quest['waitList']
-            max_wait_list_size = quest['maxWaitListSize']
-            lock_state = quest['lockState']
+            quest_id = quest[QuestFields.QUEST_ID]
+            party = quest[QuestFields.PARTY]
+            wait_list = quest[QuestFields.WAIT_LIST]
+            max_wait_list_size = quest[QuestFields.MAX_WAIT_LIST_SIZE]
+            lock_state = quest[QuestFields.LOCK_STATE]
 
             in_party = False
             for player in party:
@@ -1153,7 +1154,7 @@ class QuestPostView(View):
                     if new_member:
                         try:
                             await new_member.send(f'You have been added to the party for '
-                                                  f'**{quest["title"]}**, due to a player dropping!')
+                                                  f'**{quest[QuestFields.TITLE]}**, due to a player dropping!')
                         except discord.errors.Forbidden as e:
                             logger.warning(f'Could not DM {new_member.id} about party promotion: {e}')
                         except Exception as e:
@@ -1162,7 +1163,7 @@ class QuestPostView(View):
                         logger.warning(f'Could not find member ID {key} in guild {guild.id}.')
 
                 # If the quest list is locked and a party role exists, fetch the role.
-                party_role_id = quest['partyRoleId']
+                party_role_id = quest[QuestFields.PARTY_ROLE_ID]
                 if lock_state and party_role_id:
                     role = guild.get_role(party_role_id)
 
@@ -1177,8 +1178,8 @@ class QuestPostView(View):
             await replace_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='quests',
-                query={'guildId': guild_id, 'questId': quest_id},
+                collection_name=DatabaseCollections.QUESTS,
+                query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
                 new_data=self.quest,
                 cache_id=f'{guild_id}:{quest_id}'
             )
@@ -1196,8 +1197,8 @@ class ViewCharacterView(LayoutView):
 
         container = Container()
 
-        name = character_data.get('name', 'Unknown')
-        xp = character_data['attributes'].get('experience', None)
+        name = character_data.get(CommonFields.NAME, 'Unknown')
+        xp = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.EXPERIENCE, None)
 
         container.add_item(TextDisplay(content=f'**Character Sheet for {name} (<@{member_id}>)**'))
         container.add_item(Separator())
@@ -1253,7 +1254,7 @@ class ReviewSubmissionView(LayoutView):
         container.add_item(header)
         container.add_item(Separator())
 
-        items = self.data.get('items', {})
+        items = self.data.get(CommonFields.ITEMS, {})
         currency = self.data.get('currency', {})
 
         description = '**Items:**\n' + ('\n'.join([f'{k}: {v}' for k, v in sorted(items.items())]) or 'None')
@@ -1276,7 +1277,7 @@ class ReviewSubmissionView(LayoutView):
             user_id = self.data['user_id']
             submission_id = self.data['submission_id']
 
-            for name, quantity in self.data.get('items', {}).items():
+            for name, quantity in self.data.get(CommonFields.ITEMS, {}).items():
                 await update_character_inventory(interaction, user_id, character_id, name, quantity)
             for name, quantity in self.data.get('currency', {}).items():
                 await update_character_inventory(interaction, user_id, character_id, name, quantity)
@@ -1284,7 +1285,7 @@ class ReviewSubmissionView(LayoutView):
             await delete_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='approvals',
+                collection_name=DatabaseCollections.APPROVALS,
                 search_filter={'submission_id': submission_id},
                 cache_id=f'approval_submission:{submission_id}'
             )
@@ -1326,7 +1327,7 @@ class ReviewSubmissionView(LayoutView):
             await delete_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
-                collection_name='approvals',
+                collection_name=DatabaseCollections.APPROVALS,
                 search_filter={'submission_id': submission_id},
                 cache_id=f'approval_submission:{submission_id}'
             )
