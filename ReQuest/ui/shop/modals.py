@@ -2,6 +2,7 @@ import discord
 from discord.ui import Modal
 
 from ReQuest.utilities.constants import CartFields
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     update_cart_item_quantity,
@@ -14,18 +15,18 @@ from ReQuest.utilities.supportFunctions import (
 class EditCartItemModal(Modal):
     def __init__(self, cart_view, item_key, current_quantity):
         super().__init__(
-            title='Edit Cart Quantity',
+            title=t(DEFAULT_LOCALE, 'shop-modal-title-edit-cart-qty'),
         )
         self.cart_view = cart_view
         self.item_key = item_key
         self.current_quantity = current_quantity
 
         self.quantity_text_input = discord.ui.TextInput(
-            label='Quantity',
+            label=t(DEFAULT_LOCALE, 'shop-modal-label-quantity'),
             default=str(current_quantity),
             min_length=1,
             max_length=5,
-            placeholder='Enter the new quantity for this item',
+            placeholder=t(DEFAULT_LOCALE, 'shop-modal-placeholder-quantity'),
             custom_id='cart_quantity_text_input'
         )
         self.add_item(self.quantity_text_input)
@@ -33,7 +34,10 @@ class EditCartItemModal(Modal):
     async def on_submit(self, interaction: discord.Interaction):
         try:
             if not self.quantity_text_input.value.isdigit():
-                await interaction.response.send_message('Please enter a valid number.', ephemeral=True)
+                locale = getattr(self, 'locale', DEFAULT_LOCALE)
+                await interaction.response.send_message(
+                    t(locale, 'shop-error-invalid-number'), ephemeral=True
+                )
                 return
 
             new_quantity = int(self.quantity_text_input.value)

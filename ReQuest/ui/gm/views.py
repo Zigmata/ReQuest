@@ -21,6 +21,7 @@ from ReQuest.ui.common.modals import PageJumpModal
 from ReQuest.ui.common.views import MenuBaseView
 from ReQuest.ui.gm import buttons, selects
 from ReQuest.utilities.constants import CharacterFields, QuestFields, ConfigFields, CommonFields, DatabaseCollections
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
@@ -47,22 +48,23 @@ logger = logging.getLogger(__name__)
 
 class GMBaseView(MenuBaseView):
     def __init__(self):
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            title='Game Master - Main Menu',
+            title=t(locale, 'gm-title-main-menu'),
             menu_items=[
                 {
-                    'name': 'Quests',
-                    'description': 'Functions for creating, posting, and managing quests.',
+                    'name': t(locale, 'gm-menu-quests'),
+                    'description': t(locale, 'gm-menu-desc-quests'),
                     'view_class': GMQuestMenuView
                 },
                 {
-                    'name': 'Players',
-                    'description': 'Player management information.',
+                    'name': t(locale, 'gm-menu-players'),
+                    'description': t(locale, 'gm-menu-desc-players'),
                     'view_class': GMPlayerMenuView
                 },
                 {
-                    'name': 'Character Approvals',
-                    'description': 'Review pending inventory submissions.',
+                    'name': t(locale, 'gm-menu-approvals'),
+                    'description': t(locale, 'gm-menu-desc-approvals'),
                     'view_class': GMApprovalsView
                 }
             ],
@@ -115,15 +117,16 @@ class GMQuestMenuView(LayoutView):
 
     def build_view(self):
         self.clear_items()
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
         header_section = Section(accessory=BackButton(GMBaseView))
-        header_section.add_item(TextDisplay('**Game Master - Quests**'))
+        header_section.add_item(TextDisplay(f'**{t(locale, "gm-title-quest-management")}**'))
         container.add_item(header_section)
         container.add_item(Separator())
 
         create_quest_section = Section(accessory=buttons.CreateQuestButton(self))
-        create_quest_section.add_item(TextDisplay('Create and post a new quest.'))
+        create_quest_section.add_item(TextDisplay(t(locale, 'gm-desc-create-quest')))
         container.add_item(create_quest_section)
         container.add_item(Separator())
 
@@ -150,7 +153,7 @@ class GMQuestMenuView(LayoutView):
         if self.total_pages > 1:
             nav_row = ActionRow()
             prev_button = Button(
-                label='Previous',
+                label=t(locale, 'common-btn-previous'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='gm_q_prev',
                 disabled=(self.current_page == 0)
@@ -159,7 +162,7 @@ class GMQuestMenuView(LayoutView):
             nav_row.add_item(prev_button)
 
             page_display = Button(
-                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                label=t(locale, 'common-page-display', current=self.current_page + 1, total=self.total_pages),
                 style=discord.ButtonStyle.secondary,
                 custom_id='gm_q_page'
             )
@@ -167,7 +170,7 @@ class GMQuestMenuView(LayoutView):
             nav_row.add_item(page_display)
 
             next_button = Button(
-                label='Next',
+                label=t(locale, 'common-btn-next'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='gm_q_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -288,7 +291,7 @@ class ManageQuestsView(LayoutView):
                 query={CommonFields.ID: guild_id}
             )
             if not channel_id_query:
-                raise UserFeedbackError('Quest channel has not been set!')
+                raise UserFeedbackError(t(DEFAULT_LOCALE, 'gm-error-quest-channel-not-set'), message_id='gm-error-quest-channel-not-set')
             channel_id = strip_id(channel_id_query[ConfigFields.QUEST_CHANNEL])
             channel = interaction.client.get_channel(channel_id)
 
@@ -327,8 +330,7 @@ class ManageQuestsView(LayoutView):
                             # If the quest has a party role configured, assign it to each party member
                             if role:
                                 tasks.append(member.add_roles(role))
-                            tasks.append(member.send(f'Game Master <@{user_id}> has marked your quest, **"{title}"**, '
-                                                     f'ready to start!'))
+                            tasks.append(member.send(t(DEFAULT_LOCALE, 'gm-dm-quest-ready', questTitle=title)))
                         else:
                             logger.warning(f'Could not find member {key} in guild {guild_id} to notify about quest '
                                            f'ready state.')
@@ -413,7 +415,7 @@ class ManageQuestsView(LayoutView):
             rewards = quest[QuestFields.REWARDS]
 
             if not party:
-                raise UserFeedbackError('You cannot complete a quest with an empty roster. Try cancelling instead.')
+                raise UserFeedbackError(t(DEFAULT_LOCALE, 'gm-error-empty-roster'), message_id='gm-error-empty-roster')
 
             archive_channel = None
             archive_query = await get_cached_data(
@@ -477,9 +479,9 @@ class ManageQuestsView(LayoutView):
 
                     # Send reward summary to player
                     reward_strings = self.build_reward_summary(total_xp, combined_items, xp_enabled)
-                    dm_embed = discord.Embed(title=f'Quest Complete: {title}', type='rich')
+                    dm_embed = discord.Embed(title=t(DEFAULT_LOCALE, 'gm-embed-title-quest-complete', questTitle=title), type='rich')
                     if reward_strings:
-                        dm_embed.add_field(name='Rewards', value='\n'.join(reward_strings))
+                        dm_embed.add_field(name=t(DEFAULT_LOCALE, 'gm-embed-field-rewards'), value='\n'.join(reward_strings))
                     try:
                         await member.send(embed=dm_embed)
                     except discord.errors.Forbidden as e:
@@ -487,9 +489,9 @@ class ManageQuestsView(LayoutView):
 
             # Build an embed for feedback
             quest_embed = discord.Embed(
-                title=f'QUEST COMPLETED: {title}',
+                title=t(DEFAULT_LOCALE, 'gm-embed-title-quest-completed', questTitle=title),
                 description=(
-                    f'**GM:** <@!{gm}>\n\n'
+                    f'{t(DEFAULT_LOCALE, "common-embed-label-gm")} <@!{gm}>\n\n'
                     f'{description}\n\n'
                     f'------'
                 ),
@@ -503,13 +505,13 @@ class ManageQuestsView(LayoutView):
                         character = player[str(member_id)][str(character_id)]
                         formatted_party.append(f'- <@!{member_id}> as {character[CommonFields.NAME]}')
 
-            quest_embed.add_field(name=f'__Party__', value='\n'.join(formatted_party))
-            quest_embed.set_footer(text='Quest ID: ' + quest_id)
+            quest_embed.add_field(name=t(DEFAULT_LOCALE, 'gm-embed-field-party'), value='\n'.join(formatted_party))
+            quest_embed.set_footer(text=t(DEFAULT_LOCALE, 'common-embed-footer-quest-id', questId=quest_id))
 
             if summary:
-                quest_embed.add_field(name='Summary', value=summary, inline=False)
+                quest_embed.add_field(name=t(DEFAULT_LOCALE, 'gm-embed-field-summary'), value=summary, inline=False)
             if reward_summary:
-                quest_embed.add_field(name='Rewards', value='\n'.join(reward_summary), inline=True)
+                quest_embed.add_field(name=t(DEFAULT_LOCALE, 'gm-embed-field-rewards'), value='\n'.join(reward_summary), inline=True)
 
             # If an archive channel is configured, post the archived post
             if archive_channel:
@@ -587,18 +589,18 @@ class ManageQuestsView(LayoutView):
                                                                  item_name, quantity)
 
                 gm_rewards_embed = discord.Embed(
-                    title='GM Rewards Issued',
+                    title=t(DEFAULT_LOCALE, 'gm-embed-title-gm-rewards'),
                     description=character_string,
                     color=discord.Color.gold(),
                     type='rich'
                 )
                 if experience and xp_enabled:
-                    gm_rewards_embed.add_field(name='Experience', value=experience)
+                    gm_rewards_embed.add_field(name=t(DEFAULT_LOCALE, 'gm-embed-field-experience'), value=experience)
                 if items:
                     item_strings = []
                     for item_name, quantity in items.items():
                         item_strings.append(f'{escape_markdown(titlecase(item_name))}: {quantity}')
-                    gm_rewards_embed.add_field(name='Items', value='\n'.join(item_strings))
+                    gm_rewards_embed.add_field(name=t(DEFAULT_LOCALE, 'gm-embed-field-items'), value='\n'.join(item_strings))
 
                 try:
                     await interaction.user.send(embed=gm_rewards_embed)
@@ -680,7 +682,7 @@ class RewardsMenuView(LayoutView):
 
             options = self._build_party_member_options(self.quest)
             if options:
-                self.party_member_select.placeholder = 'Select a party member'
+                self.party_member_select.placeholder = t(DEFAULT_LOCALE, 'gm-select-placeholder-party-member')
                 self.party_member_select.disabled = False
                 self.party_member_select.options = options
             else:
@@ -911,14 +913,14 @@ class RemovePlayerView(LayoutView):
                 if removed_member_id in waiting_player:
                     wait_list.remove(waiting_player)
                     player_found = True
-                    removal_message = f'The Game Master for **{quest[QuestFields.TITLE]}** has removed you from the wait list.'
+                    removal_message = t(DEFAULT_LOCALE, 'gm-dm-player-removed-waitlist', questTitle=quest[QuestFields.TITLE])
                     break
 
             # If they're not in the wait list, they must be in the party
             if not player_found:
                 for player in party:
                     if removed_member_id in player:
-                        removal_message = f'The Game Master for **{quest[QuestFields.TITLE]}** has removed you from the party.'
+                        removal_message = t(DEFAULT_LOCALE, 'gm-dm-player-removed', questTitle=quest[QuestFields.TITLE])
                         party.remove(player)
 
                         # If there is a wait list, promote the first entry into the party
@@ -930,8 +932,7 @@ class RemovePlayerView(LayoutView):
                                 new_member = await get_guild_member(guild, int(key))
                                 if new_member:
                                     try:
-                                        await new_member.send(f'You have been added to the party for '
-                                                              f'**{quest[QuestFields.TITLE]}**, due to a player dropping!')
+                                        await new_member.send(t(DEFAULT_LOCALE, 'gm-dm-party-promotion', questTitle=quest[QuestFields.TITLE]))
 
                                         # If a role is set, assign it to the player
                                         if role and lock_state:
@@ -961,7 +962,7 @@ class RemovePlayerView(LayoutView):
             # Give the GM some feedback that the changes applied
             gm_member = await get_guild_member(guild, interaction.user.id)
             if gm_member:
-                await gm_member.send(f'Player removed and quest roster updated!')
+                await gm_member.send(t(DEFAULT_LOCALE, 'gm-msg-player-removed'))
             else:
                 logger.warning(f'Could not find GM member {interaction.user.id} in guild {guild_id} to notify about '
                                f'player removal from quest.')
@@ -1030,7 +1031,10 @@ class QuestPostView(View):
             for player in current_party:
                 if str(user_id) in player:
                     for character_id, character_data in player[str(user_id)].items():
-                        raise UserFeedbackError(f'You are already on this quest as {character_data[CommonFields.NAME]}')
+                        raise UserFeedbackError(
+                            t(DEFAULT_LOCALE, 'gm-error-already-on-quest', characterName=character_data[CommonFields.NAME]),
+                            message_id='gm-error-already-on-quest'
+                        )
             max_wait_list_size = quest[QuestFields.MAX_WAIT_LIST_SIZE]
             max_party_size = quest[QuestFields.MAX_PARTY_SIZE]
 
@@ -1044,15 +1048,16 @@ class QuestPostView(View):
                     CharacterFields.ACTIVE_CHARACTERS not in player_characters or
                     str(guild_id) not in player_characters[CharacterFields.ACTIVE_CHARACTERS]):
                 raise UserFeedbackError(
-                    'You do not have an active character on this server. Use the `/player` menus to create a new '
-                    'character, or activate an existing one on this server.'
+                    t(DEFAULT_LOCALE, 'gm-error-no-active-character-long'),
+                    message_id='gm-error-no-active-character-long'
                 )
             active_character_id = player_characters[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
             active_character = player_characters[CharacterFields.CHARACTERS][active_character_id]
 
             if quest[QuestFields.LOCK_STATE]:
                 raise UserFeedbackError(
-                    f'Error joining quest **{quest[QuestFields.TITLE]}**: The quest is locked and not accepting new players.'
+                    t(DEFAULT_LOCALE, 'gm-error-quest-locked', questTitle=quest[QuestFields.TITLE]),
+                    message_id='gm-error-quest-locked'
                 )
             else:
                 new_player_entry = {f'{user_id}': {f'{active_character_id}': active_character}}
@@ -1083,7 +1088,10 @@ class QuestPostView(View):
 
                     # Otherwise, inform the user that the party/wait list is full
                     else:
-                        raise UserFeedbackError(f'Error joining quest **{quest[QuestFields.TITLE]}**: The quest roster is full!')
+                        raise UserFeedbackError(
+                            t(DEFAULT_LOCALE, 'gm-error-quest-full', questTitle=quest[QuestFields.TITLE]),
+                            message_id='gm-error-quest-full'
+                        )
                 # If there is no wait list, this section formats the embed without it
                 else:
                     # If there is room in the party, add the user.
@@ -1098,7 +1106,10 @@ class QuestPostView(View):
                         )
                         self.quest[QuestFields.PARTY].append(new_player_entry)
                     else:
-                        raise UserFeedbackError(f'Error joining quest **{quest[QuestFields.TITLE]}**: The quest roster is full!')
+                        raise UserFeedbackError(
+                            t(DEFAULT_LOCALE, 'gm-error-quest-full', questTitle=quest[QuestFields.TITLE]),
+                            message_id='gm-error-quest-full'
+                        )
 
                 await setup_view(self, interaction)
                 await interaction.response.edit_message(embed=self.embed, view=self)
@@ -1129,7 +1140,10 @@ class QuestPostView(View):
                     if str(user_id) in player:
                         in_wait_list = True
             if not in_party and not in_wait_list:
-                raise UserFeedbackError(f'You are not signed up for this quest.')
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'gm-error-not-signed-up'),
+                    message_id='gm-error-not-signed-up'
+                )
 
             if in_wait_list:
                 for player in wait_list:
@@ -1153,8 +1167,7 @@ class QuestPostView(View):
                     # Notify the member they have been moved into the main party
                     if new_member:
                         try:
-                            await new_member.send(f'You have been added to the party for '
-                                                  f'**{quest[QuestFields.TITLE]}**, due to a player dropping!')
+                            await new_member.send(t(DEFAULT_LOCALE, 'gm-dm-party-promotion', questTitle=quest[QuestFields.TITLE]))
                         except discord.errors.Forbidden as e:
                             logger.warning(f'Could not DM {new_member.id} about party promotion: {e}')
                         except Exception as e:
@@ -1200,16 +1213,17 @@ class ViewCharacterView(LayoutView):
         name = character_data.get(CommonFields.NAME, 'Unknown')
         xp = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.EXPERIENCE, None)
 
-        container.add_item(TextDisplay(content=f'**Character Sheet for {name} (<@{member_id}>)**'))
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
+        container.add_item(TextDisplay(content=t(locale, 'gm-title-character-sheet', characterName=name, memberId=str(member_id))))
         container.add_item(Separator())
 
         if xp_enabled and xp is not None:
-            container.add_item(TextDisplay(f'__**Experience Points:**__\n{xp}'))
+            container.add_item(TextDisplay(f'{t(locale, "gm-label-experience-points")}\n{xp}'))
             container.add_item(Separator())
 
         # Display inventory grouped by container
         inventory_display = format_inventory_by_container(character_data, currency_config)
-        container.add_item(TextDisplay(f'__**Possessions**__\n\n{inventory_display}'))
+        container.add_item(TextDisplay(f'{t(locale, "gm-label-possessions")}\n\n{inventory_display}'))
 
         self.add_item(container)
 
@@ -1227,14 +1241,15 @@ class GMApprovalsView(LayoutView):
         self.build_view()
 
     def build_view(self):
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
         header = Section(accessory=BackButton(GMBaseView))
-        header.add_item(TextDisplay("**Game Master - Inventory Approvals**"))
+        header.add_item(TextDisplay(f'**{t(locale, "gm-title-approvals")}**'))
         container.add_item(header)
         container.add_item(Separator())
 
         section = Section(accessory=self.review_button)
-        section.add_item(TextDisplay("Enter a Submission ID to review and approve/deny it."))
+        section.add_item(TextDisplay(t(locale, 'gm-desc-review-submission')))
         container.add_item(section)
 
         self.add_item(container)
@@ -1248,18 +1263,19 @@ class ReviewSubmissionView(LayoutView):
         self.build_view()
 
     def build_view(self):
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
         header = Section(accessory=BackButton(GMApprovalsView))
-        header.add_item(TextDisplay(f'**Reviewing: {self.data["character_name"]}**'))
+        header.add_item(TextDisplay(f'**{t(locale, "gm-title-reviewing", characterName=self.data["character_name"])}**'))
         container.add_item(header)
         container.add_item(Separator())
 
         items = self.data.get(CommonFields.ITEMS, {})
         currency = self.data.get('currency', {})
 
-        description = '**Items:**\n' + ('\n'.join([f'{k}: {v}' for k, v in sorted(items.items())]) or 'None')
+        description = f'{t(locale, "gm-label-items")}\n' + ('\n'.join([f'{k}: {v}' for k, v in sorted(items.items())]) or 'None')
         currency_labels = format_consolidated_totals(currency, self.currency_config)
-        description += '\n\n**Currency:**\n' + ('\n'.join(currency_labels) or 'None')
+        description += f'\n\n{t(locale, "gm-label-currency")}\n' + ('\n'.join(currency_labels) or 'None')
 
         container.add_item(TextDisplay(description))
 
@@ -1291,11 +1307,10 @@ class ReviewSubmissionView(LayoutView):
             )
 
             approval_embed = discord.Embed(
-                title='Inventory Update Approved',
-                description=(
-                    f'The inventory for **{self.data["character_name"]}** has been approved by '
-                    f'{interaction.user.mention}.'
-                ),
+                title=t(DEFAULT_LOCALE, 'gm-embed-title-approved'),
+                description=t(DEFAULT_LOCALE, 'gm-embed-desc-approved',
+                              characterName=self.data["character_name"],
+                              approver=interaction.user.mention),
                 color=discord.Color.green(),
                 type='rich'
             )
@@ -1333,11 +1348,10 @@ class ReviewSubmissionView(LayoutView):
             )
 
             denial_embed = discord.Embed(
-                title='Inventory Update Denied',
-                description=(
-                    f'The inventory for **{self.data["character_name"]}** has been denied by '
-                    f'{interaction.user.mention}.'
-                ),
+                title=t(DEFAULT_LOCALE, 'gm-embed-title-denied'),
+                description=t(DEFAULT_LOCALE, 'gm-embed-desc-denied',
+                              characterName=self.data["character_name"],
+                              denier=interaction.user.mention),
                 color=discord.Color.red(),
                 type='rich'
             )

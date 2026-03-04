@@ -5,6 +5,7 @@ from discord.ui import Select, RoleSelect, ChannelSelect
 
 from ReQuest.ui.common.enums import InventoryType, RoleplayMode, ScheduleType, DayOfWeek
 from ReQuest.utilities.constants import ConfigFields, CommonFields, RoleplayFields, DatabaseCollections
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     setup_view,
@@ -23,7 +24,7 @@ class SingleChannelConfigSelect(ChannelSelect):
 
         super().__init__(
             channel_types=channel_types,
-            placeholder=f'Search for your {config_name} Channel',
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-channel', {'configName': config_name}),
             custom_id=f'config_{config_type}_channel_select'
         )
         self.calling_view = calling_view
@@ -49,7 +50,7 @@ class SingleChannelConfigSelect(ChannelSelect):
 class QuestAnnounceRoleSelect(RoleSelect):
     def __init__(self, calling_view):
         super().__init__(
-            placeholder='Choose your Quest Announcement Role',
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-announce-role'),
             custom_id='quest_announce_role_select'
         )
         self.calling_view = calling_view
@@ -74,7 +75,7 @@ class QuestAnnounceRoleSelect(RoleSelect):
 class AddGMRoleSelect(RoleSelect):
     def __init__(self, calling_view):
         super().__init__(
-            placeholder='Choose your GM Role(s)',
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-gm-roles'),
             custom_id='add_gm_role_select',
             max_values=25
         )
@@ -126,14 +127,14 @@ class ConfigWaitListSelect(Select):
     def __init__(self, calling_view):
         super().__init__(
             options=[
-                discord.SelectOption(label='0 (Disabled)', value='0'),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-disabled'), value='0'),
                 discord.SelectOption(label='1', value='1'),
                 discord.SelectOption(label='2', value='2'),
                 discord.SelectOption(label='3', value='3'),
                 discord.SelectOption(label='4', value='4'),
                 discord.SelectOption(label='5', value='5')
             ],
-            placeholder='Select Wait List size',
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-wait-list'),
             custom_id='config_wait_list_select'
         )
         self.calling_view = calling_view
@@ -158,19 +159,23 @@ class ConfigWaitListSelect(Select):
 class InventoryTypeSelect(Select):
     def __init__(self, calling_view):
         super().__init__(
-            placeholder='Select Inventory Mode',
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-inventory-mode'),
             options=[
-                discord.SelectOption(label='Disabled', value=InventoryType.DISABLED.value,
-                                     description='Players start with empty inventories.'),
-                discord.SelectOption(label='Selection', value=InventoryType.SELECTION.value,
-                                     description='Players choose items freely from the New Character Shop.'),
-                discord.SelectOption(label='Purchase', value=InventoryType.PURCHASE.value,
-                                     description='Players purchase items from the New Character Shop with a given '
-                                                 'amount of currency.'),
-                discord.SelectOption(label='Open', value=InventoryType.OPEN.value,
-                                     description='Players manually input their own inventories.'),
-                discord.SelectOption(label='Static', value=InventoryType.STATIC.value,
-                                     description='Players are given a predefined starting inventory.')
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-disabled-label'),
+                                     value=InventoryType.DISABLED.value,
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-disabled')),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-selection'),
+                                     value=InventoryType.SELECTION.value,
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-selection')),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-purchase'),
+                                     value=InventoryType.PURCHASE.value,
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-purchase')),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-open'),
+                                     value=InventoryType.OPEN.value,
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-open')),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-static'),
+                                     value=InventoryType.STATIC.value,
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-static')),
             ],
             custom_id='inventory_type_select'
         )
@@ -196,7 +201,7 @@ class RoleplayChannelSelect(ChannelSelect):
     def __init__(self, calling_view):
         super().__init__(
             channel_types=[discord.ChannelType.text, discord.ChannelType.forum, discord.ChannelType.category],
-            placeholder='Select Eligible Channels',
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-rp-channels'),
             min_values=0,
             max_values=25,
             custom_id='rp_channel_select'
@@ -234,17 +239,17 @@ class RoleplayChannelSelect(ChannelSelect):
 class RoleplayModeSelect(Select):
     def __init__(self, calling_view):
         super().__init__(
-            placeholder='Select Mode',
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-rp-mode'),
             options=[
                 discord.SelectOption(
-                    label='Scheduled',
+                    label=t(DEFAULT_LOCALE, 'config-select-option-scheduled'),
                     value=RoleplayMode.SCHEDULED.value,
-                    description='Rewards are granted once within a specified reset period.'
+                    description=t(DEFAULT_LOCALE, 'config-select-desc-scheduled')
                 ),
                 discord.SelectOption(
-                    label='Accrued',
+                    label=t(DEFAULT_LOCALE, 'config-select-option-accrued'),
                     value=RoleplayMode.ACCRUED.value,
-                    description='Rewards are repeatedly granted based on specified activity levels.'
+                    description=t(DEFAULT_LOCALE, 'config-select-desc-accrued')
                 )
             ],
             custom_id='rp_mode_select'
@@ -270,11 +275,17 @@ class RoleplayModeSelect(Select):
 class RoleplayResetSelect(Select):
     def __init__(self, calling_view):
         super().__init__(
-            placeholder='Select Reset Period',
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-reset-period'),
             options=[
-                discord.SelectOption(label='Hourly', value=ScheduleType.HOURLY.value, description='Resets every hour.'),
-                discord.SelectOption(label='Daily', value=ScheduleType.DAILY.value, description='Resets every 24 hours.'),
-                discord.SelectOption(label='Weekly', value=ScheduleType.WEEKLY.value, description='Resets every 7 days.')
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-hourly'),
+                                     value=ScheduleType.HOURLY.value,
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-hourly')),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-daily'),
+                                     value=ScheduleType.DAILY.value,
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-daily')),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-weekly'),
+                                     value=ScheduleType.WEEKLY.value,
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-weekly'))
             ],
             custom_id='rp_reset_select'
         )
@@ -299,15 +310,15 @@ class RoleplayResetSelect(Select):
 class RoleplayResetDaySelect(Select):
     def __init__(self, calling_view):
         super().__init__(
-            placeholder='Select Reset Day',
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-reset-day'),
             options=[
-                discord.SelectOption(label='Monday', value=DayOfWeek.MONDAY.value),
-                discord.SelectOption(label='Tuesday', value=DayOfWeek.TUESDAY.value),
-                discord.SelectOption(label='Wednesday', value=DayOfWeek.WEDNESDAY.value),
-                discord.SelectOption(label='Thursday', value=DayOfWeek.THURSDAY.value),
-                discord.SelectOption(label='Friday', value=DayOfWeek.FRIDAY.value),
-                discord.SelectOption(label='Saturday', value=DayOfWeek.SATURDAY.value),
-                discord.SelectOption(label='Sunday', value=DayOfWeek.SUNDAY.value)
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'common-day-monday'), value=DayOfWeek.MONDAY.value),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'common-day-tuesday'), value=DayOfWeek.TUESDAY.value),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'common-day-wednesday'), value=DayOfWeek.WEDNESDAY.value),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'common-day-thursday'), value=DayOfWeek.THURSDAY.value),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'common-day-friday'), value=DayOfWeek.FRIDAY.value),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'common-day-saturday'), value=DayOfWeek.SATURDAY.value),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'common-day-sunday'), value=DayOfWeek.SUNDAY.value)
             ],
             custom_id='rp_reset_day_select'
         )
@@ -333,10 +344,13 @@ class RoleplayResetTimeSelect(Select):
     def __init__(self, calling_view):
         options = []
         for hour in range(0, 24):
-            options.append(discord.SelectOption(label=f'{hour:02}:00 UTC', value=f'{hour}'))
+            options.append(discord.SelectOption(
+                label=t(DEFAULT_LOCALE, 'config-select-option-utc-time', {'hour': f'{hour:02}'}),
+                value=f'{hour}'
+            ))
 
         super().__init__(
-            placeholder='Select Reset Time (UTC)',
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-reset-time'),
             options=options,
             custom_id='rp_reset_time_select'
         )
@@ -363,7 +377,7 @@ class ForumChannelSelect(ChannelSelect):
     def __init__(self, calling_view):
         super().__init__(
             channel_types=[discord.ChannelType.forum],
-            placeholder='Select a forum channel',
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-forum-channel'),
             custom_id='forum_channel_select'
         )
         self.calling_view = calling_view
@@ -395,25 +409,25 @@ class ForumThreadSelect(Select):
                     options.append(discord.SelectOption(
                         label=thread.name[:100],  # Discord label limit
                         value=str(thread.id),
-                        description=f'Thread ID: {thread.id}'
+                        description=t(DEFAULT_LOCALE, 'config-select-desc-thread-id', {'threadId': str(thread.id)})
                     ))
             else:
                 # Provide a placeholder option if no threads found
                 options.append(discord.SelectOption(
-                    label='No active threads found',
+                    label=t(DEFAULT_LOCALE, 'config-select-option-no-threads'),
                     value='none',
-                    description='Create a new thread or check archived threads'
+                    description=t(DEFAULT_LOCALE, 'config-select-desc-no-threads')
                 ))
 
         if not options:
             options.append(discord.SelectOption(
-                label='Select a forum first',
+                label=t(DEFAULT_LOCALE, 'config-select-option-select-forum-first'),
                 value='none',
-                description='Please select a forum channel above'
+                description=t(DEFAULT_LOCALE, 'config-select-desc-select-forum-first')
             ))
 
         super().__init__(
-            placeholder='Select a thread',
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-thread'),
             options=options,
             custom_id='forum_thread_select'
         )
@@ -424,7 +438,7 @@ class ForumThreadSelect(Select):
             selected_value = self.values[0]
             if selected_value == 'none':
                 await interaction.response.send_message(
-                    'Please select a valid thread or create a new one.',
+                    t(DEFAULT_LOCALE, 'config-error-select-valid-thread'),
                     ephemeral=True
                 )
                 return
@@ -446,7 +460,7 @@ class ForumThreadSelect(Select):
                 await interaction.response.edit_message(view=self.calling_view)
             else:
                 await interaction.response.send_message(
-                    'Could not find the selected thread. It may have been deleted or archived.',
+                    t(DEFAULT_LOCALE, 'config-error-thread-not-found'),
                     ephemeral=True
                 )
         except Exception as e:

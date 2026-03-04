@@ -4,6 +4,7 @@ from discord.ui import Button
 
 from ReQuest.ui.shop import modals
 from ReQuest.utilities.constants import CharacterFields, ShopFields, CommonFields, CartFields, DatabaseCollections
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     get_cached_data,
@@ -34,15 +35,15 @@ class ShopItemButton(Button):
                 is_out_of_stock = True
 
         if is_out_of_stock:
-            label = 'Out of Stock'
+            label = t(DEFAULT_LOCALE, 'shop-btn-out-of-stock')
             style = ButtonStyle.secondary
             disabled = True
         elif len(costs) > 1:
-            label = 'View Purchase Options'
+            label = t(DEFAULT_LOCALE, 'shop-btn-view-options')
             style = ButtonStyle.success
             disabled = False
         else:
-            label = f'Add to Cart ({cost_string})'
+            label = t(DEFAULT_LOCALE, 'shop-btn-add-to-cart', {'cost': cost_string})
             style = ButtonStyle.success
             disabled = False
 
@@ -64,7 +65,11 @@ class ShopItemButton(Button):
             self.stock_info = await get_item_stock(interaction.client, interaction.guild_id, channel_id, item_name)
             # Only check stock if data is valid (has ShopFields.AVAILABLE key)
             if self.stock_info is not None and ShopFields.AVAILABLE in self.stock_info and self.stock_info.get(ShopFields.AVAILABLE, 0) <= 0:
-                raise UserFeedbackError(f'**{self.item[CommonFields.NAME]}** is out of stock.')
+                locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
+                raise UserFeedbackError(
+                    t(locale, 'shop-error-item-out-of-stock', {'itemName': self.item[CommonFields.NAME]}),
+                    message_id='shop-error-item-out-of-stock'
+                )
 
             costs = self.item.get(ShopFields.COSTS, [])
             if len(costs) > 1:
@@ -80,7 +85,7 @@ class ShopItemButton(Button):
 class SelectCostOptionButton(Button):
     def __init__(self, shop_view, item, index):
         super().__init__(
-            label="Select",
+            label=t(DEFAULT_LOCALE, 'common-btn-select'),
             style=ButtonStyle.primary,
             custom_id=f'sel_opt_{item["name"]}_{index}'
         )
@@ -98,7 +103,7 @@ class SelectCostOptionButton(Button):
 class ViewCartButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='View Cart',
+            label=t(DEFAULT_LOCALE, 'shop-btn-view-cart'),
             style=ButtonStyle.success,
             custom_id='view_cart_button'
         )
@@ -149,7 +154,7 @@ class ViewCartButton(Button):
 class CartBackButton(Button):
     def __init__(self, target_view):
         super().__init__(
-            label='Back to Shop',
+            label=t(DEFAULT_LOCALE, 'shop-btn-back-to-shop'),
             style=ButtonStyle.secondary,
             custom_id='cart_back_button'
         )
@@ -166,7 +171,7 @@ class CartBackButton(Button):
 class CartClearButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Clear Cart',
+            label=t(DEFAULT_LOCALE, 'shop-btn-clear-cart'),
             style=ButtonStyle.danger,
             custom_id='cart_clear_button'
         )
@@ -198,7 +203,7 @@ class CartClearButton(Button):
 class CartCheckoutButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Checkout',
+            label=t(DEFAULT_LOCALE, 'shop-btn-checkout'),
             style=ButtonStyle.success,
             custom_id='cart_checkout_button'
         )
@@ -214,7 +219,7 @@ class CartCheckoutButton(Button):
 class EditCartItemButton(Button):
     def __init__(self, item_key, quantity):
         super().__init__(
-            label='Edit Quantity',
+            label=t(DEFAULT_LOCALE, 'shop-btn-edit-quantity'),
             style=ButtonStyle.secondary,
             custom_id=f'edit_cart_item_button_{item_key}'
         )

@@ -8,6 +8,7 @@ from ReQuest.ui.common.modals import ConfirmModal
 from ReQuest.ui.gm import modals
 from ReQuest.ui.common.enums import RewardType
 from ReQuest.utilities.constants import QuestFields, ConfigFields, CommonFields, DatabaseCollections
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     setup_view,
@@ -26,7 +27,7 @@ logger = logging.getLogger(__name__)
 class CreateQuestButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Create',
+            label=t(DEFAULT_LOCALE, 'gm-btn-create'),
             style=ButtonStyle.success,
             custom_id='create_quest_button'
         )
@@ -43,7 +44,7 @@ class CreateQuestButton(Button):
 class EditQuestButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Edit Details',
+            label=t(DEFAULT_LOCALE, 'gm-btn-edit-details'),
             style=ButtonStyle.primary,
             custom_id='edit_quest_button'
         )
@@ -61,7 +62,7 @@ class EditQuestButton(Button):
 class ToggleReadyButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Toggle Ready',
+            label=t(DEFAULT_LOCALE, 'gm-btn-toggle-ready'),
             style=ButtonStyle.primary,
             custom_id='toggle_ready_button'
         )
@@ -77,7 +78,7 @@ class ToggleReadyButton(Button):
 class RewardsMenuButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Configure Rewards',
+            label=t(DEFAULT_LOCALE, 'gm-btn-configure-rewards'),
             style=ButtonStyle.primary,
             custom_id='rewards_menu_button'
         )
@@ -96,7 +97,7 @@ class RewardsMenuButton(Button):
 class RemovePlayerButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Remove Player',
+            label=t(DEFAULT_LOCALE, 'gm-btn-remove-player'),
             style=ButtonStyle.danger,
             custom_id='remove_player_button'
         )
@@ -116,7 +117,7 @@ class RemovePlayerButton(Button):
 class CancelQuestButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Cancel Quest',
+            label=t(DEFAULT_LOCALE, 'gm-btn-cancel-quest'),
             style=ButtonStyle.danger,
             custom_id='cancel_quest_button'
         )
@@ -124,10 +125,11 @@ class CancelQuestButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
             confirm_modal = ConfirmModal(
-                title='Cancel Quest',
-                prompt_label='Type CONFIRM to cancel the quest.',
-                prompt_placeholder='Type "CONFIRM" to proceed.',
+                title=t(locale, 'gm-modal-title-cancel-quest'),
+                prompt_label=t(locale, 'gm-modal-label-cancel-quest'),
+                prompt_placeholder=t(locale, 'gm-modal-placeholder-cancel-quest'),
                 confirm_callback=self.confirm_callback
             )
             await interaction.response.send_modal(confirm_modal)
@@ -152,7 +154,7 @@ class CancelQuestButton(Button):
                         member = await get_guild_member(guild, int(member_id))
                         if member:
                             try:
-                                await member.send(f'Quest **{title}** was cancelled by the GM.')
+                                await member.send(t(DEFAULT_LOCALE, 'gm-dm-quest-cancelled', questTitle=title))
                             except discord.errors.Forbidden as e:
                                 logger.warning(f'Could not DM {member_id} about quest cancellation: {e}')
                             except Exception as e:
@@ -206,7 +208,7 @@ class CancelQuestButton(Button):
 class PartyRewardsButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Manage Party Rewards',
+            label=t(DEFAULT_LOCALE, 'gm-btn-manage-party-rewards'),
             style=ButtonStyle.secondary,
             custom_id='party_rewards_button'
         )
@@ -269,7 +271,7 @@ class PartyRewardsButton(Button):
 class IndividualRewardsButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Manage Individual Rewards',
+            label=t(DEFAULT_LOCALE, 'gm-btn-manage-individual-rewards'),
             style=ButtonStyle.secondary,
             custom_id='individual_rewards_button',
             disabled=True
@@ -334,7 +336,7 @@ class IndividualRewardsButton(Button):
 class JoinQuestButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Join',
+            label=t(DEFAULT_LOCALE, 'gm-btn-join'),
             style=ButtonStyle.success,
             custom_id='join_quest_button'
         )
@@ -350,7 +352,7 @@ class JoinQuestButton(Button):
 class LeaveQuestButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Leave',
+            label=t(DEFAULT_LOCALE, 'gm-btn-leave'),
             style=ButtonStyle.danger,
             custom_id='leave_quest_button'
         )
@@ -366,7 +368,7 @@ class LeaveQuestButton(Button):
 class CompleteQuestButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Complete Quest',
+            label=t(DEFAULT_LOCALE, 'gm-btn-complete-quest'),
             style=ButtonStyle.success,
             custom_id='complete_quest_button'
         )
@@ -394,7 +396,7 @@ class CompleteQuestButton(Button):
 
 class ReviewSubmissionButton(Button):
     def __init__(self, calling_view):
-        super().__init__(label="Review Submission", style=ButtonStyle.success)
+        super().__init__(label=t(DEFAULT_LOCALE, 'gm-btn-review-submission'), style=ButtonStyle.success)
         self.calling_view = calling_view
 
     async def callback(self, interaction):
@@ -403,7 +405,7 @@ class ReviewSubmissionButton(Button):
 
 class ApproveSubmissionButton(Button):
     def __init__(self, calling_view):
-        super().__init__(label="Approve", style=ButtonStyle.success)
+        super().__init__(label=t(DEFAULT_LOCALE, 'gm-btn-approve'), style=ButtonStyle.success)
         self.calling_view = calling_view
 
     async def callback(self, interaction):
@@ -412,7 +414,7 @@ class ApproveSubmissionButton(Button):
 
 class DenySubmissionButton(Button):
     def __init__(self, calling_view):
-        super().__init__(label="Deny", style=ButtonStyle.danger)
+        super().__init__(label=t(DEFAULT_LOCALE, 'gm-btn-deny'), style=ButtonStyle.danger)
         self.calling_view = calling_view
 
     async def callback(self, interaction):
@@ -422,7 +424,7 @@ class DenySubmissionButton(Button):
 class ManageQuestRowButton(Button):
     def __init__(self, quest):
         super().__init__(
-            label='Manage',
+            label=t(DEFAULT_LOCALE, 'common-btn-manage'),
             style=ButtonStyle.secondary,
             custom_id=f'manage_quest_{quest[QuestFields.QUEST_ID]}'
         )
@@ -441,7 +443,7 @@ class ManageQuestRowButton(Button):
 class BackToManageQuestButton(Button):
     def __init__(self, quest):
         super().__init__(
-            label='Back',
+            label=t(DEFAULT_LOCALE, 'common-btn-back'),
             style=ButtonStyle.secondary,
             custom_id='back_to_manage_quest'
         )

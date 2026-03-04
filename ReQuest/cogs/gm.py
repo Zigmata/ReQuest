@@ -6,6 +6,7 @@ from discord.ext.commands import Cog
 from ReQuest.ui.gm import views, modals
 from ReQuest.utilities.checks import has_gm_or_mod
 from ReQuest.utilities.constants import CharacterFields, CommonFields, DatabaseCollections
+from ReQuest.utilities.localizer import resolve_locale, t
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     get_cached_data,
@@ -53,6 +54,7 @@ class GameMaster(Cog):
         Add or remove items or experience from a player.
         """
         try:
+            locale = await resolve_locale(interaction)
             bot = interaction.client
             guild_id = str(interaction.guild_id)
             player_query = await get_cached_data(
@@ -62,10 +64,10 @@ class GameMaster(Cog):
                 query={CommonFields.ID: member.id}
             )
             if not player_query:
-                raise UserFeedbackError('The target player does not have any registered characters.')
+                raise UserFeedbackError(t(locale, 'error-no-characters'), message_id='error-no-characters')
 
             if guild_id not in player_query[CharacterFields.ACTIVE_CHARACTERS]:
-                raise UserFeedbackError('The target player does not have a character activated on this server.')
+                raise UserFeedbackError(t(locale, 'error-no-active-character-target'), message_id='error-no-active-character-target')
 
             active_character_id = player_query[CharacterFields.ACTIVE_CHARACTERS][guild_id]
             character_data = player_query[CharacterFields.CHARACTERS][active_character_id]
@@ -82,6 +84,7 @@ class GameMaster(Cog):
         View a player's active character.
         """
         try:
+            locale = await resolve_locale(interaction)
             bot = interaction.client
             guild_id = str(interaction.guild_id)
             player_query = await get_cached_data(
@@ -91,10 +94,10 @@ class GameMaster(Cog):
                 query={CommonFields.ID: member.id}
             )
             if not player_query:
-                raise UserFeedbackError('The target player does not have any registered characters.')
+                raise UserFeedbackError(t(locale, 'error-no-characters'), message_id='error-no-characters')
 
             if guild_id not in player_query[CharacterFields.ACTIVE_CHARACTERS]:
-                raise UserFeedbackError('The target player does not have a character activated on this server.')
+                raise UserFeedbackError(t(locale, 'error-no-active-character-target'), message_id='error-no-active-character-target')
 
             active_character_id = player_query[CharacterFields.ACTIVE_CHARACTERS][guild_id]
             character_data = player_query[CharacterFields.CHARACTERS][active_character_id]

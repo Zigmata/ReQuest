@@ -7,6 +7,7 @@ from discord.ext.commands import Cog
 
 from ReQuest.ui.common.enums import ScheduleType, RestockMode
 from ReQuest.utilities.constants import CommonFields, ShopFields, RestockFields, DatabaseCollections
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.supportFunctions import (
     cleanup_expired_carts,
     get_last_restock,
@@ -218,17 +219,17 @@ class Tasks(Cog):
 
             if len(restocked_items) > max_display:
                 remaining = len(restocked_items) - max_display
-                item_lines.append(f". . . and {remaining} more.")
+                item_lines.append(t(DEFAULT_LOCALE, 'shop-restock-more-items', remaining=remaining))
 
             description = "\n".join(item_lines)
 
             embed = discord.Embed(
-                title="Shop Restocked!",
+                title=t(DEFAULT_LOCALE, 'shop-embed-title-restocked'),
                 description=description,
                 color=discord.Color.green(),
                 timestamp=datetime.now(timezone.utc)
             )
-            embed.set_footer(text=f"{len(restocked_items)} item{'s' if len(restocked_items) != 1 else ''} restocked")
+            embed.set_footer(text=t(DEFAULT_LOCALE, 'shop-embed-footer-restocked', count=len(restocked_items)))
 
             await channel.send(embed=embed)
         except Exception as e:

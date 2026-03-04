@@ -5,6 +5,7 @@ from discord.ext.commands import Cog
 
 from ReQuest.ui.player import modals, views
 from ReQuest.utilities.checks import has_active_character
+from ReQuest.utilities.localizer import resolve_locale, t
 from ReQuest.utilities.supportFunctions import log_exception, setup_view
 
 
@@ -28,7 +29,9 @@ class Player(Cog):
         Player Menus
         """
         try:
+            locale = await resolve_locale(interaction)
             new_view = views.PlayerBaseView()
+            new_view.locale = locale
             await setup_view(new_view, interaction)
             await interaction.response.send_message(view=new_view, ephemeral=True)
         except Exception as e:
@@ -38,7 +41,8 @@ class Player(Cog):
     @app_commands.guild_only()
     async def trade_menu(self, interaction: discord.Interaction, target: discord.Member):
         try:
-            modal = modals.TradeModal(target=target)
+            locale = await resolve_locale(interaction)
+            modal = modals.TradeModal(target=target, locale=locale)
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)

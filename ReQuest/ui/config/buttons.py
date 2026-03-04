@@ -13,6 +13,7 @@ from ReQuest.ui.common.enums import ShopChannelType
 from ReQuest.utilities.constants import (
     ConfigFields, ShopFields, CommonFields, RoleplayFields, CurrencyFields, DatabaseCollections
 )
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     setup_view,
@@ -31,7 +32,7 @@ logger = logging.getLogger(__name__)
 class QuestAnnounceRoleRemoveButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Clear',
+            label=t(DEFAULT_LOCALE, 'config-btn-clear'),
             style=ButtonStyle.danger,
             custom_id='quest_announce_role_remove_button'
         )
@@ -57,7 +58,7 @@ class GMRoleRemoveViewButton(BaseViewButton):
     def __init__(self, target_view_class):
         super().__init__(
             target_view_class=target_view_class,
-            label='Remove GM Roles',
+            label=t(DEFAULT_LOCALE, 'config-btn-remove-gm-roles'),
             style=ButtonStyle.danger,
             custom_id='gm_role_remove_view_button'
         )
@@ -66,7 +67,7 @@ class GMRoleRemoveViewButton(BaseViewButton):
 class RemoveGMRoleButton(Button):
     def __init__(self, calling_view, role_name):
         super().__init__(
-            label='Remove',
+            label=t(DEFAULT_LOCALE, 'common-btn-remove'),
             style=ButtonStyle.danger,
             custom_id=f'remove_gm_role_{role_name}'
         )
@@ -76,9 +77,9 @@ class RemoveGMRoleButton(Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             confirm_modal = common_modals.ConfirmModal(
-                title='Confirm Role Removal',
-                prompt_label=f'Remove {self.role_name}?',
-                prompt_placeholder='Type CONFIRM to proceed',
+                title=t(DEFAULT_LOCALE, 'config-modal-title-confirm-role-removal'),
+                prompt_label=t(DEFAULT_LOCALE, 'config-modal-label-remove-role', {'roleName': self.role_name}),
+                prompt_placeholder=t(DEFAULT_LOCALE, 'common-confirm-placeholder'),
                 confirm_callback=self._confirm_delete
             )
             await interaction.response.send_modal(confirm_modal)
@@ -105,7 +106,7 @@ class RemoveGMRoleButton(Button):
 class QuestSummaryToggleButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Toggle Quest Summary',
+            label=t(DEFAULT_LOCALE, 'config-btn-toggle-quest-summary'),
             style=ButtonStyle.primary,
             custom_id='quest_summary_toggle_button'
         )
@@ -158,7 +159,7 @@ class QuestSummaryToggleButton(Button):
 class PlayerExperienceToggleButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Toggle Player Experience',
+            label=t(DEFAULT_LOCALE, 'config-btn-toggle-player-experience'),
             style=ButtonStyle.primary,
             custom_id='config_player_experience_toggle_button'
         )
@@ -201,7 +202,7 @@ class PlayerExperienceToggleButton(Button):
 class ToggleDoubleButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Toggle Display',
+            label=t(DEFAULT_LOCALE, 'config-btn-toggle-display'),
             style=ButtonStyle.primary,
             custom_id='toggle_double_button'
         )
@@ -232,7 +233,7 @@ class ToggleDoubleButton(Button):
 class AddDenominationButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Add Denomination',
+            label=t(DEFAULT_LOCALE, 'config-btn-add-denomination'),
             style=ButtonStyle.success,
             custom_id='add_denomination_button'
         )
@@ -252,7 +253,7 @@ class AddDenominationButton(Button):
 class RemoveDenominationButton(Button):
     def __init__(self, calling_view, denomination_name):
         super().__init__(
-            label='Remove',
+            label=t(DEFAULT_LOCALE, 'common-btn-remove'),
             style=ButtonStyle.danger,
             custom_id=f'remove_denomination_button_{denomination_name}'
         )
@@ -262,9 +263,9 @@ class RemoveDenominationButton(Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             confirm_modal = common_modals.ConfirmModal(
-                title='Confirm Removal',
-                prompt_label=f'Remove {self.denomination_name}?',
-                prompt_placeholder='Type CONFIRM to proceed',
+                title=t(DEFAULT_LOCALE, 'config-modal-title-confirm-removal'),
+                prompt_label=t(DEFAULT_LOCALE, 'config-modal-label-remove-denomination', {'denominationName': self.denomination_name}),
+                prompt_placeholder=t(DEFAULT_LOCALE, 'common-confirm-placeholder'),
                 confirm_callback=self._confirm_delete
             )
             await interaction.response.send_modal(confirm_modal)
@@ -294,7 +295,7 @@ class RemoveDenominationButton(Button):
 class RenameDenominationButton(Button):
     def __init__(self, calling_view, denomination_name):
         super().__init__(
-            label='Rename',
+            label=t(DEFAULT_LOCALE, 'common-btn-rename'),
             style=ButtonStyle.secondary,
             custom_id=f'rename_denomination_button_{denomination_name}'
         )
@@ -317,7 +318,7 @@ class RenameDenominationButton(Button):
 class AddCurrencyButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Add New Currency',
+            label=t(DEFAULT_LOCALE, 'config-btn-add-new-currency'),
             style=ButtonStyle.success,
             custom_id='add_currency_button'
         )
@@ -333,7 +334,7 @@ class AddCurrencyButton(Button):
 class ManageCurrencyButton(Button):
     def __init__(self, currency_name):
         super().__init__(
-            label='Manage',
+            label=t(DEFAULT_LOCALE, 'common-btn-manage'),
             style=ButtonStyle.primary,
             custom_id=f'manage_currency_button_{currency_name}'
         )
@@ -352,7 +353,7 @@ class ManageCurrencyButton(Button):
 class RemoveCurrencyButton(Button):
     def __init__(self, calling_view, currency_name):
         super().__init__(
-            label='Remove Currency',
+            label=t(DEFAULT_LOCALE, 'config-btn-remove-currency'),
             style=ButtonStyle.danger,
             custom_id='remove_currency_button'
         )
@@ -362,9 +363,9 @@ class RemoveCurrencyButton(Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             modal = common_modals.ConfirmModal(
-                title='Confirm Currency Removal',
-                prompt_label=f'Remove {self.currency_name}?',
-                prompt_placeholder='Type CONFIRM to proceed',
+                title=t(DEFAULT_LOCALE, 'config-modal-title-confirm-currency-removal'),
+                prompt_label=t(DEFAULT_LOCALE, 'config-modal-label-remove-currency', {'currencyName': self.currency_name}),
+                prompt_placeholder=t(DEFAULT_LOCALE, 'common-confirm-placeholder'),
                 confirm_callback=self._confirm_delete
             )
             await interaction.response.send_modal(modal)
@@ -395,7 +396,7 @@ class RemoveCurrencyButton(Button):
 class RenameCurrencyButton(Button):
     def __init__(self, calling_view, currency_name):
         super().__init__(
-            label='Rename',
+            label=t(DEFAULT_LOCALE, 'common-btn-rename'),
             style=ButtonStyle.secondary,
             custom_id='rename_currency_button'
         )
@@ -414,7 +415,7 @@ class RenameCurrencyButton(Button):
 class ClearChannelButton(Button):
     def __init__(self, calling_view, collection_name):
         super().__init__(
-            label='Clear',
+            label=t(DEFAULT_LOCALE, 'config-btn-clear'),
             style=ButtonStyle.danger,
             custom_id=f'clear_{collection_name}_channel_button'
         )
@@ -440,7 +441,7 @@ class ClearChannelButton(Button):
 class ForbiddenRolesButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Forbidden Roles',
+            label=t(DEFAULT_LOCALE, 'config-btn-forbidden-roles'),
             custom_id='forbidden_roles_button'
         )
         self.calling_view = calling_view
@@ -466,7 +467,7 @@ class ForbiddenRolesButton(Button):
 class PlayerBoardPurgeButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Purge Player Board',
+            label=t(DEFAULT_LOCALE, 'config-btn-purge-player-board'),
             style=ButtonStyle.danger,
             custom_id='player_board_purge_button'
         )
@@ -483,7 +484,7 @@ class PlayerBoardPurgeButton(Button):
 class GMRewardsButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Add/Modify Rewards',
+            label=t(DEFAULT_LOCALE, 'config-btn-add-modify-rewards'),
             custom_id='gm_rewards_button'
         )
         self.calling_view = calling_view
@@ -499,7 +500,7 @@ class GMRewardsButton(Button):
 class AddShopWizardButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Add Shop (Wizard)',
+            label=t(DEFAULT_LOCALE, 'config-btn-add-shop-wizard'),
             style=ButtonStyle.success,
             custom_id='add_shop_wizard_button'
         )
@@ -519,7 +520,7 @@ class TextChannelShopButton(Button):
     """Opens the existing text channel shop modal."""
     def __init__(self, calling_view):
         super().__init__(
-            label='Select',
+            label=t(DEFAULT_LOCALE, 'common-btn-select'),
             style=ButtonStyle.primary,
             custom_id='text_channel_shop_button'
         )
@@ -538,7 +539,7 @@ class ForumThreadShopButton(Button):
     """Opens the forum thread shop setup view."""
     def __init__(self, calling_view):
         super().__init__(
-            label='Select',
+            label=t(DEFAULT_LOCALE, 'common-btn-select'),
             style=ButtonStyle.primary,
             custom_id='forum_thread_shop_button'
         )
@@ -558,7 +559,7 @@ class CreateNewForumThreadButton(Button):
     """Opens modal to create a new forum thread for the shop."""
     def __init__(self, calling_view):
         super().__init__(
-            label='Continue',
+            label=t(DEFAULT_LOCALE, 'common-btn-continue'),
             style=ButtonStyle.success,
             custom_id='create_new_forum_thread_button'
         )
@@ -568,7 +569,7 @@ class CreateNewForumThreadButton(Button):
         try:
             if not self.calling_view.selected_forum:
                 await interaction.response.send_message(
-                    'Please select a forum channel first.',
+                    t(DEFAULT_LOCALE, 'config-error-select-forum-first'),
                     ephemeral=True
                 )
                 return
@@ -584,7 +585,7 @@ class UseExistingThreadButton(Button):
     """Opens modal to configure shop in an existing forum thread."""
     def __init__(self, calling_view):
         super().__init__(
-            label='Continue',
+            label=t(DEFAULT_LOCALE, 'common-btn-continue'),
             style=ButtonStyle.success,
             custom_id='use_existing_thread_button'
         )
@@ -594,7 +595,7 @@ class UseExistingThreadButton(Button):
         try:
             if not self.calling_view.selected_thread:
                 await interaction.response.send_message(
-                    'Please select a thread first.',
+                    t(DEFAULT_LOCALE, 'config-error-select-thread-first'),
                     ephemeral=True
                 )
                 return
@@ -614,7 +615,7 @@ class UseExistingThreadButton(Button):
 class AddShopJSONButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Add Shop (JSON)',
+            label=t(DEFAULT_LOCALE, 'config-btn-add-shop-json'),
             style=ButtonStyle.success,
             custom_id='add_shop_json_button',
             row=2
@@ -650,7 +651,7 @@ class ManageShopNavButton(Button):
 class EditShopButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Edit Shop (Wizard)',
+            label=t(DEFAULT_LOCALE, 'config-btn-edit-shop-wizard'),
             style=ButtonStyle.primary,
             custom_id='edit_shop_wizard_button'
         )
@@ -668,7 +669,7 @@ class EditShopButton(Button):
             shop_data = query.get(ShopFields.SHOP_CHANNELS, {}).get(self.calling_view.selected_channel_id)
 
             if not shop_data:
-                await interaction.response.send_message('Error: Could not find that shop\'s data.', ephemeral=True)
+                await interaction.response.send_message(t(DEFAULT_LOCALE, 'config-error-shop-data-not-found'), ephemeral=True)
                 return
 
             from ReQuest.ui.config.views import EditShopView
@@ -683,7 +684,7 @@ class EditShopButton(Button):
 class RemoveShopButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Remove Shop',
+            label=t(DEFAULT_LOCALE, 'config-btn-remove-shop'),
             style=ButtonStyle.danger,
             custom_id='remove_shop_button'
         )
@@ -692,9 +693,9 @@ class RemoveShopButton(Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             confirm_modal = common_modals.ConfirmModal(
-                title='Confirm Shop Removal',
-                prompt_label='WARNING: This action is irreversible!',
-                prompt_placeholder='Type CONFIRM to proceed',
+                title=t(DEFAULT_LOCALE, 'config-modal-title-confirm-shop-removal'),
+                prompt_label=t(DEFAULT_LOCALE, 'config-modal-label-shop-removal-warning'),
+                prompt_placeholder=t(DEFAULT_LOCALE, 'common-confirm-placeholder'),
                 confirm_callback=self._confirm_delete
             )
             await interaction.response.send_modal(confirm_modal)
@@ -754,7 +755,7 @@ class RemoveShopButton(Button):
 class EditShopItemButton(Button):
     def __init__(self, item: dict, calling_view):
         super().__init__(
-            label='Edit',
+            label=t(DEFAULT_LOCALE, 'common-btn-edit'),
             style=ButtonStyle.primary,
             custom_id=f"edit_shop_item_{item[CommonFields.NAME]}"
         )
@@ -775,7 +776,7 @@ class EditShopItemButton(Button):
 class DeleteShopItemButton(Button):
     def __init__(self, item: dict, calling_view):
         super().__init__(
-            label='Delete',
+            label=t(DEFAULT_LOCALE, 'common-btn-delete'),
             style=ButtonStyle.danger,
             custom_id=f"delete_shop_item_{item[CommonFields.NAME]}"
         )
@@ -809,7 +810,7 @@ class DeleteShopItemButton(Button):
 class AddItemButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Add Item',
+            label=t(DEFAULT_LOCALE, 'config-btn-add-item'),
             style=ButtonStyle.success,
             custom_id='add_shop_item_button'
         )
@@ -825,7 +826,7 @@ class AddItemButton(Button):
 class EditShopDetailsButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Edit Shop Details',
+            label=t(DEFAULT_LOCALE, 'config-btn-edit-shop-details'),
             style=ButtonStyle.secondary,
             custom_id='edit_shop_details_button'
         )
@@ -846,7 +847,7 @@ class EditShopDetailsButton(Button):
 class DownloadShopJSONButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Download JSON',
+            label=t(DEFAULT_LOCALE, 'config-btn-download-json'),
             style=ButtonStyle.secondary,
             custom_id='download_shop_json_button'
         )
@@ -878,7 +879,7 @@ class DownloadShopJSONButton(Button):
             shop_file = discord.File(json_bytes, filename=file_name)
 
             await interaction.response.send_message(
-                f"Here is the JSON definition for **{shop_name}**.",
+                t(DEFAULT_LOCALE, 'config-msg-shop-json-download', {'shopName': shop_name}),
                 file=shop_file,
                 ephemeral=True
             )
@@ -890,7 +891,7 @@ class DownloadShopJSONButton(Button):
 class UpdateShopJSONButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Edit Shop (JSON)',
+            label=t(DEFAULT_LOCALE, 'config-btn-edit-shop-json'),
             style=ButtonStyle.primary,
             custom_id='edit_shop_json_button'
         )
@@ -908,7 +909,7 @@ class UpdateShopJSONButton(Button):
 class ScanServerButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Scan Server Configs',
+            label=t(DEFAULT_LOCALE, 'config-btn-scan-server-configs'),
             style=ButtonStyle.success,
             custom_id='scan_server_button'
         )
@@ -925,7 +926,7 @@ class ScanServerButton(Button):
 class AddNewCharacterShopItemButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Add Item',
+            label=t(DEFAULT_LOCALE, 'config-btn-add-item'),
             style=ButtonStyle.success,
             custom_id='add_new_character_shop_item_button'
         )
@@ -942,7 +943,7 @@ class AddNewCharacterShopItemButton(Button):
 class EditNewCharacterShopItemButton(Button):
     def __init__(self, item: dict, calling_view):
         super().__init__(
-            label='Edit',
+            label=t(DEFAULT_LOCALE, 'common-btn-edit'),
             style=ButtonStyle.primary,
             custom_id=f"edit_new_character_shop_item_{item[CommonFields.NAME]}"
         )
@@ -961,7 +962,7 @@ class EditNewCharacterShopItemButton(Button):
 class DeleteNewCharacterShopItemButton(Button):
     def __init__(self, item: dict, calling_view):
         super().__init__(
-            label='Delete',
+            label=t(DEFAULT_LOCALE, 'common-btn-delete'),
             style=ButtonStyle.danger,
             custom_id=f"delete_new_character_shop_item_{item[CommonFields.NAME]}"
         )
@@ -993,7 +994,7 @@ class DeleteNewCharacterShopItemButton(Button):
 class NewCharacterShopJSONButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Upload JSON',
+            label=t(DEFAULT_LOCALE, 'config-btn-upload-json'),
             style=ButtonStyle.success,
             custom_id='upload_new_character_shop_json_button',
             row=1
@@ -1010,7 +1011,7 @@ class NewCharacterShopJSONButton(Button):
 class DownloadNewCharacterShopJSONButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Download JSON',
+            label=t(DEFAULT_LOCALE, 'config-btn-download-json'),
             style=ButtonStyle.secondary,
             custom_id='download_new_character_shop_json_button',
             row=1
@@ -1038,7 +1039,7 @@ class DownloadNewCharacterShopJSONButton(Button):
             shop_file = discord.File(json_bytes, filename=file_name)
 
             await interaction.response.send_message(
-                "Here is the JSON definition for the New Character Shop.",
+                t(DEFAULT_LOCALE, 'config-msg-new-char-shop-json-download'),
                 file=shop_file,
                 ephemeral=True
             )
@@ -1049,7 +1050,7 @@ class DownloadNewCharacterShopJSONButton(Button):
 class ConfigNewCharacterWealthButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Configure New Character Wealth',
+            label=t(DEFAULT_LOCALE, 'config-btn-configure-new-character-wealth'),
             style=ButtonStyle.primary,
             custom_id='config_new_character_wealth_button'
         )
@@ -1082,7 +1083,7 @@ class ConfigNewCharacterWealthButton(Button):
 class AddStaticKitButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Create New Kit',
+            label=t(DEFAULT_LOCALE, 'config-btn-create-new-kit'),
             style=ButtonStyle.success,
             custom_id='add_static_kit_button'
         )
@@ -1098,7 +1099,7 @@ class AddStaticKitButton(Button):
 class EditStaticKitButton(Button):
     def __init__(self, kit_id, kit_data):
         super().__init__(
-            label='Edit',
+            label=t(DEFAULT_LOCALE, 'common-btn-edit'),
             style=ButtonStyle.secondary,
             custom_id=f'edit_static_kit_button_{kit_id}'
         )
@@ -1128,7 +1129,7 @@ class EditStaticKitButton(Button):
 class RemoveStaticKitButton(Button):
     def __init__(self, kit_id, kit_name):
         super().__init__(
-            label='Delete Kit',
+            label=t(DEFAULT_LOCALE, 'config-btn-delete-kit'),
             style=ButtonStyle.danger,
             custom_id=f'remove_static_kit_button_{kit_id}'
         )
@@ -1138,9 +1139,9 @@ class RemoveStaticKitButton(Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             confirm_modal = common_modals.ConfirmModal(
-                title='Confirm Kit Deletion',
-                prompt_label='WARNING: Irreversible!',
-                prompt_placeholder='Type CONFIRM',
+                title=t(DEFAULT_LOCALE, 'config-modal-title-confirm-kit-deletion'),
+                prompt_label=t(DEFAULT_LOCALE, 'config-modal-label-kit-deletion-warning'),
+                prompt_placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-type-confirm'),
                 confirm_callback=self._confirm_delete
             )
             await interaction.response.send_modal(confirm_modal)
@@ -1170,7 +1171,7 @@ class RemoveStaticKitButton(Button):
 class AddKitItemButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Add Item',
+            label=t(DEFAULT_LOCALE, 'config-btn-add-item'),
             style=ButtonStyle.success,
             custom_id='add_kit_item_btn'
         )
@@ -1186,7 +1187,7 @@ class AddKitItemButton(Button):
 class EditKitItemButton(Button):
     def __init__(self, calling_view, item, index):
         super().__init__(
-            label='Edit',
+            label=t(DEFAULT_LOCALE, 'common-btn-edit'),
             style=ButtonStyle.secondary,
             custom_id=f'edit_kit_item_{index}'
         )
@@ -1206,7 +1207,7 @@ class EditKitItemButton(Button):
 class DeleteKitItemButton(Button):
     def __init__(self, calling_view, index):
         super().__init__(
-            label='Delete',
+            label=t(DEFAULT_LOCALE, 'common-btn-delete'),
             style=ButtonStyle.danger,
             custom_id=f'del_kit_item_{index}'
         )
@@ -1248,7 +1249,7 @@ class DeleteKitItemButton(Button):
 class AddKitCurrencyButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Add Currency',
+            label=t(DEFAULT_LOCALE, 'config-btn-add-currency'),
             style=ButtonStyle.success,
             custom_id='add_kit_curr_btn'
         )
@@ -1264,7 +1265,7 @@ class AddKitCurrencyButton(Button):
 class DeleteKitCurrencyButton(Button):
     def __init__(self, calling_view, currency_name):
         super().__init__(
-            label='Delete',
+            label=t(DEFAULT_LOCALE, 'common-btn-delete'),
             style=ButtonStyle.danger,
             custom_id=f'del_kit_curr_{currency_name}'
         )
@@ -1297,7 +1298,7 @@ class DeleteKitCurrencyButton(Button):
 class RoleplayToggleEnableButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Toggle RP Rewards',
+            label=t(DEFAULT_LOCALE, 'config-btn-toggle-rp-rewards'),
             custom_id='rp_toggle_button'
         )
         self.calling_view = calling_view
@@ -1322,7 +1323,7 @@ class RoleplayToggleEnableButton(Button):
 class RoleplayClearChannelsButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Clear Channels',
+            label=t(DEFAULT_LOCALE, 'config-btn-clear-channels'),
             style=ButtonStyle.danger,
             custom_id='rp_clear_channels_button'
         )
@@ -1347,7 +1348,7 @@ class RoleplayClearChannelsButton(Button):
 class RoleplaySettingsButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Edit Settings',
+            label=t(DEFAULT_LOCALE, 'config-btn-edit-settings'),
             style=ButtonStyle.primary,
             custom_id='rp_settings_button'
         )
@@ -1363,7 +1364,7 @@ class RoleplaySettingsButton(Button):
 class RoleplayRewardsButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Configure Rewards',
+            label=t(DEFAULT_LOCALE, 'config-btn-configure-rewards'),
             style=ButtonStyle.primary,
             custom_id='rp_rewards_button')
         self.calling_view = calling_view
@@ -1380,7 +1381,7 @@ class RoleplayRewardsButton(Button):
 class ConfigStockLimitsButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Stock Limits',
+            label=t(DEFAULT_LOCALE, 'config-btn-stock-limits'),
             style=ButtonStyle.secondary,
             custom_id='config_stock_limits_button'
         )
@@ -1404,7 +1405,7 @@ class SetItemStockButton(Button):
     def __init__(self, item: dict, calling_view, current_stock: int | None = None):
         # Determine label based on whether limit exists
         has_limit = item.get(ShopFields.MAX_STOCK) is not None
-        label = 'Edit Limit' if has_limit else 'Set Limit'
+        label = t(DEFAULT_LOCALE, 'config-btn-edit-limit') if has_limit else t(DEFAULT_LOCALE, 'config-btn-set-limit')
 
         super().__init__(
             label=label,
@@ -1431,7 +1432,7 @@ class SetItemStockButton(Button):
 class RemoveItemStockLimitButton(Button):
     def __init__(self, item: dict, calling_view):
         super().__init__(
-            label='Remove Limit',
+            label=t(DEFAULT_LOCALE, 'config-btn-remove-limit'),
             style=ButtonStyle.danger,
             custom_id=f"remove_stock_limit_{item[CommonFields.NAME]}"
         )
@@ -1441,9 +1442,9 @@ class RemoveItemStockLimitButton(Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             confirm_modal = common_modals.ConfirmModal(
-                title='Confirm Remove Stock Limit',
-                prompt_label='Type CONFIRM to remove the stock limit',
-                prompt_placeholder='Type CONFIRM',
+                title=t(DEFAULT_LOCALE, 'config-modal-title-confirm-remove-stock-limit'),
+                prompt_label=t(DEFAULT_LOCALE, 'config-modal-label-remove-stock-limit'),
+                prompt_placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-type-confirm'),
                 confirm_callback=self._confirm_callback
             )
             await interaction.response.send_modal(confirm_modal)
@@ -1496,7 +1497,7 @@ class RemoveItemStockLimitButton(Button):
 class RestockScheduleButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Configure Restock Schedule',
+            label=t(DEFAULT_LOCALE, 'config-btn-configure-restock-schedule'),
             style=ButtonStyle.primary,
             custom_id='restock_schedule_button'
         )
@@ -1517,7 +1518,7 @@ class RestockScheduleButton(Button):
 class BackToEditShopButton(Button):
     def __init__(self, channel_id: str, shop_data: dict):
         super().__init__(
-            label='Back to Shop Editor',
+            label=t(DEFAULT_LOCALE, 'config-btn-back-to-shop-editor'),
             style=ButtonStyle.secondary,
             custom_id='back_to_edit_shop_button'
         )

@@ -8,6 +8,7 @@ from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.common.enums import InventoryType
 from ReQuest.ui.player import modals
 from ReQuest.utilities.constants import CharacterFields, CommonFields, ContainerFields, ShopFields, DatabaseCollections
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     setup_view,
@@ -32,7 +33,7 @@ logger = logging.getLogger(__name__)
 class RegisterCharacterButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Register New Character',
+            label=t(DEFAULT_LOCALE, 'player-btn-register-character'),
             style=ButtonStyle.success,
             custom_id='register_character_button'
         )
@@ -49,7 +50,7 @@ class RegisterCharacterButton(Button):
 class RemoveCharacterButton(Button):
     def __init__(self, calling_view, character_id, character_name):
         super().__init__(
-            label='Remove',
+            label=t(DEFAULT_LOCALE, 'common-btn-remove'),
             style=ButtonStyle.danger,
             custom_id=f'remove_character_{character_id}'
         )
@@ -59,10 +60,11 @@ class RemoveCharacterButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
             confirm_modal = common_modals.ConfirmModal(
-                title='Confirm Character Removal',
-                prompt_label=f'Delete {self.character_name}?',
-                prompt_placeholder='Type CONFIRM to proceed.',
+                title=t(locale, 'player-modal-title-confirm-char-removal'),
+                prompt_label=t(locale, 'player-modal-label-confirm-char-delete', characterName=self.character_name),
+                prompt_placeholder=t(locale, 'common-confirm-placeholder'),
                 confirm_callback=self._confirm_delete
             )
             await interaction.response.send_modal(confirm_modal)
@@ -114,7 +116,7 @@ class RemoveCharacterButton(Button):
 class ActivateCharacterButton(Button):
     def __init__(self, calling_view, character_id, disabled=False):
         super().__init__(
-            label='Activate',
+            label=t(DEFAULT_LOCALE, 'player-btn-activate'),
             style=ButtonStyle.primary,
             custom_id=f'activate_character_{character_id}',
             disabled=disabled
@@ -146,7 +148,7 @@ class ActivateCharacterButton(Button):
 class CreatePlayerPostButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Create Post',
+            label=t(DEFAULT_LOCALE, 'player-btn-create-post'),
             style=ButtonStyle.success,
             custom_id='create_player_post_button'
         )
@@ -163,7 +165,7 @@ class CreatePlayerPostButton(Button):
 class RemovePlayerPostButton(Button):
     def __init__(self, calling_view, post):
         super().__init__(
-            label='Remove',
+            label=t(DEFAULT_LOCALE, 'common-btn-remove'),
             style=ButtonStyle.danger,
             custom_id=f'remove_player_post_button_{post.get("postId")}')
         self.calling_view = calling_view
@@ -171,10 +173,11 @@ class RemovePlayerPostButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
             confirm_modal = common_modals.ConfirmModal(
-                title='Confirm Post Removal',
-                prompt_label=f'WARNING: This action is irreversible!',
-                prompt_placeholder='Type CONFIRM to proceed.',
+                title=t(locale, 'player-modal-title-confirm-post-removal'),
+                prompt_label=t(locale, 'player-modal-label-post-removal-warning'),
+                prompt_placeholder=t(locale, 'common-confirm-placeholder'),
                 confirm_callback=self._confirm_delete
             )
             await interaction.response.send_modal(confirm_modal)
@@ -225,7 +228,7 @@ class RemovePlayerPostButton(Button):
 class EditPlayerPostButton(Button):
     def __init__(self, calling_view, post):
         super().__init__(
-            label='Edit',
+            label=t(DEFAULT_LOCALE, 'common-btn-edit'),
             custom_id=f'edit_player_post_button_{post.get("postId")}'
         )
         self.calling_view = calling_view
@@ -242,7 +245,7 @@ class EditPlayerPostButton(Button):
 class OpenStartingShopButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Open Starting Shop',
+            label=t(DEFAULT_LOCALE, 'player-btn-open-starting-shop'),
             style=ButtonStyle.primary,
             custom_id='open_starting_shop_button'
         )
@@ -265,7 +268,7 @@ class OpenStartingShopButton(Button):
 class SelectStaticKitButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Select Kit',
+            label=t(DEFAULT_LOCALE, 'player-btn-select-kit'),
             style=ButtonStyle.primary,
             custom_id='select_static_kit_button'
         )
@@ -287,7 +290,7 @@ class SelectStaticKitButton(Button):
 class OpenInventoryInputButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Input Inventory',
+            label=t(DEFAULT_LOCALE, 'player-btn-input-inventory'),
             style=ButtonStyle.primary,
             custom_id='open_inv_input_button'
         )
@@ -302,14 +305,14 @@ class OpenInventoryInputButton(Button):
 
 class WizardItemButton(Button):
     def __init__(self, item, inventory_type, cost_string='Free'):
-        label = f'Add to Cart'
+        label = t(DEFAULT_LOCALE, 'player-btn-add-to-cart')
         costs = item.get(ShopFields.COSTS, [])
 
         if inventory_type == InventoryType.PURCHASE.value:
             if len(costs) > 1:
-                label = 'View Purchase Options'
+                label = t(DEFAULT_LOCALE, 'player-btn-view-purchase-options')
             else:
-                label = f'Add to Cart ({cost_string})'
+                label = t(DEFAULT_LOCALE, 'player-btn-add-to-cart-cost', costString=cost_string)
 
         super().__init__(
             label=label,
@@ -334,7 +337,7 @@ class WizardItemButton(Button):
 class WizardSelectCostOptionButton(Button):
     def __init__(self, shop_view, item, index):
         super().__init__(
-            label="Select",
+            label=t(DEFAULT_LOCALE, 'common-btn-select'),
             style=ButtonStyle.primary,
             custom_id=f'wiz_sel_opt_{item[CommonFields.NAME]}_{index}'
         )
@@ -352,7 +355,7 @@ class WizardSelectCostOptionButton(Button):
 class WizardViewCartButton(Button):
     def __init__(self, calling_view, count=0):
         super().__init__(
-            label=f'Review & Submit ({count})',
+            label=t(DEFAULT_LOCALE, 'player-btn-review-submit', count=count),
             style=ButtonStyle.success,
             custom_id='wiz_view_cart_button'
         )
@@ -371,7 +374,7 @@ class WizardViewCartButton(Button):
 class WizardSubmitButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Submit Character',
+            label=t(DEFAULT_LOCALE, 'player-btn-submit-character'),
             style=ButtonStyle.success,
             custom_id='wiz_submit_button'
         )
@@ -387,7 +390,7 @@ class WizardSubmitButton(Button):
 class WizardKeepShoppingButton(Button):
     def __init__(self, shop_view):
         super().__init__(
-            label='Keep Shopping',
+            label=t(DEFAULT_LOCALE, 'player-btn-keep-shopping'),
             style=ButtonStyle.secondary,
             custom_id='wiz_keep_shopping_button'
         )
@@ -404,7 +407,7 @@ class WizardKeepShoppingButton(Button):
 class WizardEditCartItemButton(Button):
     def __init__(self, item_key, quantity):
         super().__init__(
-            label='Edit Quantity',
+            label=t(DEFAULT_LOCALE, 'player-btn-edit-quantity'),
             style=ButtonStyle.secondary,
             custom_id=f'wiz_edit_cart_{item_key}'
         )
@@ -422,7 +425,7 @@ class WizardEditCartItemButton(Button):
 class WizardClearCartButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Clear Cart',
+            label=t(DEFAULT_LOCALE, 'player-btn-clear-cart'),
             style=ButtonStyle.danger,
             custom_id='wiz_clear_cart_button'
         )
@@ -443,7 +446,7 @@ class WizardClearCartButton(Button):
 class SpendCurrencyButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Spend Currency',
+            label=t(DEFAULT_LOCALE, 'player-btn-spend-currency'),
             style=ButtonStyle.primary,
             custom_id='spend_currency_button'
         )
@@ -460,7 +463,7 @@ class SpendCurrencyButton(Button):
 class SelectKitOptionButton(Button):
     def __init__(self, kit_id, kit_data):
         super().__init__(
-            label='Select',
+            label=t(DEFAULT_LOCALE, 'common-btn-select'),
             style=ButtonStyle.primary,
             custom_id=f'sel_kit_{kit_id}'
         )
@@ -486,7 +489,7 @@ class SelectKitOptionButton(Button):
 class KitConfirmButton(Button):
     def __init__(self):
         super().__init__(
-            label='Confirm Selection',
+            label=t(DEFAULT_LOCALE, 'player-btn-confirm-selection'),
             style=ButtonStyle.success,
             custom_id='confirm_kit_btn'
         )
@@ -501,7 +504,7 @@ class KitConfirmButton(Button):
 class KitBackButton(Button):
     def __init__(self):
         super().__init__(
-            label='Back to Kits',
+            label=t(DEFAULT_LOCALE, 'player-btn-back-to-kits'),
             style=ButtonStyle.secondary,
             custom_id='kit_back_btn'
         )
@@ -523,7 +526,7 @@ class KitBackButton(Button):
 class PrintInventoryButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Print Inventory',
+            label=t(DEFAULT_LOCALE, 'player-btn-print-inventory'),
             style=ButtonStyle.secondary,
             custom_id='print_inventory_button'
         )
@@ -531,6 +534,7 @@ class PrintInventoryButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
             character_name = self.calling_view.active_character[CommonFields.NAME]
             formatted = format_inventory_by_container(
                 self.calling_view.active_character,
@@ -538,7 +542,7 @@ class PrintInventoryButton(Button):
             )
 
             inventory_embed = discord.Embed(
-                title=f"{character_name}'s Inventory",
+                title=t(locale, 'player-embed-title-inventory', characterName=character_name),
                 description=formatted,
                 color=discord.Color.blue()
             )
@@ -553,7 +557,7 @@ class PrintInventoryButton(Button):
 class ManageContainersButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Manage Containers',
+            label=t(DEFAULT_LOCALE, 'player-btn-manage-containers'),
             style=ButtonStyle.secondary,
             custom_id='manage_containers_button'
         )
@@ -575,7 +579,7 @@ class ManageContainersButton(Button):
 class CreateContainerButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='+ Create New',
+            label=t(DEFAULT_LOCALE, 'player-btn-create-new'),
             style=ButtonStyle.success,
             custom_id='create_container_button'
         )
@@ -592,7 +596,7 @@ class CreateContainerButton(Button):
 class RenameContainerButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Rename',
+            label=t(DEFAULT_LOCALE, 'common-btn-rename'),
             style=ButtonStyle.secondary,
             custom_id='rename_container_button',
             disabled=True
@@ -603,7 +607,10 @@ class RenameContainerButton(Button):
         try:
             container_id = self.calling_view.selected_container_id
             if container_id is None:
-                raise UserFeedbackError('Cannot rename Loose Items.')
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'player-error-cannot-rename-loose'),
+                    message_id='player-error-cannot-rename-loose'
+                )
 
             # Get current name
             containers = self.calling_view.character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
@@ -618,7 +625,7 @@ class RenameContainerButton(Button):
 class DeleteContainerButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Delete',
+            label=t(DEFAULT_LOCALE, 'common-btn-delete'),
             style=ButtonStyle.danger,
             custom_id='delete_container_button',
             disabled=True
@@ -627,25 +634,29 @@ class DeleteContainerButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
             container_id = self.calling_view.selected_container_id
             if container_id is None:
-                raise UserFeedbackError('Cannot delete Loose Items.')
+                raise UserFeedbackError(
+                    t(locale, 'player-error-cannot-delete-loose'),
+                    message_id='player-error-cannot-delete-loose'
+                )
 
             items = get_container_items(self.calling_view.character_data, container_id)
             item_count = len(items)
 
             containers = self.calling_view.character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
-            container_name = containers.get(container_id, {}).get(ContainerFields.NAME, 'Unknown')
+            container_name = containers.get(container_id, {}).get(ContainerFields.NAME, t(locale, 'common-label-unknown'))
 
             if item_count > 0:
-                prompt_label = f'Has {item_count} items. Will move to Loose Items.'
+                prompt_label = t(locale, 'player-modal-label-container-has-items', itemCount=item_count)
             else:
-                prompt_label = f'Delete "{container_name}"?'
+                prompt_label = t(locale, 'player-modal-label-confirm-container-delete', containerName=container_name)
 
             confirm_modal = common_modals.ConfirmModal(
-                title='Confirm Container Deletion',
+                title=t(locale, 'player-modal-title-confirm-container-delete'),
                 prompt_label=prompt_label,
-                prompt_placeholder='Type CONFIRM to proceed',
+                prompt_placeholder=t(locale, 'common-confirm-placeholder'),
                 confirm_callback=self._confirm_delete
             )
             await interaction.response.send_modal(confirm_modal)
@@ -671,7 +682,7 @@ class DeleteContainerButton(Button):
 class MoveContainerUpButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='▲ Up',
+            label=t(DEFAULT_LOCALE, 'player-btn-up'),
             style=ButtonStyle.secondary,
             custom_id='move_container_up_button',
             disabled=True
@@ -697,7 +708,7 @@ class MoveContainerUpButton(Button):
 class MoveContainerDownButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='▼ Down',
+            label=t(DEFAULT_LOCALE, 'player-btn-down'),
             style=ButtonStyle.secondary,
             custom_id='move_container_down_button',
             disabled=True
@@ -723,7 +734,7 @@ class MoveContainerDownButton(Button):
 class ConsumeFromContainerButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Consume/Destroy',
+            label=t(DEFAULT_LOCALE, 'player-btn-consume-destroy'),
             style=ButtonStyle.danger,
             custom_id='consume_from_container_button',
             disabled=True
@@ -754,7 +765,7 @@ class ConsumeFromContainerButton(Button):
 class MoveItemButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Move',
+            label=t(DEFAULT_LOCALE, 'player-btn-move'),
             style=ButtonStyle.primary,
             custom_id='move_item_button',
             disabled=True
@@ -792,7 +803,7 @@ class MoveItemButton(Button):
 class MoveAllButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Move All',
+            label=t(DEFAULT_LOCALE, 'player-btn-move-all'),
             style=ButtonStyle.success,
             custom_id='move_all_button',
             disabled=True
@@ -828,7 +839,7 @@ class MoveAllButton(Button):
 class MoveSomeButton(Button):
     def __init__(self, calling_view):
         super().__init__(
-            label='Move Some...',
+            label=t(DEFAULT_LOCALE, 'player-btn-move-some'),
             style=ButtonStyle.secondary,
             custom_id='move_some_button',
             disabled=True
@@ -850,7 +861,7 @@ class MoveSomeButton(Button):
 class BackToInventoryOverviewButton(Button):
     def __init__(self):
         super().__init__(
-            label='← Back to Overview',
+            label=t(DEFAULT_LOCALE, 'player-btn-back-to-overview'),
             style=ButtonStyle.secondary,
             custom_id='back_to_inv_overview_button'
         )
@@ -868,7 +879,7 @@ class BackToInventoryOverviewButton(Button):
 class CancelMoveButton(Button):
     def __init__(self, source_view):
         super().__init__(
-            label='← Cancel',
+            label=t(DEFAULT_LOCALE, 'player-btn-cancel-move'),
             style=ButtonStyle.secondary,
             custom_id='cancel_move_button'
         )

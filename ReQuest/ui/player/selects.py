@@ -4,6 +4,7 @@ import discord
 from discord.ui import Select
 
 from ReQuest.utilities.constants import CharacterFields, CommonFields, DatabaseCollections
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.supportFunctions import log_exception, setup_view, update_cached_data
 from ReQuest.ui.common import modals
 
@@ -13,7 +14,7 @@ logger = logging.getLogger(__name__)
 class ActiveCharacterSelect(Select):
     def __init__(self, calling_view):
         super().__init__(
-            placeholder='You have no registered characters',
+            placeholder=t(DEFAULT_LOCALE, 'player-select-placeholder-no-characters'),
             options=[],
             custom_id='active_character_select',
             disabled=True
@@ -42,7 +43,7 @@ class ActiveCharacterSelect(Select):
 class RemoveCharacterSelect(Select):
     def __init__(self, calling_view):
         super().__init__(
-            placeholder='Select a character to remove',
+            placeholder=t(DEFAULT_LOCALE, 'player-select-placeholder-remove-character'),
             options=[],
             custom_id='remove_character_select'
         )
@@ -50,12 +51,13 @@ class RemoveCharacterSelect(Select):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
             selected_character_id = self.values[0]
             self.calling_view.selected_character_id = selected_character_id
             confirm_modal = modals.ConfirmModal(
-                title='Confirm Character Removal',
-                prompt_label='WARNING: This action is irreversible!',
-                prompt_placeholder='Type CONFIRM to proceed',
+                title=t(locale, 'player-modal-title-confirm-char-removal'),
+                prompt_label=t(locale, 'common-modal-label-warning'),
+                prompt_placeholder=t(locale, 'common-confirm-placeholder'),
                 confirm_callback=self.calling_view.confirm_callback
             )
             await interaction.response.send_modal(confirm_modal)
@@ -66,7 +68,7 @@ class RemoveCharacterSelect(Select):
 class ManageablePostSelect(Select):
     def __init__(self, calling_view):
         super().__init__(
-            placeholder='Select a post',
+            placeholder=t(DEFAULT_LOCALE, 'player-select-placeholder-post'),
             options=[],
             custom_id='manageable_post_select'
         )
@@ -90,8 +92,10 @@ class ContainerOverviewSelect(Select):
             options.append(discord.SelectOption(label=label, value=value))
 
         super().__init__(
-            placeholder='Select a container to view...',
-            options=options if options else [discord.SelectOption(label='No containers', value='none')],
+            placeholder=t(DEFAULT_LOCALE, 'player-select-placeholder-container-view'),
+            options=options if options else [discord.SelectOption(
+                label=t(DEFAULT_LOCALE, 'player-select-option-no-containers'), value='none'
+            )],
             custom_id=f'container_overview_select_{current_page}',
             disabled=not options
         )
@@ -127,8 +131,10 @@ class ContainerItemSelect(Select):
             options.append(discord.SelectOption(label=label, value=item_name))
 
         super().__init__(
-            placeholder='Select an item...',
-            options=options if options else [discord.SelectOption(label='No items', value='none')],
+            placeholder=t(DEFAULT_LOCALE, 'player-select-placeholder-item'),
+            options=options if options else [discord.SelectOption(
+                label=t(DEFAULT_LOCALE, 'player-select-option-no-items'), value='none'
+            )],
             custom_id=f'container_item_select_{current_page}',
             disabled=not options
         )
@@ -158,8 +164,10 @@ class DestinationContainerSelect(Select):
             options.append(discord.SelectOption(label=label, value=value))
 
         super().__init__(
-            placeholder='Select destination...',
-            options=options if options else [discord.SelectOption(label='No destinations', value='none')],
+            placeholder=t(DEFAULT_LOCALE, 'player-select-placeholder-destination'),
+            options=options if options else [discord.SelectOption(
+                label=t(DEFAULT_LOCALE, 'player-select-option-no-destinations'), value='none'
+            )],
             custom_id=f'dest_container_select_{current_page}',
             disabled=not options
         )
@@ -196,8 +204,10 @@ class ManageContainerSelect(Select):
                 options.append(discord.SelectOption(label=label, value=value))
 
         super().__init__(
-            placeholder='Select a container...',
-            options=options if options else [discord.SelectOption(label='No containers', value='none')],
+            placeholder=t(DEFAULT_LOCALE, 'player-select-placeholder-container'),
+            options=options if options else [discord.SelectOption(
+                label=t(DEFAULT_LOCALE, 'player-select-option-no-containers'), value='none'
+            )],
             custom_id=f'manage_container_select_{current_page}',
             disabled=not options
         )

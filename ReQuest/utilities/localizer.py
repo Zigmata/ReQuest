@@ -12,7 +12,7 @@ SUPPORTED_LOCALES = ['en-US', 'pt-BR']
 FTL_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'locales', '{locale}')
 
 _resource_loader = FluentResourceLoader(FTL_DIR)
-_FTL_FILES = ['common.ftl', 'errors.ftl', 'info.ftl']
+_FTL_FILES = ['common.ftl', 'errors.ftl', 'info.ftl', 'admin.ftl', 'config.ftl', 'gm.ftl', 'player.ftl', 'shop.ftl']
 
 
 class Localizer:

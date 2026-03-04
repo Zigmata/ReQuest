@@ -21,6 +21,7 @@ from ReQuest.ui.player import buttons, selects
 from ReQuest.utilities.constants import (
     CharacterFields, ConfigFields, CommonFields, ShopFields, DatabaseCollections
 )
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
@@ -52,40 +53,43 @@ logger = logging.getLogger(__name__)
 class PlayerBaseView(LayoutView):
     def __init__(self):
         super().__init__()
-        self.player_board_button = MenuViewButton(PlayerBoardView, 'Player Board')
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
+        self.player_board_button = MenuViewButton(
+            PlayerBoardView, t(locale, 'player-menu-btn-player-board')
+        )
 
         self.build_view()
 
     def build_view(self):
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
         header_section = Section(accessory=MenuDoneButton())
-        header_section.add_item(TextDisplay('**Player Commands - Main Menu**'))
+        header_section.add_item(TextDisplay(t(locale, 'player-title-main-menu')))
         container.add_item(header_section)
         container.add_item(Separator())
 
-        character_section = Section(accessory=MenuViewButton(CharacterBaseView, 'Characters'))
-        character_section.add_item(TextDisplay(
-            'Register, view, and activate player characters.'
-        ))
+        character_section = Section(
+            accessory=MenuViewButton(CharacterBaseView, t(locale, 'player-menu-btn-characters'))
+        )
+        character_section.add_item(TextDisplay(t(locale, 'player-menu-desc-characters')))
         container.add_item(character_section)
 
-        inventory_section = Section(accessory=MenuViewButton(InventoryOverviewView, 'Inventory'))
-        inventory_section.add_item(TextDisplay(
-            'View your active character\'s inventory and spend currency.'
-        ))
+        inventory_section = Section(
+            accessory=MenuViewButton(InventoryOverviewView, t(locale, 'player-menu-btn-inventory'))
+        )
+        inventory_section.add_item(TextDisplay(t(locale, 'player-menu-desc-inventory')))
         container.add_item(inventory_section)
 
         player_board_section = Section(accessory=self.player_board_button)
-        player_board_section.add_item(TextDisplay(
-            'Create a post for the Player Board'
-        ))
+        player_board_section.add_item(TextDisplay(t(locale, 'player-menu-desc-player-board')))
         container.add_item(player_board_section)
 
         self.add_item(container)
 
     async def setup(self, bot, guild):
         try:
+            locale = getattr(self, 'locale', DEFAULT_LOCALE)
             channel_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -96,7 +100,7 @@ class PlayerBaseView(LayoutView):
                 self.player_board_button.disabled = False
             else:
                 self.player_board_button.disabled = True
-                self.player_board_button.label = 'Player Board (Not Configured)'
+                self.player_board_button.label = t(locale, 'player-menu-btn-player-board-disabled')
         except Exception as e:
             await log_exception(e)
 
@@ -144,20 +148,21 @@ class CharacterBaseView(LayoutView):
 
     def build_view(self):
         self.clear_items()
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
         header_section = Section(accessory=BackButton(PlayerBaseView))
-        header_section.add_item(TextDisplay('**Player Commands - Characters**'))
+        header_section.add_item(TextDisplay(t(locale, 'player-title-characters')))
         container.add_item(header_section)
         container.add_item(Separator())
 
         register_section = Section(accessory=buttons.RegisterCharacterButton(self))
-        register_section.add_item(TextDisplay("Register a new character."))
+        register_section.add_item(TextDisplay(t(locale, 'player-desc-register-character')))
         container.add_item(register_section)
         container.add_item(Separator())
 
         if not self.sorted_characters:
-            container.add_item(TextDisplay("You have no characters registered."))
+            container.add_item(TextDisplay(t(locale, 'player-msg-no-characters')))
         else:
             start = self.current_page * self.items_per_page
             end = start + self.items_per_page
@@ -172,11 +177,11 @@ class CharacterBaseView(LayoutView):
 
                 display_name = f"**{name}**"
                 if is_active:
-                    display_name += " (Active)"
+                    display_name += f" {t(locale, 'player-label-active')}"
 
                 info_text = f"{display_name}"
                 if self.xp_enabled and xp and xp > 0:
-                    info_text += f" - {xp} XP"
+                    info_text += f" - {t(locale, 'player-label-xp', xp=xp)}"
                 if note:
                     info_text += f"\n*{note}*"
 
@@ -184,7 +189,7 @@ class CharacterBaseView(LayoutView):
 
                 activate_button = buttons.ActivateCharacterButton(self, character_id, disabled=is_active)
                 if is_active:
-                    activate_button.label = "Active"
+                    activate_button.label = t(locale, 'player-btn-active')
                     activate_button.style = discord.ButtonStyle.success
 
                 actions.add_item(activate_button)
@@ -199,7 +204,7 @@ class CharacterBaseView(LayoutView):
             nav_row = ActionRow()
 
             prev_button = Button(
-                label='Previous',
+                label=t(locale, 'common-btn-previous'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='char_prev',
                 disabled=(self.current_page == 0)
@@ -208,7 +213,7 @@ class CharacterBaseView(LayoutView):
             nav_row.add_item(prev_button)
 
             page_display = Button(
-                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                label=t(locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages),
                 style=discord.ButtonStyle.secondary,
                 custom_id='char_page_disp'
             )
@@ -216,7 +221,7 @@ class CharacterBaseView(LayoutView):
             nav_row.add_item(page_display)
 
             next_button = Button(
-                label='Next',
+                label=t(locale, 'common-btn-next'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='char_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -365,29 +370,27 @@ class InventoryOverviewView(LayoutView):
 
     def build_view(self):
         self.clear_items()
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
         header_section = Section(accessory=BackButton(PlayerBaseView))
 
         if not self.active_character:
-            header_section.add_item(TextDisplay('**Player Commands - Inventory**'))
+            header_section.add_item(TextDisplay(t(locale, 'player-title-inventory')))
             container.add_item(header_section)
             container.add_item(Separator())
 
             if self.active_character_id is None:
-                container.add_item(TextDisplay(
-                    'No Active Character: Activate a character for this server to use these menus.'
-                ))
+                container.add_item(TextDisplay(t(locale, 'player-msg-no-active-character')))
             else:
-                container.add_item(TextDisplay(
-                    'No Characters: Register a character to use these menus.'
-                ))
+                container.add_item(TextDisplay(t(locale, 'player-msg-no-characters-registered')))
 
             self.add_item(container)
             return
 
         header_section.add_item(TextDisplay(
-            f"**{self.active_character[CharacterFields.NAME]}'s Inventory**"
+            t(locale, 'player-title-char-inventory',
+              characterName=self.active_character[CharacterFields.NAME])
         ))
         container.add_item(header_section)
         container.add_item(Separator())
@@ -396,15 +399,20 @@ class InventoryOverviewView(LayoutView):
         summary_lines = []
         total_items = 0
         for c in self.containers:
-            summary_lines.append(f"**{c['name']}** — {c['count']} items")
+            summary_lines.append(
+                t(locale, 'player-label-container-summary',
+                  containerName=c['name'], count=c['count'])
+            )
             total_items += c['count']
 
         if self.currencies:
             summary_lines.append('')
-            summary_lines.append('**Currency**')
+            summary_lines.append(t(locale, 'player-label-currency'))
             summary_lines.extend(self.currencies)
 
-        container.add_item(TextDisplay('\n'.join(summary_lines) if summary_lines else 'Inventory is empty.'))
+        container.add_item(TextDisplay(
+            '\n'.join(summary_lines) if summary_lines else t(locale, 'player-msg-inventory-empty')
+        ))
         container.add_item(Separator())
 
         # Container select (paginated)
@@ -438,7 +446,7 @@ class InventoryOverviewView(LayoutView):
             nav_row = ActionRow()
 
             prev_button = Button(
-                label='Previous',
+                label=t(locale, 'common-btn-previous'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='inv_overview_prev',
                 disabled=(self.current_page == 0)
@@ -447,7 +455,7 @@ class InventoryOverviewView(LayoutView):
             nav_row.add_item(prev_button)
 
             page_button = Button(
-                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                label=t(locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages),
                 style=discord.ButtonStyle.secondary,
                 custom_id='inv_overview_page'
             )
@@ -455,7 +463,7 @@ class InventoryOverviewView(LayoutView):
             nav_row.add_item(page_button)
 
             next_button = Button(
-                label='Next',
+                label=t(locale, 'common-btn-next'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='inv_overview_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -490,7 +498,7 @@ class ContainerItemsView(LayoutView):
         self.character_id = character_id
         self.character_data = character_data
         self.container_id = container_id
-        self.container_name = 'Loose Items'
+        self.container_name = t(DEFAULT_LOCALE, 'common-label-loose-items')
 
         self.selected_item = None
         self.items = []
@@ -533,6 +541,7 @@ class ContainerItemsView(LayoutView):
 
     def build_view(self):
         self.clear_items()
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
         header_section = Section(accessory=buttons.BackToInventoryOverviewButton())
@@ -541,7 +550,7 @@ class ContainerItemsView(LayoutView):
         container.add_item(Separator())
 
         if not self.items:
-            container.add_item(TextDisplay('This container is empty.'))
+            container.add_item(TextDisplay(t(locale, 'player-msg-container-empty')))
         else:
             # Display items on current page
             start = self.current_page * self.items_per_page
@@ -562,7 +571,9 @@ class ContainerItemsView(LayoutView):
             container.add_item(item_select_row)
 
             if self.selected_item:
-                container.add_item(TextDisplay(f'Selected: **{self.selected_item}**'))
+                container.add_item(TextDisplay(
+                    t(locale, 'player-label-selected-item', itemName=self.selected_item)
+                ))
 
         self.add_item(container)
 
@@ -584,7 +595,7 @@ class ContainerItemsView(LayoutView):
             nav_row = ActionRow()
 
             prev_button = Button(
-                label='Previous',
+                label=t(locale, 'common-btn-previous'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='container_items_prev',
                 disabled=(self.current_page == 0)
@@ -593,7 +604,7 @@ class ContainerItemsView(LayoutView):
             nav_row.add_item(prev_button)
 
             page_button = Button(
-                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                label=t(locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages),
                 style=discord.ButtonStyle.secondary,
                 custom_id='container_items_page'
             )
@@ -601,7 +612,7 @@ class ContainerItemsView(LayoutView):
             nav_row.add_item(page_button)
 
             next_button = Button(
-                label='Next',
+                label=t(locale, 'common-btn-next'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='container_items_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -675,19 +686,21 @@ class MoveDestinationView(LayoutView):
 
     def build_view(self):
         self.clear_items()
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
         header_section = Section(accessory=buttons.CancelMoveButton(self.source_view))
         header_section.add_item(TextDisplay(
-            f'**Move "{self.item_name}"** ({self.available_quantity} available)'
+            t(locale, 'player-title-move-item',
+              itemName=self.item_name, available=self.available_quantity)
         ))
         container.add_item(header_section)
         container.add_item(Separator())
 
         if not self.containers:
-            container.add_item(TextDisplay('No other containers available.'))
+            container.add_item(TextDisplay(t(locale, 'player-msg-no-other-containers')))
         else:
-            container.add_item(TextDisplay('Select destination container:'))
+            container.add_item(TextDisplay(t(locale, 'player-msg-select-destination')))
 
             # Destination select (paginated)
             start = self.current_page * self.items_per_page
@@ -703,7 +716,7 @@ class MoveDestinationView(LayoutView):
                 destination_name = None
                 # Find destination name
                 if self.selected_destination is None:
-                    destination_name = 'Loose Items'
+                    destination_name = t(locale, 'common-label-loose-items')
                 else:
                     for dest_container in self.containers:
                         if dest_container['id'] == self.selected_destination:
@@ -711,7 +724,9 @@ class MoveDestinationView(LayoutView):
                             break
 
                 if destination_name is not None:
-                    container.add_item(TextDisplay(f'Destination: **{destination_name}**'))
+                    container.add_item(TextDisplay(
+                        t(locale, 'player-label-destination', destinationName=destination_name)
+                    ))
 
         self.add_item(container)
 
@@ -737,7 +752,7 @@ class MoveDestinationView(LayoutView):
             nav_row = ActionRow()
 
             prev_button = Button(
-                label='Previous',
+                label=t(locale, 'common-btn-previous'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='move_dest_prev',
                 disabled=(self.current_page == 0)
@@ -746,7 +761,7 @@ class MoveDestinationView(LayoutView):
             nav_row.add_item(prev_button)
 
             page_button = Button(
-                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                label=t(locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages),
                 style=discord.ButtonStyle.secondary,
                 custom_id='move_dest_page'
             )
@@ -754,7 +769,7 @@ class MoveDestinationView(LayoutView):
             nav_row.add_item(page_button)
 
             next_button = Button(
-                label='Next',
+                label=t(locale, 'common-btn-next'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='move_dest_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -823,10 +838,11 @@ class ContainerManagementView(LayoutView):
 
     def build_view(self):
         self.clear_items()
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
         header_section = Section(accessory=buttons.BackToInventoryOverviewButton())
-        header_section.add_item(TextDisplay('**Manage Containers**'))
+        header_section.add_item(TextDisplay(t(locale, 'player-title-manage-containers')))
         container.add_item(header_section)
         container.add_item(Separator())
 
@@ -834,10 +850,16 @@ class ContainerManagementView(LayoutView):
         container_lines = []
         for index, container_data in enumerate(self.containers):
             prefix = f'{index + 1}. '
-            suffix = ' (default)' if container_data['id'] is None else ''
-            container_lines.append(f"{prefix}**{container_data['name']}** ({container_data['count']} items){suffix}")
+            suffix = t(locale, 'player-label-default-suffix') if container_data['id'] is None else ''
+            container_lines.append(
+                t(locale, 'player-label-container-line',
+                  prefix=prefix, containerName=container_data['name'],
+                  count=container_data['count'], suffix=suffix)
+            )
 
-        container.add_item(TextDisplay('\n'.join(container_lines) if container_lines else 'No containers.'))
+        container.add_item(TextDisplay(
+            '\n'.join(container_lines) if container_lines else t(locale, 'player-msg-no-containers')
+        ))
         container.add_item(Separator())
 
         # Container select (paginated)
@@ -851,13 +873,15 @@ class ContainerManagementView(LayoutView):
         container.add_item(manage_select_row)
 
         if self.has_selection:
-            selected_name = 'Loose Items'
+            selected_name = t(locale, 'common-label-loose-items')
             if self.selected_container_id is not None:
                 for container_data in self.containers:
                     if container_data['id'] == self.selected_container_id:
                         selected_name = container_data['name']
                         break
-            container.add_item(TextDisplay(f'Selected: **{selected_name}**'))
+            container.add_item(TextDisplay(
+                t(locale, 'player-label-selected-container', containerName=selected_name)
+            ))
 
         self.add_item(container)
 
@@ -906,7 +930,7 @@ class ContainerManagementView(LayoutView):
             nav_row = ActionRow()
 
             prev_button = Button(
-                label='Previous',
+                label=t(locale, 'common-btn-previous'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='manage_containers_prev',
                 disabled=(self.current_page == 0)
@@ -915,7 +939,7 @@ class ContainerManagementView(LayoutView):
             nav_row.add_item(prev_button)
 
             page_button = Button(
-                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                label=t(locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages),
                 style=discord.ButtonStyle.secondary,
                 custom_id='manage_containers_page'
             )
@@ -923,7 +947,7 @@ class ContainerManagementView(LayoutView):
             nav_row.add_item(page_button)
 
             next_button = Button(
-                label='Next',
+                label=t(locale, 'common-btn-next'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='manage_containers_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -999,32 +1023,31 @@ class PlayerBoardView(LayoutView):
 
     def build_view(self):
         self.clear_items()
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
         header_section = Section(accessory=BackButton(PlayerBaseView))
-        header_section.add_item(TextDisplay('**Player Commands - Player Board**'))
+        header_section.add_item(TextDisplay(t(locale, 'player-title-player-board')))
         container.add_item(header_section)
         container.add_item(Separator())
 
         create_post_section = Section(accessory=buttons.CreatePlayerPostButton(self))
-        create_post_section.add_item(TextDisplay(
-            'Create a new post for the Player Board.'
-        ))
+        create_post_section.add_item(TextDisplay(t(locale, 'player-desc-create-post')))
         container.add_item(create_post_section)
         container.add_item(Separator())
 
         if not self.posts:
-            container.add_item(TextDisplay("You don't have any current posts."))
+            container.add_item(TextDisplay(t(locale, 'player-msg-no-posts')))
         else:
             start = self.current_page * self.items_per_page
             end = start + self.items_per_page
             page_posts = self.posts[start:end]
 
             for post in page_posts:
-                title = post.get('title', 'Untitled')
-                post_id = post.get('postId', 'Unknown')
+                title = post.get('title', t(locale, 'player-label-untitled'))
+                post_id = post.get('postId', t(locale, 'common-label-unknown'))
 
-                info_text = f"**{title}** (ID: `{post_id}`)"
+                info_text = t(locale, 'player-label-post-info', title=title, postId=post_id)
 
                 actions = ActionRow()
                 actions.add_item(buttons.EditPlayerPostButton(self, post))
@@ -1040,7 +1063,7 @@ class PlayerBoardView(LayoutView):
             nav_row = ActionRow()
 
             prev_button = Button(
-                label='Previous',
+                label=t(locale, 'common-btn-previous'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='pb_prev',
                 disabled=(self.current_page == 0)
@@ -1049,7 +1072,7 @@ class PlayerBoardView(LayoutView):
             nav_row.add_item(prev_button)
 
             page_display = Button(
-                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                label=t(locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages),
                 style=discord.ButtonStyle.secondary,
                 custom_id='pb_page_disp'
             )
@@ -1057,7 +1080,7 @@ class PlayerBoardView(LayoutView):
             nav_row.add_item(page_display)
 
             next_button = Button(
-                label='Next',
+                label=t(locale, 'common-btn-next'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='pb_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -1087,6 +1110,7 @@ class PlayerBoardView(LayoutView):
 
     async def create_post(self, title, content, interaction):
         try:
+            locale = getattr(self, 'locale', DEFAULT_LOCALE)
             post_collection = interaction.client.gdb[DatabaseCollections.PLAYER_BOARD]
             post_id = str(shortuuid.uuid()[:8])
 
@@ -1095,12 +1119,18 @@ class PlayerBoardView(LayoutView):
                 description=content,
                 type='rich'
             )
-            post_embed.add_field(name='Author', value=interaction.user.mention)
-            post_embed.set_footer(text=f'Post ID: {post_id}')
+            post_embed.add_field(
+                name=t(locale, 'player-embed-field-author'),
+                value=interaction.user.mention
+            )
+            post_embed.set_footer(text=t(locale, 'player-embed-footer-post-id', postId=post_id))
 
             channel = interaction.client.get_channel(self.player_board_channel_id)
             if not channel:
-                raise UserFeedbackError("Player Board channel not found.")
+                raise UserFeedbackError(
+                    t(locale, 'player-error-board-channel-not-found'),
+                    message_id='player-error-board-channel-not-found'
+                )
 
             message = await channel.send(embed=post_embed)
 
@@ -1128,6 +1158,7 @@ class PlayerBoardView(LayoutView):
 
     async def edit_post(self, post, new_title, new_content, interaction):
         try:
+            locale = getattr(self, 'locale', DEFAULT_LOCALE)
             bot = interaction.client
             await update_cached_data(
                 bot=bot,
@@ -1151,8 +1182,11 @@ class PlayerBoardView(LayoutView):
                             description=new_content,
                             type='rich'
                         )
-                        embed.add_field(name='Author', value=interaction.user.mention)
-                        embed.set_footer(text=f'Post ID: {post["postId"]}')
+                        embed.add_field(
+                            name=t(locale, 'player-embed-field-author'),
+                            value=interaction.user.mention
+                        )
+                        embed.set_footer(text=t(locale, 'player-embed-footer-post-id', postId=post['postId']))
 
                         await message.edit(embed=embed)
                     except discord.NotFound:
@@ -1181,21 +1215,24 @@ class NewCharacterWizardView(LayoutView):
         self.build_view()
 
     def build_view(self):
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
-        container.add_item(TextDisplay(f"**Setup Inventory for {self.character_name}**"))
+        container.add_item(TextDisplay(
+            t(locale, 'player-title-setup-inventory', characterName=self.character_name)
+        ))
         container.add_item(Separator())
 
         description = ""
         action_row = ActionRow()
 
         if self.inventory_type in [InventoryType.SELECTION.value, InventoryType.PURCHASE.value]:
-            description = "Browse the Starting Shop to equip your character."
+            description = t(locale, 'player-desc-browse-shop')
             action_row.add_item(buttons.OpenStartingShopButton(self))
         elif self.inventory_type == InventoryType.STATIC.value:
-            description = "Select a Starting Kit."
+            description = t(locale, 'player-desc-select-kit')
             action_row.add_item(buttons.SelectStaticKitButton(self))
         elif self.inventory_type == InventoryType.OPEN.value:
-            description = "Manually input your starting inventory."
+            description = t(locale, 'player-desc-input-inventory')
             action_row.add_item(buttons.OpenInventoryInputButton(self))
 
         container.add_item(TextDisplay(description))
@@ -1245,13 +1282,16 @@ class StaticKitSelectView(LayoutView):
 
     def build_view(self):
         self.clear_items()
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
-        container.add_item(TextDisplay(f'**Select a Kit for {self.character_name}**'))
+        container.add_item(TextDisplay(
+            t(locale, 'player-title-select-kit', characterName=self.character_name)
+        ))
         container.add_item(Separator())
 
         if not self.sorted_kits:
-            container.add_item(TextDisplay('No starting kits are available.'))
+            container.add_item(TextDisplay(t(locale, 'player-msg-no-kits')))
         else:
             start = self.current_page * self.items_per_page
             end = start + self.items_per_page
@@ -1277,7 +1317,9 @@ class StaticKitSelectView(LayoutView):
                 for item in items[:3]:  # Show first 3 items
                     preview_list.append(f'{item.get(CommonFields.QUANTITY, 1)}x {escape_markdown(titlecase(item.get(CommonFields.NAME, "")))}')
                 if len(items) > 3:
-                    preview_list.append(f'...and {len(items) - 3} more items')
+                    preview_list.append(
+                        t(locale, 'player-label-and-more-items', count=len(items) - 3)
+                    )
 
                 if currency:
                     currency_strings = format_consolidated_totals(currency, self.currency_config)
@@ -1286,7 +1328,7 @@ class StaticKitSelectView(LayoutView):
                 if preview_list:
                     content_lines.append(f'> {", ".join(preview_list)}')
                 else:
-                    content_lines.append('> *Empty Kit*')
+                    content_lines.append(f'> {t(locale, "player-label-empty-kit")}')
 
                 section.add_item(TextDisplay('\n'.join(content_lines)))
                 container.add_item(section)
@@ -1297,7 +1339,7 @@ class StaticKitSelectView(LayoutView):
         if self.total_pages > 1:
             nav_row = ActionRow()
             prev_button = Button(
-                label='Prev',
+                label=t(locale, 'common-btn-prev'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='kit_prev',
                 disabled=(self.current_page == 0)
@@ -1305,14 +1347,14 @@ class StaticKitSelectView(LayoutView):
             prev_button.callback = self.prev_page
 
             page_display = Button(
-                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                label=t(locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages),
                 style=discord.ButtonStyle.secondary,
                 custom_id='kit_page_display'
             )
             page_display.callback = self.show_page_jump_modal
 
             next_button = Button(
-                label='Next',
+                label=t(locale, 'common-btn-next'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='kit_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -1355,9 +1397,13 @@ class StaticKitConfirmView(LayoutView):
 
     def build_view(self):
         self.clear_items()
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
-        container.add_item(TextDisplay(f'**Confirm Selection: {escape_markdown(titlecase(self.kit_data.get(CommonFields.NAME)))}**'))
+        container.add_item(TextDisplay(
+            t(locale, 'player-title-confirm-kit',
+              kitName=escape_markdown(titlecase(self.kit_data.get(CommonFields.NAME))))
+        ))
         container.add_item(Separator())
 
         description = self.kit_data.get('description')
@@ -1371,18 +1417,18 @@ class StaticKitConfirmView(LayoutView):
 
         details = []
         if items:
-            details.append('**Items:**')
+            details.append(t(locale, 'player-label-items-heading'))
             for item in items:
                 details.append(f'- {item.get(CommonFields.QUANTITY, 1)}x {escape_markdown(titlecase(item.get(CommonFields.NAME)))}')
 
         if currency:
-            details.append('\n**Currency:**')
+            details.append(f'\n{t(locale, "player-label-currency-heading")}')
             curr_strs = format_consolidated_totals(currency, self.currency_config)
             for s in curr_strs:
                 details.append(f'- {s}')
 
         if not details:
-            details.append('This kit is empty.')
+            details.append(t(locale, 'player-msg-kit-empty'))
 
         container.add_item(TextDisplay('\n'.join(details)))
         container.add_item(Separator())
@@ -1410,10 +1456,13 @@ class NewCharacterComplexItemPurchaseView(LayoutView):
 
     def build_view(self):
         self.clear_items()
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
         header = Section(accessory=buttons.WizardKeepShoppingButton(self.parent_view))
-        header.add_item(TextDisplay(f"**Purchase Options: {self.item[CommonFields.NAME]}**"))
+        header.add_item(TextDisplay(
+            t(locale, 'player-title-purchase-options', itemName=self.item[CommonFields.NAME])
+        ))
         container.add_item(header)
         container.add_item(Separator())
 
@@ -1421,14 +1470,16 @@ class NewCharacterComplexItemPurchaseView(LayoutView):
         currency_config = getattr(self.parent_view, 'currency_config', {})
 
         if not costs:
-            container.add_item(TextDisplay("This item has no cost options available."))
+            container.add_item(TextDisplay(t(locale, 'player-msg-no-cost-options')))
         else:
             for index, cost_option in enumerate(costs):
                 cost_str = format_complex_cost([cost_option], currency_config)
 
                 select_button = buttons.WizardSelectCostOptionButton(self.parent_view, self.item, index)
                 section = Section(accessory=select_button)
-                section.add_item(TextDisplay(f"**Option {index + 1}:** {cost_str}"))
+                section.add_item(TextDisplay(
+                    t(locale, 'player-label-cost-option', index=index + 1, costString=cost_str)
+                ))
                 container.add_item(section)
 
         self.add_item(container)
@@ -1483,14 +1534,15 @@ class NewCharacterShopView(LayoutView):
 
     def build_view(self):
         self.clear_items()
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
-        title = f'**Starting Shop ({self.inventory_type.capitalize()})**'
+        title = t(locale, 'player-title-starting-shop', inventoryType=self.inventory_type.capitalize())
         if self.starting_wealth:
             amount = self.starting_wealth.get(CommonFields.AMOUNT, 0)
             currency = self.starting_wealth.get(CharacterFields.CURRENCY, '')
             formatted_currency = format_price_string(amount, currency, self.currency_config)
-            title += f'\nStarting Wealth: {formatted_currency}'
+            title += '\n' + t(locale, 'player-label-starting-wealth', formattedCurrency=formatted_currency)
 
         container.add_item(TextDisplay(title))
         container.add_item(Separator())
@@ -1500,7 +1552,7 @@ class NewCharacterShopView(LayoutView):
         stock_slice = self.shop_stock[start:end]
 
         for item in stock_slice:
-            cost_string = 'Free'
+            cost_string = t(locale, 'common-label-free')
             if self.inventory_type == InventoryType.PURCHASE.value:
                 costs = item.get(ShopFields.COSTS, [])
                 cost_string = format_complex_cost(costs, self.currency_config)
@@ -1518,7 +1570,7 @@ class NewCharacterShopView(LayoutView):
                         item_quantity_in_cart += value[CommonFields.QUANTITY]
 
                 if item_quantity_in_cart > 0:
-                    display += f" **(In Cart: {item_quantity_in_cart})**"
+                    display += f" {t(locale, 'player-label-in-cart', quantity=item_quantity_in_cart)}"
 
             if description := item.get('description'):
                 display += f"\n*{description}*"
@@ -1531,7 +1583,7 @@ class NewCharacterShopView(LayoutView):
         nav_row = ActionRow()
         if self.total_pages > 1:
             prev_button = Button(
-                label='Prev',
+                label=t(locale, 'common-btn-prev'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='wiz_prev',
                 disabled=(self.current_page == 0)
@@ -1539,7 +1591,7 @@ class NewCharacterShopView(LayoutView):
             prev_button.callback = self.prev_page
 
             next_button = Button(
-                label='Next',
+                label=t(locale, 'common-btn-next'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='wiz_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -1598,10 +1650,11 @@ class NewCharacterCartView(LayoutView):
 
     def build_view(self):
         self.clear_items()
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
         header_section = Section(accessory=buttons.WizardKeepShoppingButton(self.shop_view))
-        header_section.add_item(TextDisplay('**Review Cart**'))
+        header_section.add_item(TextDisplay(t(locale, 'player-title-review-cart')))
         container.add_item(header_section)
         container.add_item(Separator())
 
@@ -1641,7 +1694,9 @@ class NewCharacterCartView(LayoutView):
                 is_ok, _ = check_sufficient_funds(wallet, self.shop_view.currency_config, base_currency, amount)
                 if not is_ok:
                     self.can_afford = False
-                    warnings.append(f'Insufficient {titlecase(base_currency)}')
+                    warnings.append(
+                        t(locale, 'player-label-insufficient-currency', currencyName=titlecase(base_currency))
+                    )
 
             final_currency = {}
 
@@ -1667,7 +1722,7 @@ class NewCharacterCartView(LayoutView):
             self.current_page = max(0, self.total_pages - 1)
 
         if not cart_items:
-            container.add_item(TextDisplay('Your cart is empty.'))
+            container.add_item(TextDisplay(t(locale, 'player-msg-cart-empty')))
         else:
             start = self.current_page * self.items_per_page
             end = start + self.items_per_page
@@ -1681,9 +1736,9 @@ class NewCharacterCartView(LayoutView):
                 quantity_per_purchase = item.get(CommonFields.QUANTITY, 1)
                 total_quantity = quantity * quantity_per_purchase
 
-                display = f'**{name}** x{quantity}'
+                display = t(locale, 'player-label-cart-item', name=name, quantity=quantity)
                 if quantity_per_purchase > 1:
-                    display += f' (Total: {total_quantity})'
+                    display += f' {t(locale, "player-label-cart-item-total", totalQuantity=total_quantity)}'
 
                 if self.shop_view.inventory_type == InventoryType.PURCHASE.value:
                     costs = item.get(ShopFields.COSTS, [])
@@ -1708,16 +1763,18 @@ class NewCharacterCartView(LayoutView):
         if self.shop_view.inventory_type == InventoryType.PURCHASE.value:
             totals = format_consolidated_totals(consolidated_costs, self.shop_view.currency_config)
             if totals:
-                container.add_item(TextDisplay(f'**Total Cost:**\n{", ".join(totals)}'))
+                container.add_item(TextDisplay(
+                    t(locale, 'player-label-total-cost') + f'\n{", ".join(totals)}'
+                ))
             else:
-                container.add_item(TextDisplay('**Total Cost:** Free'))
+                container.add_item(TextDisplay(t(locale, 'player-label-total-cost-free')))
 
         self.add_item(container)
 
         nav_row = ActionRow()
         if self.total_pages > 1:
             prev_button = Button(
-                label='Prev',
+                label=t(locale, 'common-btn-prev'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='wiz_cart_prev',
                 disabled=(self.current_page == 0)
@@ -1725,14 +1782,14 @@ class NewCharacterCartView(LayoutView):
             prev_button.callback = self.prev_page
 
             page_display = Button(
-                label=f'Page {self.current_page + 1} of {self.total_pages}',
+                label=t(locale, 'player-label-cart-page', current=self.current_page + 1, total=self.total_pages),
                 style=discord.ButtonStyle.secondary,
                 custom_id='wiz_cart_page_display'
             )
             page_display.callback = self.show_page_jump_modal
 
             next_button = Button(
-                label='Next',
+                label=t(locale, 'common-btn-next'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='wiz_cart_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -1777,6 +1834,7 @@ class NewCharacterCartView(LayoutView):
 
 async def _handle_submission(interaction, character_id, character_name, items, currency):
     try:
+        locale = getattr(interaction, '_locale_override', DEFAULT_LOCALE)
         guild_id = interaction.guild_id
         bot = interaction.client
         currency_config = await get_cached_data(
@@ -1810,24 +1868,30 @@ async def _handle_submission(interaction, character_id, character_name, items, c
         if forum_channel and isinstance(forum_channel, discord.ForumChannel):
             # Create Embed for Forum Post
             embed = discord.Embed(
-                title=f'Inventory Approval: {character_name}',
-                description=f'Submitted by {interaction.user.mention}',
+                title=t(locale, 'player-embed-title-approval', characterName=character_name),
+                description=t(locale, 'player-embed-desc-submitted-by', userMention=interaction.user.mention),
                 color=discord.Color.blue()
             )
             embed.set_author(name=interaction.user.display_name,
                              icon_url=interaction.user.avatar.url if interaction.user.avatar else None)
 
             item_labels = [f'{k}: {v}' for k, v in items.items()]
-            embed.add_field(name='Items', value='\n'.join(item_labels) or 'None', inline=False)
+            embed.add_field(
+                name=t(locale, 'player-embed-field-items'),
+                value='\n'.join(item_labels) or t(locale, 'common-label-none'), inline=False
+            )
 
             currency_labels = format_consolidated_totals(currency, currency_config)
-            embed.add_field(name='Currency', value='\n'.join(currency_labels) or 'None', inline=False)
+            embed.add_field(
+                name=t(locale, 'player-embed-field-currency-received'),
+                value='\n'.join(currency_labels) or t(locale, 'common-label-none'), inline=False
+            )
 
             submission_id = shortuuid.uuid()[:8]
-            embed.set_footer(text=f'Submission ID: {submission_id}')
+            embed.set_footer(text=t(locale, 'player-embed-footer-submission-id', submissionId=submission_id))
 
             # Create Thread
-            thread_name = f'Approval: {character_name}'
+            thread_name = t(locale, 'player-label-approval-thread', characterName=character_name)
             thread_message = await forum_channel.create_thread(name=thread_name, embed=embed)
 
             # Store submission in DB (Needed for GM to approve later)
@@ -1842,12 +1906,10 @@ async def _handle_submission(interaction, character_id, character_name, items, c
             await interaction.response.edit_message(view=new_view)
 
             confirmation_embed = discord.Embed(
-                title='Inventory Submission Sent',
-                description=(
-                    f'Your submission for **{character_name}** has been sent to the GM team for approval! '
-                    f'You will be notified once it has been reviewed.\n'
-                    f'[View Submission Thread]({thread_message.thread.jump_url})'
-                ),
+                title=t(locale, 'player-embed-title-submission-sent'),
+                description=t(locale, 'player-embed-desc-submission-sent',
+                              characterName=character_name,
+                              threadUrl=thread_message.thread.jump_url),
                 color=discord.Color.green()
             )
             await interaction.followup.send(embed=confirmation_embed, ephemeral=True)
@@ -1859,9 +1921,14 @@ async def _handle_submission(interaction, character_id, character_name, items, c
             for name, quantity in currency.items():
                 await update_character_inventory(interaction, interaction.user.id, character_id, name, quantity)
 
-            report_embed = discord.Embed(title='Starting Inventory Applied', color=discord.Color.green())
+            report_embed = discord.Embed(
+                title=t(locale, 'player-embed-title-starting-inventory'),
+                color=discord.Color.green()
+            )
             report_embed.description = (
-                f'Player: {interaction.user.mention} as `{character_name}`\n'
+                t(locale, 'player-embed-desc-starting-inventory',
+                  playerMention=interaction.user.mention,
+                  characterName=character_name) + '\n'
             )
 
             added_items_summary = []
@@ -1869,12 +1936,18 @@ async def _handle_submission(interaction, character_id, character_name, items, c
                 quantity_label = f'{quantity}x ' if quantity > 1 else ''
                 added_items_summary.append(f'{quantity_label}{escape_markdown(titlecase(name))}')
 
-            report_embed.add_field(name='Items Received', value='\n'.join(added_items_summary) or 'None', inline=False)
+            report_embed.add_field(
+                name=t(locale, 'player-embed-field-items-received'),
+                value='\n'.join(added_items_summary) or t(locale, 'common-label-none'), inline=False
+            )
 
             currency_labels = format_consolidated_totals(currency, currency_config)
-            report_embed.add_field(name='Currency Received', value='\n'.join(currency_labels) or 'None', inline=False)
+            report_embed.add_field(
+                name=t(locale, 'player-embed-field-currency-received-label'),
+                value='\n'.join(currency_labels) or t(locale, 'common-label-none'), inline=False
+            )
 
-            report_embed.set_footer(text=f'Transaction ID: {shortuuid.uuid()[:12]}')
+            report_embed.set_footer(text=t(locale, 'player-embed-footer-transaction-id', transactionId=shortuuid.uuid()[:12]))
 
             view = CharacterBaseView()
             await setup_view(view, interaction)

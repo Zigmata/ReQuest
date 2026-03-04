@@ -17,6 +17,7 @@ from ReQuest.ui.common import buttons as common_buttons
 from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.common.buttons import MenuDoneButton, MenuViewButton
 from ReQuest.utilities.constants import DatabaseCollections
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.supportFunctions import log_exception, get_cached_data
 
 logger = logging.getLogger(__name__)
@@ -25,28 +26,29 @@ logger = logging.getLogger(__name__)
 class AdminBaseView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
 
         container = Container()
 
-        header_section = Section(accessory=MenuDoneButton())
-        header_section.add_item(TextDisplay('**Administration - Main Menu**'))
+        header_section = Section(accessory=MenuDoneButton(locale=locale))
+        header_section.add_item(TextDisplay(f'**{t(locale, "admin-title-main-menu")}**'))
         container.add_item(header_section)
         container.add_item(Separator())
 
         allow_list_section = Section(accessory=MenuViewButton(AdminAllowlistView, 'Allowlist'))
-        allow_list_section.add_item(TextDisplay('Configure the server allowlist for invite restrictions.'))
+        allow_list_section.add_item(TextDisplay(t(locale, 'admin-desc-allowlist')))
         container.add_item(allow_list_section)
 
         cog_section = Section(accessory=MenuViewButton(AdminCogView, 'Cogs'))
-        cog_section.add_item(TextDisplay('Load or reload cogs.'))
+        cog_section.add_item(TextDisplay(t(locale, 'admin-desc-cogs')))
         container.add_item(cog_section)
 
-        print_guilds_section = Section(accessory=buttons.PrintGuildsButton())
-        print_guilds_section.add_item(TextDisplay('Returns a list of all guilds the bot is a member of.'))
+        print_guilds_section = Section(accessory=buttons.PrintGuildsButton(locale=locale))
+        print_guilds_section.add_item(TextDisplay(t(locale, 'admin-desc-guild-list')))
         container.add_item(print_guilds_section)
 
-        shutdown_section = Section(accessory=buttons.AdminShutdownButton(self))
-        shutdown_section.add_item(TextDisplay('Shuts down the bot'))
+        shutdown_section = Section(accessory=buttons.AdminShutdownButton(self, locale=locale))
+        shutdown_section.add_item(TextDisplay(t(locale, 'admin-desc-shutdown')))
         container.add_item(shutdown_section)
 
         self.add_item(container)
@@ -87,24 +89,21 @@ class AdminAllowlistView(LayoutView):
 
     def build_view(self):
         self.clear_items()
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
-        header_section = Section(accessory=common_buttons.BackButton(AdminBaseView))
-        header_section.add_item(TextDisplay('**Administration - Server Allowlist**'))
+        header_section = Section(accessory=common_buttons.BackButton(AdminBaseView, locale=locale))
+        header_section.add_item(TextDisplay(f'**{t(locale, "admin-title-allowlist")}**'))
         container.add_item(header_section)
         container.add_item(Separator())
 
-        add_server_section = Section(accessory=buttons.AllowlistAddServerButton(self))
-        add_server_section.add_item(TextDisplay(
-            'Add a new Discord Server ID to the allowlist.\n'
-            '**WARNING: There is no way to verify the server ID provided is valid without the bot being a '
-            'server member. Double-check your inputs!**'
-        ))
+        add_server_section = Section(accessory=buttons.AllowlistAddServerButton(self, locale=locale))
+        add_server_section.add_item(TextDisplay(t(locale, 'admin-desc-allowlist-warning')))
         container.add_item(add_server_section)
         container.add_item(Separator())
 
         if not self.servers:
-            container.add_item(TextDisplay("No servers in allowlist."))
+            container.add_item(TextDisplay(t(locale, 'admin-msg-no-servers')))
         else:
             start = self.current_page * self.items_per_page
             end = start + self.items_per_page
@@ -116,7 +115,7 @@ class AdminAllowlistView(LayoutView):
 
                 info = f"**{name}** (ID: `{server_id}`)"
 
-                section = Section(accessory=buttons.RemoveServerButton(self, server_id, name))
+                section = Section(accessory=buttons.RemoveServerButton(self, server_id, name, locale=locale))
                 section.add_item(TextDisplay(info))
                 container.add_item(section)
 
@@ -126,7 +125,7 @@ class AdminAllowlistView(LayoutView):
             nav_row = ActionRow()
 
             prev_button = Button(
-                label='Previous',
+                label=t(locale, 'common-btn-previous'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='allow_prev',
                 disabled=(self.current_page == 0)
@@ -135,7 +134,7 @@ class AdminAllowlistView(LayoutView):
             nav_row.add_item(prev_button)
 
             page_display = Button(
-                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                label=t(locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages),
                 style=discord.ButtonStyle.secondary,
                 custom_id='allow_page_disp'
             )
@@ -143,7 +142,7 @@ class AdminAllowlistView(LayoutView):
             nav_row.add_item(page_display)
 
             next_button = Button(
-                label='Next',
+                label=t(locale, 'common-btn-next'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='allow_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -178,23 +177,20 @@ class AdminCogView(LayoutView):
         self.build_view()
 
     def build_view(self):
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
-        header_section = Section(accessory=common_buttons.BackButton(AdminBaseView))
-        header_section.add_item(TextDisplay('**Administration - Cogs**'))
+        header_section = Section(accessory=common_buttons.BackButton(AdminBaseView, locale=locale))
+        header_section.add_item(TextDisplay(f'**{t(locale, "admin-title-cogs")}**'))
         container.add_item(header_section)
         container.add_item(Separator())
 
-        load_cog_section = Section(accessory=buttons.AdminLoadCogButton())
-        load_cog_section.add_item(TextDisplay(
-            'Load a bot cog by name. File must be named `<name>.py` and stored in ReQuest\\cogs\\.'
-        ))
+        load_cog_section = Section(accessory=buttons.AdminLoadCogButton(locale=locale))
+        load_cog_section.add_item(TextDisplay(t(locale, 'admin-desc-load-cog')))
         container.add_item(load_cog_section)
 
-        reload_cog_section = Section(accessory=buttons.AdminReloadCogButton())
-        reload_cog_section.add_item(TextDisplay(
-            'Reload a loaded cog by name. Same naming and file path restrictions apply.'
-        ))
+        reload_cog_section = Section(accessory=buttons.AdminReloadCogButton(locale=locale))
+        reload_cog_section.add_item(TextDisplay(t(locale, 'admin-desc-reload-cog')))
         container.add_item(reload_cog_section)
 
         self.add_item(container)

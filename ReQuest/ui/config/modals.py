@@ -24,6 +24,7 @@ from ReQuest.utilities.constants import (
     CharacterFields, ConfigFields, CurrencyFields, QuestFields, ShopFields, RestockFields, RoleplayFields, CommonFields,
     DatabaseCollections
 )
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     setup_view,
@@ -91,12 +92,12 @@ SHOP_SCHEMA = {
 class AddCurrencyTextModal(Modal):
     def __init__(self, calling_view):
         super().__init__(
-            title='Add New Currency',
+            title=t(DEFAULT_LOCALE, 'config-modal-title-add-currency'),
             timeout=180
         )
         self.calling_view = calling_view
         self.text_input = discord.ui.TextInput(
-            label='Currency Name',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-currency-name'),
             required=True,
             custom_id='new_currency_name_text_input')
         self.add_item(self.text_input)
@@ -122,9 +123,11 @@ class AddCurrencyTextModal(Modal):
                             matches += 1
 
             if matches > 0:
+                locale = getattr(self, '_locale', DEFAULT_LOCALE)
                 await interaction.response.defer(ephemeral=True, thinking=True)
-                await interaction.followup.send(f'A currency or denomination named {self.text_input.value} '
-                                                f'already exists!')
+                await interaction.followup.send(
+                    t(locale, 'config-error-currency-already-exists', {'name': self.text_input.value})
+                )
             else:
                 await update_cached_data(
                     bot=bot,
@@ -143,13 +146,13 @@ class AddCurrencyTextModal(Modal):
 class RenameCurrencyModal(Modal):
     def __init__(self, calling_view, old_currency_name):
         super().__init__(
-            title='Rename Currency',
+            title=t(DEFAULT_LOCALE, 'config-modal-title-rename-currency'),
             timeout=180
         )
         self.calling_view = calling_view
         self.old_currency_name = old_currency_name
         self.text_input = discord.ui.TextInput(
-            label='New Currency Name',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-new-currency-name'),
             required=True,
             default=old_currency_name,
             custom_id='rename_currency_text_input'
@@ -179,10 +182,16 @@ class RenameCurrencyModal(Modal):
             if query:
                 for currency in query.get(CurrencyFields.CURRENCIES, []):
                     if currency[CommonFields.NAME].lower() == new_name.lower():
-                        raise UserFeedbackError(f'A currency named "{new_name}" already exists.')
+                        raise UserFeedbackError(
+                            t(DEFAULT_LOCALE, 'config-error-currency-name-exists', {'name': new_name}),
+                            message_id='config-error-currency-name-exists'
+                        )
                     for denomination in currency.get(CurrencyFields.DENOMINATIONS, []):
                         if denomination[CommonFields.NAME].lower() == new_name.lower():
-                            raise UserFeedbackError(f'A denomination named "{new_name}" already exists.')
+                            raise UserFeedbackError(
+                                t(DEFAULT_LOCALE, 'config-error-denomination-name-exists', {'name': new_name}),
+                                message_id='config-error-denomination-name-exists'
+                            )
 
             # Update the currency name
             await update_cached_data(
@@ -204,14 +213,14 @@ class RenameCurrencyModal(Modal):
 class RenameDenominationModal(Modal):
     def __init__(self, calling_view, currency_name, old_denomination_name):
         super().__init__(
-            title='Rename Denomination',
+            title=t(DEFAULT_LOCALE, 'config-modal-title-rename-denomination'),
             timeout=180
         )
         self.calling_view = calling_view
         self.currency_name = currency_name
         self.old_denomination_name = old_denomination_name
         self.text_input = discord.ui.TextInput(
-            label='New Denomination Name',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-new-denomination-name'),
             required=True,
             default=old_denomination_name,
             custom_id='rename_denomination_text_input'
@@ -241,10 +250,16 @@ class RenameDenominationModal(Modal):
             if query:
                 for currency in query.get(CurrencyFields.CURRENCIES, []):
                     if currency[CommonFields.NAME].lower() == new_name.lower():
-                        raise UserFeedbackError(f'A currency named "{new_name}" already exists.')
+                        raise UserFeedbackError(
+                            t(DEFAULT_LOCALE, 'config-error-currency-name-exists', {'name': new_name}),
+                            message_id='config-error-currency-name-exists'
+                        )
                     for denomination in currency.get(CurrencyFields.DENOMINATIONS, []):
                         if denomination[CommonFields.NAME].lower() == new_name.lower():
-                            raise UserFeedbackError(f'A denomination named "{new_name}" already exists.')
+                            raise UserFeedbackError(
+                                t(DEFAULT_LOCALE, 'config-error-denomination-name-exists', {'name': new_name}),
+                                message_id='config-error-denomination-name-exists'
+                            )
 
             # Update the denomination name using arrayFilters
             collection = bot.gdb[DatabaseCollections.CURRENCY]
@@ -268,20 +283,20 @@ class RenameDenominationModal(Modal):
 class AddCurrencyDenominationModal(Modal):
     def __init__(self, calling_view, base_currency_name):
         super().__init__(
-            title=f'Add {base_currency_name} Denomination',
+            title=t(DEFAULT_LOCALE, 'config-modal-title-add-denomination', {'currencyName': base_currency_name}),
             timeout=300
         )
         self.calling_view = calling_view
         self.base_currency_name = base_currency_name
 
         self.denomination_name_text_input = discord.ui.TextInput(
-            label='Name',
-            placeholder='e.g., Silver',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-denomination-name'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-denomination-name'),
             custom_id='denomination_name_text_input'
         )
         self.denomination_value_text_input = discord.ui.TextInput(
-            label='Value',
-            placeholder='e.g., 0.1',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-denomination-value'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-denomination-value'),
             custom_id='denomination_value_text_input'
         )
         self.add_item(self.denomination_name_text_input)
@@ -302,15 +317,17 @@ class AddCurrencyDenominationModal(Modal):
             for currency in query[CurrencyFields.CURRENCIES]:
                 if new_name.lower() == currency[CommonFields.NAME].lower():
                     raise UserFeedbackError(
-                        f'New denomination name cannot match an existing currency on this server! Found existing '
-                        f'currency named \"{currency[CommonFields.NAME]}\".'
+                        t(DEFAULT_LOCALE, 'config-error-denomination-matches-currency',
+                          {'existingName': currency[CommonFields.NAME]}),
+                        message_id='config-error-denomination-matches-currency'
                     )
                 for denomination in currency[CurrencyFields.DENOMINATIONS]:
                     if new_name.lower() == denomination[CommonFields.NAME].lower():
                         raise UserFeedbackError(
-                            f'New denomination name cannot match an existing denomination on this server! Found '
-                            f'existing denomination named \"{denomination[CommonFields.NAME]}\" under the currency named '
-                            f'\"{currency[CommonFields.NAME]}\".'
+                            t(DEFAULT_LOCALE, 'config-error-denomination-matches-denomination',
+                              {'denominationName': denomination[CommonFields.NAME],
+                               'currencyName': currency[CommonFields.NAME]}),
+                            message_id='config-error-denomination-matches-denomination'
                         )
             base_currency = next((item for item in query[CurrencyFields.CURRENCIES] if item[CommonFields.NAME] == self.base_currency_name),
                                  None)
@@ -319,8 +336,9 @@ class AddCurrencyDenominationModal(Modal):
                     if float(self.denomination_value_text_input.value) == denomination[CurrencyFields.VALUE]:
                         using_name = denomination[CommonFields.NAME]
                         raise UserFeedbackError(
-                            f'Denominations under a single currency must have unique values! {using_name} already has '
-                            f'this value assigned.'
+                            t(DEFAULT_LOCALE, 'config-error-denomination-value-exists',
+                              {'denominationName': using_name}),
+                            message_id='config-error-denomination-value-exists'
                         )
 
                 await update_cached_data(
@@ -344,13 +362,13 @@ class AddCurrencyDenominationModal(Modal):
 class ForbiddenRolesModal(Modal):
     def __init__(self, current_list):
         super().__init__(
-            title='Forbidden Role Names',
+            title=t(DEFAULT_LOCALE, 'config-modal-title-forbidden-roles'),
             timeout=600
         )
         self.names_text_input = discord.ui.TextInput(
-            label='Names',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-names'),
             style=discord.TextStyle.paragraph,
-            placeholder='Input names separated by commas',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-names'),
             default=', '.join(current_list),
             custom_id='names_text_input',
             required=False
@@ -371,7 +389,10 @@ class ForbiddenRolesModal(Modal):
                 query={CommonFields.ID: interaction.guild_id},
                 update_data={'$set': {ConfigFields.FORBIDDEN_ROLES: names}}
             )
-            await interaction.response.send_message('Forbidden roles updated!', ephemeral=True)
+            locale = getattr(self, '_locale', DEFAULT_LOCALE)
+            await interaction.response.send_message(
+                t(locale, 'config-msg-forbidden-roles-updated'), ephemeral=True
+            )
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -379,14 +400,14 @@ class ForbiddenRolesModal(Modal):
 class PlayerBoardPurgeModal(Modal):
     def __init__(self, calling_view):
         super().__init__(
-            title='Purge Player Board',
+            title=t(DEFAULT_LOCALE, 'config-modal-title-purge-player-board'),
             timeout=600
         )
         self.calling_view = calling_view
         self.age_text_input = discord.ui.TextInput(
-            label='Age',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-age'),
             custom_id='age_text_input',
-            placeholder='Enter the maximum post age (in days) to keep'
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-age')
         )
         self.add_item(self.age_text_input)
 
@@ -420,9 +441,12 @@ class PlayerBoardPurgeModal(Modal):
             channel = interaction.guild.get_channel(channel_id)
             await channel.purge(before=cutoff_date)
 
-            await interaction.response.send_message(f'Posts older than {age} days have been purged!',
-                                                    ephemeral=True,
-                                                    delete_after=10)
+            locale = getattr(self, '_locale', DEFAULT_LOCALE)
+            await interaction.response.send_message(
+                t(locale, 'config-msg-posts-purged', {'days': str(age)}),
+                ephemeral=True,
+                delete_after=10
+            )
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -430,7 +454,7 @@ class PlayerBoardPurgeModal(Modal):
 class GMRewardsModal(Modal):
     def __init__(self, calling_view):
         super().__init__(
-            title='Add/Modify GM Rewards',
+            title=t(DEFAULT_LOCALE, 'config-modal-title-gm-rewards'),
             timeout=600
         )
         self.calling_view = calling_view
@@ -439,21 +463,19 @@ class GMRewardsModal(Modal):
 
         if self.xp_enabled:
             self.experience_text_input = discord.ui.TextInput(
-                label='Experience',
+                label=t(DEFAULT_LOCALE, 'config-modal-label-experience'),
                 custom_id='experience_text_input',
-                placeholder='Enter a number',
+                placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-enter-number'),
                 default=current_rewards[CharacterFields.EXPERIENCE] if current_rewards and current_rewards[CharacterFields.EXPERIENCE] else None,
                 required=False
             )
             self.add_item(self.experience_text_input)
 
         self.items_text_input = discord.ui.TextInput(
-            label='Items',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-items'),
             style=discord.TextStyle.paragraph,
             custom_id='items_text_input',
-            placeholder='Name: Quantity\n'
-                        'Name2: Quantity\n'
-                        'etc.',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-items'),
             default=(self.parse_items_to_string(current_rewards[CommonFields.ITEMS])
                      if current_rewards and current_rewards[CommonFields.ITEMS]
                      else None),
@@ -469,7 +491,10 @@ class GMRewardsModal(Modal):
                 try:
                     experience = int(self.experience_text_input.value)
                 except ValueError:
-                    raise UserFeedbackError('Experience must be a valid integer (e.g. 2000).')
+                    raise UserFeedbackError(
+                        t(DEFAULT_LOCALE, 'config-error-experience-invalid'),
+                        message_id='config-error-experience-invalid'
+                    )
 
             items = None
             if self.items_text_input.value:
@@ -480,8 +505,8 @@ class GMRewardsModal(Modal):
                         items[titlecase(item_name.strip())] = int(quantity.strip())
                     except ValueError:
                         raise UserFeedbackError(
-                            f'Invalid item format: "{item}". Each item must be on a new line, and in the format '
-                            f'"Name: Quantity".'
+                            t(DEFAULT_LOCALE, 'config-error-item-format-invalid', {'item': item}),
+                            message_id='config-error-item-format-invalid'
                         )
 
             await update_cached_data(
@@ -510,7 +535,7 @@ class ConfigShopDetailsModal(Modal):
     def __init__(self, calling_view, existing_shop_data=None, existing_channel_id=None,
                  channel_type='text', parent_forum_id=None, preselected_channel=None):
         super().__init__(
-            title='Add/Edit Shop Details',
+            title=t(DEFAULT_LOCALE, 'config-modal-title-shop-details'),
             timeout=600
         )
         self.calling_view = calling_view
@@ -530,41 +555,41 @@ class ConfigShopDetailsModal(Modal):
         if not self.existing_channel_id and not self.preselected_channel:
             self.shop_channel_select = discord.ui.ChannelSelect(
                 channel_types=[discord.ChannelType.text],
-                placeholder='Select the channel for this shop',
+                placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-channel'),
                 custom_id='shop_channel_select',
                 required=True
             )
             self.channel_label = Label(
-                text='Select a channel',
+                text=t(DEFAULT_LOCALE, 'config-modal-label-shop-channel'),
                 component=self.shop_channel_select
             )
             self.add_item(self.channel_label)
         self.shop_name_text_input = discord.ui.TextInput(
-            label='Shop Name',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-shop-name'),
             custom_id='shop_name_text_input',
-            placeholder='Enter the name of the shop',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-name'),
             default=name_default,
             required=True
         )
         self.shop_keeper_text_input = discord.ui.TextInput(
-            label='Shopkeeper Name',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-shopkeeper-name'),
             custom_id='shop_keeper_text_input',
-            placeholder='Enter the name of the shopkeeper',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shopkeeper-name'),
             default=keeper_default,
             required=False
         )
         self.shop_description_text_input = discord.ui.TextInput(
-            label='Shop Description',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-shop-description'),
             style=discord.TextStyle.paragraph,
             custom_id='shop_description_text_input',
-            placeholder='Enter a description for the shop',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-description'),
             default=description_default,
             required=False
         )
         self.shop_image_text_input = discord.ui.TextInput(
-            label='Shop Image URL',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-shop-image-url'),
             custom_id='shop_image_text_input',
-            placeholder='Enter a URL for the shop image',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-image-url'),
             default=image_default,
             required=False
         )
@@ -585,7 +610,10 @@ class ConfigShopDetailsModal(Modal):
                 channel_id = str(self.preselected_channel.id)
             else:
                 if not self.shop_channel_select or not self.shop_channel_select.values:
-                    raise UserFeedbackError('No channel selected for the shop.')
+                    raise UserFeedbackError(
+                        t(DEFAULT_LOCALE, 'config-error-no-channel-selected'),
+                        message_id='config-error-no-channel-selected'
+                    )
                 channel_id = str(self.shop_channel_select.values[0].id)
 
             if not self.existing_channel_id:
@@ -597,8 +625,8 @@ class ConfigShopDetailsModal(Modal):
                 )
                 if query and channel_id in query.get(ShopFields.SHOP_CHANNELS, {}):
                     raise UserFeedbackError(
-                        'A shop is already registered in the selected channel. Please choose a different channel or '
-                        'edit the existing shop.'
+                        t(DEFAULT_LOCALE, 'config-error-shop-already-in-channel'),
+                        message_id='config-error-shop-already-in-channel'
                     )
 
             shop_data = {
@@ -659,7 +687,7 @@ def build_shop_header_view(shop_data: dict) -> LayoutView:
     if shop_name := shop_data.get(ShopFields.SHOP_NAME):
         header_items.append(TextDisplay(f'# {shop_name}'))
     if shop_keeper := shop_data.get(ShopFields.SHOP_KEEPER):
-        header_items.append(TextDisplay(f'**Shopkeeper:** {shop_keeper}'))
+        header_items.append(TextDisplay(t(DEFAULT_LOCALE, 'config-label-shopkeeper', {'name': shop_keeper})))
     if shop_description := shop_data.get(ShopFields.SHOP_DESCRIPTION):
         header_items.append(TextDisplay(f'*{shop_description}*'))
 
@@ -674,7 +702,7 @@ def build_shop_header_view(shop_data: dict) -> LayoutView:
             container.add_item(item)
 
     container.add_item(Separator())
-    container.add_item(TextDisplay('Use the `/shop` command to browse and purchase items.'))
+    container.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-msg-use-shop-command')))
 
     view.add_item(container)
     return view
@@ -684,41 +712,41 @@ class ForumThreadShopModal(Modal):
     """Modal for creating a shop in a new forum thread."""
     def __init__(self, calling_view, forum_channel):
         super().__init__(
-            title='Create Forum Thread Shop',
+            title=t(DEFAULT_LOCALE, 'config-modal-title-forum-thread-shop'),
             timeout=600
         )
         self.calling_view = calling_view
         self.forum_channel = forum_channel
 
         self.thread_name_input = discord.ui.TextInput(
-            label='Thread Name',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-thread-name'),
             custom_id='thread_name_input',
-            placeholder='Enter the name for the shop thread',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-thread-name'),
             required=True
         )
         self.shop_name_input = discord.ui.TextInput(
-            label='Shop Name',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-shop-name'),
             custom_id='shop_name_input',
-            placeholder='Enter the name of the shop',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-name'),
             required=True
         )
         self.shop_keeper_input = discord.ui.TextInput(
-            label='Shopkeeper Name',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-shopkeeper-name'),
             custom_id='shop_keeper_input',
-            placeholder='Enter the name of the shopkeeper',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shopkeeper-name'),
             required=False
         )
         self.shop_description_input = discord.ui.TextInput(
-            label='Shop Description',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-shop-description'),
             style=discord.TextStyle.paragraph,
             custom_id='shop_description_input',
-            placeholder='Enter a description for the shop',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-description'),
             required=False
         )
         self.shop_image_input = discord.ui.TextInput(
-            label='Shop Image URL',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-shop-image-url'),
             custom_id='shop_image_input',
-            placeholder='Enter a URL for the shop image',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-image-url'),
             required=False
         )
 
@@ -736,7 +764,10 @@ class ForumThreadShopModal(Modal):
             # Fetch the actual ForumChannel object (self.forum_channel is an AppCommandChannel)
             forum = interaction.guild.get_channel(self.forum_channel.id)
             if not forum:
-                raise UserFeedbackError('Could not find the selected forum channel.')
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-forum-not-found'),
+                    message_id='config-error-forum-not-found'
+                )
 
             # Build shop data first so we can create the header view
             thread_name = self.thread_name_input.value
@@ -772,7 +803,8 @@ class ForumThreadShopModal(Modal):
             )
             if query and channel_id in query.get(ShopFields.SHOP_CHANNELS, {}):
                 raise UserFeedbackError(
-                    'A shop is already registered in this thread. This should not happen for a new thread.'
+                    t(DEFAULT_LOCALE, 'config-error-shop-already-in-thread'),
+                    message_id='config-error-shop-already-in-thread'
                 )
 
             await update_cached_data(
@@ -796,25 +828,25 @@ class ForumThreadShopModal(Modal):
 class ConfigShopJSONModal(Modal):
     def __init__(self, calling_view):
         super().__init__(
-            title='Add New Shop via JSON',
+            title=t(DEFAULT_LOCALE, 'config-modal-title-add-shop-json'),
             timeout=600
         )
         self.calling_view = calling_view
 
         self.shop_channel_select = discord.ui.ChannelSelect(
             channel_types=[discord.ChannelType.text],
-            placeholder='Select the channel for this shop',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-channel'),
             custom_id='shop_channel_select'
         )
         self.shop_json_file_upload = discord.ui.FileUpload(
             custom_id='shop_json_file_upload'
         )
         self.select_label = Label(
-            text='Select a channel',
+            text=t(DEFAULT_LOCALE, 'config-modal-label-shop-channel'),
             component=self.shop_channel_select
         )
         self.upload_label = Label(
-            text='Upload a .json file containing the shop data',
+            text=t(DEFAULT_LOCALE, 'config-modal-label-upload-json'),
             component=self.shop_json_file_upload
         )
         self.add_item(self.select_label)
@@ -834,16 +866,22 @@ class ConfigShopJSONModal(Modal):
             )
             if query and channel_id in query.get(ShopFields.SHOP_CHANNELS, {}):
                 raise UserFeedbackError(
-                    'A shop is already registered in the selected channel. Please choose a different channel or edit '
-                    'the existing shop.'
+                    t(DEFAULT_LOCALE, 'config-error-shop-already-in-channel'),
+                    message_id='config-error-shop-already-in-channel'
                 )
 
             if not self.shop_json_file_upload.values:
-                raise UserFeedbackError('No JSON file uploaded for the shop.')
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-no-json-uploaded'),
+                    message_id='config-error-no-json-uploaded'
+                )
 
             uploaded_file = self.shop_json_file_upload.values[0]
             if not uploaded_file.filename.endswith('.json'):
-                raise UserFeedbackError('Uploaded file must be a JSON file (.json).')
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-file-must-be-json'),
+                    message_id='config-error-file-must-be-json'
+                )
 
             file_bytes = await uploaded_file.read()
 
@@ -852,12 +890,18 @@ class ConfigShopJSONModal(Modal):
             try:
                 shop_data = json.loads(file_content)
             except json.JSONDecodeError as jde:
-                raise UserFeedbackError(f'Invalid JSON format: {str(jde)}')
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-invalid-json', {'error': str(jde)}),
+                    message_id='config-error-invalid-json'
+                )
 
             try:
                 validate(instance=shop_data, schema=SHOP_SCHEMA)
             except jsonschema.exceptions.ValidationError as ve:
-                raise UserFeedbackError(f'JSON does not conform to schema: {str(ve)}')
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-json-validation-failed', {'error': str(ve)}),
+                    message_id='config-error-json-validation-failed'
+                )
 
             await update_cached_data(
                 bot=bot,
@@ -885,7 +929,7 @@ class ConfigShopJSONModal(Modal):
 class ShopItemModal(Modal):
     def __init__(self, calling_view, existing_item=None):
         super().__init__(
-            title='Add/Edit Shop Item',
+            title=t(DEFAULT_LOCALE, 'config-modal-title-shop-item'),
             timeout=600
         )
         self.calling_view = calling_view
@@ -904,31 +948,31 @@ class ShopItemModal(Modal):
             costs_default = '\n'.join(lines)
 
         self.item_name_text_input = discord.ui.TextInput(
-            label='Item Name',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-item-name'),
             custom_id='item_name_text_input',
-            placeholder='Enter the name of the item',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-name'),
             default=name_default
         )
         self.item_description_text_input = discord.ui.TextInput(
-            label='Item Description',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-item-description'),
             style=discord.TextStyle.paragraph,
             custom_id='item_description_text_input',
-            placeholder='Enter a description for the item',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-description'),
             default=description_default,
             required=False
         )
         self.item_quantity_text_input = discord.ui.TextInput(
-            label='Item Quantity',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-item-quantity'),
             custom_id='item_quantity_text_input',
-            placeholder='Enter the quantity sold per purchase',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-quantity'),
             default=quantity_default,
             required=False
         )
         self.item_cost_text_input = discord.ui.TextInput(
-            label='Item Costs',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-item-costs'),
             style=discord.TextStyle.paragraph,
             custom_id='item_cost_text_input',
-            placeholder='E.g.: 10 gold + 5 silver\nOR: 50 rep\n(Use + for AND, New Lines for OR)',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-costs'),
             default=costs_default,
             required=False
         )
@@ -950,7 +994,10 @@ class ShopItemModal(Modal):
                 if quantity < 1:
                     raise ValueError
             except ValueError:
-                raise UserFeedbackError('Item quantity must be a positive integer.')
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-item-quantity-positive'),
+                    message_id='config-error-item-quantity-positive'
+                )
 
             cost_string = self.item_cost_text_input.value
             parsed_costs = []
@@ -966,8 +1013,8 @@ class ShopItemModal(Modal):
                         parts = component.strip().split(' ', 1)
                         if len(parts) < 2:
                             raise UserFeedbackError(
-                                f'Invalid cost format in option: "{option}". Each cost must have an amount and a '
-                                f'currency separated by a space, e.g. "10 gold".'
+                                t(DEFAULT_LOCALE, 'config-error-cost-format-invalid', {'option': option}),
+                                message_id='config-error-cost-format-invalid'
                             )
 
                         amount_string = parts[0]
@@ -979,8 +1026,9 @@ class ShopItemModal(Modal):
                                 raise ValueError
                         except ValueError:
                             raise UserFeedbackError(
-                                f'Invalid amount "{amount_string}" for currency: "{currency_name}". Amount must be a '
-                                f'positive number.'
+                                t(DEFAULT_LOCALE, 'config-error-cost-amount-invalid',
+                                  {'amount': amount_string, 'currency': currency_name}),
+                                message_id='config-error-cost-amount-invalid'
                             )
 
                         currency_key = currency_name.lower()
@@ -994,8 +1042,8 @@ class ShopItemModal(Modal):
 
                         if not currency_config_entry:
                             raise UserFeedbackError(
-                                f'Unknown currency `{currency_name}`. Please use a valid currency configured for this '
-                                f'server.'
+                                t(DEFAULT_LOCALE, 'config-error-unknown-currency', {'currency': currency_name}),
+                                message_id='config-error-unknown-currency'
                             )
 
                         current_options[currency_key] = amount
@@ -1034,7 +1082,11 @@ class ShopItemModal(Modal):
             else:
                 for item in shop_stock:
                     if item.get(CommonFields.NAME).lower() == new_item[CommonFields.NAME].lower():
-                        raise UserFeedbackError(f'An item named {new_item[CommonFields.NAME]} already exists in this shop.')
+                        raise UserFeedbackError(
+                            t(DEFAULT_LOCALE, 'config-error-item-already-exists',
+                              {'itemName': new_item[CommonFields.NAME]}),
+                            message_id='config-error-item-already-exists'
+                        )
                 shop_data[ShopFields.SHOP_STOCK].append(new_item)
 
             await update_cached_data(
@@ -1055,7 +1107,7 @@ class ShopItemModal(Modal):
 class ConfigUpdateShopJSONModal(Modal):
     def __init__(self, calling_view):
         super().__init__(
-            title='Update Shop via JSON',
+            title=t(DEFAULT_LOCALE, 'config-modal-title-update-shop-json'),
             timeout=600
         )
         self.calling_view = calling_view
@@ -1066,7 +1118,7 @@ class ConfigUpdateShopJSONModal(Modal):
             required=True
         )
         self.upload_label = Label(
-            text=f"Upload new JSON definition",
+            text=t(DEFAULT_LOCALE, 'config-modal-label-upload-new-json'),
             component=self.shop_json_file_upload
         )
         self.add_item(self.upload_label)
@@ -1078,11 +1130,17 @@ class ConfigUpdateShopJSONModal(Modal):
             channel_id = self.calling_view.selected_channel_id
 
             if not self.shop_json_file_upload.values:
-                raise UserFeedbackError("No file was uploaded.")
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-no-file-uploaded'),
+                    message_id='config-error-no-file-uploaded'
+                )
 
             uploaded_file = self.shop_json_file_upload.values[0]
             if not uploaded_file.filename.endswith('.json'):
-                raise UserFeedbackError("File must be a `.json` file.")
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-file-must-be-json-ext'),
+                    message_id='config-error-file-must-be-json-ext'
+                )
 
             file_bytes = await uploaded_file.read()
             file_content = file_bytes.decode('utf-8')
@@ -1090,12 +1148,18 @@ class ConfigUpdateShopJSONModal(Modal):
             try:
                 shop_data = json.loads(file_content)
             except json.JSONDecodeError as jde:
-                raise UserFeedbackError(f'Invalid JSON format: {str(jde)}')
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-invalid-json', {'error': str(jde)}),
+                    message_id='config-error-invalid-json'
+                )
 
             try:
                 validate(instance=shop_data, schema=SHOP_SCHEMA)
             except jsonschema.exceptions.ValidationError as err:
-                raise UserFeedbackError(f"JSON validation failed: {err.message}")
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-json-validation-message', {'error': err.message}),
+                    message_id='config-error-json-validation-message'
+                )
 
             await update_cached_data(
                 bot=bot,
@@ -1128,7 +1192,7 @@ class ConfigUpdateShopJSONModal(Modal):
 class NewCharacterShopItemModal(Modal):
     def __init__(self, calling_view, inventory_type, existing_item=None):
         super().__init__(
-            title='Add/Edit NewCharacter Gear',
+            title=t(DEFAULT_LOCALE, 'config-modal-title-new-char-item'),
             timeout=600
         )
         self.calling_view = calling_view
@@ -1148,27 +1212,27 @@ class NewCharacterShopItemModal(Modal):
             costs_default = '\n'.join(lines)
 
         self.item_name_text_input = discord.ui.TextInput(
-            label='Item Name',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-item-name'),
             custom_id='item_name_text_input',
-            placeholder='Enter the name of the item',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-name'),
             default=name_default
         )
         self.add_item(self.item_name_text_input)
 
         self.item_description_text_input = discord.ui.TextInput(
-            label='Item Description',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-item-description'),
             style=discord.TextStyle.paragraph,
             custom_id='item_description_text_input',
-            placeholder='Enter a description for the item',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-description'),
             default=description_default,
             required=False
         )
         self.add_item(self.item_description_text_input)
 
         self.item_quantity_text_input = discord.ui.TextInput(
-            label='Item Quantity',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-item-quantity'),
             custom_id='item_quantity_text_input',
-            placeholder='Enter the quantity received per selection',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-quantity-selection'),
             default=quantity_default,
             required=False
         )
@@ -1176,9 +1240,9 @@ class NewCharacterShopItemModal(Modal):
 
         if inventory_type == 'purchase':
             self.item_cost_text_input = discord.ui.TextInput(
-                label='Item Cost',
+                label=t(DEFAULT_LOCALE, 'config-modal-label-item-cost'),
                 custom_id='item_cost_text_input',
-                placeholder='E.g.: 10 gold + 5 silver\nOR: 50 rep\n(Use + for AND, New Lines for OR)',
+                placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-costs'),
                 style=discord.TextStyle.paragraph,
                 default=costs_default,
                 required=False
@@ -1192,7 +1256,10 @@ class NewCharacterShopItemModal(Modal):
 
             quantity_string = self.item_quantity_text_input.value
             if not quantity_string.isdigit() or int(quantity_string) < 1:
-                raise UserFeedbackError('Item quantity must be a positive integer.')
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-item-quantity-positive'),
+                    message_id='config-error-item-quantity-positive'
+                )
 
             parsed_costs = []
             if self.inventory_type == 'purchase':
@@ -1209,7 +1276,10 @@ class NewCharacterShopItemModal(Modal):
                             parts = component.strip().split(' ', 1)
                             if len(parts) < 2:
                                 raise UserFeedbackError(
-                                    f"Invalid cost format: '{component}'. Expected 'Amount Currency'.")
+                                    t(DEFAULT_LOCALE, 'config-error-cost-format-short',
+                                      {'component': component.strip()}),
+                                    message_id='config-error-cost-format-short'
+                                )
 
                             amount_str = parts[0]
                             currency_name = parts[1]
@@ -1220,7 +1290,10 @@ class NewCharacterShopItemModal(Modal):
                                     raise ValueError
                             except ValueError:
                                 raise UserFeedbackError(
-                                    f"Invalid amount '{amount_str}' for currency '{currency_name}'.")
+                                    t(DEFAULT_LOCALE, 'config-error-amount-invalid-short',
+                                      {'amount': amount_str, 'currency': currency_name}),
+                                    message_id='config-error-amount-invalid-short'
+                                )
 
                             currency_key = currency_name.lower()
                             currency_config = await get_cached_data(
@@ -1233,8 +1306,8 @@ class NewCharacterShopItemModal(Modal):
 
                             if not currency_config_entry:
                                 raise UserFeedbackError(
-                                    f'Unknown currency `{currency_name}`. Please use a valid currency configured for '
-                                    f'this server.'
+                                    t(DEFAULT_LOCALE, 'config-error-unknown-currency', {'currency': currency_name}),
+                                    message_id='config-error-unknown-currency'
                                 )
 
                             current_option_dict[currency_key] = amount
@@ -1273,7 +1346,9 @@ class NewCharacterShopItemModal(Modal):
                 for item in shop_stock:
                     if item.get(CommonFields.NAME).lower() == new_item[CommonFields.NAME].lower():
                         raise UserFeedbackError(
-                            f'An item named {new_item[CommonFields.NAME]} already exists in the New Character shop.'
+                            t(DEFAULT_LOCALE, 'config-error-item-exists-new-char',
+                              {'itemName': new_item[CommonFields.NAME]}),
+                            message_id='config-error-item-exists-new-char'
                         )
                 shop_stock.append(new_item)
 
@@ -1295,7 +1370,7 @@ class NewCharacterShopItemModal(Modal):
 class NewCharacterShopJSONModal(Modal):
     def __init__(self, calling_view):
         super().__init__(
-            title='Upload New Character Shop (JSON)',
+            title=t(DEFAULT_LOCALE, 'config-modal-title-upload-new-char-json'),
             timeout=600
         )
         self.calling_view = calling_view
@@ -1304,7 +1379,7 @@ class NewCharacterShopJSONModal(Modal):
             custom_id='shop_json_file_upload'
         )
         self.upload_label = Label(
-            text='Upload a .json file containing the shop data',
+            text=t(DEFAULT_LOCALE, 'config-modal-label-upload-json'),
             component=self.shop_json_file_upload
         )
         self.add_item(self.upload_label)
@@ -1315,11 +1390,17 @@ class NewCharacterShopJSONModal(Modal):
             guild_id = interaction.guild_id
 
             if not self.shop_json_file_upload.values:
-                raise UserFeedbackError('No JSON file uploaded.')
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-no-json-uploaded-short'),
+                    message_id='config-error-no-json-uploaded-short'
+                )
 
             uploaded_file = self.shop_json_file_upload.values[0]
             if not uploaded_file.filename.endswith('.json'):
-                raise UserFeedbackError('Uploaded file must be a JSON file (.json).')
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-file-must-be-json'),
+                    message_id='config-error-file-must-be-json'
+                )
 
             file_bytes = await uploaded_file.read()
             file_content = file_bytes.decode('utf-8')
@@ -1327,14 +1408,23 @@ class NewCharacterShopJSONModal(Modal):
             try:
                 shop_data = json.loads(file_content)
             except json.JSONDecodeError as jde:
-                raise UserFeedbackError(f'Invalid JSON format: {str(jde)}')
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-invalid-json', {'error': str(jde)}),
+                    message_id='config-error-invalid-json'
+                )
 
             if ShopFields.SHOP_STOCK not in shop_data or not isinstance(shop_data[ShopFields.SHOP_STOCK], list):
-                raise UserFeedbackError("JSON must contain a 'shopStock' array.")
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-json-must-have-shopstock'),
+                    message_id='config-error-json-must-have-shopstock'
+                )
 
             for item in shop_data[ShopFields.SHOP_STOCK]:
                 if CommonFields.NAME not in item or 'price' not in item:
-                    raise UserFeedbackError("All items must have 'name' and 'price'.")
+                    raise UserFeedbackError(
+                        t(DEFAULT_LOCALE, 'config-error-items-must-have-name-price'),
+                        message_id='config-error-items-must-have-name-price'
+                    )
 
             await update_cached_data(
                 bot=bot,
@@ -1354,19 +1444,19 @@ class NewCharacterShopJSONModal(Modal):
 class ConfigNewCharacterWealthModal(Modal):
     def __init__(self, calling_view, current_amount=None, current_currency=None):
         super().__init__(
-            title='Set New Character Wealth',
+            title=t(DEFAULT_LOCALE, 'config-modal-title-set-wealth'),
             timeout=600
         )
         self.amount_text_input = discord.ui.TextInput(
-            label='Amount',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-amount'),
             custom_id='amount_text_input',
-            placeholder='Enter the amount of this currency.',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-amount'),
             default=current_amount if current_amount is not None else ''
         )
         self.currency_name_text_input = discord.ui.TextInput(
-            label='Currency Name',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-currency-name'),
             custom_id='currency_name_text_input',
-            placeholder='Enter the name of a currency defined on this server',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-currency-name'),
             default=current_currency or ''
         )
         self.calling_view = calling_view
@@ -1400,13 +1490,17 @@ class ConfigNewCharacterWealthModal(Modal):
                 )
 
                 if not currency_config:
-                    raise UserFeedbackError('No currencies are configured on this server.')
+                    raise UserFeedbackError(
+                        t(DEFAULT_LOCALE, 'config-error-no-currencies-configured'),
+                        message_id='config-error-no-currencies-configured'
+                    )
 
                 found_name, parent_name = find_currency_or_denomination(currency_config, currency_input)
 
                 if not found_name:
                     raise UserFeedbackError(
-                        f'Currency or denomination named {currency_input} not found. Please use a valid currency.'
+                        t(DEFAULT_LOCALE, 'config-error-currency-not-found', {'name': currency_input}),
+                        message_id='config-error-currency-not-found'
                     )
 
                 await update_cached_data(
@@ -1426,22 +1520,22 @@ class ConfigNewCharacterWealthModal(Modal):
 class CreateStaticKitModal(Modal):
     def __init__(self, calling_view):
         super().__init__(
-            title='Create New Static Kit',
+            title=t(DEFAULT_LOCALE, 'config-modal-title-create-kit'),
             timeout=600
         )
         self.calling_view = calling_view
 
         self.kit_name_text_input = discord.ui.TextInput(
-            label='Kit Name',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-kit-name'),
             custom_id='kit_name_text_input',
-            placeholder='e.g., Warrior Starter Kit',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-kit-name'),
             max_length=50
         )
         self.kit_description_text_input = discord.ui.TextInput(
-            label='Description',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-description'),
             style=discord.TextStyle.paragraph,
             custom_id='kit_description_text_input',
-            placeholder='Optional description for this kit',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-kit-description'),
             required=False,
             max_length=200
         )
@@ -1466,8 +1560,9 @@ class CreateStaticKitModal(Modal):
                 for kit_data in existing_kits.values():
                     if kit_name.lower() == kit_data[CommonFields.NAME].lower():
                         raise UserFeedbackError(
-                            f'A static kit named "{titlecase(kit_name)}" already exists. Please choose a '
-                            f'different name.'
+                            t(DEFAULT_LOCALE, 'config-error-kit-name-exists',
+                              {'kitName': titlecase(kit_name)}),
+                            message_id='config-error-kit-name-exists'
                         )
 
             kit_data = {
@@ -1494,7 +1589,7 @@ class CreateStaticKitModal(Modal):
 class StaticKitItemModal(Modal):
     def __init__(self, calling_view, existing_item=None, index=None):
         super().__init__(
-            title='Add/Edit Kit Item',
+            title=t(DEFAULT_LOCALE, 'config-modal-title-kit-item'),
             timeout=600
         )
         self.calling_view = calling_view
@@ -1505,23 +1600,23 @@ class StaticKitItemModal(Modal):
         quantity_default = str(existing_item.get(CommonFields.QUANTITY, '1')) if existing_item else '1'
 
         self.item_name_text_input = discord.ui.TextInput(
-            label='Item Name',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-item-name'),
             custom_id='item_name_text_input',
-            placeholder='Enter the name of the item',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-name'),
             default=name_default
         )
         self.description_text_input = discord.ui.TextInput(
-            label='Item Description',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-item-description'),
             style=discord.TextStyle.paragraph,
             custom_id='item_description_text_input',
-            placeholder='Enter a description for the item',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-description'),
             default=description_default,
             required=False
         )
         self.item_quantity_text_input = discord.ui.TextInput(
-            label='Item Quantity',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-item-quantity'),
             custom_id='item_quantity_text_input',
-            placeholder='Enter the quantity of this item to be included in the kit',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-kit-item-quantity'),
             default=quantity_default
         )
         self.add_item(self.item_name_text_input)
@@ -1580,19 +1675,19 @@ class StaticKitItemModal(Modal):
 class StaticKitCurrencyModal(Modal):
     def __init__(self, calling_view):
         super().__init__(
-            title='Add Kit Currency',
+            title=t(DEFAULT_LOCALE, 'config-modal-title-kit-currency'),
             timeout=600
         )
         self.calling_view = calling_view
         self.currency_name_text_input = discord.ui.TextInput(
-            label='Currency Name',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-currency-name'),
             custom_id='currency_name_text_input',
-            placeholder='e.g., Gold'
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-currency-eg')
         )
         self.amount_text_input = discord.ui.TextInput(
-            label='Amount',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-amount'),
             custom_id='amount_text_input',
-            placeholder='e.g., 100'
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-amount-eg')
         )
         self.add_item(self.currency_name_text_input)
         self.add_item(self.amount_text_input)
@@ -1602,7 +1697,10 @@ class StaticKitCurrencyModal(Modal):
             bot = interaction.client
             currency_input = self.currency_name_text_input.value.strip()
             if not self.amount_text_input.value.replace('.', '', 1).isdigit():
-                raise UserFeedbackError("Amount must be a number.")
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-amount-must-be-number'),
+                    message_id='config-error-amount-must-be-number'
+                )
             amount = float(self.amount_text_input.value)
 
             currency_config = await get_cached_data(
@@ -1612,16 +1710,25 @@ class StaticKitCurrencyModal(Modal):
                 query={CommonFields.ID: interaction.guild_id}
             )
             if not currency_config:
-                raise UserFeedbackError("No currencies configured on server.")
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-no-currencies-on-server'),
+                    message_id='config-error-no-currencies-on-server'
+                )
 
             denomination_map, parent_name = get_denomination_map(currency_config, currency_input)
 
             if not denomination_map:
-                raise UserFeedbackError(f'Currency "{currency_input}" not found.')
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-currency-not-found-short', {'currency': currency_input}),
+                    message_id='config-error-currency-not-found-short'
+                )
 
             multiplier = denomination_map.get(currency_input.lower())
             if multiplier is None:
-                raise UserFeedbackError(f'Denomination "{currency_input}" not found in currency configuration.')
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-denomination-not-found', {'denomination': currency_input}),
+                    message_id='config-error-denomination-not-found'
+                )
 
             converted_amount = amount * multiplier
 
@@ -1664,7 +1771,7 @@ class StaticKitCurrencyModal(Modal):
 class RoleplaySettingsModal(Modal):
     def __init__(self, calling_view):
         super().__init__(
-            title='Roleplay Settings'
+            title=t(DEFAULT_LOCALE, 'config-modal-title-rp-settings')
         )
         self.calling_view = calling_view
         config = calling_view.config
@@ -1672,16 +1779,16 @@ class RoleplaySettingsModal(Modal):
         self.mode = config.get(RoleplayFields.MODE, 'accrued')
 
         self.minimum_length_text_input = discord.ui.TextInput(
-            label='Minimum Message Length (characters)',
-            placeholder='# of characters required for a message to be eligible. 0 for no limit',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-min-message-length'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-min-message-length'),
             default=str(mode_config.get(RoleplayFields.MIN_LENGTH, 0)),
             max_length=4
         )
         self.add_item(self.minimum_length_text_input)
 
         self.cooldown_text_input = discord.ui.TextInput(
-            label='Cooldown (seconds)',
-            placeholder='Wait time, in seconds, between counting messages as eligible for rewards',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-cooldown'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-cooldown'),
             default=str(mode_config.get(RoleplayFields.COOLDOWN, 30)),
             max_length=4
         )
@@ -1689,8 +1796,8 @@ class RoleplaySettingsModal(Modal):
 
         if self.mode == 'scheduled':
             self.threshold_text_input = discord.ui.TextInput(
-                label='Message Threshold',
-                placeholder='Number of messages required to trigger reward',
+                label=t(DEFAULT_LOCALE, 'config-modal-label-message-threshold'),
+                placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-message-threshold'),
                 default=str(mode_config.get(RoleplayFields.THRESHOLD, 20)),
                 max_length=4
             )
@@ -1698,8 +1805,8 @@ class RoleplaySettingsModal(Modal):
 
         elif self.mode == 'accrued':
             self.frequency_text_input = discord.ui.TextInput(
-                label='Frequency (# of messages)',
-                placeholder='Number of eligible messages required to earn rewards',
+                label=t(DEFAULT_LOCALE, 'config-modal-label-frequency'),
+                placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-frequency'),
                 default=str(mode_config.get(RoleplayFields.FREQUENCY, 20)),
                 max_length=4
             )
@@ -1716,7 +1823,10 @@ class RoleplaySettingsModal(Modal):
                 if minimum_length < 0:
                     raise ValueError
             except ValueError:
-                raise UserFeedbackError('Minimum Message Length must be a non-negative integer.')
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-min-length-invalid'),
+                    message_id='config-error-min-length-invalid'
+                )
 
             new_config[RoleplayFields.MIN_LENGTH] = minimum_length
 
@@ -1726,7 +1836,10 @@ class RoleplaySettingsModal(Modal):
                 if cooldown_seconds < 0:
                     raise ValueError
             except ValueError:
-                raise UserFeedbackError('Cooldown must be a non-negative integer.')
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-cooldown-invalid'),
+                    message_id='config-error-cooldown-invalid'
+                )
 
             new_config[RoleplayFields.COOLDOWN] = cooldown_seconds
 
@@ -1737,7 +1850,10 @@ class RoleplaySettingsModal(Modal):
                     if threshold < 1:
                         raise ValueError
                 except ValueError:
-                    raise UserFeedbackError('Message Threshold must be a positive integer.')
+                    raise UserFeedbackError(
+                        t(DEFAULT_LOCALE, 'config-error-threshold-invalid'),
+                        message_id='config-error-threshold-invalid'
+                    )
 
                 new_config[RoleplayFields.THRESHOLD] = threshold
 
@@ -1748,7 +1864,10 @@ class RoleplaySettingsModal(Modal):
                     if frequency < 1:
                         raise ValueError
                 except ValueError:
-                    raise UserFeedbackError('Frequency must be a positive integer.')
+                    raise UserFeedbackError(
+                        t(DEFAULT_LOCALE, 'config-error-frequency-invalid'),
+                        message_id='config-error-frequency-invalid'
+                    )
 
                 new_config[RoleplayFields.FREQUENCY] = frequency
 
@@ -1769,14 +1888,14 @@ class RoleplaySettingsModal(Modal):
 
 class RoleplayRewardsModal(Modal):
     def __init__(self, calling_view, xp_enabled):
-        super().__init__(title='Configure Roleplay Rewards')
+        super().__init__(title=t(DEFAULT_LOCALE, 'config-modal-title-rp-rewards'))
         self.calling_view = calling_view
         rewards = calling_view.config.get(RoleplayFields.REWARDS, {})
 
         self.xp_enabled = xp_enabled
         if self.xp_enabled:
             self.experience_text_input = discord.ui.TextInput(
-                label='Experience',
+                label=t(DEFAULT_LOCALE, 'config-modal-label-experience'),
                 default=str(rewards.get(RoleplayFields.XP, 0)),
                 required=False
             )
@@ -1787,7 +1906,7 @@ class RoleplayRewardsModal(Modal):
             item_display = '\n'.join([f'{k}: {v}' for k, v in sorted(items.items())])
 
         self.items = discord.ui.TextInput(
-            label='Items (Name: Quantity)',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-items-name-quantity'),
             style=discord.TextStyle.paragraph,
             default=item_display,
             required=False
@@ -1806,7 +1925,7 @@ class RoleplayRewardsModal(Modal):
             currency_display = '\n'.join(formatted_lines)
 
         self.currency = discord.ui.TextInput(
-            label='Currency (Name: Amount)',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-currency-name-amount'),
             style=discord.TextStyle.paragraph,
             default=currency_display,
             required=False
@@ -1824,7 +1943,10 @@ class RoleplayRewardsModal(Modal):
                     if xp < 0:
                         raise ValueError
                 except ValueError:
-                    raise UserFeedbackError('Experience must be a non-negative integer.')
+                    raise UserFeedbackError(
+                        t(DEFAULT_LOCALE, 'config-error-experience-non-negative'),
+                        message_id='config-error-experience-non-negative'
+                    )
 
             items = {}
             if self.items.value:
@@ -1836,7 +1958,11 @@ class RoleplayRewardsModal(Modal):
                             if int(v.strip()) < 1:
                                 raise ValueError
                         except ValueError:
-                            raise UserFeedbackError(f'Item quantity for "{k.strip()}" must be a positive integer.')
+                            raise UserFeedbackError(
+                                t(DEFAULT_LOCALE, 'config-error-item-quantity-positive-named',
+                                  {'itemName': k.strip()}),
+                                message_id='config-error-item-quantity-positive-named'
+                            )
 
             currency = {}
             if self.currency.value:
@@ -1848,7 +1974,11 @@ class RoleplayRewardsModal(Modal):
                             if float(v.strip()) <= 0:
                                 raise ValueError
                         except ValueError:
-                            raise UserFeedbackError(f'Currency amount for "{k.strip()}" must be a positive number.')
+                            raise UserFeedbackError(
+                                t(DEFAULT_LOCALE, 'config-error-currency-amount-positive',
+                                  {'currencyName': k.strip()}),
+                                message_id='config-error-currency-amount-positive'
+                            )
 
             new_rewards = {
                 RoleplayFields.XP: xp,
@@ -1873,16 +2003,16 @@ class SetItemStockModal(Modal):
     def __init__(self, calling_view, item_name: str, current_max: int | None = None,
                  current_stock: int | None = None):
         super().__init__(
-            title=f'Stock Limit: {item_name[:40]}',
+            title=t(DEFAULT_LOCALE, 'config-modal-title-stock-limit', {'itemName': item_name[:40]}),
             timeout=600
         )
         self.calling_view = calling_view
         self.item_name = item_name
 
         self.max_stock_text_input = discord.ui.TextInput(
-            label='Maximum Stock',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-max-stock'),
             custom_id='max_stock_text_input',
-            placeholder='Enter max stock (e.g., 10)',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-max-stock'),
             default=str(current_max) if current_max is not None else '',
             required=True
         )
@@ -1895,9 +2025,9 @@ class SetItemStockModal(Modal):
             default_current = str(current_max)
 
         self.current_stock_text_input = discord.ui.TextInput(
-            label='Current Stock',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-current-stock'),
             custom_id='current_stock_text_input',
-            placeholder='Enter current available stock',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-current-stock'),
             default=default_current,
             required=True
         )
@@ -1918,7 +2048,10 @@ class SetItemStockModal(Modal):
                 if max_stock < 1:
                     raise ValueError
             except ValueError:
-                raise UserFeedbackError('Maximum stock must be a positive integer.')
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-max-stock-positive'),
+                    message_id='config-error-max-stock-positive'
+                )
 
             # Validate current stock
             current_stock_str = self.current_stock_text_input.value.strip()
@@ -1927,10 +2060,16 @@ class SetItemStockModal(Modal):
                 if current_stock < 0:
                     raise ValueError
             except ValueError:
-                raise UserFeedbackError('Current stock must be a non-negative integer.')
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-current-stock-non-negative'),
+                    message_id='config-error-current-stock-non-negative'
+                )
 
             if current_stock > max_stock:
-                raise UserFeedbackError('Current stock cannot exceed maximum stock.')
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-current-exceeds-max'),
+                    message_id='config-error-current-exceeds-max'
+                )
 
             # Update the shop config with maxStock for this item
             shop_query = await get_cached_data(
@@ -1951,7 +2090,10 @@ class SetItemStockModal(Modal):
                     break
 
             if not item_found:
-                raise UserFeedbackError(f'Item "{self.item_name}" not found in shop.')
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-item-not-in-shop', {'itemName': self.item_name}),
+                    message_id='config-error-item-not-in-shop'
+                )
 
             # Save shop config
             await update_cached_data(
@@ -1975,7 +2117,7 @@ class SetItemStockModal(Modal):
 class RestockScheduleModal(Modal):
     def __init__(self, calling_view, current_config: dict | None = None):
         super().__init__(
-            title='Configure Restock Schedule',
+            title=t(DEFAULT_LOCALE, 'config-modal-title-restock-schedule'),
             timeout=600
         )
         self.calling_view = calling_view
@@ -1993,46 +2135,46 @@ class RestockScheduleModal(Modal):
         increment = current_config.get(RestockFields.INCREMENT_AMOUNT, 1)
 
         self.schedule_text_input = discord.ui.TextInput(
-            label='Schedule (hourly/daily/weekly/none)',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-schedule'),
             custom_id='schedule_text_input',
-            placeholder='Enter: hourly, daily, weekly, or none',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-schedule'),
             default=schedule if schedule else 'none',
             required=True
         )
 
         self.time_text_input = discord.ui.TextInput(
             custom_id='time_text_input',
-            placeholder='e.g., 14:30 for 2:30 PM UTC',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-time'),
             default=f'{hour:02d}:{minute:02d}',
             required=False
         )
 
         self.time_label = Label(
-            text='Time (HH:MM in UTC)',
-            description=f'Current time: {utc_time_str}',
+            text=t(DEFAULT_LOCALE, 'config-modal-label-time'),
+            description=t(DEFAULT_LOCALE, 'config-modal-desc-current-time', {'utcTime': utc_time_str}),
             component=self.time_text_input
         )
 
         self.day_text_input = discord.ui.TextInput(
-            label='Day of Week (0=Mon, 6=Sun) - Weekly only',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-day-of-week'),
             custom_id='day_text_input',
-            placeholder='Enter 0-6 (Monday=0, Sunday=6)',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-day-of-week'),
             default=str(day),
             required=False
         )
 
         self.mode_text_input = discord.ui.TextInput(
-            label='Mode (full/incremental)',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-mode'),
             custom_id='mode_text_input',
-            placeholder='full = reset to max, incremental = add amount',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-mode'),
             default=mode,
             required=True
         )
 
         self.increment_text_input = discord.ui.TextInput(
-            label='Increment Amount (for incremental mode)',
+            label=t(DEFAULT_LOCALE, 'config-modal-label-increment'),
             custom_id='increment_text_input',
-            placeholder='Amount to add per restock cycle',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-increment'),
             default=str(increment),
             required=False
         )
@@ -2052,7 +2194,10 @@ class RestockScheduleModal(Modal):
             schedule = self.schedule_text_input.value.strip().lower()
             valid_schedules = [s.value for s in ScheduleType] + ['none', '']
             if schedule not in valid_schedules:
-                raise UserFeedbackError('Schedule must be one of: hourly, daily, weekly, or none.')
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-schedule-invalid'),
+                    message_id='config-error-schedule-invalid'
+                )
 
             # Parse time
             hour, minute = 0, 0
@@ -2065,7 +2210,10 @@ class RestockScheduleModal(Modal):
                     if not (0 <= hour <= 23 and 0 <= minute <= 59):
                         raise ValueError
                 except (ValueError, IndexError):
-                    raise UserFeedbackError('Time must be in HH:MM format (e.g., 14:30).')
+                    raise UserFeedbackError(
+                        t(DEFAULT_LOCALE, 'config-error-time-format-invalid'),
+                        message_id='config-error-time-format-invalid'
+                    )
 
             # Parse day of week
             day = 0
@@ -2076,13 +2224,19 @@ class RestockScheduleModal(Modal):
                     if not (0 <= day <= 6):
                         raise ValueError
                 except ValueError:
-                    raise UserFeedbackError('Day of week must be 0-6 (Monday=0, Sunday=6).')
+                    raise UserFeedbackError(
+                        t(DEFAULT_LOCALE, 'config-error-day-of-week-invalid'),
+                        message_id='config-error-day-of-week-invalid'
+                    )
 
             # Parse mode
             mode = self.mode_text_input.value.strip().lower()
             valid_modes = [m.value for m in RestockMode]
             if mode not in valid_modes:
-                raise UserFeedbackError('Mode must be either "full" or "incremental".')
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-mode-invalid'),
+                    message_id='config-error-mode-invalid'
+                )
 
             # Parse increment amount
             increment_amount = 1
@@ -2094,7 +2248,10 @@ class RestockScheduleModal(Modal):
                         if increment_amount < 1:
                             raise ValueError
                     except ValueError:
-                        raise UserFeedbackError('Increment amount must be a positive integer.')
+                        raise UserFeedbackError(
+                            t(DEFAULT_LOCALE, 'config-error-increment-positive'),
+                            message_id='config-error-increment-positive'
+                        )
 
             # Build restock config
             if schedule in ['none', '']:

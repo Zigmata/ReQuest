@@ -27,6 +27,7 @@ from ReQuest.utilities.constants import (
     ConfigFields, CurrencyFields, ShopFields, RestockFields, RoleplayFields, CommonFields,
     DatabaseCollections
 )
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
@@ -48,46 +49,46 @@ logger = logging.getLogger(__name__)
 class ConfigBaseView(common_views.MenuBaseView):
     def __init__(self):
         super().__init__(
-            title='Server Configuration - Main Menu',
+            title=t(DEFAULT_LOCALE, 'config-title-main-menu'),
             menu_items=[
                 {
-                    'name': 'Config Wizard',
-                    'description': 'Validate your server is ready to use ReQuest with a quick scan.',
+                    'name': t(DEFAULT_LOCALE, 'config-menu-config-wizard'),
+                    'description': t(DEFAULT_LOCALE, 'config-menu-desc-config-wizard'),
                     'view_class': ConfigWizardView
                 },
                 {
-                    'name': 'Channels',
-                    'description': 'Set designated channels for ReQuest posts.',
+                    'name': t(DEFAULT_LOCALE, 'config-menu-channels'),
+                    'description': t(DEFAULT_LOCALE, 'config-menu-desc-channels'),
                     'view_class': ConfigChannelsView
                 },
                 {
-                    'name': 'Currency',
-                    'description': 'Global currency settings.',
+                    'name': t(DEFAULT_LOCALE, 'config-menu-currency'),
+                    'description': t(DEFAULT_LOCALE, 'config-menu-desc-currency'),
                     'view_class': ConfigCurrencyView
                 },
                 {
-                    'name': 'Players',
-                    'description': 'Global player settings, such as experience point tracking.',
+                    'name': t(DEFAULT_LOCALE, 'config-menu-players'),
+                    'description': t(DEFAULT_LOCALE, 'config-menu-desc-players'),
                     'view_class': ConfigPlayersView
                 },
                 {
-                    'name': 'Quests',
-                    'description': 'Global quest settings, such as wait lists.',
+                    'name': t(DEFAULT_LOCALE, 'config-menu-quests'),
+                    'description': t(DEFAULT_LOCALE, 'config-menu-desc-quests'),
                     'view_class': ConfigQuestsView
                 },
                 {
-                    'name': 'RP Rewards',
-                    'description': 'Configure roleplaying rewards.',
+                    'name': t(DEFAULT_LOCALE, 'config-menu-rp-rewards'),
+                    'description': t(DEFAULT_LOCALE, 'config-menu-desc-rp-rewards'),
                     'view_class': ConfigRoleplayView
                 },
                 {
-                    'name': 'Roles',
-                    'description': 'Configuration options for pingable or privileged roles.',
+                    'name': t(DEFAULT_LOCALE, 'config-menu-roles'),
+                    'description': t(DEFAULT_LOCALE, 'config-menu-desc-roles'),
                     'view_class': ConfigRolesView
                 },
                 {
-                    'name': 'Shops',
-                    'description': 'Configure custom shops.',
+                    'name': t(DEFAULT_LOCALE, 'config-menu-shops'),
+                    'description': t(DEFAULT_LOCALE, 'config-menu-desc-shops'),
                     'view_class': ConfigShopsView
                 }
             ],
@@ -104,13 +105,7 @@ class ConfigWizardView(LayoutView):
         self.pages = []
         self.current_page = 0
         self.total_pages = 4
-        self.intro_text = (
-            '**Welcome to the ReQuest Configuration Wizard!**\n\n'
-            'This wizard will help you ensure that your server is properly configured to use ReQuest\'s features. '
-            'It will scan your current settings and provide recommendations for any adjustments needed.\n\n'
-            'Use the "Launch Scan" button below to begin the validation process. Once the scan is complete, '
-            'you will receive a detailed report of your server\'s configuration along with any recommended changes.'
-        )
+        self.intro_text = t(DEFAULT_LOCALE, 'config-wizard-intro')
 
         self.build_view()
 
@@ -119,8 +114,8 @@ class ConfigWizardView(LayoutView):
         container = Container()
 
         header_section = Section(accessory=BackButton(ConfigBaseView))
-        header_section.accessory.label = 'Quit'  # Overriding button label to avoid confusion w/ pagination
-        header_section.add_item(TextDisplay('**Server Configuration - Wizard**'))
+        header_section.accessory.label = t(DEFAULT_LOCALE, 'config-btn-quit')
+        header_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-title-wizard')))
         container.add_item(header_section)
         container.add_item(Separator())
 
@@ -167,7 +162,7 @@ class ConfigWizardView(LayoutView):
             nav_row = ActionRow()
 
             prev_button = Button(
-                label='Previous',
+                label=t(DEFAULT_LOCALE, 'common-btn-previous'),
                 style=ButtonStyle.secondary,
                 custom_id='wizard_prev_page',
                 disabled=(self.current_page == 0)
@@ -176,7 +171,7 @@ class ConfigWizardView(LayoutView):
             nav_row.add_item(prev_button)
 
             page_button = Button(
-                label=f'Page {self.current_page + 1} of {len(self.pages)}',
+                label=t(DEFAULT_LOCALE, 'common-page-display', {'current': str(self.current_page + 1), 'total': str(len(self.pages))}),
                 style=ButtonStyle.secondary,
                 custom_id='wizard_page_indicator'
             )
@@ -184,7 +179,7 @@ class ConfigWizardView(LayoutView):
             nav_row.add_item(page_button)
 
             next_button = Button(
-                label='Next',
+                label=t(DEFAULT_LOCALE, 'common-btn-next'),
                 style=ButtonStyle.secondary,
                 custom_id='wizard_next_page',
                 disabled=(self.current_page == len(self.pages) - 1)
@@ -193,7 +188,7 @@ class ConfigWizardView(LayoutView):
             nav_row.add_item(next_button)
 
             scan_button = buttons.ScanServerButton(self)
-            scan_button.label = 'Re-Scan'
+            scan_button.label = t(DEFAULT_LOCALE, 'config-btn-re-scan')
             nav_row.add_item(scan_button)
 
             container.add_item(nav_row)
@@ -211,7 +206,7 @@ class ConfigWizardView(LayoutView):
             await interaction.response.send_modal(common_modals.PageJumpModal(self))
         except Exception as e:
             logging.error(f'Failed to send PageJumpModal: {e}')
-            await interaction.response.send_message('Could not open page selector', ephemeral=True)
+            await interaction.response.send_message(t(DEFAULT_LOCALE, 'common-error-page-selector'), ephemeral=True)
 
     async def next_page_callback(self, interaction: discord.Interaction):
         if self.current_page < len(self.pages) - 1:
@@ -231,58 +226,58 @@ class ConfigWizardView(LayoutView):
 
             # Use a dictionary to map permission attribute names to readable names
             required_permissions = {
-                'view_channel': 'View Channels',
-                'manage_roles': 'Manage Roles',
-                'send_messages': 'Send Messages',
-                'attach_files': 'Attach Files',
-                'add_reactions': 'Add Reactions',
-                'use_external_emojis': 'Use External Emoji',
-                'manage_messages': 'Manage Messages',
-                'read_message_history': 'Read Message History'
+                'view_channel': t(DEFAULT_LOCALE, 'config-wizard-perm-view-channels'),
+                'manage_roles': t(DEFAULT_LOCALE, 'config-wizard-perm-manage-roles'),
+                'send_messages': t(DEFAULT_LOCALE, 'config-wizard-perm-send-messages'),
+                'attach_files': t(DEFAULT_LOCALE, 'config-wizard-perm-attach-files'),
+                'add_reactions': t(DEFAULT_LOCALE, 'config-wizard-perm-add-reactions'),
+                'use_external_emojis': t(DEFAULT_LOCALE, 'config-wizard-perm-use-external-emoji'),
+                'manage_messages': t(DEFAULT_LOCALE, 'config-wizard-perm-manage-messages'),
+                'read_message_history': t(DEFAULT_LOCALE, 'config-wizard-perm-read-message-history')
             }
 
             missing_perms = []
 
             for attr, name in required_permissions.items():
                 if not getattr(bot_perms, attr):
-                    missing_perms.append(f'- ⚠️ Missing: `{name}`')
+                    missing_perms.append(t(DEFAULT_LOCALE, 'config-wizard-missing-perm', {'permissionName': name}))
 
             report_lines = [
-                '__**Bot Global Permissions**__',
-                'This section verifies that ReQuest has the correct permissions to function correctly.\n',
-                f'Bot Role: {bot_member.top_role.mention}'
+                t(DEFAULT_LOCALE, 'config-wizard-bot-permissions-header'),
+                t(DEFAULT_LOCALE, 'config-wizard-bot-permissions-desc') + '\n',
+                t(DEFAULT_LOCALE, 'config-wizard-bot-role', {'roleMention': bot_member.top_role.mention})
             ]
 
             if missing_perms:
-                report_lines.append('**Status: ⚠️ WARNINGS FOUND**')
+                report_lines.append(t(DEFAULT_LOCALE, 'config-wizard-status-warnings'))
                 report_lines.extend(missing_perms)
                 report_lines.append('')
-                report_lines.append('Please ensure the bot\'s highest role has these permissions granted globally.')
+                report_lines.append(t(DEFAULT_LOCALE, 'config-wizard-ensure-permissions'))
                 return '\n'.join(report_lines), True
             else:
-                report_lines.append('**Status: ✅ OK**')
-                report_lines.append('The bot has all required global permissions.')
+                report_lines.append(t(DEFAULT_LOCALE, 'config-wizard-status-ok'))
+                report_lines.append(t(DEFAULT_LOCALE, 'config-wizard-bot-permissions-ok'))
                 return '\n'.join(report_lines), False
 
         except Exception as e:
             required_perms_list = [
-                'View Channels',
-                'Manage Roles',
-                'Send Messages',
-                'Attach Files',
-                'Add Reactions',
-                'Use External Emoji',
-                'Manage Messages',
-                'Read Message History'
+                t(DEFAULT_LOCALE, 'config-wizard-perm-view-channels'),
+                t(DEFAULT_LOCALE, 'config-wizard-perm-manage-roles'),
+                t(DEFAULT_LOCALE, 'config-wizard-perm-send-messages'),
+                t(DEFAULT_LOCALE, 'config-wizard-perm-attach-files'),
+                t(DEFAULT_LOCALE, 'config-wizard-perm-add-reactions'),
+                t(DEFAULT_LOCALE, 'config-wizard-perm-use-external-emoji'),
+                t(DEFAULT_LOCALE, 'config-wizard-perm-manage-messages'),
+                t(DEFAULT_LOCALE, 'config-wizard-perm-read-message-history')
             ]
 
             report_lines = [
-                '__**Bot Global Permissions**__',
-                '**Status: ❌ SCAN FAILED**',
-                'An unexpected error occurred while checking bot permissions.',
-                f'Error: {type(e).__name__}',
+                t(DEFAULT_LOCALE, 'config-wizard-bot-permissions-header'),
+                t(DEFAULT_LOCALE, 'config-wizard-status-scan-failed'),
+                t(DEFAULT_LOCALE, 'config-wizard-scan-error'),
+                t(DEFAULT_LOCALE, 'config-wizard-error-type', {'errorType': type(e).__name__}),
                 '',
-                '**Required Permissions for the Bot\'s Role:**',
+                t(DEFAULT_LOCALE, 'config-wizard-required-permissions'),
                 '\n'.join([f'- {p}' for p in required_perms_list])
             ]
 
@@ -294,15 +289,8 @@ class ConfigWizardView(LayoutView):
         """
         has_warnings = False
         report_lines = [
-            '__**Role Configurations**__',
-            'This section verifies the following:\n'
-            '- GM roles (required) and Announcement role (optional) are configured.\n'
-            '- The default (@everyone) role has required permissions for users to access bot features.\n'
-            '- The default (@everyone) role does not have dangerous permissions.\n'
-            '- GM and Announcement roles are checked to see if they have any permission escalations '
-            'beyond the default role.\n',
-            'Any warnings here are solely recommendations based on a default setup. Depending on your server\'s '
-            'needs, you may have reason to disregard some of these recommendations.\n'
+            t(DEFAULT_LOCALE, 'config-wizard-role-header'),
+            t(DEFAULT_LOCALE, 'config-wizard-role-desc')
         ]
 
         # Validate default (@everyone) role
@@ -311,31 +299,31 @@ class ConfigWizardView(LayoutView):
 
         # These are needed for users to access the bot's features
         required_default_permissions = {
-            'view_channel': 'View Channels',
-            'read_message_history': 'Read Message History',
-            'send_messages': 'Send Messages',
-            'send_messages_in_threads': 'Send Messages in Threads',
-            'use_application_commands': 'Use Application Commands'
+            'view_channel': t(DEFAULT_LOCALE, 'config-wizard-perm-view-channels'),
+            'read_message_history': t(DEFAULT_LOCALE, 'config-wizard-perm-read-message-history'),
+            'send_messages': t(DEFAULT_LOCALE, 'config-wizard-perm-send-messages'),
+            'send_messages_in_threads': t(DEFAULT_LOCALE, 'config-wizard-perm-send-messages-in-threads'),
+            'use_application_commands': t(DEFAULT_LOCALE, 'config-wizard-perm-use-application-commands')
         }
 
         for permission, name in required_default_permissions.items():
             if not getattr(default_role.permissions, permission):
-                default_issues.append(f'- Missing Permission: `{name}`')
+                default_issues.append(t(DEFAULT_LOCALE, 'config-wizard-missing-permission', {'permissionName': name}))
 
         # These are generally a bad idea, or may enable users to circumvent bot features
         dangerous_permissions = {
-            'manage_channels': 'Manage Channels',
-            'manage_roles': 'Manage Roles',
-            'manage_webhooks': 'Manage Webhooks',
-            'manage_guild': 'Manage Server',
-            'manage_nicknames': 'Manage Nicknames',
-            'kick_members': 'Kick Members',
-            'ban_members': 'Ban Members',
-            'moderate_members': 'Timeout Members',
-            'mention_everyone': 'Mention @everyone',
-            'manage_messages': 'Manage Messages',
-            'manage_threads': 'Manage Threads',
-            'administrator': 'Administrator'
+            'manage_channels': t(DEFAULT_LOCALE, 'config-wizard-perm-manage-channels'),
+            'manage_roles': t(DEFAULT_LOCALE, 'config-wizard-perm-manage-roles'),
+            'manage_webhooks': t(DEFAULT_LOCALE, 'config-wizard-perm-manage-webhooks'),
+            'manage_guild': t(DEFAULT_LOCALE, 'config-wizard-perm-manage-server'),
+            'manage_nicknames': t(DEFAULT_LOCALE, 'config-wizard-perm-manage-nicknames'),
+            'kick_members': t(DEFAULT_LOCALE, 'config-wizard-perm-kick-members'),
+            'ban_members': t(DEFAULT_LOCALE, 'config-wizard-perm-ban-members'),
+            'moderate_members': t(DEFAULT_LOCALE, 'config-wizard-perm-timeout-members'),
+            'mention_everyone': t(DEFAULT_LOCALE, 'config-wizard-perm-mention-everyone'),
+            'manage_messages': t(DEFAULT_LOCALE, 'config-wizard-perm-manage-messages'),
+            'manage_threads': t(DEFAULT_LOCALE, 'config-wizard-perm-manage-threads'),
+            'administrator': t(DEFAULT_LOCALE, 'config-wizard-perm-administrator')
         }
 
         for permission, name in dangerous_permissions.items():
@@ -344,17 +332,17 @@ class ConfigWizardView(LayoutView):
 
         if default_issues:
             has_warnings = True
-            report_lines.append('**Default Role:**\n⚠️ @everyone: Dangerous Permissions Found:')
+            report_lines.append(t(DEFAULT_LOCALE, 'config-wizard-default-role-label') + '\n' + t(DEFAULT_LOCALE, 'config-wizard-default-role-dangerous'))
             report_lines.extend(default_issues)
         else:
-            report_lines.append('**Default Role:**\n- ✅ @everyone: OK')
+            report_lines.append(t(DEFAULT_LOCALE, 'config-wizard-default-role-label') + '\n' + t(DEFAULT_LOCALE, 'config-wizard-default-role-ok'))
 
         # Validate at least one GM role is configured, and does not extend permissions of the default role
         if not gm_roles_config or not gm_roles_config.get(ConfigFields.GM_ROLES):
             has_warnings = True
-            report_lines.append('\n**GM Roles:**\n- ⚠️ No GM Roles Configured')
+            report_lines.append('\n' + t(DEFAULT_LOCALE, 'config-wizard-gm-roles-label') + '\n' + t(DEFAULT_LOCALE, 'config-wizard-no-gm-roles'))
         else:
-            report_lines.append('\n**GM Roles:**')
+            report_lines.append('\n' + t(DEFAULT_LOCALE, 'config-wizard-gm-roles-label'))
             for role_data in gm_roles_config[ConfigFields.GM_ROLES]:
                 try:
                     role_id = strip_id(role_data[CommonFields.MENTION])
@@ -362,8 +350,7 @@ class ConfigWizardView(LayoutView):
 
                     if not role:
                         has_warnings = True
-                        report_lines.append(f'- ⚠️ **{role_data[CommonFields.NAME]}:** Configured Role Not Found/Deleted '
-                                            f'from Server')
+                        report_lines.append(t(DEFAULT_LOCALE, 'config-wizard-role-not-found', {'roleName': role_data[CommonFields.NAME]}))
                         continue
 
                     escalation_report = self._has_escalations(role, default_role)
@@ -372,7 +359,7 @@ class ConfigWizardView(LayoutView):
                         has_warnings = True
                         report_lines.extend(escalation_report.report_lines)
                     else:
-                        report_lines.append(f'- ✅ {role.mention}: OK')
+                        report_lines.append(t(DEFAULT_LOCALE, 'config-wizard-role-ok', {'roleMention': role.mention}))
                 except Exception as e:
                     logger.error(f'Error validating role {role_data}: {e}')
                     report_lines.append(f'- Error validating {role_data[CommonFields.NAME]}')
@@ -380,7 +367,7 @@ class ConfigWizardView(LayoutView):
         # Validate announcement role
         if not announcement_role_config or not announcement_role_config.get(ConfigFields.ANNOUNCE_ROLE):
             has_warnings = True
-            report_lines.append('\n**Announcement Role:**\n- ℹ️ No Announcement Role Configured')
+            report_lines.append('\n' + t(DEFAULT_LOCALE, 'config-wizard-announcement-role-label') + '\n' + t(DEFAULT_LOCALE, 'config-wizard-no-announcement-role'))
         else:
             try:
                 role_id = strip_id(announcement_role_config[ConfigFields.ANNOUNCE_ROLE])
@@ -389,17 +376,17 @@ class ConfigWizardView(LayoutView):
                 if not role:
                     has_warnings = True
                     report_lines.append(
-                        '\n**Announcement Role:**\n- ⚠️ Configured Role Not Found/Deleted from Server'
+                        '\n' + t(DEFAULT_LOCALE, 'config-wizard-announcement-role-label') + '\n' + t(DEFAULT_LOCALE, 'config-wizard-announcement-role-not-found')
                     )
                 else:
                     escalation_report = self._has_escalations(role, default_role)
 
                     if escalation_report.has_escalations:
                         has_warnings = True
-                        report_lines.append('\n**Announcement Role:**')
+                        report_lines.append('\n' + t(DEFAULT_LOCALE, 'config-wizard-announcement-role-label'))
                         report_lines.extend(escalation_report.report_lines)
                     else:
-                        report_lines.append(f'\n**Announcement Role:**\n- ✅ {role.mention}: OK')
+                        report_lines.append('\n' + t(DEFAULT_LOCALE, 'config-wizard-announcement-role-label') + '\n' + t(DEFAULT_LOCALE, 'config-wizard-role-ok', {'roleMention': role.mention}))
             except Exception as e:
                 logger.error(f'Error validating announcement role: {e}')
                 report_lines.append('- Error validating Announcement Role')
@@ -415,11 +402,8 @@ class ConfigWizardView(LayoutView):
         Validate configured channels and their permissions.
         """
         report_lines = [
-            '__**Channel Configurations**__',
-            'This section verifies the following:\n'
-            '- Configured channels exist.\n'
-            '- The bot has permission to view and send messages in the configured channels.\n'
-            '- The default (@everyone) role does not have `Send Messages` permissions.\n'
+            t(DEFAULT_LOCALE, 'config-wizard-channel-header'),
+            t(DEFAULT_LOCALE, 'config-wizard-channel-desc')
         ]
 
         has_warnings = False
@@ -434,9 +418,9 @@ class ConfigWizardView(LayoutView):
             if not mention:
                 if required:
                     has_warnings = True
-                    report_lines.append(f'\n**{name}:**\n- ⚠️ No Channel Configured')
+                    report_lines.append(f'\n**{name}:**\n' + t(DEFAULT_LOCALE, 'config-wizard-channel-no-config-required'))
                 else:
-                    report_lines.append(f'\n**{name}:**\n- ℹ️ Not Configured (Optional)')
+                    report_lines.append(f'\n**{name}:**\n' + t(DEFAULT_LOCALE, 'config-wizard-channel-not-configured'))
                 continue
 
             try:
@@ -445,8 +429,7 @@ class ConfigWizardView(LayoutView):
 
                 if not channel:
                     has_warnings = True
-                    report_lines.append(f'\n**{name}:**\n'
-                                        f'- ⚠️ Configured Channel Not Found/Deleted from Server')
+                    report_lines.append(f'\n**{name}:**\n' + t(DEFAULT_LOCALE, 'config-wizard-channel-not-found'))
                     continue
 
                 # Check bot permissions
@@ -456,28 +439,28 @@ class ConfigWizardView(LayoutView):
                 bot_mention = bot_member.mention
 
                 if not bot_permissions.view_channel:
-                    channel_issues.append(f'- ⚠️ {bot_mention} cannot view this channel.')
+                    channel_issues.append(t(DEFAULT_LOCALE, 'config-wizard-bot-cannot-view', {'botMention': bot_mention}))
                 if not bot_permissions.send_messages:
-                    channel_issues.append(f'- ⚠️ {bot_mention} cannot send messages in this channel.')
+                    channel_issues.append(t(DEFAULT_LOCALE, 'config-wizard-bot-cannot-send', {'botMention': bot_mention}))
 
                 # Check default role permissions
                 default_role = guild.default_role
                 default_permissions = channel.permissions_for(default_role)
                 if default_permissions.send_messages:
-                    channel_issues.append('- ⚠️ @everyone can send messages in this channel.')
+                    channel_issues.append(t(DEFAULT_LOCALE, 'config-wizard-everyone-can-send'))
 
                 if channel_issues:
                     has_warnings = True
                     report_lines.append(f'\n**{name} ({channel.mention}):**')
                     report_lines.extend(channel_issues)
                 else:
-                    report_lines.append(f'\n**{name} ({channel.mention}):**\n- ✅ OK')
+                    report_lines.append(f'\n**{name} ({channel.mention}):**\n' + t(DEFAULT_LOCALE, 'config-wizard-channel-ok'))
             except Exception as e:
                 logger.error(f'Error validating channel {name}: {e}')
                 report_lines.append(f'- Error validating {name} channel')
                 has_warnings = True
 
-        button = MenuViewButton(ConfigChannelsView, 'Configure Channels')
+        button = MenuViewButton(ConfigChannelsView, t(DEFAULT_LOCALE, 'config-btn-configure-channels'))
         button.disabled = not has_warnings
 
         return '\n'.join(report_lines), button
@@ -499,10 +482,10 @@ class ConfigWizardView(LayoutView):
             else:
                 escalations_str = ', '.join(escalations[:3])
                 if len(escalations) > 3:
-                    escalations_str += f', and {len(escalations) - 3} more...'
+                    escalations_str += t(DEFAULT_LOCALE, 'config-wizard-escalation-more', {'count': str(len(escalations) - 3)})
 
             report_lines.append(
-                f'- ⚠️ {role.mention}: Permission Escalations Detected - {escalations_str}'
+                t(DEFAULT_LOCALE, 'config-wizard-escalation-detected', {'roleMention': role.mention, 'escalations': escalations_str})
             )
             return result(True, report_lines)
         else:
@@ -512,10 +495,10 @@ class ConfigWizardView(LayoutView):
     def _format_currency_report(currency_config):
         report_lines = []
         if not currency_config or not currency_config.get(CurrencyFields.CURRENCIES):
-            report_lines.append('- ℹ️ No Currencies Configured')
+            report_lines.append(t(DEFAULT_LOCALE, 'config-wizard-no-currencies'))
             return '\n'.join(report_lines)
 
-        report_lines.append('**Configured Currencies:**')
+        report_lines.append(t(DEFAULT_LOCALE, 'config-wizard-configured-currencies'))
         for currency in currency_config[CurrencyFields.CURRENCIES]:
             name = currency[CommonFields.NAME]
             denominations = currency.get(CurrencyFields.DENOMINATIONS, {})
@@ -530,7 +513,7 @@ class ConfigWizardView(LayoutView):
                     denomination_list.append(f'  - {denom_name}: {denom_value}')
                 lines.extend(denomination_list)
             else:
-                lines.append('  - No Denominations Configured')
+                lines.append('  - ' + t(DEFAULT_LOCALE, 'config-wizard-no-denominations'))
 
             report_lines.extend(lines)
 
@@ -540,18 +523,18 @@ class ConfigWizardView(LayoutView):
     def _format_gm_rewards_report(gm_rewards_query):
         report_lines = []
         if not gm_rewards_query or (not gm_rewards_query.get('experience') and not gm_rewards_query.get(CommonFields.ITEMS)):
-            report_lines.append('**Status:** Disabled')
+            report_lines.append(t(DEFAULT_LOCALE, 'config-wizard-gm-rewards-disabled'))
             return '\n'.join(report_lines)
 
-        report_lines.append('**Status:** Enabled')
+        report_lines.append(t(DEFAULT_LOCALE, 'config-wizard-gm-rewards-enabled'))
         experience = gm_rewards_query.get('experience')
         items = gm_rewards_query.get(CommonFields.ITEMS)
 
         if experience and experience > 0:
-            report_lines.append(f'- Experience: {experience}')
+            report_lines.append(t(DEFAULT_LOCALE, 'config-wizard-gm-rewards-experience', {'xp': str(experience)}))
 
         if items:
-            report_lines.append('- Items:')
+            report_lines.append(t(DEFAULT_LOCALE, 'config-wizard-gm-rewards-items'))
             for item_name, quantity in items.items():
                 report_lines.append(f'  - {escape_markdown(titlecase(item_name))}: {quantity}')
 
@@ -570,69 +553,73 @@ class ConfigWizardView(LayoutView):
         components = []
 
         # Quest Settings
+        wait_list_display = str(wait_list_size) if wait_list_size > 0 else t(DEFAULT_LOCALE, 'config-label-rp-disabled')
+        summary_display = t(DEFAULT_LOCALE, 'config-label-rp-enabled') if summary_enabled else t(DEFAULT_LOCALE, 'config-label-rp-disabled')
         quest_section_content = [
-            '**Quest Settings**',
-            f'- Quest Wait List Size: {wait_list_size if wait_list_size > 0 else "Disabled"}',
-            f'- Quest Summary: {"Enabled" if summary_enabled else "Disabled"}',
-            f'\n**GM Rewards (Per Quest)**',
+            t(DEFAULT_LOCALE, 'config-wizard-quest-settings'),
+            t(DEFAULT_LOCALE, 'config-wizard-quest-wait-list', {'size': wait_list_display}),
+            t(DEFAULT_LOCALE, 'config-wizard-quest-summary', {'status': summary_display}),
+            '\n' + t(DEFAULT_LOCALE, 'config-wizard-gm-rewards-per-quest'),
             self._format_gm_rewards_report(gm_rewards_query)
         ]
         components.append({
             'content': '\n'.join(quest_section_content),
-            'shortcut_button': MenuViewButton(ConfigQuestsView, 'Configure Quests')
+            'shortcut_button': MenuViewButton(ConfigQuestsView, t(DEFAULT_LOCALE, 'config-btn-configure-quests'))
         })
 
         # Player Settings
+        xp_display = t(DEFAULT_LOCALE, 'config-label-rp-enabled') if xp_enabled else t(DEFAULT_LOCALE, 'config-label-rp-disabled')
         player_section_content = [
-            '**Player Settings**',
-            f'- Player Experience: {"Enabled" if xp_enabled else "Disabled"}'
+            t(DEFAULT_LOCALE, 'config-wizard-player-settings'),
+            t(DEFAULT_LOCALE, 'config-wizard-player-experience', {'status': xp_display})
         ]
         components.append({
             'content': '\n'.join(player_section_content),
-            'shortcut_button': MenuViewButton(ConfigPlayersView, 'Configure Players')
+            'shortcut_button': MenuViewButton(ConfigPlayersView, t(DEFAULT_LOCALE, 'config-btn-configure-players'))
         })
 
         # Currency Settings
         currency_section_content = [
-            '**Currency Settings**',
+            t(DEFAULT_LOCALE, 'config-wizard-currency-settings'),
             self._format_currency_report(currency_config)
         ]
         components.append({
             'content': '\n'.join(currency_section_content),
-            'shortcut_button': MenuViewButton(ConfigCurrencyView, 'Configure Currency')
+            'shortcut_button': MenuViewButton(ConfigCurrencyView, t(DEFAULT_LOCALE, 'config-btn-configure-currency'))
         })
 
         # Roleplay Rewards Settings
         rp_enabled = roleplay_config.get(RoleplayFields.ENABLED, False) if roleplay_config else False
         rp_mode = roleplay_config.get(RoleplayFields.MODE, 'scheduled') if roleplay_config else 'scheduled'
         rp_channels = roleplay_config.get(RoleplayFields.CHANNELS, []) if roleplay_config else []
+        rp_status_display = t(DEFAULT_LOCALE, 'config-label-rp-enabled') if rp_enabled else t(DEFAULT_LOCALE, 'config-label-rp-disabled')
         roleplay_section_content = [
-            '**Roleplay Rewards**',
-            f'- Status: {"Enabled" if rp_enabled else "Disabled"}',
-            f'- Mode: {rp_mode.capitalize()}',
-            f'- Monitored Channels: {len(rp_channels)}'
+            t(DEFAULT_LOCALE, 'config-wizard-rp-rewards'),
+            t(DEFAULT_LOCALE, 'config-wizard-rp-status', {'status': rp_status_display}),
+            t(DEFAULT_LOCALE, 'config-wizard-rp-mode', {'mode': rp_mode.capitalize()}),
+            t(DEFAULT_LOCALE, 'config-wizard-rp-channels', {'count': str(len(rp_channels))})
         ]
         components.append({
             'content': '\n'.join(roleplay_section_content),
-            'shortcut_button': MenuViewButton(ConfigRoleplayView, 'Configure RP Rewards')
+            'shortcut_button': MenuViewButton(ConfigRoleplayView, t(DEFAULT_LOCALE, 'config-btn-configure-rp-rewards'))
         })
 
         # Shops Settings
         shop_channels = shops_config.get(ShopFields.SHOP_CHANNELS, {}) if shops_config else {}
         shops_section_content = [
-            '**Shops**',
-            f'- Configured Shops: {len(shop_channels)}'
+            t(DEFAULT_LOCALE, 'config-wizard-shops'),
+            t(DEFAULT_LOCALE, 'config-wizard-shops-count', {'count': str(len(shop_channels))})
         ]
         if shop_channels:
-            shop_names = [data.get(ShopFields.SHOP_NAME, 'Unnamed Shop') for data in shop_channels.values()]
+            shop_names = [data.get(ShopFields.SHOP_NAME, t(DEFAULT_LOCALE, 'config-wizard-unnamed-shop')) for data in shop_channels.values()]
             shop_names.sort(key=str.lower)
             for shop_name in shop_names[:3]:
                 shops_section_content.append(f'  - {shop_name}')
             if len(shop_names) > 3:
-                shops_section_content.append(f'  - ...and {len(shop_names) - 3} more')
+                shops_section_content.append('  - ' + t(DEFAULT_LOCALE, 'config-wizard-shops-more', {'count': str(len(shop_names) - 3)}))
         components.append({
             'content': '\n'.join(shops_section_content),
-            'shortcut_button': MenuViewButton(ConfigShopsView, 'Configure Shops')
+            'shortcut_button': MenuViewButton(ConfigShopsView, t(DEFAULT_LOCALE, 'config-btn-configure-shops'))
         })
 
         # New Character Setup
@@ -640,20 +627,20 @@ class ConfigWizardView(LayoutView):
         shop_items = new_char_shop.get(ShopFields.SHOP_STOCK, []) if new_char_shop else []
         kits = static_kits.get('kits', []) if static_kits else []
         new_char_section_content = [
-            '**New Character Setup**',
-            f'- Inventory Type: {inv_type.capitalize()}',
-            f'- New Character Shop Items: {len(shop_items)}',
-            f'- Static Kits: {len(kits)}'
+            t(DEFAULT_LOCALE, 'config-wizard-new-char-setup'),
+            t(DEFAULT_LOCALE, 'config-wizard-inventory-type', {'type': inv_type.capitalize()}),
+            t(DEFAULT_LOCALE, 'config-wizard-new-char-shop-items', {'count': str(len(shop_items))}),
+            t(DEFAULT_LOCALE, 'config-wizard-static-kits', {'count': str(len(kits))})
         ]
         components.append({
             'content': '\n'.join(new_char_section_content),
-            'shortcut_button': MenuViewButton(ConfigPlayersView, 'New Char Setup')
+            'shortcut_button': MenuViewButton(ConfigPlayersView, t(DEFAULT_LOCALE, 'config-btn-new-char-setup'))
         })
 
         # Header
         intro_content = [
-            '__**Settings Dashboard**__',
-            'This section provides an overview of non-essential configurations for quick reference.\n'
+            t(DEFAULT_LOCALE, 'config-wizard-dashboard-header'),
+            t(DEFAULT_LOCALE, 'config-wizard-dashboard-desc') + '\n'
         ]
 
         return {
@@ -694,7 +681,7 @@ class ConfigWizardView(LayoutView):
             )
             channels.append(
                 {
-                    'name': 'Quest Board',
+                    'name': t(DEFAULT_LOCALE, 'config-wizard-channel-quest-board'),
                     'mention': quest_channel_query[ConfigFields.QUEST_CHANNEL] if quest_channel_query else None,
                     'required': True}
             )
@@ -707,7 +694,7 @@ class ConfigWizardView(LayoutView):
             )
             channels.append(
                 {
-                    'name': 'Player Board',
+                    'name': t(DEFAULT_LOCALE, 'config-wizard-channel-player-board'),
                     'mention': player_channel_query[ConfigFields.PLAYER_BOARD_CHANNEL] if player_channel_query else None,
                     'required': False}
             )
@@ -720,7 +707,7 @@ class ConfigWizardView(LayoutView):
             )
             channels.append(
                 {
-                    'name': 'Quest Archive',
+                    'name': t(DEFAULT_LOCALE, 'config-wizard-channel-quest-archive'),
                     'mention': archive_channel_query[ConfigFields.ARCHIVE_CHANNEL] if archive_channel_query else None,
                     'required': False
                 }
@@ -734,7 +721,7 @@ class ConfigWizardView(LayoutView):
             )
             channels.append(
                 {
-                    'name': 'GM Transaction Log',
+                    'name': t(DEFAULT_LOCALE, 'config-wizard-channel-gm-transaction-log'),
                     'mention': gm_log_query[ConfigFields.GM_TRANSACTION_LOG_CHANNEL] if gm_log_query else None,
                     'required': False
                 }
@@ -748,7 +735,7 @@ class ConfigWizardView(LayoutView):
             )
             channels.append(
                 {
-                    'name': 'Player Transaction Log',
+                    'name': t(DEFAULT_LOCALE, 'config-wizard-channel-player-transaction-log'),
                     'mention': player_transaction_log_query[ConfigFields.PLAYER_TRANSACTION_LOG_CHANNEL]
                     if player_transaction_log_query else None,
                     'required': False
@@ -763,7 +750,7 @@ class ConfigWizardView(LayoutView):
             )
             channels.append(
                 {
-                    'name': 'Shop Log',
+                    'name': t(DEFAULT_LOCALE, 'config-wizard-channel-shop-log'),
                     'mention': shop_log_query[ConfigFields.SHOP_LOG_CHANNEL] if shop_log_query else None,
                     'required': False
                 }
@@ -777,7 +764,7 @@ class ConfigWizardView(LayoutView):
             )
             channels.append(
                 {
-                    'name': 'Character Approval Queue',
+                    'name': t(DEFAULT_LOCALE, 'config-wizard-channel-approval-queue'),
                     'mention': approval_queue_query[ConfigFields.APPROVAL_QUEUE_CHANNEL] if approval_queue_query else None,
                     'required': False
                 }
@@ -853,7 +840,7 @@ class ConfigWizardView(LayoutView):
 
             # Role validation report
             role_text, role_has_warnings = self.validate_roles(guild, gm_roles_query, announcement_role_query)
-            role_button = MenuViewButton(ConfigRolesView, 'Configure Roles')
+            role_button = MenuViewButton(ConfigRolesView, t(DEFAULT_LOCALE, 'config-btn-configure-roles'))
             role_button.disabled = not role_has_warnings
 
             # Channel validation report
@@ -901,12 +888,12 @@ class ConfigRolesView(LayoutView):
         super().__init__(timeout=None)
 
         self.announcement_role_status = TextDisplay(
-            '**Announcement Role:** Not Configured\n'
-            'This role is mentioned when a quest is posted.'
+            t(DEFAULT_LOCALE, 'config-label-announcement-role-default') + '\n' +
+            t(DEFAULT_LOCALE, 'config-desc-announcement-role')
         )
         self.gm_roles_status = TextDisplay(
-            '**GM Role(s):** Not Configured\n'
-            'These roles will grant access to Game Master commands and features.'
+            t(DEFAULT_LOCALE, 'config-label-gm-roles-default') + '\n' +
+            t(DEFAULT_LOCALE, 'config-desc-gm-roles')
         )
 
         self.quest_announce_role_select = selects.QuestAnnounceRoleSelect(self)
@@ -920,7 +907,7 @@ class ConfigRolesView(LayoutView):
         container = Container()
 
         header_section = Section(accessory=BackButton(ConfigBaseView))
-        header_section.add_item(TextDisplay('**Server Configuration - Roles**'))
+        header_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-title-roles')))
 
         container.add_item(header_section)
         container.add_item(Separator())
@@ -940,10 +927,8 @@ class ConfigRolesView(LayoutView):
         container.add_item(Separator())
 
         container.add_item(TextDisplay(
-            '__**Forbidden Roles**__\n'
-            'Configures a list of role names that cannot be used by Game Masters for their party roles. '
-            'By default, `everyone`, `administrator`, `gm`, and `game master` cannot be used. This configuration '
-            'extends that list.\n'
+            t(DEFAULT_LOCALE, 'config-title-forbidden-roles') + '\n' +
+            t(DEFAULT_LOCALE, 'config-desc-forbidden-roles')
         ))
         forbidden_role_row = ActionRow(self.forbidden_roles_button)
         container.add_item(forbidden_role_row)
@@ -969,28 +954,32 @@ class ConfigRolesView(LayoutView):
 
             if not announcement_role:
                 announcement_role_string = (
-                    '**Announcement Role:** Not Configured\n'
-                    'This role is mentioned when a quest is posted.'
+                    t(DEFAULT_LOCALE, 'config-label-announcement-role-default') + '\n' +
+                    t(DEFAULT_LOCALE, 'config-desc-announcement-role')
                 )
                 self.quest_announce_role_remove_button.disabled = True
             else:
                 announcement_role_string = (
-                    f'**Announcement Role:** {announcement_role}\n'
-                    'This role is mentioned when a quest is posted.'
+                    t(DEFAULT_LOCALE, 'config-label-announcement-role', {'status': announcement_role}) + '\n' +
+                    t(DEFAULT_LOCALE, 'config-desc-announcement-role')
                 )
                 self.quest_announce_role_remove_button.disabled = False
 
             if not gm_roles:
-                gm_roles_string = ('**GM Role(s):** Not Configured\n'
-                                   'These roles will grant access to Game Master commands and features.')
+                gm_roles_string = (
+                    t(DEFAULT_LOCALE, 'config-label-gm-roles-default') + '\n' +
+                    t(DEFAULT_LOCALE, 'config-desc-gm-roles')
+                )
                 self.gm_role_remove_view_button.disabled = True
             else:
                 role_mentions = []
                 for role in gm_roles:
                     role_mentions.append(role[CommonFields.MENTION])
 
-                gm_roles_string = (f'**GM Role(s):** {", ".join(role_mentions)}\n'
-                                   f'These roles will grant access to Game Master commands and features.')
+                gm_roles_string = (
+                    t(DEFAULT_LOCALE, 'config-label-gm-roles', {'roles': ', '.join(role_mentions)}) + '\n' +
+                    t(DEFAULT_LOCALE, 'config-desc-gm-roles')
+                )
                 self.gm_role_remove_view_button.disabled = False
 
             self.announcement_role_status.content = announcement_role_string
@@ -1038,12 +1027,12 @@ class ConfigGMRoleRemoveView(LayoutView):
         container = Container()
 
         header_section = Section(accessory=BackButton(ConfigRolesView))
-        header_section.add_item(TextDisplay('**Server Configuration - Remove GM Role(s)**'))
+        header_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-title-remove-gm-roles')))
         container.add_item(header_section)
         container.add_item(Separator())
 
         if not self.roles:
-            container.add_item(TextDisplay("No GM roles configured."))
+            container.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-msg-no-gm-roles')))
         else:
             start = self.current_page * self.items_per_page
             end = start + self.items_per_page
@@ -1065,7 +1054,7 @@ class ConfigGMRoleRemoveView(LayoutView):
             nav_row = ActionRow()
 
             prev_button = Button(
-                label='Previous',
+                label=t(DEFAULT_LOCALE, 'common-btn-previous'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='gm_role_prev',
                 disabled=(self.current_page == 0)
@@ -1074,7 +1063,7 @@ class ConfigGMRoleRemoveView(LayoutView):
             nav_row.add_item(prev_button)
 
             page_display = Button(
-                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                label=t(DEFAULT_LOCALE, 'common-page-label', {'current': str(self.current_page + 1), 'total': str(self.total_pages)}),
                 style=discord.ButtonStyle.secondary,
                 custom_id='gm_role_page'
             )
@@ -1082,7 +1071,7 @@ class ConfigGMRoleRemoveView(LayoutView):
             nav_row.add_item(page_display)
 
             next_button = Button(
-                label='Next',
+                label=t(DEFAULT_LOCALE, 'common-btn-next'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='gm_role_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -1118,28 +1107,28 @@ class ConfigChannelsView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         self.quest_board_info = TextDisplay(
-            '**Quest Board:** Not Configured\n'
-            'The channel where new/active quests will be posted.'
+            t(DEFAULT_LOCALE, 'config-label-quest-board-default') + '\n' +
+            t(DEFAULT_LOCALE, 'config-desc-quest-board')
         )
         self.player_board_info = TextDisplay(
-            '**Player Board:** Not Configured\n'
-            'An optional announcement/message board for use by players.'
+            t(DEFAULT_LOCALE, 'config-label-player-board-default') + '\n' +
+            t(DEFAULT_LOCALE, 'config-desc-player-board')
         )
         self.quest_archive_info = TextDisplay(
-            '**Quest Archive:** Not Configured\n'
-            'An optional channel where completed quests will move to, with summary information.'
+            t(DEFAULT_LOCALE, 'config-label-quest-archive-default') + '\n' +
+            t(DEFAULT_LOCALE, 'config-desc-quest-archive')
         )
         self.gm_transaction_log_info = TextDisplay(
-            '**GM Transaction Log:** Not Configured\n'
-            'An optional channel where GM transactions (i.e. Modify Player commands) are logged.'
+            t(DEFAULT_LOCALE, 'config-label-gm-transaction-log-default') + '\n' +
+            t(DEFAULT_LOCALE, 'config-desc-gm-transaction-log')
         )
         self.player_transaction_log_info = TextDisplay(
-            '**Player Transaction Log:** Not Configured\n'
-            'An optional channel where player transactions such as trading and consuming items are logged.'
+            t(DEFAULT_LOCALE, 'config-label-player-transaction-log-default') + '\n' +
+            t(DEFAULT_LOCALE, 'config-desc-player-transaction-log')
         )
         self.shop_log_info = TextDisplay(
-            '**Shop Log:** Not Configured\n'
-            'An optional channel where shop transactions are logged.'
+            t(DEFAULT_LOCALE, 'config-label-shop-log-default') + '\n' +
+            t(DEFAULT_LOCALE, 'config-desc-shop-log')
         )
         self.quest_channel_select = selects.SingleChannelConfigSelect(
             calling_view=self,
@@ -1177,7 +1166,7 @@ class ConfigChannelsView(LayoutView):
         container = Container()
 
         header_section = Section(accessory=BackButton(ConfigBaseView))
-        header_section.add_item(TextDisplay('**Server Configuration - Channels**'))
+        header_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-title-channels')))
 
         container.add_item(header_section)
         container.add_item(Separator())
@@ -1278,28 +1267,28 @@ class ConfigChannelsView(LayoutView):
             shop_log = shop_log_query.get(ConfigFields.SHOP_LOG_CHANNEL) if shop_log_query else None
 
             self.quest_board_info.content = (
-                f'**Quest Board:** {quest_board}\n'
-                f'The channel where new/active quests will be posted.'
+                t(DEFAULT_LOCALE, 'config-label-quest-board', {'channel': str(quest_board)}) + '\n' +
+                t(DEFAULT_LOCALE, 'config-desc-quest-board')
             )
             self.player_board_info.content = (
-                f'**Player Board:** {player_board}\n'
-                f'An optional announcement/message board for use by players.'
+                t(DEFAULT_LOCALE, 'config-label-player-board', {'channel': str(player_board)}) + '\n' +
+                t(DEFAULT_LOCALE, 'config-desc-player-board')
             )
             self.quest_archive_info.content = (
-                f'**Quest Archive:** {quest_archive}\n'
-                f'An optional channel where completed quests will move to, with summary information.'
+                t(DEFAULT_LOCALE, 'config-label-quest-archive', {'channel': str(quest_archive)}) + '\n' +
+                t(DEFAULT_LOCALE, 'config-desc-quest-archive')
             )
             self.gm_transaction_log_info.content = (
-                f'**GM Transaction Log:** {gm_transaction_log}\n'
-                f'An optional channel where GM transactions (i.e. Modify Player commands) are logged.'
+                t(DEFAULT_LOCALE, 'config-label-gm-transaction-log', {'channel': str(gm_transaction_log)}) + '\n' +
+                t(DEFAULT_LOCALE, 'config-desc-gm-transaction-log')
             )
             self.player_transaction_log_info.content = (
-                f'**Player Transaction Log:** {player_transaction_log}\n'
-                f'An optional channel where player transactions such as trading and consuming items are logged.'
+                t(DEFAULT_LOCALE, 'config-label-player-transaction-log', {'channel': str(player_transaction_log)}) + '\n' +
+                t(DEFAULT_LOCALE, 'config-desc-player-transaction-log')
             )
             self.shop_log_info.content = (
-                f'**Shop Log:** {shop_log}\n'
-                f'An optional channel where shop transactions are logged.'
+                t(DEFAULT_LOCALE, 'config-label-shop-log', {'channel': str(shop_log)}) + '\n' +
+                t(DEFAULT_LOCALE, 'config-desc-shop-log')
             )
 
             self.build_view()
@@ -1314,13 +1303,12 @@ class ConfigQuestsView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         self.wait_list_info = TextDisplay(
-            '**Quest Wait List Size:** Disabled\n'
-            'A wait list allows the specified number of players to queue for a quest that is full, '
-            'in case a player drops.'
+            t(DEFAULT_LOCALE, 'config-label-wait-list-disabled') + '\n' +
+            t(DEFAULT_LOCALE, 'config-desc-wait-list')
         )
         self.quest_summary_info = TextDisplay(
-            '**Quest Summary:** Disabled\n'
-            'This option enables GMs to provide a short summary when closing out quests.'
+            t(DEFAULT_LOCALE, 'config-label-quest-summary-disabled') + '\n' +
+            t(DEFAULT_LOCALE, 'config-desc-quest-summary')
         )
         self.wait_list_select = selects.ConfigWaitListSelect(self)
         self.quest_summary_toggle_button = buttons.QuestSummaryToggleButton(self)
@@ -1330,7 +1318,7 @@ class ConfigQuestsView(LayoutView):
         container = Container()
 
         header_section = Section(accessory=BackButton(ConfigBaseView))
-        header_section.add_item(TextDisplay('**Server Configuration - Quests**'))
+        header_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-title-quests')))
 
         container.add_item(header_section)
         container.add_item(Separator())
@@ -1345,10 +1333,10 @@ class ConfigQuestsView(LayoutView):
         container.add_item(quest_summary_section)
         container.add_item(Separator())
 
-        gm_rewards_section = Section(accessory=MenuViewButton(GMRewardsView, 'GM Rewards'))
+        gm_rewards_section = Section(accessory=MenuViewButton(GMRewardsView, t(DEFAULT_LOCALE, 'config-label-gm-rewards')))
         gm_rewards_section.add_item(TextDisplay(
-            '**GM Rewards**\n'
-            'Configure rewards for GMs to receive upon completing quests.'
+            t(DEFAULT_LOCALE, 'config-label-gm-rewards') + '\n' +
+            t(DEFAULT_LOCALE, 'config-desc-gm-rewards')
         ))
         container.add_item(gm_rewards_section)
 
@@ -1372,18 +1360,28 @@ class ConfigQuestsView(LayoutView):
             )
             wait_list = wait_list_query.get(ConfigFields.QUEST_WAIT_LIST, 0) if wait_list_query else 0
 
-            wait_list_display = wait_list if isinstance(wait_list, int) and wait_list > 0 else 'Disabled'
-            quest_summary_display = "Enabled" if quest_summary is True else "Disabled"
+            if isinstance(wait_list, int) and wait_list > 0:
+                self.wait_list_info.content = (
+                    t(DEFAULT_LOCALE, 'config-label-wait-list', {'size': str(wait_list)}) + '\n' +
+                    t(DEFAULT_LOCALE, 'config-desc-wait-list')
+                )
+            else:
+                self.wait_list_info.content = (
+                    t(DEFAULT_LOCALE, 'config-label-wait-list-disabled') + '\n' +
+                    t(DEFAULT_LOCALE, 'config-desc-wait-list')
+                )
 
-            self.wait_list_info.content = (
-                f'**Quest Wait List Size:** {wait_list_display}\n'
-                f'A wait list allows the specified number of players to queue for a quest that is full, in case a '
-                f'player drops.'
-            )
-            self.quest_summary_info.content = (
-                f'**Quest Summary:** {quest_summary_display}\n'
-                f'This option enables GMs to provide a short summary when closing out quests.'
-            )
+            if quest_summary is True:
+                quest_summary_display = t(DEFAULT_LOCALE, 'config-label-rp-enabled')
+                self.quest_summary_info.content = (
+                    t(DEFAULT_LOCALE, 'config-label-quest-summary', {'status': quest_summary_display}) + '\n' +
+                    t(DEFAULT_LOCALE, 'config-desc-quest-summary')
+                )
+            else:
+                self.quest_summary_info.content = (
+                    t(DEFAULT_LOCALE, 'config-label-quest-summary-disabled') + '\n' +
+                    t(DEFAULT_LOCALE, 'config-desc-quest-summary')
+                )
 
             self.build_view()
         except Exception as e:
@@ -1393,7 +1391,7 @@ class ConfigQuestsView(LayoutView):
 class GMRewardsView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
-        self.gm_rewards_info = TextDisplay('No rewards configured.')
+        self.gm_rewards_info = TextDisplay(t(DEFAULT_LOCALE, 'config-msg-no-rewards'))
         self.current_rewards = None
         self.xp_enabled = True
 
@@ -1402,18 +1400,13 @@ class GMRewardsView(LayoutView):
         container = Container()
 
         header_section = Section(accessory=BackButton(ConfigQuestsView))
-        header_section.add_item(TextDisplay('**Server Configuration - GM Rewards**'))
+        header_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-title-gm-rewards')))
 
         container.add_item(header_section)
         container.add_item(Separator())
 
         gm_rewards_section = Section(accessory=buttons.GMRewardsButton(self))
-        gm_rewards_section.add_item(TextDisplay(
-            '**Add/Modify Rewards**\n'
-            'Opens an input modal to add, modify, or remove GM rewards.\n\n'
-            '> Rewards configured are on a per-quest basis. Every time a Game Master completes a quest, they will '
-            'receive the rewards configured below on their active character.'
-        ))
+        gm_rewards_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-desc-gm-rewards-detail')))
         container.add_item(gm_rewards_section)
         container.add_item(Separator())
 
@@ -1440,19 +1433,19 @@ class GMRewardsView(LayoutView):
             xp_info = ''
             item_info = ''
             if self.xp_enabled and experience:
-                xp_info = f'**Experience:** {experience}'
+                xp_info = t(DEFAULT_LOCALE, 'config-label-gm-experience', {'xp': str(experience)})
 
             if items:
                 rewards_list = []
                 for item, quantity in items.items():
                     rewards_list.append(f'{item.capitalize()}: {quantity}')
                 rewards_string = '\n'.join(rewards_list)
-                item_info = f'**Items:**\n{rewards_string}'
+                item_info = t(DEFAULT_LOCALE, 'config-label-gm-items') + '\n' + rewards_string
 
             if xp_info or item_info:
                 self.gm_rewards_info.content = f'{xp_info}\n\n{item_info}'.strip()
             else:
-                self.gm_rewards_info.content = 'No rewards configured.'
+                self.gm_rewards_info.content = t(DEFAULT_LOCALE, 'config-msg-no-rewards')
 
             self.build_view()
         except Exception as e:
@@ -1466,8 +1459,8 @@ class ConfigPlayersView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         self.player_experience_info = TextDisplay(
-            '**Player Experience:** Disabled\n'
-            'Enables/Disables the use of experience points (or similar value-based character progression.'
+            t(DEFAULT_LOCALE, 'config-label-player-experience-disabled') + '\n' +
+            t(DEFAULT_LOCALE, 'config-desc-player-experience')
         )
 
     def build_view(self):
@@ -1475,7 +1468,7 @@ class ConfigPlayersView(LayoutView):
         container = Container()
 
         header_section = Section(accessory=BackButton(ConfigBaseView))
-        header_section.add_item(TextDisplay('**Server Configuration - Players**'))
+        header_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-title-players')))
         container.add_item(header_section)
         container.add_item(Separator())
 
@@ -1484,18 +1477,18 @@ class ConfigPlayersView(LayoutView):
         container.add_item(experience_section)
         container.add_item(Separator())
 
-        new_character_section = Section(accessory=MenuViewButton(ConfigNewCharacterView, 'New Character Settings'))
+        new_character_section = Section(accessory=MenuViewButton(ConfigNewCharacterView, t(DEFAULT_LOCALE, 'config-btn-new-character-settings')))
         new_character_section.add_item(TextDisplay(
-            '**New Character Settings**\n'
-            'Configure settings related to new player characters and how their initial inventories are set up.'
+            t(DEFAULT_LOCALE, 'config-label-new-char-settings') + '\n' +
+            t(DEFAULT_LOCALE, 'config-desc-new-char-settings')
         ))
         container.add_item(new_character_section)
         container.add_item(Separator())
 
         player_board_section = Section(accessory=buttons.PlayerBoardPurgeButton(self))
         player_board_section.add_item(TextDisplay(
-            '**Player Board Purge**\n'
-            'Purges posts from the player board (if enabled).\n\n'
+            t(DEFAULT_LOCALE, 'config-label-player-board-purge') + '\n' +
+            t(DEFAULT_LOCALE, 'config-desc-player-board-purge') + '\n\n'
         ))
         container.add_item(player_board_section)
 
@@ -1505,10 +1498,16 @@ class ConfigPlayersView(LayoutView):
         try:
             # XP section
             player_experience = await get_xp_config(bot, guild.id)
-            self.player_experience_info.content = (
-                f'**Player Experience:** {"Enabled" if player_experience else "Disabled"}\n'
-                f'Enables/Disables the use of experience points (or similar value-based character progression.'
-            )
+            if player_experience:
+                self.player_experience_info.content = (
+                    t(DEFAULT_LOCALE, 'config-label-player-experience', {'status': t(DEFAULT_LOCALE, 'config-label-rp-enabled')}) + '\n' +
+                    t(DEFAULT_LOCALE, 'config-desc-player-experience')
+                )
+            else:
+                self.player_experience_info.content = (
+                    t(DEFAULT_LOCALE, 'config-label-player-experience-disabled') + '\n' +
+                    t(DEFAULT_LOCALE, 'config-desc-player-experience')
+                )
 
             self.build_view()
         except Exception as e:
@@ -1519,15 +1518,15 @@ class ConfigNewCharacterView(LayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         self.inventory_type_info = TextDisplay(
-            '**New Character Inventory Type:** Disabled\n'
-            'Determines how newly-registered characters initialize their inventories.'
+            t(DEFAULT_LOCALE, 'config-label-inventory-type-disabled') + '\n' +
+            t(DEFAULT_LOCALE, 'config-desc-inventory-type')
         )
         self.new_character_wealth_info = TextDisplay(
-            '**New Character Wealth:** Disabled\n'
+            t(DEFAULT_LOCALE, 'config-label-new-char-wealth-disabled') + '\n'
         )
         self.approval_queue_info = TextDisplay(
-            '**Approval Queue:** Disabled\n'
-            'If set, new characters must be approved by a GM in this Forum Channel before they are active.'
+            t(DEFAULT_LOCALE, 'config-label-approval-queue-disabled') + '\n' +
+            t(DEFAULT_LOCALE, 'config-desc-approval-queue')
         )
         self.inventory_type_select = selects.InventoryTypeSelect(self)
         self.approval_queue_select = selects.SingleChannelConfigSelect(
@@ -1537,16 +1536,16 @@ class ConfigNewCharacterView(LayoutView):
 
         self.new_character_wealth = None
         self.currency_config = {}
-        self.new_character_shop_button = MenuViewButton(ConfigNewCharacterShopView, 'Configure New Character Shop')
+        self.new_character_shop_button = MenuViewButton(ConfigNewCharacterShopView, t(DEFAULT_LOCALE, 'config-btn-configure-new-character-shop'))
         self.new_character_wealth_button = buttons.ConfigNewCharacterWealthButton(self)
-        self.static_kits_button = MenuViewButton(ConfigStaticKitsView, 'Configure Static Kits')
+        self.static_kits_button = MenuViewButton(ConfigStaticKitsView, t(DEFAULT_LOCALE, 'config-btn-configure-static-kits'))
 
     def build_view(self):
         self.clear_items()
         container = Container()
 
         header_section = Section(accessory=BackButton(ConfigPlayersView))
-        header_section.add_item(TextDisplay('**Server Configuration - New Character Settings**'))
+        header_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-title-new-character')))
         container.add_item(header_section)
         container.add_item(Separator())
 
@@ -1587,16 +1586,16 @@ class ConfigNewCharacterView(LayoutView):
             self.new_character_wealth = new_character_wealth
 
             type_description = {
-                'disabled': 'Players start with empty inventories.',
-                'selection': 'Players choose items freely from the New Character Shop.',
-                'purchase': 'Players purchase items from the New Character Shop with a given amount of currency.',
-                'open': 'Players manually input their inventory items.',
-                'static': 'Players are given a predefined starting inventory.'
+                'disabled': t(DEFAULT_LOCALE, 'config-desc-inv-type-disabled'),
+                'selection': t(DEFAULT_LOCALE, 'config-desc-inv-type-selection'),
+                'purchase': t(DEFAULT_LOCALE, 'config-desc-inv-type-purchase'),
+                'open': t(DEFAULT_LOCALE, 'config-desc-inv-type-open'),
+                'static': t(DEFAULT_LOCALE, 'config-desc-inv-type-static')
             }
 
             self.inventory_type_info.content = (
-                f'**New Character Inventory Type:** {inventory_type.capitalize()}\n'
-                f'{type_description.get(inventory_type, "")}'
+                t(DEFAULT_LOCALE, 'config-label-inventory-type', {'type': inventory_type.capitalize()}) + '\n' +
+                type_description.get(inventory_type, '')
             )
 
             # New character Shop section
@@ -1609,9 +1608,9 @@ class ConfigNewCharacterView(LayoutView):
             self.currency_config = currency_config
 
             self.new_character_shop_button.disabled = True
-            self.new_character_shop_button.label = 'Configure New Character Shop'
+            self.new_character_shop_button.label = t(DEFAULT_LOCALE, 'config-btn-configure-new-character-shop')
             self.new_character_wealth_button.disabled = True
-            self.new_character_wealth_button.label = 'Configure New Character Wealth'
+            self.new_character_wealth_button.label = t(DEFAULT_LOCALE, 'config-btn-configure-new-character-wealth')
             self.static_kits_button.disabled = True
 
             if inventory_type == 'selection':
@@ -1619,16 +1618,16 @@ class ConfigNewCharacterView(LayoutView):
                 if currency_config:
                     self.new_character_wealth_button.disabled = False
                 else:
-                    self.new_character_wealth_button.label = 'Disabled (No Currency Configured)'
+                    self.new_character_wealth_button.label = t(DEFAULT_LOCALE, 'config-btn-disabled-no-currency')
 
             if inventory_type == 'purchase':
                 if not currency_config:
-                    self.new_character_shop_button.label = 'Disabled (No Currency Configured)'
-                    self.new_character_wealth_button.label = 'Disabled (No Currency Configured)'
+                    self.new_character_shop_button.label = t(DEFAULT_LOCALE, 'config-btn-disabled-no-currency')
+                    self.new_character_wealth_button.label = t(DEFAULT_LOCALE, 'config-btn-disabled-no-currency')
                 else:
                     self.new_character_wealth_button.disabled = False
                     if not new_character_wealth:
-                        self.new_character_shop_button.label = 'Disabled (No Starting Wealth Configured)'
+                        self.new_character_shop_button.label = t(DEFAULT_LOCALE, 'config-btn-disabled-no-wealth')
                     else:
                         self.new_character_shop_button.disabled = False
 
@@ -1642,11 +1641,11 @@ class ConfigNewCharacterView(LayoutView):
                 formatted_wealth = format_price_string(amount, currency_name, currency_config)
 
                 self.new_character_wealth_info.content = (
-                    f'**New Character Wealth:** {formatted_wealth}'
+                    t(DEFAULT_LOCALE, 'config-label-new-char-wealth', {'wealth': formatted_wealth})
                 )
             else:
                 self.new_character_wealth_info.content = (
-                    f'**New Character Wealth:** Disabled'
+                    t(DEFAULT_LOCALE, 'config-label-new-char-wealth-disabled')
                 )
 
             # Approval Queue section
@@ -1656,12 +1655,17 @@ class ConfigNewCharacterView(LayoutView):
                 collection_name=DatabaseCollections.APPROVAL_QUEUE_CHANNEL,
                 query={CommonFields.ID: guild.id}
             )
-            approval_channel = approval_query[ConfigFields.APPROVAL_QUEUE_CHANNEL] if approval_query else 'Not Configured'
-
-            self.approval_queue_info.content = (
-                f'**Approval Queue:** {approval_channel}\n'
-                f'If set, new characters must be approved by a GM in this Forum Channel before they are active.'
-            )
+            if approval_query and approval_query.get(ConfigFields.APPROVAL_QUEUE_CHANNEL):
+                approval_channel = approval_query[ConfigFields.APPROVAL_QUEUE_CHANNEL]
+                self.approval_queue_info.content = (
+                    t(DEFAULT_LOCALE, 'config-label-approval-queue', {'channel': approval_channel}) + '\n' +
+                    t(DEFAULT_LOCALE, 'config-desc-approval-queue')
+                )
+            else:
+                self.approval_queue_info.content = (
+                    t(DEFAULT_LOCALE, 'config-label-approval-queue-not-configured') + '\n' +
+                    t(DEFAULT_LOCALE, 'config-desc-approval-queue')
+                )
 
             self.build_view()
         except Exception as e:
@@ -1684,11 +1688,11 @@ class ConfigNewCharacterShopView(LayoutView):
         container = Container()
 
         header_section = Section(accessory=BackButton(ConfigNewCharacterView))
-        header_section.add_item(TextDisplay('**Server Configuration - New Character Shop**'))
+        header_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-title-new-char-shop')))
         container.add_item(header_section)
         container.add_item(Separator())
 
-        container.add_item(TextDisplay(self.mode_description or 'Define the shop items.'))
+        container.add_item(TextDisplay(self.mode_description or t(DEFAULT_LOCALE, 'config-msg-define-shop-items')))
 
         action_row = ActionRow()
         action_row.add_item(buttons.AddNewCharacterShopItemButton(self))
@@ -1702,7 +1706,7 @@ class ConfigNewCharacterShopView(LayoutView):
         current_stock = self.all_stock[start_index:end_index]
 
         if not current_stock:
-            container.add_item(TextDisplay("No items configured."))
+            container.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-msg-no-items')))
         else:
             for item in current_stock:
                 item_name = escape_markdown(item.get(CommonFields.NAME))
@@ -1733,7 +1737,7 @@ class ConfigNewCharacterShopView(LayoutView):
             nav_row = ActionRow()
 
             prev_button = Button(
-                label='Previous',
+                label=t(DEFAULT_LOCALE, 'common-btn-previous'),
                 style=ButtonStyle.secondary,
                 custom_id='ss_prev',
                 disabled=(self.current_page == 0)
@@ -1742,14 +1746,14 @@ class ConfigNewCharacterShopView(LayoutView):
             nav_row.add_item(prev_button)
 
             page_button = Button(
-                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                label=t(DEFAULT_LOCALE, 'common-page-label', {'current': str(self.current_page + 1), 'total': str(self.total_pages)}),
                 style=ButtonStyle.secondary,
                 disabled=True
             )
             nav_row.add_item(page_button)
 
             next_button = Button(
-                label='Next',
+                label=t(DEFAULT_LOCALE, 'common-btn-next'),
                 style=ButtonStyle.primary,
                 custom_id='ss_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -1771,18 +1775,18 @@ class ConfigNewCharacterShopView(LayoutView):
 
             if self.inventory_type == 'selection':
                 self.mode_description = (
-                    '**Inventory Type:** Selection\n'
-                    'Players choose items freely from the New Character Shop.'
+                    t(DEFAULT_LOCALE, 'config-label-inv-type-selection') + '\n' +
+                    t(DEFAULT_LOCALE, 'config-desc-inv-type-selection-shop')
                 )
             elif self.inventory_type == 'purchase':
                 self.mode_description = (
-                    '**Inventory Type:** Purchase\n'
-                    'Players purchase items from the New Character Shop with a given amount of currency.'
+                    t(DEFAULT_LOCALE, 'config-label-inv-type-purchase') + '\n' +
+                    t(DEFAULT_LOCALE, 'config-desc-inv-type-purchase-shop')
                 )
             else:
                 self.mode_description = (
-                    f'**Inventory Type:** {titlecase(self.inventory_type)}\n'
-                    f'New Character Shop is not in use.'
+                    t(DEFAULT_LOCALE, 'config-label-inv-type-other', {'type': titlecase(self.inventory_type)}) + '\n' +
+                    t(DEFAULT_LOCALE, 'config-desc-inv-type-not-in-use')
                 )
 
             query = await get_cached_data(
@@ -1872,17 +1876,17 @@ class ConfigStaticKitsView(LayoutView):
         container = Container()
 
         header_section = Section(accessory=BackButton(ConfigNewCharacterView))
-        header_section.add_item(TextDisplay('**Server Configuration - Static Kits**'))
+        header_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-title-static-kits')))
         container.add_item(header_section)
         container.add_item(Separator())
 
         add_section = Section(accessory=buttons.AddStaticKitButton(self))
-        add_section.add_item(TextDisplay("Create a new kit definition."))
+        add_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-desc-create-kit')))
         container.add_item(add_section)
         container.add_item(Separator())
 
         if not self.sorted_kits:
-            container.add_item(TextDisplay("No kits configured."))
+            container.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-msg-no-kits')))
         else:
             start = self.current_page * self.items_per_page
             end = start + self.items_per_page
@@ -1903,7 +1907,7 @@ class ConfigStaticKitsView(LayoutView):
                 for item in items[:3]:
                     contents.append(f"{item.get(CommonFields.QUANTITY, 1)}x {escape_markdown(titlecase(item.get(CommonFields.NAME, '')))}")
                 if len(items) > 3:
-                    contents.append(f"...and {len(items) - 3} more items")
+                    contents.append(t(DEFAULT_LOCALE, 'config-label-kit-more-items', {'count': str(len(items) - 3)}))
 
                 if currency:
                     contents.extend(format_consolidated_totals(currency, self.currency_config))
@@ -1911,7 +1915,7 @@ class ConfigStaticKitsView(LayoutView):
                 if contents:
                     info_text += f"\n> {', '.join(contents)}"
                 else:
-                    info_text += "\n> *Empty Kit*"
+                    info_text += '\n> ' + t(DEFAULT_LOCALE, 'config-label-empty-kit')
 
                 container.add_item(TextDisplay(info_text))
 
@@ -1927,7 +1931,7 @@ class ConfigStaticKitsView(LayoutView):
             nav_row = ActionRow()
 
             prev_button = Button(
-                label='Previous',
+                label=t(DEFAULT_LOCALE, 'common-btn-previous'),
                 style=ButtonStyle.secondary,
                 custom_id='kit_conf_prev',
                 disabled=(self.current_page == 0)
@@ -1936,7 +1940,7 @@ class ConfigStaticKitsView(LayoutView):
             nav_row.add_item(prev_button)
 
             page_display = Button(
-                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                label=t(DEFAULT_LOCALE, 'common-page-label', {'current': str(self.current_page + 1), 'total': str(self.total_pages)}),
                 style=ButtonStyle.secondary,
                 custom_id='kit_conf_page_disp'
             )
@@ -1944,7 +1948,7 @@ class ConfigStaticKitsView(LayoutView):
             nav_row.add_item(page_display)
 
             next_button = Button(
-                label='Next',
+                label=t(DEFAULT_LOCALE, 'common-btn-next'),
                 style=ButtonStyle.secondary,
                 custom_id='kit_conf_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -2013,7 +2017,7 @@ class EditStaticKitView(LayoutView):
         container = Container()
 
         header_section = Section(accessory=BackButton(ConfigStaticKitsView))
-        header_section.add_item(TextDisplay(f'**Editing Kit: {titlecase(self.kit_data[CommonFields.NAME])}**'))
+        header_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-title-editing-kit', {'kitName': titlecase(self.kit_data[CommonFields.NAME])})))
         container.add_item(header_section)
 
         if description := self.kit_data.get('description'):
@@ -2027,7 +2031,7 @@ class EditStaticKitView(LayoutView):
         container.add_item(Separator())
 
         if not combined_list:
-            container.add_item(TextDisplay("This kit is empty. Use the buttons above to add currency or items."))
+            container.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-msg-kit-empty')))
         else:
             start_index = self.current_page * self.items_per_page
             end_index = start_index + self.items_per_page
@@ -2042,7 +2046,7 @@ class EditStaticKitView(LayoutView):
 
                     currency_section = Section(accessory=buttons.DeleteKitCurrencyButton(self, currency_name))
                     display = format_price_string(amount, currency_name, self.currency_config)
-                    currency_section.add_item(TextDisplay(f'**Currency:** {display}'))
+                    currency_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-label-kit-currency', {'display': display})))
                     container.add_item(currency_section)
                 elif entry['type'] == 'item':
                     if entry_type == 'currency':
@@ -2055,7 +2059,7 @@ class EditStaticKitView(LayoutView):
                     item_actions.add_item(buttons.EditKitItemButton(self, item_data, index))
                     item_actions.add_item(buttons.DeleteKitItemButton(self, index))
 
-                    display = f'**Item:** {escape_markdown(titlecase(item_data[CommonFields.NAME]))}'
+                    display = t(DEFAULT_LOCALE, 'config-label-kit-item', {'name': escape_markdown(titlecase(item_data[CommonFields.NAME]))})
                     if item_data[CommonFields.QUANTITY] > 1:
                         display += f' (x{item_data[CommonFields.QUANTITY]})'
                     if item_data.get('description'):
@@ -2068,7 +2072,7 @@ class EditStaticKitView(LayoutView):
             if self.total_pages > 1:
                 nav_row = ActionRow()
                 prev_button = Button(
-                    label='Previous',
+                    label=t(DEFAULT_LOCALE, 'common-btn-previous'),
                     style=ButtonStyle.secondary,
                     custom_id='kit_prev',
                     disabled=(self.current_page == 0)
@@ -2077,14 +2081,14 @@ class EditStaticKitView(LayoutView):
                 nav_row.add_item(prev_button)
 
                 page_button = Button(
-                    label=f'Page {self.current_page + 1}/{self.total_pages}',
+                    label=t(DEFAULT_LOCALE, 'common-page-label', {'current': str(self.current_page + 1), 'total': str(self.total_pages)}),
                     style=ButtonStyle.secondary
                 )
                 page_button.callback = self.show_page_jump_modal
                 nav_row.add_item(page_button)
 
                 next_button = Button(
-                    label='Next',
+                    label=t(DEFAULT_LOCALE, 'common-btn-next'),
                     style=ButtonStyle.primary,
                     custom_id='kit_next',
                     disabled=(self.current_page >= self.total_pages - 1)
@@ -2112,7 +2116,7 @@ class EditStaticKitView(LayoutView):
             await interaction.response.send_modal(common_modals.PageJumpModal(self))
         except Exception as e:
             logging.error(f'Failed to send PageJumpModal: {e}')
-            await interaction.response.send_message('Could not open page selector', ephemeral=True)
+            await interaction.response.send_message(t(DEFAULT_LOCALE, 'common-error-page-selector'), ephemeral=True)
 
 
 # ------ CURRENCY ------
@@ -2154,17 +2158,17 @@ class ConfigCurrencyView(LayoutView):
         container = Container()
 
         header_section = Section(accessory=BackButton(ConfigBaseView))
-        header_section.add_item(TextDisplay('**Server Configuration - Currency**'))
+        header_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-title-currency')))
         container.add_item(header_section)
         container.add_item(Separator())
 
         add_currency_section = Section(accessory=buttons.AddCurrencyButton(self))
-        add_currency_section.add_item(TextDisplay('Create a new currency.'))
+        add_currency_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-desc-create-currency')))
         container.add_item(add_currency_section)
         container.add_item(Separator())
 
         if not self.currencies:
-            container.add_item(TextDisplay('No currencies configured.'))
+            container.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-msg-no-currencies')))
         else:
             start = self.current_page * self.items_per_page
             end = start + self.items_per_page
@@ -2175,11 +2179,11 @@ class ConfigCurrencyView(LayoutView):
                 is_double = currency.get(CurrencyFields.IS_DOUBLE, False)
                 denominations = currency.get(CurrencyFields.DENOMINATIONS, [])
 
-                currency_type = 'Double' if is_double else 'Integer'
+                currency_type = t(DEFAULT_LOCALE, 'config-label-currency-type-double') if is_double else t(DEFAULT_LOCALE, 'config-label-currency-type-integer')
                 denomination_count = len(denominations)
 
-                info = (f'**{titlecase(currency_name)}**\n'
-                        f'Display Type: {currency_type} | Denominations: {denomination_count}')
+                info = (f'**{titlecase(currency_name)}**\n' +
+                        t(DEFAULT_LOCALE, 'config-label-currency-display-type', {'type': currency_type, 'count': str(denomination_count)}))
 
                 section = Section(accessory=buttons.ManageCurrencyButton(currency_name))
                 section.add_item(TextDisplay(info))
@@ -2191,7 +2195,7 @@ class ConfigCurrencyView(LayoutView):
         if self.total_pages > 1:
             nav_row = ActionRow()
             prev_button = Button(
-                label='Previous',
+                label=t(DEFAULT_LOCALE, 'common-btn-previous'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='curr_prev',
                 disabled=(self.current_page == 0)
@@ -2200,7 +2204,7 @@ class ConfigCurrencyView(LayoutView):
             nav_row.add_item(prev_button)
 
             page_display = Button(
-                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                label=t(DEFAULT_LOCALE, 'common-page-label', {'current': str(self.current_page + 1), 'total': str(self.total_pages)}),
                 style=discord.ButtonStyle.secondary,
                 custom_id='curr_page_disp'
             )
@@ -2208,7 +2212,7 @@ class ConfigCurrencyView(LayoutView):
             nav_row.add_item(page_display)
 
             next_button = Button(
-                label='Next',
+                label=t(DEFAULT_LOCALE, 'common-btn-next'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='curr_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -2278,32 +2282,20 @@ class ConfigEditCurrencyView(LayoutView):
     def build_view(self):
         self.clear_items()
         container = Container()
-        display_type = 'Double' if self.currency_data.get(CurrencyFields.IS_DOUBLE) else 'Integer'
+        display_type = t(DEFAULT_LOCALE, 'config-label-currency-type-double') if self.currency_data.get(CurrencyFields.IS_DOUBLE) else t(DEFAULT_LOCALE, 'config-label-currency-type-integer')
 
         header_section = Section(accessory=BackButton(ConfigCurrencyView))
-        header_section.add_item(TextDisplay(f'**Manage Currency: {titlecase(self.currency_name)}**'))
+        header_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-title-manage-currency', {'currencyName': titlecase(self.currency_name)})))
         container.add_item(header_section)
         container.add_item(Separator())
 
-        info_text = (
-            '__**Currency and Denominations**__\n'
-            '- The given name of your currency is considered the base currency and has a value of 1.'
-            '```Example: "gold" is configured as a currency.```\n'
-            '- Adding a denomination requires specifying a name and a value relative to the base currency.'
-            '```Example: Gold is given two denominations: silver (value of 0.1), and copper (value of 0.01).```\n'
-            '- Any transactions involving a base currency or its denominations will automatically convert them.'
-            '```Example: A player has 10 gold and spends 3 copper. Their new balance will automatically display '
-            '9 gold, 9 silver, and 7 copper.```\n'
-            '- Currencies displayed as an integer will show each denomination, while currencies displayed as a double '
-            'will show only as the base currency.'
-            '```Example: The player above with double display enabled will show as 9.97 gold.```\n'
-        )
+        info_text = t(DEFAULT_LOCALE, 'config-desc-currency-info')
         container.add_item(TextDisplay(info_text))
         container.add_item(Separator())
 
         actions = ActionRow()
         toggle_double_button = buttons.ToggleDoubleButton(self)
-        toggle_double_button.label = f'Toggle Display (Current: {display_type})'
+        toggle_double_button.label = t(DEFAULT_LOCALE, 'config-btn-toggle-display-current', {'type': display_type})
         actions.add_item(toggle_double_button)
         actions.add_item(buttons.AddDenominationButton(self))
         actions.add_item(buttons.RenameCurrencyButton(self, self.currency_name))
@@ -2312,7 +2304,7 @@ class ConfigEditCurrencyView(LayoutView):
         container.add_item(Separator())
 
         if not self.denominations:
-            container.add_item(TextDisplay("No denominations configured."))
+            container.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-msg-no-denominations')))
         else:
             start = self.current_page * self.items_per_page
             end = start + self.items_per_page
@@ -2335,7 +2327,7 @@ class ConfigEditCurrencyView(LayoutView):
         if self.total_pages > 1:
             nav_row = ActionRow()
             prev_button = Button(
-                label='Previous',
+                label=t(DEFAULT_LOCALE, 'common-btn-previous'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='denom_prev',
                 disabled=(self.current_page == 0)
@@ -2344,7 +2336,7 @@ class ConfigEditCurrencyView(LayoutView):
             nav_row.add_item(prev_button)
 
             page_display = Button(
-                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                label=t(DEFAULT_LOCALE, 'common-page-label', {'current': str(self.current_page + 1), 'total': str(self.total_pages)}),
                 style=discord.ButtonStyle.secondary,
                 custom_id='denom_page_disp'
             )
@@ -2352,7 +2344,7 @@ class ConfigEditCurrencyView(LayoutView):
             nav_row.add_item(page_display)
 
             next_button = Button(
-                label='Next',
+                label=t(DEFAULT_LOCALE, 'common-btn-next'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='denom_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -2428,27 +2420,21 @@ class ConfigShopsView(LayoutView):
         container = Container()
 
         header_section = Section(accessory=BackButton(ConfigBaseView))
-        header_section.add_item(TextDisplay('**Server Configuration - Shops**'))
+        header_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-title-shops')))
         container.add_item(header_section)
         container.add_item(Separator())
 
         add_shop_wizard_section = Section(accessory=buttons.AddShopWizardButton(self))
-        add_shop_wizard_section.add_item(TextDisplay(
-            '**Add Shop (Wizard)**\n'
-            'Create a new, empty shop from a form.'
-        ))
+        add_shop_wizard_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-desc-add-shop-wizard')))
         container.add_item(add_shop_wizard_section)
 
         add_shop_json_section = Section(accessory=AddShopJSONButton(self))
-        add_shop_json_section.add_item(TextDisplay(
-            '**Add Shop (JSON)**\n'
-            'Create a new shop by providing a full JSON definition. (Advanced)'
-        ))
+        add_shop_json_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-desc-add-shop-json')))
         container.add_item(add_shop_json_section)
         container.add_item(Separator())
 
         if not self.shops:
-            container.add_item(TextDisplay("No shops configured."))
+            container.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-msg-no-shops')))
         else:
             start = self.current_page * self.items_per_page
             end = start + self.items_per_page
@@ -2458,11 +2444,11 @@ class ConfigShopsView(LayoutView):
                 shop_name = shop['data'].get(ShopFields.SHOP_NAME, 'Unknown Shop')
                 channel_id = shop['id']
                 channel_type = shop['data'].get(ShopFields.CHANNEL_TYPE, 'text')
-                type_indicator = ' (Forum)' if channel_type == ShopChannelType.FORUM_THREAD.value else ''
+                type_indicator = ' ' + t(DEFAULT_LOCALE, 'config-label-shop-type-forum') if channel_type == ShopChannelType.FORUM_THREAD.value else ''
 
-                info = f"**{shop_name}**{type_indicator}\nChannel: <#{channel_id}>"
+                info = f"**{shop_name}**{type_indicator}\n" + t(DEFAULT_LOCALE, 'config-label-shop-channel', {'channelId': channel_id})
 
-                section = Section(accessory=buttons.ManageShopNavButton(channel_id, shop['data'], 'Manage'))
+                section = Section(accessory=buttons.ManageShopNavButton(channel_id, shop['data'], t(DEFAULT_LOCALE, 'common-btn-manage')))
                 section.add_item(TextDisplay(info))
                 container.add_item(section)
 
@@ -2471,7 +2457,7 @@ class ConfigShopsView(LayoutView):
         if self.total_pages > 1:
             nav_row = ActionRow()
             prev_button = Button(
-                label='Previous',
+                label=t(DEFAULT_LOCALE, 'common-btn-previous'),
                 style=ButtonStyle.secondary,
                 custom_id='conf_shop_prev',
                 disabled=(self.current_page == 0)
@@ -2480,7 +2466,7 @@ class ConfigShopsView(LayoutView):
             nav_row.add_item(prev_button)
 
             page_display = Button(
-                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                label=t(DEFAULT_LOCALE, 'common-page-label', {'current': str(self.current_page + 1), 'total': str(self.total_pages)}),
                 style=discord.ButtonStyle.secondary,
                 custom_id='conf_shop_page'
             )
@@ -2488,7 +2474,7 @@ class ConfigShopsView(LayoutView):
             nav_row.add_item(page_display)
 
             next_button = Button(
-                label='Next',
+                label=t(DEFAULT_LOCALE, 'common-btn-next'),
                 style=ButtonStyle.secondary,
                 custom_id='conf_shop_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -2530,21 +2516,21 @@ class ShopChannelTypeSelectionView(LayoutView):
         container = Container()
 
         header_section = Section(accessory=BackButton(ConfigShopsView))
-        header_section.add_item(TextDisplay('**Add Shop - Choose Location Type**'))
+        header_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-title-choose-location')))
         container.add_item(header_section)
         container.add_item(Separator())
 
         text_section = Section(accessory=buttons.TextChannelShopButton(self))
         text_section.add_item(TextDisplay(
-            '**Text Channel**\n'
-            'Create a shop in a standard text channel.'
+            t(DEFAULT_LOCALE, 'config-label-text-channel') + '\n' +
+            t(DEFAULT_LOCALE, 'config-desc-text-channel')
         ))
         container.add_item(text_section)
 
         forum_section = Section(accessory=buttons.ForumThreadShopButton(self))
         forum_section.add_item(TextDisplay(
-            '**Forum Thread**\n'
-            'Create a shop in a forum thread (new or existing).'
+            t(DEFAULT_LOCALE, 'config-label-forum-thread') + '\n' +
+            t(DEFAULT_LOCALE, 'config-desc-forum-thread')
         ))
         container.add_item(forum_section)
 
@@ -2569,12 +2555,12 @@ class ForumShopSetupView(LayoutView):
         container = Container()
 
         header_section = Section(accessory=BackButton(ShopChannelTypeSelectionView))
-        header_section.add_item(TextDisplay('**Add Shop - Forum Thread Setup**'))
+        header_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-title-forum-setup')))
         container.add_item(header_section)
         container.add_item(Separator())
 
         # Forum selection
-        container.add_item(TextDisplay('**Step 1: Select a Forum Channel**'))
+        container.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-label-step1')))
         forum_select_row = ActionRow()
         forum_select_row.add_item(selects.ForumChannelSelect(self))
         container.add_item(forum_select_row)
@@ -2582,11 +2568,11 @@ class ForumShopSetupView(LayoutView):
 
         if self.selected_forum:
             # Thread creation mode selection
-            container.add_item(TextDisplay('**Step 2: Choose Thread Option**'))
+            container.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-label-step2')))
 
             new_thread_row = ActionRow()
             new_thread_btn = Button(
-                label='Create New Thread',
+                label=t(DEFAULT_LOCALE, 'config-btn-create-new-thread'),
                 style=ButtonStyle.primary if self.create_new_thread else ButtonStyle.secondary,
                 custom_id='forum_new_thread_toggle'
             )
@@ -2594,7 +2580,7 @@ class ForumShopSetupView(LayoutView):
             new_thread_row.add_item(new_thread_btn)
 
             existing_thread_btn = Button(
-                label='Use Existing Thread',
+                label=t(DEFAULT_LOCALE, 'config-btn-use-existing-thread'),
                 style=ButtonStyle.primary if not self.create_new_thread else ButtonStyle.secondary,
                 custom_id='forum_existing_thread_toggle'
             )
@@ -2606,14 +2592,11 @@ class ForumShopSetupView(LayoutView):
             if self.create_new_thread:
                 # Show button to proceed with new thread creation
                 proceed_section = Section(accessory=buttons.CreateNewForumThreadButton(self))
-                proceed_section.add_item(TextDisplay(
-                    '**Create New Thread**\n'
-                    'Opens a form to create a new thread and configure the shop.'
-                ))
+                proceed_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-desc-create-new-thread')))
                 container.add_item(proceed_section)
             else:
                 # Show thread select for existing threads
-                container.add_item(TextDisplay('**Step 3: Select an Existing Thread**'))
+                container.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-label-step3')))
                 thread_select_row = ActionRow()
                 thread_select_row.add_item(selects.ForumThreadSelect(self))
                 container.add_item(thread_select_row)
@@ -2621,8 +2604,8 @@ class ForumShopSetupView(LayoutView):
                 if self.selected_thread:
                     proceed_section = Section(accessory=buttons.UseExistingThreadButton(self))
                     proceed_section.add_item(TextDisplay(
-                        f'**Selected Thread:** {self.selected_thread.name}\n'
-                        'Click to configure the shop in this thread.'
+                        t(DEFAULT_LOCALE, 'config-label-selected-thread', {'threadName': self.selected_thread.name}) + '\n' +
+                        t(DEFAULT_LOCALE, 'config-desc-click-to-configure')
                     ))
                     container.add_item(proceed_section)
 
@@ -2655,39 +2638,39 @@ class ManageShopView(LayoutView):
         shop_name = self.shop_data.get(ShopFields.SHOP_NAME, 'Unknown')
 
         header_section = Section(accessory=BackButton(ConfigShopsView))
-        header_section.add_item(TextDisplay(f'**Manage Shop: {shop_name}**'))
+        header_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-title-manage-shop', {'shopName': shop_name})))
         container.add_item(header_section)
         container.add_item(Separator())
 
-        shop_keeper = self.shop_data.get(ShopFields.SHOP_KEEPER, 'None')
-        shop_description = self.shop_data.get(ShopFields.SHOP_DESCRIPTION, 'None')
+        shop_keeper = self.shop_data.get(ShopFields.SHOP_KEEPER, t(DEFAULT_LOCALE, 'common-label-none'))
+        shop_description = self.shop_data.get(ShopFields.SHOP_DESCRIPTION, t(DEFAULT_LOCALE, 'common-label-none'))
         channel_type = self.shop_data.get(ShopFields.CHANNEL_TYPE, 'text')
-        channel_type_display = 'Forum Thread' if channel_type == ShopChannelType.FORUM_THREAD.value else 'Text Channel'
+        channel_type_display = t(DEFAULT_LOCALE, 'config-label-shop-type-forum-thread') if channel_type == ShopChannelType.FORUM_THREAD.value else t(DEFAULT_LOCALE, 'config-label-shop-type-text')
 
         info_text = (
-            f"**Channel:** <#{self.selected_channel_id}>\n"
-            f"**Type:** {channel_type_display}\n"
-            f"**Shopkeeper:** {shop_keeper}\n"
-            f"**Description:** {shop_description}"
+            t(DEFAULT_LOCALE, 'config-label-shop-channel-info', {'channelId': self.selected_channel_id}) + '\n' +
+            t(DEFAULT_LOCALE, 'config-label-shop-type', {'type': channel_type_display}) + '\n' +
+            t(DEFAULT_LOCALE, 'config-label-shopkeeper', {'name': shop_keeper}) + '\n' +
+            t(DEFAULT_LOCALE, 'config-label-shop-description', {'description': shop_description})
         )
         container.add_item(TextDisplay(info_text))
         container.add_item(Separator())
 
         wizard_section = Section(accessory=buttons.EditShopButton(self))
-        wizard_section.add_item(TextDisplay("Edit Shop details and items via Wizard."))
+        wizard_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-desc-edit-wizard')))
         container.add_item(wizard_section)
 
         json_section = Section(accessory=buttons.UpdateShopJSONButton(self))
-        json_section.add_item(TextDisplay("Upload a new JSON definition for this shop."))
+        json_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-desc-upload-json')))
         container.add_item(json_section)
 
         download_section = Section(accessory=buttons.DownloadShopJSONButton(self))
-        download_section.add_item(TextDisplay("Download the current JSON definition."))
+        download_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-desc-download-json')))
         container.add_item(download_section)
         container.add_item(Separator())
 
         remove_section = Section(accessory=buttons.RemoveShopButton(self))
-        remove_section.add_item(TextDisplay("Permanently remove this shop."))
+        remove_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-desc-remove-shop')))
         container.add_item(remove_section)
 
         self.add_item(container)
@@ -2709,7 +2692,7 @@ class EditShopView(LayoutView):
         self.done_editing_button = buttons.ManageShopNavButton(
             self.channel_id,
             self.shop_data,
-            'Done Editing',
+            t(DEFAULT_LOCALE, 'config-btn-done-editing'),
             ButtonStyle.secondary
         )
         self.currency_config = {}
@@ -2730,10 +2713,10 @@ class EditShopView(LayoutView):
     def build_view(self):
         self.clear_items()
         container = Container()
-        header_items = [TextDisplay(f'**Editing Shop: {self.shop_data.get(ShopFields.SHOP_NAME)}**')]
+        header_items = [TextDisplay(t(DEFAULT_LOCALE, 'config-title-editing-shop', {'shopName': self.shop_data.get(ShopFields.SHOP_NAME)}))]
 
         if shop_keeper := self.shop_data.get(ShopFields.SHOP_KEEPER):
-            header_items.append(TextDisplay(f'Shopkeeper: **{shop_keeper}**'))
+            header_items.append(TextDisplay(t(DEFAULT_LOCALE, 'config-label-shop-shopkeeper', {'name': shop_keeper})))
         if shop_description := self.shop_data.get(ShopFields.SHOP_DESCRIPTION):
             header_items.append(TextDisplay(f'*{shop_description}*'))
 
@@ -2792,7 +2775,7 @@ class EditShopView(LayoutView):
             pagination_row = ActionRow()
 
             prev_button = Button(
-                label='Previous',
+                label=t(DEFAULT_LOCALE, 'common-btn-previous'),
                 style=ButtonStyle.secondary,
                 custom_id='shop_edit_prev',
                 disabled=(self.current_page == 0)
@@ -2800,14 +2783,14 @@ class EditShopView(LayoutView):
             prev_button.callback = self.prev_page
 
             page_display = Button(
-                label=f'Page {self.current_page + 1} of {self.total_pages}',
+                label=t(DEFAULT_LOCALE, 'common-page-display', {'current': str(self.current_page + 1), 'total': str(self.total_pages)}),
                 style=ButtonStyle.secondary,
                 custom_id='shop_edit_page'
             )
             page_display.callback = self.show_page_jump_modal
 
             next_button = Button(
-                label='Next',
+                label=t(DEFAULT_LOCALE, 'common-btn-next'),
                 style=ButtonStyle.primary,
                 custom_id='shop_edit_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -2842,7 +2825,7 @@ class EditShopView(LayoutView):
             await interaction.response.send_modal(common_modals.PageJumpModal(self))
         except Exception as e:
             logging.error(f'Failed to send PageJumpModal: {e}')
-            await interaction.response.send_message('Could not open page selector', ephemeral=True)
+            await interaction.response.send_message(t(DEFAULT_LOCALE, 'common-error-page-selector'), ephemeral=True)
 
     def update_stock(self, new_stock: list):
         self.all_stock = new_stock
@@ -2900,14 +2883,14 @@ class ConfigStockLimitsView(LayoutView):
         # Header
         shop_name = self.shop_data.get(ShopFields.SHOP_NAME, 'Unknown Shop')
         header_section = Section(accessory=buttons.BackToEditShopButton(self.channel_id, self.shop_data))
-        header_section.add_item(TextDisplay(f'**Stock Configuration: {shop_name}**'))
+        header_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-title-stock-config', {'shopName': shop_name})))
         container.add_item(header_section)
         container.add_item(Separator())
 
         # Current UTC time display
         now = datetime.now(timezone.utc)
         utc_time_str = now.strftime('%Y-%m-%d %H:%M UTC')
-        container.add_item(TextDisplay(f'Current UTC Time: **{utc_time_str}**'))
+        container.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-label-current-utc', {'time': utc_time_str})))
         container.add_item(Separator())
 
         # Restock schedule section
@@ -2920,21 +2903,21 @@ class ConfigStockLimitsView(LayoutView):
             mode = restock_config.get(RestockFields.MODE, RestockMode.FULL.value)
             increment = restock_config.get(RestockFields.INCREMENT_AMOUNT, 1)
 
-            day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-            day_name = day_names[day_of_week] if 0 <= day_of_week <= 6 else 'Unknown'
+            day_name_keys = ['common-day-monday', 'common-day-tuesday', 'common-day-wednesday', 'common-day-thursday', 'common-day-friday', 'common-day-saturday', 'common-day-sunday']
+            day_name = t(DEFAULT_LOCALE, day_name_keys[day_of_week]) if 0 <= day_of_week <= 6 else t(DEFAULT_LOCALE, 'common-label-unknown')
 
-            schedule_text = f'**Restock Schedule:** {schedule.capitalize()}'
+            schedule_text = t(DEFAULT_LOCALE, 'config-label-restock-schedule', {'schedule': schedule.capitalize()})
             if schedule == ScheduleType.HOURLY.value:
-                schedule_text += f' at minute :{minute:02d}'
+                schedule_text += ' ' + t(DEFAULT_LOCALE, 'config-label-restock-hourly', {'minute': f'{minute:02d}'})
             elif schedule == ScheduleType.DAILY.value:
-                schedule_text += f' at {hour:02d}:{minute:02d} UTC'
+                schedule_text += ' ' + t(DEFAULT_LOCALE, 'config-label-restock-daily', {'time': f'{hour:02d}:{minute:02d}'})
             elif schedule == ScheduleType.WEEKLY.value:
-                schedule_text += f' on {day_name} at {hour:02d}:{minute:02d} UTC'
+                schedule_text += ' ' + t(DEFAULT_LOCALE, 'config-label-restock-weekly', {'day': day_name, 'time': f'{hour:02d}:{minute:02d}'})
 
-            mode_text = 'Full restock' if mode == RestockMode.FULL.value else f'Add {increment} per cycle (up to max)'
-            schedule_text += f'\n**Mode:** {mode_text}'
+            mode_text = t(DEFAULT_LOCALE, 'config-label-restock-full') if mode == RestockMode.FULL.value else t(DEFAULT_LOCALE, 'config-label-restock-incremental', {'amount': str(increment)})
+            schedule_text += '\n' + t(DEFAULT_LOCALE, 'config-label-restock-mode', {'mode': mode_text})
         else:
-            schedule_text = '**Restock Schedule:** Disabled'
+            schedule_text = t(DEFAULT_LOCALE, 'config-label-restock-disabled')
 
         schedule_section = Section(accessory=buttons.RestockScheduleButton(self))
         schedule_section.add_item(TextDisplay(schedule_text))
@@ -2942,10 +2925,10 @@ class ConfigStockLimitsView(LayoutView):
         container.add_item(Separator())
 
         # Item stock limits section
-        container.add_item(TextDisplay('**Item Stock Limits**'))
+        container.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-label-item-stock-limits')))
 
         if not self.all_stock:
-            container.add_item(TextDisplay('No items in this shop.'))
+            container.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-msg-no-items-in-shop')))
         else:
             start_index = self.current_page * self.items_per_page
             end_index = start_index + self.items_per_page
@@ -2966,11 +2949,11 @@ class ConfigStockLimitsView(LayoutView):
 
                 if max_stock is not None:
                     if current_available is not None:
-                        stock_text = f'**{item_name_display}**\nMax: {max_stock} | Available: {current_available}'
+                        stock_text = f'**{item_name_display}**\n' + t(DEFAULT_LOCALE, 'config-label-stock-with-available', {'max': str(max_stock), 'available': str(current_available)})
                         if reserved > 0:
-                            stock_text += f' | Reserved: {reserved}'
+                            stock_text += t(DEFAULT_LOCALE, 'config-label-stock-reserved', {'reserved': str(reserved)})
                     else:
-                        stock_text = f'**{item_name_display}**\nMax: {max_stock} | Available: (not initialized)'
+                        stock_text = f'**{item_name_display}**\n' + t(DEFAULT_LOCALE, 'config-label-stock-not-initialized', {'max': str(max_stock)})
 
                     # Create button row with edit and remove buttons
                     item_row = ActionRow()
@@ -2980,7 +2963,7 @@ class ConfigStockLimitsView(LayoutView):
                     container.add_item(TextDisplay(stock_text))
                     container.add_item(item_row)
                 else:
-                    stock_text = f'**{item_name_display}**\nStock: Unlimited'
+                    stock_text = f'**{item_name_display}**\n' + t(DEFAULT_LOCALE, 'config-label-stock-unlimited')
                     item_section = Section(accessory=buttons.SetItemStockButton(item, self))
                     item_section.add_item(TextDisplay(stock_text))
                     container.add_item(item_section)
@@ -2992,7 +2975,7 @@ class ConfigStockLimitsView(LayoutView):
             nav_row = ActionRow()
 
             prev_button = Button(
-                label='Previous',
+                label=t(DEFAULT_LOCALE, 'common-btn-previous'),
                 style=ButtonStyle.secondary,
                 custom_id='stock_limits_prev',
                 disabled=(self.current_page == 0)
@@ -3000,14 +2983,14 @@ class ConfigStockLimitsView(LayoutView):
             prev_button.callback = self.prev_page
 
             page_display = Button(
-                label=f'Page {self.current_page + 1} of {self.total_pages}',
+                label=t(DEFAULT_LOCALE, 'common-page-display', {'current': str(self.current_page + 1), 'total': str(self.total_pages)}),
                 style=ButtonStyle.secondary,
                 custom_id='stock_limits_page'
             )
             page_display.callback = self.show_page_jump_modal
 
             next_button = Button(
-                label='Next',
+                label=t(DEFAULT_LOCALE, 'common-btn-next'),
                 style=ButtonStyle.primary,
                 custom_id='stock_limits_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -3074,7 +3057,7 @@ class ConfigRoleplayView(LayoutView):
         container = Container()
 
         header_section = Section(accessory=BackButton(ConfigBaseView))
-        header_section.add_item(TextDisplay('**Server Configuration - Roleplay Rewards**'))
+        header_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-title-roleplay')))
         container.add_item(header_section)
         container.add_item(Separator())
 
@@ -3085,13 +3068,14 @@ class ConfigRoleplayView(LayoutView):
         now = datetime.now(timezone.utc)
         time_str = now.strftime('%H:%M UTC')
 
+        status_display = t(DEFAULT_LOCALE, 'config-label-rp-enabled') if enabled else t(DEFAULT_LOCALE, 'config-label-rp-disabled')
         status_text = (
-            f'**Status:** {"Enabled" if enabled else "Disabled"}\n'
-            f'ℹ️ **Server Time:** `{time_str}`'
+            t(DEFAULT_LOCALE, 'config-label-rp-status', {'status': status_display}) + '\n' +
+            t(DEFAULT_LOCALE, 'config-label-rp-server-time', {'time': time_str})
         )
 
         status_section = Section(accessory=self.roleplay_toggle_button)
-        self.roleplay_toggle_button.label = 'Disable' if enabled else 'Enable'
+        self.roleplay_toggle_button.label = t(DEFAULT_LOCALE, 'common-btn-disable') if enabled else t(DEFAULT_LOCALE, 'common-btn-enable')
         self.roleplay_toggle_button.style = ButtonStyle.danger if enabled else ButtonStyle.success
         status_section.add_item(TextDisplay(status_text))
         container.add_item(status_section)
@@ -3099,26 +3083,20 @@ class ConfigRoleplayView(LayoutView):
 
         # Mode Description
         if mode == 'scheduled':
-            mode_description = (
-                '```Rewards are distributed once, upon sending the required threshold of eligible messages within the '
-                'set time period (hourly, daily, or weekly).```'
-            )
+            mode_description = t(DEFAULT_LOCALE, 'config-desc-rp-mode-scheduled')
         else:
-            mode_description = (
-                '```Rewards are distributed on a recurring basis each time a set number of eligible messages are sent.'
-                '```'
-            )
+            mode_description = t(DEFAULT_LOCALE, 'config-desc-rp-mode-accrued')
 
         # Settings
         settings_config = self.config.get(RoleplayFields.CONFIG, {})
         min_length = settings_config.get(RoleplayFields.MIN_LENGTH, 20)
         cooldown = settings_config.get(RoleplayFields.COOLDOWN, 30)
         setting_details = (
-            f'**Configuration Details:**\n\n'
-            f'**Mode:** {mode.capitalize()}\n'
-            f'{mode_description}'
-            f'**Minimum Message Length:** {min_length} characters\n'
-            f'**Cooldown:** {cooldown} seconds\n'
+            t(DEFAULT_LOCALE, 'config-label-rp-config-details') + '\n\n' +
+            t(DEFAULT_LOCALE, 'config-label-rp-mode', {'mode': mode.capitalize()}) + '\n' +
+            mode_description +
+            t(DEFAULT_LOCALE, 'config-label-rp-min-length', {'length': str(min_length)}) + '\n' +
+            t(DEFAULT_LOCALE, 'config-label-rp-cooldown', {'seconds': str(cooldown)}) + '\n'
         )
 
         if mode == 'scheduled':
@@ -3128,7 +3106,7 @@ class ConfigRoleplayView(LayoutView):
                 frequency = 'day'
             elif frequency_config == 'weekly':
                 frequency = 'week'
-            setting_details += f'**Frequency:** Once per {frequency}\n'
+            setting_details += t(DEFAULT_LOCALE, 'config-label-rp-frequency-once', {'period': frequency}) + '\n'
 
             if frequency_config in ['daily', 'weekly']:
                 reset_time = settings_config.get(RoleplayFields.RESET_TIME, 0)
@@ -3139,14 +3117,14 @@ class ConfigRoleplayView(LayoutView):
                     reset_day = settings_config.get(RoleplayFields.RESET_DAY, 'monday')
                     formatted_day = f'{reset_day.capitalize()}s at '
 
-                setting_details += f'**Reset Time:** {formatted_day}{formatted_time} UTC\n'
+                setting_details += t(DEFAULT_LOCALE, 'config-label-rp-reset-time', {'dayAndTime': f'{formatted_day}{formatted_time}'}) + '\n'
 
             message_threshold = settings_config.get(RoleplayFields.THRESHOLD, 20)
 
-            setting_details += f'**Threshold:** {message_threshold} eligible messages'
+            setting_details += t(DEFAULT_LOCALE, 'config-label-rp-threshold', {'count': str(message_threshold)})
         else:
             frequency = settings_config.get(RoleplayFields.FREQUENCY, 20)
-            setting_details += f'**Frequency:** Every {frequency} eligible messages'
+            setting_details += t(DEFAULT_LOCALE, 'config-label-rp-frequency-every', {'count': str(frequency)})
 
         settings_section = Section(accessory=buttons.RoleplaySettingsButton(self))
         settings_section.add_item(setting_details)
@@ -3176,16 +3154,16 @@ class ConfigRoleplayView(LayoutView):
         # Channels
         channels = self.config.get(RoleplayFields.CHANNELS, [])
         if not channels:
-            channel_lines = 'None configured.'
+            channel_lines = t(DEFAULT_LOCALE, 'config-msg-rp-no-channels')
         else:
             shown_channels = channels[:6]
             formatted_lines = [f'- <#{chan_id}>' for chan_id in shown_channels]
             remaining = len(channels) - len(shown_channels)
             if remaining > 0:
-                formatted_lines.append(f'...and {remaining} more.')
+                formatted_lines.append(t(DEFAULT_LOCALE, 'config-label-rp-channels-more', {'count': str(remaining)}))
             channel_lines = '\n'.join(formatted_lines)
 
-        channel_text = f'**Roleplaying Channels:**\n{channel_lines}'
+        channel_text = t(DEFAULT_LOCALE, 'config-label-rp-channels') + '\n' + channel_lines
 
         channel_section = Section(accessory=buttons.RoleplayClearChannelsButton(self))
         channel_section.add_item(TextDisplay(channel_text))
@@ -3196,21 +3174,21 @@ class ConfigRoleplayView(LayoutView):
         container.add_item(Separator())
 
         # Rewards
-        rewards_text = '**Rewards:**\n'
+        rewards_text = t(DEFAULT_LOCALE, 'config-label-rp-rewards') + '\n'
         rewards_data = self.config.get(RoleplayFields.REWARDS, {})
         if not rewards_data:
-            rewards_text += "None configured."
+            rewards_text += t(DEFAULT_LOCALE, 'config-msg-rp-no-rewards')
         else:
             if xp := rewards_data.get(RoleplayFields.XP):
-                rewards_text += f'**Experience:** {xp}\n'
+                rewards_text += t(DEFAULT_LOCALE, 'config-label-rp-experience', {'xp': str(xp)}) + '\n'
             if items := rewards_data.get(RoleplayFields.ITEMS):
                 item_lines = [f'- {escape_markdown(titlecase(name))}: {quantity}' for name, quantity in items.items()]
-                rewards_text += f'**Items:**\n{"\n".join(item_lines)}\n'
+                rewards_text += t(DEFAULT_LOCALE, 'config-label-rp-items') + '\n' + '\n'.join(item_lines) + '\n'
             if currency := rewards_data.get(RoleplayFields.CURRENCY):
                 consolidated = consolidate_currency_totals(currency, self.currency_config)
                 currency_lines = format_consolidated_totals(consolidated, self.currency_config)
                 formatted_lines = [f'- {line}' for line in currency_lines]
-                rewards_text += f'**Currency:**\n{"\n".join(formatted_lines)}\n'
+                rewards_text += t(DEFAULT_LOCALE, 'config-label-rp-currency') + '\n' + '\n'.join(formatted_lines) + '\n'
 
         reward_section = Section(accessory=self.rewards_button)
         reward_section.add_item(TextDisplay(rewards_text))

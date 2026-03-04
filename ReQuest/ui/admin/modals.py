@@ -5,27 +5,29 @@ import discord.ui
 from discord.ui import Modal
 
 from ReQuest.utilities.constants import DatabaseCollections
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.supportFunctions import log_exception, update_cached_data
 
 logger = logging.getLogger(__name__)
 
 
 class AllowServerModal(Modal):
-    def __init__(self, calling_view):
+    def __init__(self, calling_view, locale=None):
+        self._locale = locale or DEFAULT_LOCALE
         super().__init__(
-            title='Add Server ID to Allowlist',
+            title=t(self._locale, 'admin-modal-title-add-server'),
             timeout=180
         )
         self.calling_view = calling_view
         self.allow_server_name_input = discord.ui.TextInput(
-            label='Server Name',
+            label=t(self._locale, 'admin-modal-label-server-name'),
             custom_id='allow_server_name_input',
-            placeholder='Type a short name for the Discord Server'
+            placeholder=t(self._locale, 'admin-modal-placeholder-server-name')
         )
         self.allow_server_id_input = discord.ui.TextInput(
-            label='Server ID',
+            label=t(self._locale, 'admin-modal-label-server-id'),
             custom_id='allow_server_text_input',
-            placeholder='Type the ID of the Discord Server'
+            placeholder=t(self._locale, 'admin-modal-placeholder-server-id')
         )
         self.add_item(self.allow_server_name_input)
         self.add_item(self.allow_server_id_input)
@@ -51,7 +53,7 @@ class AllowServerModal(Modal):
 
             if view.remove_guild_allowlist_select.disabled:
                 view.remove_guild_allowlist_select.disabled = False
-                view.remove_guild_allowlist_select.placeholder = 'Select a server to remove'
+                view.remove_guild_allowlist_select.placeholder = t(self._locale, 'admin-select-placeholder-server')
                 view.remove_guild_allowlist_select.options.clear()
 
             view.remove_guild_allowlist_select.options.append(
@@ -64,14 +66,15 @@ class AllowServerModal(Modal):
 
 
 class AdminCogTextModal(Modal):
-    def __init__(self, function, on_submit):
+    def __init__(self, function, on_submit, locale=None):
+        self._locale = locale or DEFAULT_LOCALE
         super().__init__(
-            title=f'{function.capitalize()} Cog',
+            title=t(self._locale, 'admin-modal-title-cog-action', action=function.capitalize()),
             timeout=180
         )
         self.text_input = discord.ui.TextInput(
-            label='Name',
-            placeholder=f'Enter the name of the Cog to {function}',
+            label=t(self._locale, 'admin-modal-label-cog-name'),
+            placeholder=t(self._locale, 'admin-modal-placeholder-cog-name', action=function),
             custom_id='cog_name_text_input'
         )
         self.add_item(self.text_input)

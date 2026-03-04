@@ -4,6 +4,7 @@ import discord
 from discord.ui import Select
 
 from ReQuest.utilities.constants import QuestFields
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.supportFunctions import log_exception, find_member_and_character_id_in_lists, setup_view
 from ReQuest.ui.common import modals as common_modals
 
@@ -13,7 +14,7 @@ logger = logging.getLogger(__name__)
 class PartyMemberSelect(Select):
     def __init__(self, calling_view, disabled_components=None):
         super().__init__(
-            placeholder='Select a party member',
+            placeholder=t(DEFAULT_LOCALE, 'gm-select-placeholder-party-member'),
             options=[],
             custom_id='party_member_select',
             disabled=True
@@ -45,7 +46,7 @@ class PartyMemberSelect(Select):
 class RemovePlayerSelect(Select):
     def __init__(self, calling_view):
         super().__init__(
-            placeholder='Select a party member',
+            placeholder=t(DEFAULT_LOCALE, 'gm-select-placeholder-party-member'),
             options=[],
             custom_id='remove_player_select'
         )
@@ -59,10 +60,11 @@ class RemovePlayerSelect(Select):
             member_id, character_id = find_member_and_character_id_in_lists([party, wait_list], self.values[0])
             view.selected_character_id = character_id
             view.selected_member_id = member_id
+            locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
             confirm_modal = common_modals.ConfirmModal(
-                title=f'Remove character from quest',
-                prompt_label=f'Confirm character removal?',
-                prompt_placeholder='Type "CONFIRM" to proceed.',
+                title=t(locale, 'gm-modal-title-remove-from-quest'),
+                prompt_label=t(locale, 'gm-modal-label-remove-from-quest'),
+                prompt_placeholder=t(locale, 'gm-modal-placeholder-remove-from-quest'),
                 confirm_callback=view.confirm_callback
             )
             await interaction.response.send_modal(confirm_modal)

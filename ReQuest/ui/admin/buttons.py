@@ -8,15 +8,17 @@ from discord.ui import Button
 from ReQuest.ui.admin import modals
 from ReQuest.ui.common import modals as common_modals
 from ReQuest.utilities.constants import DatabaseCollections
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.supportFunctions import log_exception, setup_view, update_cached_data
 
 logger = logging.getLogger(__name__)
 
 
 class AdminShutdownButton(Button):
-    def __init__(self, calling_view):
+    def __init__(self, calling_view, locale=None):
+        self._locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label='Shutdown',
+            label=t(self._locale, 'admin-btn-shutdown'),
             style=ButtonStyle.danger,
             custom_id='shutdown_bot_button'
         )
@@ -24,11 +26,13 @@ class AdminShutdownButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
             confirm_modal = common_modals.ConfirmModal(
-                title='Confirm Shutdown',
-                prompt_label='Warning! This will shut down the bot. Type CONFIRM to proceed.',
-                prompt_placeholder='Type CONFIRM to proceed',
-                confirm_callback=self._confirm_shutdown
+                title=t(locale, 'admin-modal-title-confirm-shutdown'),
+                prompt_label=t(locale, 'admin-modal-label-shutdown-warning'),
+                prompt_placeholder=t(locale, 'common-confirm-placeholder'),
+                confirm_callback=self._confirm_shutdown,
+                locale=locale
             )
             await interaction.response.send_modal(confirm_modal)
         except Exception as e:
@@ -37,16 +41,17 @@ class AdminShutdownButton(Button):
     @staticmethod
     async def _confirm_shutdown(interaction: discord.Interaction):
         try:
-            await interaction.response.send_message('Shutting down!', ephemeral=True)
+            await interaction.response.send_message(t(DEFAULT_LOCALE, 'admin-msg-shutting-down'), ephemeral=True)
             await interaction.client.close()
         except Exception as e:
             await log_exception(e)
 
 
 class AllowlistAddServerButton(Button):
-    def __init__(self, calling_view):
+    def __init__(self, calling_view, locale=None):
+        self._locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label='Add New Server',
+            label=t(self._locale, 'admin-btn-add-server'),
             style=ButtonStyle.success,
             custom_id='allowlist_add_server_button'
         )
@@ -61,19 +66,23 @@ class AllowlistAddServerButton(Button):
 
 
 class AdminLoadCogButton(Button):
-    def __init__(self):
+    def __init__(self, locale=None):
+        self._locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label='Load Cog',
+            label=t(self._locale, 'admin-btn-load-cog'),
             custom_id='admin_load_cog_button'
         )
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
+
             async def modal_callback(modal_interaction, input_value):
                 module = input_value.lower()
                 await interaction.client.load_extension(f'ReQuest.cogs.{module}')
-                await modal_interaction.response.send_message(f'Extension successfully loaded: `{module}`',
-                                                              ephemeral=True)
+                await modal_interaction.response.send_message(
+                    t(locale, 'admin-msg-extension-loaded', module=module),
+                    ephemeral=True)
 
             modal = modals.AdminCogTextModal('load', modal_callback)
             await interaction.response.send_modal(modal)
@@ -82,19 +91,23 @@ class AdminLoadCogButton(Button):
 
 
 class AdminReloadCogButton(Button):
-    def __init__(self):
+    def __init__(self, locale=None):
+        self._locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label='Reload Cog',
+            label=t(self._locale, 'admin-btn-reload-cog'),
             custom_id='admin_reload_cog_button'
         )
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
+
             async def modal_callback(modal_interaction, input_value):
                 module = input_value.lower()
                 await interaction.client.reload_extension(f'ReQuest.cogs.{module}')
-                await modal_interaction.response.send_message(f'Extension successfully reloaded: `{module}`',
-                                                              ephemeral=True)
+                await modal_interaction.response.send_message(
+                    t(locale, 'admin-msg-extension-reloaded', module=module),
+                    ephemeral=True)
 
             modal = modals.AdminCogTextModal('reload', modal_callback)
             await interaction.response.send_modal(modal)
@@ -103,22 +116,24 @@ class AdminReloadCogButton(Button):
 
 
 class PrintGuildsButton(Button):
-    def __init__(self):
+    def __init__(self, locale=None):
+        self._locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label='Output Guild List',
+            label=t(self._locale, 'admin-btn-output-guilds'),
             style=ButtonStyle.primary,
             custom_id='print_guilds_button'
         )
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
             guilds = interaction.client.guilds
             guild_list = [f'{guild.name} (ID: {guild.id})' for guild in guilds]
-            guilds_message = f'Connected to ({len(guilds)}) guilds:\n' + '\n'.join(guild_list)
+            guilds_message = t(locale, 'admin-msg-connected-guilds', count=len(guilds)) + '\n' + '\n'.join(guild_list)
             file_name = f'guilds_list.txt'
             guilds_file = discord.File(fp=io.BytesIO(guilds_message.encode()), filename=file_name)
             await interaction.response.send_message(
-                f'Connected to {len(guilds)} guilds:',
+                t(locale, 'admin-msg-connected-guilds', count=len(guilds)),
                 file=guilds_file,
                 ephemeral=True)
         except Exception as e:
@@ -126,9 +141,10 @@ class PrintGuildsButton(Button):
 
 
 class RemoveServerButton(Button):
-    def __init__(self, calling_view, guild_id, server_name):
+    def __init__(self, calling_view, guild_id, server_name, locale=None):
+        self._locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label='Remove',
+            label=t(self._locale, 'common-btn-remove'),
             style=ButtonStyle.danger,
             custom_id=f'remove_server_{guild_id}'
         )
@@ -138,11 +154,13 @@ class RemoveServerButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
             confirm_modal = common_modals.ConfirmModal(
-                title='Confirm Server Removal',
-                prompt_label=f'Remove server from allow list?',
-                prompt_placeholder='Type CONFIRM to proceed',
-                confirm_callback=self._confirm_delete
+                title=t(locale, 'admin-modal-title-confirm-server-removal'),
+                prompt_label=t(locale, 'admin-modal-label-server-removal'),
+                prompt_placeholder=t(locale, 'common-confirm-placeholder'),
+                confirm_callback=self._confirm_delete,
+                locale=locale
             )
             await interaction.response.send_modal(confirm_modal)
         except Exception as e:

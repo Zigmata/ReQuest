@@ -5,6 +5,7 @@ from discord.ext.commands import Cog
 
 from ReQuest.ui.admin import views
 from ReQuest.utilities.checks import is_owner
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.supportFunctions import log_exception
 
 
@@ -24,11 +25,8 @@ class Admin(Cog):
                     return None
                 else:
                     embed = discord.Embed(
-                        title='Unauthorized Server',
-                        description='Thank you for your interest in ReQuest! Your server is not in ReQuest\'s list of '
-                                    'authorized testing servers. Please join the support Discord below, and contact '
-                                    'the development team to request test access.\n\n'
-                                    '[ReQuest Development Discord](https://discord.gg/Zq37gj4)',
+                        title=t(DEFAULT_LOCALE, 'admin-embed-title-unauthorized'),
+                        description=t(DEFAULT_LOCALE, 'admin-embed-desc-unauthorized'),
                         color=discord.Color.red()
                     )
                     await guild.owner.send(embed=embed)
@@ -59,9 +57,9 @@ class Admin(Cog):
             status = await self.bot.tree.sync(guild=guild)
             synced_commands = []
             if guild_id:
-                embed_title = f'The following commands were synchronized to {guild.name}, ID {guild_id}'
+                embed_title = t(DEFAULT_LOCALE, 'admin-embed-title-sync-guild', guildName=guild.name, guildId=guild_id)
             else:
-                embed_title = 'The following commands were synchronized globally'
+                embed_title = t(DEFAULT_LOCALE, 'admin-embed-title-sync-global')
 
             for synced_command in status:
                 synced_commands.append(synced_command.name)
@@ -69,10 +67,9 @@ class Admin(Cog):
             message_embed = discord.Embed(title=embed_title, description='\n'.join(synced_commands))
             await ctx.author.send(embed=message_embed)
         except discord.Forbidden:
-            await ctx.send(f'ReQuest does not have the correct scope in the target guild. Add `applications.commands` '
-                           f'permission and try again.')
+            await ctx.send(t(DEFAULT_LOCALE, 'admin-error-missing-scope'))
         except Exception as e:
-            await ctx.send(f'There was an error syncing commands: {e}')
+            await ctx.send(t(DEFAULT_LOCALE, 'admin-error-sync-failed', error=str(e)))
 
     @commands.command(name='commandclear', hidden=True)
     @commands.dm_only()
@@ -92,12 +89,11 @@ class Admin(Cog):
 
             self.bot.tree.clear_commands(guild=guild)
 
-            await ctx.author.send('Commands cleared.')
+            await ctx.author.send(t(DEFAULT_LOCALE, 'admin-msg-commands-cleared'))
         except discord.Forbidden:
-            await ctx.send(f'ReQuest does not have the correct scope in the target guild. Add `applications.commands` '
-                           f'permission and try again.')
+            await ctx.send(t(DEFAULT_LOCALE, 'admin-error-missing-scope'))
         except Exception as e:
-            await ctx.send(f'There was an error syncing commands: {e}')
+            await ctx.send(t(DEFAULT_LOCALE, 'admin-error-sync-failed', error=str(e)))
 
     @app_commands.command(name='admin')
     @is_owner()
