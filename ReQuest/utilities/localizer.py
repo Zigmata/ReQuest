@@ -8,7 +8,7 @@ from ReQuest.utilities.constants import CommonFields, DatabaseCollections
 logger = logging.getLogger(__name__)
 
 DEFAULT_LOCALE = 'en-US'
-SUPPORTED_LOCALES = ['en-US']
+SUPPORTED_LOCALES = ['en-US', 'pt-BR']
 FTL_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'locales', '{locale}')
 
 _resource_loader = FluentResourceLoader(FTL_DIR)
