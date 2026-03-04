@@ -23,8 +23,21 @@ logger = logging.getLogger(__name__)
 class UserFeedbackError(Exception):
     """
     This is used for errors that should be reported to the user directly but do not need to log a stack trace.
+
+    Supports optional lazy localization via message_id and variables.
+    Existing usage (raw string) continues to work unchanged.
     """
-    pass
+
+    def __init__(self, message, *, message_id=None, **variables):
+        self.message_id = message_id
+        self.variables = variables
+        super().__init__(message)
+
+    def resolve(self, locale):
+        if self.message_id:
+            from ReQuest.utilities.localizer import t
+            return t(locale, self.message_id, **self.variables)
+        return str(self)
 
 
 def build_cache_key(database_name, identifier, collection_name):
@@ -246,21 +259,30 @@ async def log_exception(exception, interaction=None):
     """
     Logs an exception and sends a user-friendly message if interaction is provided.
     """
-    report_string = (
-        f'An exception occurred:\n\n'
-        f'```{str(exception)}```\n'
-        f'If this error is unexpected, or you suspect the bot is not functioning correctly, please submit a bug report '
-        f'in the [Official ReQuest Support Discord](https://discord.gg/Zq37gj4).'
-    )
+    from ReQuest.utilities.localizer import resolve_locale, t, DEFAULT_LOCALE
+
+    locale = DEFAULT_LOCALE
+    if interaction:
+        try:
+            locale = await resolve_locale(interaction)
+        except Exception:
+            pass
+
+    if isinstance(exception, app_commands.CommandInvokeError):
+        exception = exception.original
+
+    # Resolve the display message for UserFeedbackError
+    exception_text = str(exception)
+    if isinstance(exception, UserFeedbackError):
+        exception_text = exception.resolve(locale)
+
+    report_string = t(locale, 'error-report-description', exception=exception_text)
     error_embed = discord.Embed(
-        title='⚠️ Oops!',
+        title=t(locale, 'error-oops-title'),
         description=report_string,
         color=discord.Color.red(),
         type='rich'
     )
-
-    if isinstance(exception, app_commands.CommandInvokeError):
-        exception = exception.original
 
     if isinstance(exception, (UserFeedbackError, app_commands.CheckFailure)):
         logger.debug(f'User feedback triggered: {exception}\nUser: {interaction.user.id if interaction else "Unknown"}')
@@ -786,7 +808,13 @@ def find_member_and_character_id_in_lists(lists, selected_member_id):
 async def setup_view(view, interaction: discord.Interaction):
     """
     Dynamically sets up a view by inspecting its setup method for required parameters.
+    Resolves and propagates the user's locale to the view before calling setup().
     """
+    from ReQuest.utilities.localizer import resolve_locale
+
+    locale = await resolve_locale(interaction)
+    view.locale = locale
+
     setup_function = view.setup
     sig = inspect.signature(setup_function)
     params = sig.parameters

@@ -7,20 +7,22 @@ from discord.ui import (
 )
 
 from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 
 
 class MenuBaseView(LayoutView):
-    def __init__(self, title, menu_items, menu_level):
+    def __init__(self, title, menu_items, menu_level, locale=None):
         super().__init__(timeout=None)
         self.title = title
         self.menu_items = menu_items
         self.menu_level = menu_level
+        self.locale = locale or DEFAULT_LOCALE
 
         self.build_view()
 
     def build_view(self):
         container = Container()
-        nav_button = MenuDoneButton()
+        nav_button = MenuDoneButton(locale=self.locale)
         header_section = Section(accessory=nav_button)
         header_section.add_item(TextDisplay(f'**{self.title}**'))
         container.add_item(header_section)

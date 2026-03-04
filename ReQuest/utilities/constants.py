@@ -156,4 +156,5 @@ class DatabaseCollections:
     SHOP_STOCK = 'shopStock'
     SHOPS = 'shops'
     STATIC_KITS = 'staticKits'
+    USER_LOCALE = 'userLocale'
     CHARACTERS = 'characters'

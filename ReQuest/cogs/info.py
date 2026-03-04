@@ -2,6 +2,8 @@ import discord
 from discord import app_commands
 from discord.ext.commands import Cog
 
+from ReQuest.utilities.localizer import resolve_locale, t
+
 
 class Info(Cog):
     """Help and informational commands."""
@@ -15,15 +17,17 @@ class Info(Cog):
         """
         Get a quick reply from the bot to see if it is online.
         """
-        await interaction.response.send_message('**Pong!**\n{0}ms'.format(round(self.bot.latency * 1000)),
-                                                ephemeral=True)
+        locale = await resolve_locale(interaction)
+        latency = str(round(self.bot.latency * 1000))
+        await interaction.response.send_message(t(locale, 'info-pong', latency=latency), ephemeral=True)
 
     @app_commands.command(name='invite')
     async def invite(self, interaction: discord.Interaction):
         """
         Prints an invitation to add ReQuest to your server.
         """
-        embed = discord.Embed(title='Invite me to your server!',
+        locale = await resolve_locale(interaction)
+        embed = discord.Embed(title=t(locale, 'info-invite-title'),
                               description='[Get ReQuest!](https://discord.com/api/oauth2/authorize?client_id=6014922017'
                                           '04521765&permissions=1497132133440&scope=applications.commands%20bot)',
                               type='rich')
@@ -34,36 +38,18 @@ class Info(Cog):
         """
         Prints the bot version and a link to the development server.
         """
-        await interaction.response.send_message(
-            f'**ReQuest v{interaction.client.version}**\n\nBugs? Feature Requests? Join the development '
-            f'server at https://discord.gg/Zq37gj4')
+        locale = await resolve_locale(interaction)
+        await interaction.response.send_message(t(locale, 'info-support', version=interaction.client.version))
 
     @app_commands.command(name='help')
     async def help(self, interaction: discord.Interaction):
         """
         Displays a list of commands and their functions.
         """
+        locale = await resolve_locale(interaction)
         embed = discord.Embed(
-            title='ReQuest - Command List',
-            description=(
-                'The following basic commands are available:\n\n'
-                '- `/help`: This command.\n'
-                '- `/support`: Prints an invite to the official ReQuest Discord.\n'
-                '- `/invite`: Prints an invite to add ReQuest to your Discord.\n'
-                '- `/ping`: Performs a basic connectivity test.\n\n'
-                'The following enhanced-menu commands are available; use one to learn more about its sub-functions:\n\n'
-                '- `/config`: Server-wide configurations, mostly relating to first-time ReQuest setup for your Discord.'
-                ' Requires "Manage Server" permissions to access.\n'
-                '- `/player`: Functions for players to manage and view their player characters.\n'
-                '- `/gm`: All Game Master functions. Requires a GM role to be configured for the server.\n'
-                '- `/shop`: View and purchase items from the current channel\'s shop (if configured).\n\n'
-                'The following commands are context-menus. To access them on the desktop client, right-click a user\'s '
-                'name and choose "Apps". On mobile, view a user\'s profile and select "Apps" from the upper-right '
-                'menu.\n\n'
-                '- Trade: Give items or currency to another player.\n'
-                '- View Player (GM-only): View another player\'s active character inventory.\n'
-                '- Modify Player (GM-only): Modify another player\'s active character inventory or experience.\n'
-            ),
+            title=t(locale, 'info-help-title'),
+            description=t(locale, 'info-help-description'),
             type='rich'
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)

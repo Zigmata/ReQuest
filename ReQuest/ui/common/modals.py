@@ -4,13 +4,15 @@ import discord
 import discord.ui
 from discord.ui import Modal
 
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.supportFunctions import log_exception, UserFeedbackError
 
 logger = logging.getLogger(__name__)
 
 
 class ConfirmModal(Modal):
-    def __init__(self, title: str, prompt_label: str, prompt_placeholder: str, confirm_callback):
+    def __init__(self, title: str, prompt_label: str, prompt_placeholder: str, confirm_callback, locale=None):
+        self._locale = locale or DEFAULT_LOCALE
         if len(title) > 45:
             title = title[:42] + '...'
         if len(prompt_label) > 45:
@@ -21,7 +23,7 @@ class ConfirmModal(Modal):
         self.confirm_callback = confirm_callback
         self.prompt = discord.ui.TextInput(
             label=prompt_label,
-            placeholder=prompt_placeholder,
+            placeholder=t(self._locale, 'common-confirm-placeholder'),
             required=True,
             max_length=7
         )
@@ -32,22 +34,27 @@ class ConfirmModal(Modal):
             if self.prompt.value.strip() == 'CONFIRM':
                 await self.confirm_callback(interaction)
             else:
-                raise UserFeedbackError('Confirmation Failed: Operation cancelled.')
+                raise UserFeedbackError(
+                    t(self._locale, 'common-confirm-failed'),
+                    message_id='common-confirm-failed'
+                )
         except Exception as e:
             await log_exception(e, interaction)
 
 
 class PageJumpModal(Modal):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title='Go to Page',
+            title=t(self._locale, 'common-page-jump-title'),
             timeout=180
         )
         self.calling_view = calling_view
         self.page_number_input = discord.ui.TextInput(
-            label='Page Number',
+            label=t(self._locale, 'common-page-jump-label'),
             custom_id='page_number_input',
-            placeholder=f'Enter a number from 1 to {self.calling_view.total_pages}',
+            placeholder=t(self._locale, 'common-page-jump-placeholder', totalPages=str(self.calling_view.total_pages)),
             required=True,
             max_length=len(str(self.calling_view.total_pages))
         )
