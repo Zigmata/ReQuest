@@ -33,3 +33,14 @@ info-help-description =
     {"-"} Trade: Dê itens ou moeda a outro jogador.
     {"-"} View Player (apenas GM): Visualize o inventário do personagem ativo de outro jogador.
     {"-"} Modify Player (apenas GM): Modifique o inventário ou experiência do personagem ativo de outro jogador.
+
+## Strings do comando de idioma
+
+info-language-title = Preferência de Idioma
+info-language-current = Idioma atual: **{ $language }**
+info-language-select-placeholder = Selecione um idioma...
+info-language-label-en-us = English (US)
+info-language-label-pt-br = Português (Brasil)
+info-language-desc-en-us = Definir seu idioma para Inglês
+info-language-desc-pt-br = Definir seu idioma para Português Brasileiro
+info-language-updated = Idioma atualizado com sucesso.

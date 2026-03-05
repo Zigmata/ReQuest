@@ -33,3 +33,14 @@ info-help-description =
     {"-"} Trade: Give items or currency to another player.
     {"-"} View Player (GM-only): View another player's active character inventory.
     {"-"} Modify Player (GM-only): Modify another player's active character inventory or experience.
+
+## Language command strings
+
+info-language-title = Language Preference
+info-language-current = Current language: **{ $language }**
+info-language-select-placeholder = Select a language...
+info-language-label-en-us = English (US)
+info-language-label-pt-br = Português (Brasil)
+info-language-desc-en-us = Set your language to English
+info-language-desc-pt-br = Set your language to Brazilian Portuguese
+info-language-updated = Language updated successfully.

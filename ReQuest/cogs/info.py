@@ -2,7 +2,9 @@ import discord
 from discord import app_commands
 from discord.ext.commands import Cog
 
+from ReQuest.ui.info.views import LanguageView
 from ReQuest.utilities.localizer import resolve_locale, t
+from ReQuest.utilities.supportFunctions import setup_view
 
 
 class Info(Cog):
@@ -40,6 +42,15 @@ class Info(Cog):
         """
         locale = await resolve_locale(interaction)
         await interaction.response.send_message(t(locale, 'info-support', version=interaction.client.version))
+
+    @app_commands.command(name='language')
+    async def language(self, interaction: discord.Interaction):
+        """
+        Set your preferred language for bot responses.
+        """
+        view = LanguageView()
+        await setup_view(view, interaction)
+        await interaction.response.send_message(view=view, ephemeral=True)
 
     @app_commands.command(name='help')
     async def help(self, interaction: discord.Interaction):
