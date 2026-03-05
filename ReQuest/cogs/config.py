@@ -13,12 +13,12 @@ class Config(Cog):
 
     @app_commands.checks.has_permissions(manage_guild=True)
     @app_commands.default_permissions(manage_guild=True)
-    @app_commands.command(name='config')
+    @app_commands.command(
+        name='config',
+        description=app_commands.locale_str('Server Configuration Menus (Server Admins only)')
+    )
     @app_commands.guild_only()
     async def config(self, interaction: discord.Interaction):
-        """
-        Server Configuration Menus (Server Admins only)
-        """
         try:
             view = views.ConfigBaseView()
             await interaction.response.send_message(view=view, ephemeral=True)

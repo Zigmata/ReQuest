@@ -95,13 +95,13 @@ class Admin(Cog):
         except Exception as e:
             await ctx.send(t(DEFAULT_LOCALE, 'admin-error-sync-failed', error=str(e)))
 
-    @app_commands.command(name='admin')
+    @app_commands.command(
+        name='admin',
+        description=app_commands.locale_str('Administration wizard. Bot owner only')
+    )
     @is_owner()
     @app_commands.dm_only()
     async def admin(self, interaction: discord.Interaction):
-        """
-        Administration wizard. Bot owner only
-        """
         try:
             view = views.AdminBaseView()
             await interaction.response.send_message(view=view, ephemeral=True)

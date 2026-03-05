@@ -13,12 +13,12 @@ class Shop(Cog):
         super().__init__()
         self.bot = bot
 
-    @app_commands.command(name='shop')
+    @app_commands.command(
+        name='shop',
+        description=app_commands.locale_str('Opens a shop in the current channel if one is configured.')
+    )
     @app_commands.guild_only()
     async def shop(self, interaction):
-        """
-        Opens a shop in the current channel if one is configured.
-        """
         try:
             locale = await resolve_locale(interaction)
             bot = interaction.client

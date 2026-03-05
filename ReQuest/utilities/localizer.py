@@ -1,6 +1,9 @@
 import logging
 import os
+import re
 
+import discord
+from discord import app_commands
 from fluent.runtime import FluentLocalization, FluentResourceLoader
 
 from ReQuest.utilities.constants import CommonFields, DatabaseCollections
@@ -12,7 +15,8 @@ SUPPORTED_LOCALES = ['en-US', 'pt-BR']
 FTL_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'locales', '{locale}')
 
 _resource_loader = FluentResourceLoader(FTL_DIR)
-_FTL_FILES = ['common.ftl', 'errors.ftl', 'info.ftl', 'admin.ftl', 'config.ftl', 'gm.ftl', 'player.ftl', 'shop.ftl']
+_FTL_FILES = ['common.ftl', 'errors.ftl', 'info.ftl', 'admin.ftl', 'config.ftl', 'gm.ftl', 'player.ftl', 'shop.ftl',
+              'commands.ftl']
 
 
 class Localizer:
@@ -49,6 +53,42 @@ def t(locale, message_id, **kwargs):
     Primary localization API.
     """
     return get_localizer().format(locale, message_id, **kwargs)
+
+
+_DISCORD_LOCALE_MAP = {
+    discord.Locale.american_english: 'en-US',
+    discord.Locale.british_english: 'en-US',
+    discord.Locale.brazil_portuguese: 'pt-BR',
+}
+
+
+def _slugify(name):
+    """Convert a context menu name like 'Modify Player' to 'modify-player'."""
+    return re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-')
+
+
+class FluentTranslator(app_commands.Translator):
+    """Translates Discord slash command metadata via Fluent."""
+
+    async def translate(self, string: app_commands.locale_str, locale: discord.Locale,
+                        context: app_commands.TranslationContext) -> str | None:
+        our_locale = _DISCORD_LOCALE_MAP.get(locale)
+        if not our_locale or our_locale == DEFAULT_LOCALE:
+            return None
+
+        location = context.location
+
+        if location is app_commands.TranslationContextLocation.command_description:
+            msg_id = f'cmd-desc-{context.data.qualified_name}'
+        elif location is app_commands.TranslationContextLocation.other:
+            msg_id = f'cmd-context-name-{_slugify(string.message)}'
+        else:
+            return None
+
+        result = t(our_locale, msg_id)
+        if result == msg_id:
+            return None
+        return result
 
 
 async def resolve_locale(interaction):

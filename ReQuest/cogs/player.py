@@ -13,7 +13,7 @@ class Player(Cog):
     def __init__(self, bot: commands.Bot):
         super().__init__()
         self.trade_menu = app_commands.ContextMenu(
-            name='Trade',
+            name=app_commands.locale_str('Trade'),
             callback=self.trade_menu
         )
         self.bot = bot
@@ -22,12 +22,12 @@ class Player(Cog):
     async def cog_unload(self) -> None:
         self.bot.tree.remove_command(self.trade_menu.name, type=self.trade_menu.type)
 
-    @app_commands.command(name='player')
+    @app_commands.command(
+        name='player',
+        description=app_commands.locale_str('Player Menus')
+    )
     @app_commands.guild_only()
     async def player(self, interaction):
-        """
-        Player Menus
-        """
         try:
             locale = await resolve_locale(interaction)
             new_view = views.PlayerBaseView()

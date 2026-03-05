@@ -20,11 +20,11 @@ class GameMaster(Cog):
         super().__init__()
         self.bot = bot
         self.mod_player_menu = app_commands.ContextMenu(
-            name='Modify Player',
+            name=app_commands.locale_str('Modify Player'),
             callback=self.mod_player_menu
         )
         self.view_player_menu = app_commands.ContextMenu(
-            name='View Player',
+            name=app_commands.locale_str('View Player'),
             callback=self.view_player
         )
         self.bot.tree.add_command(self.mod_player_menu)
@@ -35,12 +35,12 @@ class GameMaster(Cog):
         self.bot.tree.remove_command(self.view_player_menu.name, type=self.view_player_menu.type)
 
     @has_gm_or_mod()
-    @app_commands.command(name='gm')
+    @app_commands.command(
+        name='gm',
+        description=app_commands.locale_str('Game Master Menus')
+    )
     @app_commands.guild_only()
     async def gm(self, interaction):
-        """
-        Game Master Menus
-        """
         try:
             view = views.GMBaseView()
             await interaction.response.send_message(view=view, ephemeral=True)
