@@ -693,8 +693,12 @@ config-msg-no-denominations = Nenhuma denominação configurada.
 
 ## View de Lojas
 config-title-shops = {"**"}Configuração do Servidor - Lojas{"**"}
-config-desc-add-shop-wizard = {"**"}Adicionar Loja (Assistente){"**"}\nCriar uma nova loja vazia a partir de um formulário.
-config-desc-add-shop-json = {"**"}Adicionar Loja (JSON){"**"}\nCriar uma nova loja fornecendo uma definição JSON completa. (Avançado)
+config-desc-add-shop-wizard =
+    {"**"}Adicionar Loja (Assistente){"**"}
+    Criar uma nova loja vazia a partir de um formulário.
+config-desc-add-shop-json =
+    {"**"}Adicionar Loja (JSON){"**"}
+    Criar uma nova loja fornecendo uma definição JSON completa. (Avançado)
 config-msg-no-shops = Nenhuma loja configurada.
 config-label-shop-type-forum = (Fórum)
 config-label-shop-channel = Canal: <#{ $channelId }>
@@ -711,7 +715,9 @@ config-title-forum-setup = {"**"}Adicionar Loja - Configuração de Tópico de F
 config-label-step1 = {"**"}Passo 1: Selecione um Canal de Fórum{"**"}
 config-label-step2 = {"**"}Passo 2: Escolha a Opção de Tópico{"**"}
 config-label-step3 = {"**"}Passo 3: Selecione um Tópico Existente{"**"}
-config-desc-create-new-thread = {"**"}Criar Novo Tópico{"**"}\nAbre um formulário para criar um novo tópico e configurar a loja.
+config-desc-create-new-thread =
+    {"**"}Criar Novo Tópico{"**"}
+    Abre um formulário para criar um novo tópico e configurar a loja.
 config-label-selected-thread = {"**"}Tópico Selecionado:{"**"} { $threadName }
 config-desc-click-to-configure = Clique para configurar a loja neste tópico.
 

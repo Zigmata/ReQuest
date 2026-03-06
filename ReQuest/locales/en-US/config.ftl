@@ -693,8 +693,12 @@ config-msg-no-denominations = No denominations configured.
 
 ## Shops View
 config-title-shops = {"**"}Server Configuration - Shops{"**"}
-config-desc-add-shop-wizard = {"**"}Add Shop (Wizard){"**"}\nCreate a new, empty shop from a form.
-config-desc-add-shop-json = {"**"}Add Shop (JSON){"**"}\nCreate a new shop by providing a full JSON definition. (Advanced)
+config-desc-add-shop-wizard =
+    {"**"}Add Shop (Wizard){"**"}
+    Create a new, empty shop from a form.
+config-desc-add-shop-json =
+    {"**"}Add Shop (JSON){"**"}
+    Create a new shop by providing a full JSON definition. (Advanced)
 config-msg-no-shops = No shops configured.
 config-label-shop-type-forum = (Forum)
 config-label-shop-channel = Channel: <#{ $channelId }>
@@ -711,7 +715,9 @@ config-title-forum-setup = {"**"}Add Shop - Forum Thread Setup{"**"}
 config-label-step1 = {"**"}Step 1: Select a Forum Channel{"**"}
 config-label-step2 = {"**"}Step 2: Choose Thread Option{"**"}
 config-label-step3 = {"**"}Step 3: Select an Existing Thread{"**"}
-config-desc-create-new-thread = {"**"}Create New Thread{"**"}\nOpens a form to create a new thread and configure the shop.
+config-desc-create-new-thread =
+    {"**"}Create New Thread{"**"}
+    Opens a form to create a new thread and configure the shop.
 config-label-selected-thread = {"**"}Selected Thread:{"**"} { $threadName }
 config-desc-click-to-configure = Click to configure the shop in this thread.
 
