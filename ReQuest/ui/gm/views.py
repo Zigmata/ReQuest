@@ -6,7 +6,6 @@ from typing import Any, Dict, Iterator, Tuple
 import discord
 from discord.ui import (
     View,
-    LayoutView,
     Container,
     TextDisplay,
     Separator,
@@ -18,7 +17,7 @@ from titlecase import titlecase
 
 from ReQuest.ui.common.buttons import MenuDoneButton, BackButton
 from ReQuest.ui.common.modals import PageJumpModal
-from ReQuest.ui.common.views import MenuBaseView
+from ReQuest.ui.common.views import MenuBaseView, LocaleLayoutView
 from ReQuest.ui.gm import buttons, selects
 from ReQuest.utilities.constants import CharacterFields, QuestFields, ConfigFields, CommonFields, DatabaseCollections
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
@@ -72,7 +71,7 @@ class GMBaseView(MenuBaseView):
         )
 
 
-class GMQuestMenuView(LayoutView):
+class GMQuestMenuView(LocaleLayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         self.quests = []
@@ -199,7 +198,7 @@ class GMQuestMenuView(LayoutView):
             await log_exception(e, interaction)
 
 
-class ManageQuestsView(LayoutView):
+class ManageQuestsView(LocaleLayoutView):
     def __init__(self, quest):
         super().__init__(timeout=None)
         self.selected_quest = quest
@@ -625,7 +624,7 @@ class ManageQuestsView(LayoutView):
         return reward_strings
 
 
-class RewardsMenuView(LayoutView):
+class RewardsMenuView(LocaleLayoutView):
     def __init__(self, calling_view):
         super().__init__(timeout=None)
         self.calling_view = calling_view
@@ -780,7 +779,7 @@ class RewardsMenuView(LayoutView):
         return '\n'.join(lines) if lines else 'None'
 
 
-class GMPlayerMenuView(LayoutView):
+class GMPlayerMenuView(LocaleLayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         self.build_view()
@@ -803,7 +802,7 @@ class GMPlayerMenuView(LayoutView):
         self.add_item(container)
 
 
-class RemovePlayerView(LayoutView):
+class RemovePlayerView(LocaleLayoutView):
     def __init__(self, quest):
         super().__init__(timeout=None)
         self.quest = quest
@@ -1204,7 +1203,7 @@ class QuestPostView(View):
             await log_exception(e, interaction)
 
 
-class ViewCharacterView(LayoutView):
+class ViewCharacterView(LocaleLayoutView):
     def __init__(self, member_id, character_data, currency_config, xp_enabled=True):
         super().__init__(timeout=None)
 
@@ -1234,7 +1233,7 @@ class ViewCharacterView(LayoutView):
 
 # ----- Approval Queue -----
 
-class GMApprovalsView(LayoutView):
+class GMApprovalsView(LocaleLayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         self.review_button = buttons.ReviewSubmissionButton(self)
@@ -1255,7 +1254,7 @@ class GMApprovalsView(LayoutView):
         self.add_item(container)
 
 
-class ReviewSubmissionView(LayoutView):
+class ReviewSubmissionView(LocaleLayoutView):
     def __init__(self, submission_data, currency_config):
         super().__init__(timeout=None)
         self.currency_config = currency_config

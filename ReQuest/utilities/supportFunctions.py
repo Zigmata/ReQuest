@@ -821,9 +821,10 @@ async def setup_view(view, interaction: discord.Interaction):
     Dynamically sets up a view by inspecting its setup method for required parameters.
     Resolves and propagates the user's locale to the view before calling setup().
     """
-    from ReQuest.utilities.localizer import resolve_locale
+    from ReQuest.utilities.localizer import resolve_locale, set_locale_context
 
     locale = await resolve_locale(interaction)
+    set_locale_context(locale)
     view.locale = locale
 
     setup_function = view.setup

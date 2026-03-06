@@ -8,13 +8,13 @@ from discord.ui import (
     Section,
     TextDisplay,
     Separator,
-    LayoutView,
     ActionRow,
     Button
 )
 from titlecase import titlecase
 
 from ReQuest.ui.common import modals as common_modals
+from ReQuest.ui.common.views import LocaleLayoutView
 from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
 from ReQuest.ui.common.enums import InventoryType
 from ReQuest.ui.player import buttons, selects
@@ -50,7 +50,7 @@ from ReQuest.utilities.supportFunctions import (
 logger = logging.getLogger(__name__)
 
 
-class PlayerBaseView(LayoutView):
+class PlayerBaseView(LocaleLayoutView):
     def __init__(self):
         super().__init__()
         locale = getattr(self, 'locale', DEFAULT_LOCALE)
@@ -105,7 +105,7 @@ class PlayerBaseView(LayoutView):
             await log_exception(e)
 
 
-class CharacterBaseView(LayoutView):
+class CharacterBaseView(LocaleLayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         self.characters = {}
@@ -250,7 +250,7 @@ class CharacterBaseView(LayoutView):
             await log_exception(e, interaction)
 
 
-class InventoryOverviewView(LayoutView):
+class InventoryOverviewView(LocaleLayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         self.active_character = None
@@ -492,7 +492,7 @@ class InventoryOverviewView(LayoutView):
             await log_exception(e, interaction)
 
 
-class ContainerItemsView(LayoutView):
+class ContainerItemsView(LocaleLayoutView):
     def __init__(self, character_id: str, character_data: dict, container_id: str | None):
         super().__init__(timeout=None)
         self.character_id = character_id
@@ -643,7 +643,7 @@ class ContainerItemsView(LayoutView):
             await log_exception(e, interaction)
 
 
-class MoveDestinationView(LayoutView):
+class MoveDestinationView(LocaleLayoutView):
     def __init__(self, source_view: ContainerItemsView, item_name: str, available_quantity: int):
         super().__init__(timeout=None)
         self.source_view = source_view
@@ -801,7 +801,7 @@ class MoveDestinationView(LayoutView):
             await log_exception(e, interaction)
 
 
-class ContainerManagementView(LayoutView):
+class ContainerManagementView(LocaleLayoutView):
     def __init__(self, character_id: str, character_data: dict):
         super().__init__(timeout=None)
         self.character_id = character_id
@@ -976,7 +976,7 @@ class ContainerManagementView(LayoutView):
             await log_exception(e, interaction)
 
 
-class PlayerBoardView(LayoutView):
+class PlayerBoardView(LocaleLayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         self.player_board_channel_id = None
@@ -1205,7 +1205,7 @@ class PlayerBoardView(LayoutView):
             await log_exception(e, interaction)
 
 
-class NewCharacterWizardView(LayoutView):
+class NewCharacterWizardView(LocaleLayoutView):
     def __init__(self, character_id, character_name, inventory_type):
         super().__init__(timeout=None)
         self.character_id = character_id
@@ -1244,7 +1244,7 @@ class NewCharacterWizardView(LayoutView):
         await _handle_submission(interaction, self.character_id, self.character_name, items, {})
 
 
-class StaticKitSelectView(LayoutView):
+class StaticKitSelectView(LocaleLayoutView):
     def __init__(self, character_id, character_name):
         super().__init__(timeout=None)
         self.character_id = character_id
@@ -1384,7 +1384,7 @@ class StaticKitSelectView(LayoutView):
             await log_exception(e, interaction)
 
 
-class StaticKitConfirmView(LayoutView):
+class StaticKitConfirmView(LocaleLayoutView):
     def __init__(self, character_id, character_name, kit_id, kit_data, currency_config):
         super().__init__(timeout=None)
         self.character_id = character_id
@@ -1447,7 +1447,7 @@ class StaticKitConfirmView(LayoutView):
         await _handle_submission(interaction, self.character_id, self.character_name, items, currency)
 
 
-class NewCharacterComplexItemPurchaseView(LayoutView):
+class NewCharacterComplexItemPurchaseView(LocaleLayoutView):
     def __init__(self, parent_view, item):
         super().__init__(timeout=None)
         self.parent_view = parent_view
@@ -1485,7 +1485,7 @@ class NewCharacterComplexItemPurchaseView(LayoutView):
         self.add_item(container)
 
 
-class NewCharacterShopView(LayoutView):
+class NewCharacterShopView(LocaleLayoutView):
     def __init__(self, character_id, character_name, inventory_type):
         super().__init__(timeout=None)
         self.character_id = character_id
@@ -1636,7 +1636,7 @@ class NewCharacterShopView(LayoutView):
         await interaction.response.edit_message(view=self)
 
 
-class NewCharacterCartView(LayoutView):
+class NewCharacterCartView(LocaleLayoutView):
     def __init__(self, shop_view: NewCharacterShopView):
         super().__init__(timeout=None)
         self.shop_view = shop_view

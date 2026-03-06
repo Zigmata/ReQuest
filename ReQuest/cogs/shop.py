@@ -4,7 +4,7 @@ from discord.ext.commands import Cog
 
 from ReQuest.ui.shop import views
 from ReQuest.utilities.constants import CommonFields, ShopFields, DatabaseCollections
-from ReQuest.utilities.localizer import resolve_locale, t
+from ReQuest.utilities.localizer import resolve_locale, set_locale_context, t
 from ReQuest.utilities.supportFunctions import log_exception, get_cached_data, UserFeedbackError, setup_view
 
 
@@ -21,6 +21,7 @@ class Shop(Cog):
     async def shop(self, interaction):
         try:
             locale = await resolve_locale(interaction)
+            set_locale_context(locale)
             bot = interaction.client
             shop_query = await get_cached_data(
                 bot=bot,

@@ -19,6 +19,11 @@ LOCALE_DESCRIPTIONS = {
     'pt-BR': 'info-language-desc-pt-br',
 }
 
+LOCALE_EMOJI = {
+    'en-US': '\U0001f1fa\U0001f1f8',
+    'pt-BR': '\U0001f1e7\U0001f1f7',
+}
+
 
 class LanguageSelect(Select):
     def __init__(self, calling_view):
@@ -36,6 +41,7 @@ class LanguageSelect(Select):
             self.options.append(discord.SelectOption(
                 label=t(locale, LOCALE_LABELS[supported_locale]),
                 description=t(locale, LOCALE_DESCRIPTIONS[supported_locale]),
+                emoji=LOCALE_EMOJI.get(supported_locale),
                 value=supported_locale,
                 default=(supported_locale == locale)
             ))

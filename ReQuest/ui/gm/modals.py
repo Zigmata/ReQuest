@@ -4,7 +4,7 @@ from titlecase import titlecase
 import discord
 import discord.ui
 import shortuuid
-from discord.ui import Modal
+from ReQuest.ui.common.modals import LocaleModal
 
 from ReQuest.ui.common.enums import RewardType
 from ReQuest.utilities.constants import QuestFields, ConfigFields, CommonFields, DatabaseCollections
@@ -27,7 +27,7 @@ from ReQuest.utilities.supportFunctions import (
 logger = logging.getLogger(__name__)
 
 
-class CreateQuestModal(Modal):
+class CreateQuestModal(LocaleModal):
     def __init__(self, calling_view):
         super().__init__(
             title=t(DEFAULT_LOCALE, 'gm-modal-title-create-quest'),
@@ -218,7 +218,7 @@ class CreateQuestModal(Modal):
             await log_exception(e, interaction)
 
 
-class EditQuestModal(Modal):
+class EditQuestModal(LocaleModal):
     def __init__(self, calling_view, quest):
         header = t(DEFAULT_LOCALE, 'gm-modal-title-editing-quest', questTitle=quest[QuestFields.TITLE])
         if len(header) > 45:
@@ -322,7 +322,7 @@ class EditQuestModal(Modal):
             await log_exception(e, interaction)
 
 
-class RewardsModal(Modal):
+class RewardsModal(LocaleModal):
     def __init__(self, caller, calling_view, reward_type: RewardType):
         super().__init__(
             title=t(DEFAULT_LOCALE, 'gm-modal-title-add-reward'),
@@ -392,7 +392,7 @@ class RewardsModal(Modal):
             await log_exception(e, interaction)
 
 
-class QuestSummaryModal(Modal):
+class QuestSummaryModal(LocaleModal):
     def __init__(self, calling_view):
         super().__init__(
             title=t(DEFAULT_LOCALE, 'gm-modal-title-add-summary'),
@@ -414,7 +414,7 @@ class QuestSummaryModal(Modal):
             await log_exception(e, interaction)
 
 
-class ModPlayerModal(Modal):
+class ModPlayerModal(LocaleModal):
     def __init__(self, member: discord.Member, character_id, character_data, xp_enabled=True):
         super().__init__(
             title=t(DEFAULT_LOCALE, 'gm-modal-title-modifying-player', playerName=member.name),
@@ -546,7 +546,7 @@ class ModPlayerModal(Modal):
             await log_exception(e, interaction)
 
 
-class ReviewSubmissionInputModal(Modal):
+class ReviewSubmissionInputModal(LocaleModal):
     def __init__(self, calling_view):
         super().__init__(title=t(DEFAULT_LOCALE, 'gm-modal-title-review-submission'), timeout=180)
         self.calling_view = calling_view

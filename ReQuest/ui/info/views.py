@@ -1,6 +1,8 @@
 import logging
 
-from discord.ui import LayoutView, Container, Section, TextDisplay, ActionRow, Separator
+from discord.ui import Container, Section, TextDisplay, ActionRow, Separator
+
+from ReQuest.ui.common.views import LocaleLayoutView
 
 from ReQuest.ui.common.buttons import MenuDoneButton
 from ReQuest.ui.info.selects import LanguageSelect
@@ -11,7 +13,7 @@ from ReQuest.utilities.supportFunctions import get_cached_data, log_exception
 logger = logging.getLogger(__name__)
 
 
-class LanguageView(LayoutView):
+class LanguageView(LocaleLayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         self.locale = DEFAULT_LOCALE

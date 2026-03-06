@@ -6,7 +6,7 @@ from discord.ext.commands import Cog
 from ReQuest.ui.gm import views, modals
 from ReQuest.utilities.checks import has_gm_or_mod
 from ReQuest.utilities.constants import CharacterFields, CommonFields, DatabaseCollections
-from ReQuest.utilities.localizer import resolve_locale, t
+from ReQuest.utilities.localizer import resolve_locale, set_locale_context, t
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     get_cached_data,
@@ -42,7 +42,10 @@ class GameMaster(Cog):
     @app_commands.guild_only()
     async def gm(self, interaction):
         try:
+            locale = await resolve_locale(interaction)
+            set_locale_context(locale)
             view = views.GMBaseView()
+            view.locale = locale
             await interaction.response.send_message(view=view, ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)
@@ -55,6 +58,7 @@ class GameMaster(Cog):
         """
         try:
             locale = await resolve_locale(interaction)
+            set_locale_context(locale)
             bot = interaction.client
             guild_id = str(interaction.guild_id)
             player_query = await get_cached_data(
@@ -85,6 +89,7 @@ class GameMaster(Cog):
         """
         try:
             locale = await resolve_locale(interaction)
+            set_locale_context(locale)
             bot = interaction.client
             guild_id = str(interaction.guild_id)
             player_query = await get_cached_data(

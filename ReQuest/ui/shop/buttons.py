@@ -43,7 +43,7 @@ class ShopItemButton(Button):
             style = ButtonStyle.success
             disabled = False
         else:
-            label = t(DEFAULT_LOCALE, 'shop-btn-add-to-cart', {'cost': cost_string})
+            label = t(DEFAULT_LOCALE, 'shop-btn-add-to-cart', **{'cost': cost_string})
             style = ButtonStyle.success
             disabled = False
 
@@ -67,7 +67,7 @@ class ShopItemButton(Button):
             if self.stock_info is not None and ShopFields.AVAILABLE in self.stock_info and self.stock_info.get(ShopFields.AVAILABLE, 0) <= 0:
                 locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
                 raise UserFeedbackError(
-                    t(locale, 'shop-error-item-out-of-stock', {'itemName': self.item[CommonFields.NAME]}),
+                    t(locale, 'shop-error-item-out-of-stock', **{'itemName': self.item[CommonFields.NAME]}),
                     message_id='shop-error-item-out-of-stock'
                 )
 

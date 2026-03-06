@@ -3,6 +3,7 @@ from discord import app_commands
 from discord.ext.commands import Cog
 
 from ReQuest.ui.config import views
+from ReQuest.utilities.localizer import resolve_locale, set_locale_context
 from ReQuest.utilities.supportFunctions import log_exception
 
 
@@ -20,7 +21,10 @@ class Config(Cog):
     @app_commands.guild_only()
     async def config(self, interaction: discord.Interaction):
         try:
+            locale = await resolve_locale(interaction)
+            set_locale_context(locale)
             view = views.ConfigBaseView()
+            view.locale = locale
             await interaction.response.send_message(view=view, ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)

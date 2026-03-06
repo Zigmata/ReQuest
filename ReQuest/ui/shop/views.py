@@ -4,7 +4,6 @@ import math
 import discord
 import shortuuid
 from discord.ui import (
-    LayoutView,
     ActionRow,
     Container,
     TextDisplay,
@@ -13,6 +12,8 @@ from discord.ui import (
     Thumbnail,
     Button
 )
+
+from ReQuest.ui.common.views import LocaleLayoutView
 from titlecase import titlecase
 
 from ReQuest.ui.common import modals as common_modals
@@ -45,7 +46,7 @@ from ReQuest.utilities.supportFunctions import (
 logger = logging.getLogger(__name__)
 
 
-class ShopBaseView(LayoutView):
+class ShopBaseView(LocaleLayoutView):
     def __init__(self, shop_data, channel_id: str = None):
         super().__init__(timeout=600)
         self.shop_data = shop_data
@@ -111,7 +112,7 @@ class ShopBaseView(LayoutView):
             if shop_name := self.shop_data.get(ShopFields.SHOP_NAME):
                 header_items.append(TextDisplay(f'**{shop_name}**'))
             if shop_keeper := self.shop_data.get(ShopFields.SHOP_KEEPER):
-                header_items.append(TextDisplay(t(locale, 'shop-label-shopkeeper', {'name': shop_keeper})))
+                header_items.append(TextDisplay(t(locale, 'shop-label-shopkeeper', **{'name': shop_keeper})))
             if shop_description := self.shop_data.get(ShopFields.SHOP_DESCRIPTION):
                 header_items.append(TextDisplay(f'*{shop_description}*'))
 
@@ -158,7 +159,7 @@ class ShopBaseView(LayoutView):
 
                 content = item_display_name
                 if cart_quantity > 0:
-                    content += f' {t(locale, "shop-label-in-cart", {"quantity": cart_quantity})}'
+                    content += f' {t(locale, "shop-label-in-cart", **{"quantity": cart_quantity})}'
 
                 # Show stock info if item has limits (and data is valid)
                 if item_stock_info is not None and ShopFields.AVAILABLE in item_stock_info:
@@ -166,7 +167,7 @@ class ShopBaseView(LayoutView):
                     if available == 0:
                         content += f'\n**{t(locale, "shop-label-out-of-stock")}**'
                     else:
-                        content += f'\n*{t(locale, "shop-label-stock-available", {"available": available})}*'
+                        content += f'\n*{t(locale, "shop-label-stock-available", **{"available": available})}*'
 
                 if item_description:
                     content += f'\n*{escape_markdown(item_description)}*'
@@ -188,7 +189,7 @@ class ShopBaseView(LayoutView):
                 prev_button.callback = self.prev_page
 
                 page_display = Button(
-                    label=t(locale, 'common-page-display', {'current': self.current_page + 1, 'total': self.total_pages}),
+                    label=t(locale, 'common-page-display', **{'current': self.current_page + 1, 'total': self.total_pages}),
                     style=discord.ButtonStyle.secondary,
                     custom_id='shop_page_display'
                 )
@@ -208,7 +209,7 @@ class ShopBaseView(LayoutView):
 
             cart_item_count = sum(item.get(CartFields.QUANTITY, 0) for item in self.cart.values())
             view_cart_button = buttons.ViewCartButton(self)
-            view_cart_button.label = t(locale, 'shop-btn-view-cart-count', {'count': cart_item_count}) if cart_item_count > 0 else t(locale, 'shop-btn-view-cart')
+            view_cart_button.label = t(locale, 'shop-btn-view-cart-count', **{'count': cart_item_count}) if cart_item_count > 0 else t(locale, 'shop-btn-view-cart')
 
             nav_row.add_item(view_cart_button)
             self.add_item(nav_row)
@@ -232,7 +233,7 @@ class ShopBaseView(LayoutView):
             if not success:
                 locale = getattr(self, 'locale', DEFAULT_LOCALE)
                 raise UserFeedbackError(
-                    t(locale, 'shop-error-item-out-of-stock', {'itemName': item_name}),
+                    t(locale, 'shop-error-item-out-of-stock', **{'itemName': item_name}),
                     message_id='shop-error-item-out-of-stock'
                 )
 
@@ -279,7 +280,7 @@ class ShopBaseView(LayoutView):
             )
 
 
-class ShopCartView(LayoutView):
+class ShopCartView(LocaleLayoutView):
     def __init__(self, prev_view: ShopBaseView, currency_config: dict, character_data: dict):
         super().__init__(timeout=None)
         self.prev_view = prev_view
@@ -339,7 +340,7 @@ class ShopCartView(LayoutView):
                         is_ok, _ = check_sufficient_funds(player_wallet, self.currency_config, base_currency, amount)
                         if not is_ok:
                             can_afford_all = False
-                            warnings.append(t(locale, 'shop-warning-insufficient-funds', {'currency': titlecase(base_currency)}))
+                            warnings.append(t(locale, 'shop-warning-insufficient-funds', **{'currency': titlecase(base_currency)}))
 
                 start_index = self.current_page * self.items_per_page
                 end_index = start_index + self.items_per_page
@@ -401,7 +402,7 @@ class ShopCartView(LayoutView):
                 prev_button.callback = self.prev_page
 
                 page_display = Button(
-                    label=t(locale, 'common-page-display', {'current': self.current_page + 1, 'total': self.total_pages}),
+                    label=t(locale, 'common-page-display', **{'current': self.current_page + 1, 'total': self.total_pages}),
                     style=discord.ButtonStyle.secondary,
                     custom_id='shop_page_display'
                 )
@@ -482,7 +483,7 @@ class ShopCartView(LayoutView):
                                                     self.currency_config, base_currency, amount)
                 if not is_ok:
                     await interaction.response.send_message(
-                        t(locale, 'shop-error-checkout-insufficient', {'currency': titlecase(base_currency)}),
+                        t(locale, 'shop-error-checkout-insufficient', **{'currency': titlecase(base_currency)}),
                         ephemeral=True
                     )
                     return
@@ -558,7 +559,7 @@ class ShopCartView(LayoutView):
             logging.error(f'Error during checkout: {e}')
 
 
-class ComplexItemPurchaseView(LayoutView):
+class ComplexItemPurchaseView(LocaleLayoutView):
     def __init__(self, parent_view, item):
         super().__init__(timeout=None)
         self.parent_view = parent_view
@@ -571,7 +572,7 @@ class ComplexItemPurchaseView(LayoutView):
         container = Container()
 
         header = Section(accessory=buttons.CartBackButton(self.parent_view))
-        header.add_item(TextDisplay(f"**{t(locale, 'shop-title-purchase-options', {'itemName': escape_markdown(self.item[CommonFields.NAME])})}**"))
+        header.add_item(TextDisplay(f"**{t(locale, 'shop-title-purchase-options', **{'itemName': escape_markdown(self.item[CommonFields.NAME])})}**"))
         container.add_item(header)
         container.add_item(Separator())
 

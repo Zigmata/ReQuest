@@ -24,7 +24,7 @@ class SingleChannelConfigSelect(ChannelSelect):
 
         super().__init__(
             channel_types=channel_types,
-            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-channel', {'configName': config_name}),
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-channel', **{'configName': config_name}),
             custom_id=f'config_{config_type}_channel_select'
         )
         self.calling_view = calling_view
@@ -345,7 +345,7 @@ class RoleplayResetTimeSelect(Select):
         options = []
         for hour in range(0, 24):
             options.append(discord.SelectOption(
-                label=t(DEFAULT_LOCALE, 'config-select-option-utc-time', {'hour': f'{hour:02}'}),
+                label=t(DEFAULT_LOCALE, 'config-select-option-utc-time', **{'hour': f'{hour:02}'}),
                 value=f'{hour}'
             ))
 
@@ -409,7 +409,7 @@ class ForumThreadSelect(Select):
                     options.append(discord.SelectOption(
                         label=thread.name[:100],  # Discord label limit
                         value=str(thread.id),
-                        description=t(DEFAULT_LOCALE, 'config-select-desc-thread-id', {'threadId': str(thread.id)})
+                        description=t(DEFAULT_LOCALE, 'config-select-desc-thread-id', **{'threadId': str(thread.id)})
                     ))
             else:
                 # Provide a placeholder option if no threads found

@@ -7,8 +7,7 @@ error-report-description =
 
     ```{ $exception }```
 
-    If this error is unexpected, or you suspect the bot is not functioning correctly, please submit a bug report
-    in the [Official ReQuest Support Discord](https://discord.gg/Zq37gj4).
+    If this error is unexpected, or you suspect the bot is not functioning correctly, please submit a bug report in the [Official ReQuest Support Discord](https://discord.gg/Zq37gj4).
 
 # Check failures
 error-owner-only = Only the bot owner can use this command!

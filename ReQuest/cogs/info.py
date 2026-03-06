@@ -3,7 +3,7 @@ from discord import app_commands
 from discord.ext.commands import Cog
 
 from ReQuest.ui.info.views import LanguageView
-from ReQuest.utilities.localizer import resolve_locale, t
+from ReQuest.utilities.localizer import resolve_locale, set_locale_context, t
 from ReQuest.utilities.supportFunctions import setup_view
 
 

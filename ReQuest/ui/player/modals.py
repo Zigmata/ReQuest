@@ -5,7 +5,7 @@ from titlecase import titlecase
 import discord
 import discord.ui
 import shortuuid
-from discord.ui import Modal
+from ReQuest.ui.common.modals import LocaleModal
 
 from ReQuest.ui.common.enums import InventoryType
 from ReQuest.utilities.constants import CharacterFields, ConfigFields, CommonFields, DatabaseCollections
@@ -35,7 +35,7 @@ from ReQuest.utilities.supportFunctions import (
 logger = logging.getLogger(__name__)
 
 
-class TradeModal(Modal):
+class TradeModal(LocaleModal):
     def __init__(self, target: discord.Member, locale: str = DEFAULT_LOCALE):
         super().__init__(
             title=t(locale, 'player-modal-title-trade', targetName=target.name),
@@ -180,7 +180,7 @@ class TradeModal(Modal):
             await log_exception(e, interaction)
 
 
-class CharacterRegisterModal(Modal):
+class CharacterRegisterModal(LocaleModal):
     def __init__(self, calling_view):
         super().__init__(
             title=t(DEFAULT_LOCALE, 'player-modal-title-register'),
@@ -250,7 +250,7 @@ class CharacterRegisterModal(Modal):
             await log_exception(e, interaction)
 
 
-class OpenInventoryInputModal(Modal):
+class OpenInventoryInputModal(LocaleModal):
     def __init__(self, calling_view):
         super().__init__(
             title=t(DEFAULT_LOCALE, 'player-modal-title-starting-inventory'),
@@ -313,7 +313,7 @@ class OpenInventoryInputModal(Modal):
             await log_exception(e, interaction)
 
 
-class SpendCurrencyModal(Modal):
+class SpendCurrencyModal(LocaleModal):
     def __init__(self, calling_view):
         super().__init__(
             title=t(DEFAULT_LOCALE, 'player-modal-title-spend-currency'),
@@ -450,7 +450,7 @@ class SpendCurrencyModal(Modal):
             await log_exception(e, interaction)
 
 
-class CreatePlayerPostModal(Modal):
+class CreatePlayerPostModal(LocaleModal):
     def __init__(self, calling_view):
         super().__init__(
             title=t(DEFAULT_LOCALE, 'player-modal-title-create-post'),
@@ -481,7 +481,7 @@ class CreatePlayerPostModal(Modal):
             await log_exception(e, interaction)
 
 
-class EditPlayerPostModal(Modal):
+class EditPlayerPostModal(LocaleModal):
     def __init__(self, calling_view, post):
         super().__init__(
             title=t(DEFAULT_LOCALE, 'player-modal-title-edit-post'),
@@ -517,7 +517,7 @@ class EditPlayerPostModal(Modal):
             await log_exception(e, interaction)
 
 
-class WizardEditCartItemModal(Modal):
+class WizardEditCartItemModal(LocaleModal):
     def __init__(self, cart_view, item_key, current_quantity):
         super().__init__(
             title=t(DEFAULT_LOCALE, 'player-modal-title-edit-cart-qty'),
@@ -562,7 +562,7 @@ class WizardEditCartItemModal(Modal):
             await log_exception(e, interaction)
 
 
-class CreateContainerModal(Modal):
+class CreateContainerModal(LocaleModal):
     def __init__(self, calling_view):
         super().__init__(
             title=t(DEFAULT_LOCALE, 'player-modal-title-create-container'),
@@ -594,7 +594,7 @@ class CreateContainerModal(Modal):
             await log_exception(e, interaction)
 
 
-class RenameContainerModal(Modal):
+class RenameContainerModal(LocaleModal):
     def __init__(self, calling_view, container_id: str, current_name: str):
         super().__init__(
             title=t(DEFAULT_LOCALE, 'player-modal-title-rename-container'),
@@ -629,7 +629,7 @@ class RenameContainerModal(Modal):
             await log_exception(e, interaction)
 
 
-class ConsumeFromContainerModal(Modal):
+class ConsumeFromContainerModal(LocaleModal):
     def __init__(self, calling_view, item_name: str, max_quantity: int):
         super().__init__(
             title=t(DEFAULT_LOCALE, 'player-modal-title-consume'),
@@ -732,7 +732,7 @@ class ConsumeFromContainerModal(Modal):
             await log_exception(e, interaction)
 
 
-class MoveItemQuantityModal(Modal):
+class MoveItemQuantityModal(LocaleModal):
     def __init__(self, calling_view, item_name: str, max_quantity: int):
         super().__init__(
             title=t(DEFAULT_LOCALE, 'player-modal-title-move-item'),

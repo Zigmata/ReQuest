@@ -3,7 +3,6 @@ import math
 
 import discord
 from discord.ui import (
-    LayoutView,
     ActionRow,
     Container,
     Section,
@@ -11,6 +10,8 @@ from discord.ui import (
     TextDisplay,
     Button
 )
+
+from ReQuest.ui.common.views import LocaleLayoutView
 
 from ReQuest.ui.admin import buttons
 from ReQuest.ui.common import buttons as common_buttons
@@ -23,7 +24,7 @@ from ReQuest.utilities.supportFunctions import log_exception, get_cached_data
 logger = logging.getLogger(__name__)
 
 
-class AdminBaseView(LayoutView):
+class AdminBaseView(LocaleLayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         locale = getattr(self, 'locale', DEFAULT_LOCALE)
@@ -54,7 +55,7 @@ class AdminBaseView(LayoutView):
         self.add_item(container)
 
 
-class AdminAllowlistView(LayoutView):
+class AdminAllowlistView(LocaleLayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         self.servers = []
@@ -171,7 +172,7 @@ class AdminAllowlistView(LayoutView):
             await log_exception(e, interaction)
 
 
-class AdminCogView(LayoutView):
+class AdminCogView(LocaleLayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         self.build_view()

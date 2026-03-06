@@ -4,13 +4,22 @@ import discord
 import discord.ui
 from discord.ui import Modal
 
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, set_locale_context
 from ReQuest.utilities.supportFunctions import log_exception, UserFeedbackError
 
 logger = logging.getLogger(__name__)
 
 
-class ConfirmModal(Modal):
+class LocaleModal(Modal):
+    """Modal subclass that propagates locale via context var before on_submit."""
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        locale = getattr(self, '_locale', None) or getattr(self, 'locale', None) or DEFAULT_LOCALE
+        set_locale_context(locale)
+        return True
+
+
+class ConfirmModal(LocaleModal):
     def __init__(self, title: str, prompt_label: str, prompt_placeholder: str, confirm_callback, locale=None):
         self._locale = locale or DEFAULT_LOCALE
         if len(title) > 45:
@@ -42,7 +51,7 @@ class ConfirmModal(Modal):
             await log_exception(e, interaction)
 
 
-class PageJumpModal(Modal):
+class PageJumpModal(LocaleModal):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         self._locale = locale

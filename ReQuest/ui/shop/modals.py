@@ -1,5 +1,5 @@
 import discord
-from discord.ui import Modal
+from ReQuest.ui.common.modals import LocaleModal
 
 from ReQuest.utilities.constants import CartFields
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
@@ -12,7 +12,7 @@ from ReQuest.utilities.supportFunctions import (
 )
 
 
-class EditCartItemModal(Modal):
+class EditCartItemModal(LocaleModal):
     def __init__(self, cart_view, item_key, current_quantity):
         super().__init__(
             title=t(DEFAULT_LOCALE, 'shop-modal-title-edit-cart-qty'),

@@ -2,7 +2,7 @@ import logging
 
 import discord
 import discord.ui
-from discord.ui import Modal
+from ReQuest.ui.common.modals import LocaleModal
 
 from ReQuest.utilities.constants import DatabaseCollections
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
@@ -11,7 +11,7 @@ from ReQuest.utilities.supportFunctions import log_exception, update_cached_data
 logger = logging.getLogger(__name__)
 
 
-class AllowServerModal(Modal):
+class AllowServerModal(LocaleModal):
     def __init__(self, calling_view, locale=None):
         self._locale = locale or DEFAULT_LOCALE
         super().__init__(
@@ -65,7 +65,7 @@ class AllowServerModal(Modal):
             await log_exception(e, interaction)
 
 
-class AdminCogTextModal(Modal):
+class AdminCogTextModal(LocaleModal):
     def __init__(self, function, on_submit, locale=None):
         self._locale = locale or DEFAULT_LOCALE
         super().__init__(
