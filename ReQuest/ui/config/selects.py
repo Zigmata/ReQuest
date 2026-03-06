@@ -4,13 +4,15 @@ import discord
 from discord.ui import Select, RoleSelect, ChannelSelect
 
 from ReQuest.ui.common.enums import InventoryType, RoleplayMode, ScheduleType, DayOfWeek
+from ReQuest.ui.info.selects import LOCALE_LABELS, LOCALE_DESCRIPTIONS, LOCALE_EMOJI
 from ReQuest.utilities.constants import ConfigFields, CommonFields, RoleplayFields, DatabaseCollections
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, SUPPORTED_LOCALES
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     setup_view,
     get_cached_data,
-    update_cached_data
+    update_cached_data,
+    delete_cached_data
 )
 
 logger = logging.getLogger(__name__)
@@ -463,5 +465,61 @@ class ForumThreadSelect(Select):
                     t(DEFAULT_LOCALE, 'config-error-thread-not-found'),
                     ephemeral=True
                 )
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ConfigLanguageSelect(Select):
+    def __init__(self, calling_view):
+        super().__init__(
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-server-language'),
+            options=[],
+            custom_id='config_language_select'
+        )
+        self.calling_view = calling_view
+
+    def populate(self, locale, current_guild_locale=None):
+        self.options.clear()
+        self.placeholder = t(locale, 'config-select-placeholder-server-language')
+
+        self.options.append(discord.SelectOption(
+            label=t(locale, 'config-select-option-default'),
+            description=t(locale, 'config-select-desc-default'),
+            value='default',
+            default=(current_guild_locale is None)
+        ))
+
+        for supported_locale in SUPPORTED_LOCALES:
+            self.options.append(discord.SelectOption(
+                label=t(locale, LOCALE_LABELS[supported_locale]),
+                description=t(locale, LOCALE_DESCRIPTIONS[supported_locale]),
+                emoji=LOCALE_EMOJI.get(supported_locale),
+                value=supported_locale,
+                default=(supported_locale == current_guild_locale)
+            ))
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            selected = self.values[0]
+            bot = interaction.client
+
+            if selected == 'default':
+                await delete_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.GUILD_LOCALE,
+                    search_filter={CommonFields.ID: interaction.guild_id}
+                )
+            else:
+                await update_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.GUILD_LOCALE,
+                    query={CommonFields.ID: interaction.guild_id},
+                    update_data={'$set': {'locale': selected}}
+                )
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)

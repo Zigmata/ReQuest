@@ -398,6 +398,8 @@ config-menu-roles = Cargos
 config-menu-desc-roles = Opções de configuração para cargos com ping ou privilegiados.
 config-menu-shops = Lojas
 config-menu-desc-shops = Configurar lojas personalizadas.
+config-menu-language = Idioma
+config-menu-desc-language = Definir o idioma padrão para este servidor.
 
 ## View do Assistente
 config-title-wizard = {"**"}Configuração do Servidor - Assistente{"**"}
@@ -776,3 +778,11 @@ config-msg-rp-no-rewards = Nenhuma configurada.
 config-label-rp-experience = {"**"}Experiência:{"**"} { $xp }
 config-label-rp-items = {"**"}Itens:{"**"}
 config-label-rp-currency = {"**"}Moeda:{"**"}
+
+## View de Idioma
+config-title-language = {"**"}Configuração do Servidor - Idioma{"**"}
+config-label-server-language = {"**"}Idioma do Servidor:{"**"} { $language }
+config-label-server-language-default = {"**"}Idioma do Servidor:{"**"} Padrão (sem substituição)
+config-select-placeholder-server-language = Selecione o idioma do servidor
+config-select-option-default = Padrão (sem substituição)
+config-select-desc-default = Usar a preferência de cada usuário ou o idioma do Discord.

@@ -711,15 +711,18 @@ async def update_character_experience(interaction, player_id: int, character_id:
         await log_exception(e, interaction)
 
 
-async def update_quest_embed(quest: dict) -> discord.Embed | None:
+async def update_quest_embed(quest: dict, locale: str | None = None) -> discord.Embed | None:
     """
     Updates a quest embed based on the current quest data.
 
     :param quest: The quest data dictionary
+    :param locale: Locale to use for static labels (defaults to DEFAULT_LOCALE)
 
     :return: Updated discord.Embed object
     """
     from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
+    if locale is None:
+        locale = DEFAULT_LOCALE
 
     try:
         embed = discord.Embed()
@@ -737,9 +740,9 @@ async def update_quest_embed(quest: dict) -> discord.Embed | None:
         lock_state = quest[QuestFields.LOCK_STATE]
 
         # Format the main embed body
-        gm_label = t(DEFAULT_LOCALE, 'common-embed-label-gm')
+        gm_label = t(locale, 'common-embed-label-gm')
         if restrictions:
-            restrictions_label = t(DEFAULT_LOCALE, 'common-embed-label-party-restrictions')
+            restrictions_label = t(locale, 'common-embed-label-party-restrictions')
             post_description = (
                 f'{gm_label} <@!{gm}>\n'
                 f'{restrictions_label} {restrictions}\n\n'
@@ -754,7 +757,7 @@ async def update_quest_embed(quest: dict) -> discord.Embed | None:
             )
 
         if lock_state:
-            title = title + ' ' + t(DEFAULT_LOCALE, 'common-label-locked')
+            title = title + ' ' + t(locale, 'common-label-locked')
 
         current_party_size = len(party)
         current_wait_list_size = 0
@@ -785,8 +788,8 @@ async def update_quest_embed(quest: dict) -> discord.Embed | None:
         if formatted_party:
             party_string = '\n'.join(formatted_party)
         else:
-            party_string = t(DEFAULT_LOCALE, 'common-label-none')
-        embed.add_field(name=f'{t(DEFAULT_LOCALE, "common-embed-field-party")} ({current_party_size}/{max_party_size})',
+            party_string = t(locale, 'common-label-none')
+        embed.add_field(name=f'{t(locale, "common-embed-field-party")} ({current_party_size}/{max_party_size})',
                         value=party_string)
 
         # Add a wait list field if one is present, unless the quest is being archived.
@@ -794,12 +797,12 @@ async def update_quest_embed(quest: dict) -> discord.Embed | None:
             if formatted_wait_list:
                 wait_list_string = '\n'.join(formatted_wait_list)
             else:
-                wait_list_string = t(DEFAULT_LOCALE, 'common-label-none')
+                wait_list_string = t(locale, 'common-label-none')
 
-            embed.add_field(name=f'{t(DEFAULT_LOCALE, "common-embed-field-wait-list")} ({current_wait_list_size}/{max_wait_list_size})',
+            embed.add_field(name=f'{t(locale, "common-embed-field-wait-list")} ({current_wait_list_size}/{max_wait_list_size})',
                             value=wait_list_string)
 
-        embed.set_footer(text=t(DEFAULT_LOCALE, 'common-embed-footer-quest-id', questId=quest_id))
+        embed.set_footer(text=t(locale, 'common-embed-footer-quest-id', questId=quest_id))
 
         return embed
     except Exception as e:

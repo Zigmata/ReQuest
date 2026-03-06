@@ -21,7 +21,7 @@ from ReQuest.ui.player import buttons, selects
 from ReQuest.utilities.constants import (
     CharacterFields, ConfigFields, CommonFields, ShopFields, DatabaseCollections
 )
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_guild_locale
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
@@ -1110,8 +1110,9 @@ class PlayerBoardView(LocaleLayoutView):
 
     async def create_post(self, title, content, interaction):
         try:
-            locale = getattr(self, 'locale', DEFAULT_LOCALE)
-            post_collection = interaction.client.gdb[DatabaseCollections.PLAYER_BOARD]
+            bot = interaction.client
+            guild_locale = await resolve_guild_locale(bot, interaction.guild_id)
+            post_collection = bot.gdb[DatabaseCollections.PLAYER_BOARD]
             post_id = str(shortuuid.uuid()[:8])
 
             post_embed = discord.Embed(
@@ -1120,10 +1121,10 @@ class PlayerBoardView(LocaleLayoutView):
                 type='rich'
             )
             post_embed.add_field(
-                name=t(locale, 'player-embed-field-author'),
+                name=t(guild_locale, 'player-embed-field-author'),
                 value=interaction.user.mention
             )
-            post_embed.set_footer(text=t(locale, 'player-embed-footer-post-id', postId=post_id))
+            post_embed.set_footer(text=t(guild_locale, 'player-embed-footer-post-id', postId=post_id))
 
             channel = interaction.client.get_channel(self.player_board_channel_id)
             if not channel:
@@ -1158,8 +1159,8 @@ class PlayerBoardView(LocaleLayoutView):
 
     async def edit_post(self, post, new_title, new_content, interaction):
         try:
-            locale = getattr(self, 'locale', DEFAULT_LOCALE)
             bot = interaction.client
+            guild_locale = await resolve_guild_locale(bot, interaction.guild_id)
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -1183,10 +1184,10 @@ class PlayerBoardView(LocaleLayoutView):
                             type='rich'
                         )
                         embed.add_field(
-                            name=t(locale, 'player-embed-field-author'),
+                            name=t(guild_locale, 'player-embed-field-author'),
                             value=interaction.user.mention
                         )
-                        embed.set_footer(text=t(locale, 'player-embed-footer-post-id', postId=post['postId']))
+                        embed.set_footer(text=t(guild_locale, 'player-embed-footer-post-id', postId=post['postId']))
 
                         await message.edit(embed=embed)
                     except discord.NotFound:

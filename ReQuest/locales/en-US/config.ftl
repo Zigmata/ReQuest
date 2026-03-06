@@ -398,6 +398,8 @@ config-menu-roles = Roles
 config-menu-desc-roles = Configuration options for pingable or privileged roles.
 config-menu-shops = Shops
 config-menu-desc-shops = Configure custom shops.
+config-menu-language = Language
+config-menu-desc-language = Set the default language for this server.
 
 ## Wizard View
 config-title-wizard = {"**"}Server Configuration - Wizard{"**"}
@@ -776,3 +778,11 @@ config-msg-rp-no-rewards = None configured.
 config-label-rp-experience = {"**"}Experience:{"**"} { $xp }
 config-label-rp-items = {"**"}Items:{"**"}
 config-label-rp-currency = {"**"}Currency:{"**"}
+
+## Language View
+config-title-language = {"**"}Server Configuration - Language{"**"}
+config-label-server-language = {"**"}Server Language:{"**"} { $language }
+config-label-server-language-default = {"**"}Server Language:{"**"} Default (no override)
+config-select-placeholder-server-language = Select server language
+config-select-option-default = Default (no override)
+config-select-desc-default = Use each user's preference or Discord locale.

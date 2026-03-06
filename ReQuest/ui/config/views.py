@@ -90,6 +90,11 @@ class ConfigBaseView(common_views.MenuBaseView):
                     'name': t(DEFAULT_LOCALE, 'config-menu-shops'),
                     'description': t(DEFAULT_LOCALE, 'config-menu-desc-shops'),
                     'view_class': ConfigShopsView
+                },
+                {
+                    'name': t(DEFAULT_LOCALE, 'config-menu-language'),
+                    'description': t(DEFAULT_LOCALE, 'config-menu-desc-language'),
+                    'view_class': ConfigLanguageView
                 }
             ],
             menu_level=0
@@ -3195,3 +3200,54 @@ class ConfigRoleplayView(LocaleLayoutView):
         container.add_item(reward_section)
 
         self.add_item(container)
+
+
+# ------ LANGUAGE ------
+
+
+class ConfigLanguageView(LocaleLayoutView):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.language_info = TextDisplay(t(DEFAULT_LOCALE, 'config-label-server-language-default'))
+        self.language_select = selects.ConfigLanguageSelect(self)
+
+    def build_view(self):
+        self.clear_items()
+        container = Container()
+
+        header_section = Section(accessory=BackButton(ConfigBaseView))
+        header_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-title-language')))
+
+        container.add_item(header_section)
+        container.add_item(Separator())
+        container.add_item(self.language_info)
+
+        language_select_row = ActionRow(self.language_select)
+        container.add_item(language_select_row)
+
+        self.add_item(container)
+
+    async def setup(self, bot, guild):
+        try:
+            guild_locale_data = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.GUILD_LOCALE,
+                query={CommonFields.ID: guild.id}
+            )
+            current_guild_locale = None
+            if guild_locale_data and 'locale' in guild_locale_data:
+                current_guild_locale = guild_locale_data['locale']
+
+            if current_guild_locale:
+                from ReQuest.ui.info.selects import LOCALE_LABELS
+                language_name = t(DEFAULT_LOCALE, LOCALE_LABELS.get(current_guild_locale, current_guild_locale))
+                self.language_info.content = t(DEFAULT_LOCALE, 'config-label-server-language',
+                                               language=language_name)
+            else:
+                self.language_info.content = t(DEFAULT_LOCALE, 'config-label-server-language-default')
+
+            self.language_select.populate(DEFAULT_LOCALE, current_guild_locale)
+            self.build_view()
+        except Exception as e:
+            await log_exception(e)

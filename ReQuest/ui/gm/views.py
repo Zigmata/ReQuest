@@ -20,7 +20,7 @@ from ReQuest.ui.common.modals import PageJumpModal
 from ReQuest.ui.common.views import MenuBaseView, LocaleLayoutView
 from ReQuest.ui.gm import buttons, selects
 from ReQuest.utilities.constants import CharacterFields, QuestFields, ConfigFields, CommonFields, DatabaseCollections
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_guild_locale
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
@@ -371,7 +371,7 @@ class ManageQuestsView(LocaleLayoutView):
 
             # Create a fresh quest view, and update the original post message
             quest_view = QuestPostView(quest)
-            await quest_view.setup()
+            await quest_view.setup(bot=interaction.client)
             await message.edit(embed=quest_view.embed, view=quest_view)
 
             await setup_view(self, interaction)
@@ -487,10 +487,12 @@ class ManageQuestsView(LocaleLayoutView):
                         logger.warning(f'Could not DM {member.id} about quest completion rewards: {e}')
 
             # Build an embed for feedback
+            guild_locale = await resolve_guild_locale(bot, guild_id)
+
             quest_embed = discord.Embed(
-                title=t(DEFAULT_LOCALE, 'gm-embed-title-quest-completed', questTitle=title),
+                title=t(guild_locale, 'gm-embed-title-quest-completed', questTitle=title),
                 description=(
-                    f'{t(DEFAULT_LOCALE, "common-embed-label-gm")} <@!{gm}>\n\n'
+                    f'{t(guild_locale, "common-embed-label-gm")} <@!{gm}>\n\n'
                     f'{description}\n\n'
                     f'------'
                 ),
@@ -504,13 +506,13 @@ class ManageQuestsView(LocaleLayoutView):
                         character = player[str(member_id)][str(character_id)]
                         formatted_party.append(f'- <@!{member_id}> as {character[CommonFields.NAME]}')
 
-            quest_embed.add_field(name=t(DEFAULT_LOCALE, 'gm-embed-field-party'), value='\n'.join(formatted_party))
-            quest_embed.set_footer(text=t(DEFAULT_LOCALE, 'common-embed-footer-quest-id', questId=quest_id))
+            quest_embed.add_field(name=t(guild_locale, 'gm-embed-field-party'), value='\n'.join(formatted_party))
+            quest_embed.set_footer(text=t(guild_locale, 'common-embed-footer-quest-id', questId=quest_id))
 
             if summary:
-                quest_embed.add_field(name=t(DEFAULT_LOCALE, 'gm-embed-field-summary'), value=summary, inline=False)
+                quest_embed.add_field(name=t(guild_locale, 'gm-embed-field-summary'), value=summary, inline=False)
             if reward_summary:
-                quest_embed.add_field(name=t(DEFAULT_LOCALE, 'gm-embed-field-rewards'), value='\n'.join(reward_summary), inline=True)
+                quest_embed.add_field(name=t(guild_locale, 'gm-embed-field-rewards'), value='\n'.join(reward_summary), inline=True)
 
             # If an archive channel is configured, post the archived post
             if archive_channel:
@@ -1004,9 +1006,14 @@ class QuestPostView(View):
         self.add_item(self.join_button)
         self.add_item(self.leave_button)
 
-    async def setup(self):
+    async def setup(self, bot=None):
         try:
-            self.embed = await update_quest_embed(self.quest)
+            guild_locale = DEFAULT_LOCALE
+            if bot:
+                guild_id = self.quest.get(QuestFields.GUILD_ID)
+                if guild_id:
+                    guild_locale = await resolve_guild_locale(bot, guild_id)
+            self.embed = await update_quest_embed(self.quest, locale=guild_locale)
         except Exception as e:
             await log_exception(e)
 
@@ -1197,7 +1204,7 @@ class QuestPostView(View):
             )
 
             # Refresh the query with the new document and edit the post
-            await self.setup()
+            await self.setup(bot=bot)
             await interaction.response.edit_message(embed=self.embed, view=self)
         except Exception as e:
             await log_exception(e, interaction)

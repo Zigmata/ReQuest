@@ -157,4 +157,5 @@ class DatabaseCollections:
     SHOPS = 'shops'
     STATIC_KITS = 'staticKits'
     USER_LOCALE = 'userLocale'
+    GUILD_LOCALE = 'guildLocale'
     CHARACTERS = 'characters'

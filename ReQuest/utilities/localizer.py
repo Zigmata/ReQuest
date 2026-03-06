@@ -107,10 +107,36 @@ class FluentTranslator(app_commands.Translator):
         return result
 
 
+async def resolve_guild_locale(bot, guild_id):
+    """
+    Resolve the guild's configured locale.
+    Returns the guild locale if set and supported, otherwise DEFAULT_LOCALE.
+    """
+    if not guild_id:
+        return DEFAULT_LOCALE
+
+    try:
+        from ReQuest.utilities.supportFunctions import get_cached_data
+        guild_locale_data = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name=DatabaseCollections.GUILD_LOCALE,
+            query={CommonFields.ID: guild_id}
+        )
+        if guild_locale_data and 'locale' in guild_locale_data:
+            guild_locale = guild_locale_data['locale']
+            if guild_locale in SUPPORTED_LOCALES:
+                return guild_locale
+    except Exception as e:
+        logger.debug(f'Could not resolve guild locale preference: {e}')
+
+    return DEFAULT_LOCALE
+
+
 async def resolve_locale(interaction):
     """
     Resolve the user's preferred locale via the fallback chain:
-    user DB preference > interaction.locale > DEFAULT_LOCALE.
+    user DB preference > guild DB preference > interaction.locale > DEFAULT_LOCALE.
     """
     bot = interaction.client
 
@@ -128,6 +154,11 @@ async def resolve_locale(interaction):
                 return user_locale
     except Exception as e:
         logger.debug(f'Could not resolve user locale preference: {e}')
+
+    if interaction.guild_id:
+        guild_locale = await resolve_guild_locale(bot, interaction.guild_id)
+        if guild_locale != DEFAULT_LOCALE:
+            return guild_locale
 
     discord_locale = str(interaction.locale) if interaction.locale else None
     if discord_locale and discord_locale in SUPPORTED_LOCALES:

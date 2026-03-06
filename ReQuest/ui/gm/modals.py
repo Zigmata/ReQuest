@@ -198,7 +198,7 @@ class CreateQuestModal(LocaleModal):
 
             from ReQuest.ui.gm.views import QuestPostView
             view = QuestPostView(quest)
-            await view.setup()
+            await view.setup(bot=bot)
             msg = await quest_channel.send(embed=view.embed, view=view)
             quest[QuestFields.MESSAGE_ID] = msg.id
 
