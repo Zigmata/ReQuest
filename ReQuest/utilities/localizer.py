@@ -107,6 +107,34 @@ class FluentTranslator(app_commands.Translator):
         return result
 
 
+async def resolve_user_locale(bot, user_id, guild_id=None):
+    """
+    Resolve a user's preferred locale for DMs and other non-interaction contexts.
+    Fallback chain: user DB preference > guild locale > DEFAULT_LOCALE.
+    """
+    try:
+        from ReQuest.utilities.supportFunctions import get_cached_data
+        locale_data = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.mdb,
+            collection_name=DatabaseCollections.USER_LOCALE,
+            query={CommonFields.ID: user_id}
+        )
+        if locale_data and 'locale' in locale_data:
+            user_locale = locale_data['locale']
+            if user_locale in SUPPORTED_LOCALES:
+                return user_locale
+    except Exception as e:
+        logger.debug(f'Could not resolve user locale preference: {e}')
+
+    if guild_id:
+        guild_locale = await resolve_guild_locale(bot, guild_id)
+        if guild_locale != DEFAULT_LOCALE:
+            return guild_locale
+
+    return DEFAULT_LOCALE
+
+
 async def resolve_guild_locale(bot, guild_id):
     """
     Resolve the guild's configured locale.

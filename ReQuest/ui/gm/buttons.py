@@ -8,7 +8,7 @@ from ReQuest.ui.common.modals import ConfirmModal
 from ReQuest.ui.gm import modals
 from ReQuest.ui.common.enums import RewardType
 from ReQuest.utilities.constants import QuestFields, ConfigFields, CommonFields, DatabaseCollections
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_user_locale
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     setup_view,
@@ -154,7 +154,8 @@ class CancelQuestButton(Button):
                         member = await get_guild_member(guild, int(member_id))
                         if member:
                             try:
-                                await member.send(t(DEFAULT_LOCALE, 'gm-dm-quest-cancelled', questTitle=title))
+                                member_locale = await resolve_user_locale(bot, int(member_id), guild_id)
+                                await member.send(t(member_locale, 'gm-dm-quest-cancelled', questTitle=title))
                             except discord.errors.Forbidden as e:
                                 logger.warning(f'Could not DM {member_id} about quest cancellation: {e}')
                             except Exception as e:

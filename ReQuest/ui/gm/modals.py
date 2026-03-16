@@ -8,7 +8,7 @@ from ReQuest.ui.common.modals import LocaleModal
 
 from ReQuest.ui.common.enums import RewardType
 from ReQuest.utilities.constants import QuestFields, ConfigFields, CommonFields, DatabaseCollections
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_locale, resolve_user_locale, resolve_guild_locale
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
@@ -371,7 +371,13 @@ class RewardsModal(LocaleModal):
             xp = 0
             items = None
             if self.xp_enabled and hasattr(self, 'xp_input') and self.xp_input.value:
-                xp = int(self.xp_input.value)
+                try:
+                    xp = int(self.xp_input.value)
+                except ValueError:
+                    raise UserFeedbackError(
+                        t(DEFAULT_LOCALE, 'gm-error-invalid-xp-value'),
+                        message_id='gm-error-invalid-xp-value'
+                    )
             if self.item_input.value:
                 if self.item_input.value.lower() == 'none':
                     items = 'none'
@@ -500,19 +506,9 @@ class ModPlayerModal(LocaleModal):
                         item_changes[item_name.lower()] = (item_changes.get(item_name.lower(), 0) +
                                                            int(quantity))
 
-            locale = DEFAULT_LOCALE
-            mod_summary_embed = discord.Embed(
-                title=t(locale, 'gm-embed-title-mod-report'),
-                description=(
-                    f'Game Master: {interaction.user.mention}\n'
-                    f'Recipient: {self.member.mention} as `{self.character_data[CommonFields.NAME]}`'
-                ),
-                type='rich'
-            )
-
+            # Apply DB changes
             if self.xp_enabled and xp:
                 await update_character_experience(interaction, self.member.id, self.character_id, xp)
-                mod_summary_embed.add_field(name=t(locale, 'gm-embed-field-experience'), value=xp)
 
             for base_currency_name, total_value in currency_changes.items():
                 if total_value == 0:
@@ -520,26 +516,59 @@ class ModPlayerModal(LocaleModal):
                 await update_character_inventory(interaction, self.member.id, self.character_id,
                                                  base_currency_name, total_value)
 
-                display_value = f"{total_value:.2f}" if isinstance(total_value,
-                                                                   float) and total_value % 1 != 0 else str(total_value)
-                mod_summary_embed.add_field(name=escape_markdown(titlecase(base_currency_name)), value=display_value)
-
             for item_name, quantity in item_changes.items():
                 if quantity == 0:
                     continue
                 await update_character_inventory(interaction, self.member.id, self.character_id,
                                                  item_name.lower(), int(quantity))
-                mod_summary_embed.add_field(name=escape_markdown(titlecase(item_name)), value=int(quantity))
 
             transaction_id = shortuuid.uuid()[:12]
-            mod_summary_embed.set_footer(text=t(locale, 'common-embed-footer-transaction-id', transactionId=transaction_id))
+            description = (
+                f'Game Master: {interaction.user.mention}\n'
+                f'Recipient: {self.member.mention} as `{self.character_data[CommonFields.NAME]}`'
+            )
 
+            def build_mod_embed(loc):
+                embed = discord.Embed(
+                    title=t(loc, 'gm-embed-title-mod-report'),
+                    description=description,
+                    type='rich'
+                )
+                if self.xp_enabled and xp:
+                    embed.add_field(name=t(loc, 'gm-embed-field-experience'), value=xp)
+                for cn, tv in currency_changes.items():
+                    if tv == 0:
+                        continue
+                    dv = f"{tv:.2f}" if isinstance(tv, float) and tv % 1 != 0 else str(tv)
+                    embed.add_field(name=escape_markdown(titlecase(cn)), value=dv)
+                for itn, qty in item_changes.items():
+                    if qty == 0:
+                        continue
+                    embed.add_field(name=escape_markdown(titlecase(itn)), value=int(qty))
+                embed.set_footer(text=t(loc, 'common-embed-footer-transaction-id', transactionId=transaction_id))
+                return embed
+
+            # Ephemeral response to GM in their locale
+            caller_locale = await resolve_locale(interaction)
+            guild_locale = await resolve_guild_locale(bot, guild_id)
+
+            caller_embed = build_mod_embed(caller_locale)
+            await interaction.response.send_message(embed=caller_embed, ephemeral=True)
+
+            # Log channel in guild locale
             if log_channel:
-                await log_channel.send(embed=mod_summary_embed)
+                if guild_locale != caller_locale:
+                    await log_channel.send(embed=build_mod_embed(guild_locale))
+                else:
+                    await log_channel.send(embed=caller_embed)
 
-            await interaction.response.send_message(embed=mod_summary_embed, ephemeral=True)
+            # DM to target member in their locale
             try:
-                await self.member.send(embed=mod_summary_embed)
+                member_locale = await resolve_user_locale(bot, self.member.id, guild_id)
+                if member_locale != caller_locale:
+                    await self.member.send(embed=build_mod_embed(member_locale))
+                else:
+                    await self.member.send(embed=caller_embed)
             except discord.errors.Forbidden as e:
                 logger.warning(f'Could not send DM to {self.member} regarding GM modification: {e}')
         except Exception as e:

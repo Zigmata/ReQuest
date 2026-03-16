@@ -60,4 +60,4 @@ shop-embed-title-restocked = Loja Reabastecida!
 shop-embed-footer-restocked = { $count } { $count ->
     [one] item
    *[other] itens
-} reabastecido(s)
+} reabastecidos

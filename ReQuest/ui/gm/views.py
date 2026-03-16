@@ -20,7 +20,7 @@ from ReQuest.ui.common.modals import PageJumpModal
 from ReQuest.ui.common.views import MenuBaseView, LocaleLayoutView
 from ReQuest.ui.gm import buttons, selects
 from ReQuest.utilities.constants import CharacterFields, QuestFields, ConfigFields, CommonFields, DatabaseCollections
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_guild_locale
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_guild_locale, resolve_user_locale
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
@@ -329,11 +329,13 @@ class ManageQuestsView(LocaleLayoutView):
                             # If the quest has a party role configured, assign it to each party member
                             if role:
                                 tasks.append(member.add_roles(role))
-                            tasks.append(member.send(t(DEFAULT_LOCALE, 'gm-dm-quest-ready', questTitle=title)))
+                            member_locale = await resolve_user_locale(bot, int(key), guild_id)
+                            tasks.append(member.send(t(member_locale, 'gm-dm-quest-ready', questTitle=title)))
                         else:
                             logger.warning(f'Could not find member {key} in guild {guild_id} to notify about quest '
                                            f'ready state.')
-                await interaction.user.send('Quest roster locked and party notified!')
+                gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                await interaction.user.send(t(gm_locale, 'gm-dm-roster-locked'))
             # Unlocks a quest if members are not ready
             else:
                 # Remove the role from the players
@@ -357,7 +359,8 @@ class ManageQuestsView(LocaleLayoutView):
                 )
                 quest[QuestFields.LOCK_STATE] = False
 
-                await interaction.user.send('Quest roster has been unlocked.')
+                gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                await interaction.user.send(t(gm_locale, 'gm-dm-roster-unlocked'))
 
             if tasks:
                 results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -478,9 +481,10 @@ class ManageQuestsView(LocaleLayoutView):
 
                     # Send reward summary to player
                     reward_strings = self.build_reward_summary(total_xp, combined_items, xp_enabled)
-                    dm_embed = discord.Embed(title=t(DEFAULT_LOCALE, 'gm-embed-title-quest-complete', questTitle=title), type='rich')
+                    member_locale = await resolve_user_locale(bot, int(player_id), guild_id)
+                    dm_embed = discord.Embed(title=t(member_locale, 'gm-embed-title-quest-complete', questTitle=title), type='rich')
                     if reward_strings:
-                        dm_embed.add_field(name=t(DEFAULT_LOCALE, 'gm-embed-field-rewards'), value='\n'.join(reward_strings))
+                        dm_embed.add_field(name=t(member_locale, 'gm-embed-field-rewards'), value='\n'.join(reward_strings))
                     try:
                         await member.send(embed=dm_embed)
                     except discord.errors.Forbidden as e:
@@ -560,6 +564,7 @@ class ManageQuestsView(LocaleLayoutView):
             if gm_rewards_query:
                 experience = gm_rewards_query.get(CharacterFields.EXPERIENCE)
                 items = gm_rewards_query.get(CommonFields.ITEMS)
+                gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
 
                 character_query = await get_cached_data(
                     bot=bot,
@@ -569,18 +574,14 @@ class ManageQuestsView(LocaleLayoutView):
                 )
 
                 if not character_query:
-                    character_string = ('Your server admin has configured rewards for Game Masters when they complete '
-                                        'quests. However, since you have no registered characters, your rewards could '
-                                        'not be automatically issued at this time.')
+                    character_string = t(gm_locale, 'gm-dm-rewards-no-characters')
                 else:
                     if str(guild_id) not in character_query.get(CharacterFields.ACTIVE_CHARACTERS, {}):
-                        character_string = ('Your server admin has configured rewards for Game Masters when they '
-                                            'complete quests. However, since you have no active character on this '
-                                            'server, your rewards could not be automatically issued at this time.')
+                        character_string = t(gm_locale, 'gm-dm-rewards-no-active-character')
                     else:
                         active_character_id = character_query[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
-                        character_string = (f'The following has been awarded to your active character, '
-                                            f'{character_query[CharacterFields.CHARACTERS][active_character_id][CharacterFields.NAME]}')
+                        character_name = character_query[CharacterFields.CHARACTERS][active_character_id][CharacterFields.NAME]
+                        character_string = t(gm_locale, 'gm-dm-rewards-issued', characterName=character_name)
                         if experience and xp_enabled:
                             await update_character_experience(interaction, interaction.user.id, active_character_id,
                                                               experience)
@@ -590,18 +591,18 @@ class ManageQuestsView(LocaleLayoutView):
                                                                  item_name, quantity)
 
                 gm_rewards_embed = discord.Embed(
-                    title=t(DEFAULT_LOCALE, 'gm-embed-title-gm-rewards'),
+                    title=t(gm_locale, 'gm-embed-title-gm-rewards'),
                     description=character_string,
                     color=discord.Color.gold(),
                     type='rich'
                 )
                 if experience and xp_enabled:
-                    gm_rewards_embed.add_field(name=t(DEFAULT_LOCALE, 'gm-embed-field-experience'), value=experience)
+                    gm_rewards_embed.add_field(name=t(gm_locale, 'gm-embed-field-experience'), value=experience)
                 if items:
                     item_strings = []
                     for item_name, quantity in items.items():
                         item_strings.append(f'{escape_markdown(titlecase(item_name))}: {quantity}')
-                    gm_rewards_embed.add_field(name=t(DEFAULT_LOCALE, 'gm-embed-field-items'), value='\n'.join(item_strings))
+                    gm_rewards_embed.add_field(name=t(gm_locale, 'gm-embed-field-items'), value='\n'.join(item_strings))
 
                 try:
                     await interaction.user.send(embed=gm_rewards_embed)
@@ -921,7 +922,8 @@ class RemovePlayerView(LocaleLayoutView):
             if not player_found:
                 for player in party:
                     if removed_member_id in player:
-                        removal_message = t(DEFAULT_LOCALE, 'gm-dm-player-removed', questTitle=quest[QuestFields.TITLE])
+                        removed_locale = await resolve_user_locale(bot, int(removed_member_id), guild_id)
+                        removal_message = t(removed_locale, 'gm-dm-player-removed', questTitle=quest[QuestFields.TITLE])
                         party.remove(player)
 
                         # If there is a wait list, promote the first entry into the party
@@ -933,7 +935,8 @@ class RemovePlayerView(LocaleLayoutView):
                                 new_member = await get_guild_member(guild, int(key))
                                 if new_member:
                                     try:
-                                        await new_member.send(t(DEFAULT_LOCALE, 'gm-dm-party-promotion', questTitle=quest[QuestFields.TITLE]))
+                                        promoted_locale = await resolve_user_locale(bot, int(key), guild_id)
+                                        await new_member.send(t(promoted_locale, 'gm-dm-party-promotion', questTitle=quest[QuestFields.TITLE]))
 
                                         # If a role is set, assign it to the player
                                         if role and lock_state:
@@ -963,7 +966,8 @@ class RemovePlayerView(LocaleLayoutView):
             # Give the GM some feedback that the changes applied
             gm_member = await get_guild_member(guild, interaction.user.id)
             if gm_member:
-                await gm_member.send(t(DEFAULT_LOCALE, 'gm-msg-player-removed'))
+                gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                await gm_member.send(t(gm_locale, 'gm-msg-player-removed'))
             else:
                 logger.warning(f'Could not find GM member {interaction.user.id} in guild {guild_id} to notify about '
                                f'player removal from quest.')
@@ -1173,7 +1177,8 @@ class QuestPostView(View):
                     # Notify the member they have been moved into the main party
                     if new_member:
                         try:
-                            await new_member.send(t(DEFAULT_LOCALE, 'gm-dm-party-promotion', questTitle=quest[QuestFields.TITLE]))
+                            promoted_locale = await resolve_user_locale(bot, int(key), guild_id)
+                            await new_member.send(t(promoted_locale, 'gm-dm-party-promotion', questTitle=quest[QuestFields.TITLE]))
                         except discord.errors.Forbidden as e:
                             logger.warning(f'Could not DM {new_member.id} about party promotion: {e}')
                         except Exception as e:

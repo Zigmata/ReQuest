@@ -9,8 +9,8 @@ config-btn-clear = Limpar
 config-btn-remove-gm-roles = Remover Cargos de MJ
 config-btn-forbidden-roles = Cargos Proibidos
 
-# Missões
-config-btn-toggle-quest-summary = Alternar Resumo de Missão
+# Quests
+config-btn-toggle-quest-summary = Alternar Resumo de Quest
 config-btn-toggle-player-experience = Alternar Experiência do Jogador
 config-btn-toggle-display = Alternar Exibição
 config-btn-purge-player-board = Limpar Quadro de Jogadores
@@ -70,7 +70,7 @@ config-btn-use-existing-thread = Usar Tópico Existente
 config-btn-quit = Sair
 config-btn-configure-channels = Configurar Canais
 config-btn-configure-roles = Configurar Cargos
-config-btn-configure-quests = Configurar Missões
+config-btn-configure-quests = Configurar Quests
 config-btn-configure-players = Configurar Jogadores
 config-btn-configure-currency = Configurar Moeda
 config-btn-configure-rp-rewards = Configurar Recomp. RP
@@ -315,7 +315,7 @@ config-error-increment-positive = A quantidade incremental deve ser um número i
 config-select-placeholder-channel = Procure seu Canal de { $configName }
 
 # QuestAnnounceRoleSelect
-config-select-placeholder-announce-role = Escolha seu Cargo de Anúncio de Missão
+config-select-placeholder-announce-role = Escolha seu Cargo de Anúncio de Quest
 
 # AddGMRoleSelect
 config-select-placeholder-gm-roles = Escolha seu(s) Cargo(s) de MJ
@@ -390,8 +390,8 @@ config-menu-currency = Moeda
 config-menu-desc-currency = Configurações globais de moeda.
 config-menu-players = Jogadores
 config-menu-desc-players = Configurações globais de jogadores, como rastreamento de pontos de experiência.
-config-menu-quests = Missões
-config-menu-desc-quests = Configurações globais de missões, como listas de espera.
+config-menu-quests = Quests
+config-menu-desc-quests = Configurações globais de quests, como listas de espera.
 config-menu-rp-rewards = Recompensas de RP
 config-menu-desc-rp-rewards = Configurar recompensas de roleplay.
 config-menu-roles = Cargos
@@ -496,9 +496,9 @@ config-wizard-bot-cannot-send = - ⚠️ { $botMention } não consegue enviar me
 config-wizard-everyone-can-send = - ⚠️ @everyone pode enviar mensagens neste canal.
 
 # Assistente - Nomes de canais
-config-wizard-channel-quest-board = Quadro de Missões
+config-wizard-channel-quest-board = Quadro de Quests
 config-wizard-channel-player-board = Quadro de Jogadores
-config-wizard-channel-quest-archive = Arquivo de Missões
+config-wizard-channel-quest-archive = Arquivo de Quests
 config-wizard-channel-gm-transaction-log = Log de Transações do MJ
 config-wizard-channel-player-transaction-log = Log de Transações do Jogador
 config-wizard-channel-shop-log = Log da Loja
@@ -507,10 +507,10 @@ config-wizard-channel-approval-queue = Fila de Aprovação de Personagens
 # Assistente - Painel
 config-wizard-dashboard-header = __{"**"}Painel de Configurações{"**"}__
 config-wizard-dashboard-desc = Esta seção fornece uma visão geral das configurações não essenciais para referência rápida.
-config-wizard-quest-settings = {"**"}Configurações de Missão{"**"}
+config-wizard-quest-settings = {"**"}Configurações de Quest{"**"}
 config-wizard-quest-wait-list = - Tamanho da Lista de Espera: { $size }
-config-wizard-quest-summary = - Resumo de Missão: { $status }
-config-wizard-gm-rewards-per-quest = {"**"}Recompensas do MJ (Por Missão){"**"}
+config-wizard-quest-summary = - Resumo de Quest: { $status }
+config-wizard-gm-rewards-per-quest = {"**"}Recompensas do MJ (Por Quest){"**"}
 config-wizard-player-settings = {"**"}Configurações do Jogador{"**"}
 config-wizard-player-experience = - Experiência do Jogador: { $status }
 config-wizard-currency-settings = {"**"}Configurações de Moeda{"**"}
@@ -539,7 +539,7 @@ config-wizard-unnamed-shop = Loja Sem Nome
 ## View de Cargos
 config-title-roles = {"**"}Configuração do Servidor - Cargos{"**"}
 config-label-announcement-role = {"**"}Cargo de Anúncio:{"**"} { $status }
-config-desc-announcement-role = Este cargo é mencionado quando uma missão é publicada.
+config-desc-announcement-role = Este cargo é mencionado quando uma quest é publicada.
 config-label-announcement-role-default = {"**"}Cargo de Anúncio:{"**"} Não Configurado
 config-label-gm-roles = {"**"}Cargo(s) de MJ:{"**"} { $roles }
 config-desc-gm-roles = Esses cargos concederão acesso aos comandos e recursos de Mestre de Jogo.
@@ -557,17 +557,17 @@ config-msg-no-gm-roles = Nenhum cargo de MJ configurado.
 ## View de Canais
 config-title-channels = {"**"}Configuração do Servidor - Canais{"**"}
 
-config-label-quest-board = {"**"}Quadro de Missões:{"**"} { $channel }
-config-desc-quest-board = O canal onde novas missões/missões ativas serão publicadas.
-config-label-quest-board-default = {"**"}Quadro de Missões:{"**"} Não Configurado
+config-label-quest-board = {"**"}Quadro de Quests:{"**"} { $channel }
+config-desc-quest-board = O canal onde novas quests/quests ativas serão publicadas.
+config-label-quest-board-default = {"**"}Quadro de Quests:{"**"} Não Configurado
 
 config-label-player-board = {"**"}Quadro de Jogadores:{"**"} { $channel }
 config-desc-player-board = Um quadro opcional de anúncios/mensagens para uso pelos jogadores.
 config-label-player-board-default = {"**"}Quadro de Jogadores:{"**"} Não Configurado
 
-config-label-quest-archive = {"**"}Arquivo de Missões:{"**"} { $channel }
-config-desc-quest-archive = Um canal opcional onde missões completadas serão movidas, com informações de resumo.
-config-label-quest-archive-default = {"**"}Arquivo de Missões:{"**"} Não Configurado
+config-label-quest-archive = {"**"}Arquivo de Quests:{"**"} { $channel }
+config-desc-quest-archive = Um canal opcional onde quests completadas serão movidas, com informações de resumo.
+config-label-quest-archive-default = {"**"}Arquivo de Quests:{"**"} Não Configurado
 
 config-label-gm-transaction-log = {"**"}Log de Transações do MJ:{"**"} { $channel }
 config-desc-gm-transaction-log = Um canal opcional onde transações do MJ (ex.: comandos Modificar Jogador) são registradas.
@@ -581,19 +581,19 @@ config-label-shop-log = {"**"}Log da Loja:{"**"} { $channel }
 config-desc-shop-log = Um canal opcional onde transações da loja são registradas.
 config-label-shop-log-default = {"**"}Log da Loja:{"**"} Não Configurado
 
-## View de Missões
-config-title-quests = {"**"}Configuração do Servidor - Missões{"**"}
+## View de Quests
+config-title-quests = {"**"}Configuração do Servidor - Quests{"**"}
 
 config-label-wait-list = {"**"}Tamanho da Lista de Espera:{"**"} { $size }
-config-desc-wait-list = Uma lista de espera permite que o número especificado de jogadores entre na fila para uma missão que está cheia, caso um jogador desista.
+config-desc-wait-list = Uma lista de espera permite que o número especificado de jogadores entre na fila para uma quest que está cheia, caso um jogador desista.
 config-label-wait-list-disabled = {"**"}Tamanho da Lista de Espera:{"**"} Desativado
 
-config-label-quest-summary = {"**"}Resumo de Missão:{"**"} { $status }
-config-desc-quest-summary = Esta opção permite que MJs forneçam um breve resumo ao encerrar missões.
-config-label-quest-summary-disabled = {"**"}Resumo de Missão:{"**"} Desativado
+config-label-quest-summary = {"**"}Resumo de Quest:{"**"} { $status }
+config-desc-quest-summary = Esta opção permite que MJs forneçam um breve resumo ao encerrar quests.
+config-label-quest-summary-disabled = {"**"}Resumo de Quest:{"**"} Desativado
 
-config-label-gm-rewards = {"**"}Recompensas do MJ{"**"}
-config-desc-gm-rewards = Configurar recompensas para MJs receberem ao completar missões.
+config-label-gm-rewards = Recompensas do MJ
+config-desc-gm-rewards = Configurar recompensas para MJs receberem ao completar quests.
 
 ## View de Recompensas do MJ
 config-title-gm-rewards = {"**"}Configuração do Servidor - Recompensas do MJ{"**"}
@@ -601,7 +601,7 @@ config-desc-gm-rewards-detail =
     {"**"}Adicionar/Modificar Recompensas{"**"}
     Abre um modal de entrada para adicionar, modificar ou remover recompensas do MJ.
 
-    > As recompensas configuradas são por missão. Toda vez que um Mestre de Jogo completar uma missão,
+    > As recompensas configuradas são por quest. Toda vez que um Mestre de Jogo completar uma quest,
     receberá as recompensas configuradas abaixo no seu personagem ativo.
 config-msg-no-rewards = Nenhuma recompensa configurada.
 config-label-gm-experience = {"**"}Experiência:{"**"} { $xp }
@@ -788,6 +788,16 @@ config-label-rp-currency = {"**"}Moeda:{"**"}
 ## View de Idioma
 config-title-language = {"**"}Configuração do Servidor - Idioma{"**"}
 config-label-server-language = {"**"}Idioma do Servidor:{"**"} { $language }
+config-server-language-help =
+    Esta configuração permite definir o idioma padrão para as respostas e mensagens {"**"}públicas{"**"} do ReQuest neste servidor. As respostas públicas incluem:
+    - Publicações no Quadro de Quests e de Jogadores
+    - Mensagens nos canais de Resumo de Quest e de Log
+    - Reabastecimento da loja
+    - Consumo de itens pelos jogadores
+
+    Esta configuração afeta apenas os textos estáticos gerados pelo bot e não traduz conteúdo dinâmico, como nomes de itens inseridos pelos usuários ou descrições de quests.
+
+    As respostas e menus pessoais não são afetados por esta configuração.
 config-label-server-language-default = {"**"}Idioma do Servidor:{"**"} Padrão (sem substituição)
 config-select-placeholder-server-language = Selecione o idioma do servidor
 config-select-option-default = Padrão (sem substituição)

@@ -45,7 +45,7 @@ common-label-inventory-empty = Inventário vazio.
 # Campos de embed compartilhados
 common-embed-field-party = __Grupo__
 common-embed-field-wait-list = __Lista de Espera__
-common-embed-footer-quest-id = ID da Missão: { $questId }
+common-embed-footer-quest-id = ID da Quest: { $questId }
 common-embed-footer-transaction-id = ID da Transação: { $transactionId }
 common-embed-label-gm = {"**"}Mestre:{"**"}
 common-embed-label-party-restrictions = {"**"}Restrições do Grupo:{"**"}

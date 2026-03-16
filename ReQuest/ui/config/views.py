@@ -1340,7 +1340,7 @@ class ConfigQuestsView(LocaleLayoutView):
 
         gm_rewards_section = Section(accessory=MenuViewButton(GMRewardsView, t(DEFAULT_LOCALE, 'config-label-gm-rewards')))
         gm_rewards_section.add_item(TextDisplay(
-            t(DEFAULT_LOCALE, 'config-label-gm-rewards') + '\n' +
+            f"**{t(DEFAULT_LOCALE, 'config-label-gm-rewards')}**\n" +
             t(DEFAULT_LOCALE, 'config-desc-gm-rewards')
         ))
         container.add_item(gm_rewards_section)
@@ -3209,6 +3209,7 @@ class ConfigLanguageView(LocaleLayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         self.language_info = TextDisplay(t(DEFAULT_LOCALE, 'config-label-server-language-default'))
+        self.language_help = TextDisplay(t(DEFAULT_LOCALE, 'config-server-language-help'))
         self.language_select = selects.ConfigLanguageSelect(self)
 
     def build_view(self):
@@ -3217,8 +3218,10 @@ class ConfigLanguageView(LocaleLayoutView):
 
         header_section = Section(accessory=BackButton(ConfigBaseView))
         header_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-title-language')))
-
         container.add_item(header_section)
+        container.add_item(Separator())
+
+        container.add_item(self.language_help)
         container.add_item(Separator())
         container.add_item(self.language_info)
 

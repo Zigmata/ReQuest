@@ -67,6 +67,7 @@ gm-error-quest-full = Error joining quest {"**"}{ $questTitle }{"**"}: The quest
 gm-error-not-signed-up = You are not signed up for this quest.
 gm-error-quest-channel-not-set = Quest channel has not been set!
 gm-error-empty-roster = You cannot complete a quest with an empty roster. Try cancelling instead.
+gm-error-invalid-xp-value = XP value must be a positive integer!
 
 # GM confirm modals
 gm-modal-title-cancel-quest = Cancel Quest
@@ -84,6 +85,17 @@ gm-dm-quest-locked = Quest {"**"}{ $questTitle }{"**"} is now locked by the GM.
 gm-dm-player-removed = You were removed from quest {"**"}{ $questTitle }{"**"}.
 gm-dm-player-removed-waitlist = You were removed from the wait list for {"**"}{ $questTitle }{"**"}.
 gm-dm-party-promotion = You have been added to the party for {"**"}{ $questTitle }{"**"}, due to a player dropping!
+gm-dm-roster-locked = Quest roster locked and party notified!
+gm-dm-roster-unlocked = Quest roster has been unlocked.
+gm-dm-rewards-no-characters =
+    Your server admin has configured rewards for Game Masters when they complete
+    quests. However, since you have no registered characters, your rewards could
+    not be automatically issued at this time.
+gm-dm-rewards-no-active-character =
+    Your server admin has configured rewards for Game Masters when they complete
+    quests. However, since you have no active character on this server, your rewards
+    could not be automatically issued at this time.
+gm-dm-rewards-issued = The following has been awarded to your active character, { $characterName }
 
 # GM select menus
 gm-select-placeholder-party-member = Select a party member

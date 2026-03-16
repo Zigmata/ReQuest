@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import discord
 from discord.ext import commands, tasks
@@ -110,6 +110,10 @@ class Tasks(Cog):
         """
         Determine if restocking should occur based on schedule.
 
+        Uses a "has the target time passed since the last restock?" approach
+        rather than exact minute matching, so the check is resilient to loop
+        drift and doesn't require the tick to land on the exact target minute.
+
         :param restock_config: The shop's restock configuration
         :param last_restock: The last restock datetime or None
         :param now: The current datetime (UTC)
@@ -122,35 +126,52 @@ class Tasks(Cog):
         target_day = restock_config.get(RestockFields.DAY_OF_WEEK, 0)  # 0 = Monday
 
         if schedule == ScheduleType.HOURLY.value:
-            # Check time with a tolerance of 1 minute
+            # Check if we're within a small window (2 minutes) of the target minute.
+            # This prevents a catch-up restock from firing if the bot restarts
+            # well past the target minute (e.g. target :10, restart at :45).
             minute_diff = (now.minute - target_minute) % 60
-            if minute_diff in (0, 1):
-                if last_restock is None:
-                    return True
+            if minute_diff > 2:
+                return False
 
-                # Checks with a 1-minute buffer
-                time_diff = now - last_restock
-                if time_diff.total_seconds() >= 3600 - 60:
-                    return True
+            # The target time this hour
+            target_time = now.replace(minute=target_minute, second=0, microsecond=0)
+
+            if last_restock is None:
+                return True
+
+            # Only restock if the last restock was before this hour's target
+            return last_restock < target_time
 
         elif schedule == ScheduleType.DAILY.value:
-            # Check if we're at target hour:minute
-            if now.hour == target_hour and now.minute == target_minute:
-                if last_restock is None:
-                    return True
-                # Check if it's a different day
-                if now.date() > last_restock.date():
-                    return True
+            # Build today's target time
+            target_time = now.replace(hour=target_hour, minute=target_minute, second=0, microsecond=0)
+
+            # Haven't reached target time yet today
+            if now < target_time:
+                return False
+
+            if last_restock is None:
+                return True
+
+            return last_restock < target_time
 
         elif schedule == ScheduleType.WEEKLY.value:
-            # Check if correct day, hour, minute
-            if now.weekday() == target_day and now.hour == target_hour and now.minute == target_minute:
-                if last_restock is None:
-                    return True
-                # Check if at least 6 days have passed (to avoid issues at day boundaries)
-                time_diff = now - last_restock
-                if time_diff.days >= 6:
-                    return True
+            # Calculate how many days ago the target weekday was (0 = this week's occurrence)
+            days_since_target = (now.weekday() - target_day) % 7
+            target_date = now.date() - timedelta(days=days_since_target)
+            target_time = datetime(
+                target_date.year, target_date.month, target_date.day,
+                target_hour, target_minute, 0, 0, timezone.utc
+            )
+
+            # Haven't reached target time yet this week
+            if now < target_time:
+                return False
+
+            if last_restock is None:
+                return True
+
+            return last_restock < target_time
 
         return False
 

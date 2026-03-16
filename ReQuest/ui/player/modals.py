@@ -9,7 +9,7 @@ from ReQuest.ui.common.modals import LocaleModal
 
 from ReQuest.ui.common.enums import InventoryType
 from ReQuest.utilities.constants import CharacterFields, ConfigFields, CommonFields, DatabaseCollections
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_user_locale, resolve_guild_locale
 from ReQuest.utilities.supportFunctions import (
     find_currency_or_denomination,
     log_exception,
@@ -170,11 +170,103 @@ class TradeModal(LocaleModal):
 
             await interaction.response.send_message(embed=trade_embed, ephemeral=True)
             try:
-                await self.target.send(embed=trade_embed)
+                target_locale = await resolve_user_locale(bot, target_id, guild_id)
+                if target_locale != locale:
+                    dm_embed = discord.Embed(
+                        title=t(target_locale, 'player-embed-title-trade'),
+                        description=(
+                            t(target_locale, 'player-embed-desc-trade-sender',
+                              senderMention=interaction.user.mention,
+                              senderCharacter=member_active_character[CharacterFields.NAME]) + '\n' +
+                            t(target_locale, 'player-embed-desc-trade-recipient',
+                              recipientMention=self.target.mention,
+                              recipientCharacter=target_active_character[CharacterFields.NAME]) + '\n'
+                        ),
+                        type='rich'
+                    )
+                    if is_currency:
+                        sender_balance_str_dm = '\n'.join(format_currency_display(sender_currency, currency_query)) or "None"
+                        receiver_currency_str_dm = '\n'.join(format_currency_display(receiver_currency, currency_query)) or "None"
+                        dm_embed.add_field(
+                            name=t(target_locale, 'player-embed-field-currency'),
+                            value=escape_markdown(titlecase(item_name))
+                        )
+                        dm_embed.add_field(
+                            name=t(target_locale, 'player-embed-field-amount'),
+                            value=quantity
+                        )
+                        dm_embed.add_field(
+                            name=t(target_locale, 'player-embed-field-balance',
+                                   characterName=member_active_character[CharacterFields.NAME]),
+                            value=sender_balance_str_dm, inline=False
+                        )
+                        dm_embed.add_field(
+                            name=t(target_locale, 'player-embed-field-balance',
+                                   characterName=target_active_character[CharacterFields.NAME]),
+                            value=receiver_currency_str_dm, inline=False
+                        )
+                    else:
+                        dm_embed.add_field(
+                            name=t(target_locale, 'player-embed-field-item'),
+                            value=escape_markdown(titlecase(item_name))
+                        )
+                        dm_embed.add_field(
+                            name=t(target_locale, 'player-embed-field-quantity'),
+                            value=quantity
+                        )
+                    dm_embed.set_footer(text=t(target_locale, 'player-embed-footer-transaction-id', transactionId=transaction_id))
+                    await self.target.send(embed=dm_embed)
+                else:
+                    await self.target.send(embed=trade_embed)
             except discord.errors.Forbidden as e:
                 logger.warning(f'Could not send trade DM to {self.target}. They might have DMs disabled. {e}')
             if log_channel:
-                await log_channel.send(embed=trade_embed)
+                guild_locale = await resolve_guild_locale(bot, guild_id)
+                if guild_locale != locale:
+                    log_embed = discord.Embed(
+                        title=t(guild_locale, 'player-embed-title-trade'),
+                        description=(
+                            t(guild_locale, 'player-embed-desc-trade-sender',
+                              senderMention=interaction.user.mention,
+                              senderCharacter=member_active_character[CharacterFields.NAME]) + '\n' +
+                            t(guild_locale, 'player-embed-desc-trade-recipient',
+                              recipientMention=self.target.mention,
+                              recipientCharacter=target_active_character[CharacterFields.NAME]) + '\n'
+                        ),
+                        type='rich'
+                    )
+                    if is_currency:
+                        log_embed.add_field(
+                            name=t(guild_locale, 'player-embed-field-currency'),
+                            value=escape_markdown(titlecase(item_name))
+                        )
+                        log_embed.add_field(
+                            name=t(guild_locale, 'player-embed-field-amount'),
+                            value=quantity
+                        )
+                        log_embed.add_field(
+                            name=t(guild_locale, 'player-embed-field-balance',
+                                   characterName=member_active_character[CharacterFields.NAME]),
+                            value=sender_balance_str, inline=False
+                        )
+                        log_embed.add_field(
+                            name=t(guild_locale, 'player-embed-field-balance',
+                                   characterName=target_active_character[CharacterFields.NAME]),
+                            value=receiver_currency_str, inline=False
+                        )
+                    else:
+                        log_embed.add_field(
+                            name=t(guild_locale, 'player-embed-field-item'),
+                            value=escape_markdown(titlecase(item_name))
+                        )
+                        log_embed.add_field(
+                            name=t(guild_locale, 'player-embed-field-quantity'),
+                            value=quantity
+                        )
+                    log_embed.set_footer(text=t(guild_locale, 'player-embed-footer-transaction-id', transactionId=transaction_id))
+                    await log_channel.send(embed=log_embed)
+                else:
+                    await log_channel.send(embed=trade_embed)
 
         except Exception as e:
             await log_exception(e, interaction)
@@ -426,7 +518,8 @@ class SpendCurrencyModal(LocaleModal):
                 name=t(locale, 'player-embed-field-balance', characterName=character_name),
                 value=balance_str, inline=False
             )
-            trade_embed.set_footer(text=t(locale, 'player-embed-footer-transaction-id', transactionId=shortuuid.uuid()[:12]))
+            spend_transaction_id = shortuuid.uuid()[:12]
+            trade_embed.set_footer(text=t(locale, 'player-embed-footer-transaction-id', transactionId=spend_transaction_id))
 
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
@@ -442,10 +535,37 @@ class SpendCurrencyModal(LocaleModal):
                 log_channel_id = strip_id(log_channel_query[ConfigFields.PLAYER_TRANSACTION_LOG_CHANNEL])
                 log_channel = interaction.guild.get_channel(log_channel_id)
                 if log_channel:
-                    channel_mention = interaction.channel.mention
-                    trade_embed.add_field(name=t(locale, 'player-embed-field-channel'), value=channel_mention)
-                    trade_embed.add_field(name=t(locale, 'player-embed-field-receipt'), value=receipt.jump_url)
-                    await log_channel.send(embed=trade_embed)
+                    guild_locale = await resolve_guild_locale(bot, guild_id)
+                    if guild_locale != locale:
+                        log_embed = discord.Embed(
+                            title=t(guild_locale, 'player-embed-title-spend'),
+                            description=(
+                                t(guild_locale, 'player-embed-desc-spend-player',
+                                  playerMention=interaction.user.mention,
+                                  characterName=character_name) + '\n' +
+                                t(guild_locale, 'player-embed-desc-spend-transaction',
+                                  characterName=character_name,
+                                  formattedAmount=formatted_amount)
+                            ),
+                            color=discord.Color.gold(),
+                            type='rich'
+                        )
+                        log_embed.set_author(
+                            name=interaction.user.display_name,
+                            icon_url=interaction.user.display_avatar.url if interaction.user.display_avatar else None
+                        )
+                        log_embed.add_field(
+                            name=t(guild_locale, 'player-embed-field-balance', characterName=character_name),
+                            value=balance_str, inline=False
+                        )
+                        log_embed.add_field(name=t(guild_locale, 'player-embed-field-channel'), value=interaction.channel.mention)
+                        log_embed.add_field(name=t(guild_locale, 'player-embed-field-receipt'), value=receipt.jump_url)
+                        log_embed.set_footer(text=t(guild_locale, 'player-embed-footer-transaction-id', transactionId=spend_transaction_id))
+                        await log_channel.send(embed=log_embed)
+                    else:
+                        trade_embed.add_field(name=t(locale, 'player-embed-field-channel'), value=interaction.channel.mention)
+                        trade_embed.add_field(name=t(locale, 'player-embed-field-receipt'), value=receipt.jump_url)
+                        await log_channel.send(embed=trade_embed)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -707,7 +827,8 @@ class ConsumeFromContainerModal(LocaleModal):
                 name=interaction.user.display_name,
                 icon_url=interaction.user.display_avatar.url if interaction.user.display_avatar else None
             )
-            receipt_embed.set_footer(text=t(locale, 'player-embed-footer-transaction-id', transactionId=shortuuid.uuid()[:12]))
+            consume_transaction_id = shortuuid.uuid()[:12]
+            receipt_embed.set_footer(text=t(locale, 'player-embed-footer-transaction-id', transactionId=consume_transaction_id))
 
             receipt_message = await interaction.followup.send(embed=receipt_embed, wait=True)
 
@@ -725,9 +846,34 @@ class ConsumeFromContainerModal(LocaleModal):
                 log_channel_id = strip_id(log_channel_query[ConfigFields.PLAYER_TRANSACTION_LOG_CHANNEL])
                 log_channel = interaction.guild.get_channel(log_channel_id)
                 if log_channel:
-                    receipt_embed.add_field(name=t(locale, 'player-embed-field-channel'), value=interaction.channel.mention)
-                    receipt_embed.add_field(name=t(locale, 'player-embed-field-receipt'), value=receipt_message.jump_url)
-                    await log_channel.send(embed=receipt_embed)
+                    guild_locale = await resolve_guild_locale(bot, guild_id)
+                    if guild_locale != locale:
+                        log_embed = discord.Embed(
+                            title=t(guild_locale, 'player-embed-title-consume'),
+                            description=(
+                                t(guild_locale, 'player-embed-desc-consume',
+                                  playerMention=interaction.user.mention,
+                                  characterName=self.calling_view.character_data[CharacterFields.NAME]) + '\n' +
+                                t(guild_locale, 'player-embed-desc-consume-removed',
+                                  quantity=quantity,
+                                  itemName=escape_markdown(titlecase(self.item_name)),
+                                  containerName=container_name)
+                            ),
+                            color=discord.Color.gold(),
+                            type='rich'
+                        )
+                        log_embed.set_author(
+                            name=interaction.user.display_name,
+                            icon_url=interaction.user.display_avatar.url if interaction.user.display_avatar else None
+                        )
+                        log_embed.add_field(name=t(guild_locale, 'player-embed-field-channel'), value=interaction.channel.mention)
+                        log_embed.add_field(name=t(guild_locale, 'player-embed-field-receipt'), value=receipt_message.jump_url)
+                        log_embed.set_footer(text=t(guild_locale, 'player-embed-footer-transaction-id', transactionId=consume_transaction_id))
+                        await log_channel.send(embed=log_embed)
+                    else:
+                        receipt_embed.add_field(name=t(locale, 'player-embed-field-channel'), value=interaction.channel.mention)
+                        receipt_embed.add_field(name=t(locale, 'player-embed-field-receipt'), value=receipt_message.jump_url)
+                        await log_channel.send(embed=receipt_embed)
         except Exception as e:
             await log_exception(e, interaction)
 

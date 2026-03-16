@@ -21,7 +21,7 @@ from ReQuest.ui.shop import buttons
 from ReQuest.utilities.constants import (
     CharacterFields, ConfigFields, ShopFields, CommonFields, CartFields, DatabaseCollections
 )
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_guild_locale
 from ReQuest.utilities.supportFunctions import (
     check_sufficient_funds,
     apply_currency_change_local,
@@ -543,10 +543,31 @@ class ShopCartView(LocaleLayoutView):
                 inline=False
             )
 
-            receipt_embed.set_footer(text=t(locale, 'common-embed-footer-transaction-id', transactionId=shortuuid.uuid()[:12]))
+            shop_transaction_id = shortuuid.uuid()[:12]
+            receipt_embed.set_footer(text=t(locale, 'common-embed-footer-transaction-id', transactionId=shop_transaction_id))
 
             if log_channel:
-                await log_channel.send(embed=receipt_embed)
+                guild_locale = await resolve_guild_locale(bot, guild_id)
+                if guild_locale != locale:
+                    log_embed = discord.Embed(title=t(guild_locale, 'shop-embed-title-report'), color=discord.Color.gold())
+                    log_embed.description = (
+                        f'Player: {interaction.user.mention} as `{character_data[CharacterFields.NAME]}`\n'
+                        f'Shop: {self.prev_view.shop_data.get(ShopFields.SHOP_NAME, t(guild_locale, "common-label-unknown"))}'
+                    )
+                    log_embed.add_field(
+                        name=t(guild_locale, 'shop-embed-field-purchased'),
+                        value="\n".join(added_items_summary) or t(guild_locale, 'shop-label-no-items'),
+                        inline=False
+                    )
+                    log_embed.add_field(
+                        name=t(guild_locale, 'shop-embed-field-total-paid'),
+                        value="\n".join(total_strs) or '0',
+                        inline=False
+                    )
+                    log_embed.set_footer(text=t(guild_locale, 'common-embed-footer-transaction-id', transactionId=shop_transaction_id))
+                    await log_channel.send(embed=log_embed)
+                else:
+                    await log_channel.send(embed=receipt_embed)
 
             # Clear local cart cache and refresh stock info
             self.prev_view.cart.clear()
