@@ -123,6 +123,34 @@ gm-menu-desc-approvals = Review and approve/deny character submissions.
 
 gm-title-quest-management = Game Master - Quest Management
 gm-desc-create-quest = Create a new quest.
+gm-msg-no-quests = No quests found.
+gm-label-quest-locked = (Locked)
+gm-title-manage-quest = Manage Quest - { $questTitle } `{ $questId }`
+gm-desc-edit-quest = Edit quest details such as title, description, and party size.
+gm-desc-toggle-ready = Toggle ready state (Current: {"**"}{ $status }{"**"})
+    - Locks the quest roster and notifies party members that the quest will begin soon. If a role is configured, it will be assigned to party members when locked.
+    - Unlocks the roster when set to Open.
+gm-label-ready-locked = Locked/Ready
+gm-label-ready-open = Open
+gm-desc-configure-rewards = Configure rewards for the selected quest.
+gm-desc-complete-quest = Complete a quest. Issues rewards, if any, to party members.
+gm-desc-remove-player = Remove a player from the quest roster and notify them.
+gm-desc-cancel-quest = Cancel the quest and delete it from the quest board.
+gm-title-player-management = Game Master - Player Management
+gm-desc-player-management =
+    These commands have migrated to context menus. Right-click (desktop) or long-press (mobile) a player's profile for the following menu options:
+
+    - {"**"}Modify Player{"**"}: Add or remove items and experience from a player.
+    - {"**"}View Player{"**"}: View a player's active character details.
+gm-title-remove-player = Remove Player from Quest - { $questTitle }
+gm-desc-remove-player-notes =
+    __{"**"}Player Removal Notes{"**"}__
+
+    - Choose a player from the dropdown below to remove them from the quest roster.
+    - If any players are on a wait list, the first player on the list will be promoted to the party.
+    - Individual rewards for the removed player will be deleted from the quest.
+    - If you wish to reward the player for prior contributions, use the `Modify Player` context menu to issue them rewards directly.
+gm-label-no-players-in-roster = No players in quest roster
 gm-title-character-sheet = Character Sheet for { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Experience Points:{"**"}__
 gm-label-possessions = __{"**"}Possessions{"**"}__

@@ -123,6 +123,34 @@ gm-menu-desc-approvals = Revisar e aprovar/negar submissões de personagens.
 
 gm-title-quest-management = Mestre de Jogo - Gerenciamento de Quests
 gm-desc-create-quest = Criar uma nova quest.
+gm-msg-no-quests = Nenhuma quest encontrada.
+gm-label-quest-locked = (Bloqueada)
+gm-title-manage-quest = Gerenciar Quest - { $questTitle } `{ $questId }`
+gm-desc-edit-quest = Editar detalhes da quest como título, descrição e tamanho do grupo.
+gm-desc-toggle-ready = Alternar estado de prontidão (Atual: {"**"}{ $status }{"**"})
+    - Bloqueia a lista da quest e notifica os membros do grupo que a quest começará em breve. Se um cargo estiver configurado, será atribuído aos membros do grupo quando bloqueado.
+    - Desbloqueia a lista quando definido como Aberto.
+gm-label-ready-locked = Bloqueada/Pronta
+gm-label-ready-open = Aberta
+gm-desc-configure-rewards = Configurar recompensas para a quest selecionada.
+gm-desc-complete-quest = Completar uma quest. Emite recompensas, se houver, para os membros do grupo.
+gm-desc-remove-player = Remover um jogador da lista da quest e notificá-lo.
+gm-desc-cancel-quest = Cancelar a quest e removê-la do quadro de quests.
+gm-title-player-management = Mestre de Jogo - Gerenciamento de Jogadores
+gm-desc-player-management =
+    Esses comandos migraram para menus de contexto. Clique com o botão direito (desktop) ou pressione e segure (mobile) o perfil de um jogador para as seguintes opções:
+
+    - {"**"}Modificar Jogador{"**"}: Adicionar ou remover itens e experiência de um jogador.
+    - {"**"}Ver Jogador{"**"}: Ver os detalhes do personagem ativo de um jogador.
+gm-title-remove-player = Remover Jogador da Quest - { $questTitle }
+gm-desc-remove-player-notes =
+    __{"**"}Notas de Remoção de Jogador{"**"}__
+
+    - Escolha um jogador no menu abaixo para removê-lo da lista da quest.
+    - Se houver jogadores na lista de espera, o primeiro jogador da lista será promovido ao grupo.
+    - As recompensas individuais do jogador removido serão excluídas da quest.
+    - Se deseja recompensar o jogador por contribuições anteriores, use o menu de contexto `Modificar Jogador` para emitir recompensas diretamente.
+gm-label-no-players-in-roster = Nenhum jogador na lista da quest
 gm-title-character-sheet = Ficha do Personagem de { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Pontos de Experiência:{"**"}__
 gm-label-possessions = __{"**"}Posses{"**"}__

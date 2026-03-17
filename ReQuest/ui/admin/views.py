@@ -178,6 +178,7 @@ class AdminCogView(LocaleLayoutView):
         self.build_view()
 
     def build_view(self):
+        self.clear_items()
         locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 

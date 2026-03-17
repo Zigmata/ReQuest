@@ -130,7 +130,7 @@ class GMQuestMenuView(LocaleLayoutView):
         container.add_item(Separator())
 
         if not self.quests:
-            container.add_item(TextDisplay("No quests found."))
+            container.add_item(TextDisplay(t(locale, 'gm-msg-no-quests')))
         else:
             start = self.current_page * self.items_per_page
             end = start + self.items_per_page
@@ -139,7 +139,7 @@ class GMQuestMenuView(LocaleLayoutView):
             for quest in page_items:
                 title = quest.get(QuestFields.TITLE, 'Untitled')
                 quest_id = quest.get(QuestFields.QUEST_ID, 'Unknown')
-                lock_state = " (Locked)" if quest.get(QuestFields.LOCK_STATE) else ""
+                lock_state = f" {t(locale, 'gm-label-quest-locked')}" if quest.get(QuestFields.LOCK_STATE) else ""
 
                 info_text = f"**{title}**{lock_state}\nID: `{quest_id}`"
 
@@ -225,6 +225,7 @@ class ManageQuestsView(LocaleLayoutView):
 
     def build_view(self):
         self.clear_items()
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
         quest = self.selected_quest
@@ -232,43 +233,38 @@ class ManageQuestsView(LocaleLayoutView):
         quest_id = quest.get(QuestFields.QUEST_ID, 'Unknown')
 
         header_section = Section(accessory=BackButton(GMQuestMenuView))
-        header_section.add_item(TextDisplay(f'**Manage Quest - {title}** `{quest_id}`'))
+        header_section.add_item(TextDisplay(f'**{t(locale, "gm-title-manage-quest", questTitle=title, questId=quest_id)}**'))
         container.add_item(header_section)
         container.add_item(Separator())
 
         edit_section = Section(accessory=buttons.EditQuestButton(self))
-        edit_section.add_item(TextDisplay('Edit quest details such as title, description, and party size.'))
+        edit_section.add_item(TextDisplay(t(locale, 'gm-desc-edit-quest')))
         container.add_item(edit_section)
 
-        ready_status = "Locked/Ready" if quest.get(QuestFields.LOCK_STATE) else "Open"
+        ready_status = t(locale, 'gm-label-ready-locked') if quest.get(QuestFields.LOCK_STATE) else t(locale, 'gm-label-ready-open')
         toggle_section = Section(accessory=buttons.ToggleReadyButton(self))
-        toggle_section.add_item(TextDisplay(
-            f'Toggle ready state (Current: **{ready_status}**)\n'
-            f'- Locks the quest roster and notifies party members that the quest will begin soon. If a role is '
-            f'configured, it will be assigned to party members when locked.\n'
-            f'- Unlocks the roster when set to Open.'
-        ))
+        toggle_section.add_item(TextDisplay(t(locale, 'gm-desc-toggle-ready', status=ready_status)))
         container.add_item(toggle_section)
 
         rewards_section = Section(accessory=buttons.RewardsMenuButton(self))
-        rewards_section.add_item(TextDisplay('Configure rewards for the selected quest.'))
+        rewards_section.add_item(TextDisplay(t(locale, 'gm-desc-configure-rewards')))
         container.add_item(rewards_section)
 
         complete_quest_button = buttons.CompleteQuestButton(self)
         complete_quest_button.disabled = not quest.get(QuestFields.PARTY)
         complete_section = Section(accessory=complete_quest_button)
-        complete_section.add_item(TextDisplay('Complete a quest. Issues rewards, if any, to party members.'))
+        complete_section.add_item(TextDisplay(t(locale, 'gm-desc-complete-quest')))
         container.add_item(complete_section)
 
         remove_player_button = buttons.RemovePlayerButton(self)
         remove_player_button.disabled = not quest.get(QuestFields.PARTY)
         remove_player_section = Section(accessory=remove_player_button)
-        remove_player_section.add_item(TextDisplay('Remove a player from the quest roster and notify them.'))
+        remove_player_section.add_item(TextDisplay(t(locale, 'gm-desc-remove-player')))
         container.add_item(remove_player_section)
         container.add_item(Separator())
 
         cancel_section = Section(accessory=buttons.CancelQuestButton(self))
-        cancel_section.add_item(TextDisplay('Cancel the quest and delete it from the quest board.'))
+        cancel_section.add_item(TextDisplay(t(locale, 'gm-desc-cancel-quest')))
         container.add_item(cancel_section)
 
         self.add_item(container)
@@ -788,19 +784,16 @@ class GMPlayerMenuView(LocaleLayoutView):
         self.build_view()
 
     def build_view(self):
+        self.clear_items()
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
         header_section = Section(accessory=BackButton(GMBaseView))
-        header_section.add_item(TextDisplay('**Game Master - Player Management**'))
+        header_section.add_item(TextDisplay(f'**{t(locale, "gm-title-player-management")}**'))
         container.add_item(header_section)
         container.add_item(Separator())
 
-        container.add_item(TextDisplay(
-            'These commands have migrated to context menus. Right-click (desktop) or long-press (mobile) a player\'s '
-            'profile for the following menu options:\n\n'
-            '- **Modify Player**: Add or remove items and experience from a player.\n'
-            '- **View Player**: View a player\'s active character details.'
-        ))
+        container.add_item(TextDisplay(t(locale, 'gm-desc-player-management')))
 
         self.add_item(container)
 
@@ -816,21 +809,16 @@ class RemovePlayerView(LocaleLayoutView):
         self.build_view()
 
     def build_view(self):
+        self.clear_items()
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
         header_section = Section(accessory=buttons.BackToManageQuestButton(self.quest))
-        header_section.add_item(TextDisplay(f'**Remove Player from Quest - {self.quest[QuestFields.TITLE]}**'))
+        header_section.add_item(TextDisplay(f'**{t(locale, "gm-title-remove-player", questTitle=self.quest[QuestFields.TITLE])}**'))
         container.add_item(header_section)
         container.add_item(Separator())
 
-        container.add_item(TextDisplay(
-            '__**Player Removal Notes**__\n\n'
-            '- Choose a player from the dropdown below to remove them from the quest roster.\n'
-            '- If any players are on a wait list, the first player on the list will be promoted to the party.\n'
-            '- Individual rewards for the removed player will be deleted from the quest.\n'
-            '- If you wish to reward the player for prior contributions, use the `Modify Player` context menu to issue '
-            'them rewards directly.'
-        ))
+        container.add_item(TextDisplay(t(locale, 'gm-desc-remove-player-notes')))
 
         remove_player_select_row = ActionRow(self.remove_player_select)
         container.add_item(remove_player_select_row)
@@ -857,8 +845,10 @@ class RemovePlayerView(LocaleLayoutView):
                             character = player[str(member_id)][str(character_id)]
                             options.append(discord.SelectOption(label=f'{character[CommonFields.NAME]}', value=member_id))
             if not party and not wait_list:
-                options.append(discord.SelectOption(label='No players in quest roster', value='None'))
-                self.remove_player_select.placeholder = 'No players in quest roster'
+                locale = getattr(self, 'locale', DEFAULT_LOCALE)
+                no_players_text = t(locale, 'gm-label-no-players-in-roster')
+                options.append(discord.SelectOption(label=no_players_text, value='None'))
+                self.remove_player_select.placeholder = no_players_text
                 self.remove_player_select.disabled = True
 
             self.remove_player_select.options = options
@@ -1252,6 +1242,7 @@ class GMApprovalsView(LocaleLayoutView):
         self.build_view()
 
     def build_view(self):
+        self.clear_items()
         locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
         header = Section(accessory=BackButton(GMBaseView))
