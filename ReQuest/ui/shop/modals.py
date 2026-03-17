@@ -14,19 +14,21 @@ from ReQuest.utilities.supportFunctions import (
 
 class EditCartItemModal(LocaleModal):
     def __init__(self, cart_view, item_key, current_quantity):
+        locale = getattr(cart_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'shop-modal-title-edit-cart-qty'),
+            title=t(locale, 'shop-modal-title-edit-cart-qty'),
         )
         self.cart_view = cart_view
         self.item_key = item_key
         self.current_quantity = current_quantity
 
         self.quantity_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'shop-modal-label-quantity'),
+            label=t(locale, 'shop-modal-label-quantity'),
             default=str(current_quantity),
             min_length=1,
             max_length=5,
-            placeholder=t(DEFAULT_LOCALE, 'shop-modal-placeholder-quantity'),
+            placeholder=t(locale, 'shop-modal-placeholder-quantity'),
             custom_id='cart_quantity_text_input'
         )
         self.add_item(self.quantity_text_input)

@@ -32,7 +32,7 @@ class ConfirmModal(LocaleModal):
         self.confirm_callback = confirm_callback
         self.prompt = discord.ui.TextInput(
             label=prompt_label,
-            placeholder=t(self._locale, 'common-confirm-placeholder'),
+            placeholder=prompt_placeholder,
             required=True,
             max_length=7
         )
