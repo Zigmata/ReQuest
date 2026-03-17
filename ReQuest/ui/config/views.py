@@ -3228,6 +3228,9 @@ class ConfigLanguageView(LocaleLayoutView):
         language_select_row = ActionRow(self.language_select)
         container.add_item(language_select_row)
 
+        container.add_item(Separator())
+        container.add_item(TextDisplay(t(DEFAULT_LOCALE, 'common-translation-notice')))
+
         self.add_item(container)
 
     async def setup(self, bot, guild):

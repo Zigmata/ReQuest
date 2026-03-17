@@ -50,6 +50,10 @@ common-embed-footer-transaction-id = ID da Transação: { $transactionId }
 common-embed-label-gm = {"**"}Mestre:{"**"}
 common-embed-label-party-restrictions = {"**"}Restrições do Grupo:{"**"}
 
+# Aviso de tradução
+common-translation-notice =
+    Alguns idiomas podem ser gerados automaticamente a partir de suas origens em inglês e podem não ser totalmente precisos. Se você notar uma tradução incorreta, ajude-nos a melhorar a acessibilidade do ReQuest reportando o erro no [Discord Oficial de Suporte do ReQuest](https://discord.gg/Zq37gj4).
+
 # Nomes dos dias
 common-day-monday = Segunda-feira
 common-day-tuesday = Terça-feira
