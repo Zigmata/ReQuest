@@ -88,6 +88,34 @@ SHOP_SCHEMA = {
     "required": ["shopName", "shopStock"]
 }
 
+NEW_CHARACTER_SHOP_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "shopStock": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "description": {"type": "string"},
+                    "quantity": {"type": "integer", "minimum": 1},
+                    "costs": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "patternProperties": {
+                                "^.*$": {"type": "number"}
+                            }
+                        }
+                    }
+                },
+                "required": ["name", "costs"]
+            }
+        }
+    },
+    "required": ["shopStock"]
+}
+
 
 class AddCurrencyTextModal(LocaleModal):
     def __init__(self, calling_view):
@@ -1405,18 +1433,13 @@ class NewCharacterShopJSONModal(LocaleModal):
                     message_id='config-error-invalid-json'
                 )
 
-            if ShopFields.SHOP_STOCK not in shop_data or not isinstance(shop_data[ShopFields.SHOP_STOCK], list):
+            try:
+                validate(instance=shop_data, schema=NEW_CHARACTER_SHOP_SCHEMA)
+            except jsonschema.exceptions.ValidationError as ve:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-json-must-have-shopstock'),
-                    message_id='config-error-json-must-have-shopstock'
+                    t(DEFAULT_LOCALE, 'config-error-json-validation-failed', **{'error': str(ve)}),
+                    message_id='config-error-json-validation-failed'
                 )
-
-            for item in shop_data[ShopFields.SHOP_STOCK]:
-                if CommonFields.NAME not in item or 'price' not in item:
-                    raise UserFeedbackError(
-                        t(DEFAULT_LOCALE, 'config-error-items-must-have-name-price'),
-                        message_id='config-error-items-must-have-name-price'
-                    )
 
             await update_cached_data(
                 bot=bot,

@@ -1151,6 +1151,7 @@ def format_currency_amount(amount, currency_name, currency_config) -> str:
     :return: A formatted amount string (e.g. '50' for integer, '2.50' for double)
     """
     _, _, is_double = get_base_currency_info(currency_config, currency_name)
+    amount = float(amount)
 
     if is_double:
         return f'{amount:.2f}'
