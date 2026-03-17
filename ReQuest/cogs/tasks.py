@@ -160,9 +160,9 @@ class Tasks(Cog):
             return last_restock < target_time
 
         elif schedule == ScheduleType.WEEKLY.value:
-            # Calculate how many days ago the target weekday was (0 = this week's occurrence)
-            days_since_target = (now.weekday() - target_day) % 7
-            target_date = now.date() - timedelta(days=days_since_target)
+            # Calculate this week's target day (Mon=0 anchor)
+            this_monday = now.date() - timedelta(days=now.weekday())
+            target_date = this_monday + timedelta(days=target_day)
             target_time = datetime(
                 target_date.year, target_date.month, target_date.day,
                 target_hour, target_minute, 0, 0, timezone.utc
