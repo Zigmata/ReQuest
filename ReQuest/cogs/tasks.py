@@ -126,15 +126,19 @@ class Tasks(Cog):
         target_day = restock_config.get(RestockFields.DAY_OF_WEEK, 0)  # 0 = Monday
 
         if schedule == ScheduleType.HOURLY.value:
+            # The target time this hour
+            target_time = now.replace(minute=target_minute, second=0, microsecond=0)
+
+            # Haven't reached target minute yet this hour
+            if now < target_time:
+                return False
+
             # Check if we're within a small window (2 minutes) of the target minute.
             # This prevents a catch-up restock from firing if the bot restarts
             # well past the target minute (e.g. target :10, restart at :45).
-            minute_diff = (now.minute - target_minute) % 60
+            minute_diff = now.minute - target_minute
             if minute_diff > 2:
                 return False
-
-            # The target time this hour
-            target_time = now.replace(minute=target_minute, second=0, microsecond=0)
 
             if last_restock is None:
                 return True
