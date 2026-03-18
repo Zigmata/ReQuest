@@ -4,7 +4,8 @@ import discord
 from discord.ui import Select, RoleSelect, ChannelSelect
 
 from ReQuest.ui.common.enums import InventoryType, RoleplayMode, ScheduleType, DayOfWeek
-from ReQuest.ui.info.selects import LOCALE_LABELS, LOCALE_DESCRIPTIONS, LOCALE_EMOJI
+from ReQuest.ui.info.selects import (LOCALE_LABELS, LOCALE_DESCRIPTIONS, LOCALE_EMOJI,
+                                     LOCALES_PER_PAGE, get_config_locale_total_pages)
 from ReQuest.utilities.constants import ConfigFields, CommonFields, RoleplayFields, DatabaseCollections
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, SUPPORTED_LOCALES
 from ReQuest.utilities.supportFunctions import (
@@ -478,18 +479,31 @@ class ConfigLanguageSelect(Select):
         )
         self.calling_view = calling_view
 
-    def populate(self, locale, current_guild_locale=None):
+    def populate(self, locale, current_guild_locale=None, page=0):
         self.options.clear()
-        self.placeholder = t(locale, 'config-select-placeholder-server-language')
+        # Page 0 reserves one slot for the "Default" option
+        per_page_0 = LOCALES_PER_PAGE - 1
+        if page == 0:
+            self.options.append(discord.SelectOption(
+                label=t(locale, 'config-select-option-default'),
+                description=t(locale, 'config-select-desc-default'),
+                value='default',
+                default=(current_guild_locale is None)
+            ))
+            page_locales = SUPPORTED_LOCALES[:per_page_0]
+        else:
+            start = per_page_0 + (page - 1) * LOCALES_PER_PAGE
+            end = start + LOCALES_PER_PAGE
+            page_locales = SUPPORTED_LOCALES[start:end]
 
-        self.options.append(discord.SelectOption(
-            label=t(locale, 'config-select-option-default'),
-            description=t(locale, 'config-select-desc-default'),
-            value='default',
-            default=(current_guild_locale is None)
-        ))
+        total_pages = get_config_locale_total_pages()
+        if total_pages > 1:
+            self.placeholder = t(locale, 'info-language-select-placeholder-paged',
+                                 current=page + 1, total=total_pages)
+        else:
+            self.placeholder = t(locale, 'config-select-placeholder-server-language')
 
-        for supported_locale in SUPPORTED_LOCALES:
+        for supported_locale in page_locales:
             self.options.append(discord.SelectOption(
                 label=t(locale, LOCALE_LABELS[supported_locale]),
                 description=t(locale, LOCALE_DESCRIPTIONS[supported_locale]),

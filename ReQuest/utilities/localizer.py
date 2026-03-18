@@ -12,7 +12,11 @@ from ReQuest.utilities.constants import CommonFields, DatabaseCollections
 logger = logging.getLogger(__name__)
 
 DEFAULT_LOCALE = 'en-US'
-SUPPORTED_LOCALES = ['en-US', 'pt-BR']
+SUPPORTED_LOCALES = [
+    'en-US', 'pt-BR', 'uk', 'es-419', 'es-ES', 'ru', 'ko', 'fr', 'de', 'it',
+    'bg', 'zh-CN', 'zh-TW', 'hr', 'cs', 'da', 'nl', 'fi', 'el', 'hi',
+    'hu', 'id', 'ja', 'lt', 'no', 'pl', 'ro', 'sv-SE', 'th', 'tr', 'vi',
+]
 FTL_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'locales', '{locale}')
 
 _resource_loader = FluentResourceLoader(FTL_DIR)
@@ -75,6 +79,35 @@ _DISCORD_LOCALE_MAP = {
     discord.Locale.american_english: 'en-US',
     discord.Locale.british_english: 'en-US',
     discord.Locale.brazil_portuguese: 'pt-BR',
+    discord.Locale.ukrainian: 'uk',
+    discord.Locale.latin_american_spanish: 'es-419',
+    discord.Locale.spain_spanish: 'es-ES',
+    discord.Locale.russian: 'ru',
+    discord.Locale.korean: 'ko',
+    discord.Locale.french: 'fr',
+    discord.Locale.german: 'de',
+    discord.Locale.italian: 'it',
+    discord.Locale.bulgarian: 'bg',
+    discord.Locale.chinese: 'zh-CN',
+    discord.Locale.taiwan_chinese: 'zh-TW',
+    discord.Locale.croatian: 'hr',
+    discord.Locale.czech: 'cs',
+    discord.Locale.danish: 'da',
+    discord.Locale.dutch: 'nl',
+    discord.Locale.finnish: 'fi',
+    discord.Locale.greek: 'el',
+    discord.Locale.hindi: 'hi',
+    discord.Locale.hungarian: 'hu',
+    discord.Locale.indonesian: 'id',
+    discord.Locale.japanese: 'ja',
+    discord.Locale.lithuanian: 'lt',
+    discord.Locale.norwegian: 'no',
+    discord.Locale.polish: 'pl',
+    discord.Locale.romanian: 'ro',
+    discord.Locale.swedish: 'sv-SE',
+    discord.Locale.thai: 'th',
+    discord.Locale.turkish: 'tr',
+    discord.Locale.vietnamese: 'vi',
 }
 
 

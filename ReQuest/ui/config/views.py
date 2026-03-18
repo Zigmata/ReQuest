@@ -3211,6 +3211,8 @@ class ConfigLanguageView(LocaleLayoutView):
         self.language_info = TextDisplay(t(DEFAULT_LOCALE, 'config-label-server-language-default'))
         self.language_help = TextDisplay(t(DEFAULT_LOCALE, 'config-server-language-help'))
         self.language_select = selects.ConfigLanguageSelect(self)
+        self.language_page = 0
+        self._current_guild_locale = None
 
     def build_view(self):
         self.clear_items()
@@ -3228,6 +3230,39 @@ class ConfigLanguageView(LocaleLayoutView):
         language_select_row = ActionRow(self.language_select)
         container.add_item(language_select_row)
 
+        from ReQuest.ui.info.selects import get_config_locale_total_pages
+        total_pages = get_config_locale_total_pages()
+        if total_pages > 1:
+            nav_row = ActionRow()
+            prev_button = Button(
+                label=t(DEFAULT_LOCALE, 'common-btn-prev'),
+                style=discord.ButtonStyle.secondary,
+                custom_id='config_lang_prev_page',
+                disabled=(self.language_page == 0)
+            )
+            prev_button.callback = self.prev_page
+
+            page_display = Button(
+                label=t(DEFAULT_LOCALE, 'common-page-display',
+                        current=self.language_page + 1, total=total_pages),
+                style=discord.ButtonStyle.secondary,
+                custom_id='config_lang_page_display',
+                disabled=True
+            )
+
+            next_button = Button(
+                label=t(DEFAULT_LOCALE, 'common-btn-next'),
+                style=discord.ButtonStyle.secondary,
+                custom_id='config_lang_next_page',
+                disabled=(self.language_page >= total_pages - 1)
+            )
+            next_button.callback = self.next_page
+
+            nav_row.add_item(prev_button)
+            nav_row.add_item(page_display)
+            nav_row.add_item(next_button)
+            container.add_item(nav_row)
+
         container.add_item(Separator())
         container.add_item(TextDisplay(t(DEFAULT_LOCALE, 'common-translation-notice')))
 
@@ -3241,19 +3276,34 @@ class ConfigLanguageView(LocaleLayoutView):
                 collection_name=DatabaseCollections.GUILD_LOCALE,
                 query={CommonFields.ID: guild.id}
             )
-            current_guild_locale = None
+            self._current_guild_locale = None
             if guild_locale_data and 'locale' in guild_locale_data:
-                current_guild_locale = guild_locale_data['locale']
+                self._current_guild_locale = guild_locale_data['locale']
 
-            if current_guild_locale:
+            if self._current_guild_locale:
                 from ReQuest.ui.info.selects import LOCALE_LABELS
-                language_name = t(DEFAULT_LOCALE, LOCALE_LABELS.get(current_guild_locale, current_guild_locale))
+                language_name = t(DEFAULT_LOCALE, LOCALE_LABELS.get(self._current_guild_locale, self._current_guild_locale))
                 self.language_info.content = t(DEFAULT_LOCALE, 'config-label-server-language',
                                                language=language_name)
             else:
                 self.language_info.content = t(DEFAULT_LOCALE, 'config-label-server-language-default')
 
-            self.language_select.populate(DEFAULT_LOCALE, current_guild_locale)
+            self.language_select.populate(DEFAULT_LOCALE, self._current_guild_locale, page=self.language_page)
             self.build_view()
         except Exception as e:
             await log_exception(e)
+
+    async def prev_page(self, interaction: discord.Interaction):
+        if self.language_page > 0:
+            self.language_page -= 1
+            self.language_select.populate(DEFAULT_LOCALE, self._current_guild_locale, page=self.language_page)
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction: discord.Interaction):
+        from ReQuest.ui.info.selects import get_config_locale_total_pages
+        if self.language_page < get_config_locale_total_pages() - 1:
+            self.language_page += 1
+            self.language_select.populate(DEFAULT_LOCALE, self._current_guild_locale, page=self.language_page)
+            self.build_view()
+            await interaction.response.edit_message(view=self)
