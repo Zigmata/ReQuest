@@ -7,7 +7,7 @@ from ReQuest.ui.common.views import LocaleLayoutView
 from ReQuest.ui.common.buttons import MenuDoneButton
 from ReQuest.ui.info.selects import LanguageSelect
 from ReQuest.utilities.constants import CommonFields, DatabaseCollections
-from ReQuest.utilities.localizer import DEFAULT_LOCALE, t
+from ReQuest.utilities.localizer import DEFAULT_LOCALE, SUPPORTED_LOCALES, t
 from ReQuest.utilities.supportFunctions import get_cached_data, log_exception
 
 logger = logging.getLogger(__name__)
@@ -52,7 +52,9 @@ class LanguageView(LocaleLayoutView):
 
             current_locale = self.locale
             if locale_data and 'locale' in locale_data:
-                current_locale = locale_data['locale']
+                stored_locale = locale_data['locale']
+                if stored_locale in SUPPORTED_LOCALES:
+                    current_locale = stored_locale
 
             self.current_display.content = t(
                 self.locale,

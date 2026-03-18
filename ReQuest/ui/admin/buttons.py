@@ -59,7 +59,8 @@ class AllowlistAddServerButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            new_modal = modals.AllowServerModal(self.calling_view)
+            locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
+            new_modal = modals.AllowServerModal(self.calling_view, locale=locale)
             await interaction.response.send_modal(new_modal)
         except Exception as e:
             await log_exception(e, interaction)
@@ -84,7 +85,7 @@ class AdminLoadCogButton(Button):
                     t(locale, 'admin-msg-extension-loaded', module=module),
                     ephemeral=True)
 
-            modal = modals.AdminCogTextModal('load', modal_callback)
+            modal = modals.AdminCogTextModal('load', modal_callback, locale=locale)
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)
@@ -109,7 +110,7 @@ class AdminReloadCogButton(Button):
                     t(locale, 'admin-msg-extension-reloaded', module=module),
                     ephemeral=True)
 
-            modal = modals.AdminCogTextModal('reload', modal_callback)
+            modal = modals.AdminCogTextModal('reload', modal_callback, locale=locale)
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)
