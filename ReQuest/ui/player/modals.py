@@ -5,10 +5,11 @@ from titlecase import titlecase
 import discord
 import discord.ui
 import shortuuid
-from discord.ui import Modal
+from ReQuest.ui.common.modals import LocaleModal
 
 from ReQuest.ui.common.enums import InventoryType
 from ReQuest.utilities.constants import CharacterFields, ConfigFields, CommonFields, DatabaseCollections
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_user_locale, resolve_guild_locale
 from ReQuest.utilities.supportFunctions import (
     find_currency_or_denomination,
     log_exception,
@@ -34,24 +35,30 @@ from ReQuest.utilities.supportFunctions import (
 logger = logging.getLogger(__name__)
 
 
-class TradeModal(Modal):
-    def __init__(self, target: discord.Member):
+class TradeModal(LocaleModal):
+    def __init__(self, target: discord.Member, locale: str = DEFAULT_LOCALE):
         super().__init__(
-            title=f'Trading with {target.name}',
+            title=t(locale, 'player-modal-title-trade', targetName=target.name),
             timeout=180
         )
         self.target = target
-        self.item_name_text_input = discord.ui.TextInput(label='Name',
-                                                         placeholder='Enter the name of the item you are trading',
-                                                         custom_id='item_name_text_input')
-        self.item_quantity_text_input = discord.ui.TextInput(label='Quantity',
-                                                             placeholder='Enter the amount you are trading',
-                                                             custom_id='item_quantity_text_input')
+        self.locale = locale
+        self.item_name_text_input = discord.ui.TextInput(
+            label=t(locale, 'player-modal-label-trade-name'),
+            placeholder=t(locale, 'player-modal-placeholder-trade-name'),
+            custom_id='item_name_text_input'
+        )
+        self.item_quantity_text_input = discord.ui.TextInput(
+            label=t(locale, 'player-modal-label-trade-quantity'),
+            placeholder=t(locale, 'player-modal-placeholder-trade-quantity'),
+            custom_id='item_quantity_text_input'
+        )
         self.add_item(self.item_name_text_input)
         self.add_item(self.item_quantity_text_input)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = self.locale
             bot = interaction.client
             transaction_id = shortuuid.uuid()[:12]
             member_id = interaction.user.id
@@ -88,10 +95,14 @@ class TradeModal(Modal):
                 query={CommonFields.ID: target_id}
             )
             if not target_query:
-                raise UserFeedbackError('The player you are attempting to trade with has no characters!')
+                raise UserFeedbackError(
+                    t(locale, 'player-error-trade-no-characters'),
+                    message_id='player-error-trade-no-characters'
+                )
             elif str(guild_id) not in target_query[CharacterFields.ACTIVE_CHARACTERS]:
                 raise UserFeedbackError(
-                    'The player you are attempting to trade with does not have an active character on this server!'
+                    t(locale, 'player-error-trade-no-active'),
+                    message_id='player-error-trade-no-active'
                 )
             target_active_character_id = target_query[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
             target_active_character = target_query[CharacterFields.CHARACTERS][target_active_character_id]
@@ -106,10 +117,14 @@ class TradeModal(Modal):
             is_currency, _ = find_currency_or_denomination(currency_query, item_name)
 
             trade_embed = discord.Embed(
-                title=f'Trade Report',
+                title=t(locale, 'player-embed-title-trade'),
                 description=(
-                    f'Sender: {interaction.user.mention} as `{member_active_character[CharacterFields.NAME]}`\n'
-                    f'Recipient: {self.target.mention} as `{target_active_character[CharacterFields.NAME]}`\n'
+                    t(locale, 'player-embed-desc-trade-sender',
+                      senderMention=interaction.user.mention,
+                      senderCharacter=member_active_character[CharacterFields.NAME]) + '\n' +
+                    t(locale, 'player-embed-desc-trade-recipient',
+                      recipientMention=self.target.mention,
+                      recipientCharacter=target_active_character[CharacterFields.NAME]) + '\n'
                 ),
                 type='rich'
             )
@@ -119,48 +134,160 @@ class TradeModal(Modal):
                                                                           member_id, target_id, guild_id)
                 sender_balance_str = '\n'.join(format_currency_display(sender_currency, currency_query)) or "None"
                 receiver_currency_str = '\n'.join(format_currency_display(receiver_currency, currency_query)) or "None"
-                trade_embed.add_field(name='Currency', value=escape_markdown(titlecase(item_name)))
-                trade_embed.add_field(name='Amount', value=quantity)
-                trade_embed.add_field(name=f'{member_active_character[CharacterFields.NAME]}\'s Balance', value=sender_balance_str,
-                                      inline=False)
-                trade_embed.add_field(name=f'{target_active_character[CharacterFields.NAME]}\'s Balance', value=receiver_currency_str,
-                                      inline=False)
+                trade_embed.add_field(
+                    name=t(locale, 'player-embed-field-currency'),
+                    value=escape_markdown(titlecase(item_name))
+                )
+                trade_embed.add_field(
+                    name=t(locale, 'player-embed-field-amount'),
+                    value=quantity
+                )
+                trade_embed.add_field(
+                    name=t(locale, 'player-embed-field-balance',
+                           characterName=member_active_character[CharacterFields.NAME]),
+                    value=sender_balance_str,
+                    inline=False
+                )
+                trade_embed.add_field(
+                    name=t(locale, 'player-embed-field-balance',
+                           characterName=target_active_character[CharacterFields.NAME]),
+                    value=receiver_currency_str,
+                    inline=False
+                )
             else:
                 quantity = int(quantity)
                 await trade_item(interaction.client, item_name, quantity, member_id, target_id, guild_id)
-                trade_embed.add_field(name='Item', value=escape_markdown(titlecase(item_name)))
-                trade_embed.add_field(name='Quantity', value=quantity)
+                trade_embed.add_field(
+                    name=t(locale, 'player-embed-field-item'),
+                    value=escape_markdown(titlecase(item_name))
+                )
+                trade_embed.add_field(
+                    name=t(locale, 'player-embed-field-quantity'),
+                    value=quantity
+                )
 
-            trade_embed.set_footer(text=f'Transaction ID: {transaction_id}')
+            trade_embed.set_footer(text=t(locale, 'player-embed-footer-transaction-id', transactionId=transaction_id))
 
             await interaction.response.send_message(embed=trade_embed, ephemeral=True)
             try:
-                await self.target.send(embed=trade_embed)
+                target_locale = await resolve_user_locale(bot, target_id, guild_id)
+                if target_locale != locale:
+                    dm_embed = discord.Embed(
+                        title=t(target_locale, 'player-embed-title-trade'),
+                        description=(
+                            t(target_locale, 'player-embed-desc-trade-sender',
+                              senderMention=interaction.user.mention,
+                              senderCharacter=member_active_character[CharacterFields.NAME]) + '\n' +
+                            t(target_locale, 'player-embed-desc-trade-recipient',
+                              recipientMention=self.target.mention,
+                              recipientCharacter=target_active_character[CharacterFields.NAME]) + '\n'
+                        ),
+                        type='rich'
+                    )
+                    if is_currency:
+                        sender_balance_str_dm = '\n'.join(format_currency_display(sender_currency, currency_query)) or "None"
+                        receiver_currency_str_dm = '\n'.join(format_currency_display(receiver_currency, currency_query)) or "None"
+                        dm_embed.add_field(
+                            name=t(target_locale, 'player-embed-field-currency'),
+                            value=escape_markdown(titlecase(item_name))
+                        )
+                        dm_embed.add_field(
+                            name=t(target_locale, 'player-embed-field-amount'),
+                            value=quantity
+                        )
+                        dm_embed.add_field(
+                            name=t(target_locale, 'player-embed-field-balance',
+                                   characterName=member_active_character[CharacterFields.NAME]),
+                            value=sender_balance_str_dm, inline=False
+                        )
+                        dm_embed.add_field(
+                            name=t(target_locale, 'player-embed-field-balance',
+                                   characterName=target_active_character[CharacterFields.NAME]),
+                            value=receiver_currency_str_dm, inline=False
+                        )
+                    else:
+                        dm_embed.add_field(
+                            name=t(target_locale, 'player-embed-field-item'),
+                            value=escape_markdown(titlecase(item_name))
+                        )
+                        dm_embed.add_field(
+                            name=t(target_locale, 'player-embed-field-quantity'),
+                            value=quantity
+                        )
+                    dm_embed.set_footer(text=t(target_locale, 'player-embed-footer-transaction-id', transactionId=transaction_id))
+                    await self.target.send(embed=dm_embed)
+                else:
+                    await self.target.send(embed=trade_embed)
             except discord.errors.Forbidden as e:
                 logger.warning(f'Could not send trade DM to {self.target}. They might have DMs disabled. {e}')
             if log_channel:
-                await log_channel.send(embed=trade_embed)
+                guild_locale = await resolve_guild_locale(bot, guild_id)
+                if guild_locale != locale:
+                    log_embed = discord.Embed(
+                        title=t(guild_locale, 'player-embed-title-trade'),
+                        description=(
+                            t(guild_locale, 'player-embed-desc-trade-sender',
+                              senderMention=interaction.user.mention,
+                              senderCharacter=member_active_character[CharacterFields.NAME]) + '\n' +
+                            t(guild_locale, 'player-embed-desc-trade-recipient',
+                              recipientMention=self.target.mention,
+                              recipientCharacter=target_active_character[CharacterFields.NAME]) + '\n'
+                        ),
+                        type='rich'
+                    )
+                    if is_currency:
+                        log_embed.add_field(
+                            name=t(guild_locale, 'player-embed-field-currency'),
+                            value=escape_markdown(titlecase(item_name))
+                        )
+                        log_embed.add_field(
+                            name=t(guild_locale, 'player-embed-field-amount'),
+                            value=quantity
+                        )
+                        log_embed.add_field(
+                            name=t(guild_locale, 'player-embed-field-balance',
+                                   characterName=member_active_character[CharacterFields.NAME]),
+                            value=sender_balance_str, inline=False
+                        )
+                        log_embed.add_field(
+                            name=t(guild_locale, 'player-embed-field-balance',
+                                   characterName=target_active_character[CharacterFields.NAME]),
+                            value=receiver_currency_str, inline=False
+                        )
+                    else:
+                        log_embed.add_field(
+                            name=t(guild_locale, 'player-embed-field-item'),
+                            value=escape_markdown(titlecase(item_name))
+                        )
+                        log_embed.add_field(
+                            name=t(guild_locale, 'player-embed-field-quantity'),
+                            value=quantity
+                        )
+                    log_embed.set_footer(text=t(guild_locale, 'player-embed-footer-transaction-id', transactionId=transaction_id))
+                    await log_channel.send(embed=log_embed)
+                else:
+                    await log_channel.send(embed=trade_embed)
 
         except Exception as e:
             await log_exception(e, interaction)
 
 
-class CharacterRegisterModal(Modal):
+class CharacterRegisterModal(LocaleModal):
     def __init__(self, calling_view):
         super().__init__(
-            title='Register New Character',
+            title=t(DEFAULT_LOCALE, 'player-modal-title-register'),
             timeout=180
         )
         self.name_text_input = discord.ui.TextInput(
-            label='Name',
+            label=t(DEFAULT_LOCALE, 'player-modal-label-char-name'),
             custom_id='character_name_text_input',
-            placeholder='Enter your character\'s name.',
+            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-char-name'),
             max_length=40
         )
         self.note_text_input = discord.ui.TextInput(
-            label='Note',
+            label=t(DEFAULT_LOCALE, 'player-modal-label-char-note'),
             custom_id='character_note_text_input',
-            placeholder='Enter a note to identify your character',
+            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-char-note'),
             max_length=80
         )
         self.add_item(self.name_text_input)
@@ -215,16 +342,16 @@ class CharacterRegisterModal(Modal):
             await log_exception(e, interaction)
 
 
-class OpenInventoryInputModal(Modal):
+class OpenInventoryInputModal(LocaleModal):
     def __init__(self, calling_view):
         super().__init__(
-            title='Starting Inventory Input',
+            title=t(DEFAULT_LOCALE, 'player-modal-title-starting-inventory'),
             timeout=600
         )
         self.calling_view = calling_view
         self.items_input = discord.ui.TextInput(
-            label='Inventory',
-            placeholder='One per line in <name>: <quantity> format, e.g.:\nSword: 1\ngold: 30',
+            label=t(DEFAULT_LOCALE, 'player-modal-label-inventory'),
+            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-inventory-input'),
             style=discord.TextStyle.paragraph,
             required=False
         )
@@ -232,6 +359,7 @@ class OpenInventoryInputModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
             items = {}
             errors = []
 
@@ -242,7 +370,7 @@ class OpenInventoryInputModal(Modal):
                         continue
 
                     if ':' not in line:
-                        errors.append(f'Invalid format: "{line}". Use <name>: <quantity>.')
+                        errors.append(t(locale, 'player-error-invalid-format', line=line))
                         continue
 
                     name, quantity = line.rsplit(':', 1)
@@ -250,23 +378,25 @@ class OpenInventoryInputModal(Modal):
                     quantity = quantity.strip()
 
                     if not name:
-                        errors.append(f'Item name cannot be empty in line: "{line}".')
+                        errors.append(t(locale, 'player-error-empty-name', line=line))
                         continue
 
                     if not quantity.isdigit() or int(quantity) < 1:
-                        errors.append(f'Invalid quantity for "{name}": "{quantity}". Must be a positive integer.')
+                        errors.append(t(locale, 'player-error-invalid-quantity', name=name, quantity=quantity))
                         continue
 
                     items[name] = int(quantity)
 
             if errors:
-                error_message = 'Errors in inventory input:\n- ' + '\n- '.join(errors)
+                error_message = t(locale, 'player-error-input-errors-header') + '\n- ' + '\n- '.join(errors)
                 await interaction.response.send_message(error_message, ephemeral=True)
                 return
 
             if not items:
-                await interaction.response.send_message('No valid items provided. Initializing with empty inventory.',
-                                                        ephemeral=True)
+                await interaction.response.send_message(
+                    t(locale, 'player-msg-no-valid-items'),
+                    ephemeral=True
+                )
                 return
 
             await self.calling_view.submit_open_inventory(interaction, items)
@@ -275,22 +405,22 @@ class OpenInventoryInputModal(Modal):
             await log_exception(e, interaction)
 
 
-class SpendCurrencyModal(Modal):
+class SpendCurrencyModal(LocaleModal):
     def __init__(self, calling_view):
         super().__init__(
-            title=f'Spend Currency',
+            title=t(DEFAULT_LOCALE, 'player-modal-title-spend-currency'),
             timeout=180
         )
         self.calling_view = calling_view
         self.currency_name_text_input = discord.ui.TextInput(
-            label='Currency Name',
-            placeholder=f'Enter the name of the currency you are spending',
+            label=t(DEFAULT_LOCALE, 'player-modal-label-currency-name'),
+            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-currency-name'),
             custom_id='currency_name_text_input',
             required=True
         )
         self.currency_amount_text_input = discord.ui.TextInput(
-            label='Amount',
-            placeholder='Enter the amount to spend',
+            label=t(DEFAULT_LOCALE, 'player-modal-label-currency-amount'),
+            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-currency-amount'),
             custom_id='currency_amount_text_input',
             required=True
         )
@@ -299,14 +429,21 @@ class SpendCurrencyModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
             currency_name = self.currency_name_text_input.value.strip()
             try:
                 amount = float(self.currency_amount_text_input.value.strip())
             except ValueError:
-                raise UserFeedbackError('Amount must be a number.')
+                raise UserFeedbackError(
+                    t(locale, 'player-error-amount-not-number'),
+                    message_id='player-error-amount-not-number'
+                )
 
             if amount <= 0:
-                raise UserFeedbackError('You must spend a positive amount.')
+                raise UserFeedbackError(
+                    t(locale, 'player-error-amount-positive'),
+                    message_id='player-error-amount-positive'
+                )
 
             bot = interaction.client
             member_id = interaction.user.id
@@ -319,7 +456,10 @@ class SpendCurrencyModal(Modal):
                 query={CommonFields.ID: member_id}
             )
             if not character_query or str(guild_id) not in character_query[CharacterFields.ACTIVE_CHARACTERS]:
-                raise UserFeedbackError("You do not have an active character on this server.")
+                raise UserFeedbackError(
+                    t(locale, 'player-error-no-active-character-server'),
+                    message_id='player-error-no-active-character-server'
+                )
 
             active_character_id = character_query[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
             character_data = character_query[CharacterFields.CHARACTERS][active_character_id]
@@ -332,7 +472,10 @@ class SpendCurrencyModal(Modal):
                 query={CommonFields.ID: guild_id}
             )
             if not currency_config:
-                raise UserFeedbackError("A currency configuration was not found for this server.")
+                raise UserFeedbackError(
+                    t(locale, 'player-error-no-currency-config'),
+                    message_id='player-error-no-currency-config'
+                )
 
             can_afford, message = check_sufficient_funds(current_wallet, currency_config, currency_name, amount)
             if not can_afford:
@@ -355,10 +498,14 @@ class SpendCurrencyModal(Modal):
 
             character_name = character_data[CharacterFields.NAME]
             trade_embed = discord.Embed(
-                title=f'Player Transaction Report',
+                title=t(locale, 'player-embed-title-spend'),
                 description=(
-                    f'Player: {interaction.user.mention} as `{character_name}`\n'
-                    f'Transaction: **{character_name}** spent **{formatted_amount}**.'
+                    t(locale, 'player-embed-desc-spend-player',
+                      playerMention=interaction.user.mention,
+                      characterName=character_name) + '\n' +
+                    t(locale, 'player-embed-desc-spend-transaction',
+                      characterName=character_name,
+                      formattedAmount=formatted_amount)
                 ),
                 color=discord.Color.gold(),
                 type='rich'
@@ -367,8 +514,12 @@ class SpendCurrencyModal(Modal):
                 name=interaction.user.display_name,
                 icon_url=interaction.user.display_avatar.url if interaction.user.display_avatar else None
             )
-            trade_embed.add_field(name=f'{character_name}\'s Balance', value=balance_str, inline=False)
-            trade_embed.set_footer(text=f'Transaction ID: {shortuuid.uuid()[:12]}')
+            trade_embed.add_field(
+                name=t(locale, 'player-embed-field-balance', characterName=character_name),
+                value=balance_str, inline=False
+            )
+            spend_transaction_id = shortuuid.uuid()[:12]
+            trade_embed.set_footer(text=t(locale, 'player-embed-footer-transaction-id', transactionId=spend_transaction_id))
 
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
@@ -384,31 +535,58 @@ class SpendCurrencyModal(Modal):
                 log_channel_id = strip_id(log_channel_query[ConfigFields.PLAYER_TRANSACTION_LOG_CHANNEL])
                 log_channel = interaction.guild.get_channel(log_channel_id)
                 if log_channel:
-                    channel_mention = interaction.channel.mention
-                    trade_embed.add_field(name='Channel', value=channel_mention)
-                    trade_embed.add_field(name='Receipt', value=receipt.jump_url)
-                    await log_channel.send(embed=trade_embed)
+                    guild_locale = await resolve_guild_locale(bot, guild_id)
+                    if guild_locale != locale:
+                        log_embed = discord.Embed(
+                            title=t(guild_locale, 'player-embed-title-spend'),
+                            description=(
+                                t(guild_locale, 'player-embed-desc-spend-player',
+                                  playerMention=interaction.user.mention,
+                                  characterName=character_name) + '\n' +
+                                t(guild_locale, 'player-embed-desc-spend-transaction',
+                                  characterName=character_name,
+                                  formattedAmount=formatted_amount)
+                            ),
+                            color=discord.Color.gold(),
+                            type='rich'
+                        )
+                        log_embed.set_author(
+                            name=interaction.user.display_name,
+                            icon_url=interaction.user.display_avatar.url if interaction.user.display_avatar else None
+                        )
+                        log_embed.add_field(
+                            name=t(guild_locale, 'player-embed-field-balance', characterName=character_name),
+                            value=balance_str, inline=False
+                        )
+                        log_embed.add_field(name=t(guild_locale, 'player-embed-field-channel'), value=interaction.channel.mention)
+                        log_embed.add_field(name=t(guild_locale, 'player-embed-field-receipt'), value=receipt.jump_url)
+                        log_embed.set_footer(text=t(guild_locale, 'player-embed-footer-transaction-id', transactionId=spend_transaction_id))
+                        await log_channel.send(embed=log_embed)
+                    else:
+                        trade_embed.add_field(name=t(locale, 'player-embed-field-channel'), value=interaction.channel.mention)
+                        trade_embed.add_field(name=t(locale, 'player-embed-field-receipt'), value=receipt.jump_url)
+                        await log_channel.send(embed=trade_embed)
         except Exception as e:
             await log_exception(e, interaction)
 
 
-class CreatePlayerPostModal(Modal):
+class CreatePlayerPostModal(LocaleModal):
     def __init__(self, calling_view):
         super().__init__(
-            title='Create Player Board Post',
+            title=t(DEFAULT_LOCALE, 'player-modal-title-create-post'),
             timeout=600
         )
         self.title_text_input = discord.ui.TextInput(
-            label='Title',
+            label=t(DEFAULT_LOCALE, 'player-modal-label-post-title'),
             custom_id='title_text_input',
-            placeholder='Enter a title for your post',
+            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-post-title'),
             max_length=80
         )
         self.content_text_input = discord.ui.TextInput(
-            label='Post Content',
+            label=t(DEFAULT_LOCALE, 'player-modal-label-post-content'),
             style=discord.TextStyle.paragraph,
             custom_id='content_text_input',
-            placeholder='Enter the body of your post'
+            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-post-content')
         )
         self.calling_view = calling_view
         self.add_item(self.title_text_input)
@@ -423,27 +601,27 @@ class CreatePlayerPostModal(Modal):
             await log_exception(e, interaction)
 
 
-class EditPlayerPostModal(Modal):
+class EditPlayerPostModal(LocaleModal):
     def __init__(self, calling_view, post):
         super().__init__(
-            title='Edit Player Board Post',
+            title=t(DEFAULT_LOCALE, 'player-modal-title-edit-post'),
             timeout=600
         )
         self.calling_view = calling_view
         self.post = post
         self.title_text_input = discord.ui.TextInput(
-            label='Title',
+            label=t(DEFAULT_LOCALE, 'player-modal-label-post-title'),
             custom_id='title_text_input',
-            placeholder='Enter a title for your post',
+            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-post-title'),
             default=post['title'],
             max_length=80,
             required=False
         )
         self.content_text_input = discord.ui.TextInput(
-            label='Post Content',
+            label=t(DEFAULT_LOCALE, 'player-modal-label-post-content'),
             style=discord.TextStyle.paragraph,
             custom_id='content_text_input',
-            placeholder='Enter the body of your post',
+            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-post-content'),
             default=post['content'],
             required=False
         )
@@ -459,30 +637,33 @@ class EditPlayerPostModal(Modal):
             await log_exception(e, interaction)
 
 
-class WizardEditCartItemModal(Modal):
+class WizardEditCartItemModal(LocaleModal):
     def __init__(self, cart_view, item_key, current_quantity):
         super().__init__(
-            title='Edit Cart Quantity',
+            title=t(DEFAULT_LOCALE, 'player-modal-title-edit-cart-qty'),
             timeout=600
         )
         self.cart_view = cart_view
         self.item_key = item_key
 
         self.quantity_text_input = discord.ui.TextInput(
-            label='Quantity',
+            label=t(DEFAULT_LOCALE, 'player-modal-label-cart-qty'),
             default=str(current_quantity),
             min_length=1,
             max_length=5,
-            placeholder='Enter new quantity (0 to remove)',
+            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-cart-qty'),
             custom_id='wiz_cart_qty_input'
         )
         self.add_item(self.quantity_text_input)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = getattr(self.cart_view, 'locale', DEFAULT_LOCALE)
             if not self.quantity_text_input.value.isdigit():
-                await interaction.response.send_message('Please enter a valid positive number.',
-                                                        ephemeral=True, delete_after=10)
+                await interaction.response.send_message(
+                    t(locale, 'player-error-enter-valid-number'),
+                    ephemeral=True, delete_after=10
+                )
                 return
 
             new_quantity = int(self.quantity_text_input.value)
@@ -501,16 +682,16 @@ class WizardEditCartItemModal(Modal):
             await log_exception(e, interaction)
 
 
-class CreateContainerModal(Modal):
+class CreateContainerModal(LocaleModal):
     def __init__(self, calling_view):
         super().__init__(
-            title='Create New Container',
+            title=t(DEFAULT_LOCALE, 'player-modal-title-create-container'),
             timeout=180
         )
         self.calling_view = calling_view
         self.name_input = discord.ui.TextInput(
-            label='Container Name',
-            placeholder='Enter a name for your container (e.g., Backpack)',
+            label=t(DEFAULT_LOCALE, 'player-modal-label-container-name'),
+            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-container-name'),
             custom_id='container_name_input',
             max_length=50,
             required=True
@@ -533,17 +714,17 @@ class CreateContainerModal(Modal):
             await log_exception(e, interaction)
 
 
-class RenameContainerModal(Modal):
+class RenameContainerModal(LocaleModal):
     def __init__(self, calling_view, container_id: str, current_name: str):
         super().__init__(
-            title='Rename Container',
+            title=t(DEFAULT_LOCALE, 'player-modal-title-rename-container'),
             timeout=180
         )
         self.calling_view = calling_view
         self.container_id = container_id
         self.name_input = discord.ui.TextInput(
-            label='New Container Name',
-            placeholder='Enter the new name',
+            label=t(DEFAULT_LOCALE, 'player-modal-label-new-container-name'),
+            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-new-container-name'),
             custom_id='container_rename_input',
             default=current_name,
             max_length=50,
@@ -568,10 +749,10 @@ class RenameContainerModal(Modal):
             await log_exception(e, interaction)
 
 
-class ConsumeFromContainerModal(Modal):
+class ConsumeFromContainerModal(LocaleModal):
     def __init__(self, calling_view, item_name: str, max_quantity: int):
         super().__init__(
-            title='Consume/Destroy Item',
+            title=t(DEFAULT_LOCALE, 'player-modal-title-consume'),
             timeout=180
         )
         self.calling_view = calling_view
@@ -579,8 +760,8 @@ class ConsumeFromContainerModal(Modal):
         self.max_quantity = max_quantity
 
         self.quantity_input = discord.ui.TextInput(
-            label=f'Quantity (max: {max_quantity})',
-            placeholder='Enter amount to consume/destroy',
+            label=t(DEFAULT_LOCALE, 'player-modal-label-consume-qty', maxQuantity=max_quantity),
+            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-consume-qty'),
             custom_id='consume_quantity_input',
             default='1',
             required=True
@@ -589,14 +770,24 @@ class ConsumeFromContainerModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
             if not self.quantity_input.value.isdigit():
-                raise UserFeedbackError('Quantity must be a positive integer.')
+                raise UserFeedbackError(
+                    t(locale, 'player-error-qty-positive-integer'),
+                    message_id='player-error-qty-positive-integer'
+                )
 
             quantity = int(self.quantity_input.value)
             if quantity < 1:
-                raise UserFeedbackError('Quantity must be at least 1.')
+                raise UserFeedbackError(
+                    t(locale, 'player-error-qty-at-least-one'),
+                    message_id='player-error-qty-at-least-one'
+                )
             if quantity > self.max_quantity:
-                raise UserFeedbackError(f'You only have {self.max_quantity} of this item.')
+                raise UserFeedbackError(
+                    t(locale, 'player-error-qty-only-have', maxQuantity=self.max_quantity),
+                    message_id='player-error-qty-only-have'
+                )
 
             container_name = get_container_name(
                 self.calling_view.character_data,
@@ -619,9 +810,16 @@ class ConsumeFromContainerModal(Modal):
 
             # Send receipt
             receipt_embed = discord.Embed(
-                title='Item Consumption Report',
-                description=f'Player: {interaction.user.mention } as `{self.calling_view.character_data[CharacterFields.NAME]}`\n'
-                            f'Removed: **{quantity}x {escape_markdown(titlecase(self.item_name))}** from **{container_name}**',
+                title=t(locale, 'player-embed-title-consume'),
+                description=(
+                    t(locale, 'player-embed-desc-consume',
+                      playerMention=interaction.user.mention,
+                      characterName=self.calling_view.character_data[CharacterFields.NAME]) + '\n' +
+                    t(locale, 'player-embed-desc-consume-removed',
+                      quantity=quantity,
+                      itemName=escape_markdown(titlecase(self.item_name)),
+                      containerName=container_name)
+                ),
                 color=discord.Color.gold(),
                 type='rich'
             )
@@ -629,7 +827,8 @@ class ConsumeFromContainerModal(Modal):
                 name=interaction.user.display_name,
                 icon_url=interaction.user.display_avatar.url if interaction.user.display_avatar else None
             )
-            receipt_embed.set_footer(text=f'Transaction ID: {shortuuid.uuid()[:12]}')
+            consume_transaction_id = shortuuid.uuid()[:12]
+            receipt_embed.set_footer(text=t(locale, 'player-embed-footer-transaction-id', transactionId=consume_transaction_id))
 
             receipt_message = await interaction.followup.send(embed=receipt_embed, wait=True)
 
@@ -647,17 +846,42 @@ class ConsumeFromContainerModal(Modal):
                 log_channel_id = strip_id(log_channel_query[ConfigFields.PLAYER_TRANSACTION_LOG_CHANNEL])
                 log_channel = interaction.guild.get_channel(log_channel_id)
                 if log_channel:
-                    receipt_embed.add_field(name='Channel', value=interaction.channel.mention)
-                    receipt_embed.add_field(name='Receipt', value=receipt_message.jump_url)
-                    await log_channel.send(embed=receipt_embed)
+                    guild_locale = await resolve_guild_locale(bot, guild_id)
+                    if guild_locale != locale:
+                        log_embed = discord.Embed(
+                            title=t(guild_locale, 'player-embed-title-consume'),
+                            description=(
+                                t(guild_locale, 'player-embed-desc-consume',
+                                  playerMention=interaction.user.mention,
+                                  characterName=self.calling_view.character_data[CharacterFields.NAME]) + '\n' +
+                                t(guild_locale, 'player-embed-desc-consume-removed',
+                                  quantity=quantity,
+                                  itemName=escape_markdown(titlecase(self.item_name)),
+                                  containerName=container_name)
+                            ),
+                            color=discord.Color.gold(),
+                            type='rich'
+                        )
+                        log_embed.set_author(
+                            name=interaction.user.display_name,
+                            icon_url=interaction.user.display_avatar.url if interaction.user.display_avatar else None
+                        )
+                        log_embed.add_field(name=t(guild_locale, 'player-embed-field-channel'), value=interaction.channel.mention)
+                        log_embed.add_field(name=t(guild_locale, 'player-embed-field-receipt'), value=receipt_message.jump_url)
+                        log_embed.set_footer(text=t(guild_locale, 'player-embed-footer-transaction-id', transactionId=consume_transaction_id))
+                        await log_channel.send(embed=log_embed)
+                    else:
+                        receipt_embed.add_field(name=t(locale, 'player-embed-field-channel'), value=interaction.channel.mention)
+                        receipt_embed.add_field(name=t(locale, 'player-embed-field-receipt'), value=receipt_message.jump_url)
+                        await log_channel.send(embed=receipt_embed)
         except Exception as e:
             await log_exception(e, interaction)
 
 
-class MoveItemQuantityModal(Modal):
+class MoveItemQuantityModal(LocaleModal):
     def __init__(self, calling_view, item_name: str, max_quantity: int):
         super().__init__(
-            title='Move Item',
+            title=t(DEFAULT_LOCALE, 'player-modal-title-move-item'),
             timeout=180
         )
         self.calling_view = calling_view
@@ -665,8 +889,8 @@ class MoveItemQuantityModal(Modal):
         self.max_quantity = max_quantity
 
         self.quantity_input = discord.ui.TextInput(
-            label=f'Quantity to move (max: {max_quantity})',
-            placeholder='Enter amount to move',
+            label=t(DEFAULT_LOCALE, 'player-modal-label-move-qty', maxQuantity=max_quantity),
+            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-move-qty'),
             custom_id='move_quantity_input',
             default=str(max_quantity),
             required=True
@@ -675,14 +899,24 @@ class MoveItemQuantityModal(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
             if not self.quantity_input.value.isdigit():
-                raise UserFeedbackError('Quantity must be a positive integer.')
+                raise UserFeedbackError(
+                    t(locale, 'player-error-qty-positive-integer'),
+                    message_id='player-error-qty-positive-integer'
+                )
 
             quantity = int(self.quantity_input.value)
             if quantity < 1:
-                raise UserFeedbackError('Quantity must be at least 1.')
+                raise UserFeedbackError(
+                    t(locale, 'player-error-qty-at-least-one'),
+                    message_id='player-error-qty-at-least-one'
+                )
             if quantity > self.max_quantity:
-                raise UserFeedbackError(f'You only have {self.max_quantity} of this item.')
+                raise UserFeedbackError(
+                    t(locale, 'player-error-qty-only-have', maxQuantity=self.max_quantity),
+                    message_id='player-error-qty-only-have'
+                )
 
             await move_item_between_containers(
                 interaction.client,

@@ -5,6 +5,7 @@ from discord.ext.commands import Cog
 
 from ReQuest.ui.player import modals, views
 from ReQuest.utilities.checks import has_active_character
+from ReQuest.utilities.localizer import resolve_locale, set_locale_context, t
 from ReQuest.utilities.supportFunctions import log_exception, setup_view
 
 
@@ -12,7 +13,7 @@ class Player(Cog):
     def __init__(self, bot: commands.Bot):
         super().__init__()
         self.trade_menu = app_commands.ContextMenu(
-            name='Trade',
+            name=app_commands.locale_str('Trade'),
             callback=self.trade_menu
         )
         self.bot = bot
@@ -21,14 +22,17 @@ class Player(Cog):
     async def cog_unload(self) -> None:
         self.bot.tree.remove_command(self.trade_menu.name, type=self.trade_menu.type)
 
-    @app_commands.command(name='player')
+    @app_commands.command(
+        name='player',
+        description=app_commands.locale_str('Player Menus')
+    )
     @app_commands.guild_only()
     async def player(self, interaction):
-        """
-        Player Menus
-        """
         try:
+            locale = await resolve_locale(interaction)
+            set_locale_context(locale)
             new_view = views.PlayerBaseView()
+            new_view.locale = locale
             await setup_view(new_view, interaction)
             await interaction.response.send_message(view=new_view, ephemeral=True)
         except Exception as e:
@@ -38,7 +42,9 @@ class Player(Cog):
     @app_commands.guild_only()
     async def trade_menu(self, interaction: discord.Interaction, target: discord.Member):
         try:
-            modal = modals.TradeModal(target=target)
+            locale = await resolve_locale(interaction)
+            set_locale_context(locale)
+            modal = modals.TradeModal(target=target, locale=locale)
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)

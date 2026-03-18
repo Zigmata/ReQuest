@@ -4,7 +4,6 @@ import math
 import discord
 import shortuuid
 from discord.ui import (
-    LayoutView,
     ActionRow,
     Container,
     TextDisplay,
@@ -13,6 +12,8 @@ from discord.ui import (
     Thumbnail,
     Button
 )
+
+from ReQuest.ui.common.views import LocaleLayoutView
 from titlecase import titlecase
 
 from ReQuest.ui.common import modals as common_modals
@@ -20,6 +21,7 @@ from ReQuest.ui.shop import buttons
 from ReQuest.utilities.constants import (
     CharacterFields, ConfigFields, ShopFields, CommonFields, CartFields, DatabaseCollections
 )
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_guild_locale
 from ReQuest.utilities.supportFunctions import (
     check_sufficient_funds,
     apply_currency_change_local,
@@ -44,7 +46,7 @@ from ReQuest.utilities.supportFunctions import (
 logger = logging.getLogger(__name__)
 
 
-class ShopBaseView(LayoutView):
+class ShopBaseView(LocaleLayoutView):
     def __init__(self, shop_data, channel_id: str = None):
         super().__init__(timeout=600)
         self.shop_data = shop_data
@@ -102,6 +104,7 @@ class ShopBaseView(LayoutView):
 
     def build_view(self):
         try:
+            locale = getattr(self, 'locale', DEFAULT_LOCALE)
             self.clear_items()
             container = Container()
             header_items = []
@@ -109,7 +112,7 @@ class ShopBaseView(LayoutView):
             if shop_name := self.shop_data.get(ShopFields.SHOP_NAME):
                 header_items.append(TextDisplay(f'**{shop_name}**'))
             if shop_keeper := self.shop_data.get(ShopFields.SHOP_KEEPER):
-                header_items.append(TextDisplay(f'Shopkeeper: **{shop_keeper}**'))
+                header_items.append(TextDisplay(t(locale, 'shop-label-shopkeeper', **{'name': shop_keeper})))
             if shop_description := self.shop_data.get(ShopFields.SHOP_DESCRIPTION):
                 header_items.append(TextDisplay(f'*{shop_description}*'))
 
@@ -135,7 +138,7 @@ class ShopBaseView(LayoutView):
                 costs = item.get(ShopFields.COSTS, [])
                 cost_string = format_complex_cost(costs, getattr(self, 'currency_config', {}))
 
-                item_name = item.get(CommonFields.NAME, 'Unknown Item')
+                item_name = item.get(CommonFields.NAME, t(locale, 'shop-label-unknown-item'))
                 item_name_display = escape_markdown(item_name)
 
                 # Get stock info for this item
@@ -156,15 +159,15 @@ class ShopBaseView(LayoutView):
 
                 content = item_display_name
                 if cart_quantity > 0:
-                    content += f' (In Cart: {cart_quantity})'
+                    content += f' {t(locale, "shop-label-in-cart", **{"quantity": cart_quantity})}'
 
                 # Show stock info if item has limits (and data is valid)
                 if item_stock_info is not None and ShopFields.AVAILABLE in item_stock_info:
                     available = item_stock_info.get(ShopFields.AVAILABLE, 0)
                     if available == 0:
-                        content += f'\n**OUT OF STOCK**'
+                        content += f'\n**{t(locale, "shop-label-out-of-stock")}**'
                     else:
-                        content += f'\n*Stock: {available}*'
+                        content += f'\n*{t(locale, "shop-label-stock-available", **{"available": available})}*'
 
                 if item_description:
                     content += f'\n*{escape_markdown(item_description)}*'
@@ -178,7 +181,7 @@ class ShopBaseView(LayoutView):
             nav_row = ActionRow()
             if self.total_pages > 1:
                 prev_button = Button(
-                    label='Previous',
+                    label=t(locale, 'common-btn-previous'),
                     style=discord.ButtonStyle.secondary,
                     custom_id='shop_prev_page',
                     disabled=(self.current_page == 0)
@@ -186,14 +189,14 @@ class ShopBaseView(LayoutView):
                 prev_button.callback = self.prev_page
 
                 page_display = Button(
-                    label=f'Page {self.current_page + 1} of {self.total_pages}',
+                    label=t(locale, 'common-page-display', **{'current': self.current_page + 1, 'total': self.total_pages}),
                     style=discord.ButtonStyle.secondary,
                     custom_id='shop_page_display'
                 )
                 page_display.callback = self.show_page_jump_modal
 
                 next_button = Button(
-                    label='Next',
+                    label=t(locale, 'common-btn-next'),
                     style=discord.ButtonStyle.primary,
                     custom_id='shop_next_page',
                     disabled=(self.current_page >= self.total_pages - 1)
@@ -206,7 +209,7 @@ class ShopBaseView(LayoutView):
 
             cart_item_count = sum(item.get(CartFields.QUANTITY, 0) for item in self.cart.values())
             view_cart_button = buttons.ViewCartButton(self)
-            view_cart_button.label = f'View Cart ({cart_item_count})' if cart_item_count > 0 else 'View Cart'
+            view_cart_button.label = t(locale, 'shop-btn-view-cart-count', **{'count': cart_item_count}) if cart_item_count > 0 else t(locale, 'shop-btn-view-cart')
 
             nav_row.add_item(view_cart_button)
             self.add_item(nav_row)
@@ -228,7 +231,11 @@ class ShopBaseView(LayoutView):
             )
 
             if not success:
-                raise UserFeedbackError(f'**{escape_markdown(item_name)}** is out of stock.')
+                locale = getattr(self, 'locale', DEFAULT_LOCALE)
+                raise UserFeedbackError(
+                    t(locale, 'shop-error-item-out-of-stock', **{'itemName': item_name}),
+                    message_id='shop-error-item-out-of-stock'
+                )
 
             # Refresh local cart cache and stock info
             db_cart = await get_cart(self.bot, self.guild_id, self.user_id, self.channel_id)
@@ -266,11 +273,14 @@ class ShopBaseView(LayoutView):
         try:
             await interaction.response.send_modal(common_modals.PageJumpModal(self))
         except Exception as e:
+            locale = getattr(self, 'locale', DEFAULT_LOCALE)
             logging.error(f'Failed to send PageJumpModal: {e}')
-            await interaction.response.send_message('Could not open page selector', ephemeral=True)
+            await interaction.response.send_message(
+                t(locale, 'common-error-page-selector'), ephemeral=True
+            )
 
 
-class ShopCartView(LayoutView):
+class ShopCartView(LocaleLayoutView):
     def __init__(self, prev_view: ShopBaseView, currency_config: dict, character_data: dict):
         super().__init__(timeout=None)
         self.prev_view = prev_view
@@ -286,11 +296,12 @@ class ShopCartView(LayoutView):
 
     def build_view(self):
         try:
+            locale = getattr(self, 'locale', DEFAULT_LOCALE)
             self.clear_items()
             container = Container()
 
             header_section = Section(accessory=buttons.CartBackButton(self.prev_view))
-            header_section.add_item(TextDisplay('🛒 **Shopping Cart**'))
+            header_section.add_item(TextDisplay(t(locale, 'shop-title-cart')))
             container.add_item(header_section)
             container.add_item(Separator())
 
@@ -305,7 +316,7 @@ class ShopCartView(LayoutView):
                 self.current_page = max(0, self.total_pages - 1)
 
             if not self.prev_view.cart:
-                container.add_item(TextDisplay('Your cart is empty.'))
+                container.add_item(TextDisplay(t(locale, 'shop-msg-cart-empty')))
             else:
                 for item_key, data in self.prev_view.cart.items():
                     item = data[CartFields.ITEM]
@@ -321,7 +332,7 @@ class ShopCartView(LayoutView):
                 self.base_totals = consolidate_currency_totals(raw_totals, self.currency_config)
 
                 if not self.character_data:
-                    warnings.append("⚠️ No active character found. Cannot verify funds.")
+                    warnings.append(t(locale, 'shop-warning-no-active-character'))
                     can_afford_all = False
                 else:
                     player_wallet = self.character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {})
@@ -329,7 +340,7 @@ class ShopCartView(LayoutView):
                         is_ok, _ = check_sufficient_funds(player_wallet, self.currency_config, base_currency, amount)
                         if not is_ok:
                             can_afford_all = False
-                            warnings.append(f"⚠️ Insufficient funds for {titlecase(base_currency)}")
+                            warnings.append(t(locale, 'shop-warning-insufficient-funds', **{'currency': titlecase(base_currency)}))
 
                 start_index = self.current_page * self.items_per_page
                 end_index = start_index + self.items_per_page
@@ -345,13 +356,13 @@ class ShopCartView(LayoutView):
                     total_item_quantity = quantity * quantity_per_item
 
                     costs = item.get(ShopFields.COSTS, [])
-                    price_string = 'Invalid Cost'
+                    price_string = t(locale, 'shop-label-invalid-cost')
                     if not costs:
-                        price_string = 'Free'
+                        price_string = t(locale, 'common-label-free')
                     elif 0 <= option_index < len(costs):
                         selected_cost = costs[option_index]
                         if not selected_cost:
-                            price_string = 'Free'
+                            price_string = t(locale, 'common-label-free')
                         else:
                             total_cost = {k: v * quantity for k, v in selected_cost.items()}
                             price_string = format_complex_cost([total_cost], self.currency_config)
@@ -367,13 +378,13 @@ class ShopCartView(LayoutView):
                 container.add_item(Separator())
 
                 total_strings = format_consolidated_totals(self.base_totals, self.currency_config)
-                cost_string = f'**Total Cost:**'
+                cost_string = t(locale, 'shop-label-total-cost')
                 if total_strings:
                     cost_string += f'\n{", ".join(total_strings)}'
                 else:
-                    cost_string += '\nFree'
+                    cost_string += f'\n{t(locale, "common-label-free")}'
                 if warnings:
-                    cost_string += f'\n**Warning:**\n- ' + '\n- '.join(warnings)
+                    cost_string += f'\n{t(locale, "shop-label-warning")}\n- ' + '\n- '.join(warnings)
 
                 container.add_item(TextDisplay(cost_string))
 
@@ -383,7 +394,7 @@ class ShopCartView(LayoutView):
             if self.total_pages > 1:
 
                 prev_button = Button(
-                    label='Previous',
+                    label=t(locale, 'common-btn-previous'),
                     style=discord.ButtonStyle.secondary,
                     custom_id='shop_prev_page',
                     disabled=(self.current_page == 0)
@@ -391,14 +402,14 @@ class ShopCartView(LayoutView):
                 prev_button.callback = self.prev_page
 
                 page_display = Button(
-                    label=f'Page {self.current_page + 1} of {self.total_pages}',
+                    label=t(locale, 'common-page-display', **{'current': self.current_page + 1, 'total': self.total_pages}),
                     style=discord.ButtonStyle.secondary,
                     custom_id='shop_page_display'
                 )
                 page_display.callback = self.show_page_jump_modal
 
                 next_button = Button(
-                    label='Next',
+                    label=t(locale, 'common-btn-next'),
                     style=discord.ButtonStyle.primary,
                     custom_id='shop_next_page',
                     disabled=(self.current_page >= self.total_pages - 1)
@@ -436,11 +447,15 @@ class ShopCartView(LayoutView):
         try:
             await interaction.response.send_modal(common_modals.PageJumpModal(self))
         except Exception as e:
+            locale = getattr(self, 'locale', DEFAULT_LOCALE)
             logging.error(f'Failed to send PageJumpModal: {e}')
-            await interaction.response.send_message('Could not open page selector', ephemeral=True)
+            await interaction.response.send_message(
+                t(locale, 'common-error-page-selector'), ephemeral=True
+            )
 
     async def checkout(self, interaction: discord.Interaction):
         try:
+            locale = getattr(self, 'locale', DEFAULT_LOCALE)
             bot = interaction.client
             guild_id = interaction.guild_id
             user_id = interaction.user.id
@@ -455,8 +470,9 @@ class ShopCartView(LayoutView):
             )
 
             if not character_query or str(guild_id) not in character_query[CharacterFields.ACTIVE_CHARACTERS]:
-                await interaction.response.send_message("You do not have an active character on this server.",
-                                                        ephemeral=True)
+                await interaction.response.send_message(
+                    t(locale, 'shop-error-no-active-character'), ephemeral=True
+                )
                 return
 
             active_char_id = character_query[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
@@ -467,7 +483,9 @@ class ShopCartView(LayoutView):
                                                     self.currency_config, base_currency, amount)
                 if not is_ok:
                     await interaction.response.send_message(
-                        f"Checkout failed: Insufficient {titlecase(base_currency)}.", ephemeral=True)
+                        t(locale, 'shop-error-checkout-insufficient', **{'currency': titlecase(base_currency)}),
+                        ephemeral=True
+                    )
                     return
 
             for base_currency, amount in self.base_totals.items():
@@ -507,20 +525,49 @@ class ShopCartView(LayoutView):
                 log_channel_id = strip_id(log_channel_query[ConfigFields.SHOP_LOG_CHANNEL])
                 log_channel = interaction.guild.get_channel(log_channel_id)
 
-            receipt_embed = discord.Embed(title="Shopping Report", color=discord.Color.gold())
+            receipt_embed = discord.Embed(title=t(locale, 'shop-embed-title-report'), color=discord.Color.gold())
             receipt_embed.description = (
                 f'Player: {interaction.user.mention} as `{character_data[CharacterFields.NAME]}`\n'
-                f'Shop: {self.prev_view.shop_data.get(ShopFields.SHOP_NAME, "Unknown Shop")}'
+                f'Shop: {self.prev_view.shop_data.get(ShopFields.SHOP_NAME, t(locale, "common-label-unknown"))}'
             )
-            receipt_embed.add_field(name="Purchased", value="\n".join(added_items_summary) or 'No Items', inline=False)
+            receipt_embed.add_field(
+                name=t(locale, 'shop-embed-field-purchased'),
+                value="\n".join(added_items_summary) or t(locale, 'shop-label-no-items'),
+                inline=False
+            )
 
             total_strs = format_consolidated_totals(self.base_totals, self.currency_config)
-            receipt_embed.add_field(name="Total Paid", value="\n".join(total_strs) or '0', inline=False)
+            receipt_embed.add_field(
+                name=t(locale, 'shop-embed-field-total-paid'),
+                value="\n".join(total_strs) or '0',
+                inline=False
+            )
 
-            receipt_embed.set_footer(text=f"Transaction ID: {shortuuid.uuid()[:12]}")
+            shop_transaction_id = shortuuid.uuid()[:12]
+            receipt_embed.set_footer(text=t(locale, 'common-embed-footer-transaction-id', transactionId=shop_transaction_id))
 
             if log_channel:
-                await log_channel.send(embed=receipt_embed)
+                guild_locale = await resolve_guild_locale(bot, guild_id)
+                if guild_locale != locale:
+                    log_embed = discord.Embed(title=t(guild_locale, 'shop-embed-title-report'), color=discord.Color.gold())
+                    log_embed.description = (
+                        f'Player: {interaction.user.mention} as `{character_data[CharacterFields.NAME]}`\n'
+                        f'Shop: {self.prev_view.shop_data.get(ShopFields.SHOP_NAME, t(guild_locale, "common-label-unknown"))}'
+                    )
+                    log_embed.add_field(
+                        name=t(guild_locale, 'shop-embed-field-purchased'),
+                        value="\n".join(added_items_summary) or t(guild_locale, 'shop-label-no-items'),
+                        inline=False
+                    )
+                    log_embed.add_field(
+                        name=t(guild_locale, 'shop-embed-field-total-paid'),
+                        value="\n".join(total_strs) or '0',
+                        inline=False
+                    )
+                    log_embed.set_footer(text=t(guild_locale, 'common-embed-footer-transaction-id', transactionId=shop_transaction_id))
+                    await log_channel.send(embed=log_embed)
+                else:
+                    await log_channel.send(embed=receipt_embed)
 
             # Clear local cart cache and refresh stock info
             self.prev_view.cart.clear()
@@ -533,7 +580,7 @@ class ShopCartView(LayoutView):
             logging.error(f'Error during checkout: {e}')
 
 
-class ComplexItemPurchaseView(LayoutView):
+class ComplexItemPurchaseView(LocaleLayoutView):
     def __init__(self, parent_view, item):
         super().__init__(timeout=None)
         self.parent_view = parent_view
@@ -541,11 +588,12 @@ class ComplexItemPurchaseView(LayoutView):
         self.build_view()
 
     def build_view(self):
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         self.clear_items()
         container = Container()
 
         header = Section(accessory=buttons.CartBackButton(self.parent_view))
-        header.add_item(TextDisplay(f"**Purchase Options: {escape_markdown(self.item[CommonFields.NAME])}**"))
+        header.add_item(TextDisplay(f"**{t(locale, 'shop-title-purchase-options', **{'itemName': escape_markdown(self.item[CommonFields.NAME])})}**"))
         container.add_item(header)
         container.add_item(Separator())
 
@@ -553,7 +601,7 @@ class ComplexItemPurchaseView(LayoutView):
         currency_config = getattr(self.parent_view, 'currency_config', {})
 
         if not costs:
-            container.add_item(TextDisplay("There are no purchase options available for this item."))
+            container.add_item(TextDisplay(t(locale, 'shop-msg-no-options')))
         else:
             for index, cost_option in enumerate(costs):
                 cost_str = format_complex_cost([cost_option], currency_config)

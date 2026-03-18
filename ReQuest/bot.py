@@ -100,6 +100,10 @@ class ReQuest(commands.Bot):
             health_check_interval=30
         )
 
+        # Register the Fluent translator for slash command localization
+        from ReQuest.utilities.localizer import FluentTranslator
+        await self.tree.set_translator(FluentTranslator())
+
         # Grab the list of extensions and load them asynchronously
         initial_extensions = os.getenv('LOAD_EXTENSIONS').split(',')
         for ext in initial_extensions:

@@ -1,6 +1,7 @@
 from discord import app_commands, Interaction
 
 from ReQuest.utilities.constants import ConfigFields, CharacterFields, CommonFields, DatabaseCollections
+from ReQuest.utilities.localizer import resolve_locale, t
 from ReQuest.utilities.supportFunctions import get_cached_data
 
 
@@ -9,7 +10,8 @@ def is_owner():
         if await interaction.client.is_owner(interaction.user):
             return True
 
-        raise app_commands.CheckFailure("Only the bot owner can use this command!")
+        locale = await resolve_locale(interaction)
+        raise app_commands.CheckFailure(t(locale, 'error-owner-only'))
 
     return app_commands.check(predicate)
 
@@ -35,7 +37,8 @@ def has_gm_or_mod():
                     if role.mention in gm_role_mentions:
                         return True
 
-        raise app_commands.CheckFailure("You do not have permissions to run this command!")
+        locale = await resolve_locale(interaction)
+        raise app_commands.CheckFailure(t(locale, 'error-no-permission'))
 
     return app_commands.check(predicate)
 
@@ -55,8 +58,10 @@ def has_active_character():
             if str(guild_id) in query[CharacterFields.ACTIVE_CHARACTERS]:
                 return True
             else:
-                raise app_commands.CheckFailure("You do not have an active character on this server!")
+                locale = await resolve_locale(interaction)
+                raise app_commands.CheckFailure(t(locale, 'error-no-active-character'))
         else:
-            raise app_commands.CheckFailure("You do not have any registered characters!")
+            locale = await resolve_locale(interaction)
+            raise app_commands.CheckFailure(t(locale, 'error-no-registered-characters'))
 
     return app_commands.check(predicate)
