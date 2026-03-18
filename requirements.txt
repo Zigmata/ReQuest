@@ -5,5 +5,5 @@ shortuuid~=1.0.13
 aiohttp~=3.13.3
 jsonschema~=4.26.0
 titlecase~=2.4.1
-redis~=7.2.1
+redis~=7.3.0
 fluent.runtime~=0.4.0
