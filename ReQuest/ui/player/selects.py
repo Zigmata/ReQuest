@@ -58,7 +58,8 @@ class RemoveCharacterSelect(Select):
                 title=t(locale, 'player-modal-title-confirm-char-removal'),
                 prompt_label=t(locale, 'common-modal-label-warning'),
                 prompt_placeholder=t(locale, 'common-confirm-placeholder'),
-                confirm_callback=self.calling_view.confirm_callback
+                confirm_callback=self.calling_view.confirm_callback,
+                locale=locale
             )
             await interaction.response.send_modal(confirm_modal)
         except Exception as e:

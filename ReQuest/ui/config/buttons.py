@@ -13,7 +13,7 @@ from ReQuest.ui.common.enums import ShopChannelType
 from ReQuest.utilities.constants import (
     ConfigFields, ShopFields, CommonFields, RoleplayFields, CurrencyFields, DatabaseCollections
 )
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_locale
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     setup_view,
@@ -76,11 +76,13 @@ class RemoveGMRoleButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            locale = await resolve_locale(interaction)
             confirm_modal = common_modals.ConfirmModal(
-                title=t(DEFAULT_LOCALE, 'config-modal-title-confirm-role-removal'),
-                prompt_label=t(DEFAULT_LOCALE, 'config-modal-label-remove-role', **{'roleName': self.role_name}),
-                prompt_placeholder=t(DEFAULT_LOCALE, 'common-confirm-placeholder'),
-                confirm_callback=self._confirm_delete
+                title=t(locale, 'config-modal-title-confirm-role-removal'),
+                prompt_label=t(locale, 'config-modal-label-remove-role', **{'roleName': self.role_name}),
+                prompt_placeholder=t(locale, 'common-confirm-placeholder'),
+                confirm_callback=self._confirm_delete,
+                locale=locale
             )
             await interaction.response.send_modal(confirm_modal)
         except Exception as e:
@@ -262,11 +264,13 @@ class RemoveDenominationButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            locale = await resolve_locale(interaction)
             confirm_modal = common_modals.ConfirmModal(
-                title=t(DEFAULT_LOCALE, 'config-modal-title-confirm-removal'),
-                prompt_label=t(DEFAULT_LOCALE, 'config-modal-label-remove-denomination', **{'denominationName': self.denomination_name}),
-                prompt_placeholder=t(DEFAULT_LOCALE, 'common-confirm-placeholder'),
-                confirm_callback=self._confirm_delete
+                title=t(locale, 'config-modal-title-confirm-removal'),
+                prompt_label=t(locale, 'config-modal-label-remove-denomination', **{'denominationName': self.denomination_name}),
+                prompt_placeholder=t(locale, 'common-confirm-placeholder'),
+                confirm_callback=self._confirm_delete,
+                locale=locale
             )
             await interaction.response.send_modal(confirm_modal)
         except Exception as e:
@@ -362,11 +366,13 @@ class RemoveCurrencyButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            locale = await resolve_locale(interaction)
             modal = common_modals.ConfirmModal(
-                title=t(DEFAULT_LOCALE, 'config-modal-title-confirm-currency-removal'),
-                prompt_label=t(DEFAULT_LOCALE, 'config-modal-label-remove-currency', **{'currencyName': self.currency_name}),
-                prompt_placeholder=t(DEFAULT_LOCALE, 'common-confirm-placeholder'),
-                confirm_callback=self._confirm_delete
+                title=t(locale, 'config-modal-title-confirm-currency-removal'),
+                prompt_label=t(locale, 'config-modal-label-remove-currency', **{'currencyName': self.currency_name}),
+                prompt_placeholder=t(locale, 'common-confirm-placeholder'),
+                confirm_callback=self._confirm_delete,
+                locale=locale
             )
             await interaction.response.send_modal(modal)
         except Exception as e:
@@ -692,11 +698,13 @@ class RemoveShopButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            locale = await resolve_locale(interaction)
             confirm_modal = common_modals.ConfirmModal(
-                title=t(DEFAULT_LOCALE, 'config-modal-title-confirm-shop-removal'),
-                prompt_label=t(DEFAULT_LOCALE, 'config-modal-label-shop-removal-warning'),
-                prompt_placeholder=t(DEFAULT_LOCALE, 'common-confirm-placeholder'),
-                confirm_callback=self._confirm_delete
+                title=t(locale, 'config-modal-title-confirm-shop-removal'),
+                prompt_label=t(locale, 'config-modal-label-shop-removal-warning'),
+                prompt_placeholder=t(locale, 'common-confirm-placeholder'),
+                confirm_callback=self._confirm_delete,
+                locale=locale
             )
             await interaction.response.send_modal(confirm_modal)
         except Exception as e:
@@ -1138,11 +1146,13 @@ class RemoveStaticKitButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            locale = await resolve_locale(interaction)
             confirm_modal = common_modals.ConfirmModal(
-                title=t(DEFAULT_LOCALE, 'config-modal-title-confirm-kit-deletion'),
-                prompt_label=t(DEFAULT_LOCALE, 'config-modal-label-kit-deletion-warning'),
-                prompt_placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-type-confirm'),
-                confirm_callback=self._confirm_delete
+                title=t(locale, 'config-modal-title-confirm-kit-deletion'),
+                prompt_label=t(locale, 'config-modal-label-kit-deletion-warning'),
+                prompt_placeholder=t(locale, 'config-modal-placeholder-type-confirm'),
+                confirm_callback=self._confirm_delete,
+                locale=locale
             )
             await interaction.response.send_modal(confirm_modal)
         except Exception as e:
@@ -1441,11 +1451,13 @@ class RemoveItemStockLimitButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            locale = await resolve_locale(interaction)
             confirm_modal = common_modals.ConfirmModal(
-                title=t(DEFAULT_LOCALE, 'config-modal-title-confirm-remove-stock-limit'),
-                prompt_label=t(DEFAULT_LOCALE, 'config-modal-label-remove-stock-limit'),
-                prompt_placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-type-confirm'),
-                confirm_callback=self._confirm_callback
+                title=t(locale, 'config-modal-title-confirm-remove-stock-limit'),
+                prompt_label=t(locale, 'config-modal-label-remove-stock-limit'),
+                prompt_placeholder=t(locale, 'config-modal-placeholder-type-confirm'),
+                confirm_callback=self._confirm_callback,
+                locale=locale
             )
             await interaction.response.send_modal(confirm_modal)
         except Exception as e:

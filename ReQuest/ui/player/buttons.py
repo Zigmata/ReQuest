@@ -65,7 +65,8 @@ class RemoveCharacterButton(Button):
                 title=t(locale, 'player-modal-title-confirm-char-removal'),
                 prompt_label=t(locale, 'player-modal-label-confirm-char-delete', characterName=self.character_name),
                 prompt_placeholder=t(locale, 'common-confirm-placeholder'),
-                confirm_callback=self._confirm_delete
+                confirm_callback=self._confirm_delete,
+                locale=locale
             )
             await interaction.response.send_modal(confirm_modal)
         except Exception as e:
@@ -178,7 +179,8 @@ class RemovePlayerPostButton(Button):
                 title=t(locale, 'player-modal-title-confirm-post-removal'),
                 prompt_label=t(locale, 'player-modal-label-post-removal-warning'),
                 prompt_placeholder=t(locale, 'common-confirm-placeholder'),
-                confirm_callback=self._confirm_delete
+                confirm_callback=self._confirm_delete,
+                locale=locale
             )
             await interaction.response.send_modal(confirm_modal)
         except Exception as e:
@@ -657,7 +659,8 @@ class DeleteContainerButton(Button):
                 title=t(locale, 'player-modal-title-confirm-container-delete'),
                 prompt_label=prompt_label,
                 prompt_placeholder=t(locale, 'common-confirm-placeholder'),
-                confirm_callback=self._confirm_delete
+                confirm_callback=self._confirm_delete,
+                locale=locale
             )
             await interaction.response.send_modal(confirm_modal)
         except Exception as e:

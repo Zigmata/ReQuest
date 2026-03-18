@@ -130,7 +130,8 @@ class CancelQuestButton(Button):
                 title=t(locale, 'gm-modal-title-cancel-quest'),
                 prompt_label=t(locale, 'gm-modal-label-cancel-quest'),
                 prompt_placeholder=t(locale, 'gm-modal-placeholder-cancel-quest'),
-                confirm_callback=self.confirm_callback
+                confirm_callback=self.confirm_callback,
+                locale=locale
             )
             await interaction.response.send_modal(confirm_modal)
         except Exception as e:
