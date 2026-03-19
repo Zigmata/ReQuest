@@ -699,6 +699,11 @@ config-desc-add-shop-wizard =
 config-desc-add-shop-json =
     {"**"}Mağaza Ekle (JSON){"**"}
     Tam bir JSON tanımı sağlayarak yeni bir mağaza oluşturun. (Gelişmiş)
+config-btn-example-json = Örnek JSON
+config-desc-example-json =
+    {"**"}Örnek JSON{"**"}
+    Beklenen formatı gösteren örnek bir JSON dosyası indirin.
+config-msg-example-json = İşte beklenen formatı gösteren örnek bir JSON dosyası.
 config-msg-no-shops = Mağaza yapılandırılmamış.
 config-label-shop-type-forum = (Forum)
 config-label-shop-channel = Kanal: <#{ $channelId }>

@@ -699,6 +699,11 @@ config-desc-add-shop-wizard =
 config-desc-add-shop-json =
     {"**"}Dodaj trgovinu (JSON){"**"}
     Stvorite novu trgovinu pružajući potpunu JSON definiciju. (Napredno)
+config-btn-example-json = Primjer JSON
+config-desc-example-json =
+    {"**"}Primjer JSON{"**"}
+    Preuzmite primjer JSON datoteke koja pokazuje očekivani format.
+config-msg-example-json = Evo primjera JSON datoteke koja pokazuje očekivani format.
 config-msg-no-shops = Trgovine nisu konfigurirane.
 config-label-shop-type-forum = (Forum)
 config-label-shop-channel = Kanal: <#{ $channelId }>

@@ -699,6 +699,11 @@ config-desc-add-shop-wizard =
 config-desc-add-shop-json =
     {"**"}Tilføj butik (JSON){"**"}
     Opret en ny butik ved at angive en fuld JSON-definition. (Avanceret)
+config-btn-example-json = Eksempel JSON
+config-desc-example-json =
+    {"**"}Eksempel JSON{"**"}
+    Download en eksempel JSON-fil der viser det forventede format.
+config-msg-example-json = Her er en eksempel JSON-fil der viser det forventede format.
 config-msg-no-shops = Ingen butikker konfigureret.
 config-label-shop-type-forum = (Forum)
 config-label-shop-channel = Kanal: <#{ $channelId }>

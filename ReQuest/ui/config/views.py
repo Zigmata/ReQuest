@@ -1703,6 +1703,7 @@ class ConfigNewCharacterShopView(LocaleLayoutView):
         action_row.add_item(buttons.AddNewCharacterShopItemButton(self))
         action_row.add_item(buttons.NewCharacterShopJSONButton(self))
         action_row.add_item(buttons.DownloadNewCharacterShopJSONButton(self))
+        action_row.add_item(buttons.ExampleNewCharacterShopJSONButton())
         container.add_item(action_row)
         container.add_item(Separator())
 
@@ -2436,6 +2437,10 @@ class ConfigShopsView(LocaleLayoutView):
         add_shop_json_section = Section(accessory=AddShopJSONButton(self))
         add_shop_json_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-desc-add-shop-json')))
         container.add_item(add_shop_json_section)
+
+        example_json_section = Section(accessory=buttons.ExampleShopJSONButton())
+        example_json_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-desc-example-json')))
+        container.add_item(example_json_section)
         container.add_item(Separator())
 
         if not self.shops:

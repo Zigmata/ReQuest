@@ -699,6 +699,11 @@ config-desc-add-shop-wizard =
 config-desc-add-shop-json =
     {"**"}Thêm cửa hàng (JSON){"**"}
     Tạo cửa hàng mới bằng cách cung cấp định nghĩa JSON đầy đủ. (Nâng cao)
+config-btn-example-json = JSON Mẫu
+config-desc-example-json =
+    {"**"}JSON Mẫu{"**"}
+    Tải xuống tệp JSON mẫu hiển thị định dạng mong đợi.
+config-msg-example-json = Đây là tệp JSON mẫu hiển thị định dạng mong đợi.
 config-msg-no-shops = Chưa cấu hình cửa hàng.
 config-label-shop-type-forum = (Forum)
 config-label-shop-channel = Kênh: <#{ $channelId }>

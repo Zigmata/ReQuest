@@ -852,6 +852,72 @@ class EditShopDetailsButton(Button):
             await log_exception(e, interaction)
 
 
+class ExampleShopJSONButton(Button):
+    def __init__(self):
+        super().__init__(
+            label=t(DEFAULT_LOCALE, 'config-btn-example-json'),
+            style=ButtonStyle.secondary,
+            custom_id='example_shop_json_button'
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            example = {
+                "shopName": "Example Shop",
+                "shopKeeper": "Shopkeeper Name",
+                "shopDescription": "A description of the shop.",
+                "shopImage": "https://example.com/shop_image.png",
+                "restockConfig": {
+                    "enabled": True,
+                    "schedule": "daily",
+                    "hour": 14,
+                    "minute": 0,
+                    "mode": "full"
+                },
+                "shopStock": [
+                    {
+                        "name": "Item with a single cost",
+                        "description": "This item has one cost option with one currency.",
+                        "quantity": 1,
+                        "maxStock": 10,
+                        "costs": [
+                            {"Gold": 50}
+                        ]
+                    },
+                    {
+                        "name": "Item with multi-currency cost",
+                        "description": "This item costs both Gold AND Reputation to purchase.",
+                        "quantity": 1,
+                        "costs": [
+                            {"Gold": 100, "Reputation": 5}
+                        ]
+                    },
+                    {
+                        "name": "Item with optional costs",
+                        "description": "This item can be purchased with Gold OR Reputation. Each entry in the costs array is an alternative payment option.",
+                        "quantity": 3,
+                        "maxStock": 20,
+                        "costs": [
+                            {"Gold": 200},
+                            {"Reputation": 10}
+                        ]
+                    }
+                ]
+            }
+
+            json_string = json.dumps(example, indent=4)
+            json_bytes = io.BytesIO(json_string.encode('utf-8'))
+            shop_file = discord.File(json_bytes, filename='example_shop.json')
+
+            await interaction.response.send_message(
+                t(DEFAULT_LOCALE, 'config-msg-example-json'),
+                file=shop_file,
+                ephemeral=True
+            )
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
 class DownloadShopJSONButton(Button):
     def __init__(self, calling_view):
         super().__init__(
@@ -1048,6 +1114,59 @@ class DownloadNewCharacterShopJSONButton(Button):
 
             await interaction.response.send_message(
                 t(DEFAULT_LOCALE, 'config-msg-new-char-shop-json-download'),
+                file=shop_file,
+                ephemeral=True
+            )
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ExampleNewCharacterShopJSONButton(Button):
+    def __init__(self):
+        super().__init__(
+            label=t(DEFAULT_LOCALE, 'config-btn-example-json'),
+            style=ButtonStyle.secondary,
+            custom_id='example_new_char_shop_json_button'
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            example = {
+                "shopStock": [
+                    {
+                        "name": "Item with a single cost",
+                        "description": "This item has one cost option with one currency.",
+                        "quantity": 1,
+                        "costs": [
+                            {"Gold": 50}
+                        ]
+                    },
+                    {
+                        "name": "Item with multi-currency cost",
+                        "description": "This item costs both Gold AND Reputation to purchase.",
+                        "quantity": 1,
+                        "costs": [
+                            {"Gold": 100, "Reputation": 5}
+                        ]
+                    },
+                    {
+                        "name": "Item with optional costs",
+                        "description": "This item can be purchased with Gold OR Reputation. Each entry in the costs array is an alternative payment option.",
+                        "quantity": 3,
+                        "costs": [
+                            {"Gold": 200},
+                            {"Reputation": 10}
+                        ]
+                    }
+                ]
+            }
+
+            json_string = json.dumps(example, indent=4)
+            json_bytes = io.BytesIO(json_string.encode('utf-8'))
+            shop_file = discord.File(json_bytes, filename='example_new_character_shop.json')
+
+            await interaction.response.send_message(
+                t(DEFAULT_LOCALE, 'config-msg-example-json'),
                 file=shop_file,
                 ephemeral=True
             )

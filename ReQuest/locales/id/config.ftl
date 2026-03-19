@@ -699,6 +699,11 @@ config-desc-add-shop-wizard =
 config-desc-add-shop-json =
     {"**"}Tambah Toko (JSON){"**"}
     Buat toko baru dengan memberikan definisi JSON lengkap. (Lanjutan)
+config-btn-example-json = Contoh JSON
+config-desc-example-json =
+    {"**"}Contoh JSON{"**"}
+    Unduh file JSON contoh yang menunjukkan format yang diharapkan.
+config-msg-example-json = Berikut adalah file JSON contoh yang menunjukkan format yang diharapkan.
 config-msg-no-shops = Tidak ada toko yang dikonfigurasi.
 config-label-shop-type-forum = (Forum)
 config-label-shop-channel = Kanal: <#{ $channelId }>

@@ -699,6 +699,11 @@ config-desc-add-shop-wizard =
 config-desc-add-shop-json =
     {"**"}Přidat obchod (JSON){"**"}
     Vytvořte nový obchod poskytnutím úplné JSON definice. (Pokročilé)
+config-btn-example-json = Ukázkový JSON
+config-desc-example-json =
+    {"**"}Ukázkový JSON{"**"}
+    Stáhněte si ukázkový soubor JSON zobrazující očekávaný formát.
+config-msg-example-json = Zde je ukázkový soubor JSON zobrazující očekávaný formát.
 config-msg-no-shops = Žádné obchody nejsou nakonfigurovány.
 config-label-shop-type-forum = (Forum)
 config-label-shop-channel = Kanál: <#{ $channelId }>
