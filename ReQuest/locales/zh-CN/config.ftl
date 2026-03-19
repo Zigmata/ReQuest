@@ -698,6 +698,11 @@ config-desc-add-shop-wizard =
 config-desc-add-shop-json =
     {"**"}添加商店（JSON）{"**"}
     通过提供完整的 JSON 定义创建新商店。（高级）
+config-btn-example-json = 示例 JSON
+config-desc-example-json =
+    {"**"}示例 JSON{"**"}
+    下载一个示例 JSON 文件，展示预期格式。
+config-msg-example-json = 这是一个示例 JSON 文件，展示预期格式。
 config-msg-no-shops = 未配置商店。
 config-label-shop-type-forum = （Forum）
 config-label-shop-channel = 频道：<#{ $channelId }>

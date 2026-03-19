@@ -699,6 +699,11 @@ config-desc-add-shop-wizard =
 config-desc-add-shop-json =
     {"**"}Bolt hozzáadása (JSON){"**"}
     Új bolt létrehozása teljes JSON definíció megadásával. (Haladó)
+config-btn-example-json = Példa JSON
+config-desc-example-json =
+    {"**"}Példa JSON{"**"}
+    Töltsön le egy példa JSON-fájlt, amely bemutatja a várt formátumot.
+config-msg-example-json = Itt egy példa JSON-fájl, amely bemutatja a várt formátumot.
 config-msg-no-shops = Nincsenek boltok konfigurálva.
 config-label-shop-type-forum = (Forum)
 config-label-shop-channel = Csatorna: <#{ $channelId }>

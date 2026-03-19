@@ -700,6 +700,11 @@ config-desc-add-shop-wizard =
 config-desc-add-shop-json =
     {"**"}Lisää kauppa (JSON){"**"}
     Luo uusi kauppa tarjoamalla täydellinen JSON-määritys. (Edistynyt)
+config-btn-example-json = Esimerkki JSON
+config-desc-example-json =
+    {"**"}Esimerkki JSON{"**"}
+    Lataa esimerkki-JSON-tiedosto, joka näyttää odotetun muodon.
+config-msg-example-json = Tässä on esimerkki-JSON-tiedosto, joka näyttää odotetun muodon.
 config-msg-no-shops = Kauppoja ei ole määritetty.
 config-label-shop-type-forum = (Forum)
 config-label-shop-channel = Kanava: <#{ $channelId }>

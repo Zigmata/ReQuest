@@ -697,6 +697,11 @@ config-desc-add-shop-wizard =
 config-desc-add-shop-json =
     {"**"}Dodaj sklep (JSON){"**"}
     Utwórz nowy sklep, dostarczając pełną definicję JSON. (Zaawansowane)
+config-btn-example-json = Przykład JSON
+config-desc-example-json =
+    {"**"}Przykład JSON{"**"}
+    Pobierz przykładowy plik JSON pokazujący oczekiwany format.
+config-msg-example-json = Oto przykładowy plik JSON pokazujący oczekiwany format.
 config-msg-no-shops = Nie skonfigurowano sklepów.
 config-label-shop-type-forum = (Forum)
 config-label-shop-channel = Kanał: <#{ $channelId }>

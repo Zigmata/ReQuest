@@ -699,6 +699,11 @@ config-desc-add-shop-wizard =
 config-desc-add-shop-json =
     {"**"}상점 추가 (JSON){"**"}
     완전한 JSON 정의를 제공하여 새 상점을 생성합니다. (고급)
+config-btn-example-json = 예시 JSON
+config-desc-example-json =
+    {"**"}예시 JSON{"**"}
+    예상 형식을 보여주는 예시 JSON 파일을 다운로드합니다.
+config-msg-example-json = 예상 형식을 보여주는 예시 JSON 파일입니다.
 config-msg-no-shops = 설정된 상점이 없습니다.
 config-label-shop-type-forum = (포럼)
 config-label-shop-channel = 채널: <#{ $channelId }>

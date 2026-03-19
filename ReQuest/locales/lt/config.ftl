@@ -699,6 +699,11 @@ config-desc-add-shop-wizard =
 config-desc-add-shop-json =
     {"**"}Pridėti parduotuvę (JSON){"**"}
     Sukurti naują parduotuvę pateikiant pilną JSON apibrėžimą. (Pažengusiems)
+config-btn-example-json = JSON pavyzdys
+config-desc-example-json =
+    {"**"}JSON pavyzdys{"**"}
+    Atsisiųskite JSON failo pavyzdį, rodantį numatomą formatą.
+config-msg-example-json = Štai JSON failo pavyzdys, rodantis numatomą formatą.
 config-msg-no-shops = Parduotuvės nesukonfigūruotos.
 config-label-shop-type-forum = (Forum)
 config-label-shop-channel = Kanalas: <#{ $channelId }>

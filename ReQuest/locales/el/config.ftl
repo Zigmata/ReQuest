@@ -699,6 +699,11 @@ config-desc-add-shop-wizard =
 config-desc-add-shop-json =
     {"**"}Προσθήκη Καταστήματος (JSON){"**"}
     Δημιουργήστε νέο κατάστημα παρέχοντας πλήρη ορισμό JSON. (Προχωρημένο)
+config-btn-example-json = Παράδειγμα JSON
+config-desc-example-json =
+    {"**"}Παράδειγμα JSON{"**"}
+    Κατεβάστε ένα παράδειγμα αρχείου JSON που δείχνει την αναμενόμενη μορφή.
+config-msg-example-json = Εδώ είναι ένα παράδειγμα αρχείου JSON που δείχνει την αναμενόμενη μορφή.
 config-msg-no-shops = Δεν έχουν ρυθμιστεί καταστήματα.
 config-label-shop-type-forum = (Forum)
 config-label-shop-channel = Κανάλι: <#{ $channelId }>

@@ -699,6 +699,11 @@ config-desc-add-shop-wizard =
 config-desc-add-shop-json =
     {"**"}新增商店（JSON）{"**"}
     透過提供完整的 JSON 定義建立新商店。（進階）
+config-btn-example-json = 範例 JSON
+config-desc-example-json =
+    {"**"}範例 JSON{"**"}
+    下載一個範例 JSON 檔案，展示預期格式。
+config-msg-example-json = 這是一個範例 JSON 檔案，展示預期格式。
 config-msg-no-shops = 未設定商店。
 config-label-shop-type-forum = （Forum）
 config-label-shop-channel = 頻道：<#{ $channelId }>
