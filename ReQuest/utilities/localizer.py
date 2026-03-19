@@ -48,6 +48,33 @@ class Localizer:
 
 _localizer = Localizer()
 
+
+def validate_locale_setup():
+    """Verify that every SUPPORTED_LOCALE has matching entries in UI registries and on-disk files.
+
+    Call this once after all modules have loaded (e.g. in setup_hook) to catch configuration drift.
+    """
+    from ReQuest.ui.info.selects import LOCALE_LABELS, LOCALE_DESCRIPTIONS, LOCALE_EMOJI
+
+    locales_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'locales')
+    errors = []
+
+    for locale in SUPPORTED_LOCALES:
+        if locale not in LOCALE_LABELS:
+            errors.append(f'{locale}: missing from LOCALE_LABELS')
+        if locale not in LOCALE_DESCRIPTIONS:
+            errors.append(f'{locale}: missing from LOCALE_DESCRIPTIONS')
+        if locale not in LOCALE_EMOJI:
+            errors.append(f'{locale}: missing from LOCALE_EMOJI')
+        locale_dir = os.path.join(locales_dir, locale)
+        if not os.path.isdir(locale_dir):
+            errors.append(f'{locale}: missing locale directory {locale_dir}')
+
+    if errors:
+        raise RuntimeError(
+            'Locale configuration drift detected:\n  ' + '\n  '.join(errors)
+        )
+
 _render_locale: ContextVar[str | None] = ContextVar('_render_locale', default=None)
 
 

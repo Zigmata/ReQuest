@@ -14,6 +14,6 @@ cmd-desc-player = Oyuncu Menüleri
 cmd-desc-shop = Yapılandırılmışsa mevcut kanalda bir mağaza açar.
 
 # Context menu names
-cmd-context-name-trade = Trade
-cmd-context-name-modify-player = Modify Player
-cmd-context-name-view-player = View Player
+cmd-context-name-trade = Takas
+cmd-context-name-modify-player = Oyuncuyu Düzenle
+cmd-context-name-view-player = Oyuncuyu Görüntüle

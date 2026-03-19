@@ -2,7 +2,7 @@
 
 # --- 코그 ---
 
-player-cmd-name = Trade
+player-cmd-name = 거래
 player-cmd-desc = 플레이어 메뉴
 
 # --- 버튼 ---

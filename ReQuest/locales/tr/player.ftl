@@ -2,7 +2,7 @@
 
 # --- Cog ---
 
-player-cmd-name = Trade
+player-cmd-name = Takas
 player-cmd-desc = Oyuncu Menüleri
 
 # --- Buttons ---

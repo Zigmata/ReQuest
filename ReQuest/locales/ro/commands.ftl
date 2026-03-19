@@ -14,6 +14,6 @@ cmd-desc-player = Meniuri jucător
 cmd-desc-shop = Deschide un magazin în canalul curent dacă unul este configurat.
 
 # Context menu names
-cmd-context-name-trade = Trade
-cmd-context-name-modify-player = Modify Player
-cmd-context-name-view-player = View Player
+cmd-context-name-trade = Schimb
+cmd-context-name-modify-player = Modifică Jucător
+cmd-context-name-view-player = Vizualizare Jucător

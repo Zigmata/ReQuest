@@ -707,7 +707,7 @@ config-label-shop-channel = Κανάλι: <#{ $channelId }>
 config-title-choose-location = {"**"}Προσθήκη Καταστήματος - Επιλογή Τύπου Τοποθεσίας{"**"}
 config-label-text-channel = {"**"}Κανάλι Κειμένου{"**"}
 config-desc-text-channel = Δημιουργήστε κατάστημα σε κανονικό κανάλι κειμένου.
-config-label-forum-thread = {"**"}Forum Thread{"**"}
+config-label-forum-thread = {"**"}Νήμα Forum{"**"}
 config-desc-forum-thread = Δημιουργήστε κατάστημα σε Forum thread (νέο ή υπάρχον).
 
 ## Forum Shop Setup View
@@ -725,7 +725,7 @@ config-desc-click-to-configure = Κάντε κλικ για ρύθμιση το�
 config-title-manage-shop = {"**"}Διαχείριση Καταστήματος: { $shopName }{"**"}
 config-label-shop-type = {"**"}Τύπος:{"**"} { $type }
 config-label-shop-type-text = Κανάλι Κειμένου
-config-label-shop-type-forum-thread = Forum Thread
+config-label-shop-type-forum-thread = Νήμα Forum
 config-label-shopkeeper = {"**"}Καταστηματάρχης:{"**"} { $name }
 config-label-shop-description = {"**"}Περιγραφή:{"**"} { $description }
 config-label-shop-channel-info = {"**"}Κανάλι:{"**"} <#{ $channelId }>

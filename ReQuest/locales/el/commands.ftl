@@ -14,6 +14,6 @@ cmd-desc-player = Μενού Παίκτη
 cmd-desc-shop = Ανοίγει ένα κατάστημα στο τρέχον κανάλι αν είναι ρυθμισμένο.
 
 # Context menu names
-cmd-context-name-trade = Trade
-cmd-context-name-modify-player = Modify Player
-cmd-context-name-view-player = View Player
+cmd-context-name-trade = Ανταλλαγή
+cmd-context-name-modify-player = Τροποποίηση Παίκτη
+cmd-context-name-view-player = Προβολή Παίκτη

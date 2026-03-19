@@ -14,6 +14,6 @@ cmd-desc-player = เมนูผู้เล่น
 cmd-desc-shop = เปิดร้านค้าในช่องปัจจุบันหากมีการตั้งค่าไว้
 
 # Context menu names
-cmd-context-name-trade = Trade
-cmd-context-name-modify-player = Modify Player
-cmd-context-name-view-player = View Player
+cmd-context-name-trade = แลกเปลี่ยน
+cmd-context-name-modify-player = แก้ไขผู้เล่น
+cmd-context-name-view-player = ดูผู้เล่น

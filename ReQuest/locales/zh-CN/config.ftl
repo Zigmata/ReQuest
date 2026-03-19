@@ -706,7 +706,7 @@ config-label-shop-channel = 频道：<#{ $channelId }>
 config-title-choose-location = {"**"}添加商店 - 选择位置类型{"**"}
 config-label-text-channel = {"**"}文字频道{"**"}
 config-desc-text-channel = 在标准文字频道中创建商店。
-config-label-forum-thread = {"**"}Forum Thread{"**"}
+config-label-forum-thread = {"**"}论坛帖子{"**"}
 config-desc-forum-thread = 在 Forum Thread 中创建商店（新建或已有）。
 
 ## Forum Shop Setup View
@@ -724,7 +724,7 @@ config-desc-click-to-configure = 点击以在此 Thread 中配置商店。
 config-title-manage-shop = {"**"}管理商店：{ $shopName }{"**"}
 config-label-shop-type = {"**"}类型：{"**"} { $type }
 config-label-shop-type-text = 文字频道
-config-label-shop-type-forum-thread = Forum Thread
+config-label-shop-type-forum-thread = 论坛帖子
 config-label-shopkeeper = {"**"}店主：{"**"} { $name }
 config-label-shop-description = {"**"}描述：{"**"} { $description }
 config-label-shop-channel-info = {"**"}频道：{"**"} <#{ $channelId }>

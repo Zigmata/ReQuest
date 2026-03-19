@@ -14,6 +14,6 @@ cmd-desc-player = 플레이어 메뉴
 cmd-desc-shop = 설정된 경우 현재 채널의 상점을 엽니다.
 
 # 컨텍스트 메뉴 이름
-cmd-context-name-trade = Trade
-cmd-context-name-modify-player = Modify Player
-cmd-context-name-view-player = View Player
+cmd-context-name-trade = 거래
+cmd-context-name-modify-player = 플레이어 수정
+cmd-context-name-view-player = 플레이어 보기

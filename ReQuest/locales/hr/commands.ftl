@@ -14,6 +14,6 @@ cmd-desc-player = Izbornici igrača
 cmd-desc-shop = Otvara trgovinu u trenutnom kanalu ako je konfigurirana.
 
 # Context menu names
-cmd-context-name-trade = Trade
-cmd-context-name-modify-player = Modify Player
-cmd-context-name-view-player = View Player
+cmd-context-name-trade = Razmjena
+cmd-context-name-modify-player = Izmijeni Igrača
+cmd-context-name-view-player = Pregledaj Igrača

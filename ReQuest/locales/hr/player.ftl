@@ -2,7 +2,7 @@
 
 # --- Cog ---
 
-player-cmd-name = Trade
+player-cmd-name = Razmjena
 player-cmd-desc = Izbornici igrača
 
 # --- Buttons ---

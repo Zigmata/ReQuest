@@ -14,6 +14,6 @@ cmd-desc-player = Menu Pemain
 cmd-desc-shop = Membuka toko di kanal saat ini jika sudah dikonfigurasi.
 
 # Context menu names
-cmd-context-name-trade = Trade
-cmd-context-name-modify-player = Modify Player
-cmd-context-name-view-player = View Player
+cmd-context-name-trade = Tukar
+cmd-context-name-modify-player = Modifikasi Pemain
+cmd-context-name-view-player = Lihat Pemain

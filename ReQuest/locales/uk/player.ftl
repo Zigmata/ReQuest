@@ -2,7 +2,7 @@
 
 # --- Ког ---
 
-player-cmd-name = Trade
+player-cmd-name = Обмін
 player-cmd-desc = Меню гравця
 
 # --- Кнопки ---

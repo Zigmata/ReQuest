@@ -14,6 +14,6 @@ cmd-desc-player = खिलाड़ी मेनू
 cmd-desc-shop = यदि कॉन्फ़िगर किया गया हो तो वर्तमान चैनल में दुकान खोलता है।
 
 # Context menu names
-cmd-context-name-trade = Trade
-cmd-context-name-modify-player = Modify Player
-cmd-context-name-view-player = View Player
+cmd-context-name-trade = व्यापार
+cmd-context-name-modify-player = खिलाड़ी संशोधित करें
+cmd-context-name-view-player = खिलाड़ी देखें

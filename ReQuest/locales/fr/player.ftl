@@ -2,7 +2,7 @@
 
 # --- Cog ---
 
-player-cmd-name = Trade
+player-cmd-name = Échange
 player-cmd-desc = Menus joueur
 
 # --- Boutons ---

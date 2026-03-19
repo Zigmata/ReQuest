@@ -14,6 +14,6 @@ cmd-desc-player = プレイヤーメニュー
 cmd-desc-shop = 現在のチャンネルにショップが設定されている場合、それを開きます。
 
 # Context menu names
-cmd-context-name-trade = Trade
-cmd-context-name-modify-player = Modify Player
-cmd-context-name-view-player = View Player
+cmd-context-name-trade = トレード
+cmd-context-name-modify-player = プレイヤーを変更
+cmd-context-name-view-player = プレイヤーを表示

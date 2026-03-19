@@ -14,6 +14,6 @@ cmd-desc-player = 玩家菜单
 cmd-desc-shop = 打开当前频道中已配置的商店。
 
 # Context menu names
-cmd-context-name-trade = Trade
-cmd-context-name-modify-player = Modify Player
-cmd-context-name-view-player = View Player
+cmd-context-name-trade = 交易
+cmd-context-name-modify-player = 修改玩家
+cmd-context-name-view-player = 查看玩家

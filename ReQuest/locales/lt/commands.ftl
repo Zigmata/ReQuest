@@ -14,6 +14,6 @@ cmd-desc-player = Žaidėjo meniu
 cmd-desc-shop = Atidaro parduotuvę dabartiniame kanale, jei tokia sukonfigūruota.
 
 # Context menu names
-cmd-context-name-trade = Trade
-cmd-context-name-modify-player = Modify Player
-cmd-context-name-view-player = View Player
+cmd-context-name-trade = Mainai
+cmd-context-name-modify-player = Modifikuoti Žaidėją
+cmd-context-name-view-player = Peržiūrėti Žaidėją

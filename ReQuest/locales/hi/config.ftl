@@ -707,7 +707,7 @@ config-label-shop-channel = चैनल: <#{ $channelId }>
 config-title-choose-location = {"**"}दुकान जोड़ें - स्थान प्रकार चुनें{"**"}
 config-label-text-channel = {"**"}टेक्स्ट चैनल{"**"}
 config-desc-text-channel = एक मानक टेक्स्ट चैनल में दुकान बनाएँ।
-config-label-forum-thread = {"**"}Forum Thread{"**"}
+config-label-forum-thread = {"**"}फ़ोरम थ्रेड{"**"}
 config-desc-forum-thread = एक Forum Thread (नए या मौजूदा) में दुकान बनाएँ।
 
 ## Forum Shop Setup View
@@ -725,7 +725,7 @@ config-desc-click-to-configure = इस Thread में दुकान कॉ�
 config-title-manage-shop = {"**"}दुकान प्रबंधित करें: { $shopName }{"**"}
 config-label-shop-type = {"**"}प्रकार:{"**"} { $type }
 config-label-shop-type-text = टेक्स्ट चैनल
-config-label-shop-type-forum-thread = Forum Thread
+config-label-shop-type-forum-thread = फ़ोरम थ्रेड
 config-label-shopkeeper = {"**"}दुकानदार:{"**"} { $name }
 config-label-shop-description = {"**"}विवरण:{"**"} { $description }
 config-label-shop-channel-info = {"**"}चैनल:{"**"} <#{ $channelId }>

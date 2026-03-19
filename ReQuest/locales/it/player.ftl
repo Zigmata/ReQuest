@@ -2,7 +2,7 @@
 
 # --- Cog ---
 
-player-cmd-name = Trade
+player-cmd-name = Scambio
 player-cmd-desc = Menu giocatore
 
 # --- Pulsanti ---

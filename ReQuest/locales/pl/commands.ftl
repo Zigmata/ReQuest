@@ -14,6 +14,6 @@ cmd-desc-player = Menu gracza
 cmd-desc-shop = Otwiera sklep w bieżącym kanale, jeśli jest skonfigurowany.
 
 # Context menu names
-cmd-context-name-trade = Trade
-cmd-context-name-modify-player = Modify Player
-cmd-context-name-view-player = View Player
+cmd-context-name-trade = Wymiana
+cmd-context-name-modify-player = Modyfikuj Gracza
+cmd-context-name-view-player = Podgląd Gracza

@@ -2,7 +2,7 @@
 
 # --- Cog ---
 
-player-cmd-name = Trade
+player-cmd-name = Tukar
 player-cmd-desc = Menu Pemain
 
 # --- Buttons ---
@@ -179,7 +179,7 @@ player-label-destination = Tujuan: {"**"}{ $destinationName }{"**"}
 # ContainerManagementView
 player-title-manage-containers = {"**"}Kelola Wadah{"**"}
 player-label-container-line = { $prefix }{"**"}{ $containerName }{"**"} ({ $count } barang){ $suffix }
-player-label-default-suffix = { " " }(default)
+player-label-default-suffix = { " " }(bawaan)
 player-msg-no-containers = Tidak ada wadah.
 player-label-selected-container = Terpilih: {"**"}{ $containerName }{"**"}
 

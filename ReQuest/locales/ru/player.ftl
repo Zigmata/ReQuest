@@ -2,7 +2,7 @@
 
 # --- Когда ---
 
-player-cmd-name = Trade
+player-cmd-name = Обмен
 player-cmd-desc = Меню игрока
 
 # --- Кнопки ---

@@ -2,7 +2,7 @@
 
 # --- Cog ---
 
-player-cmd-name = Trade
+player-cmd-name = Schimb
 player-cmd-desc = Meniuri jucător
 
 # --- Buttons ---
