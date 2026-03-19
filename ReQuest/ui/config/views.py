@@ -3288,6 +3288,8 @@ class ConfigLanguageView(LocaleLayoutView):
             else:
                 self.language_info.content = t(DEFAULT_LOCALE, 'config-label-server-language-default')
 
+            from ReQuest.ui.info.selects import get_config_locale_page
+            self.language_page = get_config_locale_page(self._current_guild_locale)
             self.language_select.populate(DEFAULT_LOCALE, self._current_guild_locale, page=self.language_page)
             self.build_view()
         except Exception as e:

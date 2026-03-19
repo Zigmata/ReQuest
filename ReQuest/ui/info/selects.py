@@ -119,9 +119,37 @@ def get_locale_total_pages():
     return math.ceil(len(SUPPORTED_LOCALES) / LOCALES_PER_PAGE)
 
 
+def get_locale_page(locale_code):
+    """Return the page number that contains the given locale in the user language select."""
+    try:
+        index = SUPPORTED_LOCALES.index(locale_code)
+    except ValueError:
+        return 0
+    return index // LOCALES_PER_PAGE
+
+
 def get_config_locale_total_pages():
     """Total pages for config select, which has a 'Default' option taking one slot on page 0."""
     return math.ceil((len(SUPPORTED_LOCALES) + 1) / LOCALES_PER_PAGE)
+
+
+def get_config_locale_page(locale_code):
+    """Return the page number that contains the given locale in the config language select.
+
+    Page 0 has the 'Default' option + (LOCALES_PER_PAGE - 1) locales.
+    Subsequent pages have LOCALES_PER_PAGE locales each.
+    If locale_code is None (default/no override), returns 0.
+    """
+    if locale_code is None:
+        return 0
+    try:
+        index = SUPPORTED_LOCALES.index(locale_code)
+    except ValueError:
+        return 0
+    per_page_0 = LOCALES_PER_PAGE - 1
+    if index < per_page_0:
+        return 0
+    return 1 + (index - per_page_0) // LOCALES_PER_PAGE
 
 
 class LanguageSelect(Select):

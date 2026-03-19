@@ -6,7 +6,7 @@ from discord.ui import Container, Section, TextDisplay, ActionRow, Separator, Bu
 from ReQuest.ui.common.views import LocaleLayoutView
 
 from ReQuest.ui.common.buttons import MenuDoneButton
-from ReQuest.ui.info.selects import LanguageSelect, get_locale_total_pages
+from ReQuest.ui.info.selects import LanguageSelect, get_locale_total_pages, get_locale_page
 from ReQuest.utilities.constants import CommonFields, DatabaseCollections
 from ReQuest.utilities.localizer import DEFAULT_LOCALE, SUPPORTED_LOCALES, t
 from ReQuest.utilities.supportFunctions import get_cached_data, log_exception
@@ -95,6 +95,7 @@ class LanguageView(LocaleLayoutView):
                 'info-language-current',
                 language=t(self.locale, f'info-language-label-{current_locale.lower()}')
             )
+            self.language_page = get_locale_page(current_locale)
             self.language_select.populate(self.locale, page=self.language_page)
 
             self.build_view()
