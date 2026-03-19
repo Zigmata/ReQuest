@@ -1174,6 +1174,49 @@ class ExampleNewCharacterShopJSONButton(Button):
             await log_exception(e, interaction)
 
 
+class ClearNewCharacterShopButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label=t(DEFAULT_LOCALE, 'config-btn-clear-shop'),
+            style=ButtonStyle.danger,
+            custom_id='clear_new_character_shop_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            locale = await resolve_locale(interaction)
+            confirm_modal = common_modals.ConfirmModal(
+                title=t(locale, 'config-modal-title-clear-shop'),
+                prompt_label=t(locale, 'config-modal-label-clear-shop'),
+                prompt_placeholder=t(locale, 'common-confirm-placeholder'),
+                confirm_callback=self._confirm_clear,
+                locale=locale
+            )
+            await interaction.response.send_modal(confirm_modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def _confirm_clear(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            guild_id = interaction.guild_id
+
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.NEW_CHARACTER_SHOP,
+                query={'_id': guild_id},
+                update_data={'$set': {ShopFields.SHOP_STOCK: []}}
+            )
+
+            self.calling_view.update_stock([])
+            self.calling_view.build_view()
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
 class ConfigNewCharacterWealthButton(Button):
     def __init__(self, calling_view):
         super().__init__(

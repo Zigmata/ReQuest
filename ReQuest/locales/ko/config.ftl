@@ -38,6 +38,7 @@ config-btn-re-scan = 재스캔
 config-btn-upload-json = JSON 업로드
 config-btn-configure-new-character-wealth = 신규 캐릭터 재산 설정
 config-btn-configure-new-character-shop = 신규 캐릭터 상점 설정
+config-btn-clear-shop = 상점 초기화
 config-btn-configure-static-kits = 고정 키트 설정
 config-btn-new-character-settings = 신규 캐릭터 설정
 config-btn-disabled-no-currency = 비활성화 (화폐 미설정)
@@ -84,6 +85,7 @@ config-modal-title-confirm-currency-removal = 화폐 제거 확인
 config-modal-title-confirm-shop-removal = 상점 제거 확인
 config-modal-title-confirm-kit-deletion = 키트 삭제 확인
 config-modal-title-confirm-remove-stock-limit = 재고 한도 제거 확인
+config-modal-title-clear-shop = 상점 초기화 확인
 
 # 확인 모달 프롬프트 라벨
 config-modal-label-remove-role = { $roleName }을(를) 제거하시겠습니까?
@@ -92,6 +94,7 @@ config-modal-label-remove-currency = { $currencyName }을(를) 제거하시겠�
 config-modal-label-shop-removal-warning = 경고: 이 작업은 되돌릴 수 없습니다!
 config-modal-label-kit-deletion-warning = 경고: 되돌릴 수 없습니다!
 config-modal-label-remove-stock-limit = 재고 한도를 제거하려면 CONFIRM을 입력하세요
+config-modal-label-clear-shop = 이 상점의 모든 아이템을 삭제하시겠습니까?
 config-modal-placeholder-type-confirm = CONFIRM을 입력하세요
 
 # 버튼의 오류 메시지

@@ -38,6 +38,7 @@ config-btn-re-scan = Повторне сканування
 config-btn-upload-json = Завантажити JSON
 config-btn-configure-new-character-wealth = Налаштувати стартове багатство
 config-btn-configure-new-character-shop = Налаштувати магазин нового персонажа
+config-btn-clear-shop = Очистити магазин
 config-btn-configure-static-kits = Налаштувати статичні набори
 config-btn-new-character-settings = Налаштування нового персонажа
 config-btn-disabled-no-currency = Вимкнено (Валюта не налаштована)
@@ -84,6 +85,7 @@ config-modal-title-confirm-currency-removal = Підтвердження вид�
 config-modal-title-confirm-shop-removal = Підтвердження видалення магазину
 config-modal-title-confirm-kit-deletion = Підтвердження видалення набору
 config-modal-title-confirm-remove-stock-limit = Підтвердження видалення обмеження запасів
+config-modal-title-clear-shop = Підтвердити очищення магазину
 
 # Мітки підказок модальних вікон підтвердження
 config-modal-label-remove-role = Видалити { $roleName }?
@@ -93,6 +95,7 @@ config-modal-label-shop-removal-warning = УВАГА: Ця дія незворо
 config-modal-label-kit-deletion-warning = УВАГА: Незворотно!
 config-modal-placeholder-type-confirm = Введіть CONFIRM
 config-modal-label-remove-stock-limit = Введіть CONFIRM для видалення обмеження запасів
+config-modal-label-clear-shop = Очистити всі предмети з цього магазину?
 
 # Повідомлення про помилки з кнопок
 config-error-shop-data-not-found = Помилка: Не вдалося знайти дані цього магазину.

@@ -1681,7 +1681,7 @@ class ConfigNewCharacterShopView(LocaleLayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         self.all_stock = []
-        self.items_per_page = 6
+        self.items_per_page = 5
         self.current_page = 0
         self.total_pages = 1
         self.mode_description = ''
@@ -1704,6 +1704,8 @@ class ConfigNewCharacterShopView(LocaleLayoutView):
         action_row.add_item(buttons.NewCharacterShopJSONButton(self))
         action_row.add_item(buttons.DownloadNewCharacterShopJSONButton(self))
         action_row.add_item(buttons.ExampleNewCharacterShopJSONButton())
+        if self.all_stock:
+            action_row.add_item(buttons.ClearNewCharacterShopButton(self))
         container.add_item(action_row)
         container.add_item(Separator())
 
@@ -2254,7 +2256,7 @@ class ConfigEditCurrencyView(LocaleLayoutView):
         self.currency_data = {}
         self.denominations = []
 
-        self.items_per_page = 8
+        self.items_per_page = 6
         self.current_page = 0
         self.total_pages = 1
 
@@ -2387,7 +2389,7 @@ class ConfigShopsView(LocaleLayoutView):
         super().__init__(timeout=None)
         self.shops = []
 
-        self.items_per_page = 8
+        self.items_per_page = 7
         self.current_page = 0
         self.total_pages = 1
 

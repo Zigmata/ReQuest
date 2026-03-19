@@ -38,6 +38,7 @@ config-btn-re-scan = Επανασάρωση
 config-btn-upload-json = Μεταφόρτωση JSON
 config-btn-configure-new-character-wealth = Ρύθμιση Αρχικού Πλούτου Χαρακτήρα
 config-btn-configure-new-character-shop = Ρύθμιση Καταστήματος Νέου Χαρακτήρα
+config-btn-clear-shop = Εκκαθάριση καταστήματος
 config-btn-configure-static-kits = Ρύθμιση Στατικών Κιτ
 config-btn-new-character-settings = Ρυθμίσεις Νέου Χαρακτήρα
 config-btn-disabled-no-currency = Απενεργοποιημένο (Δεν Έχει Ρυθμιστεί Νόμισμα)
@@ -84,6 +85,7 @@ config-modal-title-confirm-currency-removal = Επιβεβαίωση Αφαίρ�
 config-modal-title-confirm-shop-removal = Επιβεβαίωση Αφαίρεσης Καταστήματος
 config-modal-title-confirm-kit-deletion = Επιβεβαίωση Διαγραφής Κιτ
 config-modal-title-confirm-remove-stock-limit = Επιβεβαίωση Αφαίρεσης Ορίου Αποθέματος
+config-modal-title-clear-shop = Επιβεβαίωση εκκαθάρισης
 
 # Confirm modal prompt labels
 config-modal-label-remove-role = Αφαίρεση { $roleName };
@@ -92,6 +94,7 @@ config-modal-label-remove-currency = Αφαίρεση { $currencyName };
 config-modal-label-shop-removal-warning = ΠΡΟΕΙΔΟΠΟΙΗΣΗ: Αυτή η ενέργεια είναι μη αναστρέψιμη!
 config-modal-label-kit-deletion-warning = ΠΡΟΕΙΔΟΠΟΙΗΣΗ: Μη αναστρέψιμη!
 config-modal-label-remove-stock-limit = Πληκτρολογήστε CONFIRM για αφαίρεση του ορίου αποθέματος
+config-modal-label-clear-shop = Εκκαθάριση όλων των αντικειμένων από αυτό το κατάστημα;
 config-modal-placeholder-type-confirm = Πληκτρολογήστε CONFIRM
 
 # Error messages from buttons

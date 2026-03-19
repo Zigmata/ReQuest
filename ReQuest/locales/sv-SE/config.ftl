@@ -38,6 +38,7 @@ config-btn-re-scan = Skanna igen
 config-btn-upload-json = Ladda upp JSON
 config-btn-configure-new-character-wealth = Konfigurera nykaraktärsförmögenhet
 config-btn-configure-new-character-shop = Konfigurera nykaraktärsbutik
+config-btn-clear-shop = Rensa butik
 config-btn-configure-static-kits = Konfigurera statiska utrustningspaket
 config-btn-new-character-settings = Nykaraktärsinställningar
 config-btn-disabled-no-currency = Inaktiverad (ingen valuta konfigurerad)
@@ -84,6 +85,7 @@ config-modal-title-confirm-currency-removal = Bekräfta borttagning av valuta
 config-modal-title-confirm-shop-removal = Bekräfta borttagning av butik
 config-modal-title-confirm-kit-deletion = Bekräfta radering av utrustningspaket
 config-modal-title-confirm-remove-stock-limit = Bekräfta borttagning av lagergräns
+config-modal-title-clear-shop = Bekräfta rensning av butik
 
 # Confirm modal prompt labels
 config-modal-label-remove-role = Ta bort { $roleName }?
@@ -92,6 +94,7 @@ config-modal-label-remove-currency = Ta bort { $currencyName }?
 config-modal-label-shop-removal-warning = VARNING: Denna åtgärd är oåterkallelig!
 config-modal-label-kit-deletion-warning = VARNING: Oåterkalleligt!
 config-modal-label-remove-stock-limit = Skriv CONFIRM för att ta bort lagergränsen
+config-modal-label-clear-shop = Rensa alla föremål från denna butik?
 config-modal-placeholder-type-confirm = Skriv CONFIRM
 
 # Error messages from buttons

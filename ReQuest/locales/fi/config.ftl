@@ -39,6 +39,7 @@ config-btn-re-scan = Tarkista uudelleen
 config-btn-upload-json = Lataa JSON
 config-btn-configure-new-character-wealth = Määritä uuden hahmon varallisuus
 config-btn-configure-new-character-shop = Määritä uuden hahmon kauppa
+config-btn-clear-shop = Tyhjennä kauppa
 config-btn-configure-static-kits = Määritä kiinteät varustesarjat
 config-btn-new-character-settings = Uuden hahmon asetukset
 config-btn-disabled-no-currency = Pois käytöstä (valuuttaa ei ole määritetty)
@@ -85,6 +86,7 @@ config-modal-title-confirm-currency-removal = Vahvista valuutan poisto
 config-modal-title-confirm-shop-removal = Vahvista kaupan poisto
 config-modal-title-confirm-kit-deletion = Vahvista varustesarjan poisto
 config-modal-title-confirm-remove-stock-limit = Vahvista varastorajan poisto
+config-modal-title-clear-shop = Vahvista kaupan tyhjennys
 
 # Confirm modal prompt labels
 config-modal-label-remove-role = Poistetaanko { $roleName }?
@@ -93,6 +95,7 @@ config-modal-label-remove-currency = Poistetaanko { $currencyName }?
 config-modal-label-shop-removal-warning = VAROITUS: Tätä toimintoa ei voi kumota!
 config-modal-label-kit-deletion-warning = VAROITUS: Peruuttamaton!
 config-modal-label-remove-stock-limit = Kirjoita CONFIRM poistaaksesi varastorajan
+config-modal-label-clear-shop = Tyhjennä kaikki tuotteet tästä kaupasta?
 config-modal-placeholder-type-confirm = Kirjoita CONFIRM
 
 # Error messages from buttons

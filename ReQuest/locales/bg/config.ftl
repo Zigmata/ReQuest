@@ -38,6 +38,7 @@ config-btn-re-scan = Повторно сканиране
 config-btn-upload-json = Качване на JSON
 config-btn-configure-new-character-wealth = Конфигуриране на начално богатство
 config-btn-configure-new-character-shop = Конфигуриране на магазин за нови персонажи
+config-btn-clear-shop = Изчисти магазина
 config-btn-configure-static-kits = Конфигуриране на статични комплекти
 config-btn-new-character-settings = Настройки за нов персонаж
 config-btn-disabled-no-currency = Изключено (Няма конфигурирана валута)
@@ -84,6 +85,7 @@ config-modal-title-confirm-currency-removal = Потвърждение за пр
 config-modal-title-confirm-shop-removal = Потвърждение за премахване на магазин
 config-modal-title-confirm-kit-deletion = Потвърждение за изтриване на комплект
 config-modal-title-confirm-remove-stock-limit = Потвърждение за премахване на лимит на наличност
+config-modal-title-clear-shop = Потвърдете изчистването
 
 # Confirm modal prompt labels
 config-modal-label-remove-role = Премахване на { $roleName }?
@@ -92,6 +94,7 @@ config-modal-label-remove-currency = Премахване на { $currencyName }
 config-modal-label-shop-removal-warning = ВНИМАНИЕ: Това действие е необратимо!
 config-modal-label-kit-deletion-warning = ВНИМАНИЕ: Необратимо!
 config-modal-label-remove-stock-limit = Напишете CONFIRM, за да премахнете лимита на наличност
+config-modal-label-clear-shop = Изчистване на всички предмети от този магазин?
 config-modal-placeholder-type-confirm = Напишете CONFIRM
 
 # Error messages from buttons

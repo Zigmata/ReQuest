@@ -38,6 +38,7 @@ config-btn-re-scan = Scan igen
 config-btn-upload-json = Upload JSON
 config-btn-configure-new-character-wealth = Konfigurer ny karakters formue
 config-btn-configure-new-character-shop = Konfigurer ny karakters butik
+config-btn-clear-shop = Ryd butik
 config-btn-configure-static-kits = Konfigurer statiske pakker
 config-btn-new-character-settings = Nye karakterindstillinger
 config-btn-disabled-no-currency = Deaktiveret (ingen valuta konfigureret)
@@ -84,6 +85,7 @@ config-modal-title-confirm-currency-removal = Bekræft valutafjernelse
 config-modal-title-confirm-shop-removal = Bekræft butiksfjernelse
 config-modal-title-confirm-kit-deletion = Bekræft pakkesletning
 config-modal-title-confirm-remove-stock-limit = Bekræft fjernelse af lagergrænse
+config-modal-title-clear-shop = Bekræft rydning af butik
 
 # Confirm modal prompt labels
 config-modal-label-remove-role = Fjern { $roleName }?
@@ -92,6 +94,7 @@ config-modal-label-remove-currency = Fjern { $currencyName }?
 config-modal-label-shop-removal-warning = ADVARSEL: Denne handling er irreversibel!
 config-modal-label-kit-deletion-warning = ADVARSEL: Irreversibelt!
 config-modal-label-remove-stock-limit = Skriv CONFIRM for at fjerne lagergrænsen
+config-modal-label-clear-shop = Ryd alle varer fra denne butik?
 config-modal-placeholder-type-confirm = Skriv CONFIRM
 
 # Error messages from buttons

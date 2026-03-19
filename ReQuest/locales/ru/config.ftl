@@ -38,6 +38,7 @@ config-btn-re-scan = Повторное сканирование
 config-btn-upload-json = Загрузить JSON
 config-btn-configure-new-character-wealth = Настроить начальное богатство
 config-btn-configure-new-character-shop = Настроить магазин нового персонажа
+config-btn-clear-shop = Очистить магазин
 config-btn-configure-static-kits = Настроить стартовые наборы
 config-btn-new-character-settings = Настройки нового персонажа
 config-btn-disabled-no-currency = Отключено (Валюта не настроена)
@@ -84,6 +85,7 @@ config-modal-title-confirm-currency-removal = Подтверждение уда�
 config-modal-title-confirm-shop-removal = Подтверждение удаления магазина
 config-modal-title-confirm-kit-deletion = Подтверждение удаления набора
 config-modal-title-confirm-remove-stock-limit = Подтверждение удаления лимита запасов
+config-modal-title-clear-shop = Подтвердите очистку магазина
 
 # Метки модальных окон подтверждения
 config-modal-label-remove-role = Удалить { $roleName }?
@@ -92,6 +94,7 @@ config-modal-label-remove-currency = Удалить { $currencyName }?
 config-modal-label-shop-removal-warning = ВНИМАНИЕ: Это действие необратимо!
 config-modal-label-kit-deletion-warning = ВНИМАНИЕ: Необратимо!
 config-modal-label-remove-stock-limit = Введите CONFIRM для удаления лимита запасов
+config-modal-label-clear-shop = Очистить все предметы из этого магазина?
 config-modal-placeholder-type-confirm = Введите CONFIRM
 
 # Сообщения об ошибках кнопок

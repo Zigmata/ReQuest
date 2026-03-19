@@ -38,6 +38,7 @@ config-btn-re-scan = Nuskaityti iš naujo
 config-btn-upload-json = Įkelti JSON
 config-btn-configure-new-character-wealth = Konfigūruoti naujo personažo turtą
 config-btn-configure-new-character-shop = Konfigūruoti naujo personažo parduotuvę
+config-btn-clear-shop = Išvalyti parduotuvę
 config-btn-configure-static-kits = Konfigūruoti statinius rinkinius
 config-btn-new-character-settings = Naujo personažo nustatymai
 config-btn-disabled-no-currency = Išjungta (valiuta nesukonfigūruota)
@@ -84,6 +85,7 @@ config-modal-title-confirm-currency-removal = Patvirtinti valiutos pašalinimą
 config-modal-title-confirm-shop-removal = Patvirtinti parduotuvės pašalinimą
 config-modal-title-confirm-kit-deletion = Patvirtinti rinkinio ištrinimą
 config-modal-title-confirm-remove-stock-limit = Patvirtinti atsargų limito pašalinimą
+config-modal-title-clear-shop = Patvirtinti parduotuvės išvalymą
 
 # Confirm modal prompt labels
 config-modal-label-remove-role = Pašalinti { $roleName }?
@@ -92,6 +94,7 @@ config-modal-label-remove-currency = Pašalinti { $currencyName }?
 config-modal-label-shop-removal-warning = DĖMESIO: Šio veiksmo negalima atšaukti!
 config-modal-label-kit-deletion-warning = DĖMESIO: Negrįžtamas veiksmas!
 config-modal-label-remove-stock-limit = Įveskite CONFIRM, kad pašalintumėte atsargų limitą
+config-modal-label-clear-shop = Išvalyti visus daiktus iš šios parduotuvės?
 config-modal-placeholder-type-confirm = Įveskite CONFIRM
 
 # Error messages from buttons

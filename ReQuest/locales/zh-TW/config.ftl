@@ -38,6 +38,7 @@ config-btn-re-scan = 重新掃描
 config-btn-upload-json = 上傳 JSON
 config-btn-configure-new-character-wealth = 設定新角色財富
 config-btn-configure-new-character-shop = 設定新角色商店
+config-btn-clear-shop = 清空商店
 config-btn-configure-static-kits = 設定固定套組
 config-btn-new-character-settings = 新角色設定
 config-btn-disabled-no-currency = 已停用（未設定貨幣）
@@ -84,6 +85,7 @@ config-modal-title-confirm-currency-removal = 確認移除貨幣
 config-modal-title-confirm-shop-removal = 確認移除商店
 config-modal-title-confirm-kit-deletion = 確認刪除套組
 config-modal-title-confirm-remove-stock-limit = 確認移除庫存限制
+config-modal-title-clear-shop = 確認清空商店
 
 # Confirm modal prompt labels
 config-modal-label-remove-role = 移除 { $roleName }？
@@ -92,6 +94,7 @@ config-modal-label-remove-currency = 移除 { $currencyName }？
 config-modal-label-shop-removal-warning = 警告：此操作無法復原！
 config-modal-label-kit-deletion-warning = 警告：無法復原！
 config-modal-label-remove-stock-limit = 輸入 CONFIRM 以移除庫存限制
+config-modal-label-clear-shop = 清空此商店的所有物品？
 config-modal-placeholder-type-confirm = 輸入 CONFIRM
 
 # Error messages from buttons

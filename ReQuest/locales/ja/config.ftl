@@ -38,6 +38,7 @@ config-btn-re-scan = 再スキャン
 config-btn-upload-json = JSON をアップロード
 config-btn-configure-new-character-wealth = 新キャラクターの所持金を設定
 config-btn-configure-new-character-shop = 新キャラクターショップを設定
+config-btn-clear-shop = ショップをクリア
 config-btn-configure-static-kits = スタティックキットを設定
 config-btn-new-character-settings = 新キャラクター設定
 config-btn-disabled-no-currency = 無効（通貨が未設定です）
@@ -84,6 +85,7 @@ config-modal-title-confirm-currency-removal = 通貨削除の確認
 config-modal-title-confirm-shop-removal = ショップ削除の確認
 config-modal-title-confirm-kit-deletion = キット削除の確認
 config-modal-title-confirm-remove-stock-limit = 在庫制限削除の確認
+config-modal-title-clear-shop = ショップクリアの確認
 
 # Confirm modal prompt labels
 config-modal-label-remove-role = { $roleName } を削除しますか？
@@ -92,6 +94,7 @@ config-modal-label-remove-currency = { $currencyName } を削除しますか？
 config-modal-label-shop-removal-warning = 警告：この操作は元に戻せません！
 config-modal-label-kit-deletion-warning = 警告：元に戻せません！
 config-modal-label-remove-stock-limit = 在庫制限を削除するには CONFIRM と入力してください
+config-modal-label-clear-shop = このショップのすべてのアイテムをクリアしますか？
 config-modal-placeholder-type-confirm = CONFIRM と入力
 
 # Error messages from buttons
