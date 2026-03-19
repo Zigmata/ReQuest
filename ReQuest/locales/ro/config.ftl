@@ -38,6 +38,7 @@ config-btn-re-scan = Re-scanează
 config-btn-upload-json = Încarcă JSON
 config-btn-configure-new-character-wealth = Configurează averea personajului nou
 config-btn-configure-new-character-shop = Configurează magazinul personajului nou
+config-btn-clear-shop = Golește magazinul
 config-btn-configure-static-kits = Configurează kituri statice
 config-btn-new-character-settings = Setări personaj nou
 config-btn-disabled-no-currency = Dezactivat (Nicio monedă configurată)
@@ -84,6 +85,7 @@ config-modal-title-confirm-currency-removal = Confirmă eliminarea monedei
 config-modal-title-confirm-shop-removal = Confirmă eliminarea magazinului
 config-modal-title-confirm-kit-deletion = Confirmă ștergerea kitului
 config-modal-title-confirm-remove-stock-limit = Confirmă eliminarea limitei de stoc
+config-modal-title-clear-shop = Confirmați golirea magazinului
 
 # Confirm modal prompt labels
 config-modal-label-remove-role = Eliminați { $roleName }?
@@ -92,6 +94,7 @@ config-modal-label-remove-currency = Eliminați { $currencyName }?
 config-modal-label-shop-removal-warning = ATENȚIE: Această acțiune este ireversibilă!
 config-modal-label-kit-deletion-warning = ATENȚIE: Ireversibil!
 config-modal-label-remove-stock-limit = Tastați CONFIRM pentru a elimina limita de stoc
+config-modal-label-clear-shop = Goliți toate articolele din acest magazin?
 config-modal-placeholder-type-confirm = Tastați CONFIRM
 
 # Error messages from buttons

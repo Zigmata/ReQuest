@@ -38,6 +38,7 @@ config-btn-re-scan = Quét lại
 config-btn-upload-json = Tải lên JSON
 config-btn-configure-new-character-wealth = Cấu hình tài sản nhân vật mới
 config-btn-configure-new-character-shop = Cấu hình cửa hàng nhân vật mới
+config-btn-clear-shop = Xóa cửa hàng
 config-btn-configure-static-kits = Cấu hình bộ trang bị cố định
 config-btn-new-character-settings = Cài đặt nhân vật mới
 config-btn-disabled-no-currency = Đã tắt (Chưa cấu hình tiền tệ)
@@ -84,6 +85,7 @@ config-modal-title-confirm-currency-removal = Xác nhận xóa tiền tệ
 config-modal-title-confirm-shop-removal = Xác nhận xóa cửa hàng
 config-modal-title-confirm-kit-deletion = Xác nhận xóa bộ trang bị
 config-modal-title-confirm-remove-stock-limit = Xác nhận xóa giới hạn tồn kho
+config-modal-title-clear-shop = Xác nhận xóa cửa hàng
 
 # Confirm modal prompt labels
 config-modal-label-remove-role = Xóa { $roleName }?
@@ -92,6 +94,7 @@ config-modal-label-remove-currency = Xóa { $currencyName }?
 config-modal-label-shop-removal-warning = CẢNH BÁO: Hành động này không thể hoàn tác!
 config-modal-label-kit-deletion-warning = CẢNH BÁO: Không thể hoàn tác!
 config-modal-label-remove-stock-limit = Nhập CONFIRM để xóa giới hạn tồn kho
+config-modal-label-clear-shop = Xóa tất cả vật phẩm khỏi cửa hàng này?
 config-modal-placeholder-type-confirm = Nhập CONFIRM
 
 # Error messages from buttons

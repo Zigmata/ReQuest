@@ -38,6 +38,7 @@ config-btn-re-scan = Yeniden Tara
 config-btn-upload-json = JSON Yükle
 config-btn-configure-new-character-wealth = Yeni Karakter Servetini Yapılandır
 config-btn-configure-new-character-shop = Yeni Karakter Mağazasını Yapılandır
+config-btn-clear-shop = Mağazayı Temizle
 config-btn-configure-static-kits = Sabit Kitleri Yapılandır
 config-btn-new-character-settings = Yeni Karakter Ayarları
 config-btn-disabled-no-currency = Devre Dışı (Para Birimi Yapılandırılmamış)
@@ -84,6 +85,7 @@ config-modal-title-confirm-currency-removal = Para Birimi Kaldırmayı Onayla
 config-modal-title-confirm-shop-removal = Mağaza Kaldırmayı Onayla
 config-modal-title-confirm-kit-deletion = Kit Silmeyi Onayla
 config-modal-title-confirm-remove-stock-limit = Stok Limiti Kaldırmayı Onayla
+config-modal-title-clear-shop = Mağaza Temizlemeyi Onayla
 
 # Confirm modal prompt labels
 config-modal-label-remove-role = { $roleName } kaldırılsın mı?
@@ -92,6 +94,7 @@ config-modal-label-remove-currency = { $currencyName } kaldırılsın mı?
 config-modal-label-shop-removal-warning = UYARI: Bu işlem geri alınamaz!
 config-modal-label-kit-deletion-warning = UYARI: Geri alınamaz!
 config-modal-label-remove-stock-limit = Stok limitini kaldırmak için CONFIRM yazın
+config-modal-label-clear-shop = Bu mağazadaki tüm öğeleri temizle?
 config-modal-placeholder-type-confirm = CONFIRM yazın
 
 # Error messages from buttons

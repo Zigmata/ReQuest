@@ -38,6 +38,7 @@ config-btn-re-scan = Erneut prüfen
 config-btn-upload-json = JSON hochladen
 config-btn-configure-new-character-wealth = Neues Charaktervermögen konfigurieren
 config-btn-configure-new-character-shop = Neuen-Charakter-Shop konfigurieren
+config-btn-clear-shop = Laden leeren
 config-btn-configure-static-kits = Statische Ausrüstungssets konfigurieren
 config-btn-new-character-settings = Neuer-Charakter-Einstellungen
 config-btn-disabled-no-currency = Deaktiviert (Keine Währung konfiguriert)
@@ -84,6 +85,7 @@ config-modal-title-confirm-currency-removal = Währungsentfernung bestätigen
 config-modal-title-confirm-shop-removal = Shopentfernung bestätigen
 config-modal-title-confirm-kit-deletion = Set-Löschung bestätigen
 config-modal-title-confirm-remove-stock-limit = Bestandsgrenze entfernen bestätigen
+config-modal-title-clear-shop = Laden leeren bestätigen
 
 # Bestätigungsdialog-Bezeichnungen
 config-modal-label-remove-role = { $roleName } entfernen?
@@ -92,6 +94,7 @@ config-modal-label-remove-currency = { $currencyName } entfernen?
 config-modal-label-shop-removal-warning = WARNUNG: Diese Aktion ist unwiderruflich!
 config-modal-label-kit-deletion-warning = WARNUNG: Unwiderruflich!
 config-modal-label-remove-stock-limit = Geben Sie CONFIRM ein, um die Bestandsgrenze zu entfernen
+config-modal-label-clear-shop = Alle Artikel aus diesem Laden entfernen?
 config-modal-placeholder-type-confirm = Geben Sie CONFIRM ein
 
 # Fehlermeldungen von Schaltflächen

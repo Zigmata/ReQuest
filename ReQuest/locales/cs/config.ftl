@@ -38,6 +38,7 @@ config-btn-re-scan = Znovu skenovat
 config-btn-upload-json = Nahrát JSON
 config-btn-configure-new-character-wealth = Konfigurovat počáteční majetek
 config-btn-configure-new-character-shop = Konfigurovat obchod pro nové postavy
+config-btn-clear-shop = Vymazat obchod
 config-btn-configure-static-kits = Konfigurovat statické sady
 config-btn-new-character-settings = Nastavení nových postav
 config-btn-disabled-no-currency = Vypnuto (Není nakonfigurována měna)
@@ -84,6 +85,7 @@ config-modal-title-confirm-currency-removal = Potvrdit odebrání měny
 config-modal-title-confirm-shop-removal = Potvrdit odebrání obchodu
 config-modal-title-confirm-kit-deletion = Potvrdit smazání sady
 config-modal-title-confirm-remove-stock-limit = Potvrdit odebrání limitu zásob
+config-modal-title-clear-shop = Potvrdit vymazání obchodu
 
 # Confirm modal prompt labels
 config-modal-label-remove-role = Odebrat { $roleName }?
@@ -92,6 +94,7 @@ config-modal-label-remove-currency = Odebrat { $currencyName }?
 config-modal-label-shop-removal-warning = VAROVÁNÍ: Tato akce je nevratná!
 config-modal-label-kit-deletion-warning = VAROVÁNÍ: Nevratné!
 config-modal-label-remove-stock-limit = Napište CONFIRM pro odebrání limitu zásob
+config-modal-label-clear-shop = Vymazat všechny předměty z tohoto obchodu?
 config-modal-placeholder-type-confirm = Napište CONFIRM
 
 # Error messages from buttons

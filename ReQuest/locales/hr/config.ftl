@@ -39,6 +39,7 @@ config-btn-re-scan = Ponovno skeniraj
 config-btn-upload-json = Učitaj JSON
 config-btn-configure-new-character-wealth = Konfiguriraj bogatstvo novog lika
 config-btn-configure-new-character-shop = Konfiguriraj trgovinu za nove likove
+config-btn-clear-shop = Isprazni trgovinu
 config-btn-configure-static-kits = Konfiguriraj statičke setove
 config-btn-new-character-settings = Postavke novog lika
 config-btn-disabled-no-currency = Onemogućeno (valuta nije konfigurirana)
@@ -84,6 +85,7 @@ config-modal-title-confirm-currency-removal = Potvrdi uklanjanje valute
 config-modal-title-confirm-shop-removal = Potvrdi uklanjanje trgovine
 config-modal-title-confirm-kit-deletion = Potvrdi brisanje seta
 config-modal-title-confirm-remove-stock-limit = Potvrdi uklanjanje ograničenja zaliha
+config-modal-title-clear-shop = Potvrdi pražnjenje trgovine
 
 # Confirm modal prompt labels
 config-modal-label-remove-role = Ukloniti { $roleName }?
@@ -92,6 +94,7 @@ config-modal-label-remove-currency = Ukloniti { $currencyName }?
 config-modal-label-shop-removal-warning = UPOZORENJE: Ova radnja je nepovratna!
 config-modal-label-kit-deletion-warning = UPOZORENJE: Nepovratno!
 config-modal-label-remove-stock-limit = Upišite CONFIRM za uklanjanje ograničenja zaliha
+config-modal-label-clear-shop = Isprazniti sve predmete iz ove trgovine?
 config-modal-placeholder-type-confirm = Upišite CONFIRM
 
 # Error messages from buttons

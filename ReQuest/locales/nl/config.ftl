@@ -38,6 +38,7 @@ config-btn-re-scan = Opnieuw scannen
 config-btn-upload-json = JSON uploaden
 config-btn-configure-new-character-wealth = Startkapitaal configureren
 config-btn-configure-new-character-shop = Nieuw-personagewinkel configureren
+config-btn-clear-shop = Winkel legen
 config-btn-configure-static-kits = Statische kits configureren
 config-btn-new-character-settings = Nieuw-personage-instellingen
 config-btn-disabled-no-currency = Uitgeschakeld (geen valuta geconfigureerd)
@@ -84,6 +85,7 @@ config-modal-title-confirm-currency-removal = Bevestig valutaverwijdering
 config-modal-title-confirm-shop-removal = Bevestig winkelverwijdering
 config-modal-title-confirm-kit-deletion = Bevestig kitverwijdering
 config-modal-title-confirm-remove-stock-limit = Bevestig verwijdering voorraadlimiet
+config-modal-title-clear-shop = Bevestig winkel legen
 
 # Confirm modal prompt labels
 config-modal-label-remove-role = { $roleName } verwijderen?
@@ -92,6 +94,7 @@ config-modal-label-remove-currency = { $currencyName } verwijderen?
 config-modal-label-shop-removal-warning = WAARSCHUWING: Deze actie is onomkeerbaar!
 config-modal-label-kit-deletion-warning = WAARSCHUWING: Onomkeerbaar!
 config-modal-label-remove-stock-limit = Typ CONFIRM om de voorraadlimiet te verwijderen
+config-modal-label-clear-shop = Alle items uit deze winkel verwijderen?
 config-modal-placeholder-type-confirm = Typ CONFIRM
 
 # Error messages from buttons

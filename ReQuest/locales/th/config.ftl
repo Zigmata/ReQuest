@@ -38,6 +38,7 @@ config-btn-re-scan = สแกนอีกครั้ง
 config-btn-upload-json = อัปโหลด JSON
 config-btn-configure-new-character-wealth = ตั้งค่าทรัพย์สินตัวละครใหม่
 config-btn-configure-new-character-shop = ตั้งค่าร้านค้าตัวละครใหม่
+config-btn-clear-shop = ล้างร้านค้า
 config-btn-configure-static-kits = ตั้งค่าชุดสำเร็จรูป
 config-btn-new-character-settings = การตั้งค่าตัวละครใหม่
 config-btn-disabled-no-currency = ปิดใช้งาน (ไม่มีสกุลเงินที่ตั้งค่า)
@@ -84,6 +85,7 @@ config-modal-title-confirm-currency-removal = ยืนยันการลบ�
 config-modal-title-confirm-shop-removal = ยืนยันการลบร้านค้า
 config-modal-title-confirm-kit-deletion = ยืนยันการลบชุด
 config-modal-title-confirm-remove-stock-limit = ยืนยันการลบขีดจำกัดสินค้าคงเหลือ
+config-modal-title-clear-shop = ยืนยันการล้างร้านค้า
 
 # Confirm modal prompt labels
 config-modal-label-remove-role = ลบ { $roleName }?
@@ -92,6 +94,7 @@ config-modal-label-remove-currency = ลบ { $currencyName }?
 config-modal-label-shop-removal-warning = คำเตือน: การดำเนินการนี้ไม่สามารถย้อนกลับได้!
 config-modal-label-kit-deletion-warning = คำเตือน: ไม่สามารถย้อนกลับได้!
 config-modal-label-remove-stock-limit = พิมพ์ CONFIRM เพื่อลบขีดจำกัดสินค้าคงเหลือ
+config-modal-label-clear-shop = ล้างสินค้าทั้งหมดจากร้านค้านี้?
 config-modal-placeholder-type-confirm = พิมพ์ CONFIRM
 
 # Error messages from buttons

@@ -38,6 +38,7 @@ config-btn-re-scan = पुनः स्कैन करें
 config-btn-upload-json = JSON अपलोड करें
 config-btn-configure-new-character-wealth = नए चरित्र की संपत्ति कॉन्फ़िगर करें
 config-btn-configure-new-character-shop = नए चरित्र की दुकान कॉन्फ़िगर करें
+config-btn-clear-shop = दुकान खाली करें
 config-btn-configure-static-kits = स्थिर किट कॉन्फ़िगर करें
 config-btn-new-character-settings = नए चरित्र की सेटिंग
 config-btn-disabled-no-currency = अक्षम (कोई मुद्रा कॉन्फ़िगर नहीं)
@@ -84,6 +85,7 @@ config-modal-title-confirm-currency-removal = मुद्रा हटाने
 config-modal-title-confirm-shop-removal = दुकान हटाने की पुष्टि करें
 config-modal-title-confirm-kit-deletion = किट मिटाने की पुष्टि करें
 config-modal-title-confirm-remove-stock-limit = स्टॉक सीमा हटाने की पुष्टि करें
+config-modal-title-clear-shop = दुकान खाली करना पुष्टि करें
 
 # Confirm modal prompt labels
 config-modal-label-remove-role = { $roleName } हटाएँ?
@@ -92,6 +94,7 @@ config-modal-label-remove-currency = { $currencyName } हटाएँ?
 config-modal-label-shop-removal-warning = चेतावनी: यह कार्रवाई अपरिवर्तनीय है!
 config-modal-label-kit-deletion-warning = चेतावनी: अपरिवर्तनीय!
 config-modal-label-remove-stock-limit = स्टॉक सीमा हटाने के लिए CONFIRM टाइप करें
+config-modal-label-clear-shop = इस दुकान से सभी आइटम हटाएँ?
 config-modal-placeholder-type-confirm = CONFIRM टाइप करें
 
 # Error messages from buttons

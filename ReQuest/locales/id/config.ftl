@@ -38,6 +38,7 @@ config-btn-re-scan = Pindai Ulang
 config-btn-upload-json = Unggah JSON
 config-btn-configure-new-character-wealth = Konfigurasi Kekayaan Karakter Baru
 config-btn-configure-new-character-shop = Konfigurasi Toko Karakter Baru
+config-btn-clear-shop = Kosongkan Toko
 config-btn-configure-static-kits = Konfigurasi Kit Statis
 config-btn-new-character-settings = Pengaturan Karakter Baru
 config-btn-disabled-no-currency = Nonaktif (Mata Uang Belum Dikonfigurasi)
@@ -84,6 +85,7 @@ config-modal-title-confirm-currency-removal = Konfirmasi Penghapusan Mata Uang
 config-modal-title-confirm-shop-removal = Konfirmasi Penghapusan Toko
 config-modal-title-confirm-kit-deletion = Konfirmasi Penghapusan Kit
 config-modal-title-confirm-remove-stock-limit = Konfirmasi Penghapusan Batas Stok
+config-modal-title-clear-shop = Konfirmasi Pengosongan Toko
 
 # Confirm modal prompt labels
 config-modal-label-remove-role = Hapus { $roleName }?
@@ -92,6 +94,7 @@ config-modal-label-remove-currency = Hapus { $currencyName }?
 config-modal-label-shop-removal-warning = PERINGATAN: Tindakan ini tidak dapat dibatalkan!
 config-modal-label-kit-deletion-warning = PERINGATAN: Tidak dapat dibatalkan!
 config-modal-label-remove-stock-limit = Ketik CONFIRM untuk menghapus batas stok
+config-modal-label-clear-shop = Kosongkan semua item dari toko ini?
 config-modal-placeholder-type-confirm = Ketik CONFIRM
 
 # Error messages from buttons

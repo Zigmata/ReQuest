@@ -38,6 +38,7 @@ config-btn-re-scan = Újraellenőrzés
 config-btn-upload-json = JSON feltöltése
 config-btn-configure-new-character-wealth = Kezdő vagyon beállítása
 config-btn-configure-new-character-shop = Új karakter bolt beállítása
+config-btn-clear-shop = Bolt törlése
 config-btn-configure-static-kits = Statikus készletek beállítása
 config-btn-new-character-settings = Új karakter beállítások
 config-btn-disabled-no-currency = Letiltva (Nincs valuta konfigurálva)
@@ -84,6 +85,7 @@ config-modal-title-confirm-currency-removal = Valuta eltávolításának megerő
 config-modal-title-confirm-shop-removal = Bolt eltávolításának megerősítése
 config-modal-title-confirm-kit-deletion = Készlet törlésének megerősítése
 config-modal-title-confirm-remove-stock-limit = Készletkorlát eltávolításának megerősítése
+config-modal-title-clear-shop = Bolt törlésének megerősítése
 
 # Confirm modal prompt labels
 config-modal-label-remove-role = Eltávolítod a(z) { $roleName } szerepet?
@@ -92,6 +94,7 @@ config-modal-label-remove-currency = Eltávolítod a(z) { $currencyName } valut�
 config-modal-label-shop-removal-warning = FIGYELEM: Ez a művelet visszafordíthatatlan!
 config-modal-label-kit-deletion-warning = FIGYELEM: Visszafordíthatatlan!
 config-modal-label-remove-stock-limit = Írd be: CONFIRM a készletkorlát eltávolításához
+config-modal-label-clear-shop = Az összes tárgy törlése ebből a boltból?
 config-modal-placeholder-type-confirm = Írd be: CONFIRM
 
 # Error messages from buttons

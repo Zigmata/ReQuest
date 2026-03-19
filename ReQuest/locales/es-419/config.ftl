@@ -38,6 +38,7 @@ config-btn-re-scan = Re-Escanear
 config-btn-upload-json = Subir JSON
 config-btn-configure-new-character-wealth = Configurar Riqueza de Nuevo Personaje
 config-btn-configure-new-character-shop = Configurar Tienda de Nuevo Personaje
+config-btn-clear-shop = Vaciar Tienda
 config-btn-configure-static-kits = Configurar Kits Estáticos
 config-btn-new-character-settings = Configuración de Nuevo Personaje
 config-btn-disabled-no-currency = Desactivado (Sin Moneda Configurada)
@@ -84,6 +85,7 @@ config-modal-title-confirm-currency-removal = Confirmar Eliminación de Moneda
 config-modal-title-confirm-shop-removal = Confirmar Eliminación de Tienda
 config-modal-title-confirm-kit-deletion = Confirmar Eliminación de Kit
 config-modal-title-confirm-remove-stock-limit = Confirmar Eliminación de Límite de Inventario
+config-modal-title-clear-shop = Confirmar Vaciado de Tienda
 
 # Etiquetas de modales de confirmación
 config-modal-label-remove-role = ¿Eliminar { $roleName }?
@@ -93,6 +95,7 @@ config-modal-label-shop-removal-warning = ¡ADVERTENCIA: Esta acción es irrever
 config-modal-label-kit-deletion-warning = ¡ADVERTENCIA: Irreversible!
 config-modal-placeholder-type-confirm = Escribe CONFIRM
 config-modal-label-remove-stock-limit = Escribe CONFIRM para eliminar el límite de inventario
+config-modal-label-clear-shop = ¿Vaciar todos los artículos de esta tienda?
 
 # Mensajes de error de botones
 config-error-shop-data-not-found = Error: No se pudieron encontrar los datos de esa tienda.

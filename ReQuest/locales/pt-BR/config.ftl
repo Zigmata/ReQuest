@@ -38,6 +38,7 @@ config-btn-re-scan = Re-Escanear
 config-btn-upload-json = Enviar JSON
 config-btn-configure-new-character-wealth = Configurar Riqueza de Novo Personagem
 config-btn-configure-new-character-shop = Configurar Loja de Novo Personagem
+config-btn-clear-shop = Limpar Loja
 config-btn-configure-static-kits = Configurar Kits Estáticos
 config-btn-new-character-settings = Configurações de Novo Personagem
 config-btn-disabled-no-currency = Desativado (Sem Moeda Configurada)
@@ -84,6 +85,7 @@ config-modal-title-confirm-currency-removal = Confirmar Remoção de Moeda
 config-modal-title-confirm-shop-removal = Confirmar Remoção de Loja
 config-modal-title-confirm-kit-deletion = Confirmar Exclusão de Kit
 config-modal-title-confirm-remove-stock-limit = Confirmar Remoção de Limite de Estoque
+config-modal-title-clear-shop = Confirmar Limpeza da Loja
 
 # Rótulos de modal de confirmação
 config-modal-label-remove-role = Remover { $roleName }?
@@ -92,6 +94,7 @@ config-modal-label-remove-currency = Remover { $currencyName }?
 config-modal-label-shop-removal-warning = AVISO: Esta ação é irreversível!
 config-modal-label-kit-deletion-warning = AVISO: Irreversível!
 config-modal-label-remove-stock-limit = Digite CONFIRM para remover o limite de estoque
+config-modal-label-clear-shop = Limpar todos os itens desta loja?
 config-modal-placeholder-type-confirm = Digite CONFIRM
 
 # Mensagens de erro dos botões
