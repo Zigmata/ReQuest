@@ -12,7 +12,11 @@ from ReQuest.utilities.constants import CommonFields, DatabaseCollections
 logger = logging.getLogger(__name__)
 
 DEFAULT_LOCALE = 'en-US'
-SUPPORTED_LOCALES = ['en-US', 'pt-BR']
+SUPPORTED_LOCALES = [
+    'en-US', 'pt-BR', 'uk', 'es-419', 'es-ES', 'ru', 'ko', 'fr', 'de', 'it',
+    'bg', 'zh-CN', 'zh-TW', 'hr', 'cs', 'da', 'nl', 'fi', 'el', 'hi',
+    'hu', 'id', 'ja', 'lt', 'no', 'pl', 'ro', 'sv-SE', 'th', 'tr', 'vi',
+]
 FTL_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'locales', '{locale}')
 
 _resource_loader = FluentResourceLoader(FTL_DIR)
@@ -43,6 +47,33 @@ class Localizer:
 
 
 _localizer = Localizer()
+
+
+def validate_locale_setup():
+    """Verify that every SUPPORTED_LOCALE has matching entries in UI registries and on-disk files.
+
+    Call this once after all modules have loaded (e.g. in setup_hook) to catch configuration drift.
+    """
+    from ReQuest.ui.info.selects import LOCALE_LABELS, LOCALE_DESCRIPTIONS, LOCALE_EMOJI
+
+    locales_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'locales')
+    errors = []
+
+    for locale in SUPPORTED_LOCALES:
+        if locale not in LOCALE_LABELS:
+            errors.append(f'{locale}: missing from LOCALE_LABELS')
+        if locale not in LOCALE_DESCRIPTIONS:
+            errors.append(f'{locale}: missing from LOCALE_DESCRIPTIONS')
+        if locale not in LOCALE_EMOJI:
+            errors.append(f'{locale}: missing from LOCALE_EMOJI')
+        locale_dir = os.path.join(locales_dir, locale)
+        if not os.path.isdir(locale_dir):
+            errors.append(f'{locale}: missing locale directory {locale_dir}')
+
+    if errors:
+        raise RuntimeError(
+            'Locale configuration drift detected:\n  ' + '\n  '.join(errors)
+        )
 
 _render_locale: ContextVar[str | None] = ContextVar('_render_locale', default=None)
 
@@ -75,6 +106,35 @@ _DISCORD_LOCALE_MAP = {
     discord.Locale.american_english: 'en-US',
     discord.Locale.british_english: 'en-US',
     discord.Locale.brazil_portuguese: 'pt-BR',
+    discord.Locale.ukrainian: 'uk',
+    discord.Locale.latin_american_spanish: 'es-419',
+    discord.Locale.spain_spanish: 'es-ES',
+    discord.Locale.russian: 'ru',
+    discord.Locale.korean: 'ko',
+    discord.Locale.french: 'fr',
+    discord.Locale.german: 'de',
+    discord.Locale.italian: 'it',
+    discord.Locale.bulgarian: 'bg',
+    discord.Locale.chinese: 'zh-CN',
+    discord.Locale.taiwan_chinese: 'zh-TW',
+    discord.Locale.croatian: 'hr',
+    discord.Locale.czech: 'cs',
+    discord.Locale.danish: 'da',
+    discord.Locale.dutch: 'nl',
+    discord.Locale.finnish: 'fi',
+    discord.Locale.greek: 'el',
+    discord.Locale.hindi: 'hi',
+    discord.Locale.hungarian: 'hu',
+    discord.Locale.indonesian: 'id',
+    discord.Locale.japanese: 'ja',
+    discord.Locale.lithuanian: 'lt',
+    discord.Locale.norwegian: 'no',
+    discord.Locale.polish: 'pl',
+    discord.Locale.romanian: 'ro',
+    discord.Locale.swedish: 'sv-SE',
+    discord.Locale.thai: 'th',
+    discord.Locale.turkish: 'tr',
+    discord.Locale.vietnamese: 'vi',
 }
 
 

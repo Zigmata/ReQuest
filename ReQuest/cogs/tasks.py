@@ -133,9 +133,8 @@ class Tasks(Cog):
             if now < target_time:
                 return False
 
-            # Check if we're within a small window (2 minutes) of the target minute.
-            # This prevents a catch-up restock from firing if the bot restarts
-            # well past the target minute (e.g. target :10, restart at :45).
+            # Check if within a small window (2 minutes) of the target minute to prevent a
+            # catch-up restock from firing if the bot restarts well past the target minute.
             minute_diff = now.minute - target_minute
             if minute_diff > 2:
                 return False

@@ -101,7 +101,8 @@ class ReQuest(commands.Bot):
         )
 
         # Register the Fluent translator for slash command localization
-        from ReQuest.utilities.localizer import FluentTranslator
+        from ReQuest.utilities.localizer import FluentTranslator, validate_locale_setup
+        validate_locale_setup()
         await self.tree.set_translator(FluentTranslator())
 
         # Grab the list of extensions and load them asynchronously
