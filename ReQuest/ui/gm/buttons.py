@@ -18,7 +18,8 @@ from ReQuest.utilities.supportFunctions import (
     update_cached_data,
     delete_cached_data,
     build_cache_key,
-    get_guild_member
+    get_guild_member,
+    UserFeedbackError
 )
 
 logger = logging.getLogger(__name__)
@@ -35,7 +36,32 @@ class CreateQuestButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            modal = modals.CreateQuestModal(self.calling_view)
+            bot = interaction.client
+            guild_id = interaction.guild_id
+
+            quest_role_mode_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUEST_ROLE_MODE,
+                query={CommonFields.ID: guild_id}
+            )
+            quest_role_mode = quest_role_mode_query.get(ConfigFields.QUEST_ROLE_MODE, 'temporary') if quest_role_mode_query else 'temporary'
+
+            assigned_roles = None
+            if quest_role_mode == 'static':
+                assignments_query = await get_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.QUEST_ROLE_ASSIGNMENTS,
+                    query={CommonFields.ID: guild_id}
+                )
+                if assignments_query:
+                    all_assignments = assignments_query.get(ConfigFields.QUEST_ROLE_ASSIGNMENTS, [])
+                    assigned_roles = [
+                        a for a in all_assignments if a['userId'] == str(interaction.user.id)
+                    ]
+
+            modal = modals.CreateQuestModal(self.calling_view, quest_role_mode, assigned_roles)
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)
@@ -168,7 +194,26 @@ class CancelQuestButton(Button):
             party_role_id = quest[QuestFields.PARTY_ROLE_ID]
             if party_role_id:
                 party_role = guild.get_role(party_role_id)
-                await party_role.delete(reason=f'Quest {quest[QuestFields.QUEST_ID]} cancelled by {interaction.user.mention}.')
+                if party_role:
+                    # Check hierarchy before any destructive operations
+                    bot_top_role = guild.me.top_role
+                    if party_role >= bot_top_role:
+                        raise UserFeedbackError(
+                            t(DEFAULT_LOCALE, 'gm-error-role-hierarchy',
+                              roleName=party_role.name, roleId=str(party_role.id)),
+                            message_id='gm-error-role-hierarchy',
+                            roleName=party_role.name,
+                            roleId=str(party_role.id)
+                        )
+                    role_mode = quest.get(QuestFields.QUEST_ROLE_MODE, 'temporary')
+                    if role_mode == 'static':
+                        for player in party:
+                            for member_id in player:
+                                member = await get_guild_member(guild, int(member_id))
+                                if member:
+                                    await member.remove_roles(party_role)
+                    else:
+                        await party_role.delete(reason=f'Quest {quest[QuestFields.QUEST_ID]} cancelled by {interaction.user.mention}.')
 
             # Delete the quest from the database
             await delete_cached_data(

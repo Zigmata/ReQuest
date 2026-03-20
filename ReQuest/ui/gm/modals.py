@@ -28,12 +28,16 @@ logger = logging.getLogger(__name__)
 
 
 class CreateQuestModal(LocaleModal):
-    def __init__(self, calling_view):
+    def __init__(self, calling_view, quest_role_mode='temporary', assigned_roles=None):
         super().__init__(
             title=t(DEFAULT_LOCALE, 'gm-modal-title-create-quest'),
             timeout=None
         )
         self.calling_view = calling_view
+        self.quest_role_mode = quest_role_mode
+        self.quest_party_role_text_input = None
+        self.quest_party_role_label = None
+
         self.quest_title_text_input = discord.ui.TextInput(
             label=t(DEFAULT_LOCALE, 'gm-modal-label-quest-title'),
             custom_id='quest_title_text_input',
@@ -51,12 +55,6 @@ class CreateQuestModal(LocaleModal):
             placeholder=t(DEFAULT_LOCALE, 'gm-modal-placeholder-max-party'),
             max_length=2
         )
-        self.quest_party_role_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'gm-modal-label-party-role'),
-            custom_id='quest_party_role',
-            placeholder=t(DEFAULT_LOCALE, 'gm-modal-placeholder-party-role'),
-            required=False
-        )
         self.quest_description_text_input = discord.ui.TextInput(
             label=t(DEFAULT_LOCALE, 'gm-modal-label-description'),
             style=discord.TextStyle.paragraph,
@@ -67,7 +65,36 @@ class CreateQuestModal(LocaleModal):
         self.add_item(self.quest_title_text_input)
         self.add_item(self.quest_restrictions_text_input)
         self.add_item(self.quest_party_size_text_input)
-        self.add_item(self.quest_party_role_text_input)
+
+        if quest_role_mode == 'temporary':
+            self.quest_party_role_text_input = discord.ui.TextInput(
+                label=t(DEFAULT_LOCALE, 'gm-modal-label-party-role'),
+                custom_id='quest_party_role',
+                placeholder=t(DEFAULT_LOCALE, 'gm-modal-placeholder-party-role'),
+                required=False
+            )
+            self.add_item(self.quest_party_role_text_input)
+        elif quest_role_mode == 'static' and assigned_roles:
+            options = [discord.SelectOption(
+                label=t(DEFAULT_LOCALE, 'gm-select-option-no-role'),
+                value='none'
+            )]
+            for role_assignment in assigned_roles:
+                options.append(discord.SelectOption(
+                    label=role_assignment['roleName'],
+                    value=str(role_assignment['roleId'])
+                ))
+            role_select = discord.ui.Select(
+                placeholder=t(DEFAULT_LOCALE, 'gm-modal-desc-select-party-role'),
+                options=options,
+                custom_id='quest_party_role_select'
+            )
+            self.quest_party_role_label = discord.ui.Label(
+                text=t(DEFAULT_LOCALE, 'gm-modal-label-select-party-role'),
+                component=role_select
+            )
+            self.add_item(self.quest_party_role_label)
+
         self.add_item(self.quest_description_text_input)
 
     async def on_submit(self, interaction: discord.Interaction):
@@ -75,7 +102,6 @@ class CreateQuestModal(LocaleModal):
             title = self.quest_title_text_input.value
             restrictions = self.quest_restrictions_text_input.value
             max_party_size = int(self.quest_party_size_text_input.value)
-            party_role_name = self.quest_party_role_text_input.value
             description = self.quest_description_text_input.value
 
             guild = interaction.guild
@@ -84,40 +110,46 @@ class CreateQuestModal(LocaleModal):
             bot = interaction.client
             max_wait_list_size = 0
 
-            # Validate the party role name, if provided
             party_role_id = None
-            if party_role_name:
-                default_forbidden_names = [
-                    'everyone',
-                    'administrator',
-                    'game master',
-                    'gm',
-                ]
-                custom_forbidden_names = []
-                config_query = await get_cached_data(
-                    bot=bot,
-                    mongo_database=bot.gdb,
-                    collection_name=DatabaseCollections.FORBIDDEN_ROLES,
-                    query={CommonFields.ID: guild_id}
-                )
-                if config_query and config_query[ConfigFields.FORBIDDEN_ROLES]:
-                    for name in config_query[ConfigFields.FORBIDDEN_ROLES]:
-                        custom_forbidden_names.append(name)
 
-                if (party_role_name.lower() in default_forbidden_names or
-                        party_role_name.lower() in custom_forbidden_names):
-                    raise UserFeedbackError(t(DEFAULT_LOCALE, 'gm-error-forbidden-role-name'), message_id='gm-error-forbidden-role-name')
+            if self.quest_role_mode == 'temporary' and self.quest_party_role_text_input:
+                party_role_name = self.quest_party_role_text_input.value
+                if party_role_name:
+                    default_forbidden_names = [
+                        'everyone',
+                        'administrator',
+                        'game master',
+                        'gm',
+                    ]
+                    custom_forbidden_names = []
+                    config_query = await get_cached_data(
+                        bot=bot,
+                        mongo_database=bot.gdb,
+                        collection_name=DatabaseCollections.FORBIDDEN_ROLES,
+                        query={CommonFields.ID: guild_id}
+                    )
+                    if config_query and config_query[ConfigFields.FORBIDDEN_ROLES]:
+                        for name in config_query[ConfigFields.FORBIDDEN_ROLES]:
+                            custom_forbidden_names.append(name)
 
-                for role in guild.roles:
-                    if role.name.lower() == party_role_name.lower():
-                        raise UserFeedbackError(t(DEFAULT_LOCALE, 'gm-error-role-already-exists'), message_id='gm-error-role-already-exists')
+                    if (party_role_name.lower() in default_forbidden_names or
+                            party_role_name.lower() in custom_forbidden_names):
+                        raise UserFeedbackError(t(DEFAULT_LOCALE, 'gm-error-forbidden-role-name'), message_id='gm-error-forbidden-role-name')
 
-                party_role = await guild.create_role(
-                    name=party_role_name,
-                    reason=f'Automated party role creation from ReQuest for quest ID {quest_id}. Requested by '
-                           f'game master: {interaction.user.mention}.'
-                )
-                party_role_id = party_role.id
+                    for role in guild.roles:
+                        if role.name.lower() == party_role_name.lower():
+                            raise UserFeedbackError(t(DEFAULT_LOCALE, 'gm-error-role-already-exists'), message_id='gm-error-role-already-exists')
+
+                    party_role = await guild.create_role(
+                        name=party_role_name,
+                        reason=f'Automated party role creation from ReQuest for quest ID {quest_id}. Requested by '
+                               f'game master: {interaction.user.mention}.'
+                    )
+                    party_role_id = party_role.id
+            elif self.quest_role_mode == 'static' and self.quest_party_role_label:
+                selected_value = self.quest_party_role_label.component.values[0]
+                if selected_value != 'none':
+                    party_role_id = int(selected_value)
 
             # Get the server's wait list configuration
             wait_list_query = await get_cached_data(
@@ -190,6 +222,7 @@ class CreateQuestModal(LocaleModal):
                 QuestFields.GM: author_id,
                 QuestFields.PARTY: party,
                 QuestFields.PARTY_ROLE_ID: party_role_id,
+                QuestFields.QUEST_ROLE_MODE: self.quest_role_mode,
                 QuestFields.WAIT_LIST: wait_list,
                 QuestFields.MAX_WAIT_LIST_SIZE: max_wait_list_size,
                 QuestFields.LOCK_STATE: lock_state,

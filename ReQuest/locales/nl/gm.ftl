@@ -167,3 +167,9 @@ gm-embed-title-approved = Inventarisupdate goedgekeurd
 gm-embed-desc-approved = De inventaris voor {"**"}{ $characterName }{"**"} is goedgekeurd door { $approver }.
 gm-embed-title-denied = Inventarisupdate afgewezen
 gm-embed-desc-denied = De inventaris voor {"**"}{ $characterName }{"**"} is afgewezen door { $denier }.
+
+gm-modal-label-select-party-role = Party Role
+gm-modal-desc-select-party-role = Select a role to assign to the quest party.
+gm-select-option-no-role = None (No Party Role)
+
+gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role.

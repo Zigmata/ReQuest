@@ -167,3 +167,9 @@ gm-embed-title-approved = インベントリ更新承認済み
 gm-embed-desc-approved = {"**"}{ $characterName }{"**"} のインベントリが { $approver } によって承認されました。
 gm-embed-title-denied = インベントリ更新却下
 gm-embed-desc-denied = {"**"}{ $characterName }{"**"} のインベントリが { $denier } によって却下されました。
+
+gm-modal-label-select-party-role = Party Role
+gm-modal-desc-select-party-role = Select a role to assign to the quest party.
+gm-select-option-no-role = None (No Party Role)
+
+gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role.

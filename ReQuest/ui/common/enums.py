@@ -40,6 +40,12 @@ class DayOfWeek(Enum):
     SUNDAY = 'sunday'
 
 
+class QuestRoleMode(Enum):
+    DISABLED = 'disabled'
+    TEMPORARY = 'temporary'
+    STATIC = 'static'
+
+
 class ShopChannelType(Enum):
     TEXT_CHANNEL = 'text_channel'
     FORUM_THREAD = 'forum_thread'

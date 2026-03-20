@@ -3,7 +3,7 @@ import logging
 import discord
 from discord.ui import Select, RoleSelect, ChannelSelect
 
-from ReQuest.ui.common.enums import InventoryType, RoleplayMode, ScheduleType, DayOfWeek
+from ReQuest.ui.common.enums import InventoryType, QuestRoleMode, RoleplayMode, ScheduleType, DayOfWeek
 from ReQuest.ui.info.selects import (LOCALE_LABELS, LOCALE_DESCRIPTIONS, LOCALE_EMOJI,
                                      LOCALES_PER_PAGE, get_config_locale_total_pages)
 from ReQuest.utilities.constants import ConfigFields, CommonFields, RoleplayFields, DatabaseCollections
@@ -532,6 +532,98 @@ class ConfigLanguageSelect(Select):
                     query={CommonFields.ID: interaction.guild_id},
                     update_data={'$set': {'locale': selected}}
                 )
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class QuestRoleModeSelect(Select):
+    def __init__(self, calling_view):
+        super().__init__(
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-quest-role-mode'),
+            options=[
+                discord.SelectOption(
+                    label=t(DEFAULT_LOCALE, 'config-select-option-quest-role-disabled'),
+                    value=QuestRoleMode.DISABLED.value,
+                    description=t(DEFAULT_LOCALE, 'config-select-desc-quest-role-disabled')
+                ),
+                discord.SelectOption(
+                    label=t(DEFAULT_LOCALE, 'config-select-option-quest-role-temporary'),
+                    value=QuestRoleMode.TEMPORARY.value,
+                    description=t(DEFAULT_LOCALE, 'config-select-desc-quest-role-temporary')
+                ),
+                discord.SelectOption(
+                    label=t(DEFAULT_LOCALE, 'config-select-option-quest-role-static'),
+                    value=QuestRoleMode.STATIC.value,
+                    description=t(DEFAULT_LOCALE, 'config-select-desc-quest-role-static')
+                ),
+            ],
+            custom_id='quest_role_mode_select'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUEST_ROLE_MODE,
+                query={'_id': interaction.guild_id},
+                update_data={'$set': {ConfigFields.QUEST_ROLE_MODE: self.values[0]}}
+            )
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class AddGMQuestRoleSelect(RoleSelect):
+    def __init__(self, calling_view, member_id):
+        super().__init__(
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-add-quest-role'),
+            custom_id='add_gm_quest_role_select',
+            max_values=25
+        )
+        self.calling_view = calling_view
+        self.member_id = member_id
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            guild_id = interaction.guild_id
+
+            query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUEST_ROLE_ASSIGNMENTS,
+                query={'_id': guild_id}
+            )
+            existing = []
+            if query:
+                existing = query.get(ConfigFields.QUEST_ROLE_ASSIGNMENTS, [])
+
+            for role in self.values:
+                already_assigned = any(
+                    a['userId'] == str(self.member_id) and a['roleId'] == role.id
+                    for a in existing
+                )
+                if not already_assigned:
+                    assignment = {
+                        'userId': str(self.member_id),
+                        'roleId': role.id,
+                        'roleName': role.name
+                    }
+                    await update_cached_data(
+                        bot=bot,
+                        mongo_database=bot.gdb,
+                        collection_name=DatabaseCollections.QUEST_ROLE_ASSIGNMENTS,
+                        query={'_id': guild_id},
+                        update_data={'$push': {ConfigFields.QUEST_ROLE_ASSIGNMENTS: assignment}}
+                    )
+                    existing.append(assignment)
 
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)

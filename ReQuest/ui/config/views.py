@@ -20,7 +20,7 @@ from titlecase import titlecase
 from ReQuest.ui.common import modals as common_modals, views as common_views
 from ReQuest.ui.common.views import LocaleLayoutView
 from ReQuest.ui.common.buttons import MenuViewButton, BackButton
-from ReQuest.ui.common.enums import ShopChannelType, RestockMode, ScheduleType, RoleplayMode
+from ReQuest.ui.common.enums import QuestRoleMode, ShopChannelType, RestockMode, ScheduleType, RoleplayMode
 from ReQuest.ui.config import buttons, selects
 from ReQuest.ui.config.buttons import AddShopJSONButton
 from ReQuest.utilities.constants import (
@@ -1315,6 +1315,9 @@ class ConfigQuestsView(LocaleLayoutView):
             t(DEFAULT_LOCALE, 'config-label-quest-summary-disabled') + '\n' +
             t(DEFAULT_LOCALE, 'config-desc-quest-summary')
         )
+        self.quest_role_info = TextDisplay(
+            t(DEFAULT_LOCALE, 'config-label-quest-role-mode-temporary')
+        )
         self.wait_list_select = selects.ConfigWaitListSelect(self)
         self.quest_summary_toggle_button = buttons.QuestSummaryToggleButton(self)
 
@@ -1344,6 +1347,11 @@ class ConfigQuestsView(LocaleLayoutView):
             t(DEFAULT_LOCALE, 'config-desc-gm-rewards')
         ))
         container.add_item(gm_rewards_section)
+        container.add_item(Separator())
+
+        quest_roles_section = Section(accessory=MenuViewButton(ConfigQuestRolesView, t(DEFAULT_LOCALE, 'config-btn-quest-roles')))
+        quest_roles_section.add_item(self.quest_role_info)
+        container.add_item(quest_roles_section)
 
         self.add_item(container)
 
@@ -1387,6 +1395,16 @@ class ConfigQuestsView(LocaleLayoutView):
                     t(DEFAULT_LOCALE, 'config-label-quest-summary-disabled') + '\n' +
                     t(DEFAULT_LOCALE, 'config-desc-quest-summary')
                 )
+
+            quest_role_mode_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUEST_ROLE_MODE,
+                query={CommonFields.ID: guild.id}
+            )
+            quest_role_mode = quest_role_mode_query.get(ConfigFields.QUEST_ROLE_MODE, 'temporary') if quest_role_mode_query else 'temporary'
+            mode_label_key = f'config-label-quest-role-mode-{quest_role_mode}'
+            self.quest_role_info.content = t(DEFAULT_LOCALE, mode_label_key)
 
             self.build_view()
         except Exception as e:
@@ -1455,6 +1473,307 @@ class GMRewardsView(LocaleLayoutView):
             self.build_view()
         except Exception as e:
             await log_exception(e)
+
+
+# ------ QUEST ROLES ------
+
+
+class ConfigQuestRolesView(LocaleLayoutView):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.quest_role_mode = 'temporary'
+        self.mode_info = TextDisplay(t(DEFAULT_LOCALE, 'config-label-quest-role-mode-temporary'))
+        self.mode_select = selects.QuestRoleModeSelect(self)
+
+    def build_view(self):
+        self.clear_items()
+        container = Container()
+
+        header_section = Section(accessory=BackButton(ConfigQuestsView))
+        header_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-title-quest-roles')))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        container.add_item(self.mode_info)
+        container.add_item(ActionRow(self.mode_select))
+
+        if self.quest_role_mode == QuestRoleMode.STATIC.value:
+            container.add_item(Separator())
+            static_section = Section(
+                accessory=MenuViewButton(ConfigStaticQuestRolesView, t(DEFAULT_LOCALE, 'config-label-manage-assignments'))
+            )
+            static_section.add_item(TextDisplay(
+                t(DEFAULT_LOCALE, 'config-desc-manage-assignments')
+            ))
+            container.add_item(static_section)
+
+        self.add_item(container)
+
+    async def setup(self, bot, guild):
+        try:
+            query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUEST_ROLE_MODE,
+                query={CommonFields.ID: guild.id}
+            )
+            self.quest_role_mode = query.get(ConfigFields.QUEST_ROLE_MODE, 'temporary') if query else 'temporary'
+            mode_label_key = f'config-label-quest-role-mode-{self.quest_role_mode}'
+            self.mode_info.content = t(DEFAULT_LOCALE, mode_label_key)
+            self.build_view()
+        except Exception as e:
+            await log_exception(e)
+
+
+class ConfigStaticQuestRolesView(LocaleLayoutView):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.gm_members = []
+        self.assignments = []
+        self.items_per_page = 5
+        self.current_page = 0
+        self.total_pages = 1
+
+    def build_view(self):
+        self.clear_items()
+        container = Container()
+
+        header_section = Section(accessory=BackButton(ConfigQuestRolesView))
+        header_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-title-static-quest-roles')))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        if not self.gm_members:
+            container.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-msg-no-gm-members')))
+        else:
+            start = self.current_page * self.items_per_page
+            end = start + self.items_per_page
+            page_members = self.gm_members[start:end]
+
+            for member in page_members:
+                member_assignments = [
+                    a for a in self.assignments
+                    if a['userId'] == str(member.id)
+                ]
+                if member_assignments:
+                    role_names = ', '.join(f'<@&{a["roleId"]}>' for a in member_assignments)
+                else:
+                    role_names = t(DEFAULT_LOCALE, 'config-label-no-roles-assigned')
+
+                section = Section(accessory=buttons.ManageGMQuestRolesButton(member))
+                section.add_item(TextDisplay(f'{member.mention}: {member.name}\n{role_names}'))
+                container.add_item(section)
+
+        self.add_item(container)
+
+        if self.total_pages > 1:
+            nav_row = ActionRow()
+            prev_button = Button(
+                label=t(DEFAULT_LOCALE, 'common-btn-previous'),
+                style=discord.ButtonStyle.secondary,
+                custom_id='static_qr_prev',
+                disabled=(self.current_page == 0)
+            )
+            prev_button.callback = self.prev_page
+            nav_row.add_item(prev_button)
+
+            page_display = Button(
+                label=t(DEFAULT_LOCALE, 'common-page-label', **{'current': str(self.current_page + 1), 'total': str(self.total_pages)}),
+                style=discord.ButtonStyle.secondary,
+                custom_id='static_qr_page'
+            )
+            page_display.callback = self.show_page_jump_modal
+            nav_row.add_item(page_display)
+
+            next_button = Button(
+                label=t(DEFAULT_LOCALE, 'common-btn-next'),
+                style=discord.ButtonStyle.secondary,
+                custom_id='static_qr_next',
+                disabled=(self.current_page >= self.total_pages - 1)
+            )
+            next_button.callback = self.next_page
+            nav_row.add_item(next_button)
+
+            self.add_item(nav_row)
+
+    async def setup(self, bot, guild):
+        try:
+            gm_roles_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.GM_ROLES,
+                query={CommonFields.ID: guild.id}
+            )
+
+            gm_role_mentions = set()
+            if gm_roles_query:
+                gm_roles_list = gm_roles_query.get(ConfigFields.GM_ROLES, [])
+                for role_entry in gm_roles_list:
+                    mention = role_entry.get(CommonFields.MENTION, '')
+                    if mention:
+                        gm_role_mentions.add(mention)
+
+            if not guild.chunked:
+                await guild.chunk()
+
+            self.gm_members = []
+            for member in guild.members:
+                if member.bot:
+                    continue
+                if any(role.mention in gm_role_mentions for role in member.roles):
+                    self.gm_members.append(member)
+
+            self.gm_members.sort(key=lambda m: m.name.lower())
+
+            assignments_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUEST_ROLE_ASSIGNMENTS,
+                query={CommonFields.ID: guild.id}
+            )
+            self.assignments = assignments_query.get(ConfigFields.QUEST_ROLE_ASSIGNMENTS, []) if assignments_query else []
+
+            self.total_pages = math.ceil(len(self.gm_members) / self.items_per_page) if self.gm_members else 1
+            if self.current_page >= self.total_pages:
+                self.current_page = max(0, self.total_pages - 1)
+
+            self.build_view()
+        except Exception as e:
+            await log_exception(e)
+
+    async def prev_page(self, interaction):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction):
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def show_page_jump_modal(self, interaction):
+        try:
+            from ReQuest.ui.common import modals as common_modals
+            await interaction.response.send_modal(common_modals.PageJumpModal(self))
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ConfigGMQuestRoleAssignView(LocaleLayoutView):
+    def __init__(self, member):
+        super().__init__(timeout=None)
+        self.member = member
+        self.member_assignments = []
+        self.items_per_page = 6
+        self.current_page = 0
+        self.total_pages = 1
+
+    def build_view(self):
+        self.clear_items()
+        container = Container()
+
+        header_section = Section(accessory=BackButton(ConfigStaticQuestRolesView))
+        header_section.add_item(TextDisplay(
+            t(DEFAULT_LOCALE, 'config-title-gm-quest-role-assign', gmName=self.member.name)
+        ))
+        container.add_item(header_section)
+        container.add_item(Separator())
+
+        if not self.member_assignments:
+            container.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-label-no-roles-assigned')))
+        else:
+            start = self.current_page * self.items_per_page
+            end = start + self.items_per_page
+            page_assignments = self.member_assignments[start:end]
+
+            for assignment in page_assignments:
+                role_name = assignment['roleName']
+                role_id = assignment['roleId']
+                section = Section(
+                    accessory=buttons.RemoveGMQuestRoleButton(
+                        self, self.member.id, role_id, role_name, self.member.name
+                    )
+                )
+                section.add_item(TextDisplay(f'<@&{role_id}> ({role_name})'))
+                container.add_item(section)
+
+        container.add_item(Separator())
+        container.add_item(ActionRow(selects.AddGMQuestRoleSelect(self, self.member.id)))
+
+        self.add_item(container)
+
+        if self.total_pages > 1:
+            nav_row = ActionRow()
+            prev_button = Button(
+                label=t(DEFAULT_LOCALE, 'common-btn-previous'),
+                style=discord.ButtonStyle.secondary,
+                custom_id='gm_qr_assign_prev',
+                disabled=(self.current_page == 0)
+            )
+            prev_button.callback = self.prev_page
+            nav_row.add_item(prev_button)
+
+            page_display = Button(
+                label=t(DEFAULT_LOCALE, 'common-page-label', **{'current': str(self.current_page + 1), 'total': str(self.total_pages)}),
+                style=discord.ButtonStyle.secondary,
+                custom_id='gm_qr_assign_page'
+            )
+            page_display.callback = self.show_page_jump_modal
+            nav_row.add_item(page_display)
+
+            next_button = Button(
+                label=t(DEFAULT_LOCALE, 'common-btn-next'),
+                style=discord.ButtonStyle.secondary,
+                custom_id='gm_qr_assign_next',
+                disabled=(self.current_page >= self.total_pages - 1)
+            )
+            next_button.callback = self.next_page
+            nav_row.add_item(next_button)
+
+            self.add_item(nav_row)
+
+    async def setup(self, bot, guild):
+        try:
+            assignments_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUEST_ROLE_ASSIGNMENTS,
+                query={CommonFields.ID: guild.id}
+            )
+            all_assignments = assignments_query.get(ConfigFields.QUEST_ROLE_ASSIGNMENTS, []) if assignments_query else []
+            self.member_assignments = [
+                a for a in all_assignments if a['userId'] == str(self.member.id)
+            ]
+            self.member_assignments.sort(key=lambda a: a.get('roleName', '').lower())
+
+            self.total_pages = math.ceil(len(self.member_assignments) / self.items_per_page) if self.member_assignments else 1
+            if self.current_page >= self.total_pages:
+                self.current_page = max(0, self.total_pages - 1)
+
+            self.build_view()
+        except Exception as e:
+            await log_exception(e)
+
+    async def prev_page(self, interaction):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction):
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def show_page_jump_modal(self, interaction):
+        try:
+            from ReQuest.ui.common import modals as common_modals
+            await interaction.response.send_modal(common_modals.PageJumpModal(self))
+        except Exception as e:
+            await log_exception(e, interaction)
 
 
 # ------ PLAYERS ------

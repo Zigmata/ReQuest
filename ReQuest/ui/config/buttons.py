@@ -1708,3 +1708,73 @@ class BackToEditShopButton(Button):
             await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
+
+
+class ManageGMQuestRolesButton(Button):
+    def __init__(self, member):
+        super().__init__(
+            label=t(DEFAULT_LOCALE, 'config-btn-manage-gm-quest-roles'),
+            style=ButtonStyle.primary,
+            custom_id=f'manage_gm_quest_roles_{member.id}'
+        )
+        self.member = member
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            from ReQuest.ui.config.views import ConfigGMQuestRoleAssignView
+            view = ConfigGMQuestRoleAssignView(self.member)
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class RemoveGMQuestRoleButton(Button):
+    def __init__(self, calling_view, member_id, role_id, role_name, gm_name):
+        super().__init__(
+            label=t(DEFAULT_LOCALE, 'config-btn-clear'),
+            style=ButtonStyle.danger,
+            custom_id=f'remove_gm_quest_role_{member_id}_{role_id}'
+        )
+        self.calling_view = calling_view
+        self.member_id = member_id
+        self.role_id = role_id
+        self.role_name = role_name
+        self.gm_name = gm_name
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
+            from ReQuest.ui.common.modals import ConfirmModal
+            confirm_modal = ConfirmModal(
+                title=t(locale, 'config-modal-title-confirm-quest-role-removal'),
+                prompt_label=t(locale, 'config-modal-label-remove-quest-role',
+                               roleName=self.role_name, gmName=self.gm_name),
+                prompt_placeholder=t(locale, 'config-modal-placeholder-type-confirm'),
+                confirm_callback=self.confirm_callback,
+                locale=locale
+            )
+            await interaction.response.send_modal(confirm_modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def confirm_callback(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            guild_id = interaction.guild_id
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUEST_ROLE_ASSIGNMENTS,
+                query={'_id': guild_id},
+                update_data={'$pull': {
+                    ConfigFields.QUEST_ROLE_ASSIGNMENTS: {
+                        'userId': str(self.member_id),
+                        'roleId': self.role_id
+                    }
+                }}
+            )
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)

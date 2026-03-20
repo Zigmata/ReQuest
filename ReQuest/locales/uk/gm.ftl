@@ -167,3 +167,9 @@ gm-embed-title-approved = Оновлення інвентарю схвалено
 gm-embed-desc-approved = Інвентар для {"**"}{ $characterName }{"**"} було схвалено { $approver }.
 gm-embed-title-denied = Оновлення інвентарю відхилено
 gm-embed-desc-denied = Інвентар для {"**"}{ $characterName }{"**"} було відхилено { $denier }.
+
+gm-modal-label-select-party-role = Party Role
+gm-modal-desc-select-party-role = Select a role to assign to the quest party.
+gm-select-option-no-role = None (No Party Role)
+
+gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role.

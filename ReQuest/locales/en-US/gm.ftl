@@ -68,6 +68,7 @@ gm-error-not-signed-up = You are not signed up for this quest.
 gm-error-quest-channel-not-set = Quest channel has not been set!
 gm-error-empty-roster = You cannot complete a quest with an empty roster. Try cancelling instead.
 gm-error-invalid-xp-value = XP value must be a positive integer!
+gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role.
 
 # GM confirm modals
 gm-modal-title-cancel-quest = Cancel Quest
@@ -99,6 +100,9 @@ gm-dm-rewards-issued = The following has been awarded to your active character, 
 
 # GM select menus
 gm-select-placeholder-party-member = Select a party member
+gm-modal-label-select-party-role = Party Role
+gm-modal-desc-select-party-role = Select a role to assign to the quest party.
+gm-select-option-no-role = None (No Party Role)
 
 # GM embeds
 gm-embed-title-mod-report = GM Player Modification Report

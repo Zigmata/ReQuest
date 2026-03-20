@@ -165,3 +165,9 @@ gm-embed-title-approved = 背包更新已通過
 gm-embed-desc-approved = {"**"}{ $characterName }{"**"} 的背包已被 { $approver } 通過。
 gm-embed-title-denied = 背包更新已駁回
 gm-embed-desc-denied = {"**"}{ $characterName }{"**"} 的背包已被 { $denier } 駁回。
+
+gm-modal-label-select-party-role = Party Role
+gm-modal-desc-select-party-role = Select a role to assign to the quest party.
+gm-select-option-no-role = None (No Party Role)
+
+gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role.

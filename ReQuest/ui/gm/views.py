@@ -45,6 +45,18 @@ from ReQuest.utilities.supportFunctions import (
 logger = logging.getLogger(__name__)
 
 
+def check_role_hierarchy(guild: discord.Guild, role: discord.Role):
+    """Raises UserFeedbackError if the bot cannot manage the given role due to hierarchy."""
+    bot_top_role = guild.me.top_role
+    if role >= bot_top_role:
+        raise UserFeedbackError(
+            t(DEFAULT_LOCALE, 'gm-error-role-hierarchy', roleName=role.name, roleId=str(role.id)),
+            message_id='gm-error-role-hierarchy',
+            roleName=role.name,
+            roleId=str(role.id)
+        )
+
+
 class GMBaseView(MenuBaseView):
     def __init__(self):
         locale = getattr(self, 'locale', DEFAULT_LOCALE)
@@ -299,6 +311,8 @@ class ManageQuestsView(LocaleLayoutView):
             if quest[QuestFields.PARTY_ROLE_ID]:
                 role_id = quest[QuestFields.PARTY_ROLE_ID]
                 role = guild.get_role(role_id)
+                if role:
+                    check_role_hierarchy(guild, role)
 
             party = quest[QuestFields.PARTY]
             title = quest[QuestFields.TITLE]
@@ -425,13 +439,25 @@ class ManageQuestsView(LocaleLayoutView):
             if archive_query:
                 archive_channel = guild.get_channel(strip_id(archive_query[ConfigFields.ARCHIVE_CHANNEL]))
 
-            # Check if a party role was configured, and delete it
+            # Check if a party role was configured, and handle cleanup
             party_role_id = quest[QuestFields.PARTY_ROLE_ID]
             if party_role_id:
                 role = guild.get_role(party_role_id)
                 if role:
-                    await role.delete(
-                        reason=f'Quest ID {quest[QuestFields.QUEST_ID]} was completed by {interaction.user.mention}.')
+                    check_role_hierarchy(guild, role)
+                    role_mode = quest.get(QuestFields.QUEST_ROLE_MODE, 'temporary')
+                    if role_mode == 'static':
+                        remove_tasks = []
+                        for entry in party:
+                            for player_id in entry:
+                                member = await get_guild_member(guild, int(player_id))
+                                if member:
+                                    remove_tasks.append(member.remove_roles(role))
+                        if remove_tasks:
+                            await asyncio.gather(*remove_tasks, return_exceptions=True)
+                    else:
+                        await role.delete(
+                            reason=f'Quest ID {quest[QuestFields.QUEST_ID]} was completed by {interaction.user.mention}.')
 
             # Get party members and message them with results
             reward_summary = []
@@ -449,8 +475,6 @@ class ManageQuestsView(LocaleLayoutView):
                     # Get character data
                     character_id = next(iter(character_info))
                     character = character_info[character_id]
-                    reward_summary.append(f'<@!{player_id}> as {character[CommonFields.NAME]}:')
-
                     # Prep reward data
                     total_xp = xp_per_member
                     if not xp_enabled:
@@ -468,12 +492,18 @@ class ManageQuestsView(LocaleLayoutView):
                             combined_items[item] = combined_items.get(item, 0) + quantity
 
                     # Update the character's XP and inventory
+                    member_reward_lines = []
                     if xp_enabled and total_xp > 0:
-                        reward_summary.append(f'Experience: {total_xp}')
+                        member_reward_lines.append(f'Experience: {total_xp}')
                         await update_character_experience(interaction, int(player_id), character_id, total_xp)
                     for item_name, quantity in combined_items.items():
-                        reward_summary.append(f'{item_name}: {quantity}')
+                        member_reward_lines.append(f'{item_name}: {quantity}')
                         await update_character_inventory(interaction, int(player_id), character_id, item_name, quantity)
+
+                    # Only include this member in the reward summary if they received something
+                    if member_reward_lines:
+                        reward_summary.append(f'<@!{player_id}> as {character[CommonFields.NAME]}:')
+                        reward_summary.extend(member_reward_lines)
 
                     # Send reward summary to player
                     reward_strings = self.build_reward_summary(total_xp, combined_items, xp_enabled)
@@ -890,11 +920,13 @@ class RemovePlayerView(LocaleLayoutView):
             role = None
             if lock_state and party_role_id:
                 role = guild.get_role(party_role_id)
+                if role:
+                    check_role_hierarchy(guild, role)
 
                 # Remove the role from the member
-                if member:
+                if role and member:
                     await member.remove_roles(role)
-                else:
+                elif not member:
                     logger.warning(f'Could not find member {removed_member_id} in guild {guild_id} to remove quest '
                                    f'role.')
 
@@ -1180,13 +1212,15 @@ class QuestPostView(View):
                 party_role_id = quest[QuestFields.PARTY_ROLE_ID]
                 if lock_state and party_role_id:
                     role = guild.get_role(party_role_id)
+                    if role:
+                        check_role_hierarchy(guild, role)
 
-                    # Get the member object and remove the role
-                    member = await get_guild_member(guild, user_id)
-                    if member:
-                        await member.remove_roles(role)
-                    if new_member:
-                        await new_member.add_roles(role)
+                        # Get the member object and remove the role
+                        member = await get_guild_member(guild, user_id)
+                        if member:
+                            await member.remove_roles(role)
+                        if new_member:
+                            await new_member.add_roles(role)
 
             # Update the database
             await replace_cached_data(
