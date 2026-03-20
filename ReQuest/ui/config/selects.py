@@ -605,25 +605,27 @@ class AddGMQuestRoleSelect(RoleSelect):
             if query:
                 existing = query.get(ConfigFields.QUEST_ROLE_ASSIGNMENTS, [])
 
+            new_assignments = []
             for role in self.values:
                 already_assigned = any(
                     a['userId'] == str(self.member_id) and a['roleId'] == role.id
                     for a in existing
                 )
                 if not already_assigned:
-                    assignment = {
+                    new_assignments.append({
                         'userId': str(self.member_id),
                         'roleId': role.id,
                         'roleName': role.name
-                    }
-                    await update_cached_data(
-                        bot=bot,
-                        mongo_database=bot.gdb,
-                        collection_name=DatabaseCollections.QUEST_ROLE_ASSIGNMENTS,
-                        query={'_id': guild_id},
-                        update_data={'$push': {ConfigFields.QUEST_ROLE_ASSIGNMENTS: assignment}}
-                    )
-                    existing.append(assignment)
+                    })
+
+            if new_assignments:
+                await update_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.QUEST_ROLE_ASSIGNMENTS,
+                    query={'_id': guild_id},
+                    update_data={'$push': {ConfigFields.QUEST_ROLE_ASSIGNMENTS: {'$each': new_assignments}}}
+                )
 
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)

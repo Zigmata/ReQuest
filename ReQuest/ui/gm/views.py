@@ -440,6 +440,7 @@ class ManageQuestsView(LocaleLayoutView):
                 archive_channel = guild.get_channel(strip_id(archive_query[ConfigFields.ARCHIVE_CHANNEL]))
 
             # Check if a party role was configured, and handle cleanup
+            failed_members = []
             party_role_id = quest[QuestFields.PARTY_ROLE_ID]
             if party_role_id:
                 role = guild.get_role(party_role_id)
@@ -448,13 +449,20 @@ class ManageQuestsView(LocaleLayoutView):
                     role_mode = quest.get(QuestFields.QUEST_ROLE_MODE, 'temporary')
                     if role_mode == 'static':
                         remove_tasks = []
+                        remove_members = []
                         for entry in party:
                             for player_id in entry:
                                 member = await get_guild_member(guild, int(player_id))
                                 if member:
                                     remove_tasks.append(member.remove_roles(role))
+                                    remove_members.append(member)
+                        failed_members = []
                         if remove_tasks:
-                            await asyncio.gather(*remove_tasks, return_exceptions=True)
+                            results = await asyncio.gather(*remove_tasks, return_exceptions=True)
+                            for member, result in zip(remove_members, results):
+                                if isinstance(result, Exception):
+                                    logger.warning(f'Failed to remove role {role.name} from {member} (ID: {member.id}): {result}')
+                                    failed_members.append(member)
                     else:
                         await role.delete(
                             reason=f'Quest ID {quest[QuestFields.QUEST_ID]} was completed by {interaction.user.mention}.')
@@ -579,6 +587,14 @@ class ManageQuestsView(LocaleLayoutView):
 
             # Message feedback to the GM
             await interaction.user.send(embed=quest_embed)
+
+            # Warn GM about any failed role removals
+            if failed_members:
+                gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                failed_list = ', '.join(f'{m.mention}' for m in failed_members)
+                await interaction.user.send(
+                    t(gm_locale, 'gm-dm-role-removal-failed', roleName=role.name, members=failed_list)
+                )
 
             # Check if GM rewards are enabled, and reward the GM accordingly
             gm_rewards_query = await get_cached_data(

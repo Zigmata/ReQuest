@@ -6,6 +6,7 @@ from discord.ui import Button
 
 from ReQuest.ui.common.modals import ConfirmModal
 from ReQuest.ui.gm import modals
+from ReQuest.ui.gm.views import check_role_hierarchy
 from ReQuest.ui.common.enums import RewardType
 from ReQuest.utilities.constants import QuestFields, ConfigFields, CommonFields, DatabaseCollections
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_user_locale
@@ -18,8 +19,7 @@ from ReQuest.utilities.supportFunctions import (
     update_cached_data,
     delete_cached_data,
     build_cache_key,
-    get_guild_member,
-    UserFeedbackError
+    get_guild_member
 )
 
 logger = logging.getLogger(__name__)
@@ -195,16 +195,7 @@ class CancelQuestButton(Button):
             if party_role_id:
                 party_role = guild.get_role(party_role_id)
                 if party_role:
-                    # Check hierarchy before any destructive operations
-                    bot_top_role = guild.me.top_role
-                    if party_role >= bot_top_role:
-                        raise UserFeedbackError(
-                            t(DEFAULT_LOCALE, 'gm-error-role-hierarchy',
-                              roleName=party_role.name, roleId=str(party_role.id)),
-                            message_id='gm-error-role-hierarchy',
-                            roleName=party_role.name,
-                            roleId=str(party_role.id)
-                        )
+                    check_role_hierarchy(guild, party_role)
                     role_mode = quest.get(QuestFields.QUEST_ROLE_MODE, 'temporary')
                     if role_mode == 'static':
                         for player in party:

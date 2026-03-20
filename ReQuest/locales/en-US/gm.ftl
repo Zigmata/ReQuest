@@ -97,6 +97,9 @@ gm-dm-rewards-no-active-character =
     quests. However, since you have no active character on this server, your rewards
     could not be automatically issued at this time.
 gm-dm-rewards-issued = The following has been awarded to your active character, { $characterName }
+gm-dm-role-removal-failed =
+    ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
+    Please notify a server administrator to remove the role manually.
 
 # GM select menus
 gm-select-placeholder-party-member = Select a party member
