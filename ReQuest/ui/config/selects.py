@@ -585,7 +585,7 @@ class AddGMQuestRoleSelect(RoleSelect):
         super().__init__(
             placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-add-quest-role'),
             custom_id='add_gm_quest_role_select',
-            max_values=25
+            max_values=20
         )
         self.calling_view = calling_view
         self.member_id = member_id

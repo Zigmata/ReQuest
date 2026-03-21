@@ -1700,6 +1700,10 @@ class ConfigGMQuestRoleAssignView(LocaleLayoutView):
                 container.add_item(section)
 
         container.add_item(Separator())
+        assigned_count = len(self.member_assignments)
+        container.add_item(TextDisplay(
+            t(DEFAULT_LOCALE, 'config-label-quest-role-count', count=str(assigned_count), limit='20')
+        ))
         container.add_item(ActionRow(selects.AddGMQuestRoleSelect(self, self.member.id)))
 
         self.add_item(container)

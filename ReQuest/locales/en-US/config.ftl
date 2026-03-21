@@ -857,3 +857,4 @@ config-label-no-roles-assigned = No quest roles assigned
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Manage Quest Roles — { $gmName }{"**"}
+config-label-quest-role-count = Assigned roles: { $count }/{ $limit }
