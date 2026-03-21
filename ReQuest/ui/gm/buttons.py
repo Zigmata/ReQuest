@@ -6,7 +6,6 @@ from discord.ui import Button
 
 from ReQuest.ui.common.modals import ConfirmModal
 from ReQuest.ui.gm import modals
-from ReQuest.ui.gm.views import check_role_hierarchy
 from ReQuest.ui.common.enums import RewardType
 from ReQuest.utilities.constants import QuestFields, ConfigFields, CommonFields, DatabaseCollections
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_user_locale
@@ -19,7 +18,8 @@ from ReQuest.utilities.supportFunctions import (
     update_cached_data,
     delete_cached_data,
     build_cache_key,
-    get_guild_member
+    get_guild_member,
+    check_role_hierarchy
 )
 
 logger = logging.getLogger(__name__)
@@ -57,8 +57,14 @@ class CreateQuestButton(Button):
                 )
                 if assignments_query:
                     all_assignments = assignments_query.get(ConfigFields.QUEST_ROLE_ASSIGNMENTS, [])
+                    guild = interaction.guild
+                    bot_top_role = guild.me.top_role
                     assigned_roles = [
-                        a for a in all_assignments if a['userId'] == str(interaction.user.id)
+                        a for a in all_assignments
+                        if a['userId'] == str(interaction.user.id)
+                        and (role := guild.get_role(a['roleId'])) is not None
+                        and not role.managed
+                        and role < bot_top_role
                     ]
 
             modal = modals.CreateQuestModal(self.calling_view, quest_role_mode, assigned_roles)

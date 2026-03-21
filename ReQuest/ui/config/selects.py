@@ -605,8 +605,15 @@ class AddGMQuestRoleSelect(RoleSelect):
             if query:
                 existing = query.get(ConfigFields.QUEST_ROLE_ASSIGNMENTS, [])
 
+            bot_top_role = interaction.guild.me.top_role
             new_assignments = []
+            rejected_roles = []
             for role in self.values:
+                # Reject roles the bot cannot manage
+                if role.managed or role.is_default() or role >= bot_top_role:
+                    rejected_roles.append(role)
+                    continue
+
                 already_assigned = any(
                     a['userId'] == str(self.member_id) and a['roleId'] == role.id
                     for a in existing
@@ -628,6 +635,14 @@ class AddGMQuestRoleSelect(RoleSelect):
                 )
 
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
+            if rejected_roles:
+                rejected_list = ', '.join(r.mention for r in rejected_roles)
+                await interaction.response.edit_message(
+                    content=t(locale, 'config-error-unmanageable-roles', roles=rejected_list),
+                    view=self.calling_view
+                )
+            else:
+                await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)

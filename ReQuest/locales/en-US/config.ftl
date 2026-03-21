@@ -828,6 +828,7 @@ config-select-desc-quest-role-static = GMs pick from pre-assigned server roles.
 
 # AddGMQuestRoleSelect
 config-select-placeholder-add-quest-role = Assign server role(s) to this GM
+config-error-unmanageable-roles = The following roles cannot be assigned because they are managed by an integration, are the default role, or are above ReQuest's highest role: { $roles }
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}Server Configuration - Quest Roles{"**"}
