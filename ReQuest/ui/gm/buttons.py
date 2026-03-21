@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 import discord
@@ -204,11 +205,27 @@ class CancelQuestButton(Button):
                     check_role_hierarchy(guild, party_role)
                     role_mode = quest.get(QuestFields.QUEST_ROLE_MODE, 'temporary')
                     if role_mode == 'static':
+                        remove_tasks = []
+                        remove_members = []
                         for player in party:
                             for member_id in player:
                                 member = await get_guild_member(guild, int(member_id))
                                 if member:
-                                    await member.remove_roles(party_role)
+                                    remove_tasks.append(member.remove_roles(party_role))
+                                    remove_members.append(member)
+                        if remove_tasks:
+                            results = await asyncio.gather(*remove_tasks, return_exceptions=True)
+                            failed_members = []
+                            for member, result in zip(remove_members, results):
+                                if isinstance(result, Exception):
+                                    logger.warning(f'Failed to remove role {party_role.name} from {member} (ID: {member.id}): {result}')
+                                    failed_members.append(member)
+                            if failed_members:
+                                gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                                failed_list = ', '.join(m.mention for m in failed_members)
+                                await interaction.user.send(
+                                    t(gm_locale, 'gm-dm-role-removal-failed', roleName=party_role.name, members=failed_list)
+                                )
                     else:
                         await party_role.delete(reason=f'Quest {quest[QuestFields.QUEST_ID]} cancelled by {interaction.user.mention}.')
 
