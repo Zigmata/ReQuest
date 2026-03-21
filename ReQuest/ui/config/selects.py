@@ -605,6 +605,10 @@ class AddGMQuestRoleSelect(RoleSelect):
             if query:
                 existing = query.get(ConfigFields.QUEST_ROLE_ASSIGNMENTS, [])
 
+            max_roles_per_gm = 20
+            member_id_str = str(self.member_id)
+            member_existing = [a for a in existing if a['userId'] == member_id_str]
+
             bot_top_role = interaction.guild.me.top_role
             new_assignments = []
             rejected_roles = []
@@ -615,12 +619,14 @@ class AddGMQuestRoleSelect(RoleSelect):
                     continue
 
                 already_assigned = any(
-                    a['userId'] == str(self.member_id) and a['roleId'] == role.id
+                    a['userId'] == member_id_str and a['roleId'] == role.id
                     for a in existing
                 )
                 if not already_assigned:
+                    if len(member_existing) + len(new_assignments) >= max_roles_per_gm:
+                        break
                     new_assignments.append({
-                        'userId': str(self.member_id),
+                        'userId': member_id_str,
                         'roleId': role.id,
                         'roleName': role.name
                     })
@@ -636,10 +642,16 @@ class AddGMQuestRoleSelect(RoleSelect):
 
             await setup_view(self.calling_view, interaction)
             locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
-            if rejected_roles:
-                rejected_list = ', '.join(r.mention for r in rejected_roles)
+            at_limit = len(member_existing) + len(new_assignments) >= max_roles_per_gm
+            if rejected_roles or at_limit:
+                messages = []
+                if rejected_roles:
+                    rejected_list = ', '.join(r.mention for r in rejected_roles)
+                    messages.append(t(locale, 'config-error-unmanageable-roles', roles=rejected_list))
+                if at_limit:
+                    messages.append(t(locale, 'config-error-quest-role-limit', limit=str(max_roles_per_gm)))
                 await interaction.response.edit_message(
-                    content=t(locale, 'config-error-unmanageable-roles', roles=rejected_list),
+                    content='\n'.join(messages),
                     view=self.calling_view
                 )
             else:

@@ -856,3 +856,4 @@ config-label-no-roles-assigned = No quest roles assigned
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Manage Quest Roles — { $gmName }{"**"}
 config-error-unmanageable-roles = The following roles cannot be assigned because they are managed by an integration, are the default role, or are above ReQuest's highest role: { $roles }
+config-error-quest-role-limit = This GM has reached the maximum of { $limit } assigned quest roles.
