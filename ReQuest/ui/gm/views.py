@@ -1051,6 +1051,7 @@ class QuestPostView(View):
 
     async def join_callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             guild_id = interaction.guild_id
             user_id = interaction.user.id
@@ -1150,12 +1151,13 @@ class QuestPostView(View):
                         )
 
                 await setup_view(self, interaction)
-                await interaction.response.edit_message(embed=self.embed, view=self)
+                await interaction.edit_original_response(embed=self.embed, view=self)
         except Exception as e:
             await log_exception(e, interaction)
 
     async def leave_callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             guild_id = interaction.guild_id
             user_id = interaction.user.id
@@ -1240,7 +1242,7 @@ class QuestPostView(View):
 
             # Refresh the query with the new document and edit the post
             await self.setup(bot=bot)
-            await interaction.response.edit_message(embed=self.embed, view=self)
+            await interaction.edit_original_response(embed=self.embed, view=self)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -1330,6 +1332,7 @@ class ReviewSubmissionView(LocaleLayoutView):
 
     async def approve(self, interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             character_id = self.data['character_id']
             user_id = self.data['user_id']
@@ -1364,11 +1367,10 @@ class ReviewSubmissionView(LocaleLayoutView):
 
             # Either refresh GM view, or delete original response if in thread since it will be archived.
             if interaction.channel_id == thread_id:
-                await interaction.response.defer()
                 await interaction.followup.delete_message(interaction.message.id)
             else:
                 view = GMApprovalsView()
-                await interaction.response.edit_message(view=view)
+                await interaction.edit_original_response(view=view)
 
             # Lock/Archive thread
             await thread.edit(locked=True, archived=True)
@@ -1377,6 +1379,7 @@ class ReviewSubmissionView(LocaleLayoutView):
 
     async def deny(self, interaction):
         try:
+            await interaction.response.defer()
             # Same logic as above but for denials
             bot = interaction.client
             submission_id = self.data['submission_id']
@@ -1403,11 +1406,10 @@ class ReviewSubmissionView(LocaleLayoutView):
             await thread.send(embed=denial_embed)
 
             if interaction.channel_id == thread_id:
-                await interaction.response.defer()
                 await interaction.followup.delete_message(interaction.message.id)
             else:
                 view = GMApprovalsView()
-                await interaction.response.edit_message(view=view)
+                await interaction.edit_original_response(view=view)
 
             await thread.edit(locked=True, archived=True)
         except Exception as e:

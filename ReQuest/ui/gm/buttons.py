@@ -172,6 +172,7 @@ class CancelQuestButton(Button):
 
     async def confirm_callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             quest = self.calling_view.selected_quest
             guild_id = interaction.guild_id
@@ -261,7 +262,7 @@ class CancelQuestButton(Button):
             from ReQuest.ui.gm.views import GMQuestMenuView
             view = GMQuestMenuView()
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
