@@ -582,9 +582,10 @@ class QuestRoleModeSelect(Select):
 
 class AddGMQuestRoleSelect(RoleSelect):
     def __init__(self, calling_view, member_id):
+        import uuid
         super().__init__(
             placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-add-quest-role'),
-            custom_id='add_gm_quest_role_select',
+            custom_id=f'add_gm_quest_role_select:{uuid.uuid4().hex[:8]}',
             max_values=MAX_QUEST_ROLES_PER_GM
         )
         self.calling_view = calling_view
