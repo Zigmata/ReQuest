@@ -176,3 +176,7 @@ gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { 
 gm-dm-role-removal-failed =
     ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
     Please notify a server administrator to remove the role manually.
+
+gm-dm-role-not-found =
+    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
+    Role operations were skipped. Please notify a server administrator if this is unexpected.
