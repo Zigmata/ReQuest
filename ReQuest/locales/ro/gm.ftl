@@ -168,15 +168,15 @@ gm-embed-desc-approved = Inventarul pentru {"**"}{ $characterName }{"**"} a fost
 gm-embed-title-denied = Actualizare inventar respinsă
 gm-embed-desc-denied = Inventarul pentru {"**"}{ $characterName }{"**"} a fost respins de { $denier }.
 
-gm-modal-label-select-party-role = Party Role
-gm-modal-desc-select-party-role = Select a role to assign to the quest party.
-gm-select-option-no-role = None (No Party Role)
+gm-modal-label-select-party-role = Rol echipă
+gm-modal-desc-select-party-role = Selectați un rol de atribuit echipei quest-ului.
+gm-select-option-no-role = Niciunul (Fără rol de echipă)
 
-gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role, then retry the operation.
+gm-error-role-hierarchy = ReQuest nu poate gestiona rolul "{ $roleName }" (ID: { $roleId }) deoarece este poziționat mai sus decât cel mai înalt rol al ReQuest în ierarhia serverului. Contactați un administrator de server pentru a muta rolul sub rolul ReQuest sau pentru a atribui ReQuest un rol mai înalt, apoi reîncercați operațiunea.
 gm-dm-role-removal-failed =
-    ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
-    Please notify a server administrator to remove the role manually.
+    ⚠️ Nu s-a putut elimina rolul {"**"}{ $roleName }{"**"} de la următorii membri: { $members }.
+    Notificați un administrator de server pentru a elimina rolul manual.
 
 gm-dm-role-not-found =
-    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
-    Role operations were skipped. Please notify a server administrator if this is unexpected.
+    ⚠️ Rolul de quest (ID: { $roleId }) pentru quest-ul {"**"}{ $questTitle }{"**"} nu mai există pe server.
+    Operațiunile de rol au fost omise. Notificați un administrator de server dacă acest lucru este neașteptat.

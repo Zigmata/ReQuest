@@ -812,50 +812,50 @@ config-select-option-default = Par défaut (aucun remplacement)
 config-select-desc-default = Utiliser la préférence de chaque utilisateur ou la langue Discord.
 
 # Quest Roles
-config-btn-quest-roles = Quest Roles
-config-btn-manage-gm-quest-roles = Manage
+config-btn-quest-roles = Rôles de quête
+config-btn-manage-gm-quest-roles = Gérer
 
-config-modal-title-confirm-quest-role-removal = Confirm Role Removal
-config-modal-label-remove-quest-role = Remove { $roleName } from { $gmName }?
+config-modal-title-confirm-quest-role-removal = Confirmer la suppression du rôle
+config-modal-label-remove-quest-role = Retirer { $roleName } de { $gmName } ?
 
 # QuestRoleModeSelect
-config-select-placeholder-quest-role-mode = Select Quest Role Mode
-config-select-option-quest-role-disabled = Disabled
-config-select-desc-quest-role-disabled = No roles are created or assigned.
-config-select-option-quest-role-temporary = Temporary
-config-select-desc-quest-role-temporary = GMs can create temporary roles per quest.
-config-select-option-quest-role-static = Static
-config-select-desc-quest-role-static = GMs pick from pre-assigned server roles.
+config-select-placeholder-quest-role-mode = Sélectionnez le mode de rôles de quête
+config-select-option-quest-role-disabled = Désactivé
+config-select-desc-quest-role-disabled = Aucun rôle n'est créé ou attribué.
+config-select-option-quest-role-temporary = Temporaire
+config-select-desc-quest-role-temporary = Les GMs peuvent créer des rôles temporaires par quête.
+config-select-option-quest-role-static = Statique
+config-select-desc-quest-role-static = Les GMs choisissent parmi des rôles serveur pré-attribués.
 
 # AddGMQuestRoleSelect
-config-select-placeholder-add-quest-role = Assign server role(s) to this GM
+config-select-placeholder-add-quest-role = Attribuer un/des rôle(s) serveur à ce GM
 
 ## Quest Roles View
-config-title-quest-roles = {"**"}Server Configuration - Quest Roles{"**"}
-config-label-quest-roles = Quest Roles
+config-title-quest-roles = {"**"}Configuration du serveur - Rôles de quête{"**"}
+config-label-quest-roles = Rôles de quête
 config-desc-quest-roles =
-    Configure how party roles are handled during quests.
+    Configurez la gestion des rôles du groupe pendant les quêtes.
 
-config-label-quest-role-mode-disabled = {"**"}Quest Role Mode:{"**"} Disabled
-    No roles are created or assigned during quests.
-config-label-quest-role-mode-temporary = {"**"}Quest Role Mode:{"**"} Temporary
-    GMs can optionally create a temporary role during quest creation.
-    The role is deleted when the quest completes or is cancelled.
-config-label-quest-role-mode-static = {"**"}Quest Role Mode:{"**"} Static
-    GMs pick from pre-assigned server roles. Roles are assigned to
-    party members during quests but are never deleted.
+config-label-quest-role-mode-disabled = {"**"}Mode de rôles de quête :{"**"} Désactivé
+    Aucun rôle n'est créé ou attribué pendant les quêtes.
+config-label-quest-role-mode-temporary = {"**"}Mode de rôles de quête :{"**"} Temporaire
+    Les GMs peuvent optionnellement créer un rôle temporaire lors de la création de la quête.
+    Le rôle est supprimé lorsque la quête est terminée ou annulée.
+config-label-quest-role-mode-static = {"**"}Mode de rôles de quête :{"**"} Statique
+    Les GMs choisissent parmi des rôles serveur pré-attribués. Les rôles sont attribués
+    aux membres du groupe pendant les quêtes mais ne sont jamais supprimés.
 
 ## Static Quest Role Assignments View
-config-title-static-quest-roles = {"**"}Server Configuration - Static Quest Role Assignments{"**"}
-config-label-manage-assignments = Manage Role Assignments
+config-title-static-quest-roles = {"**"}Configuration du serveur - Attributions de rôles statiques de quête{"**"}
+config-label-manage-assignments = Gérer les attributions de rôles
 config-desc-manage-assignments =
-    Assign existing server roles to GMs for use during quests.
-    Roles must be lower than ReQuest's highest role in the server hierarchy.
-config-msg-no-gm-members = No members with a GM role were found on this server.
-config-label-no-roles-assigned = No quest roles assigned
+    Attribuez des rôles serveur existants aux GMs pour les utiliser pendant les quêtes.
+    Les rôles doivent être en dessous du rôle le plus élevé de ReQuest dans la hiérarchie du serveur.
+config-msg-no-gm-members = Aucun membre avec un rôle GM n'a été trouvé sur ce serveur.
+config-label-no-roles-assigned = Aucun rôle de quête attribué
 
 ## GM Quest Role Assign View
-config-title-gm-quest-role-assign = {"**"}Manage Quest Roles — { $gmName }{"**"}
-config-error-unmanageable-roles = The following roles cannot be assigned because they are managed by an integration, are the default role, or are above ReQuest's highest role: { $roles }
-config-error-quest-role-limit = This GM has reached the maximum of { $limit } assigned quest roles.
-config-label-quest-role-count = Assigned roles: { $count }/{ $limit }
+config-title-gm-quest-role-assign = {"**"}Gérer les rôles de quête — { $gmName }{"**"}
+config-error-unmanageable-roles = Les rôles suivants ne peuvent pas être attribués car ils sont gérés par une intégration, sont le rôle par défaut ou sont au-dessus du rôle le plus élevé de ReQuest : { $roles }
+config-error-quest-role-limit = Ce GM a atteint le maximum de { $limit } rôles de quête attribués.
+config-label-quest-role-count = Rôles attribués : { $count }/{ $limit }

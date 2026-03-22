@@ -811,51 +811,51 @@ config-select-placeholder-server-language = Pasirinkite serverio kalbą
 config-select-option-default = Numatytoji (be pakeitimo)
 config-select-desc-default = Naudoti kiekvieno vartotojo nuostatą arba Discord lokalę.
 
-# Quest Roles
-config-btn-quest-roles = Quest Roles
-config-btn-manage-gm-quest-roles = Manage
+# Quest rolės
+config-btn-quest-roles = Quest rolės
+config-btn-manage-gm-quest-roles = Valdyti
 
-config-modal-title-confirm-quest-role-removal = Confirm Role Removal
-config-modal-label-remove-quest-role = Remove { $roleName } from { $gmName }?
+config-modal-title-confirm-quest-role-removal = Patvirtinti rolės pašalinimą
+config-modal-label-remove-quest-role = Pašalinti { $roleName } iš { $gmName }?
 
 # QuestRoleModeSelect
-config-select-placeholder-quest-role-mode = Select Quest Role Mode
-config-select-option-quest-role-disabled = Disabled
-config-select-desc-quest-role-disabled = No roles are created or assigned.
-config-select-option-quest-role-temporary = Temporary
-config-select-desc-quest-role-temporary = GMs can create temporary roles per quest.
-config-select-option-quest-role-static = Static
-config-select-desc-quest-role-static = GMs pick from pre-assigned server roles.
+config-select-placeholder-quest-role-mode = Pasirinkite quest rolės režimą
+config-select-option-quest-role-disabled = Išjungta
+config-select-desc-quest-role-disabled = Rolės nėra kuriamos ir nėra priskiriamos.
+config-select-option-quest-role-temporary = Laikina
+config-select-desc-quest-role-temporary = GM gali kurti laikinas roles kiekvienam quest'ui.
+config-select-option-quest-role-static = Statinė
+config-select-desc-quest-role-static = GM pasirenka iš iš anksto priskirtų serverio rolių.
 
 # AddGMQuestRoleSelect
-config-select-placeholder-add-quest-role = Assign server role(s) to this GM
+config-select-placeholder-add-quest-role = Priskirti serverio rolę(-es) šiam GM
 
-## Quest Roles View
-config-title-quest-roles = {"**"}Server Configuration - Quest Roles{"**"}
-config-label-quest-roles = Quest Roles
+## Quest rolių rodinys
+config-title-quest-roles = {"**"}Serverio konfigūracija - Quest rolės{"**"}
+config-label-quest-roles = Quest rolės
 config-desc-quest-roles =
-    Configure how party roles are handled during quests.
+    Konfigūruokite, kaip grupės rolės valdomos quest'ų metu.
 
-config-label-quest-role-mode-disabled = {"**"}Quest Role Mode:{"**"} Disabled
-    No roles are created or assigned during quests.
-config-label-quest-role-mode-temporary = {"**"}Quest Role Mode:{"**"} Temporary
-    GMs can optionally create a temporary role during quest creation.
-    The role is deleted when the quest completes or is cancelled.
-config-label-quest-role-mode-static = {"**"}Quest Role Mode:{"**"} Static
-    GMs pick from pre-assigned server roles. Roles are assigned to
-    party members during quests but are never deleted.
+config-label-quest-role-mode-disabled = {"**"}Quest rolės režimas:{"**"} Išjungta
+    Quest'ų metu rolės nėra kuriamos ir nėra priskiriamos.
+config-label-quest-role-mode-temporary = {"**"}Quest rolės režimas:{"**"} Laikina
+    GM gali pasirinktinai sukurti laikiną rolę kuriant quest'ą.
+    Rolė ištrinama, kai quest'as užbaigiamas arba atšaukiamas.
+config-label-quest-role-mode-static = {"**"}Quest rolės režimas:{"**"} Statinė
+    GM pasirenka iš iš anksto priskirtų serverio rolių. Rolės priskiriamos
+    grupės nariams quest'ų metu, bet niekada nėra ištrinamos.
 
-## Static Quest Role Assignments View
-config-title-static-quest-roles = {"**"}Server Configuration - Static Quest Role Assignments{"**"}
-config-label-manage-assignments = Manage Role Assignments
+## Statinių quest rolių priskyrimo rodinys
+config-title-static-quest-roles = {"**"}Serverio konfigūracija - Statinių quest rolių priskyrimai{"**"}
+config-label-manage-assignments = Valdyti rolių priskyrimą
 config-desc-manage-assignments =
-    Assign existing server roles to GMs for use during quests.
-    Roles must be lower than ReQuest's highest role in the server hierarchy.
-config-msg-no-gm-members = No members with a GM role were found on this server.
-config-label-no-roles-assigned = No quest roles assigned
+    Priskirkite esamas serverio roles GM naudojimui quest'ų metu.
+    Rolės turi būti žemesnės nei aukščiausia ReQuest rolė serverio hierarchijoje.
+config-msg-no-gm-members = Šiame serveryje nerasta narių su GM role.
+config-label-no-roles-assigned = Nėra priskirtų quest rolių
 
-## GM Quest Role Assign View
-config-title-gm-quest-role-assign = {"**"}Manage Quest Roles — { $gmName }{"**"}
-config-error-unmanageable-roles = The following roles cannot be assigned because they are managed by an integration, are the default role, or are above ReQuest's highest role: { $roles }
-config-error-quest-role-limit = This GM has reached the maximum of { $limit } assigned quest roles.
-config-label-quest-role-count = Assigned roles: { $count }/{ $limit }
+## GM quest rolių priskyrimo rodinys
+config-title-gm-quest-role-assign = {"**"}Valdyti quest roles — { $gmName }{"**"}
+config-error-unmanageable-roles = Šių rolių negalima priskirti, nes jas valdo integracija, tai numatytoji rolė arba ji yra aukščiau nei aukščiausia ReQuest rolė: { $roles }
+config-error-quest-role-limit = Šis GM pasiekė didžiausią { $limit } priskirtų quest rolių skaičių.
+config-label-quest-role-count = Priskirtos rolės: { $count }/{ $limit }

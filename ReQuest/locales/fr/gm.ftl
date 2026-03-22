@@ -168,15 +168,15 @@ gm-embed-desc-approved = L'inventaire de {"**"}{ $characterName }{"**"} a été 
 gm-embed-title-denied = Mise à jour d'inventaire refusée
 gm-embed-desc-denied = L'inventaire de {"**"}{ $characterName }{"**"} a été refusé par { $denier }.
 
-gm-modal-label-select-party-role = Party Role
-gm-modal-desc-select-party-role = Select a role to assign to the quest party.
-gm-select-option-no-role = None (No Party Role)
+gm-modal-label-select-party-role = Rôle du groupe
+gm-modal-desc-select-party-role = Sélectionnez un rôle à attribuer au groupe de la quête.
+gm-select-option-no-role = Aucun (Pas de rôle de groupe)
 
-gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role, then retry the operation.
+gm-error-role-hierarchy = ReQuest ne peut pas gérer le rôle « { $roleName } » (ID : { $roleId }) car il est positionné plus haut que le rôle le plus élevé de ReQuest dans la hiérarchie du serveur. Veuillez contacter un administrateur du serveur pour déplacer le rôle en dessous du rôle de ReQuest, ou attribuer un rôle plus élevé à ReQuest, puis réessayez l'opération.
 gm-dm-role-removal-failed =
-    ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
-    Please notify a server administrator to remove the role manually.
+    ⚠️ Impossible de retirer le rôle {"**"}{ $roleName }{"**"} des membres suivants : { $members }.
+    Veuillez prévenir un administrateur du serveur pour retirer le rôle manuellement.
 
 gm-dm-role-not-found =
-    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
-    Role operations were skipped. Please notify a server administrator if this is unexpected.
+    ⚠️ Le rôle de quête (ID : { $roleId }) pour la quête {"**"}{ $questTitle }{"**"} n'existe plus sur le serveur.
+    Les opérations de rôle ont été ignorées. Veuillez prévenir un administrateur du serveur si cela est inattendu.

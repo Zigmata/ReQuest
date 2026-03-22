@@ -168,15 +168,15 @@ gm-embed-desc-approved = Personažo {"**"}{ $characterName }{"**"} inventorius b
 gm-embed-title-denied = Inventoriaus atnaujinimas atmestas
 gm-embed-desc-denied = Personažo {"**"}{ $characterName }{"**"} inventorius buvo atmestas { $denier }.
 
-gm-modal-label-select-party-role = Party Role
-gm-modal-desc-select-party-role = Select a role to assign to the quest party.
-gm-select-option-no-role = None (No Party Role)
+gm-modal-label-select-party-role = Grupės rolė
+gm-modal-desc-select-party-role = Pasirinkite rolę, kurią priskirti quest grupei.
+gm-select-option-no-role = Nėra (be grupės rolės)
 
-gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role, then retry the operation.
+gm-error-role-hierarchy = ReQuest negali valdyti rolės „{ $roleName }" (ID: { $roleId }), nes ji yra aukščiau nei aukščiausia ReQuest rolė serverio hierarchijoje. Susisiekite su serverio administratoriumi, kad perkeltų rolę žemiau ReQuest rolės arba priskirtų ReQuest aukštesnę rolę, ir bandykite dar kartą.
 gm-dm-role-removal-failed =
-    ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
-    Please notify a server administrator to remove the role manually.
+    ⚠️ Nepavyko pašalinti rolės {"**"}{ $roleName }{"**"} iš šių narių: { $members }.
+    Praneškite serverio administratoriui, kad rolę pašalintų rankiniu būdu.
 
 gm-dm-role-not-found =
-    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
-    Role operations were skipped. Please notify a server administrator if this is unexpected.
+    ⚠️ Quest rolė (ID: { $roleId }) quest'ui {"**"}{ $questTitle }{"**"} nebeegzistuoja serveryje.
+    Rolės operacijos buvo praleistos. Praneškite serverio administratoriui, jei tai netikėta.

@@ -812,50 +812,50 @@ config-select-option-default = Zadano (bez premošćivanja)
 config-select-desc-default = Koristi postavke svakog korisnika ili Discord lokalizaciju.
 
 # Quest Roles
-config-btn-quest-roles = Quest Roles
-config-btn-manage-gm-quest-roles = Manage
+config-btn-quest-roles = Uloge questa
+config-btn-manage-gm-quest-roles = Upravljaj
 
-config-modal-title-confirm-quest-role-removal = Confirm Role Removal
-config-modal-label-remove-quest-role = Remove { $roleName } from { $gmName }?
+config-modal-title-confirm-quest-role-removal = Potvrda uklanjanja uloge
+config-modal-label-remove-quest-role = Ukloniti { $roleName } od { $gmName }?
 
 # QuestRoleModeSelect
-config-select-placeholder-quest-role-mode = Select Quest Role Mode
-config-select-option-quest-role-disabled = Disabled
-config-select-desc-quest-role-disabled = No roles are created or assigned.
-config-select-option-quest-role-temporary = Temporary
-config-select-desc-quest-role-temporary = GMs can create temporary roles per quest.
-config-select-option-quest-role-static = Static
-config-select-desc-quest-role-static = GMs pick from pre-assigned server roles.
+config-select-placeholder-quest-role-mode = Odaberite način uloga questa
+config-select-option-quest-role-disabled = Onemogućeno
+config-select-desc-quest-role-disabled = Uloge se ne stvaraju niti dodjeljuju.
+config-select-option-quest-role-temporary = Privremeno
+config-select-desc-quest-role-temporary = GM-ovi mogu stvoriti privremene uloge po questu.
+config-select-option-quest-role-static = Statično
+config-select-desc-quest-role-static = GM-ovi biraju iz unaprijed dodijeljenih uloga poslužitelja.
 
 # AddGMQuestRoleSelect
-config-select-placeholder-add-quest-role = Assign server role(s) to this GM
+config-select-placeholder-add-quest-role = Dodijelite ulogu(e) poslužitelja ovom GM-u
 
 ## Quest Roles View
-config-title-quest-roles = {"**"}Server Configuration - Quest Roles{"**"}
-config-label-quest-roles = Quest Roles
+config-title-quest-roles = {"**"}Konfiguracija poslužitelja - Uloge questa{"**"}
+config-label-quest-roles = Uloge questa
 config-desc-quest-roles =
-    Configure how party roles are handled during quests.
+    Konfigurirajte kako se uloge družine upravljaju tijekom questova.
 
-config-label-quest-role-mode-disabled = {"**"}Quest Role Mode:{"**"} Disabled
-    No roles are created or assigned during quests.
-config-label-quest-role-mode-temporary = {"**"}Quest Role Mode:{"**"} Temporary
-    GMs can optionally create a temporary role during quest creation.
-    The role is deleted when the quest completes or is cancelled.
-config-label-quest-role-mode-static = {"**"}Quest Role Mode:{"**"} Static
-    GMs pick from pre-assigned server roles. Roles are assigned to
-    party members during quests but are never deleted.
+config-label-quest-role-mode-disabled = {"**"}Način uloga questa:{"**"} Onemogućeno
+    Uloge se ne stvaraju niti dodjeljuju tijekom questova.
+config-label-quest-role-mode-temporary = {"**"}Način uloga questa:{"**"} Privremeno
+    GM-ovi mogu opcionalno stvoriti privremenu ulogu prilikom stvaranja questa.
+    Uloga se briše kada se quest dovrši ili otkaže.
+config-label-quest-role-mode-static = {"**"}Način uloga questa:{"**"} Statično
+    GM-ovi biraju iz unaprijed dodijeljenih uloga poslužitelja. Uloge se dodjeljuju
+    članovima družine tijekom questova, ali se nikada ne brišu.
 
 ## Static Quest Role Assignments View
-config-title-static-quest-roles = {"**"}Server Configuration - Static Quest Role Assignments{"**"}
-config-label-manage-assignments = Manage Role Assignments
+config-title-static-quest-roles = {"**"}Konfiguracija poslužitelja - Dodjele statičnih uloga questa{"**"}
+config-label-manage-assignments = Upravljanje dodjelom uloga
 config-desc-manage-assignments =
-    Assign existing server roles to GMs for use during quests.
-    Roles must be lower than ReQuest's highest role in the server hierarchy.
-config-msg-no-gm-members = No members with a GM role were found on this server.
-config-label-no-roles-assigned = No quest roles assigned
+    Dodijelite postojeće uloge poslužitelja GM-ovima za korištenje tijekom questova.
+    Uloge moraju biti niže od najviše uloge ReQuesta u hijerarhiji poslužitelja.
+config-msg-no-gm-members = Na ovom poslužitelju nisu pronađeni članovi s GM ulogom.
+config-label-no-roles-assigned = Nema dodijeljenih uloga questa
 
 ## GM Quest Role Assign View
-config-title-gm-quest-role-assign = {"**"}Manage Quest Roles — { $gmName }{"**"}
-config-error-unmanageable-roles = The following roles cannot be assigned because they are managed by an integration, are the default role, or are above ReQuest's highest role: { $roles }
-config-error-quest-role-limit = This GM has reached the maximum of { $limit } assigned quest roles.
-config-label-quest-role-count = Assigned roles: { $count }/{ $limit }
+config-title-gm-quest-role-assign = {"**"}Upravljanje ulogama questa — { $gmName }{"**"}
+config-error-unmanageable-roles = Sljedeće uloge se ne mogu dodijeliti jer ih upravlja integracija, zadana su uloga ili su iznad najviše uloge ReQuesta: { $roles }
+config-error-quest-role-limit = Ovaj GM je dosegnuo maksimum od { $limit } dodijeljenih uloga questa.
+config-label-quest-role-count = Dodijeljene uloge: { $count }/{ $limit }

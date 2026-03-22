@@ -812,50 +812,50 @@ config-select-option-default = Padrão (sem substituição)
 config-select-desc-default = Usar a preferência de cada usuário ou o idioma do Discord.
 
 # Quest Roles
-config-btn-quest-roles = Quest Roles
-config-btn-manage-gm-quest-roles = Manage
+config-btn-quest-roles = Cargos de Quest
+config-btn-manage-gm-quest-roles = Gerenciar
 
-config-modal-title-confirm-quest-role-removal = Confirm Role Removal
-config-modal-label-remove-quest-role = Remove { $roleName } from { $gmName }?
+config-modal-title-confirm-quest-role-removal = Confirmar Remoção de Cargo
+config-modal-label-remove-quest-role = Remover { $roleName } de { $gmName }?
 
 # QuestRoleModeSelect
-config-select-placeholder-quest-role-mode = Select Quest Role Mode
-config-select-option-quest-role-disabled = Disabled
-config-select-desc-quest-role-disabled = No roles are created or assigned.
-config-select-option-quest-role-temporary = Temporary
-config-select-desc-quest-role-temporary = GMs can create temporary roles per quest.
-config-select-option-quest-role-static = Static
-config-select-desc-quest-role-static = GMs pick from pre-assigned server roles.
+config-select-placeholder-quest-role-mode = Selecione o Modo de Cargo de Quest
+config-select-option-quest-role-disabled = Desativado
+config-select-desc-quest-role-disabled = Nenhum cargo é criado ou atribuído.
+config-select-option-quest-role-temporary = Temporário
+config-select-desc-quest-role-temporary = MJs podem criar cargos temporários por quest.
+config-select-option-quest-role-static = Estático
+config-select-desc-quest-role-static = MJs escolhem entre cargos pré-atribuídos do servidor.
 
 # AddGMQuestRoleSelect
-config-select-placeholder-add-quest-role = Assign server role(s) to this GM
+config-select-placeholder-add-quest-role = Atribuir cargo(s) do servidor a este MJ
 
 ## Quest Roles View
-config-title-quest-roles = {"**"}Server Configuration - Quest Roles{"**"}
-config-label-quest-roles = Quest Roles
+config-title-quest-roles = {"**"}Configuração do Servidor - Cargos de Quest{"**"}
+config-label-quest-roles = Cargos de Quest
 config-desc-quest-roles =
-    Configure how party roles are handled during quests.
+    Configure como os cargos de grupo são gerenciados durante as quests.
 
-config-label-quest-role-mode-disabled = {"**"}Quest Role Mode:{"**"} Disabled
-    No roles are created or assigned during quests.
-config-label-quest-role-mode-temporary = {"**"}Quest Role Mode:{"**"} Temporary
-    GMs can optionally create a temporary role during quest creation.
-    The role is deleted when the quest completes or is cancelled.
-config-label-quest-role-mode-static = {"**"}Quest Role Mode:{"**"} Static
-    GMs pick from pre-assigned server roles. Roles are assigned to
-    party members during quests but are never deleted.
+config-label-quest-role-mode-disabled = {"**"}Modo de Cargo de Quest:{"**"} Desativado
+    Nenhum cargo é criado ou atribuído durante as quests.
+config-label-quest-role-mode-temporary = {"**"}Modo de Cargo de Quest:{"**"} Temporário
+    MJs podem criar opcionalmente um cargo temporário durante a criação da quest.
+    O cargo é excluído quando a quest é completada ou cancelada.
+config-label-quest-role-mode-static = {"**"}Modo de Cargo de Quest:{"**"} Estático
+    MJs escolhem entre cargos pré-atribuídos do servidor. Os cargos são atribuídos
+    aos membros do grupo durante as quests, mas nunca são excluídos.
 
 ## Static Quest Role Assignments View
-config-title-static-quest-roles = {"**"}Server Configuration - Static Quest Role Assignments{"**"}
-config-label-manage-assignments = Manage Role Assignments
+config-title-static-quest-roles = {"**"}Configuração do Servidor - Atribuições de Cargos Estáticos de Quest{"**"}
+config-label-manage-assignments = Gerenciar Atribuições de Cargos
 config-desc-manage-assignments =
-    Assign existing server roles to GMs for use during quests.
-    Roles must be lower than ReQuest's highest role in the server hierarchy.
-config-msg-no-gm-members = No members with a GM role were found on this server.
-config-label-no-roles-assigned = No quest roles assigned
+    Atribua cargos existentes do servidor a MJs para uso durante as quests.
+    Os cargos devem estar abaixo do cargo mais alto do ReQuest na hierarquia do servidor.
+config-msg-no-gm-members = Nenhum membro com cargo de MJ foi encontrado neste servidor.
+config-label-no-roles-assigned = Nenhum cargo de quest atribuído
 
 ## GM Quest Role Assign View
-config-title-gm-quest-role-assign = {"**"}Manage Quest Roles — { $gmName }{"**"}
-config-error-unmanageable-roles = The following roles cannot be assigned because they are managed by an integration, are the default role, or are above ReQuest's highest role: { $roles }
-config-error-quest-role-limit = This GM has reached the maximum of { $limit } assigned quest roles.
-config-label-quest-role-count = Assigned roles: { $count }/{ $limit }
+config-title-gm-quest-role-assign = {"**"}Gerenciar Cargos de Quest — { $gmName }{"**"}
+config-error-unmanageable-roles = Os seguintes cargos não podem ser atribuídos porque são gerenciados por uma integração, são o cargo padrão ou estão acima do cargo mais alto do ReQuest: { $roles }
+config-error-quest-role-limit = Este MJ atingiu o máximo de { $limit } cargos de quest atribuídos.
+config-label-quest-role-count = Cargos atribuídos: { $count }/{ $limit }

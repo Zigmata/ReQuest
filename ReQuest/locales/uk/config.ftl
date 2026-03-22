@@ -812,50 +812,50 @@ config-select-option-default = За замовчуванням (без пере�
 config-select-desc-default = Використовувати налаштування кожного користувача або мову Discord.
 
 # Quest Roles
-config-btn-quest-roles = Quest Roles
-config-btn-manage-gm-quest-roles = Manage
+config-btn-quest-roles = Ролі квестів
+config-btn-manage-gm-quest-roles = Керувати
 
-config-modal-title-confirm-quest-role-removal = Confirm Role Removal
-config-modal-label-remove-quest-role = Remove { $roleName } from { $gmName }?
+config-modal-title-confirm-quest-role-removal = Підтвердити видалення ролі
+config-modal-label-remove-quest-role = Видалити { $roleName } у { $gmName }?
 
 # QuestRoleModeSelect
-config-select-placeholder-quest-role-mode = Select Quest Role Mode
-config-select-option-quest-role-disabled = Disabled
-config-select-desc-quest-role-disabled = No roles are created or assigned.
-config-select-option-quest-role-temporary = Temporary
-config-select-desc-quest-role-temporary = GMs can create temporary roles per quest.
-config-select-option-quest-role-static = Static
-config-select-desc-quest-role-static = GMs pick from pre-assigned server roles.
+config-select-placeholder-quest-role-mode = Оберіть режим ролей квестів
+config-select-option-quest-role-disabled = Вимкнено
+config-select-desc-quest-role-disabled = Ролі не створюються та не призначаються.
+config-select-option-quest-role-temporary = Тимчасовий
+config-select-desc-quest-role-temporary = Ведучі Гри можуть створювати тимчасові ролі для кожного квесту.
+config-select-option-quest-role-static = Статичний
+config-select-desc-quest-role-static = Ведучі Гри обирають з попередньо призначених ролей сервера.
 
 # AddGMQuestRoleSelect
-config-select-placeholder-add-quest-role = Assign server role(s) to this GM
+config-select-placeholder-add-quest-role = Призначити роль(ролі) сервера цьому Ведучому Гри
 
 ## Quest Roles View
-config-title-quest-roles = {"**"}Server Configuration - Quest Roles{"**"}
-config-label-quest-roles = Quest Roles
+config-title-quest-roles = {"**"}Конфігурація сервера - Ролі квестів{"**"}
+config-label-quest-roles = Ролі квестів
 config-desc-quest-roles =
-    Configure how party roles are handled during quests.
+    Налаштуйте, як ролі групи обробляються під час квестів.
 
-config-label-quest-role-mode-disabled = {"**"}Quest Role Mode:{"**"} Disabled
-    No roles are created or assigned during quests.
-config-label-quest-role-mode-temporary = {"**"}Quest Role Mode:{"**"} Temporary
-    GMs can optionally create a temporary role during quest creation.
-    The role is deleted when the quest completes or is cancelled.
-config-label-quest-role-mode-static = {"**"}Quest Role Mode:{"**"} Static
-    GMs pick from pre-assigned server roles. Roles are assigned to
-    party members during quests but are never deleted.
+config-label-quest-role-mode-disabled = {"**"}Режим ролей квестів:{"**"} Вимкнено
+    Під час квестів ролі не створюються та не призначаються.
+config-label-quest-role-mode-temporary = {"**"}Режим ролей квестів:{"**"} Тимчасовий
+    Ведучі Гри можуть за бажанням створити тимчасову роль під час створення квесту.
+    Роль видаляється після завершення або скасування квесту.
+config-label-quest-role-mode-static = {"**"}Режим ролей квестів:{"**"} Статичний
+    Ведучі Гри обирають з попередньо призначених ролей сервера. Ролі
+    призначаються членам групи під час квестів, але ніколи не видаляються.
 
 ## Static Quest Role Assignments View
-config-title-static-quest-roles = {"**"}Server Configuration - Static Quest Role Assignments{"**"}
-config-label-manage-assignments = Manage Role Assignments
+config-title-static-quest-roles = {"**"}Конфігурація сервера - Призначення статичних ролей квестів{"**"}
+config-label-manage-assignments = Керування призначенням ролей
 config-desc-manage-assignments =
-    Assign existing server roles to GMs for use during quests.
-    Roles must be lower than ReQuest's highest role in the server hierarchy.
-config-msg-no-gm-members = No members with a GM role were found on this server.
-config-label-no-roles-assigned = No quest roles assigned
+    Призначте існуючі ролі сервера Ведучим Гри для використання під час квестів.
+    Ролі мають бути нижче найвищої ролі ReQuest в ієрархії сервера.
+config-msg-no-gm-members = На цьому сервері не знайдено учасників з роллю Ведучого Гри.
+config-label-no-roles-assigned = Ролі квестів не призначені
 
 ## GM Quest Role Assign View
-config-title-gm-quest-role-assign = {"**"}Manage Quest Roles — { $gmName }{"**"}
-config-error-unmanageable-roles = The following roles cannot be assigned because they are managed by an integration, are the default role, or are above ReQuest's highest role: { $roles }
-config-error-quest-role-limit = This GM has reached the maximum of { $limit } assigned quest roles.
-config-label-quest-role-count = Assigned roles: { $count }/{ $limit }
+config-title-gm-quest-role-assign = {"**"}Керування ролями квестів — { $gmName }{"**"}
+config-error-unmanageable-roles = Наступні ролі не можуть бути призначені, оскільки вони керуються інтеграцією, є роллю за замовчуванням або розташовані вище найвищої ролі ReQuest: { $roles }
+config-error-quest-role-limit = Цей Ведучий Гри досяг максимуму в { $limit } призначених ролей квестів.
+config-label-quest-role-count = Призначені ролі: { $count }/{ $limit }

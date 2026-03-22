@@ -168,15 +168,15 @@ gm-embed-desc-approved = {"**"}{ $characterName }{"**"} का सामान {
 gm-embed-title-denied = सामान अपडेट अस्वीकृत
 gm-embed-desc-denied = {"**"}{ $characterName }{"**"} का सामान { $denier } द्वारा अस्वीकृत किया गया है।
 
-gm-modal-label-select-party-role = Party Role
-gm-modal-desc-select-party-role = Select a role to assign to the quest party.
-gm-select-option-no-role = None (No Party Role)
+gm-modal-label-select-party-role = पार्टी भूमिका
+gm-modal-desc-select-party-role = Quest पार्टी को असाइन करने के लिए एक भूमिका चुनें।
+gm-select-option-no-role = कोई नहीं (कोई पार्टी भूमिका नहीं)
 
-gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role, then retry the operation.
+gm-error-role-hierarchy = ReQuest भूमिका "{ $roleName }" (ID: { $roleId }) को प्रबंधित नहीं कर सकता क्योंकि यह सर्वर पदानुक्रम में ReQuest की सबसे ऊँची भूमिका से ऊपर है। कृपया भूमिका को ReQuest की भूमिका के नीचे ले जाने के लिए, या ReQuest को एक उच्च भूमिका देने के लिए सर्वर एडमिन से संपर्क करें, फिर ऑपरेशन पुनः प्रयास करें।
 gm-dm-role-removal-failed =
-    ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
-    Please notify a server administrator to remove the role manually.
+    ⚠️ निम्नलिखित सदस्यों से भूमिका {"**"}{ $roleName }{"**"} हटाने में विफल: { $members }।
+    कृपया भूमिका को मैन्युअल रूप से हटाने के लिए सर्वर एडमिन को सूचित करें।
 
 gm-dm-role-not-found =
-    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
-    Role operations were skipped. Please notify a server administrator if this is unexpected.
+    ⚠️ Quest {"**"}{ $questTitle }{"**"} की quest भूमिका (ID: { $roleId }) अब सर्वर पर मौजूद नहीं है।
+    भूमिका संचालन छोड़ दिए गए। यदि यह अप्रत्याशित है तो कृपया सर्वर एडमिन को सूचित करें।

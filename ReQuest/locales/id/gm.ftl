@@ -168,15 +168,15 @@ gm-embed-desc-approved = Inventaris untuk {"**"}{ $characterName }{"**"} telah d
 gm-embed-title-denied = Pembaruan Inventaris Ditolak
 gm-embed-desc-denied = Inventaris untuk {"**"}{ $characterName }{"**"} telah ditolak oleh { $denier }.
 
-gm-modal-label-select-party-role = Party Role
-gm-modal-desc-select-party-role = Select a role to assign to the quest party.
-gm-select-option-no-role = None (No Party Role)
+gm-modal-label-select-party-role = Peran Rombongan
+gm-modal-desc-select-party-role = Pilih peran untuk ditetapkan ke rombongan quest.
+gm-select-option-no-role = Tidak ada (Tanpa Peran Rombongan)
 
-gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role, then retry the operation.
+gm-error-role-hierarchy = ReQuest tidak dapat mengelola peran "{ $roleName }" (ID: { $roleId }) karena posisinya lebih tinggi dari peran tertinggi ReQuest dalam hierarki server. Hubungi administrator server untuk memindahkan peran tersebut di bawah peran ReQuest, atau tetapkan peran yang lebih tinggi ke ReQuest, lalu coba lagi operasinya.
 gm-dm-role-removal-failed =
-    ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
-    Please notify a server administrator to remove the role manually.
+    ⚠️ Gagal menghapus peran {"**"}{ $roleName }{"**"} dari anggota berikut: { $members }.
+    Harap beri tahu administrator server untuk menghapus peran secara manual.
 
 gm-dm-role-not-found =
-    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
-    Role operations were skipped. Please notify a server administrator if this is unexpected.
+    ⚠️ Peran quest (ID: { $roleId }) untuk quest {"**"}{ $questTitle }{"**"} tidak lagi ada di server.
+    Operasi peran dilewati. Harap beri tahu administrator server jika ini tidak terduga.

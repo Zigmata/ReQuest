@@ -811,50 +811,50 @@ config-select-option-default = 默认（不覆盖）
 config-select-desc-default = 使用每位用户的偏好设置或 Discord 语言。
 
 # Quest Roles
-config-btn-quest-roles = Quest Roles
-config-btn-manage-gm-quest-roles = Manage
+config-btn-quest-roles = Quest 角色
+config-btn-manage-gm-quest-roles = 管理
 
-config-modal-title-confirm-quest-role-removal = Confirm Role Removal
-config-modal-label-remove-quest-role = Remove { $roleName } from { $gmName }?
+config-modal-title-confirm-quest-role-removal = 确认移除角色
+config-modal-label-remove-quest-role = 从 { $gmName } 移除 { $roleName }？
 
 # QuestRoleModeSelect
-config-select-placeholder-quest-role-mode = Select Quest Role Mode
-config-select-option-quest-role-disabled = Disabled
-config-select-desc-quest-role-disabled = No roles are created or assigned.
-config-select-option-quest-role-temporary = Temporary
-config-select-desc-quest-role-temporary = GMs can create temporary roles per quest.
-config-select-option-quest-role-static = Static
-config-select-desc-quest-role-static = GMs pick from pre-assigned server roles.
+config-select-placeholder-quest-role-mode = 选择 Quest 角色模式
+config-select-option-quest-role-disabled = 已禁用
+config-select-desc-quest-role-disabled = 不创建或分配任何角色。
+config-select-option-quest-role-temporary = 临时
+config-select-desc-quest-role-temporary = GM 可以为每个 Quest 创建临时角色。
+config-select-option-quest-role-static = 固定
+config-select-desc-quest-role-static = GM 从预分配的服务器角色中选择。
 
 # AddGMQuestRoleSelect
-config-select-placeholder-add-quest-role = Assign server role(s) to this GM
+config-select-placeholder-add-quest-role = 为此 GM 分配服务器角色
 
 ## Quest Roles View
-config-title-quest-roles = {"**"}Server Configuration - Quest Roles{"**"}
-config-label-quest-roles = Quest Roles
+config-title-quest-roles = {"**"}服务器配置 - Quest 角色{"**"}
+config-label-quest-roles = Quest 角色
 config-desc-quest-roles =
-    Configure how party roles are handled during quests.
+    配置 Quest 期间如何处理队伍角色。
 
-config-label-quest-role-mode-disabled = {"**"}Quest Role Mode:{"**"} Disabled
-    No roles are created or assigned during quests.
-config-label-quest-role-mode-temporary = {"**"}Quest Role Mode:{"**"} Temporary
-    GMs can optionally create a temporary role during quest creation.
-    The role is deleted when the quest completes or is cancelled.
-config-label-quest-role-mode-static = {"**"}Quest Role Mode:{"**"} Static
-    GMs pick from pre-assigned server roles. Roles are assigned to
-    party members during quests but are never deleted.
+config-label-quest-role-mode-disabled = {"**"}Quest 角色模式：{"**"} 已禁用
+    Quest 期间不创建或分配任何角色。
+config-label-quest-role-mode-temporary = {"**"}Quest 角色模式：{"**"} 临时
+    GM 可以在创建 Quest 时选择创建临时角色。
+    该角色在 Quest 完成或取消时删除。
+config-label-quest-role-mode-static = {"**"}Quest 角色模式：{"**"} 固定
+    GM 从预分配的服务器角色中选择。角色在 Quest
+    期间分配给队伍成员，但永远不会被删除。
 
 ## Static Quest Role Assignments View
-config-title-static-quest-roles = {"**"}Server Configuration - Static Quest Role Assignments{"**"}
-config-label-manage-assignments = Manage Role Assignments
+config-title-static-quest-roles = {"**"}服务器配置 - 固定 Quest 角色分配{"**"}
+config-label-manage-assignments = 管理角色分配
 config-desc-manage-assignments =
-    Assign existing server roles to GMs for use during quests.
-    Roles must be lower than ReQuest's highest role in the server hierarchy.
-config-msg-no-gm-members = No members with a GM role were found on this server.
-config-label-no-roles-assigned = No quest roles assigned
+    将现有的服务器角色分配给 GM，以便在 Quest 期间使用。
+    角色必须低于 ReQuest 在服务器层级中的最高角色。
+config-msg-no-gm-members = 在此服务器上未找到拥有 GM 角色的成员。
+config-label-no-roles-assigned = 未分配 Quest 角色
 
 ## GM Quest Role Assign View
-config-title-gm-quest-role-assign = {"**"}Manage Quest Roles — { $gmName }{"**"}
-config-error-unmanageable-roles = The following roles cannot be assigned because they are managed by an integration, are the default role, or are above ReQuest's highest role: { $roles }
-config-error-quest-role-limit = This GM has reached the maximum of { $limit } assigned quest roles.
-config-label-quest-role-count = Assigned roles: { $count }/{ $limit }
+config-title-gm-quest-role-assign = {"**"}管理 Quest 角色 — { $gmName }{"**"}
+config-error-unmanageable-roles = 以下角色无法分配，因为它们由集成管理、是默认角色或高于 ReQuest 的最高角色：{ $roles }
+config-error-quest-role-limit = 此 GM 已达到最多 { $limit } 个已分配 Quest 角色的上限。
+config-label-quest-role-count = 已分配角色：{ $count }/{ $limit }

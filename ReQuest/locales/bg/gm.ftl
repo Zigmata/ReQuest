@@ -168,15 +168,15 @@ gm-embed-desc-approved = Инвентарът за {"**"}{ $characterName }{"**"
 gm-embed-title-denied = Обновяването на инвентара е отхвърлено
 gm-embed-desc-denied = Инвентарът за {"**"}{ $characterName }{"**"} беше отхвърлен от { $denier }.
 
-gm-modal-label-select-party-role = Party Role
-gm-modal-desc-select-party-role = Select a role to assign to the quest party.
-gm-select-option-no-role = None (No Party Role)
+gm-modal-label-select-party-role = Роля за групата
+gm-modal-desc-select-party-role = Изберете роля за присвояване на групата на куеста.
+gm-select-option-no-role = Без (Без роля за групата)
 
-gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role, then retry the operation.
+gm-error-role-hierarchy = ReQuest не може да управлява ролята "{ $roleName }" (ID: { $roleId }), защото е позиционирана по-високо от най-високата роля на ReQuest в йерархията на сървъра. Моля, свържете се с администратор на сървъра, за да премести ролята под ролята на ReQuest, или да присвои на ReQuest по-висока роля, след което опитайте отново.
 gm-dm-role-removal-failed =
-    ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
-    Please notify a server administrator to remove the role manually.
+    ⚠️ Неуспешно премахване на ролята {"**"}{ $roleName }{"**"} от следните членове: { $members }.
+    Моля, уведомете администратор на сървъра да премахне ролята ръчно.
 
 gm-dm-role-not-found =
-    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
-    Role operations were skipped. Please notify a server administrator if this is unexpected.
+    ⚠️ Ролята за куест (ID: { $roleId }) за куест {"**"}{ $questTitle }{"**"} вече не съществува на сървъра.
+    Операциите с роли бяха пропуснати. Моля, уведомете администратор на сървъра, ако това е неочаквано.

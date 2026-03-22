@@ -813,50 +813,50 @@ config-select-option-default = Oletus (ei ohitusta)
 config-select-desc-default = Käytä kunkin käyttäjän omaa asetusta tai Discord-kieltä.
 
 # Quest Roles
-config-btn-quest-roles = Quest Roles
-config-btn-manage-gm-quest-roles = Manage
+config-btn-quest-roles = Quest-roolit
+config-btn-manage-gm-quest-roles = Hallinnoi
 
-config-modal-title-confirm-quest-role-removal = Confirm Role Removal
-config-modal-label-remove-quest-role = Remove { $roleName } from { $gmName }?
+config-modal-title-confirm-quest-role-removal = Vahvista roolin poisto
+config-modal-label-remove-quest-role = Poistetaanko { $roleName } käyttäjältä { $gmName }?
 
 # QuestRoleModeSelect
-config-select-placeholder-quest-role-mode = Select Quest Role Mode
-config-select-option-quest-role-disabled = Disabled
-config-select-desc-quest-role-disabled = No roles are created or assigned.
-config-select-option-quest-role-temporary = Temporary
-config-select-desc-quest-role-temporary = GMs can create temporary roles per quest.
-config-select-option-quest-role-static = Static
-config-select-desc-quest-role-static = GMs pick from pre-assigned server roles.
+config-select-placeholder-quest-role-mode = Valitse quest-roolitila
+config-select-option-quest-role-disabled = Pois käytöstä
+config-select-desc-quest-role-disabled = Rooleja ei luoda eikä määritetä.
+config-select-option-quest-role-temporary = Väliaikainen
+config-select-desc-quest-role-temporary = GM:t voivat luoda väliaikaisia rooleja questikohtaisesti.
+config-select-option-quest-role-static = Kiinteä
+config-select-desc-quest-role-static = GM:t valitsevat ennalta määritetyistä palvelinrooleista.
 
 # AddGMQuestRoleSelect
-config-select-placeholder-add-quest-role = Assign server role(s) to this GM
+config-select-placeholder-add-quest-role = Määritä palvelinrooli(t) tälle GM:lle
 
 ## Quest Roles View
-config-title-quest-roles = {"**"}Server Configuration - Quest Roles{"**"}
-config-label-quest-roles = Quest Roles
+config-title-quest-roles = {"**"}Palvelimen asetukset - Quest-roolit{"**"}
+config-label-quest-roles = Quest-roolit
 config-desc-quest-roles =
-    Configure how party roles are handled during quests.
+    Määritä miten ryhmärooleja käsitellään questien aikana.
 
-config-label-quest-role-mode-disabled = {"**"}Quest Role Mode:{"**"} Disabled
-    No roles are created or assigned during quests.
-config-label-quest-role-mode-temporary = {"**"}Quest Role Mode:{"**"} Temporary
-    GMs can optionally create a temporary role during quest creation.
-    The role is deleted when the quest completes or is cancelled.
-config-label-quest-role-mode-static = {"**"}Quest Role Mode:{"**"} Static
-    GMs pick from pre-assigned server roles. Roles are assigned to
-    party members during quests but are never deleted.
+config-label-quest-role-mode-disabled = {"**"}Quest-roolitila:{"**"} Pois käytöstä
+    Rooleja ei luoda eikä määritetä questien aikana.
+config-label-quest-role-mode-temporary = {"**"}Quest-roolitila:{"**"} Väliaikainen
+    GM:t voivat halutessaan luoda väliaikaisen roolin questin luonnin yhteydessä.
+    Rooli poistetaan, kun quest valmistuu tai peruutetaan.
+config-label-quest-role-mode-static = {"**"}Quest-roolitila:{"**"} Kiinteä
+    GM:t valitsevat ennalta määritetyistä palvelinrooleista. Roolit annetaan
+    ryhmän jäsenille questien aikana, mutta niitä ei koskaan poisteta.
 
 ## Static Quest Role Assignments View
-config-title-static-quest-roles = {"**"}Server Configuration - Static Quest Role Assignments{"**"}
-config-label-manage-assignments = Manage Role Assignments
+config-title-static-quest-roles = {"**"}Palvelimen asetukset - Kiinteät quest-roolimääritykset{"**"}
+config-label-manage-assignments = Hallinnoi roolimäärityksiä
 config-desc-manage-assignments =
-    Assign existing server roles to GMs for use during quests.
-    Roles must be lower than ReQuest's highest role in the server hierarchy.
-config-msg-no-gm-members = No members with a GM role were found on this server.
-config-label-no-roles-assigned = No quest roles assigned
+    Määritä olemassa olevia palvelinrooleja GM:ille käytettäväksi questien aikana.
+    Roolien on oltava alempana kuin ReQuestin korkein rooli palvelinhierarkiassa.
+config-msg-no-gm-members = Palvelimelta ei löytynyt jäseniä, joilla on GM-rooli.
+config-label-no-roles-assigned = Quest-rooleja ei ole määritetty
 
 ## GM Quest Role Assign View
-config-title-gm-quest-role-assign = {"**"}Manage Quest Roles — { $gmName }{"**"}
-config-error-unmanageable-roles = The following roles cannot be assigned because they are managed by an integration, are the default role, or are above ReQuest's highest role: { $roles }
-config-error-quest-role-limit = This GM has reached the maximum of { $limit } assigned quest roles.
-config-label-quest-role-count = Assigned roles: { $count }/{ $limit }
+config-title-gm-quest-role-assign = {"**"}Hallinnoi quest-rooleja — { $gmName }{"**"}
+config-error-unmanageable-roles = Seuraavia rooleja ei voida määrittää, koska ne ovat integraation hallinnoimia, oletusrooli tai ReQuestin korkeimman roolin yläpuolella: { $roles }
+config-error-quest-role-limit = Tämä GM on saavuttanut enimmäismäärän { $limit } määritettyä quest-roolia.
+config-label-quest-role-count = Määritetyt roolit: { $count }/{ $limit }

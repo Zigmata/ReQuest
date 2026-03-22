@@ -812,50 +812,50 @@ config-select-option-default = Implicit (fără suprascriere)
 config-select-desc-default = Folosiți preferința fiecărui utilizator sau setarea Discord.
 
 # Quest Roles
-config-btn-quest-roles = Quest Roles
-config-btn-manage-gm-quest-roles = Manage
+config-btn-quest-roles = Roluri de Quest
+config-btn-manage-gm-quest-roles = Gestionează
 
-config-modal-title-confirm-quest-role-removal = Confirm Role Removal
-config-modal-label-remove-quest-role = Remove { $roleName } from { $gmName }?
+config-modal-title-confirm-quest-role-removal = Confirmă eliminarea rolului
+config-modal-label-remove-quest-role = Eliminați { $roleName } de la { $gmName }?
 
 # QuestRoleModeSelect
-config-select-placeholder-quest-role-mode = Select Quest Role Mode
-config-select-option-quest-role-disabled = Disabled
-config-select-desc-quest-role-disabled = No roles are created or assigned.
-config-select-option-quest-role-temporary = Temporary
-config-select-desc-quest-role-temporary = GMs can create temporary roles per quest.
+config-select-placeholder-quest-role-mode = Selectați modul rolurilor de quest
+config-select-option-quest-role-disabled = Dezactivat
+config-select-desc-quest-role-disabled = Nu se creează sau atribuie roluri.
+config-select-option-quest-role-temporary = Temporar
+config-select-desc-quest-role-temporary = GM-ii pot crea roluri temporare per quest.
 config-select-option-quest-role-static = Static
-config-select-desc-quest-role-static = GMs pick from pre-assigned server roles.
+config-select-desc-quest-role-static = GM-ii aleg din roluri de server pre-atribuite.
 
 # AddGMQuestRoleSelect
-config-select-placeholder-add-quest-role = Assign server role(s) to this GM
+config-select-placeholder-add-quest-role = Atribuiți rol(uri) de server acestui GM
 
 ## Quest Roles View
-config-title-quest-roles = {"**"}Server Configuration - Quest Roles{"**"}
-config-label-quest-roles = Quest Roles
+config-title-quest-roles = {"**"}Configurare server - Roluri de Quest{"**"}
+config-label-quest-roles = Roluri de Quest
 config-desc-quest-roles =
-    Configure how party roles are handled during quests.
+    Configurați modul în care rolurile de echipă sunt gestionate în timpul quest-urilor.
 
-config-label-quest-role-mode-disabled = {"**"}Quest Role Mode:{"**"} Disabled
-    No roles are created or assigned during quests.
-config-label-quest-role-mode-temporary = {"**"}Quest Role Mode:{"**"} Temporary
-    GMs can optionally create a temporary role during quest creation.
-    The role is deleted when the quest completes or is cancelled.
-config-label-quest-role-mode-static = {"**"}Quest Role Mode:{"**"} Static
-    GMs pick from pre-assigned server roles. Roles are assigned to
-    party members during quests but are never deleted.
+config-label-quest-role-mode-disabled = {"**"}Mod roluri de quest:{"**"} Dezactivat
+    Nu se creează sau atribuie roluri în timpul quest-urilor.
+config-label-quest-role-mode-temporary = {"**"}Mod roluri de quest:{"**"} Temporar
+    GM-ii pot crea opțional un rol temporar în timpul creării quest-ului.
+    Rolul este șters când quest-ul este finalizat sau anulat.
+config-label-quest-role-mode-static = {"**"}Mod roluri de quest:{"**"} Static
+    GM-ii aleg din roluri de server pre-atribuite. Rolurile sunt atribuite
+    membrilor echipei în timpul quest-urilor, dar nu sunt niciodată șterse.
 
 ## Static Quest Role Assignments View
-config-title-static-quest-roles = {"**"}Server Configuration - Static Quest Role Assignments{"**"}
-config-label-manage-assignments = Manage Role Assignments
+config-title-static-quest-roles = {"**"}Configurare server - Atribuiri roluri statice de quest{"**"}
+config-label-manage-assignments = Gestionare atribuiri roluri
 config-desc-manage-assignments =
-    Assign existing server roles to GMs for use during quests.
-    Roles must be lower than ReQuest's highest role in the server hierarchy.
-config-msg-no-gm-members = No members with a GM role were found on this server.
-config-label-no-roles-assigned = No quest roles assigned
+    Atribuiți roluri existente de server GM-ilor pentru utilizare în timpul quest-urilor.
+    Rolurile trebuie să fie mai jos decât cel mai înalt rol al ReQuest în ierarhia serverului.
+config-msg-no-gm-members = Nu s-au găsit membri cu rol de GM pe acest server.
+config-label-no-roles-assigned = Niciun rol de quest atribuit
 
 ## GM Quest Role Assign View
-config-title-gm-quest-role-assign = {"**"}Manage Quest Roles — { $gmName }{"**"}
-config-error-unmanageable-roles = The following roles cannot be assigned because they are managed by an integration, are the default role, or are above ReQuest's highest role: { $roles }
-config-error-quest-role-limit = This GM has reached the maximum of { $limit } assigned quest roles.
-config-label-quest-role-count = Assigned roles: { $count }/{ $limit }
+config-title-gm-quest-role-assign = {"**"}Gestionare roluri de quest — { $gmName }{"**"}
+config-error-unmanageable-roles = Următoarele roluri nu pot fi atribuite deoarece sunt gestionate de o integrare, sunt rolul implicit sau sunt deasupra celui mai înalt rol al ReQuest: { $roles }
+config-error-quest-role-limit = Acest GM a atins maximul de { $limit } roluri de quest atribuite.
+config-label-quest-role-count = Roluri atribuite: { $count }/{ $limit }

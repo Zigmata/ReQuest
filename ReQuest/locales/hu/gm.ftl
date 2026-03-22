@@ -168,15 +168,15 @@ gm-embed-desc-approved = A(z) {"**"}{ $characterName }{"**"} leltára jóváhagy
 gm-embed-title-denied = Leltár frissítés elutasítva
 gm-embed-desc-denied = A(z) {"**"}{ $characterName }{"**"} leltára elutasítva { $denier } által.
 
-gm-modal-label-select-party-role = Party Role
-gm-modal-desc-select-party-role = Select a role to assign to the quest party.
-gm-select-option-no-role = None (No Party Role)
+gm-modal-label-select-party-role = Csapat szerep
+gm-modal-desc-select-party-role = Válassz egy szerepet a quest csapatához való hozzárendeléshez.
+gm-select-option-no-role = Nincs (csapat szerep nélkül)
 
-gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role, then retry the operation.
+gm-error-role-hierarchy = A ReQuest nem tudja kezelni a(z) "{ $roleName }" (ID: { $roleId }) szerepet, mert a szerver hierarchiában a ReQuest legmagasabb szerepe felett helyezkedik el. Kérd meg a szerver adminisztrátort, hogy helyezze a szerepet a ReQuest szerepe alá, vagy rendeljen magasabb szerepet a ReQuesthez, majd próbáld újra a műveletet.
 gm-dm-role-removal-failed =
-    ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
-    Please notify a server administrator to remove the role manually.
+    ⚠️ Nem sikerült eltávolítani a(z) {"**"}{ $roleName }{"**"} szerepet a következő tagoktól: { $members }.
+    Értesítsd a szerver adminisztrátort a szerep kézi eltávolításához.
 
 gm-dm-role-not-found =
-    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
-    Role operations were skipped. Please notify a server administrator if this is unexpected.
+    ⚠️ A(z) {"**"}{ $questTitle }{"**"} questhez tartozó quest szerep (ID: { $roleId }) már nem létezik a szerveren.
+    A szerep műveletek kihagyásra kerültek. Értesítsd a szerver adminisztrátort, ha ez nem várt esemény.

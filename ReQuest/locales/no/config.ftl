@@ -811,51 +811,51 @@ config-select-placeholder-server-language = Velg serverspråk
 config-select-option-default = Standard (ingen overstyring)
 config-select-desc-default = Bruk hver brukers preferanse eller Discord-lokale.
 
-# Quest Roles
-config-btn-quest-roles = Quest Roles
-config-btn-manage-gm-quest-roles = Manage
+# Quest-roller
+config-btn-quest-roles = Quest-roller
+config-btn-manage-gm-quest-roles = Administrer
 
-config-modal-title-confirm-quest-role-removal = Confirm Role Removal
-config-modal-label-remove-quest-role = Remove { $roleName } from { $gmName }?
+config-modal-title-confirm-quest-role-removal = Bekreft rollefjerning
+config-modal-label-remove-quest-role = Fjerne { $roleName } fra { $gmName }?
 
 # QuestRoleModeSelect
-config-select-placeholder-quest-role-mode = Select Quest Role Mode
-config-select-option-quest-role-disabled = Disabled
-config-select-desc-quest-role-disabled = No roles are created or assigned.
-config-select-option-quest-role-temporary = Temporary
-config-select-desc-quest-role-temporary = GMs can create temporary roles per quest.
-config-select-option-quest-role-static = Static
-config-select-desc-quest-role-static = GMs pick from pre-assigned server roles.
+config-select-placeholder-quest-role-mode = Velg quest-rollemodus
+config-select-option-quest-role-disabled = Deaktivert
+config-select-desc-quest-role-disabled = Ingen roller opprettes eller tildeles.
+config-select-option-quest-role-temporary = Midlertidig
+config-select-desc-quest-role-temporary = Spillledere kan opprette midlertidige roller per quest.
+config-select-option-quest-role-static = Statisk
+config-select-desc-quest-role-static = Spillledere velger fra forhåndstildelte serverroller.
 
 # AddGMQuestRoleSelect
-config-select-placeholder-add-quest-role = Assign server role(s) to this GM
+config-select-placeholder-add-quest-role = Tildel serverrolle(r) til denne spilllederen
 
-## Quest Roles View
-config-title-quest-roles = {"**"}Server Configuration - Quest Roles{"**"}
-config-label-quest-roles = Quest Roles
+## Quest-roller visning
+config-title-quest-roles = {"**"}Serverkonfigurasjon - Quest-roller{"**"}
+config-label-quest-roles = Quest-roller
 config-desc-quest-roles =
-    Configure how party roles are handled during quests.
+    Konfigurer hvordan grupperoller håndteres under quester.
 
-config-label-quest-role-mode-disabled = {"**"}Quest Role Mode:{"**"} Disabled
-    No roles are created or assigned during quests.
-config-label-quest-role-mode-temporary = {"**"}Quest Role Mode:{"**"} Temporary
-    GMs can optionally create a temporary role during quest creation.
-    The role is deleted when the quest completes or is cancelled.
-config-label-quest-role-mode-static = {"**"}Quest Role Mode:{"**"} Static
-    GMs pick from pre-assigned server roles. Roles are assigned to
-    party members during quests but are never deleted.
+config-label-quest-role-mode-disabled = {"**"}Quest-rollemodus:{"**"} Deaktivert
+    Ingen roller opprettes eller tildeles under quester.
+config-label-quest-role-mode-temporary = {"**"}Quest-rollemodus:{"**"} Midlertidig
+    Spillledere kan valgfritt opprette en midlertidig rolle ved quest-opprettelse.
+    Rollen slettes når questen fullføres eller avbrytes.
+config-label-quest-role-mode-static = {"**"}Quest-rollemodus:{"**"} Statisk
+    Spillledere velger fra forhåndstildelte serverroller. Roller tildeles
+    gruppemedlemmer under quester, men slettes aldri.
 
-## Static Quest Role Assignments View
-config-title-static-quest-roles = {"**"}Server Configuration - Static Quest Role Assignments{"**"}
-config-label-manage-assignments = Manage Role Assignments
+## Statiske quest-rolletildelinger visning
+config-title-static-quest-roles = {"**"}Serverkonfigurasjon - Statiske quest-rolletildelinger{"**"}
+config-label-manage-assignments = Administrer rolletildelinger
 config-desc-manage-assignments =
-    Assign existing server roles to GMs for use during quests.
-    Roles must be lower than ReQuest's highest role in the server hierarchy.
-config-msg-no-gm-members = No members with a GM role were found on this server.
-config-label-no-roles-assigned = No quest roles assigned
+    Tildel eksisterende serverroller til spillledere for bruk under quester.
+    Roller må være lavere enn ReQuests høyeste rolle i serverhierarkiet.
+config-msg-no-gm-members = Ingen medlemmer med en spilllederrolle ble funnet på denne serveren.
+config-label-no-roles-assigned = Ingen quest-roller tildelt
 
-## GM Quest Role Assign View
-config-title-gm-quest-role-assign = {"**"}Manage Quest Roles — { $gmName }{"**"}
-config-error-unmanageable-roles = The following roles cannot be assigned because they are managed by an integration, are the default role, or are above ReQuest's highest role: { $roles }
-config-error-quest-role-limit = This GM has reached the maximum of { $limit } assigned quest roles.
-config-label-quest-role-count = Assigned roles: { $count }/{ $limit }
+## GM quest-rolletildeling visning
+config-title-gm-quest-role-assign = {"**"}Administrer quest-roller — { $gmName }{"**"}
+config-error-unmanageable-roles = Følgende roller kan ikke tildeles fordi de administreres av en integrasjon, er standardrollen, eller er over ReQuests høyeste rolle: { $roles }
+config-error-quest-role-limit = Denne spilllederen har nådd maksimalt { $limit } tildelte quest-roller.
+config-label-quest-role-count = Tildelte roller: { $count }/{ $limit }

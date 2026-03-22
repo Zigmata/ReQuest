@@ -166,15 +166,15 @@ gm-embed-desc-approved = {"**"}{ $characterName }{"**"} 的背包已被 { $appro
 gm-embed-title-denied = 背包更新已駁回
 gm-embed-desc-denied = {"**"}{ $characterName }{"**"} 的背包已被 { $denier } 駁回。
 
-gm-modal-label-select-party-role = Party Role
-gm-modal-desc-select-party-role = Select a role to assign to the quest party.
-gm-select-option-no-role = None (No Party Role)
+gm-modal-label-select-party-role = 隊伍身分組
+gm-modal-desc-select-party-role = 選擇要指派給 Quest 隊伍的身分組。
+gm-select-option-no-role = 無（不設隊伍身分組）
 
-gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role, then retry the operation.
+gm-error-role-hierarchy = ReQuest 無法管理身分組「{ $roleName }」（ID：{ $roleId }），因為該身分組在伺服器階層中高於 ReQuest 的最高身分組。請聯繫伺服器管理員將該身分組移至 ReQuest 身分組下方，或為 ReQuest 指派更高的身分組，然後重試操作。
 gm-dm-role-removal-failed =
-    ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
-    Please notify a server administrator to remove the role manually.
+    ⚠️ 無法從以下成員移除身分組 {"**"}{ $roleName }{"**"}：{ $members }。
+    請通知伺服器管理員手動移除該身分組。
 
 gm-dm-role-not-found =
-    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
-    Role operations were skipped. Please notify a server administrator if this is unexpected.
+    ⚠️ Quest {"**"}{ $questTitle }{"**"} 的 Quest 身分組（ID：{ $roleId }）在伺服器上已不存在。
+    身分組操作已跳過。如果這不在預期之內，請通知伺服器管理員。

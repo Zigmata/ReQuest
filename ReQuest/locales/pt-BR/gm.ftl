@@ -168,15 +168,15 @@ gm-embed-desc-approved = O inventário de {"**"}{ $characterName }{"**"} foi apr
 gm-embed-title-denied = Atualização de Inventário Negada
 gm-embed-desc-denied = O inventário de {"**"}{ $characterName }{"**"} foi negado por { $denier }.
 
-gm-modal-label-select-party-role = Party Role
-gm-modal-desc-select-party-role = Select a role to assign to the quest party.
-gm-select-option-no-role = None (No Party Role)
+gm-modal-label-select-party-role = Cargo do Grupo
+gm-modal-desc-select-party-role = Selecione um cargo para atribuir ao grupo da quest.
+gm-select-option-no-role = Nenhum (Sem Cargo de Grupo)
 
-gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role, then retry the operation.
+gm-error-role-hierarchy = O ReQuest não pode gerenciar o cargo "{ $roleName }" (ID: { $roleId }) porque está posicionado acima do cargo mais alto do ReQuest na hierarquia do servidor. Entre em contato com um administrador do servidor para mover o cargo abaixo do cargo do ReQuest, ou atribuir ao ReQuest um cargo mais alto, e tente novamente.
 gm-dm-role-removal-failed =
-    ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
-    Please notify a server administrator to remove the role manually.
+    ⚠️ Falha ao remover o cargo {"**"}{ $roleName }{"**"} dos seguintes membros: { $members }.
+    Notifique um administrador do servidor para remover o cargo manualmente.
 
 gm-dm-role-not-found =
-    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
-    Role operations were skipped. Please notify a server administrator if this is unexpected.
+    ⚠️ O cargo de quest (ID: { $roleId }) para a quest {"**"}{ $questTitle }{"**"} não existe mais no servidor.
+    As operações de cargo foram ignoradas. Notifique um administrador do servidor se isso for inesperado.

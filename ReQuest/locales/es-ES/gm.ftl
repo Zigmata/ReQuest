@@ -168,15 +168,15 @@ gm-embed-desc-approved = El inventario de {"**"}{ $characterName }{"**"} ha sido
 gm-embed-title-denied = Actualización de inventario rechazada
 gm-embed-desc-denied = El inventario de {"**"}{ $characterName }{"**"} ha sido rechazado por { $denier }.
 
-gm-modal-label-select-party-role = Party Role
-gm-modal-desc-select-party-role = Select a role to assign to the quest party.
-gm-select-option-no-role = None (No Party Role)
+gm-modal-label-select-party-role = Rol del grupo
+gm-modal-desc-select-party-role = Seleccionad un rol para asignar al grupo de la quest.
+gm-select-option-no-role = Ninguno (Sin rol de grupo)
 
-gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role, then retry the operation.
+gm-error-role-hierarchy = ReQuest no puede gestionar el rol "{ $roleName }" (ID: { $roleId }) porque está posicionado por encima del rol más alto de ReQuest en la jerarquía del servidor. Contactad con un administrador del servidor para mover el rol por debajo del rol de ReQuest, o asignad a ReQuest un rol más alto, y luego reintentad la operación.
 gm-dm-role-removal-failed =
-    ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
-    Please notify a server administrator to remove the role manually.
+    ⚠️ No se ha podido eliminar el rol {"**"}{ $roleName }{"**"} de los siguientes miembros: { $members }.
+    Notificad a un administrador del servidor para eliminar el rol manualmente.
 
 gm-dm-role-not-found =
-    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
-    Role operations were skipped. Please notify a server administrator if this is unexpected.
+    ⚠️ El rol de quest (ID: { $roleId }) para la quest {"**"}{ $questTitle }{"**"} ya no existe en el servidor.
+    Las operaciones de rol se han omitido. Notificad a un administrador del servidor si esto es inesperado.

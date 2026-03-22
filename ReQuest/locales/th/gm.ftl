@@ -168,15 +168,15 @@ gm-embed-desc-approved = คลังไอเทมของ {"**"}{ $character
 gm-embed-title-denied = ปฏิเสธการอัปเดตคลังไอเทม
 gm-embed-desc-denied = คลังไอเทมของ {"**"}{ $characterName }{"**"} ถูกปฏิเสธโดย { $denier }
 
-gm-modal-label-select-party-role = Party Role
-gm-modal-desc-select-party-role = Select a role to assign to the quest party.
-gm-select-option-no-role = None (No Party Role)
+gm-modal-label-select-party-role = บทบาทปาร์ตี้
+gm-modal-desc-select-party-role = เลือกบทบาทที่จะกำหนดให้ปาร์ตี้ของ quest
+gm-select-option-no-role = ไม่มี (ไม่มีบทบาทปาร์ตี้)
 
-gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role, then retry the operation.
+gm-error-role-hierarchy = ReQuest ไม่สามารถจัดการบทบาท "{ $roleName }" (ID: { $roleId }) ได้เนื่องจากอยู่ในตำแหน่งสูงกว่าบทบาทสูงสุดของ ReQuest ในลำดับชั้นของเซิร์ฟเวอร์ กรุณาติดต่อผู้ดูแลเซิร์ฟเวอร์เพื่อย้ายบทบาทให้อยู่ต่ำกว่าบทบาทของ ReQuest หรือกำหนดบทบาทที่สูงกว่าให้ ReQuest แล้วลองอีกครั้ง
 gm-dm-role-removal-failed =
-    ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
-    Please notify a server administrator to remove the role manually.
+    ⚠️ ไม่สามารถลบบทบาท {"**"}{ $roleName }{"**"} จากสมาชิกต่อไปนี้: { $members }
+    กรุณาแจ้งผู้ดูแลเซิร์ฟเวอร์เพื่อลบบทบาทด้วยตนเอง
 
 gm-dm-role-not-found =
-    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
-    Role operations were skipped. Please notify a server administrator if this is unexpected.
+    ⚠️ บทบาท quest (ID: { $roleId }) สำหรับ quest {"**"}{ $questTitle }{"**"} ไม่มีอยู่บนเซิร์ฟเวอร์อีกต่อไป
+    การดำเนินการบทบาทถูกข้ามไป กรุณาแจ้งผู้ดูแลเซิร์ฟเวอร์หากนี่เป็นสิ่งที่ไม่คาดคิด

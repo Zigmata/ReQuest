@@ -168,15 +168,15 @@ gm-embed-desc-approved = Ο εξοπλισμός του {"**"}{ $characterName }
 gm-embed-title-denied = Ενημέρωση Εξοπλισμού Απορρίφθηκε
 gm-embed-desc-denied = Ο εξοπλισμός του {"**"}{ $characterName }{"**"} απορρίφθηκε από τον/την { $denier }.
 
-gm-modal-label-select-party-role = Party Role
-gm-modal-desc-select-party-role = Select a role to assign to the quest party.
-gm-select-option-no-role = None (No Party Role)
+gm-modal-label-select-party-role = Ρόλος Ομάδας
+gm-modal-desc-select-party-role = Επιλέξτε έναν ρόλο για ανάθεση στην ομάδα του quest.
+gm-select-option-no-role = Κανένας (Χωρίς Ρόλο Ομάδας)
 
-gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role, then retry the operation.
+gm-error-role-hierarchy = Το ReQuest δεν μπορεί να διαχειριστεί τον ρόλο "{ $roleName }" (ID: { $roleId }) επειδή βρίσκεται ψηλότερα από τον υψηλότερο ρόλο του ReQuest στην ιεραρχία του διακομιστή. Επικοινωνήστε με τον διαχειριστή του διακομιστή για να μετακινήσει τον ρόλο κάτω από τον ρόλο του ReQuest, ή να αναθέσει στο ReQuest υψηλότερο ρόλο, και δοκιμάστε ξανά.
 gm-dm-role-removal-failed =
-    ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
-    Please notify a server administrator to remove the role manually.
+    ⚠️ Αποτυχία αφαίρεσης του ρόλου {"**"}{ $roleName }{"**"} από τα ακόλουθα μέλη: { $members }.
+    Ενημερώστε τον διαχειριστή του διακομιστή για να αφαιρέσει τον ρόλο χειροκίνητα.
 
 gm-dm-role-not-found =
-    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
-    Role operations were skipped. Please notify a server administrator if this is unexpected.
+    ⚠️ Ο ρόλος quest (ID: { $roleId }) για το quest {"**"}{ $questTitle }{"**"} δεν υπάρχει πλέον στον διακομιστή.
+    Οι λειτουργίες ρόλων παραλείφθηκαν. Ενημερώστε τον διαχειριστή του διακομιστή αν αυτό είναι απρόσμενο.

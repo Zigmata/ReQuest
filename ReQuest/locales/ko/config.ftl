@@ -811,51 +811,51 @@ config-select-placeholder-server-language = 서버 언어를 선택하세요
 config-select-option-default = 기본값 (재정의 없음)
 config-select-desc-default = 각 사용자의 환경 설정 또는 Discord 로캘을 사용합니다.
 
-# Quest Roles
-config-btn-quest-roles = Quest Roles
-config-btn-manage-gm-quest-roles = Manage
+# Quest 역할
+config-btn-quest-roles = Quest 역할
+config-btn-manage-gm-quest-roles = 관리
 
-config-modal-title-confirm-quest-role-removal = Confirm Role Removal
-config-modal-label-remove-quest-role = Remove { $roleName } from { $gmName }?
+config-modal-title-confirm-quest-role-removal = 역할 제거 확인
+config-modal-label-remove-quest-role = { $gmName }에서 { $roleName }을(를) 제거하시겠습니까?
 
 # QuestRoleModeSelect
-config-select-placeholder-quest-role-mode = Select Quest Role Mode
-config-select-option-quest-role-disabled = Disabled
-config-select-desc-quest-role-disabled = No roles are created or assigned.
-config-select-option-quest-role-temporary = Temporary
-config-select-desc-quest-role-temporary = GMs can create temporary roles per quest.
-config-select-option-quest-role-static = Static
-config-select-desc-quest-role-static = GMs pick from pre-assigned server roles.
+config-select-placeholder-quest-role-mode = Quest 역할 모드 선택
+config-select-option-quest-role-disabled = 비활성화
+config-select-desc-quest-role-disabled = 역할이 생성되거나 할당되지 않습니다.
+config-select-option-quest-role-temporary = 임시
+config-select-desc-quest-role-temporary = GM이 Quest마다 임시 역할을 생성할 수 있습니다.
+config-select-option-quest-role-static = 고정
+config-select-desc-quest-role-static = GM이 미리 할당된 서버 역할에서 선택합니다.
 
 # AddGMQuestRoleSelect
-config-select-placeholder-add-quest-role = Assign server role(s) to this GM
+config-select-placeholder-add-quest-role = 이 GM에 서버 역할 할당
 
-## Quest Roles View
-config-title-quest-roles = {"**"}Server Configuration - Quest Roles{"**"}
-config-label-quest-roles = Quest Roles
+## Quest 역할 뷰
+config-title-quest-roles = {"**"}서버 설정 - Quest 역할{"**"}
+config-label-quest-roles = Quest 역할
 config-desc-quest-roles =
-    Configure how party roles are handled during quests.
+    Quest 중 파티 역할이 처리되는 방식을 설정합니다.
 
-config-label-quest-role-mode-disabled = {"**"}Quest Role Mode:{"**"} Disabled
-    No roles are created or assigned during quests.
-config-label-quest-role-mode-temporary = {"**"}Quest Role Mode:{"**"} Temporary
-    GMs can optionally create a temporary role during quest creation.
-    The role is deleted when the quest completes or is cancelled.
-config-label-quest-role-mode-static = {"**"}Quest Role Mode:{"**"} Static
-    GMs pick from pre-assigned server roles. Roles are assigned to
-    party members during quests but are never deleted.
+config-label-quest-role-mode-disabled = {"**"}Quest 역할 모드:{"**"} 비활성화
+    Quest 중 역할이 생성되거나 할당되지 않습니다.
+config-label-quest-role-mode-temporary = {"**"}Quest 역할 모드:{"**"} 임시
+    GM이 Quest 생성 시 선택적으로 임시 역할을 생성할 수 있습니다.
+    Quest가 완료되거나 취소되면 역할이 삭제됩니다.
+config-label-quest-role-mode-static = {"**"}Quest 역할 모드:{"**"} 고정
+    GM이 미리 할당된 서버 역할에서 선택합니다. Quest 중
+    파티 멤버에게 역할이 할당되지만 삭제되지는 않습니다.
 
-## Static Quest Role Assignments View
-config-title-static-quest-roles = {"**"}Server Configuration - Static Quest Role Assignments{"**"}
-config-label-manage-assignments = Manage Role Assignments
+## 고정 Quest 역할 할당 뷰
+config-title-static-quest-roles = {"**"}서버 설정 - 고정 Quest 역할 할당{"**"}
+config-label-manage-assignments = 역할 할당 관리
 config-desc-manage-assignments =
-    Assign existing server roles to GMs for use during quests.
-    Roles must be lower than ReQuest's highest role in the server hierarchy.
-config-msg-no-gm-members = No members with a GM role were found on this server.
-config-label-no-roles-assigned = No quest roles assigned
+    Quest 중 사용할 기존 서버 역할을 GM에 할당합니다.
+    역할은 서버 계층에서 ReQuest의 최상위 역할보다 낮아야 합니다.
+config-msg-no-gm-members = 이 서버에서 GM 역할을 가진 멤버를 찾을 수 없습니다.
+config-label-no-roles-assigned = 할당된 Quest 역할 없음
 
-## GM Quest Role Assign View
-config-title-gm-quest-role-assign = {"**"}Manage Quest Roles — { $gmName }{"**"}
-config-error-unmanageable-roles = The following roles cannot be assigned because they are managed by an integration, are the default role, or are above ReQuest's highest role: { $roles }
-config-error-quest-role-limit = This GM has reached the maximum of { $limit } assigned quest roles.
-config-label-quest-role-count = Assigned roles: { $count }/{ $limit }
+## GM Quest 역할 할당 뷰
+config-title-gm-quest-role-assign = {"**"}Quest 역할 관리 — { $gmName }{"**"}
+config-error-unmanageable-roles = 다음 역할은 통합에 의해 관리되거나, 기본 역할이거나, ReQuest의 최상위 역할보다 높아서 할당할 수 없습니다: { $roles }
+config-error-quest-role-limit = 이 GM은 최대 { $limit }개의 Quest 역할 할당 한도에 도달했습니다.
+config-label-quest-role-count = 할당된 역할: { $count }/{ $limit }

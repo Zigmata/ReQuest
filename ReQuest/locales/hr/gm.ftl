@@ -168,15 +168,15 @@ gm-embed-desc-approved = Inventar za {"**"}{ $characterName }{"**"} je odobren o
 gm-embed-title-denied = Ažuriranje inventara odbijeno
 gm-embed-desc-denied = Inventar za {"**"}{ $characterName }{"**"} je odbijen od strane { $denier }.
 
-gm-modal-label-select-party-role = Party Role
-gm-modal-desc-select-party-role = Select a role to assign to the quest party.
-gm-select-option-no-role = None (No Party Role)
+gm-modal-label-select-party-role = Uloga družine
+gm-modal-desc-select-party-role = Odaberite ulogu za dodjelu družini questa.
+gm-select-option-no-role = Ništa (bez uloge družine)
 
-gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role, then retry the operation.
+gm-error-role-hierarchy = ReQuest ne može upravljati ulogom "{ $roleName }" (ID: { $roleId }) jer je pozicionirana iznad najviše uloge ReQuesta u hijerarhiji poslužitelja. Kontaktirajte administratora poslužitelja da premjesti ulogu ispod uloge ReQuesta ili dodijeli ReQuestu višu ulogu, zatim ponovite operaciju.
 gm-dm-role-removal-failed =
-    ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
-    Please notify a server administrator to remove the role manually.
+    ⚠️ Uklanjanje uloge {"**"}{ $roleName }{"**"} nije uspjelo za sljedeće članove: { $members }.
+    Obavijestite administratora poslužitelja da ručno ukloni ulogu.
 
 gm-dm-role-not-found =
-    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
-    Role operations were skipped. Please notify a server administrator if this is unexpected.
+    ⚠️ Uloga questa (ID: { $roleId }) za quest {"**"}{ $questTitle }{"**"} više ne postoji na poslužitelju.
+    Operacije s ulogama su preskočene. Obavijestite administratora poslužitelja ako je ovo neočekivano.

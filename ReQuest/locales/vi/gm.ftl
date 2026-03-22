@@ -168,15 +168,15 @@ gm-embed-desc-approved = Kho đồ của {"**"}{ $characterName }{"**"} đã đ�
 gm-embed-title-denied = Cập nhật kho đồ bị từ chối
 gm-embed-desc-denied = Kho đồ của {"**"}{ $characterName }{"**"} đã bị { $denier } từ chối.
 
-gm-modal-label-select-party-role = Party Role
-gm-modal-desc-select-party-role = Select a role to assign to the quest party.
-gm-select-option-no-role = None (No Party Role)
+gm-modal-label-select-party-role = Vai trò đội hình
+gm-modal-desc-select-party-role = Chọn vai trò để gán cho đội hình quest.
+gm-select-option-no-role = Không (Không có vai trò đội hình)
 
-gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role, then retry the operation.
+gm-error-role-hierarchy = ReQuest không thể quản lý vai trò "{ $roleName }" (ID: { $roleId }) vì nó được đặt cao hơn vai trò cao nhất của ReQuest trong hệ thống phân cấp máy chủ. Vui lòng liên hệ quản trị viên máy chủ để di chuyển vai trò xuống dưới vai trò của ReQuest hoặc gán cho ReQuest vai trò cao hơn, sau đó thử lại thao tác.
 gm-dm-role-removal-failed =
-    ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
-    Please notify a server administrator to remove the role manually.
+    ⚠️ Không thể xóa vai trò {"**"}{ $roleName }{"**"} khỏi các thành viên sau: { $members }.
+    Vui lòng thông báo cho quản trị viên máy chủ để xóa vai trò thủ công.
 
 gm-dm-role-not-found =
-    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
-    Role operations were skipped. Please notify a server administrator if this is unexpected.
+    ⚠️ Vai trò quest (ID: { $roleId }) cho quest {"**"}{ $questTitle }{"**"} không còn tồn tại trên máy chủ.
+    Các thao tác vai trò đã bị bỏ qua. Vui lòng thông báo cho quản trị viên máy chủ nếu đây là điều bất ngờ.

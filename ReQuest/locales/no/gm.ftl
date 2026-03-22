@@ -168,15 +168,15 @@ gm-embed-desc-approved = Inventaret for {"**"}{ $characterName }{"**"} har blitt
 gm-embed-title-denied = Inventaroppdatering avslått
 gm-embed-desc-denied = Inventaret for {"**"}{ $characterName }{"**"} har blitt avslått av { $denier }.
 
-gm-modal-label-select-party-role = Party Role
-gm-modal-desc-select-party-role = Select a role to assign to the quest party.
-gm-select-option-no-role = None (No Party Role)
+gm-modal-label-select-party-role = Grupperolle
+gm-modal-desc-select-party-role = Velg en rolle å tildele quest-gruppen.
+gm-select-option-no-role = Ingen (ingen grupperolle)
 
-gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role, then retry the operation.
+gm-error-role-hierarchy = ReQuest kan ikke administrere rollen "{ $roleName }" (ID: { $roleId }) fordi den er plassert høyere enn ReQuests høyeste rolle i serverhierarkiet. Kontakt en serveradministrator for å flytte rollen under ReQuests rolle, eller tildel ReQuest en høyere rolle, og prøv igjen.
 gm-dm-role-removal-failed =
-    ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
-    Please notify a server administrator to remove the role manually.
+    ⚠️ Kunne ikke fjerne rollen {"**"}{ $roleName }{"**"} fra følgende medlemmer: { $members }.
+    Varsle en serveradministrator om å fjerne rollen manuelt.
 
 gm-dm-role-not-found =
-    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
-    Role operations were skipped. Please notify a server administrator if this is unexpected.
+    ⚠️ Quest-rollen (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} eksisterer ikke lenger på serveren.
+    Rolleoperasjoner ble hoppet over. Varsle en serveradministrator hvis dette er uventet.

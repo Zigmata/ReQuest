@@ -168,15 +168,15 @@ gm-embed-desc-approved = L'inventario di {"**"}{ $characterName }{"**"} è stato
 gm-embed-title-denied = Aggiornamento inventario rifiutato
 gm-embed-desc-denied = L'inventario di {"**"}{ $characterName }{"**"} è stato rifiutato da { $denier }.
 
-gm-modal-label-select-party-role = Party Role
-gm-modal-desc-select-party-role = Select a role to assign to the quest party.
-gm-select-option-no-role = None (No Party Role)
+gm-modal-label-select-party-role = Ruolo del gruppo
+gm-modal-desc-select-party-role = Seleziona un ruolo da assegnare al gruppo della quest.
+gm-select-option-no-role = Nessuno (senza ruolo del gruppo)
 
-gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role, then retry the operation.
+gm-error-role-hierarchy = ReQuest non può gestire il ruolo "{ $roleName }" (ID: { $roleId }) perché è posizionato più in alto del ruolo più alto di ReQuest nella gerarchia del server. Contatta un amministratore del server per spostare il ruolo sotto il ruolo di ReQuest, oppure assegna a ReQuest un ruolo superiore, quindi riprova l'operazione.
 gm-dm-role-removal-failed =
-    ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
-    Please notify a server administrator to remove the role manually.
+    ⚠️ Impossibile rimuovere il ruolo {"**"}{ $roleName }{"**"} dai seguenti membri: { $members }.
+    Avvisa un amministratore del server per rimuovere il ruolo manualmente.
 
 gm-dm-role-not-found =
-    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
-    Role operations were skipped. Please notify a server administrator if this is unexpected.
+    ⚠️ Il ruolo quest (ID: { $roleId }) per la quest {"**"}{ $questTitle }{"**"} non esiste più sul server.
+    Le operazioni sui ruoli sono state saltate. Avvisa un amministratore del server se questo è inaspettato.

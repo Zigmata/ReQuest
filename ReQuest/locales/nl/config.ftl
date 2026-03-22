@@ -811,51 +811,51 @@ config-select-placeholder-server-language = Selecteer servertaal
 config-select-option-default = Standaard (geen overschrijving)
 config-select-desc-default = Gebruik de voorkeur van elke gebruiker of de Discord-taalinstelling.
 
-# Quest Roles
-config-btn-quest-roles = Quest Roles
-config-btn-manage-gm-quest-roles = Manage
+# Questrollen
+config-btn-quest-roles = Questrollen
+config-btn-manage-gm-quest-roles = Beheren
 
-config-modal-title-confirm-quest-role-removal = Confirm Role Removal
-config-modal-label-remove-quest-role = Remove { $roleName } from { $gmName }?
+config-modal-title-confirm-quest-role-removal = Rolverwijdering bevestigen
+config-modal-label-remove-quest-role = { $roleName } verwijderen van { $gmName }?
 
 # QuestRoleModeSelect
-config-select-placeholder-quest-role-mode = Select Quest Role Mode
-config-select-option-quest-role-disabled = Disabled
-config-select-desc-quest-role-disabled = No roles are created or assigned.
-config-select-option-quest-role-temporary = Temporary
-config-select-desc-quest-role-temporary = GMs can create temporary roles per quest.
-config-select-option-quest-role-static = Static
-config-select-desc-quest-role-static = GMs pick from pre-assigned server roles.
+config-select-placeholder-quest-role-mode = Selecteer questrolmodus
+config-select-option-quest-role-disabled = Uitgeschakeld
+config-select-desc-quest-role-disabled = Er worden geen rollen aangemaakt of toegewezen.
+config-select-option-quest-role-temporary = Tijdelijk
+config-select-desc-quest-role-temporary = GM's kunnen tijdelijke rollen per quest aanmaken.
+config-select-option-quest-role-static = Statisch
+config-select-desc-quest-role-static = GM's kiezen uit vooraf toegewezen serverrollen.
 
 # AddGMQuestRoleSelect
-config-select-placeholder-add-quest-role = Assign server role(s) to this GM
+config-select-placeholder-add-quest-role = Serverrol(len) toewijzen aan deze GM
 
-## Quest Roles View
-config-title-quest-roles = {"**"}Server Configuration - Quest Roles{"**"}
-config-label-quest-roles = Quest Roles
+## Questrollen weergave
+config-title-quest-roles = {"**"}Serverconfiguratie - Questrollen{"**"}
+config-label-quest-roles = Questrollen
 config-desc-quest-roles =
-    Configure how party roles are handled during quests.
+    Configureer hoe groepsrollen worden afgehandeld tijdens quests.
 
-config-label-quest-role-mode-disabled = {"**"}Quest Role Mode:{"**"} Disabled
-    No roles are created or assigned during quests.
-config-label-quest-role-mode-temporary = {"**"}Quest Role Mode:{"**"} Temporary
-    GMs can optionally create a temporary role during quest creation.
-    The role is deleted when the quest completes or is cancelled.
-config-label-quest-role-mode-static = {"**"}Quest Role Mode:{"**"} Static
-    GMs pick from pre-assigned server roles. Roles are assigned to
-    party members during quests but are never deleted.
+config-label-quest-role-mode-disabled = {"**"}Questrolmodus:{"**"} Uitgeschakeld
+    Er worden geen rollen aangemaakt of toegewezen tijdens quests.
+config-label-quest-role-mode-temporary = {"**"}Questrolmodus:{"**"} Tijdelijk
+    GM's kunnen optioneel een tijdelijke rol aanmaken bij het maken van een quest.
+    De rol wordt verwijderd wanneer de quest is voltooid of geannuleerd.
+config-label-quest-role-mode-static = {"**"}Questrolmodus:{"**"} Statisch
+    GM's kiezen uit vooraf toegewezen serverrollen. Rollen worden toegewezen aan
+    groepsleden tijdens quests maar worden nooit verwijderd.
 
-## Static Quest Role Assignments View
-config-title-static-quest-roles = {"**"}Server Configuration - Static Quest Role Assignments{"**"}
-config-label-manage-assignments = Manage Role Assignments
+## Statische questrol toewijzingen weergave
+config-title-static-quest-roles = {"**"}Serverconfiguratie - Statische questrol toewijzingen{"**"}
+config-label-manage-assignments = Roltoewijzingen beheren
 config-desc-manage-assignments =
-    Assign existing server roles to GMs for use during quests.
-    Roles must be lower than ReQuest's highest role in the server hierarchy.
-config-msg-no-gm-members = No members with a GM role were found on this server.
-config-label-no-roles-assigned = No quest roles assigned
+    Wijs bestaande serverrollen toe aan GM's voor gebruik tijdens quests.
+    Rollen moeten lager zijn dan de hoogste rol van ReQuest in de serverhiërarchie.
+config-msg-no-gm-members = Er zijn geen leden met een GM-rol gevonden op deze server.
+config-label-no-roles-assigned = Geen questrollen toegewezen
 
-## GM Quest Role Assign View
-config-title-gm-quest-role-assign = {"**"}Manage Quest Roles — { $gmName }{"**"}
-config-error-unmanageable-roles = The following roles cannot be assigned because they are managed by an integration, are the default role, or are above ReQuest's highest role: { $roles }
-config-error-quest-role-limit = This GM has reached the maximum of { $limit } assigned quest roles.
-config-label-quest-role-count = Assigned roles: { $count }/{ $limit }
+## GM questrol toewijzing weergave
+config-title-gm-quest-role-assign = {"**"}Questrollen beheren — { $gmName }{"**"}
+config-error-unmanageable-roles = De volgende rollen kunnen niet worden toegewezen omdat ze worden beheerd door een integratie, de standaardrol zijn, of boven de hoogste rol van ReQuest staan: { $roles }
+config-error-quest-role-limit = Deze GM heeft het maximum van { $limit } toegewezen questrollen bereikt.
+config-label-quest-role-count = Toegewezen rollen: { $count }/{ $limit }

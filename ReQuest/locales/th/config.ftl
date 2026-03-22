@@ -812,50 +812,50 @@ config-select-option-default = ค่าเริ่มต้น (ไม่ม�
 config-select-desc-default = ใช้การตั้งค่าของผู้ใช้แต่ละคนหรือภาษาของ Discord
 
 # Quest Roles
-config-btn-quest-roles = Quest Roles
-config-btn-manage-gm-quest-roles = Manage
+config-btn-quest-roles = บทบาท Quest
+config-btn-manage-gm-quest-roles = จัดการ
 
-config-modal-title-confirm-quest-role-removal = Confirm Role Removal
-config-modal-label-remove-quest-role = Remove { $roleName } from { $gmName }?
+config-modal-title-confirm-quest-role-removal = ยืนยันการลบบทบาท
+config-modal-label-remove-quest-role = ลบ { $roleName } จาก { $gmName }?
 
 # QuestRoleModeSelect
-config-select-placeholder-quest-role-mode = Select Quest Role Mode
-config-select-option-quest-role-disabled = Disabled
-config-select-desc-quest-role-disabled = No roles are created or assigned.
-config-select-option-quest-role-temporary = Temporary
-config-select-desc-quest-role-temporary = GMs can create temporary roles per quest.
-config-select-option-quest-role-static = Static
-config-select-desc-quest-role-static = GMs pick from pre-assigned server roles.
+config-select-placeholder-quest-role-mode = เลือกโหมดบทบาท Quest
+config-select-option-quest-role-disabled = ปิดใช้งาน
+config-select-desc-quest-role-disabled = ไม่มีการสร้างหรือกำหนดบทบาท
+config-select-option-quest-role-temporary = ชั่วคราว
+config-select-desc-quest-role-temporary = GM สามารถสร้างบทบาทชั่วคราวต่อ quest ได้
+config-select-option-quest-role-static = คงที่
+config-select-desc-quest-role-static = GM เลือกจากบทบาทเซิร์ฟเวอร์ที่กำหนดไว้ล่วงหน้า
 
 # AddGMQuestRoleSelect
-config-select-placeholder-add-quest-role = Assign server role(s) to this GM
+config-select-placeholder-add-quest-role = กำหนดบทบาทเซิร์ฟเวอร์ให้ GM นี้
 
 ## Quest Roles View
-config-title-quest-roles = {"**"}Server Configuration - Quest Roles{"**"}
-config-label-quest-roles = Quest Roles
+config-title-quest-roles = {"**"}การตั้งค่าเซิร์ฟเวอร์ - บทบาท Quest{"**"}
+config-label-quest-roles = บทบาท Quest
 config-desc-quest-roles =
-    Configure how party roles are handled during quests.
+    ตั้งค่าวิธีจัดการบทบาทปาร์ตี้ระหว่าง quest
 
-config-label-quest-role-mode-disabled = {"**"}Quest Role Mode:{"**"} Disabled
-    No roles are created or assigned during quests.
-config-label-quest-role-mode-temporary = {"**"}Quest Role Mode:{"**"} Temporary
-    GMs can optionally create a temporary role during quest creation.
-    The role is deleted when the quest completes or is cancelled.
-config-label-quest-role-mode-static = {"**"}Quest Role Mode:{"**"} Static
-    GMs pick from pre-assigned server roles. Roles are assigned to
-    party members during quests but are never deleted.
+config-label-quest-role-mode-disabled = {"**"}โหมดบทบาท Quest:{"**"} ปิดใช้งาน
+    ไม่มีการสร้างหรือกำหนดบทบาทระหว่าง quest
+config-label-quest-role-mode-temporary = {"**"}โหมดบทบาท Quest:{"**"} ชั่วคราว
+    GM สามารถสร้างบทบาทชั่วคราวเมื่อสร้าง quest ได้ตามต้องการ
+    บทบาทจะถูกลบเมื่อ quest เสร็จสมบูรณ์หรือถูกยกเลิก
+config-label-quest-role-mode-static = {"**"}โหมดบทบาท Quest:{"**"} คงที่
+    GM เลือกจากบทบาทเซิร์ฟเวอร์ที่กำหนดไว้ล่วงหน้า บทบาทจะถูกกำหนดให้
+    สมาชิกปาร์ตี้ระหว่าง quest แต่จะไม่ถูกลบ
 
 ## Static Quest Role Assignments View
-config-title-static-quest-roles = {"**"}Server Configuration - Static Quest Role Assignments{"**"}
-config-label-manage-assignments = Manage Role Assignments
+config-title-static-quest-roles = {"**"}การตั้งค่าเซิร์ฟเวอร์ - การกำหนดบทบาท Quest แบบคงที่{"**"}
+config-label-manage-assignments = จัดการการกำหนดบทบาท
 config-desc-manage-assignments =
-    Assign existing server roles to GMs for use during quests.
-    Roles must be lower than ReQuest's highest role in the server hierarchy.
-config-msg-no-gm-members = No members with a GM role were found on this server.
-config-label-no-roles-assigned = No quest roles assigned
+    กำหนดบทบาทเซิร์ฟเวอร์ที่มีอยู่ให้ GM สำหรับใช้ระหว่าง quest
+    บทบาทต้องอยู่ต่ำกว่าบทบาทสูงสุดของ ReQuest ในลำดับชั้นของเซิร์ฟเวอร์
+config-msg-no-gm-members = ไม่พบสมาชิกที่มีบทบาท GM บนเซิร์ฟเวอร์นี้
+config-label-no-roles-assigned = ไม่มีบทบาท quest ที่กำหนด
 
 ## GM Quest Role Assign View
-config-title-gm-quest-role-assign = {"**"}Manage Quest Roles — { $gmName }{"**"}
-config-error-unmanageable-roles = The following roles cannot be assigned because they are managed by an integration, are the default role, or are above ReQuest's highest role: { $roles }
-config-error-quest-role-limit = This GM has reached the maximum of { $limit } assigned quest roles.
-config-label-quest-role-count = Assigned roles: { $count }/{ $limit }
+config-title-gm-quest-role-assign = {"**"}จัดการบทบาท Quest — { $gmName }{"**"}
+config-error-unmanageable-roles = บทบาทต่อไปนี้ไม่สามารถกำหนดได้เนื่องจากถูกจัดการโดยการเชื่อมต่อ เป็นบทบาทเริ่มต้น หรืออยู่เหนือบทบาทสูงสุดของ ReQuest: { $roles }
+config-error-quest-role-limit = GM นี้ถึงจำนวนสูงสุด { $limit } บทบาท quest ที่กำหนดแล้ว
+config-label-quest-role-count = บทบาทที่กำหนด: { $count }/{ $limit }

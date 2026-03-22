@@ -168,15 +168,15 @@ gm-embed-desc-approved = {"**"}{ $characterName }{"**"} のインベントリが
 gm-embed-title-denied = インベントリ更新却下
 gm-embed-desc-denied = {"**"}{ $characterName }{"**"} のインベントリが { $denier } によって却下されました。
 
-gm-modal-label-select-party-role = Party Role
-gm-modal-desc-select-party-role = Select a role to assign to the quest party.
-gm-select-option-no-role = None (No Party Role)
+gm-modal-label-select-party-role = パーティーロール
+gm-modal-desc-select-party-role = Quest パーティーに割り当てるロールを選択してください。
+gm-select-option-no-role = なし（パーティーロールなし）
 
-gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role, then retry the operation.
+gm-error-role-hierarchy = ReQuest はロール "{ $roleName }"（ID: { $roleId }）を管理できません。サーバー階層で ReQuest の最上位ロールより上位に位置しているためです。サーバー管理者に連絡して、ロールを ReQuest のロールより下に移動するか、ReQuest により高いロールを割り当ててから、操作を再試行してください。
 gm-dm-role-removal-failed =
-    ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
-    Please notify a server administrator to remove the role manually.
+    ⚠️ 以下のメンバーからロール {"**"}{ $roleName }{"**"} を削除できませんでした: { $members }。
+    サーバー管理者に連絡してロールを手動で削除してください。
 
 gm-dm-role-not-found =
-    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
-    Role operations were skipped. Please notify a server administrator if this is unexpected.
+    ⚠️ Quest {"**"}{ $questTitle }{"**"} の Quest ロール（ID: { $roleId }）がサーバー上に存在しなくなりました。
+    ロール操作はスキップされました。これが予期しない場合はサーバー管理者に連絡してください。

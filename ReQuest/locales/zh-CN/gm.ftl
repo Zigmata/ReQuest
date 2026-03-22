@@ -166,15 +166,15 @@ gm-embed-desc-approved = {"**"}{ $characterName }{"**"} 的物品栏已由 { $ap
 gm-embed-title-denied = 物品栏更新已拒绝
 gm-embed-desc-denied = {"**"}{ $characterName }{"**"} 的物品栏已由 { $denier } 拒绝。
 
-gm-modal-label-select-party-role = Party Role
-gm-modal-desc-select-party-role = Select a role to assign to the quest party.
-gm-select-option-no-role = None (No Party Role)
+gm-modal-label-select-party-role = 队伍角色
+gm-modal-desc-select-party-role = 选择要分配给 Quest 队伍的角色。
+gm-select-option-no-role = 无（不设队伍角色）
 
-gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role, then retry the operation.
+gm-error-role-hierarchy = ReQuest 无法管理角色"{ $roleName }"（ID：{ $roleId }），因为该角色在服务器层级中高于 ReQuest 的最高角色。请联系服务器管理员将该角色移至 ReQuest 角色下方，或为 ReQuest 分配更高的角色，然后重试操作。
 gm-dm-role-removal-failed =
-    ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
-    Please notify a server administrator to remove the role manually.
+    ⚠️ 无法从以下成员移除角色 {"**"}{ $roleName }{"**"}：{ $members }。
+    请通知服务器管理员手动移除该角色。
 
 gm-dm-role-not-found =
-    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
-    Role operations were skipped. Please notify a server administrator if this is unexpected.
+    ⚠️ Quest {"**"}{ $questTitle }{"**"} 的 Quest 角色（ID：{ $roleId }）在服务器上已不存在。
+    角色操作已跳过。如果这不在预期之内，请通知服务器管理员。

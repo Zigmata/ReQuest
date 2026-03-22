@@ -168,15 +168,15 @@ gm-embed-desc-approved = Inventaret for {"**"}{ $characterName }{"**"} er blevet
 gm-embed-title-denied = Inventaropdatering afvist
 gm-embed-desc-denied = Inventaret for {"**"}{ $characterName }{"**"} er blevet afvist af { $denier }.
 
-gm-modal-label-select-party-role = Party Role
-gm-modal-desc-select-party-role = Select a role to assign to the quest party.
-gm-select-option-no-role = None (No Party Role)
+gm-modal-label-select-party-role = Grupperolle
+gm-modal-desc-select-party-role = Vælg en rolle at tildele quest-gruppen.
+gm-select-option-no-role = Ingen (Ingen grupperolle)
 
-gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role, then retry the operation.
+gm-error-role-hierarchy = ReQuest kan ikke administrere rollen "{ $roleName }" (ID: { $roleId }), fordi den er placeret højere end ReQuests højeste rolle i serverhierarkiet. Kontakt venligst en serveradministrator for at flytte rollen under ReQuests rolle, eller tildel ReQuest en højere rolle, og prøv derefter igen.
 gm-dm-role-removal-failed =
-    ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
-    Please notify a server administrator to remove the role manually.
+    ⚠️ Kunne ikke fjerne rollen {"**"}{ $roleName }{"**"} fra følgende medlemmer: { $members }.
+    Underret venligst en serveradministrator om at fjerne rollen manuelt.
 
 gm-dm-role-not-found =
-    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
-    Role operations were skipped. Please notify a server administrator if this is unexpected.
+    ⚠️ Quest-rollen (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} eksisterer ikke længere på serveren.
+    Rolleoperationer blev sprunget over. Underret venligst en serveradministrator, hvis dette er uventet.

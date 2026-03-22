@@ -168,15 +168,15 @@ gm-embed-desc-approved = Inventář pro {"**"}{ $characterName }{"**"} byl schv�
 gm-embed-title-denied = Aktualizace inventáře zamítnuta
 gm-embed-desc-denied = Inventář pro {"**"}{ $characterName }{"**"} byl zamítnut uživatelem { $denier }.
 
-gm-modal-label-select-party-role = Party Role
-gm-modal-desc-select-party-role = Select a role to assign to the quest party.
-gm-select-option-no-role = None (No Party Role)
+gm-modal-label-select-party-role = Role skupiny
+gm-modal-desc-select-party-role = Vyberte roli k přiřazení skupině questu.
+gm-select-option-no-role = Žádná (Bez role skupiny)
 
-gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role, then retry the operation.
+gm-error-role-hierarchy = ReQuest nemůže spravovat roli "{ $roleName }" (ID: { $roleId }), protože je umístěna výše než nejvyšší role ReQuest v hierarchii serveru. Kontaktujte administrátora serveru, aby přesunul roli pod roli ReQuest, nebo přidělil ReQuest vyšší roli, a poté operaci zopakujte.
 gm-dm-role-removal-failed =
-    ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
-    Please notify a server administrator to remove the role manually.
+    ⚠️ Nepodařilo se odebrat roli {"**"}{ $roleName }{"**"} následujícím členům: { $members }.
+    Upozorněte administrátora serveru, aby roli odebral ručně.
 
 gm-dm-role-not-found =
-    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
-    Role operations were skipped. Please notify a server administrator if this is unexpected.
+    ⚠️ Role questu (ID: { $roleId }) pro quest {"**"}{ $questTitle }{"**"} na serveru již neexistuje.
+    Operace s rolemi byly přeskočeny. Upozorněte administrátora serveru, pokud je to neočekávané.

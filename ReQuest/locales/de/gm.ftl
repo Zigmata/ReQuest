@@ -168,15 +168,15 @@ gm-embed-desc-approved = Das Inventar für {"**"}{ $characterName }{"**"} wurde 
 gm-embed-title-denied = Inventaraktualisierung abgelehnt
 gm-embed-desc-denied = Das Inventar für {"**"}{ $characterName }{"**"} wurde von { $denier } abgelehnt.
 
-gm-modal-label-select-party-role = Party Role
-gm-modal-desc-select-party-role = Select a role to assign to the quest party.
-gm-select-option-no-role = None (No Party Role)
+gm-modal-label-select-party-role = Gruppenrolle
+gm-modal-desc-select-party-role = Wählen Sie eine Rolle für die Quest-Gruppe aus.
+gm-select-option-no-role = Keine (Keine Gruppenrolle)
 
-gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role, then retry the operation.
+gm-error-role-hierarchy = ReQuest kann die Rolle "{ $roleName }" (ID: { $roleId }) nicht verwalten, da sie höher als die höchste Rolle von ReQuest in der Serverhierarchie positioniert ist. Bitte wenden Sie sich an einen Serveradministrator, um die Rolle unter die Rolle von ReQuest zu verschieben, oder weisen Sie ReQuest eine höhere Rolle zu, und versuchen Sie es dann erneut.
 gm-dm-role-removal-failed =
-    ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
-    Please notify a server administrator to remove the role manually.
+    ⚠️ Die Rolle {"**"}{ $roleName }{"**"} konnte nicht von den folgenden Mitgliedern entfernt werden: { $members }.
+    Bitte benachrichtigen Sie einen Serveradministrator, um die Rolle manuell zu entfernen.
 
 gm-dm-role-not-found =
-    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
-    Role operations were skipped. Please notify a server administrator if this is unexpected.
+    ⚠️ Die Quest-Rolle (ID: { $roleId }) für Quest {"**"}{ $questTitle }{"**"} existiert nicht mehr auf dem Server.
+    Rollenoperationen wurden übersprungen. Bitte benachrichtigen Sie einen Serveradministrator, falls dies unerwartet ist.

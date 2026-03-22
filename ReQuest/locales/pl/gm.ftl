@@ -168,15 +168,15 @@ gm-embed-desc-approved = Ekwipunek postaci {"**"}{ $characterName }{"**"} zosta�
 gm-embed-title-denied = Aktualizacja ekwipunku odrzucona
 gm-embed-desc-denied = Ekwipunek postaci {"**"}{ $characterName }{"**"} został odrzucony przez { $denier }.
 
-gm-modal-label-select-party-role = Party Role
-gm-modal-desc-select-party-role = Select a role to assign to the quest party.
-gm-select-option-no-role = None (No Party Role)
+gm-modal-label-select-party-role = Rola drużyny
+gm-modal-desc-select-party-role = Wybierz rolę do przypisania drużynie questowej.
+gm-select-option-no-role = Brak (bez roli drużyny)
 
-gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role, then retry the operation.
+gm-error-role-hierarchy = ReQuest nie może zarządzać rolą "{ $roleName }" (ID: { $roleId }), ponieważ znajduje się ona wyżej niż najwyższa rola ReQuest w hierarchii serwera. Skontaktuj się z administratorem serwera, aby przenieść rolę poniżej roli ReQuest lub przypisać ReQuest wyższą rolę, a następnie spróbuj ponownie.
 gm-dm-role-removal-failed =
-    ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
-    Please notify a server administrator to remove the role manually.
+    ⚠️ Nie udało się usunąć roli {"**"}{ $roleName }{"**"} od następujących członków: { $members }.
+    Powiadom administratora serwera, aby ręcznie usunął rolę.
 
 gm-dm-role-not-found =
-    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
-    Role operations were skipped. Please notify a server administrator if this is unexpected.
+    ⚠️ Rola questowa (ID: { $roleId }) dla questu {"**"}{ $questTitle }{"**"} nie istnieje już na serwerze.
+    Operacje na rolach zostały pominięte. Powiadom administratora serwera, jeśli jest to nieoczekiwane.

@@ -812,50 +812,50 @@ config-select-option-default = Alapértelmezett (nincs felülírás)
 config-select-desc-default = A felhasználók egyéni beállítása vagy a Discord nyelve alapján.
 
 # Quest Roles
-config-btn-quest-roles = Quest Roles
-config-btn-manage-gm-quest-roles = Manage
+config-btn-quest-roles = Quest szerepek
+config-btn-manage-gm-quest-roles = Kezelés
 
-config-modal-title-confirm-quest-role-removal = Confirm Role Removal
-config-modal-label-remove-quest-role = Remove { $roleName } from { $gmName }?
+config-modal-title-confirm-quest-role-removal = Szerep eltávolításának megerősítése
+config-modal-label-remove-quest-role = Eltávolítod a(z) { $roleName } szerepet { $gmName } GM-től?
 
 # QuestRoleModeSelect
-config-select-placeholder-quest-role-mode = Select Quest Role Mode
-config-select-option-quest-role-disabled = Disabled
-config-select-desc-quest-role-disabled = No roles are created or assigned.
-config-select-option-quest-role-temporary = Temporary
-config-select-desc-quest-role-temporary = GMs can create temporary roles per quest.
-config-select-option-quest-role-static = Static
-config-select-desc-quest-role-static = GMs pick from pre-assigned server roles.
+config-select-placeholder-quest-role-mode = Quest szerep mód kiválasztása
+config-select-option-quest-role-disabled = Letiltva
+config-select-desc-quest-role-disabled = Szerepek nem jönnek létre és nem kerülnek kiosztásra.
+config-select-option-quest-role-temporary = Ideiglenes
+config-select-desc-quest-role-temporary = A GM-ek questenként ideiglenes szerepeket hozhatnak létre.
+config-select-option-quest-role-static = Statikus
+config-select-desc-quest-role-static = A GM-ek előre kiosztott szerver szerepekből választanak.
 
 # AddGMQuestRoleSelect
-config-select-placeholder-add-quest-role = Assign server role(s) to this GM
+config-select-placeholder-add-quest-role = Szerver szerep(ek) hozzárendelése ehhez a GM-hez
 
 ## Quest Roles View
-config-title-quest-roles = {"**"}Server Configuration - Quest Roles{"**"}
-config-label-quest-roles = Quest Roles
+config-title-quest-roles = {"**"}Szerver konfiguráció - Quest szerepek{"**"}
+config-label-quest-roles = Quest szerepek
 config-desc-quest-roles =
-    Configure how party roles are handled during quests.
+    Állítsd be, hogyan kezelje a rendszer a csapatszerepeket a questek során.
 
-config-label-quest-role-mode-disabled = {"**"}Quest Role Mode:{"**"} Disabled
-    No roles are created or assigned during quests.
-config-label-quest-role-mode-temporary = {"**"}Quest Role Mode:{"**"} Temporary
-    GMs can optionally create a temporary role during quest creation.
-    The role is deleted when the quest completes or is cancelled.
-config-label-quest-role-mode-static = {"**"}Quest Role Mode:{"**"} Static
-    GMs pick from pre-assigned server roles. Roles are assigned to
-    party members during quests but are never deleted.
+config-label-quest-role-mode-disabled = {"**"}Quest szerep mód:{"**"} Letiltva
+    Szerepek nem jönnek létre és nem kerülnek kiosztásra a questek során.
+config-label-quest-role-mode-temporary = {"**"}Quest szerep mód:{"**"} Ideiglenes
+    A GM-ek opcionálisan ideiglenes szerepet hozhatnak létre quest létrehozásakor.
+    A szerep törlődik, amikor a quest befejeződik vagy törlésre kerül.
+config-label-quest-role-mode-static = {"**"}Quest szerep mód:{"**"} Statikus
+    A GM-ek előre kiosztott szerver szerepekből választanak. A szerepek a
+    csapattagokhoz kerülnek kiosztásra a questek során, de soha nem törlődnek.
 
 ## Static Quest Role Assignments View
-config-title-static-quest-roles = {"**"}Server Configuration - Static Quest Role Assignments{"**"}
-config-label-manage-assignments = Manage Role Assignments
+config-title-static-quest-roles = {"**"}Szerver konfiguráció - Statikus quest szerep kiosztások{"**"}
+config-label-manage-assignments = Szerep kiosztások kezelése
 config-desc-manage-assignments =
-    Assign existing server roles to GMs for use during quests.
-    Roles must be lower than ReQuest's highest role in the server hierarchy.
-config-msg-no-gm-members = No members with a GM role were found on this server.
-config-label-no-roles-assigned = No quest roles assigned
+    Meglévő szerver szerepek hozzárendelése GM-ekhez questek során való használatra.
+    A szerepeknek a ReQuest legmagasabb szerepe alatt kell lenniük a szerver hierarchiában.
+config-msg-no-gm-members = Nem találhatók GM szereppel rendelkező tagok ezen a szerveren.
+config-label-no-roles-assigned = Nincsenek kiosztott quest szerepek
 
 ## GM Quest Role Assign View
-config-title-gm-quest-role-assign = {"**"}Manage Quest Roles — { $gmName }{"**"}
-config-error-unmanageable-roles = The following roles cannot be assigned because they are managed by an integration, are the default role, or are above ReQuest's highest role: { $roles }
-config-error-quest-role-limit = This GM has reached the maximum of { $limit } assigned quest roles.
-config-label-quest-role-count = Assigned roles: { $count }/{ $limit }
+config-title-gm-quest-role-assign = {"**"}Quest szerepek kezelése — { $gmName }{"**"}
+config-error-unmanageable-roles = A következő szerepek nem oszthatók ki, mert egy integráció kezeli őket, alapértelmezett szerepek, vagy a ReQuest legmagasabb szerepe felett vannak: { $roles }
+config-error-quest-role-limit = Ez a GM elérte a maximum { $limit } kiosztott quest szerep korlátot.
+config-label-quest-role-count = Kiosztott szerepek: { $count }/{ $limit }

@@ -810,50 +810,50 @@ config-select-option-default = デフォルト（上書きなし）
 config-select-desc-default = 各ユーザーの設定または Discord のロケールを使用します。
 
 # Quest Roles
-config-btn-quest-roles = Quest Roles
-config-btn-manage-gm-quest-roles = Manage
+config-btn-quest-roles = Quest ロール
+config-btn-manage-gm-quest-roles = 管理
 
-config-modal-title-confirm-quest-role-removal = Confirm Role Removal
-config-modal-label-remove-quest-role = Remove { $roleName } from { $gmName }?
+config-modal-title-confirm-quest-role-removal = ロール削除の確認
+config-modal-label-remove-quest-role = { $gmName } から { $roleName } を削除しますか？
 
 # QuestRoleModeSelect
-config-select-placeholder-quest-role-mode = Select Quest Role Mode
-config-select-option-quest-role-disabled = Disabled
-config-select-desc-quest-role-disabled = No roles are created or assigned.
-config-select-option-quest-role-temporary = Temporary
-config-select-desc-quest-role-temporary = GMs can create temporary roles per quest.
-config-select-option-quest-role-static = Static
-config-select-desc-quest-role-static = GMs pick from pre-assigned server roles.
+config-select-placeholder-quest-role-mode = Quest ロールモードを選択
+config-select-option-quest-role-disabled = 無効
+config-select-desc-quest-role-disabled = ロールの作成や割り当ては行われません。
+config-select-option-quest-role-temporary = 一時的
+config-select-desc-quest-role-temporary = GM が Quest ごとに一時的なロールを作成できます。
+config-select-option-quest-role-static = スタティック
+config-select-desc-quest-role-static = GM が事前に割り当てられたサーバーロールから選択します。
 
 # AddGMQuestRoleSelect
-config-select-placeholder-add-quest-role = Assign server role(s) to this GM
+config-select-placeholder-add-quest-role = この GM にサーバーロールを割り当て
 
 ## Quest Roles View
-config-title-quest-roles = {"**"}Server Configuration - Quest Roles{"**"}
-config-label-quest-roles = Quest Roles
+config-title-quest-roles = {"**"}サーバー設定 - Quest ロール{"**"}
+config-label-quest-roles = Quest ロール
 config-desc-quest-roles =
-    Configure how party roles are handled during quests.
+    Quest 中のパーティーロールの扱い方を設定します。
 
-config-label-quest-role-mode-disabled = {"**"}Quest Role Mode:{"**"} Disabled
-    No roles are created or assigned during quests.
-config-label-quest-role-mode-temporary = {"**"}Quest Role Mode:{"**"} Temporary
-    GMs can optionally create a temporary role during quest creation.
-    The role is deleted when the quest completes or is cancelled.
-config-label-quest-role-mode-static = {"**"}Quest Role Mode:{"**"} Static
-    GMs pick from pre-assigned server roles. Roles are assigned to
-    party members during quests but are never deleted.
+config-label-quest-role-mode-disabled = {"**"}Quest ロールモード:{"**"} 無効
+    Quest 中にロールの作成や割り当ては行われません。
+config-label-quest-role-mode-temporary = {"**"}Quest ロールモード:{"**"} 一時的
+    GM が Quest 作成時に一時的なロールを任意で作成できます。
+    Quest が完了またはキャンセルされるとロールは削除されます。
+config-label-quest-role-mode-static = {"**"}Quest ロールモード:{"**"} スタティック
+    GM が事前に割り当てられたサーバーロールから選択します。ロールは Quest 中に
+    パーティーメンバーに割り当てられますが、削除されることはありません。
 
 ## Static Quest Role Assignments View
-config-title-static-quest-roles = {"**"}Server Configuration - Static Quest Role Assignments{"**"}
-config-label-manage-assignments = Manage Role Assignments
+config-title-static-quest-roles = {"**"}サーバー設定 - スタティック Quest ロールの割り当て{"**"}
+config-label-manage-assignments = ロール割り当ての管理
 config-desc-manage-assignments =
-    Assign existing server roles to GMs for use during quests.
-    Roles must be lower than ReQuest's highest role in the server hierarchy.
-config-msg-no-gm-members = No members with a GM role were found on this server.
-config-label-no-roles-assigned = No quest roles assigned
+    Quest 中に使用するために既存のサーバーロールを GM に割り当てます。
+    ロールはサーバー階層で ReQuest の最上位ロールより下位である必要があります。
+config-msg-no-gm-members = このサーバーに GM ロールを持つメンバーが見つかりません。
+config-label-no-roles-assigned = Quest ロールが割り当てられていません
 
 ## GM Quest Role Assign View
-config-title-gm-quest-role-assign = {"**"}Manage Quest Roles — { $gmName }{"**"}
-config-error-unmanageable-roles = The following roles cannot be assigned because they are managed by an integration, are the default role, or are above ReQuest's highest role: { $roles }
-config-error-quest-role-limit = This GM has reached the maximum of { $limit } assigned quest roles.
-config-label-quest-role-count = Assigned roles: { $count }/{ $limit }
+config-title-gm-quest-role-assign = {"**"}Quest ロールの管理 — { $gmName }{"**"}
+config-error-unmanageable-roles = 以下のロールは、インテグレーションによって管理されている、デフォルトロールである、または ReQuest の最上位ロールより上位にあるため割り当てできません: { $roles }
+config-error-quest-role-limit = この GM は Quest ロールの最大割り当て数 { $limit } に達しています。
+config-label-quest-role-count = 割り当て済みロール: { $count }/{ $limit }

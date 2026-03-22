@@ -168,15 +168,15 @@ gm-embed-desc-approved = De inventaris voor {"**"}{ $characterName }{"**"} is go
 gm-embed-title-denied = Inventarisupdate afgewezen
 gm-embed-desc-denied = De inventaris voor {"**"}{ $characterName }{"**"} is afgewezen door { $denier }.
 
-gm-modal-label-select-party-role = Party Role
-gm-modal-desc-select-party-role = Select a role to assign to the quest party.
-gm-select-option-no-role = None (No Party Role)
+gm-modal-label-select-party-role = Groepsrol
+gm-modal-desc-select-party-role = Selecteer een rol om aan de questgroep toe te wijzen.
+gm-select-option-no-role = Geen (geen groepsrol)
 
-gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role, then retry the operation.
+gm-error-role-hierarchy = ReQuest kan de rol "{ $roleName }" (ID: { $roleId }) niet beheren omdat deze hoger staat dan de hoogste rol van ReQuest in de serverhiërarchie. Neem contact op met een serverbeheerder om de rol onder de rol van ReQuest te plaatsen, of wijs ReQuest een hogere rol toe, en probeer het opnieuw.
 gm-dm-role-removal-failed =
-    ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
-    Please notify a server administrator to remove the role manually.
+    ⚠️ Het verwijderen van de rol {"**"}{ $roleName }{"**"} van de volgende leden is mislukt: { $members }.
+    Breng een serverbeheerder op de hoogte om de rol handmatig te verwijderen.
 
 gm-dm-role-not-found =
-    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
-    Role operations were skipped. Please notify a server administrator if this is unexpected.
+    ⚠️ De questrol (ID: { $roleId }) voor quest {"**"}{ $questTitle }{"**"} bestaat niet meer op de server.
+    Rolbewerkingen zijn overgeslagen. Breng een serverbeheerder op de hoogte als dit onverwacht is.

@@ -812,50 +812,50 @@ config-select-option-default = Default (tanpa penggantian)
 config-select-desc-default = Gunakan preferensi masing-masing pengguna atau lokal Discord.
 
 # Quest Roles
-config-btn-quest-roles = Quest Roles
-config-btn-manage-gm-quest-roles = Manage
+config-btn-quest-roles = Peran Quest
+config-btn-manage-gm-quest-roles = Kelola
 
-config-modal-title-confirm-quest-role-removal = Confirm Role Removal
-config-modal-label-remove-quest-role = Remove { $roleName } from { $gmName }?
+config-modal-title-confirm-quest-role-removal = Konfirmasi Penghapusan Peran
+config-modal-label-remove-quest-role = Hapus { $roleName } dari { $gmName }?
 
 # QuestRoleModeSelect
-config-select-placeholder-quest-role-mode = Select Quest Role Mode
-config-select-option-quest-role-disabled = Disabled
-config-select-desc-quest-role-disabled = No roles are created or assigned.
-config-select-option-quest-role-temporary = Temporary
-config-select-desc-quest-role-temporary = GMs can create temporary roles per quest.
-config-select-option-quest-role-static = Static
-config-select-desc-quest-role-static = GMs pick from pre-assigned server roles.
+config-select-placeholder-quest-role-mode = Pilih Mode Peran Quest
+config-select-option-quest-role-disabled = Nonaktif
+config-select-desc-quest-role-disabled = Tidak ada peran yang dibuat atau ditetapkan.
+config-select-option-quest-role-temporary = Sementara
+config-select-desc-quest-role-temporary = GM dapat membuat peran sementara per quest.
+config-select-option-quest-role-static = Statis
+config-select-desc-quest-role-static = GM memilih dari peran server yang telah ditetapkan.
 
 # AddGMQuestRoleSelect
-config-select-placeholder-add-quest-role = Assign server role(s) to this GM
+config-select-placeholder-add-quest-role = Tetapkan peran server ke GM ini
 
 ## Quest Roles View
-config-title-quest-roles = {"**"}Server Configuration - Quest Roles{"**"}
-config-label-quest-roles = Quest Roles
+config-title-quest-roles = {"**"}Konfigurasi Server - Peran Quest{"**"}
+config-label-quest-roles = Peran Quest
 config-desc-quest-roles =
-    Configure how party roles are handled during quests.
+    Konfigurasi bagaimana peran rombongan ditangani selama quest.
 
-config-label-quest-role-mode-disabled = {"**"}Quest Role Mode:{"**"} Disabled
-    No roles are created or assigned during quests.
-config-label-quest-role-mode-temporary = {"**"}Quest Role Mode:{"**"} Temporary
-    GMs can optionally create a temporary role during quest creation.
-    The role is deleted when the quest completes or is cancelled.
-config-label-quest-role-mode-static = {"**"}Quest Role Mode:{"**"} Static
-    GMs pick from pre-assigned server roles. Roles are assigned to
-    party members during quests but are never deleted.
+config-label-quest-role-mode-disabled = {"**"}Mode Peran Quest:{"**"} Nonaktif
+    Tidak ada peran yang dibuat atau ditetapkan selama quest.
+config-label-quest-role-mode-temporary = {"**"}Mode Peran Quest:{"**"} Sementara
+    GM dapat membuat peran sementara secara opsional saat membuat quest.
+    Peran dihapus ketika quest selesai atau dibatalkan.
+config-label-quest-role-mode-static = {"**"}Mode Peran Quest:{"**"} Statis
+    GM memilih dari peran server yang telah ditetapkan. Peran diberikan kepada
+    anggota rombongan selama quest tetapi tidak pernah dihapus.
 
 ## Static Quest Role Assignments View
-config-title-static-quest-roles = {"**"}Server Configuration - Static Quest Role Assignments{"**"}
-config-label-manage-assignments = Manage Role Assignments
+config-title-static-quest-roles = {"**"}Konfigurasi Server - Penetapan Peran Quest Statis{"**"}
+config-label-manage-assignments = Kelola Penetapan Peran
 config-desc-manage-assignments =
-    Assign existing server roles to GMs for use during quests.
-    Roles must be lower than ReQuest's highest role in the server hierarchy.
-config-msg-no-gm-members = No members with a GM role were found on this server.
-config-label-no-roles-assigned = No quest roles assigned
+    Tetapkan peran server yang ada ke GM untuk digunakan selama quest.
+    Peran harus lebih rendah dari peran tertinggi ReQuest dalam hierarki server.
+config-msg-no-gm-members = Tidak ditemukan anggota dengan peran GM di server ini.
+config-label-no-roles-assigned = Tidak ada peran quest yang ditetapkan
 
 ## GM Quest Role Assign View
-config-title-gm-quest-role-assign = {"**"}Manage Quest Roles — { $gmName }{"**"}
-config-error-unmanageable-roles = The following roles cannot be assigned because they are managed by an integration, are the default role, or are above ReQuest's highest role: { $roles }
-config-error-quest-role-limit = This GM has reached the maximum of { $limit } assigned quest roles.
-config-label-quest-role-count = Assigned roles: { $count }/{ $limit }
+config-title-gm-quest-role-assign = {"**"}Kelola Peran Quest — { $gmName }{"**"}
+config-error-unmanageable-roles = Peran berikut tidak dapat ditetapkan karena dikelola oleh integrasi, merupakan peran default, atau berada di atas peran tertinggi ReQuest: { $roles }
+config-error-quest-role-limit = GM ini telah mencapai batas maksimum { $limit } peran quest yang ditetapkan.
+config-label-quest-role-count = Peran yang ditetapkan: { $count }/{ $limit }

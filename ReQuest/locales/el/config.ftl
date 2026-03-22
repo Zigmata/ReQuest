@@ -812,50 +812,50 @@ config-select-option-default = Προεπιλογή (χωρίς παράκαμψ
 config-select-desc-default = Χρήση της προτίμησης κάθε χρήστη ή του Discord locale.
 
 # Quest Roles
-config-btn-quest-roles = Quest Roles
-config-btn-manage-gm-quest-roles = Manage
+config-btn-quest-roles = Ρόλοι Quest
+config-btn-manage-gm-quest-roles = Διαχείριση
 
-config-modal-title-confirm-quest-role-removal = Confirm Role Removal
-config-modal-label-remove-quest-role = Remove { $roleName } from { $gmName }?
+config-modal-title-confirm-quest-role-removal = Επιβεβαίωση Αφαίρεσης Ρόλου
+config-modal-label-remove-quest-role = Αφαίρεση { $roleName } από { $gmName };
 
 # QuestRoleModeSelect
-config-select-placeholder-quest-role-mode = Select Quest Role Mode
-config-select-option-quest-role-disabled = Disabled
-config-select-desc-quest-role-disabled = No roles are created or assigned.
-config-select-option-quest-role-temporary = Temporary
-config-select-desc-quest-role-temporary = GMs can create temporary roles per quest.
-config-select-option-quest-role-static = Static
-config-select-desc-quest-role-static = GMs pick from pre-assigned server roles.
+config-select-placeholder-quest-role-mode = Επιλέξτε λειτουργία ρόλων quest
+config-select-option-quest-role-disabled = Απενεργοποιημένο
+config-select-desc-quest-role-disabled = Δεν δημιουργούνται ούτε ανατίθενται ρόλοι.
+config-select-option-quest-role-temporary = Προσωρινοί
+config-select-desc-quest-role-temporary = Οι GM μπορούν να δημιουργούν προσωρινούς ρόλους ανά quest.
+config-select-option-quest-role-static = Στατικοί
+config-select-desc-quest-role-static = Οι GM επιλέγουν από προκαθορισμένους ρόλους διακομιστή.
 
 # AddGMQuestRoleSelect
-config-select-placeholder-add-quest-role = Assign server role(s) to this GM
+config-select-placeholder-add-quest-role = Ανάθεση ρόλου(-ων) διακομιστή σε αυτόν τον GM
 
 ## Quest Roles View
-config-title-quest-roles = {"**"}Server Configuration - Quest Roles{"**"}
-config-label-quest-roles = Quest Roles
+config-title-quest-roles = {"**"}Ρυθμίσεις Διακομιστή - Ρόλοι Quest{"**"}
+config-label-quest-roles = Ρόλοι Quest
 config-desc-quest-roles =
-    Configure how party roles are handled during quests.
+    Ρυθμίστε πώς διαχειρίζονται οι ρόλοι ομάδας κατά τη διάρκεια των quest.
 
-config-label-quest-role-mode-disabled = {"**"}Quest Role Mode:{"**"} Disabled
-    No roles are created or assigned during quests.
-config-label-quest-role-mode-temporary = {"**"}Quest Role Mode:{"**"} Temporary
-    GMs can optionally create a temporary role during quest creation.
-    The role is deleted when the quest completes or is cancelled.
-config-label-quest-role-mode-static = {"**"}Quest Role Mode:{"**"} Static
-    GMs pick from pre-assigned server roles. Roles are assigned to
-    party members during quests but are never deleted.
+config-label-quest-role-mode-disabled = {"**"}Λειτουργία Ρόλων Quest:{"**"} Απενεργοποιημένο
+    Δεν δημιουργούνται ούτε ανατίθενται ρόλοι κατά τη διάρκεια των quest.
+config-label-quest-role-mode-temporary = {"**"}Λειτουργία Ρόλων Quest:{"**"} Προσωρινοί
+    Οι GM μπορούν προαιρετικά να δημιουργήσουν έναν προσωρινό ρόλο κατά τη δημιουργία quest.
+    Ο ρόλος διαγράφεται όταν το quest ολοκληρωθεί ή ακυρωθεί.
+config-label-quest-role-mode-static = {"**"}Λειτουργία Ρόλων Quest:{"**"} Στατικοί
+    Οι GM επιλέγουν από προκαθορισμένους ρόλους διακομιστή. Οι ρόλοι ανατίθενται
+    στα μέλη της ομάδας κατά τη διάρκεια των quest αλλά δεν διαγράφονται ποτέ.
 
 ## Static Quest Role Assignments View
-config-title-static-quest-roles = {"**"}Server Configuration - Static Quest Role Assignments{"**"}
-config-label-manage-assignments = Manage Role Assignments
+config-title-static-quest-roles = {"**"}Ρυθμίσεις Διακομιστή - Αναθέσεις Στατικών Ρόλων Quest{"**"}
+config-label-manage-assignments = Διαχείριση Αναθέσεων Ρόλων
 config-desc-manage-assignments =
-    Assign existing server roles to GMs for use during quests.
-    Roles must be lower than ReQuest's highest role in the server hierarchy.
-config-msg-no-gm-members = No members with a GM role were found on this server.
-config-label-no-roles-assigned = No quest roles assigned
+    Αναθέστε υπάρχοντες ρόλους διακομιστή σε GM για χρήση κατά τη διάρκεια quest.
+    Οι ρόλοι πρέπει να είναι χαμηλότεροι από τον υψηλότερο ρόλο του ReQuest στην ιεραρχία του διακομιστή.
+config-msg-no-gm-members = Δεν βρέθηκαν μέλη με ρόλο GM σε αυτόν τον διακομιστή.
+config-label-no-roles-assigned = Δεν έχουν ανατεθεί ρόλοι quest
 
 ## GM Quest Role Assign View
-config-title-gm-quest-role-assign = {"**"}Manage Quest Roles — { $gmName }{"**"}
-config-error-unmanageable-roles = The following roles cannot be assigned because they are managed by an integration, are the default role, or are above ReQuest's highest role: { $roles }
-config-error-quest-role-limit = This GM has reached the maximum of { $limit } assigned quest roles.
-config-label-quest-role-count = Assigned roles: { $count }/{ $limit }
+config-title-gm-quest-role-assign = {"**"}Διαχείριση Ρόλων Quest — { $gmName }{"**"}
+config-error-unmanageable-roles = Οι ακόλουθοι ρόλοι δεν μπορούν να ανατεθούν επειδή διαχειρίζονται από μια ενσωμάτωση, είναι ο προεπιλεγμένος ρόλος ή βρίσκονται πάνω από τον υψηλότερο ρόλο του ReQuest: { $roles }
+config-error-quest-role-limit = Αυτός ο GM έχει φτάσει το μέγιστο των { $limit } ανατεθειμένων ρόλων quest.
+config-label-quest-role-count = Ανατεθειμένοι ρόλοι: { $count }/{ $limit }

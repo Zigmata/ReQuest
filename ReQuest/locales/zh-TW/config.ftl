@@ -812,50 +812,50 @@ config-select-option-default = 預設（無覆蓋）
 config-select-desc-default = 使用每位使用者的偏好設定或 Discord 語系。
 
 # Quest Roles
-config-btn-quest-roles = Quest Roles
-config-btn-manage-gm-quest-roles = Manage
+config-btn-quest-roles = Quest 身分組
+config-btn-manage-gm-quest-roles = 管理
 
-config-modal-title-confirm-quest-role-removal = Confirm Role Removal
-config-modal-label-remove-quest-role = Remove { $roleName } from { $gmName }?
+config-modal-title-confirm-quest-role-removal = 確認移除身分組
+config-modal-label-remove-quest-role = 從 { $gmName } 移除 { $roleName }？
 
 # QuestRoleModeSelect
-config-select-placeholder-quest-role-mode = Select Quest Role Mode
-config-select-option-quest-role-disabled = Disabled
-config-select-desc-quest-role-disabled = No roles are created or assigned.
-config-select-option-quest-role-temporary = Temporary
-config-select-desc-quest-role-temporary = GMs can create temporary roles per quest.
-config-select-option-quest-role-static = Static
-config-select-desc-quest-role-static = GMs pick from pre-assigned server roles.
+config-select-placeholder-quest-role-mode = 選擇 Quest 身分組模式
+config-select-option-quest-role-disabled = 已停用
+config-select-desc-quest-role-disabled = 不建立或指派任何身分組。
+config-select-option-quest-role-temporary = 臨時
+config-select-desc-quest-role-temporary = GM 可為每個 Quest 建立臨時身分組。
+config-select-option-quest-role-static = 固定
+config-select-desc-quest-role-static = GM 從預先指派的伺服器身分組中選擇。
 
 # AddGMQuestRoleSelect
-config-select-placeholder-add-quest-role = Assign server role(s) to this GM
+config-select-placeholder-add-quest-role = 為此 GM 指派伺服器身分組
 
 ## Quest Roles View
-config-title-quest-roles = {"**"}Server Configuration - Quest Roles{"**"}
-config-label-quest-roles = Quest Roles
+config-title-quest-roles = {"**"}伺服器設定 - Quest 身分組{"**"}
+config-label-quest-roles = Quest 身分組
 config-desc-quest-roles =
-    Configure how party roles are handled during quests.
+    設定 Quest 期間如何處理隊伍身分組。
 
-config-label-quest-role-mode-disabled = {"**"}Quest Role Mode:{"**"} Disabled
-    No roles are created or assigned during quests.
-config-label-quest-role-mode-temporary = {"**"}Quest Role Mode:{"**"} Temporary
-    GMs can optionally create a temporary role during quest creation.
-    The role is deleted when the quest completes or is cancelled.
-config-label-quest-role-mode-static = {"**"}Quest Role Mode:{"**"} Static
-    GMs pick from pre-assigned server roles. Roles are assigned to
-    party members during quests but are never deleted.
+config-label-quest-role-mode-disabled = {"**"}Quest 身分組模式：{"**"} 已停用
+    Quest 期間不建立或指派任何身分組。
+config-label-quest-role-mode-temporary = {"**"}Quest 身分組模式：{"**"} 臨時
+    GM 可在建立 Quest 時選擇建立臨時身分組。
+    該身分組在 Quest 完成或取消時刪除。
+config-label-quest-role-mode-static = {"**"}Quest 身分組模式：{"**"} 固定
+    GM 從預先指派的伺服器身分組中選擇。身分組在 Quest
+    期間指派給隊伍成員，但永遠不會被刪除。
 
 ## Static Quest Role Assignments View
-config-title-static-quest-roles = {"**"}Server Configuration - Static Quest Role Assignments{"**"}
-config-label-manage-assignments = Manage Role Assignments
+config-title-static-quest-roles = {"**"}伺服器設定 - 固定 Quest 身分組指派{"**"}
+config-label-manage-assignments = 管理身分組指派
 config-desc-manage-assignments =
-    Assign existing server roles to GMs for use during quests.
-    Roles must be lower than ReQuest's highest role in the server hierarchy.
-config-msg-no-gm-members = No members with a GM role were found on this server.
-config-label-no-roles-assigned = No quest roles assigned
+    將現有的伺服器身分組指派給 GM，以便在 Quest 期間使用。
+    身分組必須低於 ReQuest 在伺服器階層中的最高身分組。
+config-msg-no-gm-members = 在此伺服器上未找到擁有 GM 身分組的成員。
+config-label-no-roles-assigned = 未指派 Quest 身分組
 
 ## GM Quest Role Assign View
-config-title-gm-quest-role-assign = {"**"}Manage Quest Roles — { $gmName }{"**"}
-config-error-unmanageable-roles = The following roles cannot be assigned because they are managed by an integration, are the default role, or are above ReQuest's highest role: { $roles }
-config-error-quest-role-limit = This GM has reached the maximum of { $limit } assigned quest roles.
-config-label-quest-role-count = Assigned roles: { $count }/{ $limit }
+config-title-gm-quest-role-assign = {"**"}管理 Quest 身分組 — { $gmName }{"**"}
+config-error-unmanageable-roles = 以下身分組無法指派，因為它們由整合管理、是預設身分組或高於 ReQuest 的最高身分組：{ $roles }
+config-error-quest-role-limit = 此 GM 已達到最多 { $limit } 個已指派 Quest 身分組的上限。
+config-label-quest-role-count = 已指派身分組：{ $count }/{ $limit }

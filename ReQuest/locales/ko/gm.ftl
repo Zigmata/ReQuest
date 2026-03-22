@@ -168,15 +168,15 @@ gm-embed-desc-approved = {"**"}{ $characterName }{"**"}의 인벤토리가 { $ap
 gm-embed-title-denied = 인벤토리 업데이트 거부됨
 gm-embed-desc-denied = {"**"}{ $characterName }{"**"}의 인벤토리가 { $denier }에 의해 거부되었습니다.
 
-gm-modal-label-select-party-role = Party Role
-gm-modal-desc-select-party-role = Select a role to assign to the quest party.
-gm-select-option-no-role = None (No Party Role)
+gm-modal-label-select-party-role = 파티 역할
+gm-modal-desc-select-party-role = Quest 파티에 할당할 역할을 선택하세요.
+gm-select-option-no-role = 없음 (파티 역할 없음)
 
-gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role, then retry the operation.
+gm-error-role-hierarchy = ReQuest가 역할 "{ $roleName }" (ID: { $roleId })을(를) 관리할 수 없습니다. 해당 역할이 서버 계층에서 ReQuest의 최상위 역할보다 높기 때문입니다. 서버 관리자에게 연락하여 해당 역할을 ReQuest의 역할 아래로 이동하거나, ReQuest에 더 높은 역할을 할당한 후 다시 시도하세요.
 gm-dm-role-removal-failed =
-    ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
-    Please notify a server administrator to remove the role manually.
+    ⚠️ 다음 멤버에게서 역할 {"**"}{ $roleName }{"**"}을(를) 제거하지 못했습니다: { $members }.
+    서버 관리자에게 수동으로 역할을 제거해 달라고 알려주세요.
 
 gm-dm-role-not-found =
-    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
-    Role operations were skipped. Please notify a server administrator if this is unexpected.
+    ⚠️ Quest {"**"}{ $questTitle }{"**"}의 Quest 역할 (ID: { $roleId })이(가) 서버에 더 이상 존재하지 않습니다.
+    역할 작업이 건너뛰어졌습니다. 예상치 못한 상황이라면 서버 관리자에게 알려주세요.

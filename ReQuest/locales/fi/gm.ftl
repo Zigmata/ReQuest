@@ -168,15 +168,15 @@ gm-embed-desc-approved = Hahmon {"**"}{ $characterName }{"**"} inventaario on hy
 gm-embed-title-denied = Inventaarion päivitys hylätty
 gm-embed-desc-denied = Hahmon {"**"}{ $characterName }{"**"} inventaario on hylätty, hylkääjä: { $denier }.
 
-gm-modal-label-select-party-role = Party Role
-gm-modal-desc-select-party-role = Select a role to assign to the quest party.
-gm-select-option-no-role = None (No Party Role)
+gm-modal-label-select-party-role = Ryhmärooli
+gm-modal-desc-select-party-role = Valitse rooli, joka annetaan questin ryhmälle.
+gm-select-option-no-role = Ei mitään (Ei ryhmäroolia)
 
-gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role, then retry the operation.
+gm-error-role-hierarchy = ReQuest ei voi hallita roolia "{ $roleName }" (ID: { $roleId }), koska se on palvelinhierarkiassa ReQuestin korkeimman roolin yläpuolella. Ota yhteyttä palvelimen ylläpitäjään siirtääksesi roolin ReQuestin roolin alapuolelle tai antaaksesi ReQuestille korkeamman roolin, ja yritä sitten uudelleen.
 gm-dm-role-removal-failed =
-    ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
-    Please notify a server administrator to remove the role manually.
+    ⚠️ Roolia {"**"}{ $roleName }{"**"} ei voitu poistaa seuraavilta jäseniltä: { $members }.
+    Ilmoita palvelimen ylläpitäjälle roolin manuaalista poistoa varten.
 
 gm-dm-role-not-found =
-    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
-    Role operations were skipped. Please notify a server administrator if this is unexpected.
+    ⚠️ Questin {"**"}{ $questTitle }{"**"} quest-roolia (ID: { $roleId }) ei enää löydy palvelimelta.
+    Roolitoiminnot ohitettiin. Ilmoita palvelimen ylläpitäjälle, jos tämä on odottamatonta.

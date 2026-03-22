@@ -168,15 +168,15 @@ gm-embed-desc-approved = Інвентар для {"**"}{ $characterName }{"**"} 
 gm-embed-title-denied = Оновлення інвентарю відхилено
 gm-embed-desc-denied = Інвентар для {"**"}{ $characterName }{"**"} було відхилено { $denier }.
 
-gm-modal-label-select-party-role = Party Role
-gm-modal-desc-select-party-role = Select a role to assign to the quest party.
-gm-select-option-no-role = None (No Party Role)
+gm-modal-label-select-party-role = Роль групи
+gm-modal-desc-select-party-role = Оберіть роль для призначення групі квесту.
+gm-select-option-no-role = Немає (без ролі групи)
 
-gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role, then retry the operation.
+gm-error-role-hierarchy = ReQuest не може керувати роллю "{ $roleName }" (ID: { $roleId }), оскільки вона розташована вище найвищої ролі ReQuest в ієрархії сервера. Будь ласка, зверніться до адміністратора сервера, щоб перемістити роль нижче ролі ReQuest або призначити ReQuest вищу роль, а потім повторіть операцію.
 gm-dm-role-removal-failed =
-    ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
-    Please notify a server administrator to remove the role manually.
+    ⚠️ Не вдалося видалити роль {"**"}{ $roleName }{"**"} у наступних учасників: { $members }.
+    Будь ласка, повідомте адміністратора сервера для ручного видалення ролі.
 
 gm-dm-role-not-found =
-    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
-    Role operations were skipped. Please notify a server administrator if this is unexpected.
+    ⚠️ Роль квесту (ID: { $roleId }) для квесту {"**"}{ $questTitle }{"**"} більше не існує на сервері.
+    Операції з ролями були пропущені. Будь ласка, повідомте адміністратора сервера, якщо це несподівано.

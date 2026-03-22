@@ -812,50 +812,50 @@ config-select-option-default = Mặc định (không ghi đè)
 config-select-desc-default = Sử dụng tùy chọn cá nhân của người dùng hoặc ngôn ngữ Discord.
 
 # Quest Roles
-config-btn-quest-roles = Quest Roles
-config-btn-manage-gm-quest-roles = Manage
+config-btn-quest-roles = Vai trò Quest
+config-btn-manage-gm-quest-roles = Quản lý
 
-config-modal-title-confirm-quest-role-removal = Confirm Role Removal
-config-modal-label-remove-quest-role = Remove { $roleName } from { $gmName }?
+config-modal-title-confirm-quest-role-removal = Xác nhận xóa vai trò
+config-modal-label-remove-quest-role = Xóa { $roleName } khỏi { $gmName }?
 
 # QuestRoleModeSelect
-config-select-placeholder-quest-role-mode = Select Quest Role Mode
-config-select-option-quest-role-disabled = Disabled
-config-select-desc-quest-role-disabled = No roles are created or assigned.
-config-select-option-quest-role-temporary = Temporary
-config-select-desc-quest-role-temporary = GMs can create temporary roles per quest.
-config-select-option-quest-role-static = Static
-config-select-desc-quest-role-static = GMs pick from pre-assigned server roles.
+config-select-placeholder-quest-role-mode = Chọn chế độ vai trò Quest
+config-select-option-quest-role-disabled = Đã tắt
+config-select-desc-quest-role-disabled = Không có vai trò nào được tạo hoặc gán.
+config-select-option-quest-role-temporary = Tạm thời
+config-select-desc-quest-role-temporary = GM có thể tạo vai trò tạm thời cho mỗi quest.
+config-select-option-quest-role-static = Cố định
+config-select-desc-quest-role-static = GM chọn từ các vai trò máy chủ được gán trước.
 
 # AddGMQuestRoleSelect
-config-select-placeholder-add-quest-role = Assign server role(s) to this GM
+config-select-placeholder-add-quest-role = Gán vai trò máy chủ cho GM này
 
 ## Quest Roles View
-config-title-quest-roles = {"**"}Server Configuration - Quest Roles{"**"}
-config-label-quest-roles = Quest Roles
+config-title-quest-roles = {"**"}Cấu hình máy chủ - Vai trò Quest{"**"}
+config-label-quest-roles = Vai trò Quest
 config-desc-quest-roles =
-    Configure how party roles are handled during quests.
+    Cấu hình cách vai trò đội hình được xử lý trong quest.
 
-config-label-quest-role-mode-disabled = {"**"}Quest Role Mode:{"**"} Disabled
-    No roles are created or assigned during quests.
-config-label-quest-role-mode-temporary = {"**"}Quest Role Mode:{"**"} Temporary
-    GMs can optionally create a temporary role during quest creation.
-    The role is deleted when the quest completes or is cancelled.
-config-label-quest-role-mode-static = {"**"}Quest Role Mode:{"**"} Static
-    GMs pick from pre-assigned server roles. Roles are assigned to
-    party members during quests but are never deleted.
+config-label-quest-role-mode-disabled = {"**"}Chế độ vai trò Quest:{"**"} Đã tắt
+    Không có vai trò nào được tạo hoặc gán trong quest.
+config-label-quest-role-mode-temporary = {"**"}Chế độ vai trò Quest:{"**"} Tạm thời
+    GM có thể tùy chọn tạo vai trò tạm thời khi tạo quest.
+    Vai trò sẽ bị xóa khi quest hoàn thành hoặc bị hủy.
+config-label-quest-role-mode-static = {"**"}Chế độ vai trò Quest:{"**"} Cố định
+    GM chọn từ các vai trò máy chủ được gán trước. Vai trò được gán cho
+    thành viên đội hình trong quest nhưng không bao giờ bị xóa.
 
 ## Static Quest Role Assignments View
-config-title-static-quest-roles = {"**"}Server Configuration - Static Quest Role Assignments{"**"}
-config-label-manage-assignments = Manage Role Assignments
+config-title-static-quest-roles = {"**"}Cấu hình máy chủ - Gán vai trò Quest cố định{"**"}
+config-label-manage-assignments = Quản lý gán vai trò
 config-desc-manage-assignments =
-    Assign existing server roles to GMs for use during quests.
-    Roles must be lower than ReQuest's highest role in the server hierarchy.
-config-msg-no-gm-members = No members with a GM role were found on this server.
-config-label-no-roles-assigned = No quest roles assigned
+    Gán các vai trò máy chủ hiện có cho GM để sử dụng trong quest.
+    Vai trò phải thấp hơn vai trò cao nhất của ReQuest trong hệ thống phân cấp máy chủ.
+config-msg-no-gm-members = Không tìm thấy thành viên nào có vai trò GM trên máy chủ này.
+config-label-no-roles-assigned = Chưa gán vai trò quest nào
 
 ## GM Quest Role Assign View
-config-title-gm-quest-role-assign = {"**"}Manage Quest Roles — { $gmName }{"**"}
-config-error-unmanageable-roles = The following roles cannot be assigned because they are managed by an integration, are the default role, or are above ReQuest's highest role: { $roles }
-config-error-quest-role-limit = This GM has reached the maximum of { $limit } assigned quest roles.
-config-label-quest-role-count = Assigned roles: { $count }/{ $limit }
+config-title-gm-quest-role-assign = {"**"}Quản lý vai trò Quest — { $gmName }{"**"}
+config-error-unmanageable-roles = Các vai trò sau không thể được gán vì chúng được quản lý bởi tích hợp, là vai trò mặc định hoặc cao hơn vai trò cao nhất của ReQuest: { $roles }
+config-error-quest-role-limit = GM này đã đạt tối đa { $limit } vai trò quest được gán.
+config-label-quest-role-count = Vai trò đã gán: { $count }/{ $limit }
