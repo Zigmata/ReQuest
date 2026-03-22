@@ -640,7 +640,6 @@ class AddGMQuestRoleSelect(RoleSelect):
                     update_data={'$push': {ConfigFields.QUEST_ROLE_ASSIGNMENTS: {'$each': new_assignments}}}
                 )
 
-            await setup_view(self.calling_view, interaction)
             locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
             at_limit = len(member_existing) + len(new_assignments) >= max_roles_per_gm
             if rejected_roles or at_limit:
@@ -650,11 +649,11 @@ class AddGMQuestRoleSelect(RoleSelect):
                     messages.append(t(locale, 'config-error-unmanageable-roles', roles=rejected_list))
                 if at_limit:
                     messages.append(t(locale, 'config-error-quest-role-limit', limit=str(max_roles_per_gm)))
-                await interaction.response.edit_message(
-                    content='\n'.join(messages),
-                    view=self.calling_view
-                )
+                self.calling_view.error_message = '\n'.join(messages)
             else:
-                await interaction.response.edit_message(view=self.calling_view)
+                self.calling_view.error_message = None
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)

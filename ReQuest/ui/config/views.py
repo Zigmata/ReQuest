@@ -1666,6 +1666,7 @@ class ConfigGMQuestRoleAssignView(LocaleLayoutView):
         super().__init__(timeout=None)
         self.member = member
         self.member_assignments = []
+        self.error_message = None
         self.items_per_page = 6
         self.current_page = 0
         self.total_pages = 1
@@ -1705,6 +1706,9 @@ class ConfigGMQuestRoleAssignView(LocaleLayoutView):
             t(DEFAULT_LOCALE, 'config-label-quest-role-count', count=str(assigned_count), limit='20')
         ))
         container.add_item(ActionRow(selects.AddGMQuestRoleSelect(self, self.member.id)))
+
+        if self.error_message:
+            container.add_item(TextDisplay(self.error_message))
 
         self.add_item(container)
 
