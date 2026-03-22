@@ -207,11 +207,13 @@ class CancelQuestButton(Button):
                     check_role_hierarchy(guild, party_role)
                     role_mode = quest.get(QuestFields.QUEST_ROLE_MODE, 'temporary')
                     if role_mode == 'static':
+                        if not guild.chunked:
+                            await guild.chunk()
                         remove_tasks = []
                         remove_members = []
                         for player in party:
                             for member_id in player:
-                                member = await get_guild_member(guild, int(member_id))
+                                member = guild.get_member(int(member_id))
                                 if member:
                                     remove_tasks.append(member.remove_roles(party_role))
                                     remove_members.append(member)

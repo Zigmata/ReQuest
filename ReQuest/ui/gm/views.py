@@ -438,11 +438,13 @@ class ManageQuestsView(LocaleLayoutView):
                     check_role_hierarchy(guild, role)
                     role_mode = quest.get(QuestFields.QUEST_ROLE_MODE, 'temporary')
                     if role_mode == 'static':
+                        if not guild.chunked:
+                            await guild.chunk()
                         remove_tasks = []
                         remove_members = []
                         for entry in party:
                             for player_id in entry:
-                                member = await get_guild_member(guild, int(player_id))
+                                member = guild.get_member(int(player_id))
                                 if member:
                                     remove_tasks.append(member.remove_roles(role))
                                     remove_members.append(member)

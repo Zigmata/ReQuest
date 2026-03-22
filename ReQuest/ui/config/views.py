@@ -1605,23 +1605,28 @@ class ConfigStaticQuestRolesView(LocaleLayoutView):
                 query={CommonFields.ID: guild.id}
             )
 
-            gm_role_mentions = set()
+            gm_role_ids = set()
             if gm_roles_query:
                 gm_roles_list = gm_roles_query.get(ConfigFields.GM_ROLES, [])
                 for role_entry in gm_roles_list:
                     mention = role_entry.get(CommonFields.MENTION, '')
                     if mention:
-                        gm_role_mentions.add(mention)
+                        role_id = int(mention.strip('<@&>'))
+                        gm_role_ids.add(role_id)
 
+            # Chunk once to ensure full member cache, then collect from role.members
             if not guild.chunked:
                 await guild.chunk()
 
-            self.gm_members = []
-            for member in guild.members:
-                if member.bot:
-                    continue
-                if any(role.mention in gm_role_mentions for role in member.roles):
-                    self.gm_members.append(member)
+            gm_member_set = set()
+            for role_id in gm_role_ids:
+                role = guild.get_role(role_id)
+                if role:
+                    for member in role.members:
+                        if not member.bot:
+                            gm_member_set.add(member)
+
+            self.gm_members = list(gm_member_set)
 
             self.gm_members.sort(key=lambda m: m.name.lower())
 
