@@ -40,7 +40,7 @@ common-label-locked = (ΚΛΕΙΔΩΜΕΝΟ)
 common-label-loose-items = Ελεύθερα Αντικείμενα
 common-label-and-more = . . . και { $remaining } ακόμη.
 common-label-currency = Νόμισμα
-common-label-inventory-empty = Το inventάριο είναι κενό.
+common-label-inventory-empty = Το αντικειμενοθήκη είναι κενή.
 
 # Shared embed fields
 common-embed-field-party = __Ομάδα__

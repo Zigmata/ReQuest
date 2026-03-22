@@ -41,7 +41,7 @@ gm-modal-placeholder-items =
     osv.
 gm-modal-title-add-summary = Tilføj quest-resumé
 gm-modal-label-summary = Resumé
-gm-modal-placeholder-summary = Tilføj et historieresuméaf denne quest
+gm-modal-placeholder-summary = Tilføj et historieresumé af denne quest
 gm-modal-title-modifying-player = Redigerer { $playerName }
 gm-modal-placeholder-xp-add-remove = Indtast et positivt eller negativt tal.
 gm-modal-label-inventory = Inventar

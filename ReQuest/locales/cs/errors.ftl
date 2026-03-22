@@ -12,7 +12,7 @@ error-report-description =
 # Check failures
 error-owner-only = Tento příkaz může použít pouze vlastník bota!
 error-no-permission = Nemáte oprávnění ke spuštění tohoto příkazu!
-error-no-active-character = Na tomto serveru nemáte aktivního postavení!
+error-no-active-character = Na tomto serveru nemáte aktivní postavu!
 error-no-registered-characters = Nemáte žádné zaregistrované postavy!
 error-no-characters = Cílový hráč nemá žádné zaregistrované postavy.
 error-no-active-character-target = Cílový hráč nemá na tomto serveru aktivovanou postavu.
