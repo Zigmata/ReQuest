@@ -585,7 +585,7 @@ class AddGMQuestRoleSelect(RoleSelect):
         super().__init__(
             placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-add-quest-role'),
             custom_id='add_gm_quest_role_select',
-            max_values=20
+            max_values=ConfigFields.MAX_QUEST_ROLES_PER_GM
         )
         self.calling_view = calling_view
         self.member_id = member_id
@@ -605,7 +605,7 @@ class AddGMQuestRoleSelect(RoleSelect):
             if query:
                 existing = query.get(ConfigFields.QUEST_ROLE_ASSIGNMENTS, [])
 
-            max_roles_per_gm = 20
+            max_roles_per_gm = ConfigFields.MAX_QUEST_ROLES_PER_GM
             member_id_str = str(self.member_id)
             member_existing = [a for a in existing if a['userId'] == member_id_str]
 

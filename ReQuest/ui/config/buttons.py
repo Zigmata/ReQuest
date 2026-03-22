@@ -1774,6 +1774,7 @@ class RemoveGMQuestRoleButton(Button):
                     }
                 }}
             )
+            self.calling_view.error_message = None
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:

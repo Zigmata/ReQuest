@@ -61,7 +61,8 @@ class CreateQuestButton(Button):
                     guild = interaction.guild
                     bot_top_role = guild.me.top_role
                     assigned_roles = [
-                        a for a in all_assignments
+                        {'userId': a['userId'], 'roleId': a['roleId'], 'roleName': role.name}
+                        for a in all_assignments
                         if a['userId'] == str(interaction.user.id)
                         and (role := guild.get_role(a['roleId'])) is not None
                         and not role.managed
