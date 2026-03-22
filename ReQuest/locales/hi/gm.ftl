@@ -167,3 +167,16 @@ gm-embed-title-approved = सामान अपडेट स्वीकृत
 gm-embed-desc-approved = {"**"}{ $characterName }{"**"} का सामान { $approver } द्वारा स्वीकृत किया गया है।
 gm-embed-title-denied = सामान अपडेट अस्वीकृत
 gm-embed-desc-denied = {"**"}{ $characterName }{"**"} का सामान { $denier } द्वारा अस्वीकृत किया गया है।
+
+gm-modal-label-select-party-role = Party Role
+gm-modal-desc-select-party-role = Select a role to assign to the quest party.
+gm-select-option-no-role = None (No Party Role)
+
+gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { $roleId }) because it is positioned higher than ReQuest's highest role in the server hierarchy. Please contact a server administrator to move the role below ReQuest's role, or assign ReQuest a higher role, then retry the operation.
+gm-dm-role-removal-failed =
+    ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
+    Please notify a server administrator to remove the role manually.
+
+gm-dm-role-not-found =
+    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
+    Role operations were skipped. Please notify a server administrator if this is unexpected.

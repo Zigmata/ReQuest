@@ -39,10 +39,12 @@ from ReQuest.utilities.supportFunctions import (
     replace_cached_data,
     escape_markdown,
     get_guild_member,
-    build_cache_key
+    build_cache_key,
+    check_role_hierarchy
 )
 
 logger = logging.getLogger(__name__)
+
 
 
 class GMBaseView(MenuBaseView):
@@ -299,6 +301,8 @@ class ManageQuestsView(LocaleLayoutView):
             if quest[QuestFields.PARTY_ROLE_ID]:
                 role_id = quest[QuestFields.PARTY_ROLE_ID]
                 role = guild.get_role(role_id)
+                if role:
+                    check_role_hierarchy(guild, role)
 
             party = quest[QuestFields.PARTY]
             title = quest[QuestFields.TITLE]
@@ -425,13 +429,45 @@ class ManageQuestsView(LocaleLayoutView):
             if archive_query:
                 archive_channel = guild.get_channel(strip_id(archive_query[ConfigFields.ARCHIVE_CHANNEL]))
 
-            # Check if a party role was configured, and delete it
+            # Check if a party role was configured, and handle cleanup
+            failed_members = []
             party_role_id = quest[QuestFields.PARTY_ROLE_ID]
             if party_role_id:
                 role = guild.get_role(party_role_id)
                 if role:
-                    await role.delete(
-                        reason=f'Quest ID {quest[QuestFields.QUEST_ID]} was completed by {interaction.user.mention}.')
+                    check_role_hierarchy(guild, role)
+                    role_mode = quest.get(QuestFields.QUEST_ROLE_MODE, 'temporary')
+                    if role_mode == 'static':
+                        if not guild.chunked:
+                            await guild.chunk()
+                        remove_tasks = []
+                        remove_members = []
+                        for entry in party:
+                            for player_id in entry:
+                                member = guild.get_member(int(player_id))
+                                if member:
+                                    remove_tasks.append(member.remove_roles(role))
+                                    remove_members.append(member)
+                        failed_members = []
+                        if remove_tasks:
+                            results = await asyncio.gather(*remove_tasks, return_exceptions=True)
+                            for member, result in zip(remove_members, results):
+                                if isinstance(result, Exception):
+                                    logger.warning(f'Failed to remove role {role.name} from {member} (ID: {member.id}): {result}')
+                                    failed_members.append(member)
+                    else:
+                        await role.delete(
+                            reason=f'Quest ID {quest[QuestFields.QUEST_ID]} was completed by {interaction.user.mention}.')
+                else:
+                    logger.warning(f'Quest role {party_role_id} no longer exists in guild {guild_id}. '
+                                   f'Skipping role cleanup for completed quest {quest[QuestFields.QUEST_ID]}.')
+                    try:
+                        gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                        await interaction.user.send(
+                            t(gm_locale, 'gm-dm-role-not-found', roleId=str(party_role_id), questTitle=quest[QuestFields.TITLE])
+                        )
+                    except discord.errors.Forbidden:
+                        logger.warning(f'Could not DM {interaction.user.id} about missing quest role.')
 
             # Get party members and message them with results
             reward_summary = []
@@ -449,8 +485,6 @@ class ManageQuestsView(LocaleLayoutView):
                     # Get character data
                     character_id = next(iter(character_info))
                     character = character_info[character_id]
-                    reward_summary.append(f'<@!{player_id}> as {character[CommonFields.NAME]}:')
-
                     # Prep reward data
                     total_xp = xp_per_member
                     if not xp_enabled:
@@ -468,12 +502,18 @@ class ManageQuestsView(LocaleLayoutView):
                             combined_items[item] = combined_items.get(item, 0) + quantity
 
                     # Update the character's XP and inventory
+                    member_reward_lines = []
                     if xp_enabled and total_xp > 0:
-                        reward_summary.append(f'Experience: {total_xp}')
+                        member_reward_lines.append(f'Experience: {total_xp}')
                         await update_character_experience(interaction, int(player_id), character_id, total_xp)
                     for item_name, quantity in combined_items.items():
-                        reward_summary.append(f'{item_name}: {quantity}')
+                        member_reward_lines.append(f'{item_name}: {quantity}')
                         await update_character_inventory(interaction, int(player_id), character_id, item_name, quantity)
+
+                    # Only include this member in the reward summary if they received something
+                    if member_reward_lines:
+                        reward_summary.append(f'<@!{player_id}> as {character[CommonFields.NAME]}:')
+                        reward_summary.extend(member_reward_lines)
 
                     # Send reward summary to player
                     reward_strings = self.build_reward_summary(total_xp, combined_items, xp_enabled)
@@ -549,6 +589,14 @@ class ManageQuestsView(LocaleLayoutView):
 
             # Message feedback to the GM
             await interaction.user.send(embed=quest_embed)
+
+            # Warn GM about any failed role removals
+            if failed_members:
+                gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                failed_list = ', '.join(f'{m.mention}' for m in failed_members)
+                await interaction.user.send(
+                    t(gm_locale, 'gm-dm-role-removal-failed', roleName=role.name, members=failed_list)
+                )
 
             # Check if GM rewards are enabled, and reward the GM accordingly
             gm_rewards_query = await get_cached_data(
@@ -890,11 +938,23 @@ class RemovePlayerView(LocaleLayoutView):
             role = None
             if lock_state and party_role_id:
                 role = guild.get_role(party_role_id)
+                if role:
+                    check_role_hierarchy(guild, role)
 
                 # Remove the role from the member
-                if member:
+                if role and member:
                     await member.remove_roles(role)
-                else:
+                elif not role:
+                    logger.warning(f'Quest role {party_role_id} no longer exists in guild {guild_id}. '
+                                   f'Skipping role removal for member {removed_member_id}.')
+                    try:
+                        gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                        await interaction.user.send(
+                            t(gm_locale, 'gm-dm-role-not-found', roleId=str(party_role_id), questTitle=quest[QuestFields.TITLE])
+                        )
+                    except discord.errors.Forbidden:
+                        logger.warning(f'Could not DM {interaction.user.id} about missing quest role.')
+                elif not member:
                     logger.warning(f'Could not find member {removed_member_id} in guild {guild_id} to remove quest '
                                    f'role.')
 
@@ -1013,6 +1073,7 @@ class QuestPostView(View):
 
     async def join_callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             guild_id = interaction.guild_id
             user_id = interaction.user.id
@@ -1112,12 +1173,13 @@ class QuestPostView(View):
                         )
 
                 await setup_view(self, interaction)
-                await interaction.response.edit_message(embed=self.embed, view=self)
+                await interaction.edit_original_response(embed=self.embed, view=self)
         except Exception as e:
             await log_exception(e, interaction)
 
     async def leave_callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             guild_id = interaction.guild_id
             user_id = interaction.user.id
@@ -1180,13 +1242,28 @@ class QuestPostView(View):
                 party_role_id = quest[QuestFields.PARTY_ROLE_ID]
                 if lock_state and party_role_id:
                     role = guild.get_role(party_role_id)
+                    if role:
+                        check_role_hierarchy(guild, role)
 
-                    # Get the member object and remove the role
-                    member = await get_guild_member(guild, user_id)
-                    if member:
-                        await member.remove_roles(role)
-                    if new_member:
-                        await new_member.add_roles(role)
+                        # Get the member object and remove the role
+                        member = await get_guild_member(guild, user_id)
+                        if member:
+                            await member.remove_roles(role)
+                        if new_member:
+                            await new_member.add_roles(role)
+                    else:
+                        logger.warning(f'Quest role {party_role_id} no longer exists in guild {guild.id}. '
+                                       f'Skipping role update for quest {quest[QuestFields.QUEST_ID]}.')
+                        try:
+                            gm_id = quest[QuestFields.GM]
+                            gm_member = await get_guild_member(guild, gm_id)
+                            if gm_member:
+                                gm_locale = await resolve_user_locale(bot, gm_id, guild_id)
+                                await gm_member.send(
+                                    t(gm_locale, 'gm-dm-role-not-found', roleId=str(party_role_id), questTitle=quest[QuestFields.TITLE])
+                                )
+                        except discord.errors.Forbidden:
+                            logger.warning(f'Could not DM GM {quest[QuestFields.GM]} about missing quest role.')
 
             # Update the database
             await replace_cached_data(
@@ -1200,7 +1277,7 @@ class QuestPostView(View):
 
             # Refresh the query with the new document and edit the post
             await self.setup(bot=bot)
-            await interaction.response.edit_message(embed=self.embed, view=self)
+            await interaction.edit_original_response(embed=self.embed, view=self)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -1290,6 +1367,7 @@ class ReviewSubmissionView(LocaleLayoutView):
 
     async def approve(self, interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             character_id = self.data['character_id']
             user_id = self.data['user_id']
@@ -1324,11 +1402,10 @@ class ReviewSubmissionView(LocaleLayoutView):
 
             # Either refresh GM view, or delete original response if in thread since it will be archived.
             if interaction.channel_id == thread_id:
-                await interaction.response.defer()
                 await interaction.followup.delete_message(interaction.message.id)
             else:
                 view = GMApprovalsView()
-                await interaction.response.edit_message(view=view)
+                await interaction.edit_original_response(view=view)
 
             # Lock/Archive thread
             await thread.edit(locked=True, archived=True)
@@ -1337,6 +1414,7 @@ class ReviewSubmissionView(LocaleLayoutView):
 
     async def deny(self, interaction):
         try:
+            await interaction.response.defer()
             # Same logic as above but for denials
             bot = interaction.client
             submission_id = self.data['submission_id']
@@ -1363,11 +1441,10 @@ class ReviewSubmissionView(LocaleLayoutView):
             await thread.send(embed=denial_embed)
 
             if interaction.channel_id == thread_id:
-                await interaction.response.defer()
                 await interaction.followup.delete_message(interaction.message.id)
             else:
                 view = GMApprovalsView()
-                await interaction.response.edit_message(view=view)
+                await interaction.edit_original_response(view=view)
 
             await thread.edit(locked=True, archived=True)
         except Exception as e:

@@ -21,6 +21,7 @@ class BaseViewButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             view = self.target_view_class()
             locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
             view.locale = locale
@@ -28,7 +29,7 @@ class BaseViewButton(Button):
                 await setup_view(view, interaction)
             elif hasattr(view, 'build_view'):
                 view.build_view()
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 

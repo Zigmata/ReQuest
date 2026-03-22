@@ -25,6 +25,7 @@ class QuestFields:
     LOCK_STATE = 'lockState'
     REWARDS = 'rewards'
     PARTY_ROLE_ID = 'partyRoleId'
+    QUEST_ROLE_MODE = 'questRoleMode'
     XP = 'xp'
 
 
@@ -68,6 +69,11 @@ class ConfigFields:
     INVENTORY_TYPE = 'inventoryType'
     NEW_CHARACTER_WEALTH = 'newCharacterWealth'
     QUEST_WAIT_LIST = 'questWaitList'
+    QUEST_ROLE_MODE = 'questRoleMode'
+    QUEST_ROLE_ASSIGNMENTS = 'questRoleAssignments'
+
+
+MAX_QUEST_ROLES_PER_GM = 20
 
 
 class RoleplayFields:
@@ -158,4 +164,6 @@ class DatabaseCollections:
     STATIC_KITS = 'staticKits'
     USER_LOCALE = 'userLocale'
     GUILD_LOCALE = 'guildLocale'
+    QUEST_ROLE_MODE = 'questRoleMode'
+    QUEST_ROLE_ASSIGNMENTS = 'questRoleAssignments'
     CHARACTERS = 'characters'

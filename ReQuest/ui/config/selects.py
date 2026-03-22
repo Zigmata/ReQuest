@@ -3,10 +3,10 @@ import logging
 import discord
 from discord.ui import Select, RoleSelect, ChannelSelect
 
-from ReQuest.ui.common.enums import InventoryType, RoleplayMode, ScheduleType, DayOfWeek
+from ReQuest.ui.common.enums import InventoryType, QuestRoleMode, RoleplayMode, ScheduleType, DayOfWeek
 from ReQuest.ui.info.selects import (LOCALE_LABELS, LOCALE_DESCRIPTIONS, LOCALE_EMOJI,
                                      LOCALES_PER_PAGE, get_config_locale_total_pages)
-from ReQuest.utilities.constants import ConfigFields, CommonFields, RoleplayFields, DatabaseCollections
+from ReQuest.utilities.constants import ConfigFields, CommonFields, RoleplayFields, DatabaseCollections, MAX_QUEST_ROLES_PER_GM
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, SUPPORTED_LOCALES
 from ReQuest.utilities.supportFunctions import (
     log_exception,
@@ -532,6 +532,126 @@ class ConfigLanguageSelect(Select):
                     query={CommonFields.ID: interaction.guild_id},
                     update_data={'$set': {'locale': selected}}
                 )
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class QuestRoleModeSelect(Select):
+    def __init__(self, calling_view):
+        super().__init__(
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-quest-role-mode'),
+            options=[
+                discord.SelectOption(
+                    label=t(DEFAULT_LOCALE, 'config-select-option-quest-role-disabled'),
+                    value=QuestRoleMode.DISABLED.value,
+                    description=t(DEFAULT_LOCALE, 'config-select-desc-quest-role-disabled')
+                ),
+                discord.SelectOption(
+                    label=t(DEFAULT_LOCALE, 'config-select-option-quest-role-temporary'),
+                    value=QuestRoleMode.TEMPORARY.value,
+                    description=t(DEFAULT_LOCALE, 'config-select-desc-quest-role-temporary')
+                ),
+                discord.SelectOption(
+                    label=t(DEFAULT_LOCALE, 'config-select-option-quest-role-static'),
+                    value=QuestRoleMode.STATIC.value,
+                    description=t(DEFAULT_LOCALE, 'config-select-desc-quest-role-static')
+                ),
+            ],
+            custom_id='quest_role_mode_select'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUEST_ROLE_MODE,
+                query={'_id': interaction.guild_id},
+                update_data={'$set': {ConfigFields.QUEST_ROLE_MODE: self.values[0]}}
+            )
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class AddGMQuestRoleSelect(RoleSelect):
+    def __init__(self, calling_view, member_id):
+        super().__init__(
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-add-quest-role'),
+            custom_id='add_gm_quest_role_select',
+            max_values=MAX_QUEST_ROLES_PER_GM
+        )
+        self.calling_view = calling_view
+        self.member_id = member_id
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            guild_id = interaction.guild_id
+
+            query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUEST_ROLE_ASSIGNMENTS,
+                query={'_id': guild_id}
+            )
+            existing = []
+            if query:
+                existing = query.get(ConfigFields.QUEST_ROLE_ASSIGNMENTS, [])
+
+            max_roles_per_gm = MAX_QUEST_ROLES_PER_GM
+            member_id_str = str(self.member_id)
+            member_existing = [a for a in existing if a['userId'] == member_id_str]
+
+            bot_top_role = interaction.guild.me.top_role
+            new_assignments = []
+            rejected_roles = []
+            for role in self.values:
+                # Reject roles the bot cannot manage
+                if role.managed or role.is_default() or role >= bot_top_role:
+                    rejected_roles.append(role)
+                    continue
+
+                already_assigned = any(
+                    a['userId'] == member_id_str and a['roleId'] == role.id
+                    for a in existing
+                )
+                if not already_assigned:
+                    if len(member_existing) + len(new_assignments) >= max_roles_per_gm:
+                        break
+                    new_assignments.append({
+                        'userId': member_id_str,
+                        'roleId': role.id,
+                        'roleName': role.name
+                    })
+
+            if new_assignments:
+                await update_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.QUEST_ROLE_ASSIGNMENTS,
+                    query={'_id': guild_id},
+                    update_data={'$push': {ConfigFields.QUEST_ROLE_ASSIGNMENTS: {'$each': new_assignments}}}
+                )
+
+            locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
+            at_limit = len(member_existing) + len(new_assignments) >= max_roles_per_gm
+            if rejected_roles or at_limit:
+                messages = []
+                if rejected_roles:
+                    rejected_list = ', '.join(r.mention for r in rejected_roles)
+                    messages.append(t(locale, 'config-error-unmanageable-roles', roles=rejected_list))
+                if at_limit:
+                    messages.append(t(locale, 'config-error-quest-role-limit', limit=str(max_roles_per_gm)))
+                self.calling_view.error_message = '\n'.join(messages)
+            else:
+                self.calling_view.error_message = None
 
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)

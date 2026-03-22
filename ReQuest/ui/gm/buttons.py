@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 import discord
@@ -18,7 +19,8 @@ from ReQuest.utilities.supportFunctions import (
     update_cached_data,
     delete_cached_data,
     build_cache_key,
-    get_guild_member
+    get_guild_member,
+    check_role_hierarchy
 )
 
 logger = logging.getLogger(__name__)
@@ -35,7 +37,39 @@ class CreateQuestButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            modal = modals.CreateQuestModal(self.calling_view)
+            bot = interaction.client
+            guild_id = interaction.guild_id
+
+            quest_role_mode_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUEST_ROLE_MODE,
+                query={CommonFields.ID: guild_id}
+            )
+            quest_role_mode = quest_role_mode_query.get(ConfigFields.QUEST_ROLE_MODE, 'temporary') if quest_role_mode_query else 'temporary'
+
+            assigned_roles = None
+            if quest_role_mode == 'static':
+                assignments_query = await get_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.QUEST_ROLE_ASSIGNMENTS,
+                    query={CommonFields.ID: guild_id}
+                )
+                if assignments_query:
+                    all_assignments = assignments_query.get(ConfigFields.QUEST_ROLE_ASSIGNMENTS, [])
+                    guild = interaction.guild
+                    bot_top_role = guild.me.top_role
+                    assigned_roles = [
+                        {'userId': a['userId'], 'roleId': a['roleId'], 'roleName': role.name}
+                        for a in all_assignments
+                        if a['userId'] == str(interaction.user.id)
+                        and (role := guild.get_role(a['roleId'])) is not None
+                        and not role.managed
+                        and role < bot_top_role
+                    ]
+
+            modal = modals.CreateQuestModal(self.calling_view, quest_role_mode, assigned_roles)
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)
@@ -139,6 +173,7 @@ class CancelQuestButton(Button):
 
     async def confirm_callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             quest = self.calling_view.selected_quest
             guild_id = interaction.guild_id
@@ -168,7 +203,45 @@ class CancelQuestButton(Button):
             party_role_id = quest[QuestFields.PARTY_ROLE_ID]
             if party_role_id:
                 party_role = guild.get_role(party_role_id)
-                await party_role.delete(reason=f'Quest {quest[QuestFields.QUEST_ID]} cancelled by {interaction.user.mention}.')
+                if party_role:
+                    check_role_hierarchy(guild, party_role)
+                    role_mode = quest.get(QuestFields.QUEST_ROLE_MODE, 'temporary')
+                    if role_mode == 'static':
+                        if not guild.chunked:
+                            await guild.chunk()
+                        remove_tasks = []
+                        remove_members = []
+                        for player in party:
+                            for member_id in player:
+                                member = guild.get_member(int(member_id))
+                                if member:
+                                    remove_tasks.append(member.remove_roles(party_role))
+                                    remove_members.append(member)
+                        if remove_tasks:
+                            results = await asyncio.gather(*remove_tasks, return_exceptions=True)
+                            failed_members = []
+                            for member, result in zip(remove_members, results):
+                                if isinstance(result, Exception):
+                                    logger.warning(f'Failed to remove role {party_role.name} from {member} (ID: {member.id}): {result}')
+                                    failed_members.append(member)
+                            if failed_members:
+                                gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                                failed_list = ', '.join(m.mention for m in failed_members)
+                                await interaction.user.send(
+                                    t(gm_locale, 'gm-dm-role-removal-failed', roleName=party_role.name, members=failed_list)
+                                )
+                    else:
+                        await party_role.delete(reason=f'Quest {quest[QuestFields.QUEST_ID]} cancelled by {interaction.user.mention}.')
+                else:
+                    logger.warning(f'Quest role {party_role_id} no longer exists in guild {guild_id}. '
+                                   f'Skipping role cleanup for cancelled quest {quest[QuestFields.QUEST_ID]}.')
+                    try:
+                        gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                        await interaction.user.send(
+                            t(gm_locale, 'gm-dm-role-not-found', roleId=str(party_role_id), questTitle=title)
+                        )
+                    except discord.errors.Forbidden:
+                        logger.warning(f'Could not DM {interaction.user.id} about missing quest role.')
 
             # Delete the quest from the database
             await delete_cached_data(
@@ -202,7 +275,7 @@ class CancelQuestButton(Button):
             from ReQuest.ui.gm.views import GMQuestMenuView
             view = GMQuestMenuView()
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
