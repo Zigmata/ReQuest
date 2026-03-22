@@ -71,7 +71,9 @@ class ConfigFields:
     QUEST_WAIT_LIST = 'questWaitList'
     QUEST_ROLE_MODE = 'questRoleMode'
     QUEST_ROLE_ASSIGNMENTS = 'questRoleAssignments'
-    MAX_QUEST_ROLES_PER_GM = 20
+
+
+MAX_QUEST_ROLES_PER_GM = 20
 
 
 class RoleplayFields:

@@ -6,7 +6,7 @@ from discord.ui import Select, RoleSelect, ChannelSelect
 from ReQuest.ui.common.enums import InventoryType, QuestRoleMode, RoleplayMode, ScheduleType, DayOfWeek
 from ReQuest.ui.info.selects import (LOCALE_LABELS, LOCALE_DESCRIPTIONS, LOCALE_EMOJI,
                                      LOCALES_PER_PAGE, get_config_locale_total_pages)
-from ReQuest.utilities.constants import ConfigFields, CommonFields, RoleplayFields, DatabaseCollections
+from ReQuest.utilities.constants import ConfigFields, CommonFields, RoleplayFields, DatabaseCollections, MAX_QUEST_ROLES_PER_GM
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, SUPPORTED_LOCALES
 from ReQuest.utilities.supportFunctions import (
     log_exception,
@@ -585,7 +585,7 @@ class AddGMQuestRoleSelect(RoleSelect):
         super().__init__(
             placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-add-quest-role'),
             custom_id='add_gm_quest_role_select',
-            max_values=ConfigFields.MAX_QUEST_ROLES_PER_GM
+            max_values=MAX_QUEST_ROLES_PER_GM
         )
         self.calling_view = calling_view
         self.member_id = member_id
@@ -605,7 +605,7 @@ class AddGMQuestRoleSelect(RoleSelect):
             if query:
                 existing = query.get(ConfigFields.QUEST_ROLE_ASSIGNMENTS, [])
 
-            max_roles_per_gm = ConfigFields.MAX_QUEST_ROLES_PER_GM
+            max_roles_per_gm = MAX_QUEST_ROLES_PER_GM
             member_id_str = str(self.member_id)
             member_existing = [a for a in existing if a['userId'] == member_id_str]
 

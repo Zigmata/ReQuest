@@ -100,6 +100,9 @@ gm-dm-rewards-issued = The following has been awarded to your active character, 
 gm-dm-role-removal-failed =
     ⚠️ Failed to remove the role {"**"}{ $roleName }{"**"} from the following members: { $members }.
     Please notify a server administrator to remove the role manually.
+gm-dm-role-not-found =
+    ⚠️ The quest role (ID: { $roleId }) for quest {"**"}{ $questTitle }{"**"} no longer exists on the server.
+    Role operations were skipped. Please notify a server administrator if this is unexpected.
 
 # GM select menus
 gm-select-placeholder-party-member = Select a party member

@@ -230,6 +230,16 @@ class CancelQuestButton(Button):
                                 )
                     else:
                         await party_role.delete(reason=f'Quest {quest[QuestFields.QUEST_ID]} cancelled by {interaction.user.mention}.')
+                else:
+                    logger.warning(f'Quest role {party_role_id} no longer exists in guild {guild_id}. '
+                                   f'Skipping role cleanup for cancelled quest {quest[QuestFields.QUEST_ID]}.')
+                    try:
+                        gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                        await interaction.user.send(
+                            t(gm_locale, 'gm-dm-role-not-found', roleId=str(party_role_id), questTitle=title)
+                        )
+                    except discord.errors.Forbidden:
+                        logger.warning(f'Could not DM {interaction.user.id} about missing quest role.')
 
             # Delete the quest from the database
             await delete_cached_data(

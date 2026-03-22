@@ -456,6 +456,16 @@ class ManageQuestsView(LocaleLayoutView):
                     else:
                         await role.delete(
                             reason=f'Quest ID {quest[QuestFields.QUEST_ID]} was completed by {interaction.user.mention}.')
+                else:
+                    logger.warning(f'Quest role {party_role_id} no longer exists in guild {guild_id}. '
+                                   f'Skipping role cleanup for completed quest {quest[QuestFields.QUEST_ID]}.')
+                    try:
+                        gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                        await interaction.user.send(
+                            t(gm_locale, 'gm-dm-role-not-found', roleId=str(party_role_id), questTitle=quest[QuestFields.TITLE])
+                        )
+                    except discord.errors.Forbidden:
+                        logger.warning(f'Could not DM {interaction.user.id} about missing quest role.')
 
             # Get party members and message them with results
             reward_summary = []
@@ -932,6 +942,16 @@ class RemovePlayerView(LocaleLayoutView):
                 # Remove the role from the member
                 if role and member:
                     await member.remove_roles(role)
+                elif not role:
+                    logger.warning(f'Quest role {party_role_id} no longer exists in guild {guild_id}. '
+                                   f'Skipping role removal for member {removed_member_id}.')
+                    try:
+                        gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                        await interaction.user.send(
+                            t(gm_locale, 'gm-dm-role-not-found', roleId=str(party_role_id), questTitle=quest[QuestFields.TITLE])
+                        )
+                    except discord.errors.Forbidden:
+                        logger.warning(f'Could not DM {interaction.user.id} about missing quest role.')
                 elif not member:
                     logger.warning(f'Could not find member {removed_member_id} in guild {guild_id} to remove quest '
                                    f'role.')
@@ -1229,6 +1249,19 @@ class QuestPostView(View):
                             await member.remove_roles(role)
                         if new_member:
                             await new_member.add_roles(role)
+                    else:
+                        logger.warning(f'Quest role {party_role_id} no longer exists in guild {guild.id}. '
+                                       f'Skipping role update for quest {quest[QuestFields.QUEST_ID]}.')
+                        try:
+                            gm_id = quest[QuestFields.GM]
+                            gm_member = await get_guild_member(guild, gm_id)
+                            if gm_member:
+                                gm_locale = await resolve_user_locale(bot, gm_id, guild_id)
+                                await gm_member.send(
+                                    t(gm_locale, 'gm-dm-role-not-found', roleId=str(party_role_id), questTitle=quest[QuestFields.TITLE])
+                                )
+                        except discord.errors.Forbidden:
+                            logger.warning(f'Could not DM GM {quest[QuestFields.GM]} about missing quest role.')
 
             # Update the database
             await replace_cached_data(
