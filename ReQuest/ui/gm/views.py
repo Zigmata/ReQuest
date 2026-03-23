@@ -289,7 +289,6 @@ class ManageQuestsView(LocaleLayoutView):
             bot = interaction.client
             quest = self.selected_quest
             guild_id = interaction.guild_id
-            user_id = interaction.user.id
             guild = interaction.guild
 
             # Fetch the quest channel

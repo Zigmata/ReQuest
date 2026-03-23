@@ -21,7 +21,7 @@ from ReQuest.ui.player import buttons, selects
 from ReQuest.utilities.constants import (
     CharacterFields, ConfigFields, CommonFields, ShopFields, DatabaseCollections
 )
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_guild_locale
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_guild_locale, resolve_locale
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
@@ -1133,6 +1133,7 @@ class PlayerBoardView(LocaleLayoutView):
         try:
             bot = interaction.client
             guild_locale = await resolve_guild_locale(bot, interaction.guild_id)
+            user_locale = await resolve_locale(interaction)
             post_collection = bot.gdb[DatabaseCollections.PLAYER_BOARD]
             post_id = str(shortuuid.uuid()[:8])
 
@@ -1150,7 +1151,7 @@ class PlayerBoardView(LocaleLayoutView):
             channel = interaction.client.get_channel(self.player_board_channel_id)
             if not channel:
                 raise UserFeedbackError(
-                    t(locale, 'player-error-board-channel-not-found'),
+                    t(user_locale, 'player-error-board-channel-not-found'),
                     message_id='player-error-board-channel-not-found'
                 )
 

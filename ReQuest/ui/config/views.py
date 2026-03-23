@@ -1759,8 +1759,8 @@ class ConfigStaticQuestRolesView(LocaleLayoutView):
 
     async def show_page_jump_modal(self, interaction):
         try:
-            from ReQuest.ui.common import modals as common_modals
-            await interaction.response.send_modal(common_modals.PageJumpModal(self))
+            from ReQuest.ui.common.modals import PageJumpModal
+            await interaction.response.send_modal(PageJumpModal(self))
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -1892,8 +1892,8 @@ class ConfigGMQuestRoleAssignView(LocaleLayoutView):
 
     async def show_page_jump_modal(self, interaction):
         try:
-            from ReQuest.ui.common import modals as common_modals
-            await interaction.response.send_modal(common_modals.PageJumpModal(self))
+            from ReQuest.ui.common.modals import PageJumpModal
+            await interaction.response.send_modal(PageJumpModal(self))
         except Exception as e:
             await log_exception(e, interaction)
 

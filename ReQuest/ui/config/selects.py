@@ -398,7 +398,7 @@ class ForumChannelSelect(ChannelSelect):
             self.calling_view.selected_thread = None  # Reset thread selection
 
             forum = interaction.guild.get_channel(self.values[0].id)
-            self.calling_view.forum_threads = [t for t in forum.threads if not t.archived and not t.locked][:25]
+            self.calling_view.forum_threads = [th for th in forum.threads if not th.archived and not th.locked][:25]
 
             self.calling_view.build_view()
             await interaction.response.edit_message(view=self.calling_view)

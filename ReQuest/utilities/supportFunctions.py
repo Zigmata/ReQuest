@@ -3,17 +3,17 @@ import json
 import logging
 import re
 import traceback
+from datetime import datetime, timezone, timedelta
 from typing import Tuple
 
 import discord
 import shortuuid
 from discord import app_commands
 from titlecase import titlecase
-from datetime import datetime, timezone, timedelta
 
 from ReQuest.utilities.constants import (
     CharacterFields, QuestFields, ShopFields, CurrencyFields,
-    ConfigFields, RoleplayFields, RestockFields, CartFields, ContainerFields, CommonFields,
+    ConfigFields, RestockFields, CartFields, ContainerFields, CommonFields,
     DatabaseCollections
 )
 

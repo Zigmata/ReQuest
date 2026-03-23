@@ -8,7 +8,7 @@ from discord.ext.commands import Cog
 from pymongo import ReturnDocument
 
 from ReQuest.ui.common.enums import ScheduleType, RoleplayMode, DayOfWeek
-from ReQuest.utilities.constants import CharacterFields, RoleplayFields, CommonFields, DatabaseCollections
+from ReQuest.utilities.constants import CharacterFields, RoleplayFields, DatabaseCollections
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     get_cached_data,

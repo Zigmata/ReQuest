@@ -7,7 +7,7 @@ from discord.ext.commands import Cog
 
 from ReQuest.ui.common.enums import ScheduleType, RestockMode
 from ReQuest.utilities.constants import CommonFields, ShopFields, RestockFields, DatabaseCollections
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_guild_locale
+from ReQuest.utilities.localizer import t, resolve_guild_locale
 from ReQuest.utilities.supportFunctions import (
     cleanup_expired_carts,
     get_last_restock,

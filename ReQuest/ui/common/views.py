@@ -8,7 +8,7 @@ from discord.ui import (
 )
 
 from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, set_locale_context
+from ReQuest.utilities.localizer import DEFAULT_LOCALE, set_locale_context
 
 
 class LocaleLayoutView(LayoutView):
