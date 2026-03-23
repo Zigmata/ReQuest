@@ -760,7 +760,7 @@ config-label-item-stock-limits = {"**"}Limity zásob předmětů{"**"}
 config-msg-no-items-in-shop = Žádné předměty v tomto obchodě.
 config-label-stock-with-available = Max: { $max } | Dostupné: { $available }
 config-label-stock-increment = Doplnění: +{ $increment }/cyklus
-config-label-stock-reserved =  | Rezervováno: { $reserved }
+config-label-stock-reserved = | Rezervováno: { $reserved }
 config-label-stock-not-initialized = Max: { $max } | Dostupné: (neinicializováno)
 config-label-stock-unlimited = Zásoby: Neomezené
 

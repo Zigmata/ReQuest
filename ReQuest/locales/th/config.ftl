@@ -760,7 +760,7 @@ config-label-item-stock-limits = {"**"}ขีดจำกัดสินค้�
 config-msg-no-items-in-shop = ไม่มีไอเทมในร้านค้านี้
 config-label-stock-with-available = สูงสุด: { $max } | มีอยู่: { $available }
 config-label-stock-increment = เติมสต็อก: +{ $increment }/รอบ
-config-label-stock-reserved =  | จองแล้ว: { $reserved }
+config-label-stock-reserved = | จองแล้ว: { $reserved }
 config-label-stock-not-initialized = สูงสุด: { $max } | มีอยู่: (ยังไม่เริ่มต้น)
 config-label-stock-unlimited = สินค้าคงเหลือ: ไม่จำกัด
 

@@ -3514,12 +3514,12 @@ class ConfigStockLimitsView(LocaleLayoutView):
                         restock_mode = restock_config.get(RestockFields.MODE, RestockMode.FULL.value)
                         if restock_config.get(RestockFields.ENABLED) and restock_mode == RestockMode.INCREMENTAL.value:
                             increment = item.get(ShopFields.RESTOCK_INCREMENT, 1)
-                            stock_text += t(
+                            stock_text += ' ' + t(
                                 DEFAULT_LOCALE, 'config-label-stock-increment',
                                 **{'increment': str(increment)}
                             )
                         if reserved > 0:
-                            stock_text += t(
+                            stock_text += ' ' + t(
                                 DEFAULT_LOCALE, 'config-label-stock-reserved',
                                 **{'reserved': str(reserved)}
                             )

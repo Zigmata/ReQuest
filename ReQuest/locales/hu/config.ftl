@@ -760,7 +760,7 @@ config-label-item-stock-limits = {"**"}Tárgy készletkorlátok{"**"}
 config-msg-no-items-in-shop = Nincsenek tárgyak ebben a boltban.
 config-label-stock-with-available = Max: { $max } | Elérhető: { $available }
 config-label-stock-increment = Feltöltés: +{ $increment }/ciklus
-config-label-stock-reserved =  | Foglalt: { $reserved }
+config-label-stock-reserved = | Foglalt: { $reserved }
 config-label-stock-not-initialized = Max: { $max } | Elérhető: (nincs inicializálva)
 config-label-stock-unlimited = Készlet: Korlátlan
 

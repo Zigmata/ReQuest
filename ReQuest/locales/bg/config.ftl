@@ -760,7 +760,7 @@ config-label-item-stock-limits = {"**"}Лимити на наличност на
 config-msg-no-items-in-shop = Няма предмети в този магазин.
 config-label-stock-with-available = Макс: { $max } | Налични: { $available }
 config-label-stock-increment = Зареждане: +{ $increment }/цикъл
-config-label-stock-reserved =  | Запазени: { $reserved }
+config-label-stock-reserved = | Запазени: { $reserved }
 config-label-stock-not-initialized = Макс: { $max } | Налични: (не е инициализирано)
 config-label-stock-unlimited = Наличност: Неограничена
 

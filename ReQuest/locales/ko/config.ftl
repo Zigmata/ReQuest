@@ -760,7 +760,7 @@ config-label-item-stock-limits = {"**"}아이템 재고 한도{"**"}
 config-msg-no-items-in-shop = 이 상점에 아이템이 없습니다.
 config-label-stock-with-available = 최대: { $max } | 가용: { $available }
 config-label-stock-increment = 재입고: +{ $increment }/주기
-config-label-stock-reserved =  | 예약: { $reserved }
+config-label-stock-reserved = | 예약: { $reserved }
 config-label-stock-not-initialized = 최대: { $max } | 가용: (미초기화)
 config-label-stock-unlimited = 재고: 무제한
 

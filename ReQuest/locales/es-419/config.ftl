@@ -760,7 +760,7 @@ config-label-item-stock-limits = {"**"}Límites de Inventario por Objeto{"**"}
 config-msg-no-items-in-shop = No hay objetos en esta tienda.
 config-label-stock-with-available = Máx: { $max } | Disponible: { $available }
 config-label-stock-increment = Reabastecimiento: +{ $increment }/ciclo
-config-label-stock-reserved =  | Reservado: { $reserved }
+config-label-stock-reserved = | Reservado: { $reserved }
 config-label-stock-not-initialized = Máx: { $max } | Disponible: (no inicializado)
 config-label-stock-unlimited = Inventario: Ilimitado
 

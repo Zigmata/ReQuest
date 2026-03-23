@@ -765,8 +765,8 @@ config-label-restock-disabled = {"**"}Restock Schedule:{"**"} Disabled
 config-label-item-stock-limits = {"**"}Item Stock Limits{"**"}
 config-msg-no-items-in-shop = No items in this shop.
 config-label-stock-with-available = Max: { $max } | Available: { $available }
-config-label-stock-increment =  | Restock: +{ $increment }/cycle
-config-label-stock-reserved =  | Reserved: { $reserved }
+config-label-stock-increment = | Restock: +{ $increment }/cycle
+config-label-stock-reserved = | Reserved: { $reserved }
 config-label-stock-not-initialized = Max: { $max } | Available: (not initialized)
 config-label-stock-unlimited = Stock: Unlimited
 

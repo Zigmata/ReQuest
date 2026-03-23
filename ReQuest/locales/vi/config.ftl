@@ -760,7 +760,7 @@ config-label-item-stock-limits = {"**"}Giới hạn tồn kho vật phẩm{"**"}
 config-msg-no-items-in-shop = Không có vật phẩm trong cửa hàng này.
 config-label-stock-with-available = Tối đa: { $max } | Còn lại: { $available }
 config-label-stock-increment = Bổ sung: +{ $increment }/chu kỳ
-config-label-stock-reserved =  | Đã đặt: { $reserved }
+config-label-stock-reserved = | Đã đặt: { $reserved }
 config-label-stock-not-initialized = Tối đa: { $max } | Còn lại: (chưa khởi tạo)
 config-label-stock-unlimited = Tồn kho: Không giới hạn
 

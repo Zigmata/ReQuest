@@ -760,7 +760,7 @@ config-label-item-stock-limits = {"**"}Обмеження запасів пре�
 config-msg-no-items-in-shop = У цьому магазині немає предметів.
 config-label-stock-with-available = Макс.: { $max } | Доступно: { $available }
 config-label-stock-increment = Поповнення: +{ $increment }/цикл
-config-label-stock-reserved =  | Зарезервовано: { $reserved }
+config-label-stock-reserved = | Зарезервовано: { $reserved }
 config-label-stock-not-initialized = Макс.: { $max } | Доступно: (не ініціалізовано)
 config-label-stock-unlimited = Запас: Необмежений
 

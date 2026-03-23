@@ -759,7 +759,7 @@ config-label-item-stock-limits = {"**"}物品库存限制{"**"}
 config-msg-no-items-in-shop = 此商店无物品。
 config-label-stock-with-available = 最大：{ $max } | 可用：{ $available }
 config-label-stock-increment = 补货：+{ $increment }/周期
-config-label-stock-reserved =  | 预留：{ $reserved }
+config-label-stock-reserved = | 预留：{ $reserved }
 config-label-stock-not-initialized = 最大：{ $max } | 可用：（未初始化）
 config-label-stock-unlimited = 库存：无限
 
