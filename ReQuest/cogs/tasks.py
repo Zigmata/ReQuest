@@ -6,7 +6,10 @@ from discord.ext import commands, tasks
 from discord.ext.commands import Cog
 
 from ReQuest.ui.common.enums import ScheduleType, RestockMode
-from ReQuest.utilities.constants import CommonFields, ShopFields, RestockFields, DatabaseCollections
+from ReQuest.utilities.constants import (
+    CommonFields, ShopFields, RestockFields, DatabaseCollections,
+    FIRST_RESTOCK_GRACE_HOURLY, FIRST_RESTOCK_GRACE_DAILY, FIRST_RESTOCK_GRACE_WEEKLY
+)
 from ReQuest.utilities.localizer import t, resolve_guild_locale
 from ReQuest.utilities.supportFunctions import (
     cleanup_expired_carts,
@@ -136,7 +139,7 @@ class Tasks(Cog):
             if last_restock is None:
                 # First-ever restock: only fire if close to target to avoid an
                 # immediate catch-up restock on first bot start mid-hour.
-                return (now - target_time) <= timedelta(minutes=2)
+                return (now - target_time) <= timedelta(minutes=FIRST_RESTOCK_GRACE_HOURLY)
 
             # Normal case: restock if we haven't restocked since this hour's target
             return last_restock < target_time
@@ -152,7 +155,7 @@ class Tasks(Cog):
             if last_restock is None:
                 # First-ever restock: only fire if close to target to avoid
                 # a catch-up restock on first bot start late in the day.
-                return (now - target_time) <= timedelta(minutes=10)
+                return (now - target_time) <= timedelta(minutes=FIRST_RESTOCK_GRACE_DAILY)
 
             return last_restock < target_time
 
@@ -172,7 +175,7 @@ class Tasks(Cog):
             if last_restock is None:
                 # First-ever restock: only fire if close to target to avoid
                 # a catch-up restock on first bot start days after the target.
-                return (now - target_time) <= timedelta(minutes=30)
+                return (now - target_time) <= timedelta(minutes=FIRST_RESTOCK_GRACE_WEEKLY)
 
             return last_restock < target_time
 

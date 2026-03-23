@@ -75,6 +75,10 @@ class ConfigFields:
 
 MAX_QUEST_ROLES_PER_GM = 20
 
+FIRST_RESTOCK_GRACE_HOURLY = 2   # minutes
+FIRST_RESTOCK_GRACE_DAILY = 10   # minutes
+FIRST_RESTOCK_GRACE_WEEKLY = 30  # minutes
+
 
 class RoleplayFields:
     ENABLED = 'enabled'

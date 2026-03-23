@@ -20,7 +20,7 @@ class Info(Cog):
     )
     async def ping(self, interaction: discord.Interaction):
         locale = await resolve_locale(interaction)
-        latency = str(round(self.bot.latency * 1000))
+        latency = round(self.bot.latency * 1000)
         await interaction.response.send_message(t(locale, 'info-pong', latency=latency), ephemeral=True)
 
     @app_commands.command(
