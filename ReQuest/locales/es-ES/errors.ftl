@@ -33,7 +33,7 @@ error-insufficient-funds-for-transaction = Fondos insuficientes para esta transa
 # Errores del carrito
 error-cart-not-found = Carrito no encontrado.
 error-item-not-in-cart = El objeto no está en el carrito.
-error-not-enough-stock = No hay suficiente existencias disponibles.
+error-not-enough-stock = No hay suficientes existencias disponibles.
 # Errores de contenedor
 error-container-not-found = Contenedor no encontrado.
 error-container-name-empty = El nombre del contenedor no puede estar vacío.
