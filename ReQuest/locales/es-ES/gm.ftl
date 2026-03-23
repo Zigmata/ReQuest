@@ -140,8 +140,8 @@ gm-title-player-management = Game Master - Gestión de jugadores
 gm-desc-player-management =
     Estos comandos se han migrado a menús contextuales. Haced clic derecho (escritorio) o pulsación larga (móvil) en el perfil de un jugador para las siguientes opciones:
 
-    - {"**"}Modify Player{"**"}: Añadir o eliminar objetos y experiencia de un jugador.
-    - {"**"}View Player{"**"}: Ver los detalles del personaje activo de un jugador.
+    - {"**"}Modificar Jugador{"**"}: Añadir o eliminar objetos y experiencia de un jugador.
+    - {"**"}Ver Jugador{"**"}: Ver los detalles del personaje activo de un jugador.
 gm-title-remove-player = Eliminar jugador de la quest - { $questTitle }
 gm-desc-remove-player-notes =
     __{"**"}Notas sobre la eliminación de jugadores{"**"}__
@@ -149,7 +149,7 @@ gm-desc-remove-player-notes =
     - Elegid un jugador del menú desplegable de abajo para eliminarlo de la lista de la quest.
     - Si hay jugadores en lista de espera, el primero de la lista será ascendido al grupo.
     - Las recompensas individuales del jugador eliminado serán borradas de la quest.
-    - Si deseáis recompensar al jugador por contribuciones previas, usad el menú contextual `Modify Player` para emitirle recompensas directamente.
+    - Si deseáis recompensar al jugador por contribuciones previas, usad el menú contextual `Modificar Jugador` para emitirle recompensas directamente.
 gm-label-no-players-in-roster = No hay jugadores en la lista de la quest
 gm-title-character-sheet = Ficha de personaje de { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Puntos de experiencia:{"**"}__

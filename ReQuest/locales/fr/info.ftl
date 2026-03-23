@@ -30,9 +30,9 @@ info-help-description =
 
     Les commandes suivantes sont des menus contextuels. Pour y accéder sur le client de bureau, faites un clic droit sur le nom d'un utilisateur et choisissez « Apps ». Sur mobile, consultez le profil d'un utilisateur et sélectionnez « Apps » dans le menu en haut à droite.
 
-    {"-"} Trade : Donner des objets ou de la monnaie à un autre joueur.
-    {"-"} View Player (GM uniquement) : Consulter l'inventaire du personnage actif d'un autre joueur.
-    {"-"} Modify Player (GM uniquement) : Modifier l'inventaire ou l'expérience du personnage actif d'un autre joueur.
+    {"-"} Échange : Donner des objets ou de la monnaie à un autre joueur.
+    {"-"} Voir Joueur (GM uniquement) : Consulter l'inventaire du personnage actif d'un autre joueur.
+    {"-"} Modifier Joueur (GM uniquement) : Modifier l'inventaire ou l'expérience du personnage actif d'un autre joueur.
 
 ## Chaînes de la commande langue
 

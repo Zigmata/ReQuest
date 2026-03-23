@@ -38,7 +38,7 @@ common-label-none = कोई नहीं
 common-label-unknown = अज्ञात
 common-label-locked = (लॉक)
 common-label-loose-items = बिखरी वस्तुएँ
-common-label-and-more = . . . और { $remaining } और।
+common-label-and-more = . . . और { $remaining } अधिक।
 common-label-currency = मुद्रा
 common-label-inventory-empty = इन्वेंट्री खाली है।
 
