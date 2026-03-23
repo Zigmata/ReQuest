@@ -150,7 +150,9 @@ class Tasks(Cog):
                 return False
 
             if last_restock is None:
-                return True
+                # First-ever restock: only fire if close to target to avoid
+                # a catch-up restock on first bot start late in the day.
+                return (now - target_time) <= timedelta(minutes=10)
 
             return last_restock < target_time
 
@@ -168,7 +170,9 @@ class Tasks(Cog):
                 return False
 
             if last_restock is None:
-                return True
+                # First-ever restock: only fire if close to target to avoid
+                # a catch-up restock on first bot start days after the target.
+                return (now - target_time) <= timedelta(minutes=30)
 
             return last_restock < target_time
 
