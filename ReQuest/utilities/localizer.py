@@ -244,11 +244,6 @@ async def resolve_locale(interaction):
     except Exception as e:
         logger.debug(f'Could not resolve user locale preference: {e}')
 
-    if interaction.guild_id:
-        guild_locale = await resolve_guild_locale(bot, interaction.guild_id)
-        if guild_locale != DEFAULT_LOCALE:
-            return guild_locale
-
     discord_locale = str(interaction.locale) if interaction.locale else None
     if discord_locale and discord_locale in SUPPORTED_LOCALES:
         return discord_locale

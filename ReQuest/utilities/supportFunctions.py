@@ -1805,34 +1805,6 @@ async def get_or_create_cart(bot, guild_id: int, user_id: int, channel_id: str) 
     return new_cart
 
 
-async def update_cart_expiry(bot, guild_id: int, user_id: int, channel_id: str):
-    """
-    Extends the cart expiry to now + TTL.
-
-    :param bot: The Discord bot instance
-    :param guild_id: The guild ID
-    :param user_id: The user ID
-    :param channel_id: The shop channel ID
-    """
-    cart_id = build_cart_id(guild_id, user_id, channel_id)
-    now = datetime.now(timezone.utc)
-    expires_at = now + timedelta(minutes=CART_TTL_MINUTES)
-
-    await update_cached_data(
-        bot=bot,
-        mongo_database=bot.gdb,
-        collection_name=DatabaseCollections.SHOP_CARTS,
-        query={CommonFields.ID: cart_id},
-        update_data={
-            '$set': {
-                CartFields.UPDATED_AT: now.isoformat(),
-                CartFields.EXPIRES_AT: expires_at.isoformat()
-            }
-        },
-        cache_id=cart_id
-    )
-
-
 async def add_item_to_cart(bot, guild_id: int, user_id: int, channel_id: str,
                            item: dict, option_index: int = 0) -> bool:
     """

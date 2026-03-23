@@ -47,5 +47,4 @@ class QuestRoleMode(Enum):
 
 
 class ShopChannelType(Enum):
-    TEXT_CHANNEL = 'text_channel'
     FORUM_THREAD = 'forum_thread'
