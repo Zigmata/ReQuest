@@ -9,7 +9,7 @@ info-invite-title = Me convide para o seu servidor!
 info-support =
     {"**"}ReQuest v{ $version }{"**"}
 
-    Bugs? Sugestões? Entre no servidor de desenvolvimento em https://discord.gg/Zq37gj4
+    Bugs? Sugestões de recursos? Entre no servidor de desenvolvimento em https://discord.gg/Zq37gj4
 
 info-help-title = ReQuest - Lista de Comandos
 
@@ -17,27 +17,27 @@ info-help-description =
     Os seguintes comandos básicos estão disponíveis:
 
     {"-"} `/help`: Este comando.
-    {"-"} `/support`: Mostra um convite para o Discord oficial do ReQuest.
-    {"-"} `/invite`: Mostra um convite para adicionar o ReQuest ao seu Discord.
+    {"-"} `/support`: Exibe um convite para o Discord oficial do ReQuest.
+    {"-"} `/invite`: Exibe um convite para adicionar o ReQuest ao seu Discord.
     {"-"} `/ping`: Realiza um teste básico de conectividade.
 
-    Os seguintes comandos de menu avançado estão disponíveis; use um para saber mais sobre suas subfunções:
+    Os seguintes comandos com menu avançado estão disponíveis; use um deles para aprender mais sobre suas subfunções:
 
-    {"-"} `/config`: Configurações do servidor, principalmente relacionadas à configuração inicial do ReQuest para o seu Discord. Requer permissão "Gerenciar Servidor" para acessar.
+    {"-"} `/config`: Configurações do servidor, principalmente relacionadas à configuração inicial do ReQuest no seu Discord. Requer permissão de "Gerenciar Servidor".
     {"-"} `/player`: Funções para jogadores gerenciarem e visualizarem seus personagens.
-    {"-"} `/gm`: Todas as funções de Mestre de Jogo. Requer que um cargo de GM esteja configurado no servidor.
+    {"-"} `/gm`: Todas as funções do Mestre. Requer que um cargo de Mestre esteja configurado no servidor.
     {"-"} `/shop`: Visualize e compre itens da loja do canal atual (se configurada).
 
-    Os seguintes comandos são menus de contexto. Para acessá-los no cliente de desktop, clique com o botão direito no nome de um usuário e escolha "Apps". No celular, veja o perfil de um usuário e selecione "Apps" no menu superior direito.
+    Os seguintes comandos são menus de contexto. Para acessá-los no desktop, clique com o botão direito no nome de um usuário e escolha "Apps". No celular, visualize o perfil de um usuário e selecione "Apps" no menu superior direito.
 
-    {"-"} Trade: Dê itens ou moeda a outro jogador.
-    {"-"} View Player (apenas GM): Visualize o inventário do personagem ativo de outro jogador.
-    {"-"} Modify Player (apenas GM): Modifique o inventário ou experiência do personagem ativo de outro jogador.
+    {"-"} Trocar: Envie itens ou moeda para outro jogador.
+    {"-"} Ver Jogador (somente Mestre): Visualize o inventário do personagem ativo de outro jogador.
+    {"-"} Modificar Jogador (somente Mestre): Modifique o inventário ou a experiência do personagem ativo de outro jogador.
 
 ## Strings do comando de idioma
 
 info-language-title = Preferência de Idioma
-info-language-current = Idioma atual: **{ $language }**
+info-language-current = Idioma Atual: **{ $language }**
 info-language-select-placeholder = Selecione um idioma...
 info-language-select-placeholder-paged = Selecione um idioma... (Página { $current }/{ $total })
 info-language-label-en-us = English (US)
@@ -71,8 +71,8 @@ info-language-label-sv-se = Svenska
 info-language-label-th = ไทย
 info-language-label-tr = Türkçe
 info-language-label-vi = Tiếng Việt
-info-language-desc-en-us = Definir seu idioma para Inglês
-info-language-desc-pt-br = Definir seu idioma para Português Brasileiro
+info-language-desc-en-us = Definir seu idioma para inglês
+info-language-desc-pt-br = Definir seu idioma para português do Brasil
 info-language-desc-uk = Definir seu idioma para Ucraniano
 info-language-desc-es-419 = Definir seu idioma para Espanhol Latino-Americano
 info-language-desc-es-es = Definir seu idioma para Espanhol (Espanha)
@@ -102,4 +102,4 @@ info-language-desc-sv-se = Definir seu idioma para Sueco
 info-language-desc-th = Definir seu idioma para Tailandês
 info-language-desc-tr = Definir seu idioma para Turco
 info-language-desc-vi = Definir seu idioma para Vietnamita
-info-language-updated = Idioma atualizado com sucesso.
+info-language-updated = Idioma Atualizado com Sucesso.
