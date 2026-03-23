@@ -133,15 +133,12 @@ class Tasks(Cog):
             if now < target_time:
                 return False
 
-            # Check if within a small window (2 minutes) of the target time to prevent a
-            # catch-up restock from firing if the bot restarts well past the target minute.
-            if (now - target_time) > timedelta(minutes=2):
-                return False
-
             if last_restock is None:
-                return True
+                # First-ever restock: only fire if close to target to avoid an
+                # immediate catch-up restock on first bot start mid-hour.
+                return (now - target_time) <= timedelta(minutes=2)
 
-            # Only restock if the last restock was before this hour's target
+            # Normal case: restock if we haven't restocked since this hour's target
             return last_restock < target_time
 
         elif schedule == ScheduleType.DAILY.value:
