@@ -1596,7 +1596,8 @@ class SetItemStockButton(Button):
                 calling_view=self.calling_view,
                 item_name=self.item[CommonFields.NAME],
                 current_max=self.item.get(ShopFields.MAX_STOCK),
-                current_stock=self.current_stock
+                current_stock=self.current_stock,
+                current_increment=self.item.get(ShopFields.RESTOCK_INCREMENT)
             )
             await interaction.response.send_modal(modal)
         except Exception as e:

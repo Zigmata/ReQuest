@@ -2036,7 +2036,7 @@ class RoleplayRewardsModal(LocaleModal):
 
 class SetItemStockModal(LocaleModal):
     def __init__(self, calling_view, item_name: str, current_max: int | None = None,
-                 current_stock: int | None = None):
+                 current_stock: int | None = None, current_increment: int | None = None):
         super().__init__(
             title=t(DEFAULT_LOCALE, 'config-modal-title-stock-limit', **{'itemName': item_name[:40]}),
             timeout=600
@@ -2067,8 +2067,17 @@ class SetItemStockModal(LocaleModal):
             required=True
         )
 
+        self.increment_text_input = discord.ui.TextInput(
+            label=t(DEFAULT_LOCALE, 'config-modal-label-restock-increment'),
+            custom_id='increment_text_input',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-restock-increment'),
+            default=str(current_increment) if current_increment is not None else '1',
+            required=False
+        )
+
         self.add_item(self.max_stock_text_input)
         self.add_item(self.current_stock_text_input)
+        self.add_item(self.increment_text_input)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -2106,6 +2115,20 @@ class SetItemStockModal(LocaleModal):
                     message_id='config-error-current-exceeds-max'
                 )
 
+            # Validate restock increment
+            increment_amount = 1
+            increment_str = self.increment_text_input.value.strip()
+            if increment_str:
+                try:
+                    increment_amount = int(increment_str)
+                    if increment_amount < 1:
+                        raise ValueError
+                except ValueError:
+                    raise UserFeedbackError(
+                        t(DEFAULT_LOCALE, 'config-error-increment-positive'),
+                        message_id='config-error-increment-positive'
+                    )
+
             # Update the shop config with maxStock for this item
             shop_query = await get_cached_data(
                 bot=bot,
@@ -2121,6 +2144,7 @@ class SetItemStockModal(LocaleModal):
             for item in shop_stock:
                 if item.get(CommonFields.NAME) == self.item_name:
                     item[ShopFields.MAX_STOCK] = max_stock
+                    item[ShopFields.RESTOCK_INCREMENT] = increment_amount
                     item_found = True
                     break
 
@@ -2167,7 +2191,6 @@ class RestockScheduleModal(LocaleModal):
         minute = current_config.get(RestockFields.MINUTE, 0)
         day = current_config.get(RestockFields.DAY_OF_WEEK, 0)
         mode = current_config.get(RestockFields.MODE, RestockMode.FULL.value)
-        increment = current_config.get(RestockFields.INCREMENT_AMOUNT, 1)
 
         current_schedule = schedule if schedule else 'none'
         self.schedule_radio_group = discord.ui.RadioGroup(
@@ -2246,19 +2269,10 @@ class RestockScheduleModal(LocaleModal):
             component=self.mode_radio_group
         )
 
-        self.increment_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-increment'),
-            custom_id='increment_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-increment'),
-            default=str(increment),
-            required=False
-        )
-
         self.add_item(self.schedule_label)
         self.add_item(self.time_label)
         self.add_item(self.day_label)
         self.add_item(self.mode_label)
-        self.add_item(self.increment_text_input)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -2290,21 +2304,6 @@ class RestockScheduleModal(LocaleModal):
             # Parse mode
             mode = self.mode_radio_group.value
 
-            # Parse increment amount
-            increment_amount = 1
-            if mode == RestockMode.INCREMENTAL.value:
-                increment_str = self.increment_text_input.value.strip()
-                if increment_str:
-                    try:
-                        increment_amount = int(increment_str)
-                        if increment_amount < 1:
-                            raise ValueError
-                    except ValueError:
-                        raise UserFeedbackError(
-                            t(DEFAULT_LOCALE, 'config-error-increment-positive'),
-                            message_id='config-error-increment-positive'
-                        )
-
             # Build restock config
             if schedule == 'none':
                 restock_config = {RestockFields.ENABLED: False}
@@ -2316,7 +2315,6 @@ class RestockScheduleModal(LocaleModal):
                     RestockFields.MINUTE: minute,
                     RestockFields.DAY_OF_WEEK: day,
                     RestockFields.MODE: mode,
-                    RestockFields.INCREMENT_AMOUNT: increment_amount
                 }
 
             # Update shop config
