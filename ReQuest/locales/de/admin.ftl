@@ -55,5 +55,5 @@ admin-modal-label-server-removal = Server von der Erlaubnisliste entfernen?
 
 # Admin-Cog-Ansicht
 admin-title-cogs = Administration - Cogs
-admin-desc-load-cog = Laden Sie einen Bot-Cog nach Name. Die Datei muss `<name>.py` heißen und in ReQuest\cogs\ gespeichert sein.
+admin-desc-load-cog = Laden Sie einen Bot-Cog nach Name. Die Datei muss `<name>.py` heißen und in ReQuest/cogs/ gespeichert sein.
 admin-desc-reload-cog = Laden Sie einen geladenen Cog nach Name neu. Dieselben Benennungs- und Dateipfadbeschränkungen gelten.

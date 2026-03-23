@@ -55,5 +55,5 @@ admin-modal-label-server-removal = Ukloniti poslužitelj s popisa dopuštenih?
 
 # Admin cog view
 admin-title-cogs = Administracija - Cogovi
-admin-desc-load-cog = Učitajte cog bota po imenu. Datoteka mora biti nazvana `<ime>.py` i pohranjena u ReQuest\cogs\.
+admin-desc-load-cog = Učitajte cog bota po imenu. Datoteka mora biti nazvana `<ime>.py` i pohranjena u ReQuest/cogs/.
 admin-desc-reload-cog = Ponovno učitajte učitani cog po imenu. Ista ograničenja naziva i putanje datoteke se primjenjuju.

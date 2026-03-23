@@ -55,5 +55,5 @@ admin-modal-label-server-removal = सर्वर को अनुमति स
 
 # Admin cog view
 admin-title-cogs = प्रशासन - Cog
-admin-desc-load-cog = नाम से बॉट cog लोड करें। फ़ाइल का नाम `<name>.py` होना चाहिए और ReQuest\cogs\ में संग्रहीत होनी चाहिए।
+admin-desc-load-cog = नाम से बॉट cog लोड करें। फ़ाइल का नाम `<name>.py` होना चाहिए और ReQuest/cogs/ में संग्रहीत होनी चाहिए।
 admin-desc-reload-cog = नाम से लोड किया गया cog रीलोड करें। वही नामकरण और फ़ाइल पथ प्रतिबंध लागू होते हैं।

@@ -55,5 +55,5 @@ admin-modal-label-server-removal = Eliminați serverul din lista permisă?
 
 # Admin cog view
 admin-title-cogs = Administrare - Module
-admin-desc-load-cog = Încarcă un modul al botului după nume. Fișierul trebuie să se numească `<nume>.py` și să fie stocat în ReQuest\cogs\.
+admin-desc-load-cog = Încarcă un modul al botului după nume. Fișierul trebuie să se numească `<nume>.py` și să fie stocat în ReQuest/cogs/.
 admin-desc-reload-cog = Reîncarcă un modul încărcat după nume. Aceleași restricții de denumire și cale se aplică.

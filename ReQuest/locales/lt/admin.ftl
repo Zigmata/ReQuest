@@ -55,5 +55,5 @@ admin-modal-label-server-removal = Pašalinti serverį iš leidžiamų sąrašo?
 
 # Admin cog view
 admin-title-cogs = Administravimas - Cog moduliai
-admin-desc-load-cog = Įkelti boto cog modulį pagal pavadinimą. Failas turi būti pavadintas `<pavadinimas>.py` ir saugomas ReQuest\cogs\.
+admin-desc-load-cog = Įkelti boto cog modulį pagal pavadinimą. Failas turi būti pavadintas `<pavadinimas>.py` ir saugomas ReQuest/cogs/.
 admin-desc-reload-cog = Perkrauti įkeltą cog modulį pagal pavadinimą. Tie patys pavadinimo ir failo kelio apribojimai taikomi.

@@ -55,5 +55,5 @@ admin-modal-label-server-removal = Премахване на сървъра от
 
 # Admin cog view
 admin-title-cogs = Администрация - Разширения
-admin-desc-load-cog = Зареждане на разширение по име. Файлът трябва да е с име `<name>.py` и да се намира в ReQuest\cogs\.
+admin-desc-load-cog = Зареждане на разширение по име. Файлът трябва да е с име `<name>.py` и да се намира в ReQuest/cogs/.
 admin-desc-reload-cog = Презареждане на заредено разширение по име. Същите ограничения за име и пътека се прилагат.

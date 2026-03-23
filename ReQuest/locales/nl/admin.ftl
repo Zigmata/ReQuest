@@ -55,5 +55,5 @@ admin-modal-label-server-removal = Server van de toelatingslijst verwijderen?
 
 # Admin cog view
 admin-title-cogs = Beheer - Cogs
-admin-desc-load-cog = Laad een bot-cog op naam. Bestand moet `<naam>.py` heten en opgeslagen zijn in ReQuest\cogs\.
+admin-desc-load-cog = Laad een bot-cog op naam. Bestand moet `<naam>.py` heten en opgeslagen zijn in ReQuest/cogs/.
 admin-desc-reload-cog = Herlaad een geladen cog op naam. Dezelfde naamgevings- en bestandspadbeperkingen gelden.

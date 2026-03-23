@@ -55,5 +55,5 @@ admin-modal-label-server-removal = 허용 목록에서 서버를 제거하시겠
 
 # 관리 코그 뷰
 admin-title-cogs = 관리 - 코그
-admin-desc-load-cog = 이름으로 봇 코그를 로드합니다. 파일 이름은 `<이름>.py`이어야 하며 ReQuest\cogs\에 저장되어 있어야 합니다.
+admin-desc-load-cog = 이름으로 봇 코그를 로드합니다. 파일 이름은 `<이름>.py`이어야 하며 ReQuest/cogs/에 저장되어 있어야 합니다.
 admin-desc-reload-cog = 이름으로 로드된 코그를 리로드합니다. 동일한 이름 및 파일 경로 제한이 적용됩니다.

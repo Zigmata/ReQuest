@@ -55,5 +55,5 @@ admin-modal-label-server-removal = Retirer le serveur de la liste autorisée ?
 
 # Vue des cogs admin
 admin-title-cogs = Administration - Cogs
-admin-desc-load-cog = Charger un cog du bot par son nom. Le fichier doit être nommé `<nom>.py` et stocké dans ReQuest\cogs\.
+admin-desc-load-cog = Charger un cog du bot par son nom. Le fichier doit être nommé `<nom>.py` et stocké dans ReQuest/cogs/.
 admin-desc-reload-cog = Recharger un cog chargé par son nom. Les mêmes restrictions de nom et de chemin s'appliquent.

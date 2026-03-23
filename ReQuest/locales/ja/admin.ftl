@@ -55,5 +55,5 @@ admin-modal-label-server-removal = サーバーを許可リストから削除し
 
 # Admin cog view
 admin-title-cogs = 管理 - Cog
-admin-desc-load-cog = 名前で Cog を読み込みます。ファイルは `<name>.py` という名前で ReQuest\cogs\ に配置されている必要があります。
+admin-desc-load-cog = 名前で Cog を読み込みます。ファイルは `<name>.py` という名前で ReQuest/cogs/ に配置されている必要があります。
 admin-desc-reload-cog = 名前で読み込み済みの Cog を再読み込みします。同じ命名規則とファイルパスの制限が適用されます。

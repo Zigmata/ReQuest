@@ -55,5 +55,5 @@ admin-modal-label-server-removal = Ta bort server från godkännandelistan?
 
 # Admin cog view
 admin-title-cogs = Administration - Cogs
-admin-desc-load-cog = Ladda en bot-cog med namn. Filen måste heta `<namn>.py` och lagras i ReQuest\cogs\.
+admin-desc-load-cog = Ladda en bot-cog med namn. Filen måste heta `<namn>.py` och lagras i ReQuest/cogs/.
 admin-desc-reload-cog = Ladda om en laddad cog med namn. Samma namngivning och filsökväg gäller.

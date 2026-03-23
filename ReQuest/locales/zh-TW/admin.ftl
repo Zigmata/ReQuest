@@ -55,5 +55,5 @@ admin-modal-label-server-removal = 從允許列表中移除伺服器？
 
 # Admin cog view
 admin-title-cogs = 管理 - Cog
-admin-desc-load-cog = 依名稱載入機器人 Cog。檔案名稱必須為 `<name>.py`，並儲存於 ReQuest\cogs\ 目錄下。
+admin-desc-load-cog = 依名稱載入機器人 Cog。檔案名稱必須為 `<name>.py`，並儲存於 ReQuest/cogs/ 目錄下。
 admin-desc-reload-cog = 依名稱重新載入已載入的 Cog。檔案命名及路徑限制相同。

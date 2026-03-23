@@ -55,5 +55,5 @@ admin-modal-label-server-removal = Sunucu izin listesinden kaldırılsın mı?
 
 # Admin cog view
 admin-title-cogs = Yönetim - Cog'lar
-admin-desc-load-cog = Bir bot cog'unu ada göre yükleyin. Dosya `<ad>.py` olarak adlandırılmalı ve ReQuest\cogs\ dizininde bulunmalıdır.
+admin-desc-load-cog = Bir bot cog'unu ada göre yükleyin. Dosya `<ad>.py` olarak adlandırılmalı ve ReQuest/cogs/ dizininde bulunmalıdır.
 admin-desc-reload-cog = Yüklü bir cog'u ada göre yeniden yükleyin. Aynı adlandırma ve dosya yolu kısıtlamaları geçerlidir.

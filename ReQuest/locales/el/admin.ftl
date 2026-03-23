@@ -55,5 +55,5 @@ admin-modal-label-server-removal = Αφαίρεση διακομιστή από 
 
 # Admin cog view
 admin-title-cogs = Διαχείριση - Cogs
-admin-desc-load-cog = Φόρτωση ενός cog του bot με βάση το όνομα. Το αρχείο πρέπει να ονομάζεται `<name>.py` και να βρίσκεται στο ReQuest\cogs\.
+admin-desc-load-cog = Φόρτωση ενός cog του bot με βάση το όνομα. Το αρχείο πρέπει να ονομάζεται `<name>.py` και να βρίσκεται στο ReQuest/cogs/.
 admin-desc-reload-cog = Επαναφόρτωση ενός φορτωμένου cog με βάση το όνομα. Ισχύουν οι ίδιοι περιορισμοί ονομασίας και διαδρομής αρχείου.

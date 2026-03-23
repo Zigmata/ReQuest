@@ -55,5 +55,5 @@ admin-modal-label-server-removal = ลบเซิร์ฟเวอร์ออ
 
 # Admin cog view
 admin-title-cogs = การดูแลระบบ - Cog
-admin-desc-load-cog = โหลด Cog ของบอทตามชื่อ ไฟล์ต้องมีชื่อเป็น `<name>.py` และเก็บอยู่ใน ReQuest\cogs\
+admin-desc-load-cog = โหลด Cog ของบอทตามชื่อ ไฟล์ต้องมีชื่อเป็น `<name>.py` และเก็บอยู่ใน ReQuest/cogs/
 admin-desc-reload-cog = โหลด Cog ที่โหลดแล้วใหม่ตามชื่อ ข้อจำกัดชื่อและตำแหน่งไฟล์เหมือนกัน

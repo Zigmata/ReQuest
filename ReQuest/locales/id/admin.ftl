@@ -55,5 +55,5 @@ admin-modal-label-server-removal = Hapus server dari daftar izin?
 
 # Admin cog view
 admin-title-cogs = Administrasi - Cog
-admin-desc-load-cog = Muat cog bot berdasarkan nama. File harus bernama `<nama>.py` dan disimpan di ReQuest\cogs\.
+admin-desc-load-cog = Muat cog bot berdasarkan nama. File harus bernama `<nama>.py` dan disimpan di ReQuest/cogs/.
 admin-desc-reload-cog = Muat ulang cog yang sudah dimuat berdasarkan nama. Pembatasan penamaan dan jalur file yang sama berlaku.

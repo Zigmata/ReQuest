@@ -55,5 +55,5 @@ admin-modal-label-server-removal = Rimuovere il server dalla lista consentiti?
 
 # Vista cog admin
 admin-title-cogs = Amministrazione - Cog
-admin-desc-load-cog = Carica un cog del bot per nome. Il file deve chiamarsi `<nome>.py` e trovarsi in ReQuest\cogs\.
+admin-desc-load-cog = Carica un cog del bot per nome. Il file deve chiamarsi `<nome>.py` e trovarsi in ReQuest/cogs/.
 admin-desc-reload-cog = Ricarica un cog caricato per nome. Stesse restrizioni di nome e percorso file.

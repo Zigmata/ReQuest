@@ -55,5 +55,5 @@ admin-modal-label-server-removal = Remove server from allow list?
 
 # Admin cog view
 admin-title-cogs = Administration - Cogs
-admin-desc-load-cog = Load a bot cog by name. File must be named `<name>.py` and stored in ReQuest\cogs\.
+admin-desc-load-cog = Load a bot cog by name. File must be named `<name>.py` and stored in ReQuest/cogs/.
 admin-desc-reload-cog = Reload a loaded cog by name. Same naming and file path restrictions apply.

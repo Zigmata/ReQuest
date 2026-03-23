@@ -55,5 +55,5 @@ admin-modal-label-server-removal = Poistetaanko palvelin sallittujen listalta?
 
 # Admin cog view
 admin-title-cogs = Hallinta - Cogit
-admin-desc-load-cog = Lataa botin cog nimellä. Tiedoston nimi on oltava `<nimi>.py` ja se on tallennettava ReQuest\cogs\ -kansioon.
+admin-desc-load-cog = Lataa botin cog nimellä. Tiedoston nimi on oltava `<nimi>.py` ja se on tallennettava ReQuest/cogs/ -kansioon.
 admin-desc-reload-cog = Lataa ladattu cog uudelleen nimellä. Samat nimeämis- ja tiedostopolkurajoitukset pätevät.

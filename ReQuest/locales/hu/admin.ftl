@@ -55,5 +55,5 @@ admin-modal-label-server-removal = Eltávolítod a szervert az engedélyezési l
 
 # Admin cog view
 admin-title-cogs = Adminisztráció - Cogok
-admin-desc-load-cog = Bot cog betöltése név alapján. A fájlnak `<név>.py` nevűnek kell lennie, és a ReQuest\cogs\ mappában kell lennie.
+admin-desc-load-cog = Bot cog betöltése név alapján. A fájlnak `<név>.py` nevűnek kell lennie, és a ReQuest/cogs/ mappában kell lennie.
 admin-desc-reload-cog = Betöltött cog újratöltése név alapján. Ugyanazok az elnevezési és fájlútvonal-korlátozások érvényesek.

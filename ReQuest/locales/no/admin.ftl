@@ -55,5 +55,5 @@ admin-modal-label-server-removal = Fjerne server fra godkjenningslisten?
 
 # Admin cog view
 admin-title-cogs = Administrasjon - Coger
-admin-desc-load-cog = Last inn en bot-cog etter navn. Filen må hete `<navn>.py` og lagres i ReQuest\cogs\.
+admin-desc-load-cog = Last inn en bot-cog etter navn. Filen må hete `<navn>.py` og lagres i ReQuest/cogs/.
 admin-desc-reload-cog = Last inn en lastet cog på nytt etter navn. Samme navngivnings- og filstibegrensninger gjelder.

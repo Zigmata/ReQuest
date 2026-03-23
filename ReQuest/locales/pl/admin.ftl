@@ -55,5 +55,5 @@ admin-modal-label-server-removal = Usunąć serwer z listy dozwolonych?
 
 # Admin cog view
 admin-title-cogs = Administracja - Moduły
-admin-desc-load-cog = Załaduj moduł bota po nazwie. Plik musi mieć nazwę `<nazwa>.py` i znajdować się w ReQuest\cogs\.
+admin-desc-load-cog = Załaduj moduł bota po nazwie. Plik musi mieć nazwę `<nazwa>.py` i znajdować się w ReQuest/cogs/.
 admin-desc-reload-cog = Przeładuj załadowany moduł po nazwie. Obowiązują te same ograniczenia nazwy i ścieżki pliku.

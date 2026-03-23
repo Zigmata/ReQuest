@@ -55,5 +55,5 @@ admin-modal-label-server-removal = Odebrat server ze seznamu povolených?
 
 # Admin cog view
 admin-title-cogs = Administrace - Cogy
-admin-desc-load-cog = Načtěte cog bota podle názvu. Soubor musí mít název `<název>.py` a být uložen v ReQuest\cogs\.
+admin-desc-load-cog = Načtěte cog bota podle názvu. Soubor musí mít název `<název>.py` a být uložen v ReQuest/cogs/.
 admin-desc-reload-cog = Znovu načtěte načtený cog podle názvu. Platí stejná omezení pro název a cestu k souboru.

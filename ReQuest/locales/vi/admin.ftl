@@ -55,5 +55,5 @@ admin-modal-label-server-removal = Xóa máy chủ khỏi danh sách cho phép?
 
 # Admin cog view
 admin-title-cogs = Quản trị - Cog
-admin-desc-load-cog = Tải cog bot theo tên. Tệp phải có tên `<name>.py` và được lưu trong ReQuest\cogs\.
+admin-desc-load-cog = Tải cog bot theo tên. Tệp phải có tên `<name>.py` và được lưu trong ReQuest/cogs/.
 admin-desc-reload-cog = Tải lại cog đã tải theo tên. Áp dụng cùng quy tắc tên và đường dẫn tệp.
