@@ -292,21 +292,21 @@ config-error-item-not-in-shop = Voorwerp "{ $itemName }" niet gevonden in de win
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = Herbevoorrading configureren
-config-modal-label-schedule = Schema (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Voer in: hourly, daily, weekly of none
+config-modal-restock-schedule-label = Schema
+config-modal-restock-schedule-none = Geen (Uitgeschakeld)
+config-modal-restock-schedule-hourly = Elk uur
+config-modal-restock-schedule-daily = Dagelijks
+config-modal-restock-schedule-weekly = Wekelijks
 config-modal-label-time = Tijd (UU:MM in UTC)
 config-modal-desc-current-time = Huidige tijd: { $utcTime }
 config-modal-placeholder-time = bijv. 14:30 voor 14:30 UTC
-config-modal-label-day-of-week = Dag van de week (0=ma, 6=zo) - Alleen voor weekly
-config-modal-placeholder-day-of-week = Voer 0-6 in (maandag=0, zondag=6)
-config-modal-label-mode = Modus (full/incremental)
-config-modal-placeholder-mode = full = reset naar max, incremental = bedrag toevoegen
+config-modal-restock-day-label = Dag van de week (alleen wekelijks)
+config-modal-restock-mode-label = Aanvulmodus
+config-modal-restock-mode-full = Volledig (reset naar maximum)
+config-modal-restock-mode-incremental = Geleidelijk (hoeveelheid toevoegen)
 config-modal-label-increment = Toevoegbedrag (voor incremental modus)
 config-modal-placeholder-increment = Bedrag om per herbevoorrading toe te voegen
-config-error-schedule-invalid = Schema moet een van de volgende zijn: hourly, daily, weekly of none.
 config-error-time-format-invalid = Tijd moet in UU:MM-formaat zijn (bijv. 14:30).
-config-error-day-of-week-invalid = Dag van de week moet 0-6 zijn (maandag=0, zondag=6).
-config-error-mode-invalid = Modus moet "full" of "incremental" zijn.
 config-error-increment-positive = Toevoegbedrag moet een positief geheel getal zijn.
 
 # ==========================================

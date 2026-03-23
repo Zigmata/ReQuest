@@ -292,21 +292,21 @@ config-error-item-not-in-shop = Przedmiot "{ $itemName }" nie został znaleziony
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = Konfiguruj harmonogram uzupełniania
-config-modal-label-schedule = Harmonogram (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Wpisz: hourly, daily, weekly lub none
+config-modal-restock-schedule-label = Harmonogram
+config-modal-restock-schedule-none = Brak (Wyłączony)
+config-modal-restock-schedule-hourly = Co godzinę
+config-modal-restock-schedule-daily = Codziennie
+config-modal-restock-schedule-weekly = Co tydzień
 config-modal-label-time = Czas (GG:MM w UTC)
 config-modal-desc-current-time = Aktualny czas: { $utcTime }
 config-modal-placeholder-time = np. 14:30 dla 14:30 UTC
-config-modal-label-day-of-week = Dzień tygodnia (0=Pon, 6=Ndz) - Tylko weekly
-config-modal-placeholder-day-of-week = Wpisz 0-6 (Poniedziałek=0, Niedziela=6)
-config-modal-label-mode = Tryb (full/incremental)
-config-modal-placeholder-mode = full = reset do maks., incremental = dodaj ilość
+config-modal-restock-day-label = Dzień tygodnia (tylko co tydzień)
+config-modal-restock-mode-label = Tryb uzupełniania
+config-modal-restock-mode-full = Pełne (resetuj do maks.)
+config-modal-restock-mode-incremental = Stopniowe (dodaj ilość)
 config-modal-label-increment = Ilość do dodania (dla trybu incremental)
 config-modal-placeholder-increment = Ilość dodawana w każdym cyklu uzupełniania
-config-error-schedule-invalid = Harmonogram musi być jednym z: hourly, daily, weekly lub none.
 config-error-time-format-invalid = Czas musi być w formacie GG:MM (np. 14:30).
-config-error-day-of-week-invalid = Dzień tygodnia musi być od 0 do 6 (Poniedziałek=0, Niedziela=6).
-config-error-mode-invalid = Tryb musi być "full" lub "incremental".
 config-error-increment-positive = Ilość do dodania musi być dodatnią liczbą całkowitą.
 
 # ==========================================

@@ -292,21 +292,21 @@ config-error-item-not-in-shop = Předmět „{ $itemName }" nebyl nalezen v obch
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = Konfigurovat plán doplňování
-config-modal-label-schedule = Plán (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Zadejte: hourly, daily, weekly nebo none
+config-modal-restock-schedule-label = Plán
+config-modal-restock-schedule-none = Žádný (Vypnuto)
+config-modal-restock-schedule-hourly = Každou hodinu
+config-modal-restock-schedule-daily = Denně
+config-modal-restock-schedule-weekly = Týdně
 config-modal-label-time = Čas (HH:MM v UTC)
 config-modal-desc-current-time = Aktuální čas: { $utcTime }
 config-modal-placeholder-time = např. 14:30 pro 14:30 UTC
-config-modal-label-day-of-week = Den v týdnu (0=Po, 6=Ne) - pouze pro weekly
-config-modal-placeholder-day-of-week = Zadejte 0-6 (Pondělí=0, Neděle=6)
-config-modal-label-mode = Režim (full/incremental)
-config-modal-placeholder-mode = full = reset na max, incremental = přidat množství
+config-modal-restock-day-label = Den v týdnu (pouze pro týdenní)
+config-modal-restock-mode-label = Režim doplnění
+config-modal-restock-mode-full = Úplné (reset na maximum)
+config-modal-restock-mode-incremental = Postupné (přidat množství)
 config-modal-label-increment = Přírůstek (pro režim incremental)
 config-modal-placeholder-increment = Množství k přidání za cyklus doplnění
-config-error-schedule-invalid = Plán musí být jeden z: hourly, daily, weekly nebo none.
 config-error-time-format-invalid = Čas musí být ve formátu HH:MM (např. 14:30).
-config-error-day-of-week-invalid = Den v týdnu musí být 0-6 (Pondělí=0, Neděle=6).
-config-error-mode-invalid = Režim musí být buď „full" nebo „incremental".
 config-error-increment-positive = Přírůstek musí být kladné celé číslo.
 
 # ==========================================

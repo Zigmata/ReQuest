@@ -292,21 +292,21 @@ config-error-item-not-in-shop = Oggetto "{ $itemName }" non trovato nel negozio.
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = Configura programma rifornimento
-config-modal-label-schedule = Programma (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Inserisci: hourly, daily, weekly, o none
+config-modal-restock-schedule-label = Programmazione
+config-modal-restock-schedule-none = Nessuno (Disattivato)
+config-modal-restock-schedule-hourly = Ogni ora
+config-modal-restock-schedule-daily = Giornaliero
+config-modal-restock-schedule-weekly = Settimanale
 config-modal-label-time = Orario (HH:MM in UTC)
 config-modal-desc-current-time = Ora corrente: { $utcTime }
 config-modal-placeholder-time = es., 14:30 per le 14:30 UTC
-config-modal-label-day-of-week = Giorno della settimana (0=Lun, 6=Dom) - Solo settimanale
-config-modal-placeholder-day-of-week = Inserisci 0-6 (Lunedì=0, Domenica=6)
-config-modal-label-mode = Modalità (full/incremental)
-config-modal-placeholder-mode = full = ripristino al massimo, incremental = aggiungi quantità
+config-modal-restock-day-label = Giorno della settimana (solo settimanale)
+config-modal-restock-mode-label = Modalità di rifornimento
+config-modal-restock-mode-full = Completo (ripristina al massimo)
+config-modal-restock-mode-incremental = Incrementale (aggiungi quantità)
 config-modal-label-increment = Quantità incremento (per modalità incrementale)
 config-modal-placeholder-increment = Quantità da aggiungere per ciclo di rifornimento
-config-error-schedule-invalid = Il programma deve essere uno tra: hourly, daily, weekly, o none.
 config-error-time-format-invalid = L'orario deve essere nel formato HH:MM (es., 14:30).
-config-error-day-of-week-invalid = Il giorno della settimana deve essere 0-6 (Lunedì=0, Domenica=6).
-config-error-mode-invalid = La modalità deve essere "full" o "incremental".
 config-error-increment-positive = La quantità di incremento deve essere un intero positivo.
 
 # ==========================================

@@ -292,21 +292,21 @@ config-error-item-not-in-shop = "{ $itemName }" eşyası mağazada bulunamadı.
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = Yeniden Stoklama Zamanlamasını Yapılandır
-config-modal-label-schedule = Zamanlama (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Girin: hourly, daily, weekly veya none
+config-modal-restock-schedule-label = Zamanlama
+config-modal-restock-schedule-none = Yok (Devre dışı)
+config-modal-restock-schedule-hourly = Saatlik
+config-modal-restock-schedule-daily = Günlük
+config-modal-restock-schedule-weekly = Haftalık
 config-modal-label-time = Saat (UTC olarak SS:DD)
 config-modal-desc-current-time = Mevcut saat: { $utcTime }
 config-modal-placeholder-time = ör. 14:30 (UTC ile 14:30)
-config-modal-label-day-of-week = Haftanın Günü (0=Pzt, 6=Paz) - Yalnızca haftalık
-config-modal-placeholder-day-of-week = 0-6 arası girin (Pazartesi=0, Pazar=6)
-config-modal-label-mode = Mod (full/incremental)
-config-modal-placeholder-mode = full = maksimuma sıfırla, incremental = miktar ekle
+config-modal-restock-day-label = Haftanın günü (yalnızca haftalık)
+config-modal-restock-mode-label = Yenileme modu
+config-modal-restock-mode-full = Tam (maksimuma sıfırla)
+config-modal-restock-mode-incremental = Kademeli (miktar ekle)
 config-modal-label-increment = Artış Miktarı (incremental mod için)
 config-modal-placeholder-increment = Her yeniden stoklama döngüsünde eklenecek miktar
-config-error-schedule-invalid = Zamanlama şunlardan biri olmalıdır: hourly, daily, weekly veya none.
 config-error-time-format-invalid = Saat SS:DD biçiminde olmalıdır (ör. 14:30).
-config-error-day-of-week-invalid = Haftanın günü 0-6 arası olmalıdır (Pazartesi=0, Pazar=6).
-config-error-mode-invalid = Mod "full" veya "incremental" olmalıdır.
 config-error-increment-positive = Artış miktarı pozitif bir tam sayı olmalıdır.
 
 # ==========================================

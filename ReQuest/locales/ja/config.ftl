@@ -292,21 +292,21 @@ config-error-item-not-in-shop = アイテム「{ $itemName }」がショップ�
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = 補充スケジュールの設定
-config-modal-label-schedule = スケジュール（hourly/daily/weekly/none）
-config-modal-placeholder-schedule = hourly、daily、weekly、またはnoneを入力してください
+config-modal-restock-schedule-label = スケジュール
+config-modal-restock-schedule-none = なし（無効）
+config-modal-restock-schedule-hourly = 毎時
+config-modal-restock-schedule-daily = 毎日
+config-modal-restock-schedule-weekly = 毎週
 config-modal-label-time = 時間（UTC で HH:MM）
 config-modal-desc-current-time = 現在の時間: { $utcTime }
 config-modal-placeholder-time = 例: 14:30（UTC 午後2時30分）
-config-modal-label-day-of-week = 曜日（0=月、6=日）- weeklyのみ
-config-modal-placeholder-day-of-week = 0-6を入力してください（月曜日=0、日曜日=6）
-config-modal-label-mode = モード（full/incremental）
-config-modal-placeholder-mode = full = 最大まで補充、incremental = 数量を加算
+config-modal-restock-day-label = 曜日（毎週のみ）
+config-modal-restock-mode-label = 補充モード
+config-modal-restock-mode-full = 完全（最大にリセット）
+config-modal-restock-mode-incremental = 段階的（数量を追加）
 config-modal-label-increment = 追加数量（incrementalモード用）
 config-modal-placeholder-increment = 補充サイクルごとに追加する数量
-config-error-schedule-invalid = スケジュールは hourly、daily、weekly、または none のいずれかでなければなりません。
 config-error-time-format-invalid = 時間は HH:MM 形式で入力してください（例: 14:30）。
-config-error-day-of-week-invalid = 曜日は0-6でなければなりません（月曜日=0、日曜日=6）。
-config-error-mode-invalid = モードは「full」または「incremental」でなければなりません。
 config-error-increment-positive = 追加数量は正の整数でなければなりません。
 
 # ==========================================

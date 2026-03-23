@@ -292,21 +292,21 @@ config-error-item-not-in-shop = 商店中未找到物品"{ $itemName }"。
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = 配置补货计划
-config-modal-label-schedule = 计划（hourly/daily/weekly/none）
-config-modal-placeholder-schedule = 输入：hourly、daily、weekly 或 none
+config-modal-restock-schedule-label = 时间表
+config-modal-restock-schedule-none = 无（已禁用）
+config-modal-restock-schedule-hourly = 每小时
+config-modal-restock-schedule-daily = 每天
+config-modal-restock-schedule-weekly = 每周
 config-modal-label-time = 时间（UTC 格式 HH:MM）
 config-modal-desc-current-time = 当前时间：{ $utcTime }
 config-modal-placeholder-time = 例如：14:30 表示 UTC 下午 2:30
-config-modal-label-day-of-week = 星期几（0=周一, 6=周日）- 仅限每周
-config-modal-placeholder-day-of-week = 输入 0-6（周一=0，周日=6）
-config-modal-label-mode = 模式（full/incremental）
-config-modal-placeholder-mode = full = 重置为最大值, incremental = 增加数量
+config-modal-restock-day-label = 星期几（仅每周）
+config-modal-restock-mode-label = 补货模式
+config-modal-restock-mode-full = 完全（重置为最大值）
+config-modal-restock-mode-incremental = 递增（添加数量）
 config-modal-label-increment = 增量（用于 incremental 模式）
 config-modal-placeholder-increment = 每次补货周期增加的数量
-config-error-schedule-invalid = 计划必须是以下之一：hourly、daily、weekly 或 none。
 config-error-time-format-invalid = 时间必须为 HH:MM 格式（例如：14:30）。
-config-error-day-of-week-invalid = 星期几必须为 0-6（周一=0，周日=6）。
-config-error-mode-invalid = 模式必须是"full"或"incremental"。
 config-error-increment-positive = 增量必须是正整数。
 
 # ==========================================

@@ -247,21 +247,21 @@ config-error-current-stock-non-negative = Las existencias actuales deben ser un 
 config-error-current-exceeds-max = Las existencias actuales no pueden superar las existencias máximas.
 config-error-item-not-in-shop = El objeto "{ $itemName }" no se ha encontrado en la tienda.
 config-modal-title-restock-schedule = Configurar programa de reposición
-config-modal-label-schedule = Programa (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Introducid: hourly, daily, weekly, o none
+config-modal-restock-schedule-label = Programación
+config-modal-restock-schedule-none = Ninguno (Desactivado)
+config-modal-restock-schedule-hourly = Cada hora
+config-modal-restock-schedule-daily = Diario
+config-modal-restock-schedule-weekly = Semanal
 config-modal-label-time = Hora (HH:MM en UTC)
 config-modal-desc-current-time = Hora actual: { $utcTime }
 config-modal-placeholder-time = p. ej., 14:30 para las 14:30 UTC
-config-modal-label-day-of-week = Día de la semana (0=Lun, 6=Dom) - Solo semanal
-config-modal-placeholder-day-of-week = Introducid 0-6 (Lunes=0, Domingo=6)
-config-modal-label-mode = Modo (full/incremental)
-config-modal-placeholder-mode = full = restablecer al máximo, incremental = añadir cantidad
+config-modal-restock-day-label = Día de la semana (solo semanal)
+config-modal-restock-mode-label = Modo de reabastecimiento
+config-modal-restock-mode-full = Completo (restablecer al máximo)
+config-modal-restock-mode-incremental = Incremental (agregar cantidad)
 config-modal-label-increment = Cantidad de incremento (para modo incremental)
 config-modal-placeholder-increment = Cantidad a añadir por ciclo de reposición
-config-error-schedule-invalid = El programa debe ser uno de: hourly, daily, weekly, o none.
 config-error-time-format-invalid = La hora debe estar en formato HH:MM (p. ej., 14:30).
-config-error-day-of-week-invalid = El día de la semana debe ser 0-6 (Lunes=0, Domingo=6).
-config-error-mode-invalid = El modo debe ser "full" o "incremental".
 config-error-increment-positive = La cantidad de incremento debe ser un número entero positivo.
 
 # ==========================================

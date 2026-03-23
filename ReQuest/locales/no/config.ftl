@@ -292,21 +292,21 @@ config-error-item-not-in-shop = Gjenstanden "{ $itemName }" ble ikke funnet i bu
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = Konfigurer påfyllingsplan
-config-modal-label-schedule = Plan (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Skriv inn: hourly, daily, weekly eller none
+config-modal-restock-schedule-label = Tidsplan
+config-modal-restock-schedule-none = Ingen (Deaktivert)
+config-modal-restock-schedule-hourly = Hver time
+config-modal-restock-schedule-daily = Daglig
+config-modal-restock-schedule-weekly = Ukentlig
 config-modal-label-time = Tid (TT:MM i UTC)
 config-modal-desc-current-time = Gjeldende tid: { $utcTime }
 config-modal-placeholder-time = f.eks. 14:30 for 14:30 UTC
-config-modal-label-day-of-week = Ukedag (0=man, 6=søn) - Kun for ukentlig
-config-modal-placeholder-day-of-week = Skriv inn 0-6 (mandag=0, søndag=6)
-config-modal-label-mode = Modus (full/incremental)
-config-modal-placeholder-mode = full = tilbakestill til maks, incremental = legg til beløp
+config-modal-restock-day-label = Ukedag (kun ukentlig)
+config-modal-restock-mode-label = Påfyllingsmodus
+config-modal-restock-mode-full = Full (tilbakestill til maks)
+config-modal-restock-mode-incremental = Gradvis (legg til mengde)
 config-modal-label-increment = Påfyllingsbeløp (for incremental-modus)
 config-modal-placeholder-increment = Beløp som legges til per påfyllingssyklus
-config-error-schedule-invalid = Plan må være en av: hourly, daily, weekly eller none.
 config-error-time-format-invalid = Tid må være i TT:MM-format (f.eks. 14:30).
-config-error-day-of-week-invalid = Ukedag må være 0-6 (mandag=0, søndag=6).
-config-error-mode-invalid = Modus må være enten "full" eller "incremental".
 config-error-increment-positive = Påfyllingsbeløp må være et positivt heltall.
 
 # ==========================================

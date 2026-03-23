@@ -292,21 +292,21 @@ config-error-item-not-in-shop = Предметът "{ $itemName }" не е на�
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = Конфигуриране на график за презареждане
-config-modal-label-schedule = График (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Въведете: hourly, daily, weekly или none
+config-modal-restock-schedule-label = Разписание
+config-modal-restock-schedule-none = Няма (Деактивирано)
+config-modal-restock-schedule-hourly = На всеки час
+config-modal-restock-schedule-daily = Ежедневно
+config-modal-restock-schedule-weekly = Ежеседмично
 config-modal-label-time = Час (ЧЧ:ММ в UTC)
 config-modal-desc-current-time = Текущо време: { $utcTime }
 config-modal-placeholder-time = напр. 14:30 за 14:30 UTC
-config-modal-label-day-of-week = Ден от седмицата (0=Пон, 6=Нед) - Само за weekly
-config-modal-placeholder-day-of-week = Въведете 0-6 (Понеделник=0, Неделя=6)
-config-modal-label-mode = Режим (full/incremental)
-config-modal-placeholder-mode = full = нулиране до макс, incremental = добавяне на количество
+config-modal-restock-day-label = Ден от седмицата (само за ежеседмично)
+config-modal-restock-mode-label = Режим на зареждане
+config-modal-restock-mode-full = Пълно (нулиране до максимум)
+config-modal-restock-mode-incremental = Постепенно (добавяне на количество)
 config-modal-label-increment = Количество за добавяне (за incremental режим)
 config-modal-placeholder-increment = Количество за добавяне при всеки цикъл на презареждане
-config-error-schedule-invalid = Графикът трябва да е един от: hourly, daily, weekly или none.
 config-error-time-format-invalid = Часът трябва да е във формат ЧЧ:ММ (напр. 14:30).
-config-error-day-of-week-invalid = Денят от седмицата трябва да е 0-6 (Понеделник=0, Неделя=6).
-config-error-mode-invalid = Режимът трябва да е "full" или "incremental".
 config-error-increment-positive = Количеството за добавяне трябва да е положително цяло число.
 
 # ==========================================

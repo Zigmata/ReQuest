@@ -292,21 +292,21 @@ config-error-item-not-in-shop = ไม่พบไอเทม "{ $itemName }" �
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = ตั้งค่าตารางเติมสินค้า
-config-modal-label-schedule = ตาราง (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = ป้อน: hourly, daily, weekly หรือ none
+config-modal-restock-schedule-label = ตารางเวลา
+config-modal-restock-schedule-none = ไม่มี (ปิดใช้งาน)
+config-modal-restock-schedule-hourly = ทุกชั่วโมง
+config-modal-restock-schedule-daily = ทุกวัน
+config-modal-restock-schedule-weekly = ทุกสัปดาห์
 config-modal-label-time = เวลา (HH:MM ในรูปแบบ UTC)
 config-modal-desc-current-time = เวลาปัจจุบัน: { $utcTime }
 config-modal-placeholder-time = เช่น 14:30 สำหรับ 14:30 น. UTC
-config-modal-label-day-of-week = วันในสัปดาห์ (0=จันทร์, 6=อาทิตย์) - เฉพาะรายสัปดาห์
-config-modal-placeholder-day-of-week = ป้อน 0-6 (จันทร์=0, อาทิตย์=6)
-config-modal-label-mode = โหมด (full/incremental)
-config-modal-placeholder-mode = full = รีเซ็ตเป็นค่าสูงสุด, incremental = เพิ่มตามจำนวน
+config-modal-restock-day-label = วันในสัปดาห์ (เฉพาะรายสัปดาห์)
+config-modal-restock-mode-label = โหมดเติมสต็อก
+config-modal-restock-mode-full = เต็ม (รีเซ็ตเป็นค่าสูงสุด)
+config-modal-restock-mode-incremental = เพิ่มทีละน้อย (เพิ่มจำนวน)
 config-modal-label-increment = จำนวนที่เพิ่ม (สำหรับโหมด incremental)
 config-modal-placeholder-increment = จำนวนที่เพิ่มต่อรอบการเติมสินค้า
-config-error-schedule-invalid = ตารางต้องเป็นหนึ่งใน: hourly, daily, weekly หรือ none
 config-error-time-format-invalid = เวลาต้องอยู่ในรูปแบบ HH:MM (เช่น 14:30)
-config-error-day-of-week-invalid = วันในสัปดาห์ต้องเป็น 0-6 (จันทร์=0, อาทิตย์=6)
-config-error-mode-invalid = โหมดต้องเป็น "full" หรือ "incremental"
 config-error-increment-positive = จำนวนที่เพิ่มต้องเป็นจำนวนเต็มบวก
 
 # ==========================================

@@ -293,21 +293,21 @@ config-error-item-not-in-shop = Esinettä "{ $itemName }" ei löytynyt kaupasta.
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = Määritä täydennysaikataulu
-config-modal-label-schedule = Aikataulu (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Syötä: hourly, daily, weekly tai none
+config-modal-restock-schedule-label = Aikataulu
+config-modal-restock-schedule-none = Ei mitään (Pois käytöstä)
+config-modal-restock-schedule-hourly = Tunnittain
+config-modal-restock-schedule-daily = Päivittäin
+config-modal-restock-schedule-weekly = Viikoittain
 config-modal-label-time = Aika (HH:MM UTC-ajassa)
 config-modal-desc-current-time = Nykyinen aika: { $utcTime }
 config-modal-placeholder-time = esim. 14:30 vastaa klo 14:30 UTC
-config-modal-label-day-of-week = Viikonpäivä (0=Ma, 6=Su) - Vain viikottaiselle
-config-modal-placeholder-day-of-week = Syötä 0–6 (Maanantai=0, Sunnuntai=6)
-config-modal-label-mode = Tila (full/incremental)
-config-modal-placeholder-mode = full = täysi täydennys, incremental = lisää määrä
+config-modal-restock-day-label = Viikonpäivä (vain viikoittain)
+config-modal-restock-mode-label = Täydennystila
+config-modal-restock-mode-full = Täysi (nollaa maksimiin)
+config-modal-restock-mode-incremental = Asteittainen (lisää määrä)
 config-modal-label-increment = Lisäysmäärä (incremental-tilassa)
 config-modal-placeholder-increment = Täydennyskierroksen lisäysmäärä
-config-error-schedule-invalid = Aikataulun on oltava jokin seuraavista: hourly, daily, weekly tai none.
 config-error-time-format-invalid = Ajan on oltava muodossa HH:MM (esim. 14:30).
-config-error-day-of-week-invalid = Viikonpäivän on oltava 0–6 (Maanantai=0, Sunnuntai=6).
-config-error-mode-invalid = Tilan on oltava joko "full" tai "incremental".
 config-error-increment-positive = Lisäysmäärän on oltava positiivinen kokonaisluku.
 
 # ==========================================

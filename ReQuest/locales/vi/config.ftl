@@ -292,21 +292,21 @@ config-error-item-not-in-shop = Không tìm thấy vật phẩm "{ $itemName }" 
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = Cấu hình lịch nhập hàng
-config-modal-label-schedule = Lịch (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Nhập: hourly, daily, weekly, hoặc none
+config-modal-restock-schedule-label = Lịch trình
+config-modal-restock-schedule-none = Không (Đã tắt)
+config-modal-restock-schedule-hourly = Hàng giờ
+config-modal-restock-schedule-daily = Hàng ngày
+config-modal-restock-schedule-weekly = Hàng tuần
 config-modal-label-time = Thời gian (HH:MM theo UTC)
 config-modal-desc-current-time = Thời gian hiện tại: { $utcTime }
 config-modal-placeholder-time = Ví dụ: 14:30 cho 2:30 chiều UTC
-config-modal-label-day-of-week = Ngày trong tuần (0=T2, 6=CN) - Chỉ cho hàng tuần
-config-modal-placeholder-day-of-week = Nhập 0-6 (Thứ Hai=0, Chủ Nhật=6)
-config-modal-label-mode = Chế độ (full/incremental)
-config-modal-placeholder-mode = full = đặt lại tối đa, incremental = thêm số lượng
+config-modal-restock-day-label = Ngày trong tuần (chỉ hàng tuần)
+config-modal-restock-mode-label = Chế độ bổ sung
+config-modal-restock-mode-full = Đầy đủ (đặt lại tối đa)
+config-modal-restock-mode-incremental = Tăng dần (thêm số lượng)
 config-modal-label-increment = Số lượng tăng thêm (cho chế độ incremental)
 config-modal-placeholder-increment = Số lượng thêm mỗi chu kỳ nhập hàng
-config-error-schedule-invalid = Lịch phải là một trong: hourly, daily, weekly, hoặc none.
 config-error-time-format-invalid = Thời gian phải theo định dạng HH:MM (ví dụ: 14:30).
-config-error-day-of-week-invalid = Ngày trong tuần phải từ 0-6 (Thứ Hai=0, Chủ Nhật=6).
-config-error-mode-invalid = Chế độ phải là "full" hoặc "incremental".
 config-error-increment-positive = Số lượng tăng thêm phải là số nguyên dương.
 
 # ==========================================

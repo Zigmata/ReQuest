@@ -292,21 +292,21 @@ config-error-item-not-in-shop = Daiktas „{ $itemName }" nerastas parduotuvėje
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = Konfigūruoti papildymo tvarkaraštį
-config-modal-label-schedule = Tvarkaraštis (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Įveskite: hourly, daily, weekly arba none
+config-modal-restock-schedule-label = Grafikas
+config-modal-restock-schedule-none = Nėra (Išjungta)
+config-modal-restock-schedule-hourly = Kas valandą
+config-modal-restock-schedule-daily = Kasdien
+config-modal-restock-schedule-weekly = Kas savaitę
 config-modal-label-time = Laikas (HH:MM UTC formatu)
 config-modal-desc-current-time = Dabartinis laikas: { $utcTime }
 config-modal-placeholder-time = pvz., 14:30 reiškia 14:30 UTC
-config-modal-label-day-of-week = Savaitės diena (0=Pirm., 6=Sekm.) - Tik savaitiniam
-config-modal-placeholder-day-of-week = Įveskite 0-6 (Pirmadienis=0, Sekmadienis=6)
-config-modal-label-mode = Režimas (full/incremental)
-config-modal-placeholder-mode = full = grąžinti iki maks., incremental = pridėti kiekį
+config-modal-restock-day-label = Savaitės diena (tik kas savaitę)
+config-modal-restock-mode-label = Papildymo režimas
+config-modal-restock-mode-full = Pilnas (atstatyti iki maks.)
+config-modal-restock-mode-incremental = Laipsniškas (pridėti kiekį)
 config-modal-label-increment = Papildymo kiekis (incrementaliam režimui)
 config-modal-placeholder-increment = Pridedamas kiekis per papildymo ciklą
-config-error-schedule-invalid = Tvarkaraštis turi būti vienas iš: hourly, daily, weekly arba none.
 config-error-time-format-invalid = Laikas turi būti HH:MM formatu (pvz., 14:30).
-config-error-day-of-week-invalid = Savaitės diena turi būti 0-6 (Pirmadienis=0, Sekmadienis=6).
-config-error-mode-invalid = Režimas turi būti „full" arba „incremental".
 config-error-increment-positive = Papildymo kiekis turi būti teigiamas sveikasis skaičius.
 
 # ==========================================

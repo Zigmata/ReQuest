@@ -292,21 +292,21 @@ config-error-item-not-in-shop = Obiectul „{ $itemName }" nu a fost găsit în 
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = Configurează programul de reaprovizionare
-config-modal-label-schedule = Program (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Introduceți: hourly, daily, weekly sau none
+config-modal-restock-schedule-label = Programare
+config-modal-restock-schedule-none = Niciunul (Dezactivat)
+config-modal-restock-schedule-hourly = La fiecare oră
+config-modal-restock-schedule-daily = Zilnic
+config-modal-restock-schedule-weekly = Săptămânal
 config-modal-label-time = Ora (HH:MM în UTC)
 config-modal-desc-current-time = Ora curentă: { $utcTime }
 config-modal-placeholder-time = de ex., 14:30 pentru 2:30 PM UTC
-config-modal-label-day-of-week = Ziua săptămânii (0=Lun, 6=Dum) - Doar săptămânal
-config-modal-placeholder-day-of-week = Introduceți 0-6 (Luni=0, Duminică=6)
-config-modal-label-mode = Mod (full/incremental)
-config-modal-placeholder-mode = full = resetare la maxim, incremental = adăugare sumă
+config-modal-restock-day-label = Ziua săptămânii (doar săptămânal)
+config-modal-restock-mode-label = Mod de reaprovizionare
+config-modal-restock-mode-full = Complet (resetare la maxim)
+config-modal-restock-mode-incremental = Incremental (adaugă cantitate)
 config-modal-label-increment = Cantitate de incrementare (pentru modul incremental)
 config-modal-placeholder-increment = Cantitatea de adăugat per ciclu de reaprovizionare
-config-error-schedule-invalid = Programul trebuie să fie unul dintre: hourly, daily, weekly sau none.
 config-error-time-format-invalid = Ora trebuie să fie în formatul HH:MM (de ex., 14:30).
-config-error-day-of-week-invalid = Ziua săptămânii trebuie să fie 0-6 (Luni=0, Duminică=6).
-config-error-mode-invalid = Modul trebuie să fie „full" sau „incremental".
 config-error-increment-positive = Cantitatea de incrementare trebuie să fie un număr întreg pozitiv.
 
 # ==========================================

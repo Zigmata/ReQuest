@@ -292,21 +292,21 @@ config-error-item-not-in-shop = Το αντικείμενο "{ $itemName }" δε
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = Ρύθμιση Προγράμματος Ανεφοδιασμού
-config-modal-label-schedule = Πρόγραμμα (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Εισάγετε: hourly, daily, weekly ή none
+config-modal-restock-schedule-label = Χρονοδιάγραμμα
+config-modal-restock-schedule-none = Κανένα (Απενεργοποιημένο)
+config-modal-restock-schedule-hourly = Ωριαία
+config-modal-restock-schedule-daily = Ημερήσια
+config-modal-restock-schedule-weekly = Εβδομαδιαία
 config-modal-label-time = Ώρα (ΩΩ:ΛΛ σε UTC)
 config-modal-desc-current-time = Τρέχουσα ώρα: { $utcTime }
 config-modal-placeholder-time = π.χ., 14:30 για 2:30 ΜΜ UTC
-config-modal-label-day-of-week = Ημέρα Εβδομάδας (0=Δευ, 6=Κυρ) - Μόνο εβδομαδιαίο
-config-modal-placeholder-day-of-week = Εισάγετε 0-6 (Δευτέρα=0, Κυριακή=6)
-config-modal-label-mode = Λειτουργία (full/incremental)
-config-modal-placeholder-mode = full = επαναφορά στο μέγιστο, incremental = προσθήκη ποσότητας
+config-modal-restock-day-label = Ημέρα της εβδομάδας (μόνο εβδομαδιαία)
+config-modal-restock-mode-label = Λειτουργία ανεφοδιασμού
+config-modal-restock-mode-full = Πλήρης (επαναφορά στο μέγιστο)
+config-modal-restock-mode-incremental = Σταδιακή (προσθήκη ποσότητας)
 config-modal-label-increment = Ποσότητα Αύξησης (για λειτουργία incremental)
 config-modal-placeholder-increment = Ποσότητα που προστίθεται ανά κύκλο ανεφοδιασμού
-config-error-schedule-invalid = Το πρόγραμμα πρέπει να είναι ένα από: hourly, daily, weekly ή none.
 config-error-time-format-invalid = Η ώρα πρέπει να είναι σε μορφή ΩΩ:ΛΛ (π.χ., 14:30).
-config-error-day-of-week-invalid = Η ημέρα εβδομάδας πρέπει να είναι 0-6 (Δευτέρα=0, Κυριακή=6).
-config-error-mode-invalid = Η λειτουργία πρέπει να είναι "full" ή "incremental".
 config-error-increment-positive = Η ποσότητα αύξησης πρέπει να είναι θετικός ακέραιος.
 
 # ==========================================

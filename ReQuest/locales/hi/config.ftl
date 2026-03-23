@@ -292,21 +292,21 @@ config-error-item-not-in-shop = वस्तु "{ $itemName }" दुकान 
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = रीस्टॉक अनुसूची कॉन्फ़िगर करें
-config-modal-label-schedule = अनुसूची (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = दर्ज करें: hourly, daily, weekly, या none
+config-modal-restock-schedule-label = अनुसूची
+config-modal-restock-schedule-none = कोई नहीं (अक्षम)
+config-modal-restock-schedule-hourly = प्रति घंटा
+config-modal-restock-schedule-daily = दैनिक
+config-modal-restock-schedule-weekly = साप्ताहिक
 config-modal-label-time = समय (UTC में HH:MM)
 config-modal-desc-current-time = वर्तमान समय: { $utcTime }
 config-modal-placeholder-time = उदा., 14:30 अर्थात 2:30 PM UTC
-config-modal-label-day-of-week = सप्ताह का दिन (0=सोम, 6=रवि) - केवल साप्ताहिक
-config-modal-placeholder-day-of-week = 0-6 दर्ज करें (सोमवार=0, रविवार=6)
-config-modal-label-mode = मोड (full/incremental)
-config-modal-placeholder-mode = full = अधिकतम पर रीसेट, incremental = राशि जोड़ें
+config-modal-restock-day-label = सप्ताह का दिन (केवल साप्ताहिक)
+config-modal-restock-mode-label = पुनःपूर्ति मोड
+config-modal-restock-mode-full = पूर्ण (अधिकतम पर रीसेट)
+config-modal-restock-mode-incremental = क्रमिक (मात्रा जोड़ें)
 config-modal-label-increment = वृद्धि राशि (incremental मोड के लिए)
 config-modal-placeholder-increment = प्रत्येक रीस्टॉक चक्र में जोड़ने की राशि
-config-error-schedule-invalid = अनुसूची इनमें से एक होनी चाहिए: hourly, daily, weekly, या none।
 config-error-time-format-invalid = समय HH:MM प्रारूप में होना चाहिए (उदा., 14:30)।
-config-error-day-of-week-invalid = सप्ताह का दिन 0-6 होना चाहिए (सोमवार=0, रविवार=6)।
-config-error-mode-invalid = मोड "full" या "incremental" होना चाहिए।
 config-error-increment-positive = वृद्धि राशि एक धनात्मक पूर्णांक होनी चाहिए।
 
 # ==========================================

@@ -292,21 +292,21 @@ config-error-item-not-in-shop = A(z) „{ $itemName }" tárgy nem található a 
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = Feltöltési ütemezés beállítása
-config-modal-label-schedule = Ütemezés (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Írd be: hourly, daily, weekly, vagy none
+config-modal-restock-schedule-label = Ütemezés
+config-modal-restock-schedule-none = Nincs (Kikapcsolva)
+config-modal-restock-schedule-hourly = Óránként
+config-modal-restock-schedule-daily = Naponta
+config-modal-restock-schedule-weekly = Hetente
 config-modal-label-time = Időpont (ÓÓ:PP UTC-ben)
 config-modal-desc-current-time = Jelenlegi idő: { $utcTime }
 config-modal-placeholder-time = pl. 14:30 = 14:30 UTC
-config-modal-label-day-of-week = Hét napja (0=Hé, 6=Va) - Csak hetihez
-config-modal-placeholder-day-of-week = Adj meg 0-6 között (Hétfő=0, Vasárnap=6)
-config-modal-label-mode = Mód (full/incremental)
-config-modal-placeholder-mode = full = visszaállítás maximumra, incremental = összeg hozzáadása
+config-modal-restock-day-label = A hét napja (csak hetente)
+config-modal-restock-mode-label = Feltöltési mód
+config-modal-restock-mode-full = Teljes (visszaállítás maximumra)
+config-modal-restock-mode-incremental = Fokozatos (mennyiség hozzáadása)
 config-modal-label-increment = Növekményes összeg (incremental módhoz)
 config-modal-placeholder-increment = Feltöltési ciklusonként hozzáadandó mennyiség
-config-error-schedule-invalid = Az ütemezésnek a következők egyikének kell lennie: hourly, daily, weekly, vagy none.
 config-error-time-format-invalid = Az időpontnak ÓÓ:PP formátumúnak kell lennie (pl. 14:30).
-config-error-day-of-week-invalid = A hét napjának 0-6 közöttinek kell lennie (Hétfő=0, Vasárnap=6).
-config-error-mode-invalid = A módnak „full" vagy „incremental" értékűnek kell lennie.
 config-error-increment-positive = A növekményes összegnek pozitív egész számnak kell lennie.
 
 # ==========================================

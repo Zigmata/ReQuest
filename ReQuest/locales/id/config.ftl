@@ -292,21 +292,21 @@ config-error-item-not-in-shop = Barang "{ $itemName }" tidak ditemukan di toko.
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = Konfigurasi Jadwal Restock
-config-modal-label-schedule = Jadwal (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Masukkan: hourly, daily, weekly, atau none
+config-modal-restock-schedule-label = Jadwal
+config-modal-restock-schedule-none = Tidak ada (Nonaktif)
+config-modal-restock-schedule-hourly = Setiap jam
+config-modal-restock-schedule-daily = Harian
+config-modal-restock-schedule-weekly = Mingguan
 config-modal-label-time = Waktu (HH:MM dalam UTC)
 config-modal-desc-current-time = Waktu saat ini: { $utcTime }
 config-modal-placeholder-time = contoh: 14:30 untuk 14:30 UTC
-config-modal-label-day-of-week = Hari dalam Seminggu (0=Sen, 6=Min) - Hanya untuk weekly
-config-modal-placeholder-day-of-week = Masukkan 0-6 (Senin=0, Minggu=6)
-config-modal-label-mode = Mode (full/incremental)
-config-modal-placeholder-mode = full = reset ke maks, incremental = tambah jumlah
+config-modal-restock-day-label = Hari dalam seminggu (hanya mingguan)
+config-modal-restock-mode-label = Mode pengisian ulang
+config-modal-restock-mode-full = Penuh (atur ulang ke maks)
+config-modal-restock-mode-incremental = Bertahap (tambah jumlah)
 config-modal-label-increment = Jumlah Penambahan (untuk mode incremental)
 config-modal-placeholder-increment = Jumlah yang ditambahkan per siklus restock
-config-error-schedule-invalid = Jadwal harus salah satu dari: hourly, daily, weekly, atau none.
 config-error-time-format-invalid = Waktu harus dalam format HH:MM (contoh: 14:30).
-config-error-day-of-week-invalid = Hari dalam seminggu harus 0-6 (Senin=0, Minggu=6).
-config-error-mode-invalid = Mode harus "full" atau "incremental".
 config-error-increment-positive = Jumlah penambahan harus berupa bilangan bulat positif.
 
 # ==========================================

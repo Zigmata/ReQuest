@@ -292,21 +292,21 @@ config-error-item-not-in-shop = Objeto "{ $itemName }" no encontrado en la tiend
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = Configurar Horario de Reabastecimiento
-config-modal-label-schedule = Horario (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Ingresa: hourly, daily, weekly, o none
+config-modal-restock-schedule-label = Programación
+config-modal-restock-schedule-none = Ninguno (Desactivado)
+config-modal-restock-schedule-hourly = Cada hora
+config-modal-restock-schedule-daily = Diario
+config-modal-restock-schedule-weekly = Semanal
 config-modal-label-time = Hora (HH:MM en UTC)
 config-modal-desc-current-time = Hora actual: { $utcTime }
 config-modal-placeholder-time = ej., 14:30 para 2:30 PM UTC
-config-modal-label-day-of-week = Día de la Semana (0=Lun, 6=Dom) - Solo semanal
-config-modal-placeholder-day-of-week = Ingresa 0-6 (Lunes=0, Domingo=6)
-config-modal-label-mode = Modo (full/incremental)
-config-modal-placeholder-mode = full = restablecer al máximo, incremental = agregar cantidad
+config-modal-restock-day-label = Día de la semana (solo semanal)
+config-modal-restock-mode-label = Modo de reabastecimiento
+config-modal-restock-mode-full = Completo (restablecer al máximo)
+config-modal-restock-mode-incremental = Incremental (agregar cantidad)
 config-modal-label-increment = Cantidad Incremental (para modo incremental)
 config-modal-placeholder-increment = Cantidad a agregar por ciclo de reabastecimiento
-config-error-schedule-invalid = El horario debe ser uno de: hourly, daily, weekly, o none.
 config-error-time-format-invalid = La hora debe estar en formato HH:MM (ej., 14:30).
-config-error-day-of-week-invalid = El día de la semana debe ser 0-6 (Lunes=0, Domingo=6).
-config-error-mode-invalid = El modo debe ser "full" o "incremental".
 config-error-increment-positive = La cantidad incremental debe ser un número entero positivo.
 
 # ==========================================

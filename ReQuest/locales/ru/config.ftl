@@ -292,21 +292,21 @@ config-error-item-not-in-shop = Предмет "{ $itemName }" не найден
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = Настройка расписания пополнения
-config-modal-label-schedule = Расписание (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Введите: hourly, daily, weekly или none
+config-modal-restock-schedule-label = Расписание
+config-modal-restock-schedule-none = Нет (Отключено)
+config-modal-restock-schedule-hourly = Ежечасно
+config-modal-restock-schedule-daily = Ежедневно
+config-modal-restock-schedule-weekly = Еженедельно
 config-modal-label-time = Время (ЧЧ:ММ в UTC)
 config-modal-desc-current-time = Текущее время: { $utcTime }
 config-modal-placeholder-time = Напр.: 14:30 для 14:30 UTC
-config-modal-label-day-of-week = День недели (0=Пн, 6=Вс) — только для weekly
-config-modal-placeholder-day-of-week = Введите 0-6 (Понедельник=0, Воскресенье=6)
-config-modal-label-mode = Режим (full/incremental)
-config-modal-placeholder-mode = full = полное восстановление, incremental = добавить количество
+config-modal-restock-day-label = День недели (только еженедельно)
+config-modal-restock-mode-label = Режим пополнения
+config-modal-restock-mode-full = Полный (сброс до максимума)
+config-modal-restock-mode-incremental = Постепенный (добавить количество)
 config-modal-label-increment = Количество пополнения (для incremental)
 config-modal-placeholder-increment = Количество, добавляемое за цикл пополнения
-config-error-schedule-invalid = Расписание должно быть одним из: hourly, daily, weekly или none.
 config-error-time-format-invalid = Время должно быть в формате ЧЧ:ММ (напр., 14:30).
-config-error-day-of-week-invalid = День недели должен быть от 0 до 6 (Понедельник=0, Воскресенье=6).
-config-error-mode-invalid = Режим должен быть "full" или "incremental".
 config-error-increment-positive = Количество пополнения должно быть положительным целым числом.
 
 # ==========================================

@@ -292,21 +292,21 @@ config-error-item-not-in-shop = 상점에서 "{ $itemName }" 아이템을 찾을
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = 재입고 일정 설정
-config-modal-label-schedule = 일정 (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = 입력: hourly, daily, weekly, 또는 none
+config-modal-restock-schedule-label = 일정
+config-modal-restock-schedule-none = 없음 (비활성화)
+config-modal-restock-schedule-hourly = 매시간
+config-modal-restock-schedule-daily = 매일
+config-modal-restock-schedule-weekly = 매주
 config-modal-label-time = 시간 (UTC 기준 HH:MM)
 config-modal-desc-current-time = 현재 시간: { $utcTime }
 config-modal-placeholder-time = 예: 14:30 (오후 2시 30분 UTC)
-config-modal-label-day-of-week = 요일 (0=월, 6=일) - 주간 전용
-config-modal-placeholder-day-of-week = 0-6 입력 (월요일=0, 일요일=6)
-config-modal-label-mode = 모드 (full/incremental)
-config-modal-placeholder-mode = full = 최대로 초기화, incremental = 수량 추가
+config-modal-restock-day-label = 요일 (매주만 해당)
+config-modal-restock-mode-label = 재입고 모드
+config-modal-restock-mode-full = 전체 (최대로 리셋)
+config-modal-restock-mode-incremental = 점진적 (수량 추가)
 config-modal-label-increment = 증가량 (incremental 모드용)
 config-modal-placeholder-increment = 재입고 주기당 추가할 수량
-config-error-schedule-invalid = 일정은 hourly, daily, weekly, 또는 none 중 하나여야 합니다.
 config-error-time-format-invalid = 시간은 HH:MM 형식이어야 합니다 (예: 14:30).
-config-error-day-of-week-invalid = 요일은 0-6이어야 합니다 (월요일=0, 일요일=6).
-config-error-mode-invalid = 모드는 "full" 또는 "incremental"이어야 합니다.
 config-error-increment-positive = 증가량은 양의 정수여야 합니다.
 
 # ==========================================
