@@ -31,7 +31,11 @@ class ActiveCharacterSelect(Select):
                 mongo_database=bot.mdb,
                 collection_name=DatabaseCollections.CHARACTERS,
                 query={CommonFields.ID: interaction.user.id},
-                update_data={'$set': {f'{CharacterFields.ACTIVE_CHARACTERS}.{interaction.guild_id}': selected_character_id}}
+                update_data={
+                    '$set': {
+                        f'{CharacterFields.ACTIVE_CHARACTERS}.{interaction.guild_id}': selected_character_id
+                    }
+                }
             )
 
             await setup_view(self.calling_view, interaction)

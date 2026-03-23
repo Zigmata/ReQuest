@@ -267,7 +267,8 @@ class RemoveDenominationButton(Button):
             locale = await resolve_locale(interaction)
             confirm_modal = common_modals.ConfirmModal(
                 title=t(locale, 'config-modal-title-confirm-removal'),
-                prompt_label=t(locale, 'config-modal-label-remove-denomination', **{'denominationName': self.denomination_name}),
+                prompt_label=t(locale, 'config-modal-label-remove-denomination',
+                               **{'denominationName': self.denomination_name}),
                 prompt_placeholder=t(locale, 'common-confirm-placeholder'),
                 confirm_callback=self._confirm_delete,
                 locale=locale
@@ -287,7 +288,9 @@ class RemoveDenominationButton(Button):
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.CURRENCY,
                 query={'_id': interaction.guild_id, f'{CurrencyFields.CURRENCIES}.{CommonFields.NAME}': currency_name},
-                update_data={'$pull': {f'{CurrencyFields.CURRENCIES}.$.{CurrencyFields.DENOMINATIONS}': {CommonFields.NAME: denomination_name}}}
+                update_data={'$pull': {
+                    f'{CurrencyFields.CURRENCIES}.$.{CurrencyFields.DENOMINATIONS}': {
+                        CommonFields.NAME: denomination_name}}}
             )
 
             await setup_view(self.calling_view, interaction)
@@ -675,7 +678,8 @@ class EditShopButton(Button):
             shop_data = query.get(ShopFields.SHOP_CHANNELS, {}).get(self.calling_view.selected_channel_id)
 
             if not shop_data:
-                await interaction.response.send_message(t(DEFAULT_LOCALE, 'config-error-shop-data-not-found'), ephemeral=True)
+                await interaction.response.send_message(
+                    t(DEFAULT_LOCALE, 'config-error-shop-data-not-found'), ephemeral=True)
                 return
 
             from ReQuest.ui.config.views import EditShopView
@@ -803,7 +807,9 @@ class DeleteShopItemButton(Button):
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.SHOPS,
                 query={'_id': guild_id},
-                update_data={'$pull': {f'{ShopFields.SHOP_CHANNELS}.{channel_id}.{ShopFields.SHOP_STOCK}': {CommonFields.NAME: item_name}}}
+                update_data={'$pull': {
+                    f'{ShopFields.SHOP_CHANNELS}.{channel_id}.{ShopFields.SHOP_STOCK}': {
+                        CommonFields.NAME: item_name}}}
             )
 
             new_stock = [item for item in self.calling_view.all_stock if item[CommonFields.NAME] != item_name]
@@ -894,7 +900,8 @@ class ExampleShopJSONButton(Button):
                     },
                     {
                         "name": "Item with optional costs",
-                        "description": "This item can be purchased with Gold OR Reputation. Each entry in the costs array is an alternative payment option.",
+                        "description": ("This item can be purchased with Gold OR Reputation. "
+                                        "Each entry in the costs array is an alternative payment option."),
                         "quantity": 3,
                         "maxStock": 20,
                         "costs": [
@@ -1151,7 +1158,8 @@ class ExampleNewCharacterShopJSONButton(Button):
                     },
                     {
                         "name": "Item with optional costs",
-                        "description": "This item can be purchased with Gold OR Reputation. Each entry in the costs array is an alternative payment option.",
+                        "description": ("This item can be purchased with Gold OR Reputation. "
+                                        "Each entry in the costs array is an alternative payment option."),
                         "quantity": 3,
                         "costs": [
                             {"Gold": 200},

@@ -114,7 +114,9 @@ class TradeModal(LocaleModal):
                 query={CommonFields.ID: guild_id}
             )
 
-            is_currency, _ = find_currency_or_denomination(currency_query, item_name)
+            is_currency, _ = find_currency_or_denomination(
+                currency_query, item_name
+            )
 
             trade_embed = discord.Embed(
                 title=t(locale, 'player-embed-title-trade'),
@@ -185,8 +187,12 @@ class TradeModal(LocaleModal):
                         type='rich'
                     )
                     if is_currency:
-                        sender_balance_str_dm = '\n'.join(format_currency_display(sender_currency, currency_query)) or "None"
-                        receiver_currency_str_dm = '\n'.join(format_currency_display(receiver_currency, currency_query)) or "None"
+                        sender_balance_str_dm = '\n'.join(
+                            format_currency_display(sender_currency, currency_query)
+                        ) or "None"
+                        receiver_currency_str_dm = '\n'.join(
+                            format_currency_display(receiver_currency, currency_query)
+                        ) or "None"
                         dm_embed.add_field(
                             name=t(target_locale, 'player-embed-field-currency'),
                             value=escape_markdown(titlecase(item_name))
@@ -196,13 +202,17 @@ class TradeModal(LocaleModal):
                             value=quantity
                         )
                         dm_embed.add_field(
-                            name=t(target_locale, 'player-embed-field-balance',
-                                   characterName=member_active_character[CharacterFields.NAME]),
+                            name=t(
+                                target_locale, 'player-embed-field-balance',
+                                characterName=member_active_character[CharacterFields.NAME]
+                            ),
                             value=sender_balance_str_dm, inline=False
                         )
                         dm_embed.add_field(
-                            name=t(target_locale, 'player-embed-field-balance',
-                                   characterName=target_active_character[CharacterFields.NAME]),
+                            name=t(
+                                target_locale, 'player-embed-field-balance',
+                                characterName=target_active_character[CharacterFields.NAME]
+                            ),
                             value=receiver_currency_str_dm, inline=False
                         )
                     else:
@@ -214,12 +224,18 @@ class TradeModal(LocaleModal):
                             name=t(target_locale, 'player-embed-field-quantity'),
                             value=quantity
                         )
-                    dm_embed.set_footer(text=t(target_locale, 'player-embed-footer-transaction-id', transactionId=transaction_id))
+                    dm_embed.set_footer(text=t(
+                        target_locale, 'player-embed-footer-transaction-id',
+                        transactionId=transaction_id
+                    ))
                     await self.target.send(embed=dm_embed)
                 else:
                     await self.target.send(embed=trade_embed)
             except discord.errors.Forbidden as e:
-                logger.warning(f'Could not send trade DM to {self.target}. They might have DMs disabled. {e}')
+                logger.warning(
+                    f'Could not send trade DM to {self.target}. '
+                    f'They might have DMs disabled. {e}'
+                )
             if log_channel:
                 guild_locale = await resolve_guild_locale(bot, guild_id)
                 if guild_locale != locale:
@@ -263,7 +279,10 @@ class TradeModal(LocaleModal):
                             name=t(guild_locale, 'player-embed-field-quantity'),
                             value=quantity
                         )
-                    log_embed.set_footer(text=t(guild_locale, 'player-embed-footer-transaction-id', transactionId=transaction_id))
+                    log_embed.set_footer(text=t(
+                        guild_locale, 'player-embed-footer-transaction-id',
+                        transactionId=transaction_id
+                    ))
                     await log_channel.send(embed=log_embed)
                 else:
                     await log_channel.send(embed=trade_embed)
@@ -328,7 +347,10 @@ class CharacterRegisterModal(LocaleModal):
                 collection_name=DatabaseCollections.INVENTORY_CONFIG,
                 query={CommonFields.ID: guild_id}
             )
-            inventory_type = inventory_config.get(ConfigFields.INVENTORY_TYPE, InventoryType.DISABLED.value) if inventory_config else InventoryType.DISABLED.value
+            inventory_type = (
+                inventory_config.get(ConfigFields.INVENTORY_TYPE, InventoryType.DISABLED.value)
+                if inventory_config else InventoryType.DISABLED.value
+            )
 
             if inventory_type == InventoryType.DISABLED.value:
                 await setup_view(self.calling_view, interaction)
@@ -490,7 +512,10 @@ class SpendCurrencyModal(LocaleModal):
                 query={CommonFields.ID: member_id}
             )
 
-            new_wallet = updated_query[CharacterFields.CHARACTERS][active_character_id][CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {})
+            new_wallet = (
+                updated_query[CharacterFields.CHARACTERS][active_character_id]
+                [CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {})
+            )
 
             formatted_amount = format_price_string(amount, currency_name, currency_config)
             balance_lines = format_currency_display(new_wallet, currency_config)
@@ -519,7 +544,10 @@ class SpendCurrencyModal(LocaleModal):
                 value=balance_str, inline=False
             )
             spend_transaction_id = shortuuid.uuid()[:12]
-            trade_embed.set_footer(text=t(locale, 'player-embed-footer-transaction-id', transactionId=spend_transaction_id))
+            trade_embed.set_footer(text=t(
+                locale, 'player-embed-footer-transaction-id',
+                transactionId=spend_transaction_id
+            ))
 
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
@@ -558,13 +586,28 @@ class SpendCurrencyModal(LocaleModal):
                             name=t(guild_locale, 'player-embed-field-balance', characterName=character_name),
                             value=balance_str, inline=False
                         )
-                        log_embed.add_field(name=t(guild_locale, 'player-embed-field-channel'), value=interaction.channel.mention)
-                        log_embed.add_field(name=t(guild_locale, 'player-embed-field-receipt'), value=receipt.jump_url)
-                        log_embed.set_footer(text=t(guild_locale, 'player-embed-footer-transaction-id', transactionId=spend_transaction_id))
+                        log_embed.add_field(
+                            name=t(guild_locale, 'player-embed-field-channel'),
+                            value=interaction.channel.mention
+                        )
+                        log_embed.add_field(
+                            name=t(guild_locale, 'player-embed-field-receipt'),
+                            value=receipt.jump_url
+                        )
+                        log_embed.set_footer(text=t(
+                            guild_locale, 'player-embed-footer-transaction-id',
+                            transactionId=spend_transaction_id
+                        ))
                         await log_channel.send(embed=log_embed)
                     else:
-                        trade_embed.add_field(name=t(locale, 'player-embed-field-channel'), value=interaction.channel.mention)
-                        trade_embed.add_field(name=t(locale, 'player-embed-field-receipt'), value=receipt.jump_url)
+                        trade_embed.add_field(
+                            name=t(locale, 'player-embed-field-channel'),
+                            value=interaction.channel.mention
+                        )
+                        trade_embed.add_field(
+                            name=t(locale, 'player-embed-field-receipt'),
+                            value=receipt.jump_url
+                        )
                         await log_channel.send(embed=trade_embed)
         except Exception as e:
             await log_exception(e, interaction)
@@ -828,7 +871,10 @@ class ConsumeFromContainerModal(LocaleModal):
                 icon_url=interaction.user.display_avatar.url if interaction.user.display_avatar else None
             )
             consume_transaction_id = shortuuid.uuid()[:12]
-            receipt_embed.set_footer(text=t(locale, 'player-embed-footer-transaction-id', transactionId=consume_transaction_id))
+            receipt_embed.set_footer(text=t(
+                locale, 'player-embed-footer-transaction-id',
+                transactionId=consume_transaction_id
+            ))
 
             receipt_message = await interaction.followup.send(embed=receipt_embed, wait=True)
 
@@ -866,13 +912,28 @@ class ConsumeFromContainerModal(LocaleModal):
                             name=interaction.user.display_name,
                             icon_url=interaction.user.display_avatar.url if interaction.user.display_avatar else None
                         )
-                        log_embed.add_field(name=t(guild_locale, 'player-embed-field-channel'), value=interaction.channel.mention)
-                        log_embed.add_field(name=t(guild_locale, 'player-embed-field-receipt'), value=receipt_message.jump_url)
-                        log_embed.set_footer(text=t(guild_locale, 'player-embed-footer-transaction-id', transactionId=consume_transaction_id))
+                        log_embed.add_field(
+                            name=t(guild_locale, 'player-embed-field-channel'),
+                            value=interaction.channel.mention
+                        )
+                        log_embed.add_field(
+                            name=t(guild_locale, 'player-embed-field-receipt'),
+                            value=receipt_message.jump_url
+                        )
+                        log_embed.set_footer(text=t(
+                            guild_locale, 'player-embed-footer-transaction-id',
+                            transactionId=consume_transaction_id
+                        ))
                         await log_channel.send(embed=log_embed)
                     else:
-                        receipt_embed.add_field(name=t(locale, 'player-embed-field-channel'), value=interaction.channel.mention)
-                        receipt_embed.add_field(name=t(locale, 'player-embed-field-receipt'), value=receipt_message.jump_url)
+                        receipt_embed.add_field(
+                            name=t(locale, 'player-embed-field-channel'),
+                            value=interaction.channel.mention
+                        )
+                        receipt_embed.add_field(
+                            name=t(locale, 'player-embed-field-receipt'),
+                            value=receipt_message.jump_url
+                        )
                         await log_channel.send(embed=receipt_embed)
         except Exception as e:
             await log_exception(e, interaction)

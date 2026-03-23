@@ -7,7 +7,9 @@ from discord.ui import Button
 from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.common.enums import InventoryType
 from ReQuest.ui.player import modals
-from ReQuest.utilities.constants import CharacterFields, CommonFields, ContainerFields, ShopFields, DatabaseCollections
+from ReQuest.utilities.constants import (
+    CharacterFields, CommonFields, ContainerFields, ShopFields, DatabaseCollections
+)
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.supportFunctions import (
     log_exception,
@@ -134,7 +136,11 @@ class ActivateCharacterButton(Button):
                 mongo_database=bot.mdb,
                 collection_name=DatabaseCollections.CHARACTERS,
                 query={CommonFields.ID: interaction.user.id},
-                update_data={'$set': {f'{CharacterFields.ACTIVE_CHARACTERS}.{interaction.guild_id}': self.character_id}}
+                update_data={
+                    '$set': {
+                        f'{CharacterFields.ACTIVE_CHARACTERS}.{interaction.guild_id}': self.character_id
+                    }
+                }
             )
 
             await setup_view(self.calling_view, interaction)
@@ -217,7 +223,9 @@ class RemovePlayerPostButton(Button):
 
             # Invalidate the cached list
             cache_id = f'{guild_id}:{interaction.user.id}'
-            redis_key = build_cache_key(interaction.client.gdb.name, cache_id, DatabaseCollections.PLAYER_BOARD)
+            redis_key = build_cache_key(
+                interaction.client.gdb.name, cache_id, DatabaseCollections.PLAYER_BOARD
+            )
 
             await interaction.client.rdb.delete(redis_key)
 
@@ -615,7 +623,9 @@ class RenameContainerButton(Button):
                 )
 
             # Get current name
-            containers = self.calling_view.character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
+            containers = self.calling_view.character_data[
+                CharacterFields.ATTRIBUTES
+            ].get(CharacterFields.CONTAINERS, {})
             current_name = containers.get(container_id, {}).get(ContainerFields.NAME, '')
 
             modal = modals.RenameContainerModal(self.calling_view, container_id, current_name)
@@ -647,8 +657,12 @@ class DeleteContainerButton(Button):
             items = get_container_items(self.calling_view.character_data, container_id)
             item_count = len(items)
 
-            containers = self.calling_view.character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
-            container_name = containers.get(container_id, {}).get(ContainerFields.NAME, t(locale, 'common-label-unknown'))
+            containers = self.calling_view.character_data[
+                CharacterFields.ATTRIBUTES
+            ].get(CharacterFields.CONTAINERS, {})
+            container_name = containers.get(container_id, {}).get(
+                ContainerFields.NAME, t(locale, 'common-label-unknown')
+            )
 
             if item_count > 0:
                 prompt_label = t(locale, 'player-modal-label-container-has-items', itemCount=item_count)

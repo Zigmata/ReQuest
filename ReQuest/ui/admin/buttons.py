@@ -129,7 +129,9 @@ class PrintGuildsButton(Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
-            guilds = sorted(interaction.client.guilds, key=lambda g: g.me.joined_at if g.me and g.me.joined_at else datetime.min.replace(tzinfo=timezone.utc))
+            guilds = sorted(interaction.client.guilds,
+                            key=lambda g: g.me.joined_at if g.me and g.me.joined_at else
+                            datetime.min.replace(tzinfo=timezone.utc))
             guild_list = [f'{guild.name} (ID: {guild.id})' for guild in guilds]
             guilds_message = t(locale, 'admin-msg-connected-guilds', count=len(guilds)) + '\n' + '\n'.join(guild_list)
             file_name = f'guilds_list.txt'

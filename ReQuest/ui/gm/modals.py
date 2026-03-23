@@ -134,11 +134,17 @@ class CreateQuestModal(LocaleModal):
 
                     if (party_role_name.lower() in default_forbidden_names or
                             party_role_name.lower() in custom_forbidden_names):
-                        raise UserFeedbackError(t(DEFAULT_LOCALE, 'gm-error-forbidden-role-name'), message_id='gm-error-forbidden-role-name')
+                        raise UserFeedbackError(
+                            t(DEFAULT_LOCALE, 'gm-error-forbidden-role-name'),
+                            message_id='gm-error-forbidden-role-name'
+                        )
 
                     for role in guild.roles:
                         if role.name.lower() == party_role_name.lower():
-                            raise UserFeedbackError(t(DEFAULT_LOCALE, 'gm-error-role-already-exists'), message_id='gm-error-role-already-exists')
+                            raise UserFeedbackError(
+                                t(DEFAULT_LOCALE, 'gm-error-role-already-exists'),
+                                message_id='gm-error-role-already-exists'
+                            )
 
                     party_role = await guild.create_role(
                         name=party_role_name,
@@ -207,7 +213,10 @@ class CreateQuestModal(LocaleModal):
                     await ping_msg.delete()
                 except discord.errors.Forbidden:
                     raise UserFeedbackError(
-                        t(DEFAULT_LOCALE, 'gm-error-cannot-ping-announce', role=str(announce_role), channel=quest_channel.mention),
+                        t(
+                            DEFAULT_LOCALE, 'gm-error-cannot-ping-announce',
+                            role=str(announce_role), channel=quest_channel.mention
+                        ),
                         message_id='gm-error-cannot-ping-announce'
                     )
 
@@ -634,7 +643,10 @@ class ReviewSubmissionInputModal(LocaleModal):
             )
 
             if not data:
-                await interaction.response.send_message(t(DEFAULT_LOCALE, 'gm-error-submission-not-found'), ephemeral=True)
+                await interaction.response.send_message(
+                    t(DEFAULT_LOCALE, 'gm-error-submission-not-found'),
+                    ephemeral=True
+                )
                 return
 
             currency_config = await get_cached_data(

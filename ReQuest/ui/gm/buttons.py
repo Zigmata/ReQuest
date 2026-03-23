@@ -46,7 +46,10 @@ class CreateQuestButton(Button):
                 collection_name=DatabaseCollections.QUEST_ROLE_MODE,
                 query={CommonFields.ID: guild_id}
             )
-            quest_role_mode = quest_role_mode_query.get(ConfigFields.QUEST_ROLE_MODE, 'temporary') if quest_role_mode_query else 'temporary'
+            quest_role_mode = (
+                quest_role_mode_query.get(ConfigFields.QUEST_ROLE_MODE, 'temporary')
+                if quest_role_mode_query else 'temporary'
+            )
 
             assigned_roles = None
             if quest_role_mode == 'static':
@@ -222,16 +225,27 @@ class CancelQuestButton(Button):
                             failed_members = []
                             for member, result in zip(remove_members, results):
                                 if isinstance(result, Exception):
-                                    logger.warning(f'Failed to remove role {party_role.name} from {member} (ID: {member.id}): {result}')
+                                    logger.warning(
+                                        f'Failed to remove role {party_role.name} '
+                                        f'from {member} (ID: {member.id}): {result}'
+                                    )
                                     failed_members.append(member)
                             if failed_members:
                                 gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
                                 failed_list = ', '.join(m.mention for m in failed_members)
                                 await interaction.user.send(
-                                    t(gm_locale, 'gm-dm-role-removal-failed', roleName=party_role.name, members=failed_list)
+                                    t(
+                                        gm_locale, 'gm-dm-role-removal-failed',
+                                        roleName=party_role.name, members=failed_list
+                                    )
                                 )
                     else:
-                        await party_role.delete(reason=f'Quest {quest[QuestFields.QUEST_ID]} cancelled by {interaction.user.mention}.')
+                        await party_role.delete(
+                            reason=(
+                                f'Quest {quest[QuestFields.QUEST_ID]} cancelled '
+                                f'by {interaction.user.mention}.'
+                            )
+                        )
                 else:
                     logger.warning(f'Quest role {party_role_id} no longer exists in guild {guild_id}. '
                                    f'Skipping role cleanup for cancelled quest {quest[QuestFields.QUEST_ID]}.')
@@ -329,7 +343,10 @@ class PartyRewardsButton(Button):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.QUESTS,
-                query={QuestFields.GUILD_ID: quest[QuestFields.GUILD_ID], QuestFields.QUEST_ID: quest[QuestFields.QUEST_ID]},
+                query={
+                    QuestFields.GUILD_ID: quest[QuestFields.GUILD_ID],
+                    QuestFields.QUEST_ID: quest[QuestFields.QUEST_ID]
+                },
                 update_data={'$set': updates},
                 cache_id=f'{quest[QuestFields.GUILD_ID]}:{quest[QuestFields.QUEST_ID]}'
             )
@@ -394,7 +411,10 @@ class IndividualRewardsButton(Button):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.QUESTS,
-                query={QuestFields.GUILD_ID: quest[QuestFields.GUILD_ID], QuestFields.QUEST_ID: quest[QuestFields.QUEST_ID]},
+                query={
+                    QuestFields.GUILD_ID: quest[QuestFields.GUILD_ID],
+                    QuestFields.QUEST_ID: quest[QuestFields.QUEST_ID]
+                },
                 update_data={'$set': updates},
                 cache_id=f'{quest[QuestFields.GUILD_ID]}:{quest[QuestFields.QUEST_ID]}'
             )

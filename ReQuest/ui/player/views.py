@@ -128,10 +128,15 @@ class CharacterBaseView(LocaleLayoutView):
             )
 
             self.characters = query.get(CharacterFields.CHARACTERS, {}) if query else {}
-            self.active_character_id = query.get(CharacterFields.ACTIVE_CHARACTERS, {}).get(str(interaction.guild_id)) \
+            self.active_character_id = (
+                query.get(CharacterFields.ACTIVE_CHARACTERS, {}).get(str(interaction.guild_id))
                 if query else None
+            )
 
-            self.sorted_characters = sorted(self.characters.items(), key=lambda x: x[1].get(CharacterFields.NAME, '').lower())
+            self.sorted_characters = sorted(
+                self.characters.items(),
+                key=lambda x: x[1].get(CharacterFields.NAME, '').lower()
+            )
 
             self.total_pages = math.ceil(len(self.sorted_characters) / self.items_per_page)
             if self.total_pages == 0:
@@ -292,13 +297,19 @@ class InventoryOverviewView(LocaleLayoutView):
             self.active_character = query[CharacterFields.CHARACTERS][self.active_character_id]
 
             # Validate currencies in inventory and convert based on server config
-            inventory_keys_to_check = list(self.active_character[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {}).keys())
+            inventory_keys_to_check = list(
+                self.active_character[CharacterFields.ATTRIBUTES].get(
+                    CharacterFields.INVENTORY, {}
+                ).keys()
+            )
 
             if inventory_keys_to_check and self.currency_config:
                 conversion_occurred = False
 
                 for item_name_key in inventory_keys_to_check:
-                    quantity = self.active_character[CharacterFields.ATTRIBUTES][CharacterFields.INVENTORY].get(item_name_key)
+                    quantity = self.active_character[CharacterFields.ATTRIBUTES][
+                        CharacterFields.INVENTORY
+                    ].get(item_name_key)
                     is_currency, _ = find_currency_or_denomination(self.currency_config, item_name_key)
 
                     if is_currency:
@@ -312,10 +323,15 @@ class InventoryOverviewView(LocaleLayoutView):
 
                         # In the event a currency was given prior to being defined (and therefore stored as an item),
                         # this second update removes the old entry from inventory and updates the currency dict
-                        inventory = self.active_character[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
+                        inventory = self.active_character[CharacterFields.ATTRIBUTES].get(
+                            CharacterFields.INVENTORY, {}
+                        )
                         if item_name_key in inventory:
                             del inventory[item_name_key]  # Update local copy
-                            inv_path = f'{CharacterFields.CHARACTERS}.{self.active_character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}'
+                            inv_path = (
+                                f'{CharacterFields.CHARACTERS}.{self.active_character_id}'
+                                f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}'
+                            )
                             collection = bot.mdb[DatabaseCollections.CHARACTERS]
                             await collection.update_one(
                                 {CommonFields.ID: interaction.user.id},
@@ -336,7 +352,9 @@ class InventoryOverviewView(LocaleLayoutView):
                             )
 
                             # Invalidate cache after direct collection update
-                            cache_key = build_cache_key(bot.mdb.name, interaction.user.id, DatabaseCollections.CHARACTERS)
+                            cache_key = build_cache_key(
+                                bot.mdb.name, interaction.user.id, DatabaseCollections.CHARACTERS
+                            )
                             try:
                                 await bot.rdb.delete(cache_key)
                             except Exception as e:
@@ -994,7 +1012,10 @@ class PlayerBoardView(LocaleLayoutView):
                 collection_name=DatabaseCollections.PLAYER_BOARD_CHANNEL,
                 query={CommonFields.ID: guild.id}
             )
-            self.player_board_channel_id = strip_id(channel_query[ConfigFields.PLAYER_BOARD_CHANNEL]) if channel_query else None
+            self.player_board_channel_id = (
+                strip_id(channel_query[ConfigFields.PLAYER_BOARD_CHANNEL])
+                if channel_query else None
+            )
 
             cache_id = f'{guild.id}:{user.id}'
 
@@ -1316,7 +1337,10 @@ class StaticKitSelectView(LocaleLayoutView):
 
                 preview_list = []
                 for item in items[:3]:  # Show first 3 items
-                    preview_list.append(f'{item.get(CommonFields.QUANTITY, 1)}x {escape_markdown(titlecase(item.get(CommonFields.NAME, "")))}')
+                    preview_list.append(
+                        f'{item.get(CommonFields.QUANTITY, 1)}x '
+                        f'{escape_markdown(titlecase(item.get(CommonFields.NAME, "")))}'
+                    )
                 if len(items) > 3:
                     preview_list.append(
                         t(locale, 'player-label-and-more-items', count=len(items) - 3)
@@ -1420,7 +1444,10 @@ class StaticKitConfirmView(LocaleLayoutView):
         if items:
             details.append(t(locale, 'player-label-items-heading'))
             for item in items:
-                details.append(f'- {item.get(CommonFields.QUANTITY, 1)}x {escape_markdown(titlecase(item.get(CommonFields.NAME)))}')
+                details.append(
+                    f'- {item.get(CommonFields.QUANTITY, 1)}x '
+                    f'{escape_markdown(titlecase(item.get(CommonFields.NAME)))}'
+                )
 
         if currency:
             details.append(f'\n{t(locale, "player-label-currency-heading")}')
@@ -1442,7 +1469,10 @@ class StaticKitConfirmView(LocaleLayoutView):
         self.add_item(container)
 
     async def submit(self, interaction):
-        items = {item[CommonFields.NAME]: item[CommonFields.QUANTITY] for item in self.kit_data.get(CommonFields.ITEMS, [])}
+        items = {
+            item[CommonFields.NAME]: item[CommonFields.QUANTITY]
+            for item in self.kit_data.get(CommonFields.ITEMS, [])
+        }
         # Decode currency keys for display
         currency = {decode_mongo_key(k): v for k, v in self.kit_data.get(CharacterFields.CURRENCY, {}).items()}
         await _handle_submission(interaction, self.character_id, self.character_name, items, currency)
@@ -1529,7 +1559,10 @@ class NewCharacterShopView(LocaleLayoutView):
                 collection_name=DatabaseCollections.INVENTORY_CONFIG,
                 query={CommonFields.ID: guild_id}
             )
-            self.starting_wealth = inventory_config.get(ConfigFields.NEW_CHARACTER_WEALTH) if inventory_config else None
+            self.starting_wealth = (
+                inventory_config.get(ConfigFields.NEW_CHARACTER_WEALTH)
+                if inventory_config else None
+            )
 
         self.build_view()
 
@@ -1827,7 +1860,10 @@ class NewCharacterCartView(LocaleLayoutView):
             await log_exception(e, interaction)
 
     async def submit(self, interaction):
-        currency_to_give = self.remaining_wealth if self.shop_view.inventory_type == InventoryType.PURCHASE.value else {}
+        currency_to_give = (
+            self.remaining_wealth
+            if self.shop_view.inventory_type == InventoryType.PURCHASE.value else {}
+        )
 
         await _handle_submission(interaction, self.shop_view.character_id, self.shop_view.character_name,
                                  self.cart_items, currency_to_give)
@@ -1948,7 +1984,10 @@ async def _handle_submission(interaction, character_id, character_name, items, c
                 value='\n'.join(currency_labels) or t(locale, 'common-label-none'), inline=False
             )
 
-            report_embed.set_footer(text=t(locale, 'player-embed-footer-transaction-id', transactionId=shortuuid.uuid()[:12]))
+            report_embed.set_footer(text=t(
+                locale, 'player-embed-footer-transaction-id',
+                transactionId=shortuuid.uuid()[:12]
+            ))
 
             view = CharacterBaseView()
             await setup_view(view, interaction)

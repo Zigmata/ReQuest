@@ -75,6 +75,7 @@ def validate_locale_setup():
             'Locale configuration drift detected:\n  ' + '\n  '.join(errors)
         )
 
+
 _render_locale: ContextVar[str | None] = ContextVar('_render_locale', default=None)
 
 

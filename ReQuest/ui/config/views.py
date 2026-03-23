@@ -176,7 +176,10 @@ class ConfigWizardView(LocaleLayoutView):
             nav_row.add_item(prev_button)
 
             page_button = Button(
-                label=t(DEFAULT_LOCALE, 'common-page-display', **{'current': str(self.current_page + 1), 'total': str(len(self.pages))}),
+                label=t(
+                    DEFAULT_LOCALE, 'common-page-display',
+                    **{'current': str(self.current_page + 1), 'total': str(len(self.pages))}
+                ),
                 style=ButtonStyle.secondary,
                 custom_id='wizard_page_indicator'
             )
@@ -313,7 +316,10 @@ class ConfigWizardView(LocaleLayoutView):
 
         for permission, name in required_default_permissions.items():
             if not getattr(default_role.permissions, permission):
-                default_issues.append(t(DEFAULT_LOCALE, 'config-wizard-missing-permission', **{'permissionName': name}))
+                default_issues.append(t(
+                    DEFAULT_LOCALE, 'config-wizard-missing-permission',
+                    **{'permissionName': name}
+                ))
 
         # These are generally a bad idea, or may enable users to circumvent bot features
         dangerous_permissions = {
@@ -337,15 +343,24 @@ class ConfigWizardView(LocaleLayoutView):
 
         if default_issues:
             has_warnings = True
-            report_lines.append(t(DEFAULT_LOCALE, 'config-wizard-default-role-label') + '\n' + t(DEFAULT_LOCALE, 'config-wizard-default-role-dangerous'))
+            report_lines.append(
+                t(DEFAULT_LOCALE, 'config-wizard-default-role-label') + '\n' +
+                t(DEFAULT_LOCALE, 'config-wizard-default-role-dangerous')
+            )
             report_lines.extend(default_issues)
         else:
-            report_lines.append(t(DEFAULT_LOCALE, 'config-wizard-default-role-label') + '\n' + t(DEFAULT_LOCALE, 'config-wizard-default-role-ok'))
+            report_lines.append(
+                t(DEFAULT_LOCALE, 'config-wizard-default-role-label') + '\n' +
+                t(DEFAULT_LOCALE, 'config-wizard-default-role-ok')
+            )
 
         # Validate at least one GM role is configured, and does not extend permissions of the default role
         if not gm_roles_config or not gm_roles_config.get(ConfigFields.GM_ROLES):
             has_warnings = True
-            report_lines.append('\n' + t(DEFAULT_LOCALE, 'config-wizard-gm-roles-label') + '\n' + t(DEFAULT_LOCALE, 'config-wizard-no-gm-roles'))
+            report_lines.append(
+                '\n' + t(DEFAULT_LOCALE, 'config-wizard-gm-roles-label') + '\n' +
+                t(DEFAULT_LOCALE, 'config-wizard-no-gm-roles')
+            )
         else:
             report_lines.append('\n' + t(DEFAULT_LOCALE, 'config-wizard-gm-roles-label'))
             for role_data in gm_roles_config[ConfigFields.GM_ROLES]:
@@ -355,7 +370,10 @@ class ConfigWizardView(LocaleLayoutView):
 
                     if not role:
                         has_warnings = True
-                        report_lines.append(t(DEFAULT_LOCALE, 'config-wizard-role-not-found', **{'roleName': role_data[CommonFields.NAME]}))
+                        report_lines.append(t(
+                            DEFAULT_LOCALE, 'config-wizard-role-not-found',
+                            **{'roleName': role_data[CommonFields.NAME]}
+                        ))
                         continue
 
                     escalation_report = self._has_escalations(role, default_role)
@@ -364,7 +382,10 @@ class ConfigWizardView(LocaleLayoutView):
                         has_warnings = True
                         report_lines.extend(escalation_report.report_lines)
                     else:
-                        report_lines.append(t(DEFAULT_LOCALE, 'config-wizard-role-ok', **{'roleMention': role.mention}))
+                        report_lines.append(t(
+                            DEFAULT_LOCALE, 'config-wizard-role-ok',
+                            **{'roleMention': role.mention}
+                        ))
                 except Exception as e:
                     logger.error(f'Error validating role {role_data}: {e}')
                     report_lines.append(f'- Error validating {role_data[CommonFields.NAME]}')
@@ -372,7 +393,10 @@ class ConfigWizardView(LocaleLayoutView):
         # Validate announcement role
         if not announcement_role_config or not announcement_role_config.get(ConfigFields.ANNOUNCE_ROLE):
             has_warnings = True
-            report_lines.append('\n' + t(DEFAULT_LOCALE, 'config-wizard-announcement-role-label') + '\n' + t(DEFAULT_LOCALE, 'config-wizard-no-announcement-role'))
+            report_lines.append(
+                '\n' + t(DEFAULT_LOCALE, 'config-wizard-announcement-role-label') + '\n' +
+                t(DEFAULT_LOCALE, 'config-wizard-no-announcement-role')
+            )
         else:
             try:
                 role_id = strip_id(announcement_role_config[ConfigFields.ANNOUNCE_ROLE])
@@ -381,7 +405,8 @@ class ConfigWizardView(LocaleLayoutView):
                 if not role:
                     has_warnings = True
                     report_lines.append(
-                        '\n' + t(DEFAULT_LOCALE, 'config-wizard-announcement-role-label') + '\n' + t(DEFAULT_LOCALE, 'config-wizard-announcement-role-not-found')
+                        '\n' + t(DEFAULT_LOCALE, 'config-wizard-announcement-role-label') +
+                        '\n' + t(DEFAULT_LOCALE, 'config-wizard-announcement-role-not-found')
                     )
                 else:
                     escalation_report = self._has_escalations(role, default_role)
@@ -391,7 +416,11 @@ class ConfigWizardView(LocaleLayoutView):
                         report_lines.append('\n' + t(DEFAULT_LOCALE, 'config-wizard-announcement-role-label'))
                         report_lines.extend(escalation_report.report_lines)
                     else:
-                        report_lines.append('\n' + t(DEFAULT_LOCALE, 'config-wizard-announcement-role-label') + '\n' + t(DEFAULT_LOCALE, 'config-wizard-role-ok', **{'roleMention': role.mention}))
+                        report_lines.append(
+                            '\n' + t(DEFAULT_LOCALE, 'config-wizard-announcement-role-label') +
+                            '\n' + t(DEFAULT_LOCALE, 'config-wizard-role-ok',
+                                     **{'roleMention': role.mention})
+                        )
             except Exception as e:
                 logger.error(f'Error validating announcement role: {e}')
                 report_lines.append('- Error validating Announcement Role')
@@ -423,7 +452,10 @@ class ConfigWizardView(LocaleLayoutView):
             if not mention:
                 if required:
                     has_warnings = True
-                    report_lines.append(f'\n**{name}:**\n' + t(DEFAULT_LOCALE, 'config-wizard-channel-no-config-required'))
+                    report_lines.append(
+                        f'\n**{name}:**\n' +
+                        t(DEFAULT_LOCALE, 'config-wizard-channel-no-config-required')
+                    )
                 else:
                     report_lines.append(f'\n**{name}:**\n' + t(DEFAULT_LOCALE, 'config-wizard-channel-not-configured'))
                 continue
@@ -444,9 +476,15 @@ class ConfigWizardView(LocaleLayoutView):
                 bot_mention = bot_member.mention
 
                 if not bot_permissions.view_channel:
-                    channel_issues.append(t(DEFAULT_LOCALE, 'config-wizard-bot-cannot-view', **{'botMention': bot_mention}))
+                    channel_issues.append(t(
+                        DEFAULT_LOCALE, 'config-wizard-bot-cannot-view',
+                        **{'botMention': bot_mention}
+                    ))
                 if not bot_permissions.send_messages:
-                    channel_issues.append(t(DEFAULT_LOCALE, 'config-wizard-bot-cannot-send', **{'botMention': bot_mention}))
+                    channel_issues.append(t(
+                        DEFAULT_LOCALE, 'config-wizard-bot-cannot-send',
+                        **{'botMention': bot_mention}
+                    ))
 
                 # Check default role permissions
                 default_role = guild.default_role
@@ -459,7 +497,10 @@ class ConfigWizardView(LocaleLayoutView):
                     report_lines.append(f'\n**{name} ({channel.mention}):**')
                     report_lines.extend(channel_issues)
                 else:
-                    report_lines.append(f'\n**{name} ({channel.mention}):**\n' + t(DEFAULT_LOCALE, 'config-wizard-channel-ok'))
+                    report_lines.append(
+                        f'\n**{name} ({channel.mention}):**\n' +
+                        t(DEFAULT_LOCALE, 'config-wizard-channel-ok')
+                    )
             except Exception as e:
                 logger.error(f'Error validating channel {name}: {e}')
                 report_lines.append(f'- Error validating {name} channel')
@@ -487,11 +528,15 @@ class ConfigWizardView(LocaleLayoutView):
             else:
                 escalations_str = ', '.join(escalations[:3])
                 if len(escalations) > 3:
-                    escalations_str += t(DEFAULT_LOCALE, 'config-wizard-escalation-more', **{'count': str(len(escalations) - 3)})
+                    escalations_str += t(
+                        DEFAULT_LOCALE, 'config-wizard-escalation-more',
+                        **{'count': str(len(escalations) - 3)}
+                    )
 
-            report_lines.append(
-                t(DEFAULT_LOCALE, 'config-wizard-escalation-detected', **{'roleMention': role.mention, 'escalations': escalations_str})
-            )
+            report_lines.append(t(
+                DEFAULT_LOCALE, 'config-wizard-escalation-detected',
+                **{'roleMention': role.mention, 'escalations': escalations_str}
+            ))
             return result(True, report_lines)
         else:
             return result(False, report_lines)
@@ -527,7 +572,10 @@ class ConfigWizardView(LocaleLayoutView):
     @staticmethod
     def _format_gm_rewards_report(gm_rewards_query):
         report_lines = []
-        if not gm_rewards_query or (not gm_rewards_query.get('experience') and not gm_rewards_query.get(CommonFields.ITEMS)):
+        if not gm_rewards_query or (
+            not gm_rewards_query.get('experience')
+            and not gm_rewards_query.get(CommonFields.ITEMS)
+        ):
             report_lines.append(t(DEFAULT_LOCALE, 'config-wizard-gm-rewards-disabled'))
             return '\n'.join(report_lines)
 
@@ -558,8 +606,14 @@ class ConfigWizardView(LocaleLayoutView):
         components = []
 
         # Quest Settings
-        wait_list_display = str(wait_list_size) if wait_list_size > 0 else t(DEFAULT_LOCALE, 'config-label-rp-disabled')
-        summary_display = t(DEFAULT_LOCALE, 'config-label-rp-enabled') if summary_enabled else t(DEFAULT_LOCALE, 'config-label-rp-disabled')
+        wait_list_display = (
+            str(wait_list_size) if wait_list_size > 0
+            else t(DEFAULT_LOCALE, 'config-label-rp-disabled')
+        )
+        summary_display = (
+            t(DEFAULT_LOCALE, 'config-label-rp-enabled') if summary_enabled
+            else t(DEFAULT_LOCALE, 'config-label-rp-disabled')
+        )
         quest_section_content = [
             t(DEFAULT_LOCALE, 'config-wizard-quest-settings'),
             t(DEFAULT_LOCALE, 'config-wizard-quest-wait-list', **{'size': wait_list_display}),
@@ -573,7 +627,10 @@ class ConfigWizardView(LocaleLayoutView):
         })
 
         # Player Settings
-        xp_display = t(DEFAULT_LOCALE, 'config-label-rp-enabled') if xp_enabled else t(DEFAULT_LOCALE, 'config-label-rp-disabled')
+        xp_display = (
+            t(DEFAULT_LOCALE, 'config-label-rp-enabled') if xp_enabled
+            else t(DEFAULT_LOCALE, 'config-label-rp-disabled')
+        )
         player_section_content = [
             t(DEFAULT_LOCALE, 'config-wizard-player-settings'),
             t(DEFAULT_LOCALE, 'config-wizard-player-experience', **{'status': xp_display})
@@ -597,7 +654,10 @@ class ConfigWizardView(LocaleLayoutView):
         rp_enabled = roleplay_config.get(RoleplayFields.ENABLED, False) if roleplay_config else False
         rp_mode = roleplay_config.get(RoleplayFields.MODE, 'scheduled') if roleplay_config else 'scheduled'
         rp_channels = roleplay_config.get(RoleplayFields.CHANNELS, []) if roleplay_config else []
-        rp_status_display = t(DEFAULT_LOCALE, 'config-label-rp-enabled') if rp_enabled else t(DEFAULT_LOCALE, 'config-label-rp-disabled')
+        rp_status_display = (
+            t(DEFAULT_LOCALE, 'config-label-rp-enabled') if rp_enabled
+            else t(DEFAULT_LOCALE, 'config-label-rp-disabled')
+        )
         roleplay_section_content = [
             t(DEFAULT_LOCALE, 'config-wizard-rp-rewards'),
             t(DEFAULT_LOCALE, 'config-wizard-rp-status', **{'status': rp_status_display}),
@@ -616,12 +676,18 @@ class ConfigWizardView(LocaleLayoutView):
             t(DEFAULT_LOCALE, 'config-wizard-shops-count', **{'count': str(len(shop_channels))})
         ]
         if shop_channels:
-            shop_names = [data.get(ShopFields.SHOP_NAME, t(DEFAULT_LOCALE, 'config-wizard-unnamed-shop')) for data in shop_channels.values()]
+            shop_names = [
+                data.get(ShopFields.SHOP_NAME, t(DEFAULT_LOCALE, 'config-wizard-unnamed-shop'))
+                for data in shop_channels.values()
+            ]
             shop_names.sort(key=str.lower)
             for shop_name in shop_names[:3]:
                 shops_section_content.append(f'  - {shop_name}')
             if len(shop_names) > 3:
-                shops_section_content.append('  - ' + t(DEFAULT_LOCALE, 'config-wizard-shops-more', **{'count': str(len(shop_names) - 3)}))
+                shops_section_content.append(
+                    '  - ' + t(DEFAULT_LOCALE, 'config-wizard-shops-more',
+                               **{'count': str(len(shop_names) - 3)})
+                )
         components.append({
             'content': '\n'.join(shops_section_content),
             'shortcut_button': MenuViewButton(ConfigShopsView, t(DEFAULT_LOCALE, 'config-btn-configure-shops'))
@@ -700,7 +766,8 @@ class ConfigWizardView(LocaleLayoutView):
             channels.append(
                 {
                     'name': t(DEFAULT_LOCALE, 'config-wizard-channel-player-board'),
-                    'mention': player_channel_query[ConfigFields.PLAYER_BOARD_CHANNEL] if player_channel_query else None,
+                    'mention': (player_channel_query[ConfigFields.PLAYER_BOARD_CHANNEL]
+                                if player_channel_query else None),
                     'required': False}
             )
 
@@ -770,7 +837,8 @@ class ConfigWizardView(LocaleLayoutView):
             channels.append(
                 {
                     'name': t(DEFAULT_LOCALE, 'config-wizard-channel-approval-queue'),
-                    'mention': approval_queue_query[ConfigFields.APPROVAL_QUEUE_CHANNEL] if approval_queue_query else None,
+                    'mention': (approval_queue_query[ConfigFields.APPROVAL_QUEUE_CHANNEL]
+                                if approval_queue_query else None),
                     'required': False
                 }
             )
@@ -948,7 +1016,10 @@ class ConfigRolesView(LocaleLayoutView):
                 collection_name=DatabaseCollections.ANNOUNCE_ROLE,
                 query={CommonFields.ID: guild.id}
             )
-            announcement_role = announcement_role_query.get(ConfigFields.ANNOUNCE_ROLE) if announcement_role_query else None
+            announcement_role = (
+                announcement_role_query.get(ConfigFields.ANNOUNCE_ROLE)
+                if announcement_role_query else None
+            )
             gm_role_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -1068,7 +1139,10 @@ class ConfigGMRoleRemoveView(LocaleLayoutView):
             nav_row.add_item(prev_button)
 
             page_display = Button(
-                label=t(DEFAULT_LOCALE, 'common-page-label', **{'current': str(self.current_page + 1), 'total': str(self.total_pages)}),
+                label=t(
+                    DEFAULT_LOCALE, 'common-page-label',
+                    **{'current': str(self.current_page + 1), 'total': str(self.total_pages)}
+                ),
                 style=discord.ButtonStyle.secondary,
                 custom_id='gm_role_page'
             )
@@ -1197,16 +1271,18 @@ class ConfigChannelsView(LocaleLayoutView):
         container.add_item(quest_archive_select_row)
         container.add_item(Separator())
 
-        gm_transaction_log_section = Section(accessory=buttons.ClearChannelButton(self,
-                                                                                  ConfigFields.GM_TRANSACTION_LOG_CHANNEL))
+        gm_transaction_log_section = Section(
+            accessory=buttons.ClearChannelButton(self, ConfigFields.GM_TRANSACTION_LOG_CHANNEL)
+        )
         gm_transaction_log_section.add_item(self.gm_transaction_log_info)
         container.add_item(gm_transaction_log_section)
         gm_transaction_log_select_row = ActionRow(self.gm_transaction_log_channel_select)
         container.add_item(gm_transaction_log_select_row)
         container.add_item(Separator())
 
-        player_transaction_log_section = Section(accessory=buttons.ClearChannelButton(self,
-                                                                                      ConfigFields.PLAYER_TRANSACTION_LOG_CHANNEL))
+        player_transaction_log_section = Section(
+            accessory=buttons.ClearChannelButton(self, ConfigFields.PLAYER_TRANSACTION_LOG_CHANNEL)
+        )
         player_transaction_log_section.add_item(self.player_transaction_log_info)
         container.add_item(player_transaction_log_section)
         player_transaction_log_select_row = ActionRow(self.player_transaction_log_channel_select)
@@ -1261,7 +1337,10 @@ class ConfigChannelsView(LocaleLayoutView):
                 collection_name=DatabaseCollections.PLAYER_TRANSACTION_LOG_CHANNEL,
                 query={CommonFields.ID: guild.id}
             )
-            player_transaction_log = player_log_query.get(ConfigFields.PLAYER_TRANSACTION_LOG_CHANNEL) if player_log_query else None
+            player_transaction_log = (
+                player_log_query.get(ConfigFields.PLAYER_TRANSACTION_LOG_CHANNEL)
+                if player_log_query else None
+            )
 
             shop_log_query = await get_cached_data(
                 bot=bot,
@@ -1288,7 +1367,8 @@ class ConfigChannelsView(LocaleLayoutView):
                 t(DEFAULT_LOCALE, 'config-desc-gm-transaction-log')
             )
             self.player_transaction_log_info.content = (
-                t(DEFAULT_LOCALE, 'config-label-player-transaction-log', **{'channel': str(player_transaction_log)}) + '\n' +
+                t(DEFAULT_LOCALE, 'config-label-player-transaction-log',
+                  **{'channel': str(player_transaction_log)}) + '\n' +
                 t(DEFAULT_LOCALE, 'config-desc-player-transaction-log')
             )
             self.shop_log_info.content = (
@@ -1341,7 +1421,9 @@ class ConfigQuestsView(LocaleLayoutView):
         container.add_item(quest_summary_section)
         container.add_item(Separator())
 
-        gm_rewards_section = Section(accessory=MenuViewButton(GMRewardsView, t(DEFAULT_LOCALE, 'config-label-gm-rewards')))
+        gm_rewards_section = Section(
+            accessory=MenuViewButton(GMRewardsView, t(DEFAULT_LOCALE, 'config-label-gm-rewards'))
+        )
         gm_rewards_section.add_item(TextDisplay(
             f"**{t(DEFAULT_LOCALE, 'config-label-gm-rewards')}**\n" +
             t(DEFAULT_LOCALE, 'config-desc-gm-rewards')
@@ -1349,7 +1431,9 @@ class ConfigQuestsView(LocaleLayoutView):
         container.add_item(gm_rewards_section)
         container.add_item(Separator())
 
-        quest_roles_section = Section(accessory=MenuViewButton(ConfigQuestRolesView, t(DEFAULT_LOCALE, 'config-btn-quest-roles')))
+        quest_roles_section = Section(
+            accessory=MenuViewButton(ConfigQuestRolesView, t(DEFAULT_LOCALE, 'config-btn-quest-roles'))
+        )
         quest_roles_section.add_item(self.quest_role_info)
         container.add_item(quest_roles_section)
 
@@ -1402,7 +1486,10 @@ class ConfigQuestsView(LocaleLayoutView):
                 collection_name=DatabaseCollections.QUEST_ROLE_MODE,
                 query={CommonFields.ID: guild.id}
             )
-            quest_role_mode = quest_role_mode_query.get(ConfigFields.QUEST_ROLE_MODE, 'temporary') if quest_role_mode_query else 'temporary'
+            quest_role_mode = (
+                quest_role_mode_query.get(ConfigFields.QUEST_ROLE_MODE, 'temporary')
+                if quest_role_mode_query else 'temporary'
+            )
             mode_label_key = f'config-label-quest-role-mode-{quest_role_mode}'
             self.quest_role_info.content = t(DEFAULT_LOCALE, mode_label_key)
 
@@ -1500,7 +1587,10 @@ class ConfigQuestRolesView(LocaleLayoutView):
         if self.quest_role_mode == QuestRoleMode.STATIC.value:
             container.add_item(Separator())
             static_section = Section(
-                accessory=MenuViewButton(ConfigStaticQuestRolesView, t(DEFAULT_LOCALE, 'config-label-manage-assignments'))
+                accessory=MenuViewButton(
+                    ConfigStaticQuestRolesView,
+                    t(DEFAULT_LOCALE, 'config-label-manage-assignments')
+                )
             )
             static_section.add_item(TextDisplay(
                 t(DEFAULT_LOCALE, 'config-desc-manage-assignments')
@@ -1578,7 +1668,10 @@ class ConfigStaticQuestRolesView(LocaleLayoutView):
             nav_row.add_item(prev_button)
 
             page_display = Button(
-                label=t(DEFAULT_LOCALE, 'common-page-label', **{'current': str(self.current_page + 1), 'total': str(self.total_pages)}),
+                label=t(
+                    DEFAULT_LOCALE, 'common-page-label',
+                    **{'current': str(self.current_page + 1), 'total': str(self.total_pages)}
+                ),
                 style=discord.ButtonStyle.secondary,
                 custom_id='static_qr_page'
             )
@@ -1636,9 +1729,15 @@ class ConfigStaticQuestRolesView(LocaleLayoutView):
                 collection_name=DatabaseCollections.QUEST_ROLE_ASSIGNMENTS,
                 query={CommonFields.ID: guild.id}
             )
-            self.assignments = assignments_query.get(ConfigFields.QUEST_ROLE_ASSIGNMENTS, []) if assignments_query else []
+            self.assignments = (
+                assignments_query.get(ConfigFields.QUEST_ROLE_ASSIGNMENTS, [])
+                if assignments_query else []
+            )
 
-            self.total_pages = math.ceil(len(self.gm_members) / self.items_per_page) if self.gm_members else 1
+            self.total_pages = (
+                math.ceil(len(self.gm_members) / self.items_per_page)
+                if self.gm_members else 1
+            )
             if self.current_page >= self.total_pages:
                 self.current_page = max(0, self.total_pages - 1)
 
@@ -1708,7 +1807,8 @@ class ConfigGMQuestRoleAssignView(LocaleLayoutView):
         container.add_item(Separator())
         assigned_count = len(self.member_assignments)
         container.add_item(TextDisplay(
-            t(DEFAULT_LOCALE, 'config-label-quest-role-count', count=str(assigned_count), limit=str(MAX_QUEST_ROLES_PER_GM))
+            t(DEFAULT_LOCALE, 'config-label-quest-role-count',
+              count=str(assigned_count), limit=str(MAX_QUEST_ROLES_PER_GM))
         ))
         container.add_item(ActionRow(selects.AddGMQuestRoleSelect(self, self.member.id)))
 
@@ -1729,7 +1829,10 @@ class ConfigGMQuestRoleAssignView(LocaleLayoutView):
             nav_row.add_item(prev_button)
 
             page_display = Button(
-                label=t(DEFAULT_LOCALE, 'common-page-label', **{'current': str(self.current_page + 1), 'total': str(self.total_pages)}),
+                label=t(
+                    DEFAULT_LOCALE, 'common-page-label',
+                    **{'current': str(self.current_page + 1), 'total': str(self.total_pages)}
+                ),
                 style=discord.ButtonStyle.secondary,
                 custom_id='gm_qr_assign_page'
             )
@@ -1755,13 +1858,19 @@ class ConfigGMQuestRoleAssignView(LocaleLayoutView):
                 collection_name=DatabaseCollections.QUEST_ROLE_ASSIGNMENTS,
                 query={CommonFields.ID: guild.id}
             )
-            all_assignments = assignments_query.get(ConfigFields.QUEST_ROLE_ASSIGNMENTS, []) if assignments_query else []
+            all_assignments = (
+                assignments_query.get(ConfigFields.QUEST_ROLE_ASSIGNMENTS, [])
+                if assignments_query else []
+            )
             self.member_assignments = [
                 a for a in all_assignments if a['userId'] == str(self.member.id)
             ]
             self.member_assignments.sort(key=lambda a: a.get('roleName', '').lower())
 
-            self.total_pages = math.ceil(len(self.member_assignments) / self.items_per_page) if self.member_assignments else 1
+            self.total_pages = (
+                math.ceil(len(self.member_assignments) / self.items_per_page)
+                if self.member_assignments else 1
+            )
             if self.current_page >= self.total_pages:
                 self.current_page = max(0, self.total_pages - 1)
 
@@ -1814,7 +1923,11 @@ class ConfigPlayersView(LocaleLayoutView):
         container.add_item(experience_section)
         container.add_item(Separator())
 
-        new_character_section = Section(accessory=MenuViewButton(ConfigNewCharacterView, t(DEFAULT_LOCALE, 'config-btn-new-character-settings')))
+        new_character_section = Section(
+            accessory=MenuViewButton(
+                ConfigNewCharacterView, t(DEFAULT_LOCALE, 'config-btn-new-character-settings')
+            )
+        )
         new_character_section.add_item(TextDisplay(
             t(DEFAULT_LOCALE, 'config-label-new-char-settings') + '\n' +
             t(DEFAULT_LOCALE, 'config-desc-new-char-settings')
@@ -1837,7 +1950,8 @@ class ConfigPlayersView(LocaleLayoutView):
             player_experience = await get_xp_config(bot, guild.id)
             if player_experience:
                 self.player_experience_info.content = (
-                    t(DEFAULT_LOCALE, 'config-label-player-experience', **{'status': t(DEFAULT_LOCALE, 'config-label-rp-enabled')}) + '\n' +
+                    t(DEFAULT_LOCALE, 'config-label-player-experience',
+                      **{'status': t(DEFAULT_LOCALE, 'config-label-rp-enabled')}) + '\n' +
                     t(DEFAULT_LOCALE, 'config-desc-player-experience')
                 )
             else:
@@ -1873,9 +1987,13 @@ class ConfigNewCharacterView(LocaleLayoutView):
 
         self.new_character_wealth = None
         self.currency_config = {}
-        self.new_character_shop_button = MenuViewButton(ConfigNewCharacterShopView, t(DEFAULT_LOCALE, 'config-btn-configure-new-character-shop'))
+        self.new_character_shop_button = MenuViewButton(
+            ConfigNewCharacterShopView, t(DEFAULT_LOCALE, 'config-btn-configure-new-character-shop')
+        )
         self.new_character_wealth_button = buttons.ConfigNewCharacterWealthButton(self)
-        self.static_kits_button = MenuViewButton(ConfigStaticKitsView, t(DEFAULT_LOCALE, 'config-btn-configure-static-kits'))
+        self.static_kits_button = MenuViewButton(
+            ConfigStaticKitsView, t(DEFAULT_LOCALE, 'config-btn-configure-static-kits')
+        )
 
     def build_view(self):
         self.clear_items()
@@ -1918,8 +2036,14 @@ class ConfigNewCharacterView(LocaleLayoutView):
                 collection_name=DatabaseCollections.INVENTORY_CONFIG,
                 query={CommonFields.ID: guild.id}
             )
-            inventory_type = inventory_config.get(ConfigFields.INVENTORY_TYPE, 'disabled') if inventory_config else 'disabled'
-            new_character_wealth = inventory_config.get(ConfigFields.NEW_CHARACTER_WEALTH, None) if inventory_config else None
+            inventory_type = (
+                inventory_config.get(ConfigFields.INVENTORY_TYPE, 'disabled')
+                if inventory_config else 'disabled'
+            )
+            new_character_wealth = (
+                inventory_config.get(ConfigFields.NEW_CHARACTER_WEALTH, None)
+                if inventory_config else None
+            )
             self.new_character_wealth = new_character_wealth
 
             type_description = {
@@ -2086,7 +2210,10 @@ class ConfigNewCharacterShopView(LocaleLayoutView):
             nav_row.add_item(prev_button)
 
             page_button = Button(
-                label=t(DEFAULT_LOCALE, 'common-page-label', **{'current': str(self.current_page + 1), 'total': str(self.total_pages)}),
+                label=t(
+                    DEFAULT_LOCALE, 'common-page-label',
+                    **{'current': str(self.current_page + 1), 'total': str(self.total_pages)}
+                ),
                 style=ButtonStyle.secondary,
                 disabled=True
             )
@@ -2111,7 +2238,10 @@ class ConfigNewCharacterShopView(LocaleLayoutView):
                 collection_name=DatabaseCollections.INVENTORY_CONFIG,
                 query={CommonFields.ID: guild.id}
             )
-            self.inventory_type = inventory_config.get(ConfigFields.INVENTORY_TYPE, 'disabled') if inventory_config else 'disabled'
+            self.inventory_type = (
+                inventory_config.get(ConfigFields.INVENTORY_TYPE, 'disabled')
+                if inventory_config else 'disabled'
+            )
 
             if self.inventory_type == 'selection':
                 self.mode_description = (
@@ -2125,7 +2255,8 @@ class ConfigNewCharacterShopView(LocaleLayoutView):
                 )
             else:
                 self.mode_description = (
-                    t(DEFAULT_LOCALE, 'config-label-inv-type-other', **{'type': titlecase(self.inventory_type)}) + '\n' +
+                    t(DEFAULT_LOCALE, 'config-label-inv-type-other',
+                      **{'type': titlecase(self.inventory_type)}) + '\n' +
                     t(DEFAULT_LOCALE, 'config-desc-inv-type-not-in-use')
                 )
 
@@ -2245,7 +2376,10 @@ class ConfigStaticKitsView(LocaleLayoutView):
                 contents = []
 
                 for item in items[:3]:
-                    contents.append(f"{item.get(CommonFields.QUANTITY, 1)}x {escape_markdown(titlecase(item.get(CommonFields.NAME, '')))}")
+                    contents.append(
+                        f"{item.get(CommonFields.QUANTITY, 1)}x "
+                        f"{escape_markdown(titlecase(item.get(CommonFields.NAME, '')))}"
+                    )
                 if len(items) > 3:
                     contents.append(t(DEFAULT_LOCALE, 'config-label-kit-more-items', **{'count': str(len(items) - 3)}))
 
@@ -2280,7 +2414,10 @@ class ConfigStaticKitsView(LocaleLayoutView):
             nav_row.add_item(prev_button)
 
             page_display = Button(
-                label=t(DEFAULT_LOCALE, 'common-page-label', **{'current': str(self.current_page + 1), 'total': str(self.total_pages)}),
+                label=t(
+                    DEFAULT_LOCALE, 'common-page-label',
+                    **{'current': str(self.current_page + 1), 'total': str(self.total_pages)}
+                ),
                 style=ButtonStyle.secondary,
                 custom_id='kit_conf_page_disp'
             )
@@ -2357,7 +2494,10 @@ class EditStaticKitView(LocaleLayoutView):
         container = Container()
 
         header_section = Section(accessory=BackButton(ConfigStaticKitsView))
-        header_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-title-editing-kit', **{'kitName': titlecase(self.kit_data[CommonFields.NAME])})))
+        header_section.add_item(TextDisplay(t(
+            DEFAULT_LOCALE, 'config-title-editing-kit',
+            **{'kitName': titlecase(self.kit_data[CommonFields.NAME])}
+        )))
         container.add_item(header_section)
 
         if description := self.kit_data.get('description'):
@@ -2386,7 +2526,10 @@ class EditStaticKitView(LocaleLayoutView):
 
                     currency_section = Section(accessory=buttons.DeleteKitCurrencyButton(self, currency_name))
                     display = format_price_string(amount, currency_name, self.currency_config)
-                    currency_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-label-kit-currency', **{'display': display})))
+                    currency_section.add_item(TextDisplay(t(
+                        DEFAULT_LOCALE, 'config-label-kit-currency',
+                        **{'display': display}
+                    )))
                     container.add_item(currency_section)
                 elif entry['type'] == 'item':
                     if entry_type == 'currency':
@@ -2399,7 +2542,10 @@ class EditStaticKitView(LocaleLayoutView):
                     item_actions.add_item(buttons.EditKitItemButton(self, item_data, index))
                     item_actions.add_item(buttons.DeleteKitItemButton(self, index))
 
-                    display = t(DEFAULT_LOCALE, 'config-label-kit-item', **{'name': escape_markdown(titlecase(item_data[CommonFields.NAME]))})
+                    display = t(
+                        DEFAULT_LOCALE, 'config-label-kit-item',
+                        **{'name': escape_markdown(titlecase(item_data[CommonFields.NAME]))}
+                    )
                     if item_data[CommonFields.QUANTITY] > 1:
                         display += f' (x{item_data[CommonFields.QUANTITY]})'
                     if item_data.get('description'):
@@ -2421,7 +2567,10 @@ class EditStaticKitView(LocaleLayoutView):
                 nav_row.add_item(prev_button)
 
                 page_button = Button(
-                    label=t(DEFAULT_LOCALE, 'common-page-label', **{'current': str(self.current_page + 1), 'total': str(self.total_pages)}),
+                    label=t(
+                        DEFAULT_LOCALE, 'common-page-label',
+                        **{'current': str(self.current_page + 1), 'total': str(self.total_pages)}
+                    ),
                     style=ButtonStyle.secondary
                 )
                 page_button.callback = self.show_page_jump_modal
@@ -2519,11 +2668,18 @@ class ConfigCurrencyView(LocaleLayoutView):
                 is_double = currency.get(CurrencyFields.IS_DOUBLE, False)
                 denominations = currency.get(CurrencyFields.DENOMINATIONS, [])
 
-                currency_type = t(DEFAULT_LOCALE, 'config-label-currency-type-double') if is_double else t(DEFAULT_LOCALE, 'config-label-currency-type-integer')
+                currency_type = (
+                    t(DEFAULT_LOCALE, 'config-label-currency-type-double')
+                    if is_double
+                    else t(DEFAULT_LOCALE, 'config-label-currency-type-integer')
+                )
                 denomination_count = len(denominations)
 
-                info = (f'**{titlecase(currency_name)}**\n' +
-                        t(DEFAULT_LOCALE, 'config-label-currency-display-type', **{'type': currency_type, 'count': str(denomination_count)}))
+                info = (
+                    f'**{titlecase(currency_name)}**\n' +
+                    t(DEFAULT_LOCALE, 'config-label-currency-display-type',
+                      **{'type': currency_type, 'count': str(denomination_count)})
+                )
 
                 section = Section(accessory=buttons.ManageCurrencyButton(currency_name))
                 section.add_item(TextDisplay(info))
@@ -2544,7 +2700,10 @@ class ConfigCurrencyView(LocaleLayoutView):
             nav_row.add_item(prev_button)
 
             page_display = Button(
-                label=t(DEFAULT_LOCALE, 'common-page-label', **{'current': str(self.current_page + 1), 'total': str(self.total_pages)}),
+                label=t(
+                    DEFAULT_LOCALE, 'common-page-label',
+                    **{'current': str(self.current_page + 1), 'total': str(self.total_pages)}
+                ),
                 style=discord.ButtonStyle.secondary,
                 custom_id='curr_page_disp'
             )
@@ -2622,10 +2781,17 @@ class ConfigEditCurrencyView(LocaleLayoutView):
     def build_view(self):
         self.clear_items()
         container = Container()
-        display_type = t(DEFAULT_LOCALE, 'config-label-currency-type-double') if self.currency_data.get(CurrencyFields.IS_DOUBLE) else t(DEFAULT_LOCALE, 'config-label-currency-type-integer')
+        display_type = (
+            t(DEFAULT_LOCALE, 'config-label-currency-type-double')
+            if self.currency_data.get(CurrencyFields.IS_DOUBLE)
+            else t(DEFAULT_LOCALE, 'config-label-currency-type-integer')
+        )
 
         header_section = Section(accessory=BackButton(ConfigCurrencyView))
-        header_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-title-manage-currency', **{'currencyName': titlecase(self.currency_name)})))
+        header_section.add_item(TextDisplay(t(
+            DEFAULT_LOCALE, 'config-title-manage-currency',
+            **{'currencyName': titlecase(self.currency_name)}
+        )))
         container.add_item(header_section)
         container.add_item(Separator())
 
@@ -2676,7 +2842,10 @@ class ConfigEditCurrencyView(LocaleLayoutView):
             nav_row.add_item(prev_button)
 
             page_display = Button(
-                label=t(DEFAULT_LOCALE, 'common-page-label', **{'current': str(self.current_page + 1), 'total': str(self.total_pages)}),
+                label=t(
+                    DEFAULT_LOCALE, 'common-page-label',
+                    **{'current': str(self.current_page + 1), 'total': str(self.total_pages)}
+                ),
                 style=discord.ButtonStyle.secondary,
                 custom_id='denom_page_disp'
             )
@@ -2788,11 +2957,20 @@ class ConfigShopsView(LocaleLayoutView):
                 shop_name = shop['data'].get(ShopFields.SHOP_NAME, 'Unknown Shop')
                 channel_id = shop['id']
                 channel_type = shop['data'].get(ShopFields.CHANNEL_TYPE, 'text')
-                type_indicator = ' ' + t(DEFAULT_LOCALE, 'config-label-shop-type-forum') if channel_type == ShopChannelType.FORUM_THREAD.value else ''
+                type_indicator = (
+                    ' ' + t(DEFAULT_LOCALE, 'config-label-shop-type-forum')
+                    if channel_type == ShopChannelType.FORUM_THREAD.value else ''
+                )
 
-                info = f"**{shop_name}**{type_indicator}\n" + t(DEFAULT_LOCALE, 'config-label-shop-channel', **{'channelId': channel_id})
+                info = (
+                    f"**{shop_name}**{type_indicator}\n" +
+                    t(DEFAULT_LOCALE, 'config-label-shop-channel',
+                      **{'channelId': channel_id})
+                )
 
-                section = Section(accessory=buttons.ManageShopNavButton(channel_id, shop['data'], t(DEFAULT_LOCALE, 'common-btn-manage')))
+                section = Section(accessory=buttons.ManageShopNavButton(
+                    channel_id, shop['data'], t(DEFAULT_LOCALE, 'common-btn-manage')
+                ))
                 section.add_item(TextDisplay(info))
                 container.add_item(section)
 
@@ -2810,7 +2988,10 @@ class ConfigShopsView(LocaleLayoutView):
             nav_row.add_item(prev_button)
 
             page_display = Button(
-                label=t(DEFAULT_LOCALE, 'common-page-label', **{'current': str(self.current_page + 1), 'total': str(self.total_pages)}),
+                label=t(
+                    DEFAULT_LOCALE, 'common-page-label',
+                    **{'current': str(self.current_page + 1), 'total': str(self.total_pages)}
+                ),
                 style=discord.ButtonStyle.secondary,
                 custom_id='conf_shop_page'
             )
@@ -2948,7 +3129,8 @@ class ForumShopSetupView(LocaleLayoutView):
                 if self.selected_thread:
                     proceed_section = Section(accessory=buttons.UseExistingThreadButton(self))
                     proceed_section.add_item(TextDisplay(
-                        t(DEFAULT_LOCALE, 'config-label-selected-thread', **{'threadName': self.selected_thread.name}) + '\n' +
+                        t(DEFAULT_LOCALE, 'config-label-selected-thread',
+                          **{'threadName': self.selected_thread.name}) + '\n' +
                         t(DEFAULT_LOCALE, 'config-desc-click-to-configure')
                     ))
                     container.add_item(proceed_section)
@@ -2989,7 +3171,11 @@ class ManageShopView(LocaleLayoutView):
         shop_keeper = self.shop_data.get(ShopFields.SHOP_KEEPER, t(DEFAULT_LOCALE, 'common-label-none'))
         shop_description = self.shop_data.get(ShopFields.SHOP_DESCRIPTION, t(DEFAULT_LOCALE, 'common-label-none'))
         channel_type = self.shop_data.get(ShopFields.CHANNEL_TYPE, 'text')
-        channel_type_display = t(DEFAULT_LOCALE, 'config-label-shop-type-forum-thread') if channel_type == ShopChannelType.FORUM_THREAD.value else t(DEFAULT_LOCALE, 'config-label-shop-type-text')
+        channel_type_display = (
+            t(DEFAULT_LOCALE, 'config-label-shop-type-forum-thread')
+            if channel_type == ShopChannelType.FORUM_THREAD.value
+            else t(DEFAULT_LOCALE, 'config-label-shop-type-text')
+        )
 
         info_text = (
             t(DEFAULT_LOCALE, 'config-label-shop-channel-info', **{'channelId': self.selected_channel_id}) + '\n' +
@@ -3057,10 +3243,16 @@ class EditShopView(LocaleLayoutView):
     def build_view(self):
         self.clear_items()
         container = Container()
-        header_items = [TextDisplay(t(DEFAULT_LOCALE, 'config-title-editing-shop', **{'shopName': self.shop_data.get(ShopFields.SHOP_NAME)}))]
+        header_items = [TextDisplay(t(
+            DEFAULT_LOCALE, 'config-title-editing-shop',
+            **{'shopName': self.shop_data.get(ShopFields.SHOP_NAME)}
+        ))]
 
         if shop_keeper := self.shop_data.get(ShopFields.SHOP_KEEPER):
-            header_items.append(TextDisplay(t(DEFAULT_LOCALE, 'config-label-shop-shopkeeper', **{'name': shop_keeper})))
+            header_items.append(TextDisplay(t(
+                DEFAULT_LOCALE, 'config-label-shop-shopkeeper',
+                **{'name': shop_keeper}
+            )))
         if shop_description := self.shop_data.get(ShopFields.SHOP_DESCRIPTION):
             header_items.append(TextDisplay(f'*{shop_description}*'))
 
@@ -3127,7 +3319,10 @@ class EditShopView(LocaleLayoutView):
             prev_button.callback = self.prev_page
 
             page_display = Button(
-                label=t(DEFAULT_LOCALE, 'common-page-display', **{'current': str(self.current_page + 1), 'total': str(self.total_pages)}),
+                label=t(
+                    DEFAULT_LOCALE, 'common-page-display',
+                    **{'current': str(self.current_page + 1), 'total': str(self.total_pages)}
+                ),
                 style=ButtonStyle.secondary,
                 custom_id='shop_edit_page'
             )
@@ -3247,18 +3442,37 @@ class ConfigStockLimitsView(LocaleLayoutView):
             mode = restock_config.get(RestockFields.MODE, RestockMode.FULL.value)
             increment = restock_config.get(RestockFields.INCREMENT_AMOUNT, 1)
 
-            day_name_keys = ['common-day-monday', 'common-day-tuesday', 'common-day-wednesday', 'common-day-thursday', 'common-day-friday', 'common-day-saturday', 'common-day-sunday']
-            day_name = t(DEFAULT_LOCALE, day_name_keys[day_of_week]) if 0 <= day_of_week <= 6 else t(DEFAULT_LOCALE, 'common-label-unknown')
+            day_name_keys = [
+                'common-day-monday', 'common-day-tuesday', 'common-day-wednesday',
+                'common-day-thursday', 'common-day-friday', 'common-day-saturday',
+                'common-day-sunday'
+            ]
+            day_name = (
+                t(DEFAULT_LOCALE, day_name_keys[day_of_week])
+                if 0 <= day_of_week <= 6
+                else t(DEFAULT_LOCALE, 'common-label-unknown')
+            )
 
             schedule_text = t(DEFAULT_LOCALE, 'config-label-restock-schedule', **{'schedule': schedule.capitalize()})
             if schedule == ScheduleType.HOURLY.value:
                 schedule_text += ' ' + t(DEFAULT_LOCALE, 'config-label-restock-hourly', **{'minute': f'{minute:02d}'})
             elif schedule == ScheduleType.DAILY.value:
-                schedule_text += ' ' + t(DEFAULT_LOCALE, 'config-label-restock-daily', **{'time': f'{hour:02d}:{minute:02d}'})
+                schedule_text += ' ' + t(
+                    DEFAULT_LOCALE, 'config-label-restock-daily',
+                    **{'time': f'{hour:02d}:{minute:02d}'}
+                )
             elif schedule == ScheduleType.WEEKLY.value:
-                schedule_text += ' ' + t(DEFAULT_LOCALE, 'config-label-restock-weekly', **{'day': day_name, 'time': f'{hour:02d}:{minute:02d}'})
+                schedule_text += ' ' + t(
+                    DEFAULT_LOCALE, 'config-label-restock-weekly',
+                    **{'day': day_name, 'time': f'{hour:02d}:{minute:02d}'}
+                )
 
-            mode_text = t(DEFAULT_LOCALE, 'config-label-restock-full') if mode == RestockMode.FULL.value else t(DEFAULT_LOCALE, 'config-label-restock-incremental', **{'amount': str(increment)})
+            mode_text = (
+                t(DEFAULT_LOCALE, 'config-label-restock-full')
+                if mode == RestockMode.FULL.value
+                else t(DEFAULT_LOCALE, 'config-label-restock-incremental',
+                       **{'amount': str(increment)})
+            )
             schedule_text += '\n' + t(DEFAULT_LOCALE, 'config-label-restock-mode', **{'mode': mode_text})
         else:
             schedule_text = t(DEFAULT_LOCALE, 'config-label-restock-disabled')
@@ -3293,11 +3507,22 @@ class ConfigStockLimitsView(LocaleLayoutView):
 
                 if max_stock is not None:
                     if current_available is not None:
-                        stock_text = f'**{item_name_display}**\n' + t(DEFAULT_LOCALE, 'config-label-stock-with-available', **{'max': str(max_stock), 'available': str(current_available)})
+                        stock_text = (
+                            f'**{item_name_display}**\n' +
+                            t(DEFAULT_LOCALE, 'config-label-stock-with-available',
+                              **{'max': str(max_stock), 'available': str(current_available)})
+                        )
                         if reserved > 0:
-                            stock_text += t(DEFAULT_LOCALE, 'config-label-stock-reserved', **{'reserved': str(reserved)})
+                            stock_text += t(
+                                DEFAULT_LOCALE, 'config-label-stock-reserved',
+                                **{'reserved': str(reserved)}
+                            )
                     else:
-                        stock_text = f'**{item_name_display}**\n' + t(DEFAULT_LOCALE, 'config-label-stock-not-initialized', **{'max': str(max_stock)})
+                        stock_text = (
+                            f'**{item_name_display}**\n' +
+                            t(DEFAULT_LOCALE, 'config-label-stock-not-initialized',
+                              **{'max': str(max_stock)})
+                        )
 
                     # Create button row with edit and remove buttons
                     item_row = ActionRow()
@@ -3327,7 +3552,10 @@ class ConfigStockLimitsView(LocaleLayoutView):
             prev_button.callback = self.prev_page
 
             page_display = Button(
-                label=t(DEFAULT_LOCALE, 'common-page-display', **{'current': str(self.current_page + 1), 'total': str(self.total_pages)}),
+                label=t(
+                    DEFAULT_LOCALE, 'common-page-display',
+                    **{'current': str(self.current_page + 1), 'total': str(self.total_pages)}
+                ),
                 style=ButtonStyle.secondary,
                 custom_id='stock_limits_page'
             )
@@ -3412,14 +3640,20 @@ class ConfigRoleplayView(LocaleLayoutView):
         now = datetime.now(timezone.utc)
         time_str = now.strftime('%H:%M UTC')
 
-        status_display = t(DEFAULT_LOCALE, 'config-label-rp-enabled') if enabled else t(DEFAULT_LOCALE, 'config-label-rp-disabled')
+        status_display = (
+            t(DEFAULT_LOCALE, 'config-label-rp-enabled') if enabled
+            else t(DEFAULT_LOCALE, 'config-label-rp-disabled')
+        )
         status_text = (
             t(DEFAULT_LOCALE, 'config-label-rp-status', **{'status': status_display}) + '\n' +
             t(DEFAULT_LOCALE, 'config-label-rp-server-time', **{'time': time_str})
         )
 
         status_section = Section(accessory=self.roleplay_toggle_button)
-        self.roleplay_toggle_button.label = t(DEFAULT_LOCALE, 'common-btn-disable') if enabled else t(DEFAULT_LOCALE, 'common-btn-enable')
+        self.roleplay_toggle_button.label = (
+            t(DEFAULT_LOCALE, 'common-btn-disable') if enabled
+            else t(DEFAULT_LOCALE, 'common-btn-enable')
+        )
         self.roleplay_toggle_button.style = ButtonStyle.danger if enabled else ButtonStyle.success
         status_section.add_item(TextDisplay(status_text))
         container.add_item(status_section)
@@ -3461,7 +3695,10 @@ class ConfigRoleplayView(LocaleLayoutView):
                     reset_day = settings_config.get(RoleplayFields.RESET_DAY, 'monday')
                     formatted_day = f'{reset_day.capitalize()}s at '
 
-                setting_details += t(DEFAULT_LOCALE, 'config-label-rp-reset-time', **{'dayAndTime': f'{formatted_day}{formatted_time}'}) + '\n'
+                setting_details += t(
+                    DEFAULT_LOCALE, 'config-label-rp-reset-time',
+                    **{'dayAndTime': f'{formatted_day}{formatted_time}'}
+                ) + '\n'
 
             message_threshold = settings_config.get(RoleplayFields.THRESHOLD, 20)
 
@@ -3532,7 +3769,10 @@ class ConfigRoleplayView(LocaleLayoutView):
                 consolidated = consolidate_currency_totals(currency, self.currency_config)
                 currency_lines = format_consolidated_totals(consolidated, self.currency_config)
                 formatted_lines = [f'- {line}' for line in currency_lines]
-                rewards_text += t(DEFAULT_LOCALE, 'config-label-rp-currency') + '\n' + '\n'.join(formatted_lines) + '\n'
+                rewards_text += (
+                    t(DEFAULT_LOCALE, 'config-label-rp-currency') + '\n' +
+                    '\n'.join(formatted_lines) + '\n'
+                )
 
         reward_section = Section(accessory=self.rewards_button)
         reward_section.add_item(TextDisplay(rewards_text))
@@ -3621,7 +3861,10 @@ class ConfigLanguageView(LocaleLayoutView):
 
             if self._current_guild_locale:
                 from ReQuest.ui.info.selects import LOCALE_LABELS
-                language_name = t(DEFAULT_LOCALE, LOCALE_LABELS.get(self._current_guild_locale, self._current_guild_locale))
+                language_name = t(
+                    DEFAULT_LOCALE,
+                    LOCALE_LABELS.get(self._current_guild_locale, self._current_guild_locale)
+                )
                 self.language_info.content = t(DEFAULT_LOCALE, 'config-label-server-language',
                                                language=language_name)
             else:

@@ -162,8 +162,10 @@ class AddCurrencyTextModal(LocaleModal):
                     mongo_database=bot.gdb,
                     collection_name=DatabaseCollections.CURRENCY,
                     query={CommonFields.ID: guild_id},
-                    update_data={'$push': {CurrencyFields.CURRENCIES: {CommonFields.NAME: self.text_input.value,
-                                                          CurrencyFields.IS_DOUBLE: False, CurrencyFields.DENOMINATIONS: []}}}
+                    update_data={'$push': {CurrencyFields.CURRENCIES: {
+                        CommonFields.NAME: self.text_input.value,
+                        CurrencyFields.IS_DOUBLE: False,
+                        CurrencyFields.DENOMINATIONS: []}}}
                 )
                 await setup_view(view, interaction)
                 await interaction.response.edit_message(view=view)
@@ -226,7 +228,8 @@ class RenameCurrencyModal(LocaleModal):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.CURRENCY,
-                query={CommonFields.ID: guild_id, f'{CurrencyFields.CURRENCIES}.{CommonFields.NAME}': self.old_currency_name},
+                query={CommonFields.ID: guild_id,
+                       f'{CurrencyFields.CURRENCIES}.{CommonFields.NAME}': self.old_currency_name},
                 update_data={'$set': {f'{CurrencyFields.CURRENCIES}.$.{CommonFields.NAME}': new_name}}
             )
 
@@ -293,7 +296,10 @@ class RenameDenominationModal(LocaleModal):
             collection = bot.gdb[DatabaseCollections.CURRENCY]
             await collection.update_one(
                 {CommonFields.ID: guild_id, f'{CurrencyFields.CURRENCIES}.{CommonFields.NAME}': self.currency_name},
-                {'$set': {f'{CurrencyFields.CURRENCIES}.$.{CurrencyFields.DENOMINATIONS}.$[denom].{CommonFields.NAME}': new_name}},
+                {'$set': {
+                    f'{CurrencyFields.CURRENCIES}.$.{CurrencyFields.DENOMINATIONS}'
+                    f'.$[denom].{CommonFields.NAME}': new_name
+                }},
                 array_filters=[{f'denom.{CommonFields.NAME}': self.old_denomination_name}]
             )
 
@@ -345,24 +351,29 @@ class AddCurrencyDenominationModal(LocaleModal):
             for currency in query[CurrencyFields.CURRENCIES]:
                 if new_name.lower() == currency[CommonFields.NAME].lower():
                     raise UserFeedbackError(
-                        t(DEFAULT_LOCALE, 'config-error-denomination-matches-currency', **{'existingName': currency[CommonFields.NAME]}),
+                        t(DEFAULT_LOCALE, 'config-error-denomination-matches-currency',
+                          **{'existingName': currency[CommonFields.NAME]}),
                         message_id='config-error-denomination-matches-currency'
                     )
                 for denomination in currency[CurrencyFields.DENOMINATIONS]:
                     if new_name.lower() == denomination[CommonFields.NAME].lower():
                         raise UserFeedbackError(
-                            t(DEFAULT_LOCALE, 'config-error-denomination-matches-denomination', **{'denominationName': denomination[CommonFields.NAME],
-                               'currencyName': currency[CommonFields.NAME]}),
+                            t(DEFAULT_LOCALE, 'config-error-denomination-matches-denomination',
+                              **{'denominationName': denomination[CommonFields.NAME],
+                                 'currencyName': currency[CommonFields.NAME]}),
                             message_id='config-error-denomination-matches-denomination'
                         )
-            base_currency = next((item for item in query[CurrencyFields.CURRENCIES] if item[CommonFields.NAME] == self.base_currency_name),
-                                 None)
+            base_currency = next(
+                (item for item in query[CurrencyFields.CURRENCIES]
+                 if item[CommonFields.NAME] == self.base_currency_name),
+                None)
             if base_currency:
                 for denomination in base_currency[CurrencyFields.DENOMINATIONS]:
                     if float(self.denomination_value_text_input.value) == denomination[CurrencyFields.VALUE]:
                         using_name = denomination[CommonFields.NAME]
                         raise UserFeedbackError(
-                            t(DEFAULT_LOCALE, 'config-error-denomination-value-exists', **{'denominationName': using_name}),
+                            t(DEFAULT_LOCALE, 'config-error-denomination-value-exists',
+                              **{'denominationName': using_name}),
                             message_id='config-error-denomination-value-exists'
                         )
 
@@ -370,7 +381,8 @@ class AddCurrencyDenominationModal(LocaleModal):
                     bot=bot,
                     mongo_database=bot.gdb,
                     collection_name=DatabaseCollections.CURRENCY,
-                    query={CommonFields.ID: guild_id, f'{CurrencyFields.CURRENCIES}.{CommonFields.NAME}': self.base_currency_name},
+                    query={CommonFields.ID: guild_id,
+                           f'{CurrencyFields.CURRENCIES}.{CommonFields.NAME}': self.base_currency_name},
                     update_data={
                         '$push': {f'{CurrencyFields.CURRENCIES}.$.{CurrencyFields.DENOMINATIONS}': {
                             CommonFields.NAME: new_name,
@@ -491,7 +503,9 @@ class GMRewardsModal(LocaleModal):
                 label=t(DEFAULT_LOCALE, 'config-modal-label-experience'),
                 custom_id='experience_text_input',
                 placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-enter-number'),
-                default=current_rewards[CharacterFields.EXPERIENCE] if current_rewards and current_rewards[CharacterFields.EXPERIENCE] else None,
+                default=(current_rewards[CharacterFields.EXPERIENCE]
+                         if current_rewards and current_rewards[CharacterFields.EXPERIENCE]
+                         else None),
                 required=False
             )
             self.add_item(self.experience_text_input)
@@ -1051,7 +1065,8 @@ class ShopItemModal(LocaleModal):
                                 raise ValueError
                         except ValueError:
                             raise UserFeedbackError(
-                                t(DEFAULT_LOCALE, 'config-error-cost-amount-invalid', **{'amount': amount_string, 'currency': currency_name}),
+                                t(DEFAULT_LOCALE, 'config-error-cost-amount-invalid',
+                                  **{'amount': amount_string, 'currency': currency_name}),
                                 message_id='config-error-cost-amount-invalid'
                             )
 
@@ -1107,7 +1122,8 @@ class ShopItemModal(LocaleModal):
                 for item in shop_stock:
                     if item.get(CommonFields.NAME).lower() == new_item[CommonFields.NAME].lower():
                         raise UserFeedbackError(
-                            t(DEFAULT_LOCALE, 'config-error-item-already-exists', **{'itemName': new_item[CommonFields.NAME]}),
+                            t(DEFAULT_LOCALE, 'config-error-item-already-exists',
+                              **{'itemName': new_item[CommonFields.NAME]}),
                             message_id='config-error-item-already-exists'
                         )
                 shop_data[ShopFields.SHOP_STOCK].append(new_item)
@@ -1299,7 +1315,8 @@ class NewCharacterShopItemModal(LocaleModal):
                             parts = component.strip().split(' ', 1)
                             if len(parts) < 2:
                                 raise UserFeedbackError(
-                                    t(DEFAULT_LOCALE, 'config-error-cost-format-short', **{'component': component.strip()}),
+                                    t(DEFAULT_LOCALE, 'config-error-cost-format-short',
+                                      **{'component': component.strip()}),
                                     message_id='config-error-cost-format-short'
                                 )
 
@@ -1312,7 +1329,8 @@ class NewCharacterShopItemModal(LocaleModal):
                                     raise ValueError
                             except ValueError:
                                 raise UserFeedbackError(
-                                    t(DEFAULT_LOCALE, 'config-error-amount-invalid-short', **{'amount': amount_str, 'currency': currency_name}),
+                                    t(DEFAULT_LOCALE, 'config-error-amount-invalid-short',
+                                      **{'amount': amount_str, 'currency': currency_name}),
                                     message_id='config-error-amount-invalid-short'
                                 )
 
@@ -1367,7 +1385,8 @@ class NewCharacterShopItemModal(LocaleModal):
                 for item in shop_stock:
                     if item.get(CommonFields.NAME).lower() == new_item[CommonFields.NAME].lower():
                         raise UserFeedbackError(
-                            t(DEFAULT_LOCALE, 'config-error-item-exists-new-char', **{'itemName': new_item[CommonFields.NAME]}),
+                            t(DEFAULT_LOCALE, 'config-error-item-exists-new-char',
+                              **{'itemName': new_item[CommonFields.NAME]}),
                             message_id='config-error-item-exists-new-char'
                         )
                 shop_stock.append(new_item)
@@ -1523,7 +1542,8 @@ class ConfigNewCharacterWealthModal(LocaleModal):
                     mongo_database=bot.gdb,
                     collection_name=DatabaseCollections.INVENTORY_CONFIG,
                     query={CommonFields.ID: guild_id},
-                    update_data={'$set': {ConfigFields.NEW_CHARACTER_WEALTH: {CharacterFields.CURRENCY: found_name, CommonFields.AMOUNT: amount}}}
+                    update_data={'$set': {ConfigFields.NEW_CHARACTER_WEALTH: {
+                        CharacterFields.CURRENCY: found_name, CommonFields.AMOUNT: amount}}}
                 )
 
             await setup_view(self.calling_view, interaction)
@@ -1759,7 +1779,8 @@ class StaticKitCurrencyModal(LocaleModal):
 
             encoded_currency = encode_mongo_key(parent_name)
             if query and 'kits' in query:
-                existing_amount = query['kits'].get(kit_id, {}).get(CharacterFields.CURRENCY, {}).get(encoded_currency, 0)
+                existing_amount = (query['kits'].get(kit_id, {})
+                                   .get(CharacterFields.CURRENCY, {}).get(encoded_currency, 0))
 
             final_amount = existing_amount + converted_amount
 
@@ -1973,7 +1994,8 @@ class RoleplayRewardsModal(LocaleModal):
                                 raise ValueError
                         except ValueError:
                             raise UserFeedbackError(
-                                t(DEFAULT_LOCALE, 'config-error-item-quantity-positive-named', **{'itemName': k.strip()}),
+                                t(DEFAULT_LOCALE, 'config-error-item-quantity-positive-named',
+                                  **{'itemName': k.strip()}),
                                 message_id='config-error-item-quantity-positive-named'
                             )
 
@@ -1988,7 +2010,8 @@ class RoleplayRewardsModal(LocaleModal):
                                 raise ValueError
                         except ValueError:
                             raise UserFeedbackError(
-                                t(DEFAULT_LOCALE, 'config-error-currency-amount-positive', **{'currencyName': k.strip()}),
+                                t(DEFAULT_LOCALE, 'config-error-currency-amount-positive',
+                                  **{'currencyName': k.strip()}),
                                 message_id='config-error-currency-amount-positive'
                             )
 

@@ -64,7 +64,9 @@ class ShopItemButton(Button):
             channel_id = self.view.channel_id or str(interaction.channel_id)
             self.stock_info = await get_item_stock(interaction.client, interaction.guild_id, channel_id, item_name)
             # Only check stock if data is valid (has ShopFields.AVAILABLE key)
-            if self.stock_info is not None and ShopFields.AVAILABLE in self.stock_info and self.stock_info.get(ShopFields.AVAILABLE, 0) <= 0:
+            if (self.stock_info is not None
+                    and ShopFields.AVAILABLE in self.stock_info
+                    and self.stock_info.get(ShopFields.AVAILABLE, 0) <= 0):
                 locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
                 raise UserFeedbackError(
                     t(locale, 'shop-error-item-out-of-stock', **{'itemName': self.item[CommonFields.NAME]}),

@@ -434,7 +434,10 @@ async def trade_currency(interaction, currency_name, amount, sending_member_id, 
         query={CommonFields.ID: receiving_member_id}
     )
     sender_character_id = sender_data[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
-    sender_currency = sender_data[CharacterFields.CHARACTERS][sender_character_id][CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {})
+    sender_currency = (
+        sender_data[CharacterFields.CHARACTERS][sender_character_id][CharacterFields.ATTRIBUTES]
+        .get(CharacterFields.CURRENCY, {})
+    )
     receiver_character_id = receiver_data[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
 
     currency_config = await get_cached_data(
@@ -467,8 +470,14 @@ async def trade_currency(interaction, currency_name, amount, sending_member_id, 
         collection_name=DatabaseCollections.CHARACTERS,
         query={CommonFields.ID: receiving_member_id}
     )
-    updated_sender_currency = updated_sender_data[CharacterFields.CHARACTERS][sender_character_id][CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY)
-    updated_receiver_currency = updated_receiver_data[CharacterFields.CHARACTERS][receiver_character_id][CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY)
+    updated_sender_currency = (
+        updated_sender_data[CharacterFields.CHARACTERS][sender_character_id][CharacterFields.ATTRIBUTES]
+        .get(CharacterFields.CURRENCY)
+    )
+    updated_receiver_currency = (
+        updated_receiver_data[CharacterFields.CHARACTERS][receiver_character_id][CharacterFields.ATTRIBUTES]
+        .get(CharacterFields.CURRENCY)
+    )
 
     return updated_sender_currency, updated_receiver_currency
 
@@ -531,7 +540,10 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
                     break
         else:
             # Remove from container
-            container_items = sender_character[CharacterFields.ATTRIBUTES][CharacterFields.CONTAINERS][container_id].get(CharacterFields.ITEMS, {})
+            container_items = (
+                sender_character[CharacterFields.ATTRIBUTES][CharacterFields.CONTAINERS][container_id]
+                .get(CharacterFields.ITEMS, {})
+            )
             for key in list(container_items.keys()):
                 if key.lower() == normalized_item_name:
                     container_items[key] -= remove_from_here
@@ -557,11 +569,16 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
 
     # Update sender's character data
     sender_update = {
-        f'{CharacterFields.CHARACTERS}.{sender_character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}': sender_character[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
+        f'{CharacterFields.CHARACTERS}.{sender_character_id}.{CharacterFields.ATTRIBUTES}'
+        f'.{CharacterFields.INVENTORY}': sender_character[CharacterFields.ATTRIBUTES]
+        .get(CharacterFields.INVENTORY, {})
     }
     # Include container updates if containers exist
     if sender_character[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS):
-        sender_update[f'{CharacterFields.CHARACTERS}.{sender_character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}'] = sender_character[CharacterFields.ATTRIBUTES][CharacterFields.CONTAINERS]
+        sender_update[
+            f'{CharacterFields.CHARACTERS}.{sender_character_id}'
+            f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}'
+        ] = sender_character[CharacterFields.ATTRIBUTES][CharacterFields.CONTAINERS]
 
     await update_cached_data(
         bot=bot,
@@ -577,7 +594,10 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
         mongo_database=bot.mdb,
         collection_name=DatabaseCollections.CHARACTERS,
         query={CommonFields.ID: receiving_member_id},
-        update_data={'$set': {f'{CharacterFields.CHARACTERS}.{receiver_character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}': receiver_inventory}}
+        update_data={'$set': {
+            f'{CharacterFields.CHARACTERS}.{receiver_character_id}'
+            f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}': receiver_inventory
+        }}
     )
 
 
@@ -621,7 +641,9 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
             if min_value <= 0:
                 raise Exception(f"Currency {currency_parent_name} has a non-positive denomination value.")
 
-            character_currency = normalize_currency_keys(character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {}))
+            character_currency = normalize_currency_keys(
+                character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {})
+            )
 
             total_in_lowest_denom = 0.0
             for denom, value in denomination_map.items():
@@ -647,7 +669,9 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
                     new_character_currency[denom] = qty
                     total_in_lowest_denom %= denom_value_in_lowest
 
-            final_wallet = normalize_currency_keys(character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {}))
+            final_wallet = normalize_currency_keys(
+                character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {})
+            )
 
             for denom_name in denomination_map.keys():
                 if denom_name in new_character_currency:
@@ -662,10 +686,15 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
                 mongo_database=bot.mdb,
                 collection_name=DatabaseCollections.CHARACTERS,
                 query={CommonFields.ID: player_id},
-                update_data={'$set': {f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CURRENCY}': character_currency_db}}
+                update_data={'$set': {
+                    f'{CharacterFields.CHARACTERS}.{character_id}'
+                    f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.CURRENCY}': character_currency_db
+                }}
             )
         else:
-            character_inventory = normalize_currency_keys(character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {}))
+            character_inventory = normalize_currency_keys(
+                character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
+            )
             found_key = normalized_item_name
 
             if found_key in character_inventory:
@@ -685,7 +714,10 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
                 mongo_database=bot.mdb,
                 collection_name=DatabaseCollections.CHARACTERS,
                 query={CommonFields.ID: player_id},
-                update_data={'$set': {f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}': inventory_for_db}}
+                update_data={'$set': {
+                    f'{CharacterFields.CHARACTERS}.{character_id}'
+                    f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}': inventory_for_db
+                }}
             )
     except Exception as e:
         await log_exception(e, interaction)
@@ -812,8 +844,13 @@ async def update_quest_embed(quest: dict, locale: str | None = None) -> discord.
             else:
                 wait_list_string = t(locale, 'common-label-none')
 
-            embed.add_field(name=f'{t(locale, "common-embed-field-wait-list")} ({current_wait_list_size}/{max_wait_list_size})',
-                            value=wait_list_string)
+            embed.add_field(
+                name=(
+                    f'{t(locale, "common-embed-field-wait-list")}'
+                    f' ({current_wait_list_size}/{max_wait_list_size})'
+                ),
+                value=wait_list_string
+            )
 
         embed.set_footer(text=t(locale, 'common-embed-footer-quest-id', questId=quest_id))
 
@@ -880,7 +917,8 @@ def get_denomination_map(currency_config: dict, currency_name: str) -> Tuple[dic
         return None, None
 
     parent_currency_config = next(
-        (currency for currency in currency_config[CurrencyFields.CURRENCIES] if currency[CommonFields.NAME].lower() == parent_name.lower()),
+        (currency for currency in currency_config[CurrencyFields.CURRENCIES]
+         if currency[CommonFields.NAME].lower() == parent_name.lower()),
         None
     )
 
@@ -973,7 +1011,9 @@ def apply_item_change_local(character_data: dict, item_name: str, quantity: int)
         raise UserFeedbackError(f"Insufficient item(s): {titlecase(item_name)}",
                                 message_id='error-insufficient-items', itemName=titlecase(item_name))
 
-    character_data[CharacterFields.ATTRIBUTES][CharacterFields.INVENTORY] = {titlecase(k): v for k, v in inventory.items()}
+    character_data[CharacterFields.ATTRIBUTES][CharacterFields.INVENTORY] = {
+        titlecase(k): v for k, v in inventory.items()
+    }
     return character_data
 
 
@@ -1004,7 +1044,9 @@ def apply_currency_change_local(character_data: dict, currency_config: dict, ite
     if min_value <= 0:
         raise Exception(f'Currency {currency_parent_name} has a non-positive denomination value.')
 
-    character_currency = normalize_currency_keys(character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {}))
+    character_currency = normalize_currency_keys(
+        character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {})
+    )
 
     total_in_lowest_denom = 0.0
     for denom, value in denomination_map.items():
@@ -1029,14 +1071,18 @@ def apply_currency_change_local(character_data: dict, currency_config: dict, ite
             new_character_currency[denom] = qty
             total_in_lowest_denom %= denom_value_in_lowest
 
-    final_wallet = normalize_currency_keys(character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {}))
+    final_wallet = normalize_currency_keys(
+        character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {})
+    )
     for denom_name in denomination_map.keys():
         if denom_name in new_character_currency:
             final_wallet[denom_name] = new_character_currency[denom_name]
         elif denom_name in final_wallet:
             del final_wallet[denom_name]
 
-    character_data[CharacterFields.ATTRIBUTES][CharacterFields.CURRENCY] = {titlecase(k): v for k, v in final_wallet.items() if v > 0}
+    character_data[CharacterFields.ATTRIBUTES][CharacterFields.CURRENCY] = {
+        titlecase(k): v for k, v in final_wallet.items() if v > 0
+    }
     return character_data
 
 
@@ -1471,7 +1517,9 @@ async def release_stock(bot, guild_id: int, channel_id: str, item_name: str,
             {
                 '$set': {
                     f'{path}.{ShopFields.AVAILABLE}': new_available,
-                    f'{path}.{ShopFields.RESERVED}': {'$max': [0, {'$subtract': [f'${path}.{ShopFields.RESERVED}', quantity]}]}
+                    f'{path}.{ShopFields.RESERVED}': {
+                        '$max': [0, {'$subtract': [f'${path}.{ShopFields.RESERVED}', quantity]}]
+                    }
                 }
             }
         ]
@@ -1505,7 +1553,9 @@ async def finalize_stock(bot, guild_id: int, channel_id: str, item_name: str, qu
         [
             {
                 '$set': {
-                    f'{path}.{ShopFields.RESERVED}': {'$max': [0, {'$subtract': [f'${path}.{ShopFields.RESERVED}', quantity]}]}
+                    f'{path}.{ShopFields.RESERVED}': {
+                        '$max': [0, {'$subtract': [f'${path}.{ShopFields.RESERVED}', quantity]}]
+                    }
                 }
             }
         ]
@@ -1564,7 +1614,9 @@ async def increment_available_stock(bot, guild_id: int, channel_id: str, item_na
         [
             {
                 '$set': {
-                    f'{path}.{ShopFields.AVAILABLE}': {'$min': [max_stock, {'$add': [f'${path}.{ShopFields.AVAILABLE}', increment]}]}
+                    f'{path}.{ShopFields.AVAILABLE}': {
+                        '$min': [max_stock, {'$add': [f'${path}.{ShopFields.AVAILABLE}', increment]}]
+                    }
                 }
             }
         ]
@@ -2335,7 +2387,9 @@ async def create_container(bot, player_id: int, character_id: str, name: str) ->
         collection_name=DatabaseCollections.CHARACTERS,
         query={CommonFields.ID: player_id},
         update_data={'$set': {
-            f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}.{container_id}': {
+            f'{CharacterFields.CHARACTERS}.{character_id}'
+            f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}'
+            f'.{container_id}': {
                 ContainerFields.NAME: name,
                 ContainerFields.ORDER: order,
                 ContainerFields.ITEMS: {}
@@ -2389,7 +2443,11 @@ async def rename_container(bot, player_id: int, character_id: str,
         mongo_database=bot.mdb,
         collection_name=DatabaseCollections.CHARACTERS,
         query={CommonFields.ID: player_id},
-        update_data={'$set': {f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}.{container_id}.{ContainerFields.NAME}': new_name}}
+        update_data={'$set': {
+            f'{CharacterFields.CHARACTERS}.{character_id}'
+            f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}'
+            f'.{container_id}.{ContainerFields.NAME}': new_name
+        }}
     )
 
 
@@ -2451,8 +2509,15 @@ async def delete_container(bot, player_id: int, character_id: str,
             collection_name=DatabaseCollections.CHARACTERS,
             query={CommonFields.ID: player_id},
             update_data={
-                '$set': {f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}': new_inventory},
-                '$unset': {f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}.{container_id}': ''}
+                '$set': {
+                    f'{CharacterFields.CHARACTERS}.{character_id}'
+                    f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}': new_inventory
+                },
+                '$unset': {
+                    f'{CharacterFields.CHARACTERS}.{character_id}'
+                    f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}'
+                    f'.{container_id}': ''
+                }
             }
         )
     else:
@@ -2461,7 +2526,11 @@ async def delete_container(bot, player_id: int, character_id: str,
             mongo_database=bot.mdb,
             collection_name=DatabaseCollections.CHARACTERS,
             query={CommonFields.ID: player_id},
-            update_data={'$unset': {f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}.{container_id}': ''}}
+            update_data={'$unset': {
+                f'{CharacterFields.CHARACTERS}.{character_id}'
+                f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}'
+                f'.{container_id}': ''
+            }}
         )
 
     return items_count
@@ -2521,8 +2590,12 @@ async def reorder_container(bot, player_id: int, character_id: str,
         collection_name=DatabaseCollections.CHARACTERS,
         query={CommonFields.ID: player_id},
         update_data={'$set': {
-            f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}.{current_container_id}.{ContainerFields.ORDER}': target_order,
-            f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}.{target_container_id}.{ContainerFields.ORDER}': current_order
+            f'{CharacterFields.CHARACTERS}.{character_id}'
+            f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}'
+            f'.{current_container_id}.{ContainerFields.ORDER}': target_order,
+            f'{CharacterFields.CHARACTERS}.{character_id}'
+            f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}'
+            f'.{target_container_id}.{ContainerFields.ORDER}': current_order
         }}
     )
 
@@ -2564,14 +2637,21 @@ async def move_item_between_containers(
     # Get source items
     if source_container_id is None:
         source_items = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
-        source_path = f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}'
+        source_path = (
+            f'{CharacterFields.CHARACTERS}.{character_id}'
+            f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}'
+        )
     else:
         containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
         if source_container_id not in containers:
             raise UserFeedbackError('Source container not found.',
                                     message_id='error-source-container-not-found')
         source_items = containers[source_container_id].get(ContainerFields.ITEMS, {})
-        source_path = f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}.{source_container_id}.{ContainerFields.ITEMS}'
+        source_path = (
+            f'{CharacterFields.CHARACTERS}.{character_id}'
+            f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}'
+            f'.{source_container_id}.{ContainerFields.ITEMS}'
+        )
 
     # Find item in source (case-insensitive)
     source_key = None
@@ -2594,14 +2674,21 @@ async def move_item_between_containers(
     # Get destination items
     if dest_container_id is None:
         dest_items = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
-        dest_path = f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}'
+        dest_path = (
+            f'{CharacterFields.CHARACTERS}.{character_id}'
+            f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}'
+        )
     else:
         containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
         if dest_container_id not in containers:
             raise UserFeedbackError('Destination container not found.',
                                     message_id='error-dest-container-not-found')
         dest_items = containers[dest_container_id].get(ContainerFields.ITEMS, {})
-        dest_path = f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}.{dest_container_id}.{ContainerFields.ITEMS}'
+        dest_path = (
+            f'{CharacterFields.CHARACTERS}.{character_id}'
+            f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}'
+            f'.{dest_container_id}.{ContainerFields.ITEMS}'
+        )
 
     # Find existing item in destination (case-insensitive)
     dest_key = None
@@ -2676,13 +2763,20 @@ async def consume_item_from_container(
     # Get container items
     if container_id is None:
         items = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
-        path = f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}'
+        path = (
+            f'{CharacterFields.CHARACTERS}.{character_id}'
+            f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}'
+        )
     else:
         containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
         if container_id not in containers:
             raise UserFeedbackError('Container not found.', message_id='error-container-not-found')
         items = containers[container_id].get(ContainerFields.ITEMS, {})
-        path = f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}.{container_id}.{ContainerFields.ITEMS}'
+        path = (
+            f'{CharacterFields.CHARACTERS}.{character_id}'
+            f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}'
+            f'.{container_id}.{ContainerFields.ITEMS}'
+        )
 
     # Find item (case-insensitive)
     item_key = None

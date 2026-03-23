@@ -71,7 +71,10 @@ class GameMaster(Cog):
                 raise UserFeedbackError(t(locale, 'error-no-characters'), message_id='error-no-characters')
 
             if guild_id not in player_query[CharacterFields.ACTIVE_CHARACTERS]:
-                raise UserFeedbackError(t(locale, 'error-no-active-character-target'), message_id='error-no-active-character-target')
+                raise UserFeedbackError(
+                    t(locale, 'error-no-active-character-target'),
+                    message_id='error-no-active-character-target'
+                )
 
             active_character_id = player_query[CharacterFields.ACTIVE_CHARACTERS][guild_id]
             character_data = player_query[CharacterFields.CHARACTERS][active_character_id]
@@ -102,7 +105,10 @@ class GameMaster(Cog):
                 raise UserFeedbackError(t(locale, 'error-no-characters'), message_id='error-no-characters')
 
             if guild_id not in player_query[CharacterFields.ACTIVE_CHARACTERS]:
-                raise UserFeedbackError(t(locale, 'error-no-active-character-target'), message_id='error-no-active-character-target')
+                raise UserFeedbackError(
+                    t(locale, 'error-no-active-character-target'),
+                    message_id='error-no-active-character-target'
+                )
 
             active_character_id = player_query[CharacterFields.ACTIVE_CHARACTERS][guild_id]
             character_data = player_query[CharacterFields.CHARACTERS][active_character_id]

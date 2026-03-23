@@ -6,7 +6,8 @@ from discord.ui import Select, RoleSelect, ChannelSelect
 from ReQuest.ui.common.enums import InventoryType, QuestRoleMode, RoleplayMode, ScheduleType, DayOfWeek
 from ReQuest.ui.info.selects import (LOCALE_LABELS, LOCALE_DESCRIPTIONS, LOCALE_EMOJI,
                                      LOCALES_PER_PAGE, get_config_locale_total_pages)
-from ReQuest.utilities.constants import ConfigFields, CommonFields, RoleplayFields, DatabaseCollections, MAX_QUEST_ROLES_PER_GM
+from ReQuest.utilities.constants import (ConfigFields, CommonFields, RoleplayFields,
+                                         DatabaseCollections, MAX_QUEST_ROLES_PER_GM)
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, SUPPORTED_LOCALES
 from ReQuest.utilities.supportFunctions import (
     log_exception,
@@ -95,7 +96,10 @@ class AddGMRoleSelect(RoleSelect):
             )
             if not query:
                 for value in self.values:
-                    update_data = {'$push': {ConfigFields.GM_ROLES: {CommonFields.MENTION: value.mention, CommonFields.NAME: value.name}}}
+                    update_data = {
+                        '$push': {ConfigFields.GM_ROLES: {
+                            CommonFields.MENTION: value.mention,
+                            CommonFields.NAME: value.name}}}
                     await update_cached_data(
                         bot=bot,
                         mongo_database=bot.gdb,
@@ -111,7 +115,10 @@ class AddGMRoleSelect(RoleSelect):
                             matches += 1
 
                     if matches == 0:
-                        update_data = {'$push': {ConfigFields.GM_ROLES: {CommonFields.MENTION: value.mention, CommonFields.NAME: value.name}}}
+                        update_data = {
+                            '$push': {ConfigFields.GM_ROLES: {
+                                CommonFields.MENTION: value.mention,
+                                CommonFields.NAME: value.name}}}
                         await update_cached_data(
                             bot=bot,
                             mongo_database=bot.gdb,

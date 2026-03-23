@@ -189,7 +189,10 @@ class ShopBaseView(LocaleLayoutView):
                 prev_button.callback = self.prev_page
 
                 page_display = Button(
-                    label=t(locale, 'common-page-display', **{'current': self.current_page + 1, 'total': self.total_pages}),
+                    label=t(
+                        locale, 'common-page-display',
+                        **{'current': self.current_page + 1, 'total': self.total_pages}
+                    ),
                     style=discord.ButtonStyle.secondary,
                     custom_id='shop_page_display'
                 )
@@ -207,9 +210,15 @@ class ShopBaseView(LocaleLayoutView):
                 nav_row.add_item(page_display)
                 nav_row.add_item(next_button)
 
-            cart_item_count = sum(item.get(CartFields.QUANTITY, 0) for item in self.cart.values())
+            cart_item_count = sum(
+                item.get(CartFields.QUANTITY, 0) for item in self.cart.values()
+            )
             view_cart_button = buttons.ViewCartButton(self)
-            view_cart_button.label = t(locale, 'shop-btn-view-cart-count', **{'count': cart_item_count}) if cart_item_count > 0 else t(locale, 'shop-btn-view-cart')
+            view_cart_button.label = (
+                t(locale, 'shop-btn-view-cart-count', **{'count': cart_item_count})
+                if cart_item_count > 0
+                else t(locale, 'shop-btn-view-cart')
+            )
 
             nav_row.add_item(view_cart_button)
             self.add_item(nav_row)
@@ -340,7 +349,10 @@ class ShopCartView(LocaleLayoutView):
                         is_ok, _ = check_sufficient_funds(player_wallet, self.currency_config, base_currency, amount)
                         if not is_ok:
                             can_afford_all = False
-                            warnings.append(t(locale, 'shop-warning-insufficient-funds', **{'currency': titlecase(base_currency)}))
+                            warnings.append(t(
+                                locale, 'shop-warning-insufficient-funds',
+                                **{'currency': titlecase(base_currency)}
+                            ))
 
                 start_index = self.current_page * self.items_per_page
                 end_index = start_index + self.items_per_page
@@ -402,7 +414,10 @@ class ShopCartView(LocaleLayoutView):
                 prev_button.callback = self.prev_page
 
                 page_display = Button(
-                    label=t(locale, 'common-page-display', **{'current': self.current_page + 1, 'total': self.total_pages}),
+                    label=t(
+                        locale, 'common-page-display',
+                        **{'current': self.current_page + 1, 'total': self.total_pages}
+                    ),
                     style=discord.ButtonStyle.secondary,
                     custom_id='shop_page_display'
                 )
@@ -479,8 +494,12 @@ class ShopCartView(LocaleLayoutView):
             character_data = character_query[CharacterFields.CHARACTERS][active_char_id]
 
             for base_currency, amount in self.base_totals.items():
-                is_ok, msg = check_sufficient_funds(character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {}),
-                                                    self.currency_config, base_currency, amount)
+                wallet = character_data[CharacterFields.ATTRIBUTES].get(
+                    CharacterFields.CURRENCY, {}
+                )
+                is_ok, msg = check_sufficient_funds(
+                    wallet, self.currency_config, base_currency, amount
+                )
                 if not is_ok:
                     await interaction.response.send_message(
                         t(locale, 'shop-error-checkout-insufficient', **{'currency': titlecase(base_currency)}),
@@ -500,7 +519,10 @@ class ShopCartView(LocaleLayoutView):
                 total_qty = quantity * qty_per_item
 
                 character_data = apply_item_change_local(character_data, item[CommonFields.NAME], total_qty)
-                summary_string = (f'{total_qty}x ' if total_qty > 1 else '') + escape_markdown(titlecase(item[CommonFields.NAME]))
+                summary_string = (
+                    (f'{total_qty}x ' if total_qty > 1 else '')
+                    + escape_markdown(titlecase(item[CommonFields.NAME]))
+                )
                 added_items_summary.append(summary_string)
 
             await update_cached_data(
@@ -544,15 +566,25 @@ class ShopCartView(LocaleLayoutView):
             )
 
             shop_transaction_id = shortuuid.uuid()[:12]
-            receipt_embed.set_footer(text=t(locale, 'common-embed-footer-transaction-id', transactionId=shop_transaction_id))
+            receipt_embed.set_footer(text=t(
+                locale, 'common-embed-footer-transaction-id',
+                transactionId=shop_transaction_id
+            ))
 
             if log_channel:
                 guild_locale = await resolve_guild_locale(bot, guild_id)
                 if guild_locale != locale:
-                    log_embed = discord.Embed(title=t(guild_locale, 'shop-embed-title-report'), color=discord.Color.gold())
+                    log_embed = discord.Embed(
+                        title=t(guild_locale, 'shop-embed-title-report'),
+                        color=discord.Color.gold()
+                    )
                     log_embed.description = (
-                        f'Player: {interaction.user.mention} as `{character_data[CharacterFields.NAME]}`\n'
-                        f'Shop: {self.prev_view.shop_data.get(ShopFields.SHOP_NAME, t(guild_locale, "common-label-unknown"))}'
+                        f'Player: {interaction.user.mention} '
+                        f'as `{character_data[CharacterFields.NAME]}`\n'
+                        f'Shop: {self.prev_view.shop_data.get(
+                            ShopFields.SHOP_NAME,
+                            t(guild_locale, "common-label-unknown")
+                        )}'
                     )
                     log_embed.add_field(
                         name=t(guild_locale, 'shop-embed-field-purchased'),
@@ -564,7 +596,10 @@ class ShopCartView(LocaleLayoutView):
                         value="\n".join(total_strs) or '0',
                         inline=False
                     )
-                    log_embed.set_footer(text=t(guild_locale, 'common-embed-footer-transaction-id', transactionId=shop_transaction_id))
+                    log_embed.set_footer(text=t(
+                        guild_locale, 'common-embed-footer-transaction-id',
+                        transactionId=shop_transaction_id
+                    ))
                     await log_channel.send(embed=log_embed)
                 else:
                     await log_channel.send(embed=receipt_embed)
@@ -593,7 +628,11 @@ class ComplexItemPurchaseView(LocaleLayoutView):
         container = Container()
 
         header = Section(accessory=buttons.CartBackButton(self.parent_view))
-        header.add_item(TextDisplay(f"**{t(locale, 'shop-title-purchase-options', **{'itemName': escape_markdown(self.item[CommonFields.NAME])})}**"))
+        title_text = t(
+            locale, 'shop-title-purchase-options',
+            **{'itemName': escape_markdown(self.item[CommonFields.NAME])}
+        )
+        header.add_item(TextDisplay(f"**{title_text}**"))
         container.add_item(header)
         container.add_item(Separator())
 
