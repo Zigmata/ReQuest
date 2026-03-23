@@ -31,7 +31,6 @@ class AdminShutdownButton(Button):
             confirm_modal = common_modals.ConfirmModal(
                 title=t(locale, 'admin-modal-title-confirm-shutdown'),
                 prompt_label=t(locale, 'admin-modal-label-shutdown-warning'),
-                prompt_placeholder=t(locale, 'common-confirm-placeholder'),
                 confirm_callback=self._confirm_shutdown,
                 locale=locale
             )
@@ -162,7 +161,6 @@ class RemoveServerButton(Button):
             confirm_modal = common_modals.ConfirmModal(
                 title=t(locale, 'admin-modal-title-confirm-server-removal'),
                 prompt_label=t(locale, 'admin-modal-label-server-removal'),
-                prompt_placeholder=t(locale, 'common-confirm-placeholder'),
                 confirm_callback=self._confirm_delete,
                 locale=locale
             )

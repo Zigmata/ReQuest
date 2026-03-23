@@ -23,7 +23,8 @@ common-page-label = Sayfa { $current }/{ $total }
 common-error-page-selector = Sayfa seçici açılamadı
 
 # Confirm modal
-common-confirm-placeholder = Devam etmek için CONFIRM yazın
+common-confirm-word = ONAYLA
+common-confirm-placeholder = Devam etmek için { $confirmWord } yazın.
 common-confirm-failed = Onay Başarısız: İşlem iptal edildi.
 common-modal-label-warning = UYARI: Bu işlem geri alınamaz!
 

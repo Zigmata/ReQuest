@@ -23,7 +23,8 @@ common-page-label = 第 { $current }/{ $total } 页
 common-error-page-selector = 无法打开页面选择器
 
 # Confirm modal
-common-confirm-placeholder = 输入 CONFIRM 以继续
+common-confirm-word = 确认
+common-confirm-placeholder = 输入 { $confirmWord } 以继续。
 common-confirm-failed = 确认失败：操作已取消。
 common-modal-label-warning = 警告：此操作无法撤销！
 

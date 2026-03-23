@@ -23,7 +23,8 @@ common-page-label = Pagina { $current }/{ $total }
 common-error-page-selector = Kon paginaselectie niet openen
 
 # Confirm modal
-common-confirm-placeholder = Typ CONFIRM om door te gaan
+common-confirm-word = BEVESTIG
+common-confirm-placeholder = Typ { $confirmWord } om door te gaan.
 common-confirm-failed = Bevestiging mislukt: Bewerking geannuleerd.
 common-modal-label-warning = WAARSCHUWING: Deze actie kan niet ongedaan worden gemaakt!
 

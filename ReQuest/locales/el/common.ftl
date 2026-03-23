@@ -23,7 +23,8 @@ common-page-label = Σελίδα { $current }/{ $total }
 common-error-page-selector = Δεν ήταν δυνατό το άνοιγμα του επιλογέα σελίδας
 
 # Confirm modal
-common-confirm-placeholder = Πληκτρολογήστε CONFIRM για να συνεχίσετε
+common-confirm-word = ΕΠΙΒΕΒΑΙΩΣΗ
+common-confirm-placeholder = Πληκτρολογήστε { $confirmWord } για να συνεχίσετε.
 common-confirm-failed = Η επιβεβαίωση απέτυχε: Η ενέργεια ακυρώθηκε.
 common-modal-label-warning = ΠΡΟΕΙΔΟΠΟΙΗΣΗ: Αυτή η ενέργεια δεν μπορεί να αναιρεθεί!
 

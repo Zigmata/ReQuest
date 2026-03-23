@@ -23,7 +23,8 @@ common-page-label = Page { $current }/{ $total }
 common-error-page-selector = Could not open page selector
 
 # Confirm modal
-common-confirm-placeholder = Type CONFIRM to proceed
+common-confirm-word = CONFIRM
+common-confirm-placeholder = Type { $confirmWord } to proceed.
 common-confirm-failed = Confirmation Failed: Operation cancelled.
 common-modal-label-warning = WARNING: This action cannot be undone!
 

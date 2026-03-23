@@ -72,10 +72,8 @@ gm-error-invalid-xp-value = Valoarea XP trebuie să fie un număr întreg poziti
 # GM confirm modals
 gm-modal-title-cancel-quest = Anulează quest
 gm-modal-label-cancel-quest = Tastați CONFIRM pentru a anula quest-ul.
-gm-modal-placeholder-cancel-quest = Tastați „CONFIRM" pentru a continua.
 gm-modal-title-remove-from-quest = Elimină personajul din quest
 gm-modal-label-remove-from-quest = Confirmați eliminarea personajului?
-gm-modal-placeholder-remove-from-quest = Tastați „CONFIRM" pentru a continua.
 
 # GM DM messages
 gm-dm-quest-cancelled = Quest-ul {"**"}{ $questTitle }{"**"} a fost anulat de GM.

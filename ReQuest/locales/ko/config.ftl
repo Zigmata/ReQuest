@@ -95,7 +95,6 @@ config-modal-label-shop-removal-warning = 경고: 이 작업은 되돌릴 수 �
 config-modal-label-kit-deletion-warning = 경고: 되돌릴 수 없습니다!
 config-modal-label-remove-stock-limit = 재고 한도를 제거하려면 CONFIRM을 입력하세요
 config-modal-label-clear-shop = 이 상점의 모든 아이템을 삭제하시겠습니까?
-config-modal-placeholder-type-confirm = CONFIRM을 입력하세요
 
 # 버튼의 오류 메시지
 config-error-shop-data-not-found = 오류: 해당 상점 데이터를 찾을 수 없습니다.

@@ -95,7 +95,6 @@ config-modal-label-shop-removal-warning = ВНИМАНИЕ: Това дейст�
 config-modal-label-kit-deletion-warning = ВНИМАНИЕ: Необратимо!
 config-modal-label-remove-stock-limit = Напишете CONFIRM, за да премахнете лимита на наличност
 config-modal-label-clear-shop = Изчистване на всички предмети от този магазин?
-config-modal-placeholder-type-confirm = Напишете CONFIRM
 
 # Error messages from buttons
 config-error-shop-data-not-found = Грешка: Данните за този магазин не са намерени.

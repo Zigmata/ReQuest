@@ -72,10 +72,8 @@ gm-error-invalid-xp-value = Η τιμή XP πρέπει να είναι θετι
 # GM confirm modals
 gm-modal-title-cancel-quest = Ακύρωση Quest
 gm-modal-label-cancel-quest = Πληκτρολογήστε CONFIRM για ακύρωση του quest.
-gm-modal-placeholder-cancel-quest = Πληκτρολογήστε "CONFIRM" για να συνεχίσετε.
 gm-modal-title-remove-from-quest = Αφαίρεση χαρακτήρα από quest
 gm-modal-label-remove-from-quest = Επιβεβαίωση αφαίρεσης χαρακτήρα;
-gm-modal-placeholder-remove-from-quest = Πληκτρολογήστε "CONFIRM" για να συνεχίσετε.
 
 # GM DM messages
 gm-dm-quest-cancelled = Το quest {"**"}{ $questTitle }{"**"} ακυρώθηκε από τον GM.

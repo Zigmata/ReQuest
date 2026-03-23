@@ -23,7 +23,8 @@ common-page-label = Pagina { $current }/{ $total }
 common-error-page-selector = Nu s-a putut deschide selectorul de pagini
 
 # Confirm modal
-common-confirm-placeholder = Tastează CONFIRM pentru a continua
+common-confirm-word = CONFIRMĂ
+common-confirm-placeholder = Tastează { $confirmWord } pentru a continua.
 common-confirm-failed = Confirmare eșuată: Operațiune anulată.
 common-modal-label-warning = ATENȚIE: Această acțiune nu poate fi anulată!
 

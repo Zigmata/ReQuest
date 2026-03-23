@@ -93,7 +93,6 @@ config-modal-label-remove-denomination = Видалити { $denominationName }?
 config-modal-label-remove-currency = Видалити { $currencyName }?
 config-modal-label-shop-removal-warning = УВАГА: Ця дія незворотна!
 config-modal-label-kit-deletion-warning = УВАГА: Незворотно!
-config-modal-placeholder-type-confirm = Введіть CONFIRM
 config-modal-label-remove-stock-limit = Введіть CONFIRM для видалення обмеження запасів
 config-modal-label-clear-shop = Очистити всі предмети з цього магазину?
 

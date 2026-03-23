@@ -23,7 +23,8 @@ common-page-label = Стр. { $current }/{ $total }
 common-error-page-selector = Не може да се отвори избор на страница
 
 # Confirm modal
-common-confirm-placeholder = Напишете CONFIRM, за да продължите
+common-confirm-word = ПОТВЪРДИ
+common-confirm-placeholder = Напишете { $confirmWord } за да продължите.
 common-confirm-failed = Потвърждението е неуспешно: Операцията е отменена.
 common-modal-label-warning = ВНИМАНИЕ: Това действие не може да бъде отменено!
 

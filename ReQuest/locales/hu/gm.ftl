@@ -72,10 +72,8 @@ gm-error-invalid-xp-value = A tapasztalatpont értéknek pozitív egész számna
 # GM confirm modals
 gm-modal-title-cancel-quest = Quest törlése
 gm-modal-label-cancel-quest = Írd be: CONFIRM a quest törléséhez.
-gm-modal-placeholder-cancel-quest = Írd be: „CONFIRM" a folytatáshoz.
 gm-modal-title-remove-from-quest = Karakter eltávolítása a questből
 gm-modal-label-remove-from-quest = Megerősíted a karakter eltávolítását?
-gm-modal-placeholder-remove-from-quest = Írd be: „CONFIRM" a folytatáshoz.
 
 # GM DM messages
 gm-dm-quest-cancelled = A(z) {"**"}{ $questTitle }{"**"} quest törölve lett a GM által.

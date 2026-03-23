@@ -95,7 +95,6 @@ config-modal-label-shop-removal-warning = 警告：この操作は元に戻せ�
 config-modal-label-kit-deletion-warning = 警告：元に戻せません！
 config-modal-label-remove-stock-limit = 在庫制限を削除するには CONFIRM と入力してください
 config-modal-label-clear-shop = このショップのすべてのアイテムをクリアしますか？
-config-modal-placeholder-type-confirm = CONFIRM と入力
 
 # Error messages from buttons
 config-error-shop-data-not-found = エラー：そのショップのデータが見つかりません。

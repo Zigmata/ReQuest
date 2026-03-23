@@ -95,7 +95,6 @@ config-modal-label-shop-removal-warning = UYARI: Bu işlem geri alınamaz!
 config-modal-label-kit-deletion-warning = UYARI: Geri alınamaz!
 config-modal-label-remove-stock-limit = Stok limitini kaldırmak için CONFIRM yazın
 config-modal-label-clear-shop = Bu mağazadaki tüm öğeleri temizle?
-config-modal-placeholder-type-confirm = CONFIRM yazın
 
 # Error messages from buttons
 config-error-shop-data-not-found = Hata: Bu mağazanın verileri bulunamadı.

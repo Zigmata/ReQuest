@@ -95,7 +95,6 @@ config-modal-label-shop-removal-warning = ATTENZIONE: Questa azione è irreversi
 config-modal-label-kit-deletion-warning = ATTENZIONE: Irreversibile!
 config-modal-label-remove-stock-limit = Digita CONFIRM per rimuovere il limite scorte
 config-modal-label-clear-shop = Svuotare tutti gli articoli da questo negozio?
-config-modal-placeholder-type-confirm = Digita CONFIRM
 
 # Messaggi di errore dai pulsanti
 config-error-shop-data-not-found = Errore: impossibile trovare i dati di quel negozio.

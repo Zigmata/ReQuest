@@ -95,7 +95,6 @@ config-modal-label-shop-removal-warning = चेतावनी: यह का�
 config-modal-label-kit-deletion-warning = चेतावनी: अपरिवर्तनीय!
 config-modal-label-remove-stock-limit = स्टॉक सीमा हटाने के लिए CONFIRM टाइप करें
 config-modal-label-clear-shop = इस दुकान से सभी आइटम हटाएँ?
-config-modal-placeholder-type-confirm = CONFIRM टाइप करें
 
 # Error messages from buttons
 config-error-shop-data-not-found = त्रुटि: उस दुकान का डेटा नहीं मिला।

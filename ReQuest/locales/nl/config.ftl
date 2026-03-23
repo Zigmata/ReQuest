@@ -95,7 +95,6 @@ config-modal-label-shop-removal-warning = WAARSCHUWING: Deze actie is onomkeerba
 config-modal-label-kit-deletion-warning = WAARSCHUWING: Onomkeerbaar!
 config-modal-label-remove-stock-limit = Typ CONFIRM om de voorraadlimiet te verwijderen
 config-modal-label-clear-shop = Alle items uit deze winkel verwijderen?
-config-modal-placeholder-type-confirm = Typ CONFIRM
 
 # Error messages from buttons
 config-error-shop-data-not-found = Fout: Kan de gegevens van die winkel niet vinden.

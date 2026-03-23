@@ -20,8 +20,10 @@ class LocaleModal(Modal):
 
 
 class ConfirmModal(LocaleModal):
-    def __init__(self, title: str, prompt_label: str, prompt_placeholder: str, confirm_callback, locale=None):
+    def __init__(self, title: str, prompt_label: str, confirm_callback, locale=None):
         self._locale = locale or DEFAULT_LOCALE
+        self.confirm_word = t(self._locale, 'common-confirm-word')
+        prompt_placeholder = t(self._locale, 'common-confirm-placeholder', confirmWord=self.confirm_word)
         if len(title) > 45:
             title = title[:42] + '...'
         if len(prompt_label) > 45:
@@ -34,13 +36,13 @@ class ConfirmModal(LocaleModal):
             label=prompt_label,
             placeholder=prompt_placeholder,
             required=True,
-            max_length=7
+            max_length=len(self.confirm_word)
         )
         self.add_item(self.prompt)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            if self.prompt.value.strip() == 'CONFIRM':
+            if self.prompt.value.strip() == self.confirm_word:
                 await self.confirm_callback(interaction)
             else:
                 raise UserFeedbackError(

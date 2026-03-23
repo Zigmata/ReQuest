@@ -72,10 +72,8 @@ gm-error-invalid-xp-value = XP 값은 양의 정수여야 합니다!
 # GM 확인 모달
 gm-modal-title-cancel-quest = Quest 취소
 gm-modal-label-cancel-quest = Quest를 취소하려면 CONFIRM을 입력하세요.
-gm-modal-placeholder-cancel-quest = 계속하려면 "CONFIRM"을 입력하세요.
 gm-modal-title-remove-from-quest = Quest에서 캐릭터 제거
 gm-modal-label-remove-from-quest = 캐릭터 제거를 확인하시겠습니까?
-gm-modal-placeholder-remove-from-quest = 계속하려면 "CONFIRM"을 입력하세요.
 
 # GM DM 메시지
 gm-dm-quest-cancelled = Quest {"**"}{ $questTitle }{"**"}이(가) GM에 의해 취소되었습니다.

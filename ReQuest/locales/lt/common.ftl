@@ -23,7 +23,8 @@ common-page-label = Puslapis { $current }/{ $total }
 common-error-page-selector = Nepavyko atidaryti puslapių parinkiklio
 
 # Confirm modal
-common-confirm-placeholder = Įveskite CONFIRM, kad tęstumėte
+common-confirm-word = PATVIRTINTI
+common-confirm-placeholder = Įveskite { $confirmWord }, kad tęstumėte.
 common-confirm-failed = Patvirtinimas nepavyko: operacija atšaukta.
 common-modal-label-warning = DĖMESIO: Šio veiksmo negalima atšaukti!
 

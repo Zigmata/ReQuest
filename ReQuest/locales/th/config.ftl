@@ -95,7 +95,6 @@ config-modal-label-shop-removal-warning = คำเตือน: การดำ
 config-modal-label-kit-deletion-warning = คำเตือน: ไม่สามารถย้อนกลับได้!
 config-modal-label-remove-stock-limit = พิมพ์ CONFIRM เพื่อลบขีดจำกัดสินค้าคงเหลือ
 config-modal-label-clear-shop = ล้างสินค้าทั้งหมดจากร้านค้านี้?
-config-modal-placeholder-type-confirm = พิมพ์ CONFIRM
 
 # Error messages from buttons
 config-error-shop-data-not-found = ข้อผิดพลาด: ไม่พบข้อมูลร้านค้านั้น

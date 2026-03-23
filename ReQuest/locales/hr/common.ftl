@@ -23,7 +23,8 @@ common-page-label = Stranica { $current }/{ $total }
 common-error-page-selector = Nije moguće otvoriti odabir stranice
 
 # Confirm modal
-common-confirm-placeholder = Upišite CONFIRM za nastavak
+common-confirm-word = POTVRDI
+common-confirm-placeholder = Upišite { $confirmWord } za nastavak.
 common-confirm-failed = Potvrda neuspješna: Operacija otkazana.
 common-modal-label-warning = UPOZORENJE: Ova radnja se ne može poništiti!
 

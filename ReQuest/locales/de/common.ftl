@@ -23,7 +23,8 @@ common-page-label = Seite { $current }/{ $total }
 common-error-page-selector = Seitenauswahl konnte nicht geöffnet werden
 
 # Bestätigungsdialog
-common-confirm-placeholder = Geben Sie CONFIRM ein, um fortzufahren
+common-confirm-word = BESTÄTIGEN
+common-confirm-placeholder = Geben Sie { $confirmWord } ein, um fortzufahren.
 common-confirm-failed = Bestätigung fehlgeschlagen: Vorgang abgebrochen.
 common-modal-label-warning = WARNUNG: Diese Aktion kann nicht rückgängig gemacht werden!
 

@@ -95,7 +95,6 @@ config-modal-label-shop-removal-warning = 警告：此操作不可逆！
 config-modal-label-kit-deletion-warning = 警告：不可逆！
 config-modal-label-remove-stock-limit = 输入 CONFIRM 以移除库存限制
 config-modal-label-clear-shop = 清空此商店的所有物品？
-config-modal-placeholder-type-confirm = 输入 CONFIRM
 
 # Error messages from buttons
 config-error-shop-data-not-found = 错误：找不到该商店的数据。

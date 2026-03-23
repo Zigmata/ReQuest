@@ -95,7 +95,6 @@ config-modal-label-shop-removal-warning = VAROVÁNÍ: Tato akce je nevratná!
 config-modal-label-kit-deletion-warning = VAROVÁNÍ: Nevratné!
 config-modal-label-remove-stock-limit = Napište CONFIRM pro odebrání limitu zásob
 config-modal-label-clear-shop = Vymazat všechny předměty z tohoto obchodu?
-config-modal-placeholder-type-confirm = Napište CONFIRM
 
 # Error messages from buttons
 config-error-shop-data-not-found = Chyba: Data tohoto obchodu nebyla nalezena.

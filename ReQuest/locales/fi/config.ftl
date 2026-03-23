@@ -96,7 +96,6 @@ config-modal-label-shop-removal-warning = VAROITUS: Tätä toimintoa ei voi kumo
 config-modal-label-kit-deletion-warning = VAROITUS: Peruuttamaton!
 config-modal-label-remove-stock-limit = Kirjoita CONFIRM poistaaksesi varastorajan
 config-modal-label-clear-shop = Tyhjennä kaikki tuotteet tästä kaupasta?
-config-modal-placeholder-type-confirm = Kirjoita CONFIRM
 
 # Error messages from buttons
 config-error-shop-data-not-found = Virhe: Kyseisen kaupan tietoja ei löytynyt.

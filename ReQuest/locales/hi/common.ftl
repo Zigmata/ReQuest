@@ -23,7 +23,8 @@ common-page-label = पृष्ठ { $current }/{ $total }
 common-error-page-selector = पृष्ठ चयनकर्ता खोला नहीं जा सका
 
 # Confirm modal
-common-confirm-placeholder = आगे बढ़ने के लिए CONFIRM टाइप करें
+common-confirm-word = पुष्टि
+common-confirm-placeholder = आगे बढ़ने के लिए { $confirmWord } टाइप करें।
 common-confirm-failed = पुष्टि विफल: कार्रवाई रद्द कर दी गई।
 common-modal-label-warning = चेतावनी: यह कार्रवाई पूर्ववत नहीं की जा सकती!
 

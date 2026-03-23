@@ -72,10 +72,8 @@ gm-error-invalid-xp-value = XP değeri pozitif bir tam sayı olmalıdır!
 # GM confirm modals
 gm-modal-title-cancel-quest = Quest'i İptal Et
 gm-modal-label-cancel-quest = Quest'i iptal etmek için CONFIRM yazın.
-gm-modal-placeholder-cancel-quest = Devam etmek için "CONFIRM" yazın.
 gm-modal-title-remove-from-quest = Karakteri quest'ten kaldır
 gm-modal-label-remove-from-quest = Karakter kaldırma onaylansın mı?
-gm-modal-placeholder-remove-from-quest = Devam etmek için "CONFIRM" yazın.
 
 # GM DM messages
 gm-dm-quest-cancelled = {"**"}{ $questTitle }{"**"} quest'i GM tarafından iptal edildi.

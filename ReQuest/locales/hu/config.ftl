@@ -95,7 +95,6 @@ config-modal-label-shop-removal-warning = FIGYELEM: Ez a művelet visszafordíth
 config-modal-label-kit-deletion-warning = FIGYELEM: Visszafordíthatatlan!
 config-modal-label-remove-stock-limit = Írd be: CONFIRM a készletkorlát eltávolításához
 config-modal-label-clear-shop = Az összes tárgy törlése ebből a boltból?
-config-modal-placeholder-type-confirm = Írd be: CONFIRM
 
 # Error messages from buttons
 config-error-shop-data-not-found = Hiba: A bolt adatai nem találhatók.

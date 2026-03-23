@@ -95,7 +95,6 @@ config-modal-label-shop-removal-warning = ATENȚIE: Această acțiune este ireve
 config-modal-label-kit-deletion-warning = ATENȚIE: Ireversibil!
 config-modal-label-remove-stock-limit = Tastați CONFIRM pentru a elimina limita de stoc
 config-modal-label-clear-shop = Goliți toate articolele din acest magazin?
-config-modal-placeholder-type-confirm = Tastați CONFIRM
 
 # Error messages from buttons
 config-error-shop-data-not-found = Eroare: Nu s-au putut găsi datele acelui magazin.

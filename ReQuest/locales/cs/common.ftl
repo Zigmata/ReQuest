@@ -23,7 +23,8 @@ common-page-label = Stránka { $current }/{ $total }
 common-error-page-selector = Nepodařilo se otevřít výběr stránek
 
 # Confirm modal
-common-confirm-placeholder = Napište CONFIRM pro pokračování
+common-confirm-word = POTVRDIT
+common-confirm-placeholder = Napište { $confirmWord } pro pokračování.
 common-confirm-failed = Potvrzení selhalo: Operace zrušena.
 common-modal-label-warning = VAROVÁNÍ: Tuto akci nelze vrátit zpět!
 

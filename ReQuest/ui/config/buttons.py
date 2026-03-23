@@ -80,7 +80,6 @@ class RemoveGMRoleButton(Button):
             confirm_modal = common_modals.ConfirmModal(
                 title=t(locale, 'config-modal-title-confirm-role-removal'),
                 prompt_label=t(locale, 'config-modal-label-remove-role', **{'roleName': self.role_name}),
-                prompt_placeholder=t(locale, 'common-confirm-placeholder'),
                 confirm_callback=self._confirm_delete,
                 locale=locale
             )
@@ -269,7 +268,6 @@ class RemoveDenominationButton(Button):
                 title=t(locale, 'config-modal-title-confirm-removal'),
                 prompt_label=t(locale, 'config-modal-label-remove-denomination',
                                **{'denominationName': self.denomination_name}),
-                prompt_placeholder=t(locale, 'common-confirm-placeholder'),
                 confirm_callback=self._confirm_delete,
                 locale=locale
             )
@@ -373,7 +371,6 @@ class RemoveCurrencyButton(Button):
             modal = common_modals.ConfirmModal(
                 title=t(locale, 'config-modal-title-confirm-currency-removal'),
                 prompt_label=t(locale, 'config-modal-label-remove-currency', **{'currencyName': self.currency_name}),
-                prompt_placeholder=t(locale, 'common-confirm-placeholder'),
                 confirm_callback=self._confirm_delete,
                 locale=locale
             )
@@ -706,7 +703,6 @@ class RemoveShopButton(Button):
             confirm_modal = common_modals.ConfirmModal(
                 title=t(locale, 'config-modal-title-confirm-shop-removal'),
                 prompt_label=t(locale, 'config-modal-label-shop-removal-warning'),
-                prompt_placeholder=t(locale, 'common-confirm-placeholder'),
                 confirm_callback=self._confirm_delete,
                 locale=locale
             )
@@ -1197,7 +1193,6 @@ class ClearNewCharacterShopButton(Button):
             confirm_modal = common_modals.ConfirmModal(
                 title=t(locale, 'config-modal-title-clear-shop'),
                 prompt_label=t(locale, 'config-modal-label-clear-shop'),
-                prompt_placeholder=t(locale, 'common-confirm-placeholder'),
                 confirm_callback=self._confirm_clear,
                 locale=locale
             )
@@ -1320,7 +1315,6 @@ class RemoveStaticKitButton(Button):
             confirm_modal = common_modals.ConfirmModal(
                 title=t(locale, 'config-modal-title-confirm-kit-deletion'),
                 prompt_label=t(locale, 'config-modal-label-kit-deletion-warning'),
-                prompt_placeholder=t(locale, 'config-modal-placeholder-type-confirm'),
                 confirm_callback=self._confirm_delete,
                 locale=locale
             )
@@ -1625,7 +1619,6 @@ class RemoveItemStockLimitButton(Button):
             confirm_modal = common_modals.ConfirmModal(
                 title=t(locale, 'config-modal-title-confirm-remove-stock-limit'),
                 prompt_label=t(locale, 'config-modal-label-remove-stock-limit'),
-                prompt_placeholder=t(locale, 'config-modal-placeholder-type-confirm'),
                 confirm_callback=self._confirm_callback,
                 locale=locale
             )
@@ -1758,7 +1751,6 @@ class RemoveGMQuestRoleButton(Button):
                 title=t(locale, 'config-modal-title-confirm-quest-role-removal'),
                 prompt_label=t(locale, 'config-modal-label-remove-quest-role',
                                roleName=self.role_name, gmName=self.gm_name),
-                prompt_placeholder=t(locale, 'config-modal-placeholder-type-confirm'),
                 confirm_callback=self.confirm_callback,
                 locale=locale
             )

@@ -1,7 +1,7 @@
 ## Strings comuns de UI compartilhadas entre módulos
 
 # Botões de navegação
-common-btn-done = Pronto
+common-btn-done = Concluir
 common-btn-back = Voltar
 common-btn-previous = Anterior
 common-btn-next = Próximo
@@ -20,16 +20,17 @@ common-btn-disable = Desativar
 # Paginação
 common-page-display = Página { $current } de { $total }
 common-page-label = Página { $current }/{ $total }
-common-error-page-selector = Não foi possível abrir o seletor de página
+common-error-page-selector = Não foi possível abrir o seletor de páginas
 
 # Modal de confirmação
-common-confirm-placeholder = Digite CONFIRM para continuar
-common-confirm-failed = Confirmação Falhou: Operação cancelada.
+common-confirm-word = CONFIRMAR
+common-confirm-placeholder = Digite { $confirmWord } para continuar.
+common-confirm-failed = Confirmação falhou: operação cancelada.
 common-modal-label-warning = AVISO: Esta ação não pode ser desfeita!
 
 # Modal de pular página
-common-page-jump-title = Ir para Página
-common-page-jump-label = Número da Página
+common-page-jump-title = Ir para a página
+common-page-jump-label = Número da página
 common-page-jump-placeholder = Digite um número de 1 a { $totalPages }
 
 # Rótulos compartilhados
@@ -40,7 +41,7 @@ common-label-locked = (BLOQUEADO)
 common-label-loose-items = Itens Soltos
 common-label-and-more = . . . e mais { $remaining }.
 common-label-currency = Moeda
-common-label-inventory-empty = Inventário vazio.
+common-label-inventory-empty = O inventário está vazio.
 
 # Campos de embed compartilhados
 common-embed-field-party = __Grupo__
@@ -48,11 +49,11 @@ common-embed-field-wait-list = __Lista de Espera__
 common-embed-footer-quest-id = ID da Quest: { $questId }
 common-embed-footer-transaction-id = ID da Transação: { $transactionId }
 common-embed-label-gm = {"**"}Mestre:{"**"}
-common-embed-label-party-restrictions = {"**"}Restrições do Grupo:{"**"}
+common-embed-label-party-restrictions = {"**"}Restrições de Grupo:{"**"}
 
 # Aviso de tradução
 common-translation-notice =
-    Alguns idiomas podem ser gerados automaticamente a partir de suas origens em inglês e podem não ser totalmente precisos. Se você notar uma tradução incorreta, ajude-nos a melhorar a acessibilidade do ReQuest reportando o erro no [Discord Oficial de Suporte do ReQuest](https://discord.gg/Zq37gj4).
+    Alguns idiomas podem ser traduzidos automaticamente a partir do inglês e podem não ser totalmente precisos. Se você notar uma tradução incorreta, ajude-nos a melhorar a acessibilidade do ReQuest reportando o erro no [Discord Oficial de Suporte do ReQuest](https://discord.gg/Zq37gj4).
 
 # Nomes dos dias
 common-day-monday = Segunda-feira

@@ -23,7 +23,8 @@ common-page-label = { $current }/{ $total } 페이지
 common-error-page-selector = 페이지 선택기를 열 수 없습니다
 
 # 확인 모달
-common-confirm-placeholder = 계속하려면 CONFIRM을 입력하세요
+common-confirm-word = 확인
+common-confirm-placeholder = 계속하려면 { $confirmWord }을 입력하세요.
 common-confirm-failed = 확인 실패: 작업이 취소되었습니다.
 common-modal-label-warning = 경고: 이 작업은 되돌릴 수 없습니다!
 

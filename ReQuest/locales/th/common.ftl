@@ -23,7 +23,8 @@ common-page-label = หน้า { $current }/{ $total }
 common-error-page-selector = ไม่สามารถเปิดตัวเลือกหน้าได้
 
 # Confirm modal
-common-confirm-placeholder = พิมพ์ CONFIRM เพื่อดำเนินการ
+common-confirm-word = ยืนยัน
+common-confirm-placeholder = พิมพ์ { $confirmWord } เพื่อดำเนินการ
 common-confirm-failed = การยืนยันล้มเหลว: การดำเนินการถูกยกเลิก
 common-modal-label-warning = คำเตือน: การดำเนินการนี้ไม่สามารถยกเลิกได้!
 

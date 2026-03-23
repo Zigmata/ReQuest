@@ -101,7 +101,6 @@ config-modal-label-shop-removal-warning = WARNING: This action is irreversible!
 config-modal-label-kit-deletion-warning = WARNING: Irreversible!
 config-modal-label-remove-stock-limit = Type CONFIRM to remove the stock limit
 config-modal-label-clear-shop = Clear all items from this shop?
-config-modal-placeholder-type-confirm = Type CONFIRM
 
 # Error messages from buttons
 config-error-shop-data-not-found = Error: Could not find that shop's data.

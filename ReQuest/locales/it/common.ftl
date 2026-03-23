@@ -23,7 +23,8 @@ common-page-label = Pagina { $current }/{ $total }
 common-error-page-selector = Impossibile aprire il selettore di pagina
 
 # Modale di conferma
-common-confirm-placeholder = Digita CONFIRM per procedere
+common-confirm-word = CONFERMA
+common-confirm-placeholder = Digita { $confirmWord } per procedere.
 common-confirm-failed = Conferma fallita: operazione annullata.
 common-modal-label-warning = ATTENZIONE: Questa azione non può essere annullata!
 

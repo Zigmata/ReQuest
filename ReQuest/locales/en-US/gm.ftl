@@ -73,10 +73,8 @@ gm-error-role-hierarchy = ReQuest cannot manage the role "{ $roleName }" (ID: { 
 # GM confirm modals
 gm-modal-title-cancel-quest = Cancel Quest
 gm-modal-label-cancel-quest = Type CONFIRM to cancel the quest.
-gm-modal-placeholder-cancel-quest = Type "CONFIRM" to proceed.
 gm-modal-title-remove-from-quest = Remove character from quest
 gm-modal-label-remove-from-quest = Confirm character removal?
-gm-modal-placeholder-remove-from-quest = Type "CONFIRM" to proceed.
 
 # GM DM messages
 gm-dm-quest-cancelled = Quest {"**"}{ $questTitle }{"**"} was cancelled by the GM.

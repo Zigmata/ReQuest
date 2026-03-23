@@ -95,7 +95,6 @@ config-modal-label-shop-removal-warning = WARNUNG: Diese Aktion ist unwiderrufli
 config-modal-label-kit-deletion-warning = WARNUNG: Unwiderruflich!
 config-modal-label-remove-stock-limit = Geben Sie CONFIRM ein, um die Bestandsgrenze zu entfernen
 config-modal-label-clear-shop = Alle Artikel aus diesem Laden entfernen?
-config-modal-placeholder-type-confirm = Geben Sie CONFIRM ein
 
 # Fehlermeldungen von Schaltflächen
 config-error-shop-data-not-found = Fehler: Shopdaten konnten nicht gefunden werden.

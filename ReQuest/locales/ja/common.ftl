@@ -23,7 +23,8 @@ common-page-label = ページ { $current }/{ $total }
 common-error-page-selector = ページ選択を開けませんでした
 
 # Confirm modal
-common-confirm-placeholder = 続行するには CONFIRM と入力してください
+common-confirm-word = 確認
+common-confirm-placeholder = 続行するには { $confirmWord } と入力してください。
 common-confirm-failed = 確認失敗：操作がキャンセルされました。
 common-modal-label-warning = 警告：この操作は元に戻せません！
 

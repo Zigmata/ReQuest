@@ -72,10 +72,8 @@ gm-error-invalid-xp-value = Значення XP має бути додатнім
 # Модальні вікна підтвердження GM
 gm-modal-title-cancel-quest = Скасувати квест
 gm-modal-label-cancel-quest = Введіть CONFIRM для скасування квесту.
-gm-modal-placeholder-cancel-quest = Введіть "CONFIRM" для продовження.
 gm-modal-title-remove-from-quest = Видалити персонажа з квесту
 gm-modal-label-remove-from-quest = Підтвердити видалення персонажа?
-gm-modal-placeholder-remove-from-quest = Введіть "CONFIRM" для продовження.
 
 # Особисті повідомлення GM
 gm-dm-quest-cancelled = Квест {"**"}{ $questTitle }{"**"} було скасовано GM.

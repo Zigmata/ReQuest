@@ -23,7 +23,8 @@ common-page-label = Sida { $current }/{ $total }
 common-error-page-selector = Kunde inte öppna sidväljaren
 
 # Confirm modal
-common-confirm-placeholder = Skriv CONFIRM för att fortsätta
+common-confirm-word = BEKRÄFTA
+common-confirm-placeholder = Skriv { $confirmWord } för att fortsätta.
 common-confirm-failed = Bekräftelse misslyckades: Åtgärden avbröts.
 common-modal-label-warning = VARNING: Denna åtgärd kan inte ångras!
 

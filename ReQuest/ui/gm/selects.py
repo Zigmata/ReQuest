@@ -64,7 +64,6 @@ class RemovePlayerSelect(Select):
             confirm_modal = common_modals.ConfirmModal(
                 title=t(locale, 'gm-modal-title-remove-from-quest'),
                 prompt_label=t(locale, 'gm-modal-label-remove-from-quest'),
-                prompt_placeholder=t(locale, 'gm-modal-placeholder-remove-from-quest'),
                 confirm_callback=view.confirm_callback,
                 locale=locale
             )

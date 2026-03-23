@@ -72,10 +72,8 @@ gm-error-invalid-xp-value = Hodnota XP musí být kladné celé číslo!
 # GM confirm modals
 gm-modal-title-cancel-quest = Zrušit quest
 gm-modal-label-cancel-quest = Napište CONFIRM pro zrušení questu.
-gm-modal-placeholder-cancel-quest = Napište „CONFIRM" pro pokračování.
 gm-modal-title-remove-from-quest = Odebrat postavu z questu
 gm-modal-label-remove-from-quest = Potvrdit odebrání postavy?
-gm-modal-placeholder-remove-from-quest = Napište „CONFIRM" pro pokračování.
 
 # GM DM messages
 gm-dm-quest-cancelled = Quest {"**"}{ $questTitle }{"**"} byl zrušen GM.

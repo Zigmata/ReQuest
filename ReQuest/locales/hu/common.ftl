@@ -23,7 +23,8 @@ common-page-label = { $current }/{ $total }. oldal
 common-error-page-selector = Nem sikerült megnyitni az oldalválasztót
 
 # Confirm modal
-common-confirm-placeholder = Írd be: CONFIRM a folytatáshoz
+common-confirm-word = MEGERŐSÍT
+common-confirm-placeholder = Írd be: { $confirmWord } a folytatáshoz.
 common-confirm-failed = Megerősítés sikertelen: A művelet törölve.
 common-modal-label-warning = FIGYELEM: Ez a művelet nem vonható vissza!
 

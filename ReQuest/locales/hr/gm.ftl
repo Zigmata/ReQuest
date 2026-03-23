@@ -72,10 +72,8 @@ gm-error-invalid-xp-value = Vrijednost XP-a mora biti pozitivan cijeli broj!
 # GM confirm modals
 gm-modal-title-cancel-quest = Otkaži quest
 gm-modal-label-cancel-quest = Upišite CONFIRM za otkazivanje questa.
-gm-modal-placeholder-cancel-quest = Upišite "CONFIRM" za nastavak.
 gm-modal-title-remove-from-quest = Ukloni lika iz questa
 gm-modal-label-remove-from-quest = Potvrditi uklanjanje lika?
-gm-modal-placeholder-remove-from-quest = Upišite "CONFIRM" za nastavak.
 
 # GM DM messages
 gm-dm-quest-cancelled = Quest {"**"}{ $questTitle }{"**"} je otkazan od strane GM-a.

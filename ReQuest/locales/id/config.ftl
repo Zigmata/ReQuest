@@ -95,7 +95,6 @@ config-modal-label-shop-removal-warning = PERINGATAN: Tindakan ini tidak dapat d
 config-modal-label-kit-deletion-warning = PERINGATAN: Tidak dapat dibatalkan!
 config-modal-label-remove-stock-limit = Ketik CONFIRM untuk menghapus batas stok
 config-modal-label-clear-shop = Kosongkan semua item dari toko ini?
-config-modal-placeholder-type-confirm = Ketik CONFIRM
 
 # Error messages from buttons
 config-error-shop-data-not-found = Kesalahan: Tidak dapat menemukan data toko tersebut.

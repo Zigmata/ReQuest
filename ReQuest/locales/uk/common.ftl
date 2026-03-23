@@ -23,7 +23,8 @@ common-page-label = Сторінка { $current }/{ $total }
 common-error-page-selector = Не вдалося відкрити вибір сторінки
 
 # Модальне вікно підтвердження
-common-confirm-placeholder = Введіть CONFIRM для продовження
+common-confirm-word = ПІДТВЕРДИТИ
+common-confirm-placeholder = Введіть { $confirmWord } для продовження.
 common-confirm-failed = Підтвердження не вдалося: Операцію скасовано.
 common-modal-label-warning = УВАГА: Цю дію неможливо скасувати!
 

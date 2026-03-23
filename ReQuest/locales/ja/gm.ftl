@@ -72,10 +72,8 @@ gm-error-invalid-xp-value = 経験値は正の整数でなければなりませ�
 # GM confirm modals
 gm-modal-title-cancel-quest = Quest のキャンセル
 gm-modal-label-cancel-quest = Quest をキャンセルするには CONFIRM と入力してください。
-gm-modal-placeholder-cancel-quest = 続行するには「CONFIRM」と入力してください。
 gm-modal-title-remove-from-quest = Quest からキャラクターを削除
 gm-modal-label-remove-from-quest = キャラクターの削除を確認しますか？
-gm-modal-placeholder-remove-from-quest = 続行するには「CONFIRM」と入力してください。
 
 # GM DM messages
 gm-dm-quest-cancelled = Quest {"**"}{ $questTitle }{"**"} が GM によってキャンセルされました。

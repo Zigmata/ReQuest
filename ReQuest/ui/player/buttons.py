@@ -66,7 +66,6 @@ class RemoveCharacterButton(Button):
             confirm_modal = common_modals.ConfirmModal(
                 title=t(locale, 'player-modal-title-confirm-char-removal'),
                 prompt_label=t(locale, 'player-modal-label-confirm-char-delete', characterName=self.character_name),
-                prompt_placeholder=t(locale, 'common-confirm-placeholder'),
                 confirm_callback=self._confirm_delete,
                 locale=locale
             )
@@ -184,7 +183,6 @@ class RemovePlayerPostButton(Button):
             confirm_modal = common_modals.ConfirmModal(
                 title=t(locale, 'player-modal-title-confirm-post-removal'),
                 prompt_label=t(locale, 'player-modal-label-post-removal-warning'),
-                prompt_placeholder=t(locale, 'common-confirm-placeholder'),
                 confirm_callback=self._confirm_delete,
                 locale=locale
             )
@@ -672,7 +670,6 @@ class DeleteContainerButton(Button):
             confirm_modal = common_modals.ConfirmModal(
                 title=t(locale, 'player-modal-title-confirm-container-delete'),
                 prompt_label=prompt_label,
-                prompt_placeholder=t(locale, 'common-confirm-placeholder'),
                 confirm_callback=self._confirm_delete,
                 locale=locale
             )

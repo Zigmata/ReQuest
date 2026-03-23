@@ -23,7 +23,8 @@ common-page-label = Sivu { $current }/{ $total }
 common-error-page-selector = Sivuvalitsinta ei voitu avata
 
 # Confirm modal
-common-confirm-placeholder = Kirjoita CONFIRM jatkaaksesi
+common-confirm-word = VAHVISTA
+common-confirm-placeholder = Kirjoita { $confirmWord } jatkaaksesi.
 common-confirm-failed = Vahvistus epäonnistui: Toiminto peruutettu.
 common-modal-label-warning = VAROITUS: Tätä toimintoa ei voi kumota!
 

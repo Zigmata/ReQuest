@@ -95,7 +95,6 @@ config-modal-label-shop-removal-warning = VARNING: Denna åtgärd är oåterkall
 config-modal-label-kit-deletion-warning = VARNING: Oåterkalleligt!
 config-modal-label-remove-stock-limit = Skriv CONFIRM för att ta bort lagergränsen
 config-modal-label-clear-shop = Rensa alla föremål från denna butik?
-config-modal-placeholder-type-confirm = Skriv CONFIRM
 
 # Error messages from buttons
 config-error-shop-data-not-found = Fel: Kunde inte hitta butikens data.

@@ -95,7 +95,6 @@ config-modal-label-shop-removal-warning = ΠΡΟΕΙΔΟΠΟΙΗΣΗ: Αυτή �
 config-modal-label-kit-deletion-warning = ΠΡΟΕΙΔΟΠΟΙΗΣΗ: Μη αναστρέψιμη!
 config-modal-label-remove-stock-limit = Πληκτρολογήστε CONFIRM για αφαίρεση του ορίου αποθέματος
 config-modal-label-clear-shop = Εκκαθάριση όλων των αντικειμένων από αυτό το κατάστημα;
-config-modal-placeholder-type-confirm = Πληκτρολογήστε CONFIRM
 
 # Error messages from buttons
 config-error-shop-data-not-found = Σφάλμα: Δεν ήταν δυνατή η εύρεση των δεδομένων αυτού του καταστήματος.

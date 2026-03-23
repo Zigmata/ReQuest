@@ -72,10 +72,8 @@ gm-error-invalid-xp-value = XP-Wert muss eine positive Ganzzahl sein!
 # GM-Bestätigungsdialoge
 gm-modal-title-cancel-quest = Quest abbrechen
 gm-modal-label-cancel-quest = Geben Sie CONFIRM ein, um den Quest abzubrechen.
-gm-modal-placeholder-cancel-quest = Geben Sie "CONFIRM" ein, um fortzufahren.
 gm-modal-title-remove-from-quest = Charakter vom Quest entfernen
 gm-modal-label-remove-from-quest = Charakterentfernung bestätigen?
-gm-modal-placeholder-remove-from-quest = Geben Sie "CONFIRM" ein, um fortzufahren.
 
 # GM-Direktnachrichten
 gm-dm-quest-cancelled = Quest {"**"}{ $questTitle }{"**"} wurde vom GM abgebrochen.

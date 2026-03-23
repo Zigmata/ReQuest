@@ -23,7 +23,8 @@ common-page-label = Halaman { $current }/{ $total }
 common-error-page-selector = Tidak dapat membuka pemilih halaman
 
 # Confirm modal
-common-confirm-placeholder = Ketik CONFIRM untuk melanjutkan
+common-confirm-word = KONFIRMASI
+common-confirm-placeholder = Ketik { $confirmWord } untuk melanjutkan.
 common-confirm-failed = Konfirmasi Gagal: Operasi dibatalkan.
 common-modal-label-warning = PERINGATAN: Tindakan ini tidak dapat dibatalkan!
 

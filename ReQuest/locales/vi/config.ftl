@@ -95,7 +95,6 @@ config-modal-label-shop-removal-warning = CẢNH BÁO: Hành động này không
 config-modal-label-kit-deletion-warning = CẢNH BÁO: Không thể hoàn tác!
 config-modal-label-remove-stock-limit = Nhập CONFIRM để xóa giới hạn tồn kho
 config-modal-label-clear-shop = Xóa tất cả vật phẩm khỏi cửa hàng này?
-config-modal-placeholder-type-confirm = Nhập CONFIRM
 
 # Error messages from buttons
 config-error-shop-data-not-found = Lỗi: Không tìm thấy dữ liệu cửa hàng đó.

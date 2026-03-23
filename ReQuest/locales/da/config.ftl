@@ -95,7 +95,6 @@ config-modal-label-shop-removal-warning = ADVARSEL: Denne handling er irreversib
 config-modal-label-kit-deletion-warning = ADVARSEL: Irreversibelt!
 config-modal-label-remove-stock-limit = Skriv CONFIRM for at fjerne lagergrænsen
 config-modal-label-clear-shop = Ryd alle varer fra denne butik?
-config-modal-placeholder-type-confirm = Skriv CONFIRM
 
 # Error messages from buttons
 config-error-shop-data-not-found = Fejl: Kunne ikke finde den butiks data.

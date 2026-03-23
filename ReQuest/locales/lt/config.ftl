@@ -95,7 +95,6 @@ config-modal-label-shop-removal-warning = DĖMESIO: Šio veiksmo negalima atšau
 config-modal-label-kit-deletion-warning = DĖMESIO: Negrįžtamas veiksmas!
 config-modal-label-remove-stock-limit = Įveskite CONFIRM, kad pašalintumėte atsargų limitą
 config-modal-label-clear-shop = Išvalyti visus daiktus iš šios parduotuvės?
-config-modal-placeholder-type-confirm = Įveskite CONFIRM
 
 # Error messages from buttons
 config-error-shop-data-not-found = Klaida: Nepavyko rasti tos parduotuvės duomenų.

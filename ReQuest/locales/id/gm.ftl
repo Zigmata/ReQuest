@@ -72,10 +72,8 @@ gm-error-invalid-xp-value = Nilai XP harus berupa bilangan bulat positif!
 # GM confirm modals
 gm-modal-title-cancel-quest = Batalkan Quest
 gm-modal-label-cancel-quest = Ketik CONFIRM untuk membatalkan quest.
-gm-modal-placeholder-cancel-quest = Ketik "CONFIRM" untuk melanjutkan.
 gm-modal-title-remove-from-quest = Keluarkan karakter dari quest
 gm-modal-label-remove-from-quest = Konfirmasi pengeluaran karakter?
-gm-modal-placeholder-remove-from-quest = Ketik "CONFIRM" untuk melanjutkan.
 
 # GM DM messages
 gm-dm-quest-cancelled = Quest {"**"}{ $questTitle }{"**"} telah dibatalkan oleh GM.

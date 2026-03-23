@@ -95,7 +95,6 @@ config-modal-label-shop-removal-warning = UPOZORENJE: Ova radnja je nepovratna!
 config-modal-label-kit-deletion-warning = UPOZORENJE: Nepovratno!
 config-modal-label-remove-stock-limit = Upišite CONFIRM za uklanjanje ograničenja zaliha
 config-modal-label-clear-shop = Isprazniti sve predmete iz ove trgovine?
-config-modal-placeholder-type-confirm = Upišite CONFIRM
 
 # Error messages from buttons
 config-error-shop-data-not-found = Greška: Podaci te trgovine nisu pronađeni.

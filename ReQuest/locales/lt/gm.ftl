@@ -72,10 +72,8 @@ gm-error-invalid-xp-value = XP reikšmė turi būti teigiamas sveikasis skaičiu
 # GM confirm modals
 gm-modal-title-cancel-quest = Atšaukti quest'ą
 gm-modal-label-cancel-quest = Įveskite CONFIRM, kad atšauktumėte quest'ą.
-gm-modal-placeholder-cancel-quest = Įveskite „CONFIRM", kad tęstumėte.
 gm-modal-title-remove-from-quest = Pašalinti personažą iš quest'o
 gm-modal-label-remove-from-quest = Patvirtinti personažo pašalinimą?
-gm-modal-placeholder-remove-from-quest = Įveskite „CONFIRM", kad tęstumėte.
 
 # GM DM messages
 gm-dm-quest-cancelled = Quest'as {"**"}{ $questTitle }{"**"} buvo atšauktas GM.

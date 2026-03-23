@@ -23,7 +23,8 @@ common-page-label = Page { $current }/{ $total }
 common-error-page-selector = Impossible d'ouvrir le sélecteur de page
 
 # Fenêtre de confirmation
-common-confirm-placeholder = Tapez CONFIRM pour continuer
+common-confirm-word = CONFIRMER
+common-confirm-placeholder = Tapez { $confirmWord } pour continuer.
 common-confirm-failed = Confirmation échouée : opération annulée.
 common-modal-label-warning = ATTENTION : Cette action est irréversible !
 

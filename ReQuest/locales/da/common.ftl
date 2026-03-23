@@ -23,7 +23,8 @@ common-page-label = Side { $current }/{ $total }
 common-error-page-selector = Kunne ikke åbne sidevælgeren
 
 # Confirm modal
-common-confirm-placeholder = Skriv CONFIRM for at fortsætte
+common-confirm-word = BEKRÆFT
+common-confirm-placeholder = Skriv { $confirmWord } for at fortsætte.
 common-confirm-failed = Bekræftelse mislykkedes: Handlingen blev annulleret.
 common-modal-label-warning = ADVARSEL: Denne handling kan ikke fortrydes!
 

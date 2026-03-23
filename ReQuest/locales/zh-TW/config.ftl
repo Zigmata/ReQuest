@@ -95,7 +95,6 @@ config-modal-label-shop-removal-warning = 警告：此操作無法復原！
 config-modal-label-kit-deletion-warning = 警告：無法復原！
 config-modal-label-remove-stock-limit = 輸入 CONFIRM 以移除庫存限制
 config-modal-label-clear-shop = 清空此商店的所有物品？
-config-modal-placeholder-type-confirm = 輸入 CONFIRM
 
 # Error messages from buttons
 config-error-shop-data-not-found = 錯誤：找不到該商店的資料。

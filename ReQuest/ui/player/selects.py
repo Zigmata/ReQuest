@@ -61,7 +61,6 @@ class RemoveCharacterSelect(Select):
             confirm_modal = modals.ConfirmModal(
                 title=t(locale, 'player-modal-title-confirm-char-removal'),
                 prompt_label=t(locale, 'common-modal-label-warning'),
-                prompt_placeholder=t(locale, 'common-confirm-placeholder'),
                 confirm_callback=self.calling_view.confirm_callback,
                 locale=locale
             )

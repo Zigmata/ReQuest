@@ -23,7 +23,8 @@ common-page-label = Trang { $current }/{ $total }
 common-error-page-selector = Không thể mở bộ chọn trang
 
 # Confirm modal
-common-confirm-placeholder = Nhập CONFIRM để tiếp tục
+common-confirm-word = XÁC NHẬN
+common-confirm-placeholder = Nhập { $confirmWord } để tiếp tục.
 common-confirm-failed = Xác nhận thất bại: Thao tác đã bị hủy.
 common-modal-label-warning = CẢNH BÁO: Hành động này không thể hoàn tác!
 

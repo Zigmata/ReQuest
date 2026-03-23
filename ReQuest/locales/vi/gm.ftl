@@ -72,10 +72,8 @@ gm-error-invalid-xp-value = Giá trị XP phải là số nguyên dương!
 # GM confirm modals
 gm-modal-title-cancel-quest = Hủy Quest
 gm-modal-label-cancel-quest = Nhập CONFIRM để hủy quest.
-gm-modal-placeholder-cancel-quest = Nhập "CONFIRM" để tiếp tục.
 gm-modal-title-remove-from-quest = Xóa nhân vật khỏi quest
 gm-modal-label-remove-from-quest = Xác nhận xóa nhân vật?
-gm-modal-placeholder-remove-from-quest = Nhập "CONFIRM" để tiếp tục.
 
 # GM DM messages
 gm-dm-quest-cancelled = Quest {"**"}{ $questTitle }{"**"} đã bị GM hủy.

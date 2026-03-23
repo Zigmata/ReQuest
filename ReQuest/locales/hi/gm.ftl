@@ -72,10 +72,8 @@ gm-error-invalid-xp-value = XP मान एक धनात्मक पूर�
 # GM confirm modals
 gm-modal-title-cancel-quest = Quest रद्द करें
 gm-modal-label-cancel-quest = Quest रद्द करने के लिए CONFIRM टाइप करें।
-gm-modal-placeholder-cancel-quest = आगे बढ़ने के लिए "CONFIRM" टाइप करें।
 gm-modal-title-remove-from-quest = चरित्र को quest से हटाएँ
 gm-modal-label-remove-from-quest = चरित्र हटाने की पुष्टि करें?
-gm-modal-placeholder-remove-from-quest = आगे बढ़ने के लिए "CONFIRM" टाइप करें।
 
 # GM DM messages
 gm-dm-quest-cancelled = Quest {"**"}{ $questTitle }{"**"} GM द्वारा रद्द कर दी गई।

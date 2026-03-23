@@ -72,10 +72,8 @@ gm-error-invalid-xp-value = XP-värdet måste vara ett positivt heltal!
 # GM confirm modals
 gm-modal-title-cancel-quest = Avbryt quest
 gm-modal-label-cancel-quest = Skriv CONFIRM för att avbryta questen.
-gm-modal-placeholder-cancel-quest = Skriv "CONFIRM" för att fortsätta.
 gm-modal-title-remove-from-quest = Ta bort karaktär från quest
 gm-modal-label-remove-from-quest = Bekräfta borttagning av karaktär?
-gm-modal-placeholder-remove-from-quest = Skriv "CONFIRM" för att fortsätta.
 
 # GM DM messages
 gm-dm-quest-cancelled = Quest {"**"}{ $questTitle }{"**"} avbröts av GM.

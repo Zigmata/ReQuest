@@ -72,10 +72,8 @@ gm-error-invalid-xp-value = 经验值必须是正整数！
 # GM confirm modals
 gm-modal-title-cancel-quest = 取消 Quest
 gm-modal-label-cancel-quest = 输入 CONFIRM 以取消 Quest。
-gm-modal-placeholder-cancel-quest = 输入 "CONFIRM" 以继续。
 gm-modal-title-remove-from-quest = 从 Quest 中移除角色
 gm-modal-label-remove-from-quest = 确认移除角色？
-gm-modal-placeholder-remove-from-quest = 输入 "CONFIRM" 以继续。
 
 # GM DM messages
 gm-dm-quest-cancelled = Quest {"**"}{ $questTitle }{"**"} 已被 GM 取消。
