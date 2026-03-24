@@ -30,9 +30,9 @@ info-help-description =
 
     Los siguientes comandos son menús contextuales. Para acceder a ellos en el cliente de escritorio, haz clic derecho en el nombre de un usuario y elige "Apps". En móvil, ve el perfil de un usuario y selecciona "Apps" en el menú de la esquina superior derecha.
 
-    {"-"} Trade: Dar objetos o moneda a otro jugador.
-    {"-"} View Player (solo GM): Ver el inventario del personaje activo de otro jugador.
-    {"-"} Modify Player (solo GM): Modificar el inventario o experiencia del personaje activo de otro jugador.
+    {"-"} Intercambiar: Dar objetos o moneda a otro jugador.
+    {"-"} Ver Jugador (solo GM): Ver el inventario del personaje activo de otro jugador.
+    {"-"} Modificar Jugador (solo GM): Modificar el inventario o experiencia del personaje activo de otro jugador.
 
 ## Cadenas del comando de idioma
 

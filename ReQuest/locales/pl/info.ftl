@@ -30,9 +30,9 @@ info-help-description =
 
     Poniższe komendy to menu kontekstowe. Aby uzyskać do nich dostęp na kliencie desktopowym, kliknij prawym przyciskiem myszy nazwę użytkownika i wybierz "Aplikacje". Na urządzeniu mobilnym wyświetl profil użytkownika i wybierz "Aplikacje" z menu w prawym górnym rogu.
 
-    {"-"} Trade: Przekaż przedmioty lub walutę innemu graczowi.
-    {"-"} View Player (tylko GM): Wyświetl ekwipunek aktywnej postaci innego gracza.
-    {"-"} Modify Player (tylko GM): Modyfikuj ekwipunek lub doświadczenie aktywnej postaci innego gracza.
+    {"-"} Wymiana: Przekaż przedmioty lub walutę innemu graczowi.
+    {"-"} Podgląd Gracza (tylko GM): Wyświetl ekwipunek aktywnej postaci innego gracza.
+    {"-"} Modyfikuj Gracza (tylko GM): Modyfikuj ekwipunek lub doświadczenie aktywnej postaci innego gracza.
 
 ## Language command strings
 

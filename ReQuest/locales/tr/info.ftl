@@ -30,9 +30,9 @@ info-help-description =
 
     Aşağıdaki komutlar bağlam menüleridir. Masaüstü istemcisinde erişmek için bir kullanıcının adına sağ tıklayıp "Uygulamalar"ı seçin. Mobilde kullanıcının profilini görüntüleyip sağ üst menüden "Uygulamalar"ı seçin.
 
-    {"-"} Trade: Başka bir oyuncuya eşya veya para birimi verin.
-    {"-"} View Player (yalnızca GM): Başka bir oyuncunun aktif karakter envanterini görüntüleyin.
-    {"-"} Modify Player (yalnızca GM): Başka bir oyuncunun aktif karakter envanterini veya deneyimini değiştirin.
+    {"-"} Takas: Başka bir oyuncuya eşya veya para birimi verin.
+    {"-"} Oyuncuyu Görüntüle (yalnızca GM): Başka bir oyuncunun aktif karakter envanterini görüntüleyin.
+    {"-"} Oyuncuyu Düzenle (yalnızca GM): Başka bir oyuncunun aktif karakter envanterini veya deneyimini değiştirin.
 
 ## Language command strings
 

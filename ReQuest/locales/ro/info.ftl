@@ -30,9 +30,9 @@ info-help-description =
 
     Următoarele comenzi sunt meniuri contextuale. Pentru a le accesa pe clientul desktop, faceți clic dreapta pe numele unui utilizator și alegeți „Apps". Pe mobil, vizualizați profilul unui utilizator și selectați „Apps" din meniul din dreapta sus.
 
-    {"-"} Trade: Oferă obiecte sau monedă unui alt jucător.
-    {"-"} View Player (doar GM): Vizualizează inventarul personajului activ al altui jucător.
-    {"-"} Modify Player (doar GM): Modifică inventarul sau experiența personajului activ al altui jucător.
+    {"-"} Schimb: Oferă obiecte sau monedă unui alt jucător.
+    {"-"} Vizualizare Jucător (doar GM): Vizualizează inventarul personajului activ al altui jucător.
+    {"-"} Modifică Jucător (doar GM): Modifică inventarul sau experiența personajului activ al altui jucător.
 
 ## Language command strings
 

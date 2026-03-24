@@ -30,9 +30,9 @@ info-help-description =
 
     A következő parancsok kontextusmenüs parancsok. Az asztali kliensen kattints jobb egérgombbal egy felhasználó nevére, és válaszd az „Alkalmazások" opciót. Mobilon tekintsd meg a felhasználó profilját, és válaszd az „Alkalmazások" lehetőséget a jobb felső menüből.
 
-    {"-"} Trade: Tárgyak vagy valuta átadása egy másik játékosnak.
-    {"-"} View Player (csak GM): Egy másik játékos aktív karakterének leltára megtekintése.
-    {"-"} Modify Player (csak GM): Egy másik játékos aktív karakterének leltárának vagy tapasztalatának módosítása.
+    {"-"} Kereskedés: Tárgyak vagy valuta átadása egy másik játékosnak.
+    {"-"} Játékos megtekintése (csak GM): Egy másik játékos aktív karakterének leltára megtekintése.
+    {"-"} Játékos módosítása (csak GM): Egy másik játékos aktív karakterének leltárának vagy tapasztalatának módosítása.
 
 ## Language command strings
 

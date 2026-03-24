@@ -30,9 +30,9 @@ info-help-description =
 
     Sljedeće naredbe su kontekstualni izbornici. Za pristup na desktop klijentu, desnom tipkom miša kliknite na ime korisnika i odaberite "Aplikacije". Na mobilnom uređaju, pogledajte profil korisnika i odaberite "Aplikacije" iz gornjeg desnog izbornika.
 
-    {"-"} Trade: Dajte predmete ili valutu drugom igraču.
-    {"-"} View Player (samo GM): Pregledajte inventar aktivnog lika drugog igrača.
-    {"-"} Modify Player (samo GM): Izmijenite inventar ili iskustvo aktivnog lika drugog igrača.
+    {"-"} Razmjena: Dajte predmete ili valutu drugom igraču.
+    {"-"} Pregledaj Igrača (samo GM): Pregledajte inventar aktivnog lika drugog igrača.
+    {"-"} Izmijeni Igrača (samo GM): Izmijenite inventar ili iskustvo aktivnog lika drugog igrača.
 
 ## Language command strings
 

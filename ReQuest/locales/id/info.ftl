@@ -30,9 +30,9 @@ info-help-description =
 
     Perintah berikut adalah menu konteks. Untuk mengaksesnya di klien desktop, klik kanan nama pengguna dan pilih "Aplikasi". Di perangkat seluler, lihat profil pengguna dan pilih "Aplikasi" dari menu kanan atas.
 
-    {"-"} Trade: Berikan barang atau mata uang kepada pemain lain.
-    {"-"} View Player (khusus GM): Lihat inventaris karakter aktif pemain lain.
-    {"-"} Modify Player (khusus GM): Ubah inventaris atau pengalaman karakter aktif pemain lain.
+    {"-"} Tukar: Berikan barang atau mata uang kepada pemain lain.
+    {"-"} Lihat Pemain (khusus GM): Lihat inventaris karakter aktif pemain lain.
+    {"-"} Modifikasi Pemain (khusus GM): Ubah inventaris atau pengalaman karakter aktif pemain lain.
 
 ## Language command strings
 

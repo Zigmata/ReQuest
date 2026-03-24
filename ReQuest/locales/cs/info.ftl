@@ -30,9 +30,9 @@ info-help-description =
 
     Následující příkazy jsou kontextová menu. Pro přístup na desktopovém klientu klikněte pravým tlačítkem na jméno uživatele a zvolte „Aplikace". Na mobilním zařízení zobrazte profil uživatele a vyberte „Aplikace" z menu vpravo nahoře.
 
-    {"-"} Trade: Dát předměty nebo měnu jinému hráči.
-    {"-"} View Player (pouze GM): Zobrazit inventář aktivní postavy jiného hráče.
-    {"-"} Modify Player (pouze GM): Upravit inventář nebo zkušenosti aktivní postavy jiného hráče.
+    {"-"} Obchod: Dát předměty nebo měnu jinému hráči.
+    {"-"} Zobrazit hráče (pouze GM): Zobrazit inventář aktivní postavy jiného hráče.
+    {"-"} Upravit hráče (pouze GM): Upravit inventář nebo zkušenosti aktivní postavy jiného hráče.
 
 ## Language command strings
 

@@ -30,9 +30,9 @@ info-help-description =
 
     I seguenti comandi sono menu contestuali. Per accedervi sul client desktop, fai clic destro sul nome di un utente e scegli "App". Su mobile, visualizza il profilo di un utente e seleziona "App" dal menu in alto a destra.
 
-    {"-"} Trade: Dai oggetti o valuta a un altro giocatore.
-    {"-"} View Player (solo GM): Visualizza l'inventario del personaggio attivo di un altro giocatore.
-    {"-"} Modify Player (solo GM): Modifica l'inventario o l'esperienza del personaggio attivo di un altro giocatore.
+    {"-"} Scambio: Dai oggetti o valuta a un altro giocatore.
+    {"-"} Visualizza Giocatore (solo GM): Visualizza l'inventario del personaggio attivo di un altro giocatore.
+    {"-"} Modifica Giocatore (solo GM): Modifica l'inventario o l'esperienza del personaggio attivo di un altro giocatore.
 
 ## Stringhe del comando lingua
 

@@ -30,9 +30,9 @@ info-help-description =
 
     Šios komandos yra kontekstiniai meniu. Norėdami jas pasiekti darbalaukio kliente, dešiniuoju pelės mygtuku spustelėkite vartotojo vardą ir pasirinkite „Apps". Mobiliajame įrenginyje peržiūrėkite vartotojo profilį ir viršutiniame dešiniajame meniu pasirinkite „Apps".
 
-    {"-"} Trade: Perduoti daiktus ar valiutą kitam žaidėjui.
-    {"-"} View Player (tik GM): Peržiūrėti kito žaidėjo aktyvaus personažo inventorių.
-    {"-"} Modify Player (tik GM): Keisti kito žaidėjo aktyvaus personažo inventorių ar patirtį.
+    {"-"} Mainai: Perduoti daiktus ar valiutą kitam žaidėjui.
+    {"-"} Peržiūrėti Žaidėją (tik GM): Peržiūrėti kito žaidėjo aktyvaus personažo inventorių.
+    {"-"} Modifikuoti Žaidėją (tik GM): Keisti kito žaidėjo aktyvaus personažo inventorių ar patirtį.
 
 ## Language command strings
 

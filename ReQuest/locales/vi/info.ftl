@@ -30,9 +30,9 @@ info-help-description =
 
     Các lệnh sau đây là menu ngữ cảnh. Trên máy tính, nhấp chuột phải vào tên người dùng và chọn "Ứng dụng". Trên di động, xem hồ sơ người dùng và chọn "Ứng dụng" từ menu góc trên bên phải.
 
-    {"-"} Trade: Trao vật phẩm hoặc tiền tệ cho người chơi khác.
-    {"-"} View Player (chỉ GM): Xem kho đồ nhân vật đang hoạt động của người chơi khác.
-    {"-"} Modify Player (chỉ GM): Chỉnh sửa kho đồ hoặc kinh nghiệm nhân vật đang hoạt động của người chơi khác.
+    {"-"} Trao đổi: Trao vật phẩm hoặc tiền tệ cho người chơi khác.
+    {"-"} Xem người chơi (chỉ GM): Xem kho đồ nhân vật đang hoạt động của người chơi khác.
+    {"-"} Chỉnh sửa người chơi (chỉ GM): Chỉnh sửa kho đồ hoặc kinh nghiệm nhân vật đang hoạt động của người chơi khác.
 
 ## Language command strings
 
