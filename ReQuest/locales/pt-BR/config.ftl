@@ -6,7 +6,7 @@
 
 # Cargos
 config-btn-clear = Limpar
-config-btn-remove-gm-roles = Remover Cargos de MJ
+config-btn-remove-gm-roles = Remover Cargos de Mestre
 config-btn-forbidden-roles = Cargos Proibidos
 
 # Quests
@@ -31,20 +31,20 @@ config-btn-add-item = Adicionar Item
 config-btn-edit-shop-details = Editar Detalhes da Loja
 config-btn-download-json = Baixar JSON
 config-btn-done-editing = Finalizar Edição
-config-btn-scan-server-configs = Escanear Configurações do Servidor
-config-btn-re-scan = Re-Escanear
+config-btn-scan-server-configs = Analisar Configurações do Servidor
+config-btn-re-scan = Reanalisar
 
 # Loja de novo personagem
 config-btn-upload-json = Enviar JSON
 config-btn-configure-new-character-wealth = Configurar Riqueza de Novo Personagem
 config-btn-configure-new-character-shop = Configurar Loja de Novo Personagem
 config-btn-clear-shop = Limpar Loja
-config-btn-configure-static-kits = Configurar Kits Estáticos
+config-btn-configure-static-kits = Configurar Kits Fixos
 config-btn-new-character-settings = Configurações de Novo Personagem
 config-btn-disabled-no-currency = Desativado (Sem Moeda Configurada)
 config-btn-disabled-no-wealth = Desativado (Sem Riqueza Inicial Configurada)
 
-# Kits estáticos
+# Kits fixos
 config-btn-create-new-kit = Criar Novo Kit
 config-btn-delete-kit = Excluir Kit
 config-btn-add-currency = Adicionar Moeda
@@ -93,7 +93,7 @@ config-modal-label-remove-denomination = Remover { $denominationName }?
 config-modal-label-remove-currency = Remover { $currencyName }?
 config-modal-label-shop-removal-warning = AVISO: Esta ação é irreversível!
 config-modal-label-kit-deletion-warning = AVISO: Irreversível!
-config-modal-label-remove-stock-limit = Digite CONFIRM para remover o limite de estoque
+config-modal-label-remove-stock-limit = Insira CONFIRM para remover o limite de estoque
 config-modal-label-clear-shop = Limpar todos os itens desta loja?
 
 # Mensagens de erro dos botões
@@ -127,10 +127,10 @@ config-modal-title-add-denomination = Adicionar Denominação de { $currencyName
 config-modal-label-denomination-name = Nome
 config-modal-placeholder-denomination-name = ex.: Prata
 config-modal-label-denomination-value = Valor
-config-modal-placeholder-denomination-value = ex.: 0.1
+config-modal-placeholder-denomination-value = ex.: 0,1
 config-error-denomination-matches-currency = O nome da nova denominação não pode ser igual a uma moeda existente neste servidor! Moeda existente encontrada: "{ $existingName }".
 config-error-denomination-matches-denomination = O nome da nova denominação não pode ser igual a uma denominação existente neste servidor! Denominação existente "{ $denominationName }" encontrada na moeda "{ $currencyName }".
-config-error-denomination-value-exists = As denominações de uma mesma moeda devem ter valores únicos! { $denominationName } já tem esse valor atribuído.
+config-error-denomination-value-exists = As denominações de uma mesma moeda devem ter valores únicos! { $denominationName } já possui esse valor atribuído.
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Nomes de Cargos Proibidos
@@ -145,9 +145,9 @@ config-modal-placeholder-age = Insira a idade máxima da publicação (em dias) 
 config-msg-posts-purged = Publicações com mais de { $days } dias foram removidas!
 
 # GMRewardsModal
-config-modal-title-gm-rewards = Adicionar/Modificar Recompensas do MJ
+config-modal-title-gm-rewards = Adicionar/Modificar Recompensas do Mestre
 config-modal-label-experience = Experiência
-config-modal-placeholder-enter-number = Digite um número
+config-modal-placeholder-enter-number = Insira um número
 config-modal-label-items = Itens
 config-modal-placeholder-items =
     Nome: Quantidade
@@ -201,8 +201,8 @@ config-modal-placeholder-item-quantity = Insira a quantidade vendida por compra
 config-modal-label-item-costs = Custos do Item
 config-modal-placeholder-item-costs = Ex.: 10 ouro + 5 prata\nOU: 50 rep\n(Use + para E, Novas Linhas para OU)
 config-error-item-quantity-positive = A quantidade do item deve ser um número inteiro positivo.
-config-error-cost-format-invalid = Formato de custo inválido na opção: "{ $option }". Cada custo deve ter um valor e uma moeda separados por espaço, ex.: "10 ouro".
-config-error-cost-amount-invalid = Valor inválido "{ $amount }" para moeda: "{ $currency }". O valor deve ser um número positivo.
+config-error-cost-format-invalid = Formato de custo inválido na opção: "{ $option }". Cada custo deve ter um montante e uma moeda separados por espaço, ex.: "10 ouro".
+config-error-cost-amount-invalid = Montante inválido "{ $amount }" para a moeda: "{ $currency }". O montante deve ser um número positivo.
 config-error-unknown-currency = Moeda desconhecida `{ $currency }`. Use uma moeda válida configurada para este servidor.
 config-error-item-already-exists = Um item chamado { $itemName } já existe nesta loja.
 
@@ -217,8 +217,8 @@ config-error-json-validation-message = Validação JSON falhou: { $error }
 config-modal-title-new-char-item = Adicionar/Editar Equipamento de Novo Personagem
 config-modal-placeholder-item-quantity-selection = Insira a quantidade recebida por seleção
 config-modal-label-item-cost = Custo do Item
-config-error-cost-format-short = Formato de custo inválido: '{ $component }'. Esperado 'Valor Moeda'.
-config-error-amount-invalid-short = Valor inválido '{ $amount }' para moeda '{ $currency }'.
+config-error-cost-format-short = Formato de custo inválido: '{ $component }'. O esperado é 'Montante Moeda'.
+config-error-amount-invalid-short = Montante inválido '{ $amount }' para a moeda '{ $currency }'.
 config-error-item-exists-new-char = Um item chamado { $itemName } já existe na loja de Novo Personagem.
 
 # NewCharacterShopJSONModal
@@ -229,19 +229,19 @@ config-error-items-must-have-name-price = Todos os itens devem ter 'name' e 'pri
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Definir Riqueza de Novo Personagem
-config-modal-label-amount = Valor
-config-modal-placeholder-amount = Insira o valor desta moeda.
+config-modal-label-amount = Montante
+config-modal-placeholder-amount = Insira o montante desta moeda.
 config-modal-placeholder-currency-name = Insira o nome de uma moeda definida neste servidor
 config-error-no-currencies-configured = Nenhuma moeda está configurada neste servidor.
 config-error-currency-not-found = Moeda ou denominação chamada { $name } não encontrada. Use uma moeda válida.
 
 # CreateStaticKitModal
-config-modal-title-create-kit = Criar Novo Kit Estático
+config-modal-title-create-kit = Criar Novo Kit Fixo
 config-modal-label-kit-name = Nome do Kit
 config-modal-placeholder-kit-name = ex.: Kit Iniciante Guerreiro
 config-modal-label-description = Descrição
 config-modal-placeholder-kit-description = Descrição opcional para este kit
-config-error-kit-name-exists = Um kit estático chamado "{ $kitName }" já existe. Escolha um nome diferente.
+config-error-kit-name-exists = Já existe um kit fixo chamado "{ $kitName }". Escolha outro nome.
 
 # StaticKitItemModal
 config-modal-title-kit-item = Adicionar/Editar Item do Kit
@@ -251,33 +251,33 @@ config-modal-placeholder-kit-item-quantity = Insira a quantidade deste item a se
 config-modal-title-kit-currency = Adicionar Moeda ao Kit
 config-modal-placeholder-currency-eg = ex.: Ouro
 config-modal-placeholder-amount-eg = ex.: 100
-config-error-amount-must-be-number = O valor deve ser um número.
+config-error-amount-must-be-number = O montante deve ser um número.
 config-error-no-currencies-on-server = Nenhuma moeda configurada no servidor.
 config-error-currency-not-found-short = Moeda "{ $currency }" não encontrada.
 config-error-denomination-not-found = Denominação "{ $denomination }" não encontrada na configuração de moeda.
 
 # RoleplaySettingsModal
 config-modal-title-rp-settings = Configurações de Roleplay
-config-modal-label-min-message-length = Comprimento Mínimo da Mensagem (caracteres)
+config-modal-label-min-message-length = Tamanho Mínimo da Mensagem (caracteres)
 config-modal-placeholder-min-message-length = Nº de caracteres necessários para uma mensagem ser elegível. 0 para sem limite
-config-modal-label-cooldown = Tempo de Espera (segundos)
-config-modal-placeholder-cooldown = Tempo de espera, em segundos, entre contar mensagens como elegíveis para recompensas
+config-modal-label-cooldown = Intervalo (segundos)
+config-modal-placeholder-cooldown = Intervalo, em segundos, entre contar mensagens como elegíveis para recompensas
 config-modal-label-message-threshold = Limite de Mensagens
 config-modal-placeholder-message-threshold = Número de mensagens necessárias para acionar recompensa
 config-modal-label-frequency = Frequência (nº de mensagens)
 config-modal-placeholder-frequency = Número de mensagens elegíveis necessárias para ganhar recompensas
-config-error-min-length-invalid = O comprimento mínimo da mensagem deve ser um número inteiro não negativo.
-config-error-cooldown-invalid = O tempo de espera deve ser um número inteiro não negativo.
+config-error-min-length-invalid = O tamanho mínimo da mensagem deve ser um número inteiro não negativo.
+config-error-cooldown-invalid = O intervalo deve ser um número inteiro não negativo.
 config-error-threshold-invalid = O limite de mensagens deve ser um número inteiro positivo.
 config-error-frequency-invalid = A frequência deve ser um número inteiro positivo.
 
 # RoleplayRewardsModal
 config-modal-title-rp-rewards = Configurar Recompensas de Roleplay
 config-modal-label-items-name-quantity = Itens (Nome: Quantidade)
-config-modal-label-currency-name-amount = Moeda (Nome: Valor)
+config-modal-label-currency-name-amount = Moeda (Nome: Montante)
 config-error-experience-non-negative = A experiência deve ser um número inteiro não negativo.
 config-error-item-quantity-positive-named = A quantidade do item "{ $itemName }" deve ser um número inteiro positivo.
-config-error-currency-amount-positive = O valor da moeda "{ $currencyName }" deve ser um número positivo.
+config-error-currency-amount-positive = O montante da moeda "{ $currencyName }" deve ser um número positivo.
 
 # SetItemStockModal
 config-modal-title-stock-limit = Limite de Estoque: { $itemName }
@@ -307,7 +307,7 @@ config-modal-restock-mode-label = Modo de reabastecimento
 config-modal-restock-mode-full = Completo (redefinir para o máximo)
 config-modal-restock-mode-incremental = Incremental (adicionar quantidade)
 config-error-time-format-invalid = O horário deve estar no formato HH:MM (ex.: 14:30).
-config-error-increment-positive = A quantidade incremental deve ser um número inteiro positivo.
+config-error-increment-positive = O montante de incremento deve ser um número inteiro positivo.
 
 # ==========================================
 # SELEÇÕES
@@ -320,7 +320,7 @@ config-select-placeholder-channel = Procure seu Canal de { $configName }
 config-select-placeholder-announce-role = Escolha seu Cargo de Anúncio de Quest
 
 # AddGMRoleSelect
-config-select-placeholder-gm-roles = Escolha seu(s) Cargo(s) de MJ
+config-select-placeholder-gm-roles = Escolha seus Cargos de Mestre
 
 # ConfigWaitListSelect
 config-select-placeholder-wait-list = Selecione o tamanho da Lista de Espera
@@ -333,10 +333,10 @@ config-select-desc-disabled = Jogadores começam com inventários vazios.
 config-select-option-selection = Seleção
 config-select-desc-selection = Jogadores escolhem itens livremente da Loja de Novo Personagem.
 config-select-option-purchase = Compra
-config-select-desc-purchase = Jogadores compram itens da Loja de Novo Personagem com uma quantidade de moeda fornecida.
+config-select-desc-purchase = Jogadores compram itens da Loja de Novo Personagem com um montante de moeda fornecido.
 config-select-option-open = Aberto
 config-select-desc-open = Jogadores inserem manualmente seus próprios inventários.
-config-select-option-static = Estático
+config-select-option-static = Fixo
 config-select-desc-static = Jogadores recebem um inventário inicial predefinido.
 
 # RoleplayChannelSelect
@@ -345,24 +345,24 @@ config-select-placeholder-rp-channels = Selecione Canais Elegíveis
 # RoleplayModeSelect
 config-select-placeholder-rp-mode = Selecione o Modo
 config-select-option-scheduled = Agendado
-config-select-desc-scheduled = Recompensas são concedidas uma vez dentro de um período de reset especificado.
+config-select-desc-scheduled = Recompensas são concedidas uma vez dentro de um período de reinício definido.
 config-select-option-accrued = Acumulado
 config-select-desc-accrued = Recompensas são concedidas repetidamente com base nos níveis de atividade especificados.
 
 # RoleplayResetSelect
-config-select-placeholder-reset-period = Selecione o Período de Reset
+config-select-placeholder-reset-period = Selecionar Período de Reinício
 config-select-option-hourly = A cada Hora
-config-select-desc-hourly = Reseta a cada hora.
+config-select-desc-hourly = Reinicia a cada hora.
 config-select-option-daily = Diário
-config-select-desc-daily = Reseta a cada 24 horas.
+config-select-desc-daily = Reinicia a cada 24 horas.
 config-select-option-weekly = Semanal
-config-select-desc-weekly = Reseta a cada 7 dias.
+config-select-desc-weekly = Reinicia a cada 7 dias.
 
 # RoleplayResetDaySelect
-config-select-placeholder-reset-day = Selecione o Dia de Reset
+config-select-placeholder-reset-day = Selecionar Dia de Reinício
 
 # RoleplayResetTimeSelect
-config-select-placeholder-reset-time = Selecione o Horário de Reset (UTC)
+config-select-placeholder-reset-time = Selecionar Horário de Reinício (UTC)
 config-select-option-utc-time = { $hour }:00 UTC
 
 # ForumChannelSelect
@@ -385,7 +385,7 @@ config-error-thread-not-found = Não foi possível encontrar o tópico seleciona
 ## Menu Principal
 config-title-main-menu = Configuração do Servidor - Menu Principal
 config-menu-config-wizard = Assistente de Configuração
-config-menu-desc-config-wizard = Valide se seu servidor está pronto para usar o ReQuest com um escaneamento rápido.
+config-menu-desc-config-wizard = Verifique se o servidor está pronto para usar o ReQuest com uma análise rápida.
 config-menu-channels = Canais
 config-menu-desc-channels = Defina canais designados para publicações do ReQuest.
 config-menu-currency = Moeda
@@ -409,21 +409,21 @@ config-wizard-intro =
     {"**"}Bem-vindo ao Assistente de Configuração do ReQuest!{"**"}
 
     Este assistente ajudará você a garantir que seu servidor esteja configurado corretamente para usar os recursos do ReQuest.
-    Ele escaneará suas configurações atuais e fornecerá recomendações para quaisquer ajustes necessários.
+    Ele analisará suas configurações atuais e fornecerá recomendações para quaisquer ajustes necessários.
 
-    Use o botão "Iniciar Escaneamento" abaixo para começar o processo de validação. Quando o escaneamento for concluído,
+    Use o botão "Iniciar Análise" abaixo para começar o processo de validação. Quando a análise for concluída,
     você receberá um relatório detalhado da configuração do seu servidor junto com quaisquer alterações recomendadas.
 
 # Assistente - Validação de Permissões do Bot
 config-wizard-bot-permissions-header = __{"**"}Permissões Globais do Bot{"**"}__
-config-wizard-bot-permissions-desc = Esta seção verifica se o ReQuest tem as permissões corretas para funcionar corretamente.
+config-wizard-bot-permissions-desc = Esta seção verifica se o ReQuest possui as permissões corretas para funcionar corretamente.
 config-wizard-bot-role = Cargo do Bot: { $roleMention }
-config-wizard-status-warnings = {"**"}Status: ⚠️ AVISOS ENCONTRADOS{"**"}
+config-wizard-status-warnings = {"**"}Status: ⚠️ PROBLEMAS ENCONTRADOS{"**"}
 config-wizard-missing-perm = - ⚠️ Ausente: `{ $permissionName }`
-config-wizard-ensure-permissions = Certifique-se de que o cargo mais alto do bot tenha essas permissões concedidas globalmente.
+config-wizard-ensure-permissions = Certifique-se de que o cargo mais alto do bot possui essas permissões globalmente.
 config-wizard-status-ok = {"**"}Status: ✅ OK{"**"}
-config-wizard-bot-permissions-ok = O bot tem todas as permissões globais necessárias.
-config-wizard-status-scan-failed = {"**"}Status: ❌ ESCANEAMENTO FALHOU{"**"}
+config-wizard-bot-permissions-ok = O bot possui todas as permissões globais necessárias.
+config-wizard-status-scan-failed = {"**"}Status: ❌ FALHA NA ANÁLISE{"**"}
 config-wizard-scan-error = Ocorreu um erro inesperado ao verificar as permissões do bot.
 config-wizard-error-type = Erro: { $errorType }
 config-wizard-required-permissions = {"**"}Permissões Necessárias para o Cargo do Bot:{"**"}
@@ -443,10 +443,10 @@ config-wizard-role-header = __{"**"}Configurações de Cargos{"**"}__
 config-wizard-role-desc =
     Esta seção verifica o seguinte:
 
-    - Cargos de MJ (obrigatório) e Cargo de Anúncio (opcional) estão configurados.
-    - O cargo padrão (@everyone) tem as permissões necessárias para os usuários acessarem os recursos do bot.
-    - O cargo padrão (@everyone) não tem permissões perigosas.
-    - Os cargos de MJ e Anúncio são verificados para escalações de permissão além do cargo padrão.
+    - Cargos de Mestre (obrigatórios) e cargo de Anúncio (opcional) estão configurados.
+    - O cargo padrão (@everyone) possui as permissões necessárias para os usuários acessarem os recursos do bot.
+    - O cargo padrão (@everyone) não possui permissões perigosas.
+    - Os cargos de Mestre e Anúncio são verificados para escalações de permissão além do cargo padrão.
 
     Quaisquer avisos aqui são apenas recomendações baseadas em uma configuração padrão. Dependendo das necessidades do seu servidor, você pode ter motivos para desconsiderar algumas dessas recomendações.
 
@@ -454,8 +454,8 @@ config-wizard-default-role-label = {"**"}Cargo Padrão:{"**"}
 config-wizard-default-role-dangerous = ⚠️ @everyone: Permissões Perigosas Encontradas:
 config-wizard-default-role-ok = - ✅ @everyone: OK
 config-wizard-missing-permission = - Permissão Ausente: `{ $permissionName }`
-config-wizard-gm-roles-label = {"**"}Cargos de MJ:{"**"}
-config-wizard-no-gm-roles = - ⚠️ Nenhum Cargo de MJ Configurado
+config-wizard-gm-roles-label = {"**"}Cargos de Mestre:{"**"}
+config-wizard-no-gm-roles = - ⚠️ Nenhum Cargo de Mestre Configurado
 config-wizard-role-not-found = - ⚠️ {"**"}{ $roleName }:{"**"} Cargo Configurado Não Encontrado/Excluído do Servidor
 config-wizard-role-ok = - ✅ { $roleMention }: OK
 config-wizard-announcement-role-label = {"**"}Cargo de Anúncio:{"**"}
@@ -486,8 +486,8 @@ config-wizard-channel-desc =
     Esta seção verifica o seguinte:
 
     - Canais configurados existem.
-    - O bot tem permissão para ver e enviar mensagens nos canais configurados.
-    - O cargo padrão (@everyone) não tem permissões de `Enviar Mensagens`.
+    - O bot possui permissão para ver e enviar mensagens nos canais configurados.
+    - O cargo padrão (@everyone) não possui permissões de `Enviar Mensagens`.
 
 config-wizard-channel-no-config-required = - ⚠️ Nenhum Canal Configurado
 config-wizard-channel-not-configured = - ℹ️ Não Configurado (Opcional)
@@ -501,8 +501,8 @@ config-wizard-everyone-can-send = - ⚠️ @everyone pode enviar mensagens neste
 config-wizard-channel-quest-board = Quadro de Quests
 config-wizard-channel-player-board = Quadro de Jogadores
 config-wizard-channel-quest-archive = Arquivo de Quests
-config-wizard-channel-gm-transaction-log = Log de Transações do MJ
-config-wizard-channel-player-transaction-log = Log de Transações do Jogador
+config-wizard-channel-gm-transaction-log = Log de Transações do Mestre
+config-wizard-channel-player-transaction-log = Log de Transações dos Jogadores
 config-wizard-channel-shop-log = Log da Loja
 config-wizard-channel-approval-queue = Fila de Aprovação de Personagens
 
@@ -512,7 +512,7 @@ config-wizard-dashboard-desc = Esta seção fornece uma visão geral das configu
 config-wizard-quest-settings = {"**"}Configurações de Quest{"**"}
 config-wizard-quest-wait-list = - Tamanho da Lista de Espera: { $size }
 config-wizard-quest-summary = - Resumo de Quest: { $status }
-config-wizard-gm-rewards-per-quest = {"**"}Recompensas do MJ (Por Quest){"**"}
+config-wizard-gm-rewards-per-quest = {"**"}Recompensas do Mestre (Por Quest){"**"}
 config-wizard-player-settings = {"**"}Configurações do Jogador{"**"}
 config-wizard-player-experience = - Experiência do Jogador: { $status }
 config-wizard-currency-settings = {"**"}Configurações de Moeda{"**"}
@@ -526,9 +526,9 @@ config-wizard-shops-more = - ...e mais { $count }
 config-wizard-new-char-setup = {"**"}Configuração de Novo Personagem{"**"}
 config-wizard-inventory-type = - Tipo de Inventário: { $type }
 config-wizard-new-char-shop-items = - Itens da Loja de Novo Personagem: { $count }
-config-wizard-static-kits = - Kits Estáticos: { $count }
+config-wizard-static-kits = - Kits Fixos: { $count }
 
-# Assistente - Relatório de Recompensas do MJ
+# Assistente - Relatório de Recompensas do Mestre
 config-wizard-no-currencies = - ℹ️ Nenhuma Moeda Configurada
 config-wizard-configured-currencies = {"**"}Moedas Configuradas:{"**"}
 config-wizard-no-denominations = - Nenhuma Denominação Configurada
@@ -542,46 +542,46 @@ config-wizard-unnamed-shop = Loja Sem Nome
 config-title-roles = {"**"}Configuração do Servidor - Cargos{"**"}
 config-label-announcement-role = {"**"}Cargo de Anúncio:{"**"} { $status }
 config-desc-announcement-role = Este cargo é mencionado quando uma quest é publicada.
-config-label-announcement-role-default = {"**"}Cargo de Anúncio:{"**"} Não Configurado
-config-label-gm-roles = {"**"}Cargo(s) de MJ:{"**"} { $roles }
-config-desc-gm-roles = Esses cargos concederão acesso aos comandos e recursos de Mestre de Jogo.
-config-label-gm-roles-default = {"**"}Cargo(s) de MJ:{"**"} Não Configurado
+config-label-announcement-role-default = {"**"}Cargo de Anúncio:{"**"} Não configurado
+config-label-gm-roles = {"**"}Cargo(s) de Mestre:{"**"} { $roles }
+config-desc-gm-roles = Esses cargos concedem acesso aos comandos e recursos de Mestre.
+config-label-gm-roles-default = {"**"}Cargo(s) de Mestre:{"**"} Não configurado
 config-title-forbidden-roles = __{"**"}Cargos Proibidos{"**"}__
 config-desc-forbidden-roles =
-    Configura uma lista de nomes de cargos que não podem ser usados pelos Mestres de Jogo para seus cargos de grupo.
-    Por padrão, `everyone`, `administrator`, `gm` e `game master` não podem ser usados. Esta configuração
-    estende essa lista.
+    Configura uma lista de nomes de cargos que não podem ser usados por Mestres para cargos de grupo.
+    Por padrão, `todos`, `administrador` e `Mestre` não podem ser usados. Esta configuração
+    amplia essa lista.
 
-## View de Remoção de Cargo de MJ
-config-title-remove-gm-roles = {"**"}Configuração do Servidor - Remover Cargo(s) de MJ{"**"}
-config-msg-no-gm-roles = Nenhum cargo de MJ configurado.
+## View de Remoção de Cargo de Mestre
+config-title-remove-gm-roles = {"**"}Configuração do Servidor - Remover Cargo(s) de Mestre{"**"}
+config-msg-no-gm-roles = Nenhum cargo de Mestre configurado.
 
 ## View de Canais
 config-title-channels = {"**"}Configuração do Servidor - Canais{"**"}
 
 config-label-quest-board = {"**"}Quadro de Quests:{"**"} { $channel }
 config-desc-quest-board = O canal onde novas quests/quests ativas serão publicadas.
-config-label-quest-board-default = {"**"}Quadro de Quests:{"**"} Não Configurado
+config-label-quest-board-default = {"**"}Quadro de Quests:{"**"} Não configurado
 
 config-label-player-board = {"**"}Quadro de Jogadores:{"**"} { $channel }
 config-desc-player-board = Um quadro opcional de anúncios/mensagens para uso pelos jogadores.
-config-label-player-board-default = {"**"}Quadro de Jogadores:{"**"} Não Configurado
+config-label-player-board-default = {"**"}Quadro de Jogadores:{"**"} Não configurado
 
 config-label-quest-archive = {"**"}Arquivo de Quests:{"**"} { $channel }
 config-desc-quest-archive = Um canal opcional onde quests completadas serão movidas, com informações de resumo.
-config-label-quest-archive-default = {"**"}Arquivo de Quests:{"**"} Não Configurado
+config-label-quest-archive-default = {"**"}Arquivo de Quests:{"**"} Não configurado
 
-config-label-gm-transaction-log = {"**"}Log de Transações do MJ:{"**"} { $channel }
-config-desc-gm-transaction-log = Um canal opcional onde transações do MJ (ex.: comandos Modificar Jogador) são registradas.
-config-label-gm-transaction-log-default = {"**"}Log de Transações do MJ:{"**"} Não Configurado
+config-label-gm-transaction-log = {"**"}Log de Transações do Mestre:{"**"} { $channel }
+config-desc-gm-transaction-log = Canal opcional onde transações do Mestre são registradas.
+config-label-gm-transaction-log-default = {"**"}Log de Transações do Mestre:{"**"} Não configurado
 
-config-label-player-transaction-log = {"**"}Log de Transações do Jogador:{"**"} { $channel }
-config-desc-player-transaction-log = Um canal opcional onde transações de jogadores como trocas e consumo de itens são registradas.
-config-label-player-transaction-log-default = {"**"}Log de Transações do Jogador:{"**"} Não Configurado
+config-label-player-transaction-log = {"**"}Log de Transações dos Jogadores:{"**"} { $channel }
+config-desc-player-transaction-log = Canal opcional onde transações de jogadores como trocas e consumo de itens são registradas.
+config-label-player-transaction-log-default = {"**"}Log de Transações dos Jogadores:{"**"} Não configurado
 
 config-label-shop-log = {"**"}Log da Loja:{"**"} { $channel }
-config-desc-shop-log = Um canal opcional onde transações da loja são registradas.
-config-label-shop-log-default = {"**"}Log da Loja:{"**"} Não Configurado
+config-desc-shop-log = Canal opcional onde transações da loja são registradas.
+config-label-shop-log-default = {"**"}Log da Loja:{"**"} Não configurado
 
 ## View de Quests
 config-title-quests = {"**"}Configuração do Servidor - Quests{"**"}
@@ -591,20 +591,19 @@ config-desc-wait-list = Uma lista de espera permite que o número especificado d
 config-label-wait-list-disabled = {"**"}Tamanho da Lista de Espera:{"**"} Desativado
 
 config-label-quest-summary = {"**"}Resumo de Quest:{"**"} { $status }
-config-desc-quest-summary = Esta opção permite que MJs forneçam um breve resumo ao encerrar quests.
+config-desc-quest-summary = Esta opção permite que Mestres adicionem um resumo ao encerrar quests.
 config-label-quest-summary-disabled = {"**"}Resumo de Quest:{"**"} Desativado
 
-config-label-gm-rewards = Recompensas do MJ
-config-desc-gm-rewards = Configurar recompensas para MJs receberem ao completar quests.
+config-label-gm-rewards = Recompensas do Mestre
+config-desc-gm-rewards = Configurar recompensas para Mestres ao concluir quests.
 
-## View de Recompensas do MJ
-config-title-gm-rewards = {"**"}Configuração do Servidor - Recompensas do MJ{"**"}
+## View de Recompensas do Mestre
+config-title-gm-rewards = {"**"}Configuração do Servidor - Recompensas do Mestre{"**"}
 config-desc-gm-rewards-detail =
     {"**"}Adicionar/Modificar Recompensas{"**"}
-    Abre um modal de entrada para adicionar, modificar ou remover recompensas do MJ.
+    Abre um modal para adicionar, modificar ou remover recompensas.
 
-    > As recompensas configuradas são por quest. Toda vez que um Mestre de Jogo completar uma quest,
-    receberá as recompensas configuradas abaixo no seu personagem ativo.
+    > As recompensas são configuradas por quest. Sempre que um Mestre concluir uma quest, receberá as recompensas abaixo em seu personagem ativo.
 config-msg-no-rewards = Nenhuma recompensa configurada.
 config-label-gm-experience = {"**"}Experiência:{"**"} { $xp }
 config-label-gm-items = {"**"}Itens:{"**"}
@@ -633,14 +632,14 @@ config-label-new-char-wealth = {"**"}Riqueza de Novo Personagem:{"**"} { $wealth
 config-label-new-char-wealth-disabled = {"**"}Riqueza de Novo Personagem:{"**"} Desativado
 
 config-label-approval-queue = {"**"}Fila de Aprovação:{"**"} { $channel }
-config-desc-approval-queue = Se definido, novos personagens devem ser aprovados por um MJ neste Canal de Fórum antes de ficarem ativos.
+config-desc-approval-queue = Se definido, novos personagens devem ser aprovados por um Mestre neste Canal de Fórum antes de ficarem ativos.
 config-label-approval-queue-disabled = {"**"}Fila de Aprovação:{"**"} Desativado
-config-label-approval-queue-not-configured = {"**"}Fila de Aprovação:{"**"} Não Configurado
+config-label-approval-queue-not-configured = {"**"}Fila de Aprovação:{"**"} Não configurado
 
 # Descrições de tipo de inventário (usadas na configuração)
 config-desc-inv-type-disabled = Jogadores começam com inventários vazios.
 config-desc-inv-type-selection = Jogadores escolhem itens livremente da Loja de Novo Personagem.
-config-desc-inv-type-purchase = Jogadores compram itens da Loja de Novo Personagem com uma quantidade de moeda fornecida.
+config-desc-inv-type-purchase = Jogadores compram itens da Loja de Novo Personagem com um montante de moeda fornecido.
 config-desc-inv-type-open = Jogadores inserem manualmente seus itens de inventário.
 config-desc-inv-type-static = Jogadores recebem um inventário inicial predefinido.
 
@@ -649,20 +648,20 @@ config-title-new-char-shop = {"**"}Configuração do Servidor - Loja de Novo Per
 config-label-inv-type-selection = {"**"}Tipo de Inventário:{"**"} Seleção
 config-desc-inv-type-selection-shop = Jogadores escolhem itens livremente da Loja de Novo Personagem.
 config-label-inv-type-purchase = {"**"}Tipo de Inventário:{"**"} Compra
-config-desc-inv-type-purchase-shop = Jogadores compram itens da Loja de Novo Personagem com uma quantidade de moeda fornecida.
+config-desc-inv-type-purchase-shop = Jogadores compram itens da Loja de Novo Personagem com um montante de moeda fornecido.
 config-label-inv-type-other = {"**"}Tipo de Inventário:{"**"} { $type }
 config-desc-inv-type-not-in-use = A Loja de Novo Personagem não está em uso.
 config-msg-define-shop-items = Defina os itens da loja.
 config-msg-no-items = Nenhum item configurado.
 
-## View de Kits Estáticos
-config-title-static-kits = {"**"}Configuração do Servidor - Kits Estáticos{"**"}
+## View de Kits Fixos
+config-title-static-kits = {"**"}Configuração do Servidor - Kits Fixos{"**"}
 config-desc-create-kit = Criar uma nova definição de kit.
 config-msg-no-kits = Nenhum kit configurado.
 config-label-kit-more-items = ...e mais { $count } itens
 config-label-empty-kit = {"*"}Kit Vazio{"*"}
 
-## View de Edição de Kit Estático
+## View de Edição de Kit Fixo
 config-title-editing-kit = {"**"}Editando Kit: { $kitName }{"**"}
 config-msg-kit-empty = Este kit está vazio. Use os botões acima para adicionar moeda ou itens.
 config-label-kit-currency = {"**"}Moeda:{"**"} { $display }
@@ -683,13 +682,13 @@ config-desc-currency-info =
     - O nome dado à sua moeda é considerado a moeda base e tem valor 1.
     {"```"}Exemplo: "ouro" é configurado como moeda.{"```"}
     - Adicionar uma denominação requer especificar um nome e um valor relativo à moeda base.
-    {"```"}Exemplo: Ouro recebe duas denominações: prata (valor de 0.1) e cobre (valor de 0.01).{"```"}
+    {"```"}Exemplo: Ouro recebe duas denominações: prata (valor de 0,1) e cobre (valor de 0,01).{"```"}
     - Quaisquer transações envolvendo uma moeda base ou suas denominações serão convertidas automaticamente.
     {"```"}Exemplo: Um jogador tem 10 ouro e gasta 3 cobre. Seu novo saldo exibirá automaticamente
     9 ouro, 9 prata e 7 cobre.{"```"}
     - Moedas exibidas como inteiro mostrarão cada denominação, enquanto moedas exibidas como decimal
     mostrarão apenas a moeda base.
-    {"```"}Exemplo: O jogador acima com exibição decimal habilitada aparecerá como 9.97 ouro.{"```"}
+    {"```"}Exemplo: O jogador acima com exibição decimal habilitada aparecerá como 9,97 ouro.{"```"}
 config-btn-toggle-display-current = Alternar Exibição (Atual: { $type })
 config-msg-no-denominations = Nenhuma denominação configurada.
 
@@ -776,10 +775,10 @@ config-desc-rp-mode-accrued = {"```"}Recompensas são distribuídas de forma rec
 
 config-label-rp-config-details = {"**"}Detalhes da Configuração:{"**"}
 config-label-rp-mode = {"**"}Modo:{"**"} { $mode }
-config-label-rp-min-length = {"**"}Comprimento Mínimo da Mensagem:{"**"} { $length } caracteres
-config-label-rp-cooldown = {"**"}Tempo de Espera:{"**"} { $seconds } segundos
+config-label-rp-min-length = {"**"}Tamanho Mínimo da Mensagem:{"**"} { $length } caracteres
+config-label-rp-cooldown = {"**"}Intervalo:{"**"} { $seconds } segundos
 config-label-rp-frequency-once = {"**"}Frequência:{"**"} Uma vez por { $period }
-config-label-rp-reset-time = {"**"}Horário de Reset:{"**"} { $dayAndTime } UTC
+config-label-rp-reset-time = {"**"}Horário de Reinício:{"**"} { $dayAndTime } UTC
 config-label-rp-threshold = {"**"}Limite:{"**"} { $count } mensagens elegíveis
 config-label-rp-frequency-every = {"**"}Frequência:{"**"} A cada { $count } mensagens elegíveis
 
@@ -823,12 +822,12 @@ config-select-placeholder-quest-role-mode = Selecione o Modo de Cargo de Quest
 config-select-option-quest-role-disabled = Desativado
 config-select-desc-quest-role-disabled = Nenhum cargo é criado ou atribuído.
 config-select-option-quest-role-temporary = Temporário
-config-select-desc-quest-role-temporary = MJs podem criar cargos temporários por quest.
+config-select-desc-quest-role-temporary = Mestres podem criar cargos temporários por quest.
 config-select-option-quest-role-static = Estático
-config-select-desc-quest-role-static = MJs escolhem entre cargos pré-atribuídos do servidor.
+config-select-desc-quest-role-static = Mestres escolhem entre cargos pré-atribuídos do servidor.
 
 # AddGMQuestRoleSelect
-config-select-placeholder-add-quest-role = Atribuir cargo(s) do servidor a este MJ
+config-select-placeholder-add-quest-role = Atribuir cargo(s) do servidor a este Mestre
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}Configuração do Servidor - Cargos de Quest{"**"}
@@ -839,23 +838,23 @@ config-desc-quest-roles =
 config-label-quest-role-mode-disabled = {"**"}Modo de Cargo de Quest:{"**"} Desativado
     Nenhum cargo é criado ou atribuído durante as quests.
 config-label-quest-role-mode-temporary = {"**"}Modo de Cargo de Quest:{"**"} Temporário
-    MJs podem criar opcionalmente um cargo temporário durante a criação da quest.
+    Mestres podem criar opcionalmente um cargo temporário durante a criação da quest.
     O cargo é excluído quando a quest é completada ou cancelada.
 config-label-quest-role-mode-static = {"**"}Modo de Cargo de Quest:{"**"} Estático
-    MJs escolhem entre cargos pré-atribuídos do servidor. Os cargos são atribuídos
+    Mestres escolhem entre cargos pré-atribuídos do servidor. Os cargos são atribuídos
     aos membros do grupo durante as quests, mas nunca são excluídos.
 
 ## Static Quest Role Assignments View
 config-title-static-quest-roles = {"**"}Configuração do Servidor - Atribuições de Cargos Estáticos de Quest{"**"}
 config-label-manage-assignments = Gerenciar Atribuições de Cargos
 config-desc-manage-assignments =
-    Atribua cargos existentes do servidor a MJs para uso durante as quests.
+    Atribua cargos existentes do servidor a Mestres para uso durante as quests.
     Os cargos devem estar abaixo do cargo mais alto do ReQuest na hierarquia do servidor.
-config-msg-no-gm-members = Nenhum membro com cargo de MJ foi encontrado neste servidor.
+config-msg-no-gm-members = Nenhum membro com cargo de Mestre foi encontrado neste servidor.
 config-label-no-roles-assigned = Nenhum cargo de quest atribuído
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Gerenciar Cargos de Quest — { $gmName }{"**"}
 config-error-unmanageable-roles = Os seguintes cargos não podem ser atribuídos porque são gerenciados por uma integração, são o cargo padrão ou estão acima do cargo mais alto do ReQuest: { $roles }
-config-error-quest-role-limit = Este MJ atingiu o máximo de { $limit } cargos de quest atribuídos.
+config-error-quest-role-limit = Este Mestre atingiu o máximo de { $limit } cargos de quest atribuídos.
 config-label-quest-role-count = Cargos atribuídos: { $count }/{ $limit }
