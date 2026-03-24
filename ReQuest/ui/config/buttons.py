@@ -882,6 +882,7 @@ class ExampleShopJSONButton(Button):
                         "description": "This item has one cost option with one currency.",
                         "quantity": 1,
                         "maxStock": 10,
+                        "restockIncrement": 5,
                         "costs": [
                             {"Gold": 50}
                         ]
@@ -900,6 +901,7 @@ class ExampleShopJSONButton(Button):
                                         "Each entry in the costs array is an alternative payment option."),
                         "quantity": 3,
                         "maxStock": 20,
+                        "restockIncrement": 3,
                         "costs": [
                             {"Gold": 200},
                             {"Reputation": 10}
@@ -1596,7 +1598,8 @@ class SetItemStockButton(Button):
                 calling_view=self.calling_view,
                 item_name=self.item[CommonFields.NAME],
                 current_max=self.item.get(ShopFields.MAX_STOCK),
-                current_stock=self.current_stock
+                current_stock=self.current_stock,
+                current_increment=self.item.get(ShopFields.RESTOCK_INCREMENT)
             )
             await interaction.response.send_modal(modal)
         except Exception as e:

@@ -285,6 +285,8 @@ config-modal-label-max-stock = Maximale voorraad
 config-modal-placeholder-max-stock = Voer maximale voorraad in (bijv. 10)
 config-modal-label-current-stock = Huidige voorraad
 config-modal-placeholder-current-stock = Voer huidige beschikbare voorraad in
+config-modal-label-restock-increment = Aanvulhoeveelheid (per cyclus)
+config-modal-placeholder-restock-increment = Hoeveelheid per aanvulcyclus (standaard: 1)
 config-error-max-stock-positive = Maximale voorraad moet een positief geheel getal zijn.
 config-error-current-stock-non-negative = Huidige voorraad moet een niet-negatief geheel getal zijn.
 config-error-current-exceeds-max = Huidige voorraad kan de maximale voorraad niet overschrijden.
@@ -292,21 +294,19 @@ config-error-item-not-in-shop = Voorwerp "{ $itemName }" niet gevonden in de win
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = Herbevoorrading configureren
-config-modal-label-schedule = Schema (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Voer in: hourly, daily, weekly of none
+config-modal-restock-schedule-label = Schema
+config-modal-restock-schedule-none = Geen (Uitgeschakeld)
+config-modal-restock-schedule-hourly = Elk uur
+config-modal-restock-schedule-daily = Dagelijks
+config-modal-restock-schedule-weekly = Wekelijks
 config-modal-label-time = Tijd (UU:MM in UTC)
 config-modal-desc-current-time = Huidige tijd: { $utcTime }
 config-modal-placeholder-time = bijv. 14:30 voor 14:30 UTC
-config-modal-label-day-of-week = Dag van de week (0=ma, 6=zo) - Alleen voor weekly
-config-modal-placeholder-day-of-week = Voer 0-6 in (maandag=0, zondag=6)
-config-modal-label-mode = Modus (full/incremental)
-config-modal-placeholder-mode = full = reset naar max, incremental = bedrag toevoegen
-config-modal-label-increment = Toevoegbedrag (voor incremental modus)
-config-modal-placeholder-increment = Bedrag om per herbevoorrading toe te voegen
-config-error-schedule-invalid = Schema moet een van de volgende zijn: hourly, daily, weekly of none.
+config-modal-restock-day-label = Dag van de week (alleen wekelijks)
+config-modal-restock-mode-label = Aanvulmodus
+config-modal-restock-mode-full = Volledig (reset naar maximum)
+config-modal-restock-mode-incremental = Geleidelijk (hoeveelheid toevoegen)
 config-error-time-format-invalid = Tijd moet in UU:MM-formaat zijn (bijv. 14:30).
-config-error-day-of-week-invalid = Dag van de week moet 0-6 zijn (maandag=0, zondag=6).
-config-error-mode-invalid = Modus moet "full" of "incremental" zijn.
 config-error-increment-positive = Toevoegbedrag moet een positief geheel getal zijn.
 
 # ==========================================
@@ -754,12 +754,13 @@ config-label-restock-daily = om { $time } UTC
 config-label-restock-weekly = op { $day } om { $time } UTC
 config-label-restock-mode = {"**"}Modus:{"**"} { $mode }
 config-label-restock-full = Volledige herbevoorrading
-config-label-restock-incremental = Voeg { $amount } toe per cyclus (tot max)
+config-label-restock-incremental = Geleidelijk (hoeveelheden per item)
 config-label-restock-disabled = {"**"}Herbevoorradingsschema:{"**"} Uitgeschakeld
 config-label-item-stock-limits = {"**"}Voorraadlimieten per voorwerp{"**"}
 config-msg-no-items-in-shop = Geen voorwerpen in deze winkel.
 config-label-stock-with-available = Max: { $max } | Beschikbaar: { $available }
-config-label-stock-reserved = | Gereserveerd: { $reserved }
+config-label-stock-increment = Aanvulling: +{ $increment }/cyclus
+config-label-stock-reserved = Gereserveerd: { $reserved }
 config-label-stock-not-initialized = Max: { $max } | Beschikbaar: (niet geïnitialiseerd)
 config-label-stock-unlimited = Voorraad: Onbeperkt
 

@@ -285,6 +285,8 @@ config-modal-label-max-stock = 최대 재고
 config-modal-placeholder-max-stock = 최대 재고를 입력하세요 (예: 10)
 config-modal-label-current-stock = 현재 재고
 config-modal-placeholder-current-stock = 현재 가용 재고를 입력하세요
+config-modal-label-restock-increment = 재입고량 (주기당)
+config-modal-placeholder-restock-increment = 주기당 추가 수량 (기본값: 1)
 config-error-max-stock-positive = 최대 재고는 양의 정수여야 합니다.
 config-error-current-stock-non-negative = 현재 재고는 0 이상의 정수여야 합니다.
 config-error-current-exceeds-max = 현재 재고가 최대 재고를 초과할 수 없습니다.
@@ -292,21 +294,19 @@ config-error-item-not-in-shop = 상점에서 "{ $itemName }" 아이템을 찾을
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = 재입고 일정 설정
-config-modal-label-schedule = 일정 (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = 입력: hourly, daily, weekly, 또는 none
+config-modal-restock-schedule-label = 일정
+config-modal-restock-schedule-none = 없음 (비활성화)
+config-modal-restock-schedule-hourly = 매시간
+config-modal-restock-schedule-daily = 매일
+config-modal-restock-schedule-weekly = 매주
 config-modal-label-time = 시간 (UTC 기준 HH:MM)
 config-modal-desc-current-time = 현재 시간: { $utcTime }
 config-modal-placeholder-time = 예: 14:30 (오후 2시 30분 UTC)
-config-modal-label-day-of-week = 요일 (0=월, 6=일) - 주간 전용
-config-modal-placeholder-day-of-week = 0-6 입력 (월요일=0, 일요일=6)
-config-modal-label-mode = 모드 (full/incremental)
-config-modal-placeholder-mode = full = 최대로 초기화, incremental = 수량 추가
-config-modal-label-increment = 증가량 (incremental 모드용)
-config-modal-placeholder-increment = 재입고 주기당 추가할 수량
-config-error-schedule-invalid = 일정은 hourly, daily, weekly, 또는 none 중 하나여야 합니다.
+config-modal-restock-day-label = 요일 (매주만 해당)
+config-modal-restock-mode-label = 재입고 모드
+config-modal-restock-mode-full = 전체 (최대로 리셋)
+config-modal-restock-mode-incremental = 점진적 (수량 추가)
 config-error-time-format-invalid = 시간은 HH:MM 형식이어야 합니다 (예: 14:30).
-config-error-day-of-week-invalid = 요일은 0-6이어야 합니다 (월요일=0, 일요일=6).
-config-error-mode-invalid = 모드는 "full" 또는 "incremental"이어야 합니다.
 config-error-increment-positive = 증가량은 양의 정수여야 합니다.
 
 # ==========================================
@@ -754,12 +754,13 @@ config-label-restock-daily = { $time } UTC에
 config-label-restock-weekly = { $day } { $time } UTC에
 config-label-restock-mode = {"**"}모드:{"**"} { $mode }
 config-label-restock-full = 전체 재입고
-config-label-restock-incremental = 주기당 { $amount }개 추가 (최대까지)
+config-label-restock-incremental = 점진적 (아이템별 수량)
 config-label-restock-disabled = {"**"}재입고 일정:{"**"} 비활성화
 config-label-item-stock-limits = {"**"}아이템 재고 한도{"**"}
 config-msg-no-items-in-shop = 이 상점에 아이템이 없습니다.
 config-label-stock-with-available = 최대: { $max } | 가용: { $available }
-config-label-stock-reserved = | 예약: { $reserved }
+config-label-stock-increment = 재입고: +{ $increment }/주기
+config-label-stock-reserved = 예약: { $reserved }
 config-label-stock-not-initialized = 최대: { $max } | 가용: (미초기화)
 config-label-stock-unlimited = 재고: 무제한
 

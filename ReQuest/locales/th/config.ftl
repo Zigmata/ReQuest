@@ -285,6 +285,8 @@ config-modal-label-max-stock = สินค้าคงเหลือสูง�
 config-modal-placeholder-max-stock = ป้อนจำนวนสูงสุด (เช่น 10)
 config-modal-label-current-stock = สินค้าคงเหลือปัจจุบัน
 config-modal-placeholder-current-stock = ป้อนจำนวนที่มีอยู่ปัจจุบัน
+config-modal-label-restock-increment = จำนวนเติมสต็อก (ต่อรอบ)
+config-modal-placeholder-restock-increment = จำนวนที่เพิ่มต่อรอบ (ค่าเริ่มต้น: 1)
 config-error-max-stock-positive = สินค้าคงเหลือสูงสุดต้องเป็นจำนวนเต็มบวก
 config-error-current-stock-non-negative = สินค้าคงเหลือปัจจุบันต้องเป็นจำนวนเต็มไม่ติดลบ
 config-error-current-exceeds-max = สินค้าคงเหลือปัจจุบันต้องไม่เกินสินค้าคงเหลือสูงสุด
@@ -292,21 +294,19 @@ config-error-item-not-in-shop = ไม่พบไอเทม "{ $itemName }" �
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = ตั้งค่าตารางเติมสินค้า
-config-modal-label-schedule = ตาราง (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = ป้อน: hourly, daily, weekly หรือ none
+config-modal-restock-schedule-label = ตารางเวลา
+config-modal-restock-schedule-none = ไม่มี (ปิดใช้งาน)
+config-modal-restock-schedule-hourly = ทุกชั่วโมง
+config-modal-restock-schedule-daily = ทุกวัน
+config-modal-restock-schedule-weekly = ทุกสัปดาห์
 config-modal-label-time = เวลา (HH:MM ในรูปแบบ UTC)
 config-modal-desc-current-time = เวลาปัจจุบัน: { $utcTime }
 config-modal-placeholder-time = เช่น 14:30 สำหรับ 14:30 น. UTC
-config-modal-label-day-of-week = วันในสัปดาห์ (0=จันทร์, 6=อาทิตย์) - เฉพาะรายสัปดาห์
-config-modal-placeholder-day-of-week = ป้อน 0-6 (จันทร์=0, อาทิตย์=6)
-config-modal-label-mode = โหมด (full/incremental)
-config-modal-placeholder-mode = full = รีเซ็ตเป็นค่าสูงสุด, incremental = เพิ่มตามจำนวน
-config-modal-label-increment = จำนวนที่เพิ่ม (สำหรับโหมด incremental)
-config-modal-placeholder-increment = จำนวนที่เพิ่มต่อรอบการเติมสินค้า
-config-error-schedule-invalid = ตารางต้องเป็นหนึ่งใน: hourly, daily, weekly หรือ none
+config-modal-restock-day-label = วันในสัปดาห์ (เฉพาะรายสัปดาห์)
+config-modal-restock-mode-label = โหมดเติมสต็อก
+config-modal-restock-mode-full = เต็ม (รีเซ็ตเป็นค่าสูงสุด)
+config-modal-restock-mode-incremental = เพิ่มทีละน้อย (เพิ่มจำนวน)
 config-error-time-format-invalid = เวลาต้องอยู่ในรูปแบบ HH:MM (เช่น 14:30)
-config-error-day-of-week-invalid = วันในสัปดาห์ต้องเป็น 0-6 (จันทร์=0, อาทิตย์=6)
-config-error-mode-invalid = โหมดต้องเป็น "full" หรือ "incremental"
 config-error-increment-positive = จำนวนที่เพิ่มต้องเป็นจำนวนเต็มบวก
 
 # ==========================================
@@ -754,12 +754,13 @@ config-label-restock-daily = เวลา { $time } UTC
 config-label-restock-weekly = วัน{ $day } เวลา { $time } UTC
 config-label-restock-mode = {"**"}โหมด:{"**"} { $mode }
 config-label-restock-full = เติมสินค้าเต็ม
-config-label-restock-incremental = เพิ่ม { $amount } ต่อรอบ (ไม่เกินค่าสูงสุด)
+config-label-restock-incremental = เพิ่มทีละน้อย (จำนวนต่อรายการ)
 config-label-restock-disabled = {"**"}ตารางเติมสินค้า:{"**"} ปิดใช้งาน
 config-label-item-stock-limits = {"**"}ขีดจำกัดสินค้าคงเหลือ{"**"}
 config-msg-no-items-in-shop = ไม่มีไอเทมในร้านค้านี้
 config-label-stock-with-available = สูงสุด: { $max } | มีอยู่: { $available }
-config-label-stock-reserved = | จองแล้ว: { $reserved }
+config-label-stock-increment = เติมสต็อก: +{ $increment }/รอบ
+config-label-stock-reserved = จองแล้ว: { $reserved }
 config-label-stock-not-initialized = สูงสุด: { $max } | มีอยู่: (ยังไม่เริ่มต้น)
 config-label-stock-unlimited = สินค้าคงเหลือ: ไม่จำกัด
 

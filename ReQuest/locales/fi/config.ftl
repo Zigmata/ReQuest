@@ -286,6 +286,8 @@ config-modal-label-max-stock = Enimmäisvarasto
 config-modal-placeholder-max-stock = Syötä enimmäisvarasto (esim. 10)
 config-modal-label-current-stock = Nykyinen varasto
 config-modal-placeholder-current-stock = Syötä nykyinen saatavilla oleva varasto
+config-modal-label-restock-increment = Täydennysmäärä (per kierros)
+config-modal-placeholder-restock-increment = Lisättävä määrä per täydennyskierros (oletus: 1)
 config-error-max-stock-positive = Enimmäisvaraston on oltava positiivinen kokonaisluku.
 config-error-current-stock-non-negative = Nykyisen varaston on oltava ei-negatiivinen kokonaisluku.
 config-error-current-exceeds-max = Nykyinen varasto ei voi ylittää enimmäisvarastoa.
@@ -293,21 +295,19 @@ config-error-item-not-in-shop = Esinettä "{ $itemName }" ei löytynyt kaupasta.
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = Määritä täydennysaikataulu
-config-modal-label-schedule = Aikataulu (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Syötä: hourly, daily, weekly tai none
+config-modal-restock-schedule-label = Aikataulu
+config-modal-restock-schedule-none = Ei mitään (Pois käytöstä)
+config-modal-restock-schedule-hourly = Tunnittain
+config-modal-restock-schedule-daily = Päivittäin
+config-modal-restock-schedule-weekly = Viikoittain
 config-modal-label-time = Aika (HH:MM UTC-ajassa)
 config-modal-desc-current-time = Nykyinen aika: { $utcTime }
 config-modal-placeholder-time = esim. 14:30 vastaa klo 14:30 UTC
-config-modal-label-day-of-week = Viikonpäivä (0=Ma, 6=Su) - Vain viikottaiselle
-config-modal-placeholder-day-of-week = Syötä 0–6 (Maanantai=0, Sunnuntai=6)
-config-modal-label-mode = Tila (full/incremental)
-config-modal-placeholder-mode = full = täysi täydennys, incremental = lisää määrä
-config-modal-label-increment = Lisäysmäärä (incremental-tilassa)
-config-modal-placeholder-increment = Täydennyskierroksen lisäysmäärä
-config-error-schedule-invalid = Aikataulun on oltava jokin seuraavista: hourly, daily, weekly tai none.
+config-modal-restock-day-label = Viikonpäivä (vain viikoittain)
+config-modal-restock-mode-label = Täydennystila
+config-modal-restock-mode-full = Täysi (nollaa maksimiin)
+config-modal-restock-mode-incremental = Asteittainen (lisää määrä)
 config-error-time-format-invalid = Ajan on oltava muodossa HH:MM (esim. 14:30).
-config-error-day-of-week-invalid = Viikonpäivän on oltava 0–6 (Maanantai=0, Sunnuntai=6).
-config-error-mode-invalid = Tilan on oltava joko "full" tai "incremental".
 config-error-increment-positive = Lisäysmäärän on oltava positiivinen kokonaisluku.
 
 # ==========================================
@@ -755,12 +755,13 @@ config-label-restock-daily = klo { $time } UTC
 config-label-restock-weekly = { $day } klo { $time } UTC
 config-label-restock-mode = {"**"}Tila:{"**"} { $mode }
 config-label-restock-full = Täysi täydennys
-config-label-restock-incremental = Lisää { $amount } per kierros (enintään maksimi)
+config-label-restock-incremental = Asteittainen (määrät tuotekohtaisesti)
 config-label-restock-disabled = {"**"}Täydennysaikataulu:{"**"} Pois käytöstä
 config-label-item-stock-limits = {"**"}Esineiden varastorajat{"**"}
 config-msg-no-items-in-shop = Kaupassa ei ole esineitä.
 config-label-stock-with-available = Maks: { $max } | Saatavilla: { $available }
-config-label-stock-reserved = | Varattu: { $reserved }
+config-label-stock-increment = Täydennys: +{ $increment }/kierros
+config-label-stock-reserved = Varattu: { $reserved }
 config-label-stock-not-initialized = Maks: { $max } | Saatavilla: (ei alustettu)
 config-label-stock-unlimited = Varasto: Rajoittamaton
 

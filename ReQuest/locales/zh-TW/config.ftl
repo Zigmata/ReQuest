@@ -285,6 +285,8 @@ config-modal-label-max-stock = 最大庫存量
 config-modal-placeholder-max-stock = 輸入最大庫存量（例如 10）
 config-modal-label-current-stock = 目前庫存
 config-modal-placeholder-current-stock = 輸入目前可用庫存
+config-modal-label-restock-increment = 補貨數量（每週期）
+config-modal-placeholder-restock-increment = 每週期補貨數量（預設：1）
 config-error-max-stock-positive = 最大庫存量必須為正整數。
 config-error-current-stock-non-negative = 目前庫存必須為非負整數。
 config-error-current-exceeds-max = 目前庫存不可超過最大庫存量。
@@ -292,21 +294,19 @@ config-error-item-not-in-shop = 商店中找不到物品「{ $itemName }」。
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = 設定補貨排程
-config-modal-label-schedule = 排程（hourly/daily/weekly/none）
-config-modal-placeholder-schedule = 輸入：hourly、daily、weekly 或 none
+config-modal-restock-schedule-label = 時間表
+config-modal-restock-schedule-none = 無（已停用）
+config-modal-restock-schedule-hourly = 每小時
+config-modal-restock-schedule-daily = 每天
+config-modal-restock-schedule-weekly = 每週
 config-modal-label-time = 時間（UTC 的 HH:MM）
 config-modal-desc-current-time = 目前時間：{ $utcTime }
 config-modal-placeholder-time = 例如：14:30 代表 UTC 下午 2:30
-config-modal-label-day-of-week = 星期幾（0=週一，6=週日）- 僅限 weekly
-config-modal-placeholder-day-of-week = 輸入 0-6（週一=0，週日=6）
-config-modal-label-mode = 模式（full/incremental）
-config-modal-placeholder-mode = full = 重設為最大值，incremental = 增加數量
-config-modal-label-increment = 增量（用於 incremental 模式）
-config-modal-placeholder-increment = 每次補貨週期增加的數量
-config-error-schedule-invalid = 排程必須為以下之一：hourly、daily、weekly 或 none。
+config-modal-restock-day-label = 星期幾（僅每週）
+config-modal-restock-mode-label = 補貨模式
+config-modal-restock-mode-full = 完全（重設為最大值）
+config-modal-restock-mode-incremental = 遞增（增加數量）
 config-error-time-format-invalid = 時間格式必須為 HH:MM（例如 14:30）。
-config-error-day-of-week-invalid = 星期幾必須為 0-6（週一=0，週日=6）。
-config-error-mode-invalid = 模式必須為「full」或「incremental」。
 config-error-increment-positive = 增量必須為正整數。
 
 # ==========================================
@@ -754,12 +754,13 @@ config-label-restock-daily = 於 { $time } UTC
 config-label-restock-weekly = 於{ $day } { $time } UTC
 config-label-restock-mode = {"**"}模式：{"**"} { $mode }
 config-label-restock-full = 完整補貨
-config-label-restock-incremental = 每週期增加 { $amount }（上限為最大值）
+config-label-restock-incremental = 遞增（每物品數量）
 config-label-restock-disabled = {"**"}補貨排程：{"**"} 已停用
 config-label-item-stock-limits = {"**"}物品庫存限制{"**"}
 config-msg-no-items-in-shop = 此商店中沒有物品。
 config-label-stock-with-available = 最大值：{ $max } | 可用：{ $available }
-config-label-stock-reserved = | 已預留：{ $reserved }
+config-label-stock-increment = 補貨：+{ $increment }/週期
+config-label-stock-reserved = 已預留：{ $reserved }
 config-label-stock-not-initialized = 最大值：{ $max } | 可用：（尚未初始化）
 config-label-stock-unlimited = 庫存：無限制
 

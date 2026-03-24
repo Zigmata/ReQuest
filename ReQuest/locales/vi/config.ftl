@@ -285,6 +285,8 @@ config-modal-label-max-stock = Tồn kho tối đa
 config-modal-placeholder-max-stock = Nhập tồn kho tối đa (ví dụ: 10)
 config-modal-label-current-stock = Tồn kho hiện tại
 config-modal-placeholder-current-stock = Nhập số lượng tồn kho hiện có
+config-modal-label-restock-increment = Số lượng bổ sung (mỗi chu kỳ)
+config-modal-placeholder-restock-increment = Số lượng thêm mỗi chu kỳ (mặc định: 1)
 config-error-max-stock-positive = Tồn kho tối đa phải là số nguyên dương.
 config-error-current-stock-non-negative = Tồn kho hiện tại phải là số nguyên không âm.
 config-error-current-exceeds-max = Tồn kho hiện tại không được vượt quá tồn kho tối đa.
@@ -292,21 +294,19 @@ config-error-item-not-in-shop = Không tìm thấy vật phẩm "{ $itemName }" 
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = Cấu hình lịch nhập hàng
-config-modal-label-schedule = Lịch (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Nhập: hourly, daily, weekly, hoặc none
+config-modal-restock-schedule-label = Lịch trình
+config-modal-restock-schedule-none = Không (Đã tắt)
+config-modal-restock-schedule-hourly = Hàng giờ
+config-modal-restock-schedule-daily = Hàng ngày
+config-modal-restock-schedule-weekly = Hàng tuần
 config-modal-label-time = Thời gian (HH:MM theo UTC)
 config-modal-desc-current-time = Thời gian hiện tại: { $utcTime }
 config-modal-placeholder-time = Ví dụ: 14:30 cho 2:30 chiều UTC
-config-modal-label-day-of-week = Ngày trong tuần (0=T2, 6=CN) - Chỉ cho hàng tuần
-config-modal-placeholder-day-of-week = Nhập 0-6 (Thứ Hai=0, Chủ Nhật=6)
-config-modal-label-mode = Chế độ (full/incremental)
-config-modal-placeholder-mode = full = đặt lại tối đa, incremental = thêm số lượng
-config-modal-label-increment = Số lượng tăng thêm (cho chế độ incremental)
-config-modal-placeholder-increment = Số lượng thêm mỗi chu kỳ nhập hàng
-config-error-schedule-invalid = Lịch phải là một trong: hourly, daily, weekly, hoặc none.
+config-modal-restock-day-label = Ngày trong tuần (chỉ hàng tuần)
+config-modal-restock-mode-label = Chế độ bổ sung
+config-modal-restock-mode-full = Đầy đủ (đặt lại tối đa)
+config-modal-restock-mode-incremental = Tăng dần (thêm số lượng)
 config-error-time-format-invalid = Thời gian phải theo định dạng HH:MM (ví dụ: 14:30).
-config-error-day-of-week-invalid = Ngày trong tuần phải từ 0-6 (Thứ Hai=0, Chủ Nhật=6).
-config-error-mode-invalid = Chế độ phải là "full" hoặc "incremental".
 config-error-increment-positive = Số lượng tăng thêm phải là số nguyên dương.
 
 # ==========================================
@@ -754,12 +754,13 @@ config-label-restock-daily = lúc { $time } UTC
 config-label-restock-weekly = vào { $day } lúc { $time } UTC
 config-label-restock-mode = {"**"}Chế độ:{"**"} { $mode }
 config-label-restock-full = Nhập hàng đầy đủ
-config-label-restock-incremental = Thêm { $amount } mỗi chu kỳ (tối đa)
+config-label-restock-incremental = Tăng dần (số lượng theo vật phẩm)
 config-label-restock-disabled = {"**"}Lịch nhập hàng:{"**"} Đã tắt
 config-label-item-stock-limits = {"**"}Giới hạn tồn kho vật phẩm{"**"}
 config-msg-no-items-in-shop = Không có vật phẩm trong cửa hàng này.
 config-label-stock-with-available = Tối đa: { $max } | Còn lại: { $available }
-config-label-stock-reserved = | Đã đặt: { $reserved }
+config-label-stock-increment = Bổ sung: +{ $increment }/chu kỳ
+config-label-stock-reserved = Đã đặt: { $reserved }
 config-label-stock-not-initialized = Tối đa: { $max } | Còn lại: (chưa khởi tạo)
 config-label-stock-unlimited = Tồn kho: Không giới hạn
 

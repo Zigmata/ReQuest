@@ -58,8 +58,7 @@ SHOP_SCHEMA = {
                 "dayOfWeek": {"type": "integer", "minimum": 0, "maximum": 6},
                 "hour": {"type": "integer", "minimum": 0, "maximum": 23},
                 "minute": {"type": "integer", "minimum": 0, "maximum": 59},
-                "mode": {"type": "string", "enum": ["full", "incremental"]},
-                "incrementAmount": {"type": "integer", "minimum": 1}
+                "mode": {"type": "string", "enum": ["full", "incremental"]}
             }
         },
         "shopStock": {
@@ -71,6 +70,7 @@ SHOP_SCHEMA = {
                     "description": {"type": "string"},
                     "quantity": {"type": "integer", "minimum": 1},
                     "maxStock": {"type": "integer", "minimum": 1},
+                    "restockIncrement": {"type": "integer", "minimum": 1},
                     "costs": {
                         "type": "array",
                         "items": {
@@ -2036,7 +2036,7 @@ class RoleplayRewardsModal(LocaleModal):
 
 class SetItemStockModal(LocaleModal):
     def __init__(self, calling_view, item_name: str, current_max: int | None = None,
-                 current_stock: int | None = None):
+                 current_stock: int | None = None, current_increment: int | None = None):
         super().__init__(
             title=t(DEFAULT_LOCALE, 'config-modal-title-stock-limit', **{'itemName': item_name[:40]}),
             timeout=600
@@ -2067,8 +2067,17 @@ class SetItemStockModal(LocaleModal):
             required=True
         )
 
+        self.increment_text_input = discord.ui.TextInput(
+            label=t(DEFAULT_LOCALE, 'config-modal-label-restock-increment'),
+            custom_id='increment_text_input',
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-restock-increment'),
+            default=str(current_increment) if current_increment is not None else '1',
+            required=False
+        )
+
         self.add_item(self.max_stock_text_input)
         self.add_item(self.current_stock_text_input)
+        self.add_item(self.increment_text_input)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -2106,6 +2115,20 @@ class SetItemStockModal(LocaleModal):
                     message_id='config-error-current-exceeds-max'
                 )
 
+            # Validate restock increment
+            increment_amount = 1
+            increment_str = self.increment_text_input.value.strip()
+            if increment_str:
+                try:
+                    increment_amount = int(increment_str)
+                    if increment_amount < 1:
+                        raise ValueError
+                except ValueError:
+                    raise UserFeedbackError(
+                        t(DEFAULT_LOCALE, 'config-error-increment-positive'),
+                        message_id='config-error-increment-positive'
+                    )
+
             # Update the shop config with maxStock for this item
             shop_query = await get_cached_data(
                 bot=bot,
@@ -2121,6 +2144,7 @@ class SetItemStockModal(LocaleModal):
             for item in shop_stock:
                 if item.get(CommonFields.NAME) == self.item_name:
                     item[ShopFields.MAX_STOCK] = max_stock
+                    item[ShopFields.RESTOCK_INCREMENT] = increment_amount
                     item_found = True
                     break
 
@@ -2167,14 +2191,28 @@ class RestockScheduleModal(LocaleModal):
         minute = current_config.get(RestockFields.MINUTE, 0)
         day = current_config.get(RestockFields.DAY_OF_WEEK, 0)
         mode = current_config.get(RestockFields.MODE, RestockMode.FULL.value)
-        increment = current_config.get(RestockFields.INCREMENT_AMOUNT, 1)
 
-        self.schedule_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-schedule'),
-            custom_id='schedule_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-schedule'),
-            default=schedule if schedule else 'none',
-            required=True
+        current_schedule = schedule if schedule else 'none'
+        self.schedule_radio_group = discord.ui.RadioGroup(
+            custom_id='schedule_radio_group',
+            options=[
+                discord.RadioGroupOption(
+                    label=t(DEFAULT_LOCALE, 'config-modal-restock-schedule-none'), value='none',
+                    default=current_schedule == 'none'),
+                discord.RadioGroupOption(
+                    label=t(DEFAULT_LOCALE, 'config-modal-restock-schedule-hourly'), value=ScheduleType.HOURLY.value,
+                    default=current_schedule == ScheduleType.HOURLY.value),
+                discord.RadioGroupOption(
+                    label=t(DEFAULT_LOCALE, 'config-modal-restock-schedule-daily'), value=ScheduleType.DAILY.value,
+                    default=current_schedule == ScheduleType.DAILY.value),
+                discord.RadioGroupOption(
+                    label=t(DEFAULT_LOCALE, 'config-modal-restock-schedule-weekly'), value=ScheduleType.WEEKLY.value,
+                    default=current_schedule == ScheduleType.WEEKLY.value),
+            ]
+        )
+        self.schedule_label = Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-restock-schedule-label'),
+            component=self.schedule_radio_group
         )
 
         self.time_text_input = discord.ui.TextInput(
@@ -2183,42 +2221,58 @@ class RestockScheduleModal(LocaleModal):
             default=f'{hour:02d}:{minute:02d}',
             required=False
         )
-
         self.time_label = Label(
             text=t(DEFAULT_LOCALE, 'config-modal-label-time'),
             description=t(DEFAULT_LOCALE, 'config-modal-desc-current-time', **{'utcTime': utc_time_str}),
             component=self.time_text_input
         )
 
-        self.day_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-day-of-week'),
-            custom_id='day_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-day-of-week'),
-            default=str(day),
-            required=False
+        current_day = str(day)
+        self.day_radio_group = discord.ui.RadioGroup(
+            custom_id='day_radio_group',
+            options=[
+                discord.RadioGroupOption(
+                    label=t(DEFAULT_LOCALE, 'common-day-monday'), value='0', default=current_day == '0'),
+                discord.RadioGroupOption(
+                    label=t(DEFAULT_LOCALE, 'common-day-tuesday'), value='1', default=current_day == '1'),
+                discord.RadioGroupOption(
+                    label=t(DEFAULT_LOCALE, 'common-day-wednesday'), value='2', default=current_day == '2'),
+                discord.RadioGroupOption(
+                    label=t(DEFAULT_LOCALE, 'common-day-thursday'), value='3', default=current_day == '3'),
+                discord.RadioGroupOption(
+                    label=t(DEFAULT_LOCALE, 'common-day-friday'), value='4', default=current_day == '4'),
+                discord.RadioGroupOption(
+                    label=t(DEFAULT_LOCALE, 'common-day-saturday'), value='5', default=current_day == '5'),
+                discord.RadioGroupOption(
+                    label=t(DEFAULT_LOCALE, 'common-day-sunday'), value='6', default=current_day == '6'),
+            ]
+        )
+        self.day_label = Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-restock-day-label'),
+            component=self.day_radio_group
         )
 
-        self.mode_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-mode'),
-            custom_id='mode_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-mode'),
-            default=mode,
-            required=True
+        self.mode_radio_group = discord.ui.RadioGroup(
+            custom_id='mode_radio_group',
+            options=[
+                discord.RadioGroupOption(
+                    label=t(DEFAULT_LOCALE, 'config-modal-restock-mode-full'), value=RestockMode.FULL.value,
+                    default=mode == RestockMode.FULL.value),
+                discord.RadioGroupOption(
+                    label=t(DEFAULT_LOCALE, 'config-modal-restock-mode-incremental'),
+                    value=RestockMode.INCREMENTAL.value,
+                    default=mode == RestockMode.INCREMENTAL.value),
+            ]
+        )
+        self.mode_label = Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-restock-mode-label'),
+            component=self.mode_radio_group
         )
 
-        self.increment_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-increment'),
-            custom_id='increment_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-increment'),
-            default=str(increment),
-            required=False
-        )
-
-        self.add_item(self.schedule_text_input)
+        self.add_item(self.schedule_label)
         self.add_item(self.time_label)
-        self.add_item(self.day_text_input)
-        self.add_item(self.mode_text_input)
-        self.add_item(self.increment_text_input)
+        self.add_item(self.day_label)
+        self.add_item(self.mode_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -2226,18 +2280,12 @@ class RestockScheduleModal(LocaleModal):
             guild_id = interaction.guild_id
             channel_id = self.calling_view.channel_id
 
-            schedule = self.schedule_text_input.value.strip().lower()
-            valid_schedules = [s.value for s in ScheduleType] + ['none', '']
-            if schedule not in valid_schedules:
-                raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-schedule-invalid'),
-                    message_id='config-error-schedule-invalid'
-                )
+            schedule = self.schedule_radio_group.value
 
             # Parse time
             hour, minute = 0, 0
             time_str = self.time_text_input.value.strip()
-            if time_str and schedule not in ['none', '']:
+            if time_str and schedule != 'none':
                 try:
                     parts = time_str.split(':')
                     hour = int(parts[0])
@@ -2251,45 +2299,13 @@ class RestockScheduleModal(LocaleModal):
                     )
 
             # Parse day of week
-            day = 0
-            if schedule == ScheduleType.WEEKLY.value:
-                day_str = self.day_text_input.value.strip()
-                try:
-                    day = int(day_str)
-                    if not (0 <= day <= 6):
-                        raise ValueError
-                except ValueError:
-                    raise UserFeedbackError(
-                        t(DEFAULT_LOCALE, 'config-error-day-of-week-invalid'),
-                        message_id='config-error-day-of-week-invalid'
-                    )
+            day = int(self.day_radio_group.value)
 
             # Parse mode
-            mode = self.mode_text_input.value.strip().lower()
-            valid_modes = [m.value for m in RestockMode]
-            if mode not in valid_modes:
-                raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-mode-invalid'),
-                    message_id='config-error-mode-invalid'
-                )
-
-            # Parse increment amount
-            increment_amount = 1
-            if mode == RestockMode.INCREMENTAL.value:
-                increment_str = self.increment_text_input.value.strip()
-                if increment_str:
-                    try:
-                        increment_amount = int(increment_str)
-                        if increment_amount < 1:
-                            raise ValueError
-                    except ValueError:
-                        raise UserFeedbackError(
-                            t(DEFAULT_LOCALE, 'config-error-increment-positive'),
-                            message_id='config-error-increment-positive'
-                        )
+            mode = self.mode_radio_group.value
 
             # Build restock config
-            if schedule in ['none', '']:
+            if schedule == 'none':
                 restock_config = {RestockFields.ENABLED: False}
             else:
                 restock_config = {
@@ -2299,7 +2315,6 @@ class RestockScheduleModal(LocaleModal):
                     RestockFields.MINUTE: minute,
                     RestockFields.DAY_OF_WEEK: day,
                     RestockFields.MODE: mode,
-                    RestockFields.INCREMENT_AMOUNT: increment_amount
                 }
 
             # Update shop config

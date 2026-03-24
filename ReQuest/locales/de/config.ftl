@@ -285,6 +285,8 @@ config-modal-label-max-stock = Maximaler Bestand
 config-modal-placeholder-max-stock = Geben Sie den maximalen Bestand ein (z.B. 10)
 config-modal-label-current-stock = Aktueller Bestand
 config-modal-placeholder-current-stock = Geben Sie den aktuell verfügbaren Bestand ein
+config-modal-label-restock-increment = Nachfüllmenge (pro Zyklus)
+config-modal-placeholder-restock-increment = Menge pro Nachfüllzyklus (Standard: 1)
 config-error-max-stock-positive = Der maximale Bestand muss eine positive Ganzzahl sein.
 config-error-current-stock-non-negative = Der aktuelle Bestand muss eine nicht-negative Ganzzahl sein.
 config-error-current-exceeds-max = Der aktuelle Bestand darf den maximalen Bestand nicht überschreiten.
@@ -292,21 +294,19 @@ config-error-item-not-in-shop = Gegenstand "{ $itemName }" im Shop nicht gefunde
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = Nachfüllzeitplan konfigurieren
-config-modal-label-schedule = Zeitplan (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Eingabe: hourly, daily, weekly oder none
+config-modal-restock-schedule-label = Zeitplan
+config-modal-restock-schedule-none = Keiner (Deaktiviert)
+config-modal-restock-schedule-hourly = Stündlich
+config-modal-restock-schedule-daily = Täglich
+config-modal-restock-schedule-weekly = Wöchentlich
 config-modal-label-time = Uhrzeit (HH:MM in UTC)
 config-modal-desc-current-time = Aktuelle Uhrzeit: { $utcTime }
 config-modal-placeholder-time = z.B. 14:30 für 14:30 Uhr UTC
-config-modal-label-day-of-week = Wochentag (0=Mo, 6=So) - Nur bei wöchentlich
-config-modal-placeholder-day-of-week = Geben Sie 0-6 ein (Montag=0, Sonntag=6)
-config-modal-label-mode = Modus (full/incremental)
-config-modal-placeholder-mode = full = auf Maximum zurücksetzen, incremental = Menge hinzufügen
-config-modal-label-increment = Nachfüllmenge (für inkrementellen Modus)
-config-modal-placeholder-increment = Menge, die pro Nachfüllzyklus hinzugefügt wird
-config-error-schedule-invalid = Der Zeitplan muss einer der folgenden sein: hourly, daily, weekly oder none.
+config-modal-restock-day-label = Wochentag (nur wöchentlich)
+config-modal-restock-mode-label = Nachfüllmodus
+config-modal-restock-mode-full = Vollständig (auf Maximum zurücksetzen)
+config-modal-restock-mode-incremental = Schrittweise (Menge hinzufügen)
 config-error-time-format-invalid = Die Uhrzeit muss im Format HH:MM angegeben werden (z.B. 14:30).
-config-error-day-of-week-invalid = Der Wochentag muss 0-6 sein (Montag=0, Sonntag=6).
-config-error-mode-invalid = Der Modus muss entweder "full" oder "incremental" sein.
 config-error-increment-positive = Die Nachfüllmenge muss eine positive Ganzzahl sein.
 
 # ==========================================
@@ -754,12 +754,13 @@ config-label-restock-daily = um { $time } UTC
 config-label-restock-weekly = am { $day } um { $time } UTC
 config-label-restock-mode = {"**"}Modus:{"**"} { $mode }
 config-label-restock-full = Vollständige Auffüllung
-config-label-restock-incremental = { $amount } pro Zyklus hinzufügen (bis zum Maximum)
+config-label-restock-incremental = Schrittweise (Mengen pro Artikel)
 config-label-restock-disabled = {"**"}Nachfüllzeitplan:{"**"} Deaktiviert
 config-label-item-stock-limits = {"**"}Gegenstandsbestandsgrenzen{"**"}
 config-msg-no-items-in-shop = Keine Gegenstände in diesem Shop.
 config-label-stock-with-available = Max: { $max } | Verfügbar: { $available }
-config-label-stock-reserved = | Reserviert: { $reserved }
+config-label-stock-increment = Nachfüllung: +{ $increment }/Zyklus
+config-label-stock-reserved = Reserviert: { $reserved }
 config-label-stock-not-initialized = Max: { $max } | Verfügbar: (nicht initialisiert)
 config-label-stock-unlimited = Bestand: Unbegrenzt
 

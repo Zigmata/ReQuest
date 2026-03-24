@@ -285,6 +285,8 @@ config-modal-label-max-stock = Maksimalt lager
 config-modal-placeholder-max-stock = Skriv inn maks lager (f.eks. 10)
 config-modal-label-current-stock = Nåværende lager
 config-modal-placeholder-current-stock = Skriv inn nåværende tilgjengelig lager
+config-modal-label-restock-increment = Påfyllingsmengde (per syklus)
+config-modal-placeholder-restock-increment = Mengde lagt til per påfyllingssyklus (standard: 1)
 config-error-max-stock-positive = Maksimalt lager må være et positivt heltall.
 config-error-current-stock-non-negative = Nåværende lager må være et ikke-negativt heltall.
 config-error-current-exceeds-max = Nåværende lager kan ikke overstige maksimalt lager.
@@ -292,21 +294,19 @@ config-error-item-not-in-shop = Gjenstanden "{ $itemName }" ble ikke funnet i bu
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = Konfigurer påfyllingsplan
-config-modal-label-schedule = Plan (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Skriv inn: hourly, daily, weekly eller none
+config-modal-restock-schedule-label = Tidsplan
+config-modal-restock-schedule-none = Ingen (Deaktivert)
+config-modal-restock-schedule-hourly = Hver time
+config-modal-restock-schedule-daily = Daglig
+config-modal-restock-schedule-weekly = Ukentlig
 config-modal-label-time = Tid (TT:MM i UTC)
 config-modal-desc-current-time = Gjeldende tid: { $utcTime }
 config-modal-placeholder-time = f.eks. 14:30 for 14:30 UTC
-config-modal-label-day-of-week = Ukedag (0=man, 6=søn) - Kun for ukentlig
-config-modal-placeholder-day-of-week = Skriv inn 0-6 (mandag=0, søndag=6)
-config-modal-label-mode = Modus (full/incremental)
-config-modal-placeholder-mode = full = tilbakestill til maks, incremental = legg til beløp
-config-modal-label-increment = Påfyllingsbeløp (for incremental-modus)
-config-modal-placeholder-increment = Beløp som legges til per påfyllingssyklus
-config-error-schedule-invalid = Plan må være en av: hourly, daily, weekly eller none.
+config-modal-restock-day-label = Ukedag (kun ukentlig)
+config-modal-restock-mode-label = Påfyllingsmodus
+config-modal-restock-mode-full = Full (tilbakestill til maks)
+config-modal-restock-mode-incremental = Gradvis (legg til mengde)
 config-error-time-format-invalid = Tid må være i TT:MM-format (f.eks. 14:30).
-config-error-day-of-week-invalid = Ukedag må være 0-6 (mandag=0, søndag=6).
-config-error-mode-invalid = Modus må være enten "full" eller "incremental".
 config-error-increment-positive = Påfyllingsbeløp må være et positivt heltall.
 
 # ==========================================
@@ -754,12 +754,13 @@ config-label-restock-daily = kl. { $time } UTC
 config-label-restock-weekly = på { $day } kl. { $time } UTC
 config-label-restock-mode = {"**"}Modus:{"**"} { $mode }
 config-label-restock-full = Full påfylling
-config-label-restock-incremental = Legg til { $amount } per syklus (opptil maks)
+config-label-restock-incremental = Gradvis (mengder per vare)
 config-label-restock-disabled = {"**"}Påfyllingsplan:{"**"} Deaktivert
 config-label-item-stock-limits = {"**"}Lagergrenser for gjenstander{"**"}
 config-msg-no-items-in-shop = Ingen gjenstander i denne butikken.
 config-label-stock-with-available = Maks: { $max } | Tilgjengelig: { $available }
-config-label-stock-reserved = | Reservert: { $reserved }
+config-label-stock-increment = Påfylling: +{ $increment }/syklus
+config-label-stock-reserved = Reservert: { $reserved }
 config-label-stock-not-initialized = Maks: { $max } | Tilgjengelig: (ikke initialisert)
 config-label-stock-unlimited = Lager: Ubegrenset
 

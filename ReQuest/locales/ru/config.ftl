@@ -285,6 +285,8 @@ config-modal-label-max-stock = Максимальный запас
 config-modal-placeholder-max-stock = Введите максимальный запас (напр., 10)
 config-modal-label-current-stock = Текущий запас
 config-modal-placeholder-current-stock = Введите текущий доступный запас
+config-modal-label-restock-increment = Количество пополнения (за цикл)
+config-modal-placeholder-restock-increment = Количество за цикл пополнения (по умолчанию: 1)
 config-error-max-stock-positive = Максимальный запас должен быть положительным целым числом.
 config-error-current-stock-non-negative = Текущий запас должен быть неотрицательным целым числом.
 config-error-current-exceeds-max = Текущий запас не может превышать максимальный.
@@ -292,21 +294,19 @@ config-error-item-not-in-shop = Предмет "{ $itemName }" не найден
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = Настройка расписания пополнения
-config-modal-label-schedule = Расписание (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Введите: hourly, daily, weekly или none
+config-modal-restock-schedule-label = Расписание
+config-modal-restock-schedule-none = Нет (Отключено)
+config-modal-restock-schedule-hourly = Ежечасно
+config-modal-restock-schedule-daily = Ежедневно
+config-modal-restock-schedule-weekly = Еженедельно
 config-modal-label-time = Время (ЧЧ:ММ в UTC)
 config-modal-desc-current-time = Текущее время: { $utcTime }
 config-modal-placeholder-time = Напр.: 14:30 для 14:30 UTC
-config-modal-label-day-of-week = День недели (0=Пн, 6=Вс) — только для weekly
-config-modal-placeholder-day-of-week = Введите 0-6 (Понедельник=0, Воскресенье=6)
-config-modal-label-mode = Режим (full/incremental)
-config-modal-placeholder-mode = full = полное восстановление, incremental = добавить количество
-config-modal-label-increment = Количество пополнения (для incremental)
-config-modal-placeholder-increment = Количество, добавляемое за цикл пополнения
-config-error-schedule-invalid = Расписание должно быть одним из: hourly, daily, weekly или none.
+config-modal-restock-day-label = День недели (только еженедельно)
+config-modal-restock-mode-label = Режим пополнения
+config-modal-restock-mode-full = Полный (сброс до максимума)
+config-modal-restock-mode-incremental = Постепенный (добавить количество)
 config-error-time-format-invalid = Время должно быть в формате ЧЧ:ММ (напр., 14:30).
-config-error-day-of-week-invalid = День недели должен быть от 0 до 6 (Понедельник=0, Воскресенье=6).
-config-error-mode-invalid = Режим должен быть "full" или "incremental".
 config-error-increment-positive = Количество пополнения должно быть положительным целым числом.
 
 # ==========================================
@@ -754,12 +754,13 @@ config-label-restock-daily = в { $time } UTC
 config-label-restock-weekly = в { $day } в { $time } UTC
 config-label-restock-mode = {"**"}Режим:{"**"} { $mode }
 config-label-restock-full = Полное пополнение
-config-label-restock-incremental = Добавить { $amount } за цикл (до максимума)
+config-label-restock-incremental = Постепенный (количество по предмету)
 config-label-restock-disabled = {"**"}Расписание пополнения:{"**"} Отключено
 config-label-item-stock-limits = {"**"}Лимиты запасов предметов{"**"}
 config-msg-no-items-in-shop = В этом магазине нет предметов.
 config-label-stock-with-available = Макс: { $max } | Доступно: { $available }
-config-label-stock-reserved = | Зарезервировано: { $reserved }
+config-label-stock-increment = Пополнение: +{ $increment }/цикл
+config-label-stock-reserved = Зарезервировано: { $reserved }
 config-label-stock-not-initialized = Макс: { $max } | Доступно: (не инициализировано)
 config-label-stock-unlimited = Запас: Без ограничений
 

@@ -285,6 +285,8 @@ config-modal-label-max-stock = Scorte massime
 config-modal-placeholder-max-stock = Inserisci le scorte massime (es., 10)
 config-modal-label-current-stock = Scorte attuali
 config-modal-placeholder-current-stock = Inserisci le scorte attualmente disponibili
+config-modal-label-restock-increment = Incremento rifornimento (per ciclo)
+config-modal-placeholder-restock-increment = Quantità aggiunta per ciclo (predefinito: 1)
 config-error-max-stock-positive = Le scorte massime devono essere un intero positivo.
 config-error-current-stock-non-negative = Le scorte attuali devono essere un intero non negativo.
 config-error-current-exceeds-max = Le scorte attuali non possono superare le scorte massime.
@@ -292,21 +294,19 @@ config-error-item-not-in-shop = Oggetto "{ $itemName }" non trovato nel negozio.
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = Configura programma rifornimento
-config-modal-label-schedule = Programma (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Inserisci: hourly, daily, weekly, o none
+config-modal-restock-schedule-label = Programmazione
+config-modal-restock-schedule-none = Nessuno (Disattivato)
+config-modal-restock-schedule-hourly = Ogni ora
+config-modal-restock-schedule-daily = Giornaliero
+config-modal-restock-schedule-weekly = Settimanale
 config-modal-label-time = Orario (HH:MM in UTC)
 config-modal-desc-current-time = Ora corrente: { $utcTime }
 config-modal-placeholder-time = es., 14:30 per le 14:30 UTC
-config-modal-label-day-of-week = Giorno della settimana (0=Lun, 6=Dom) - Solo settimanale
-config-modal-placeholder-day-of-week = Inserisci 0-6 (Lunedì=0, Domenica=6)
-config-modal-label-mode = Modalità (full/incremental)
-config-modal-placeholder-mode = full = ripristino al massimo, incremental = aggiungi quantità
-config-modal-label-increment = Quantità incremento (per modalità incrementale)
-config-modal-placeholder-increment = Quantità da aggiungere per ciclo di rifornimento
-config-error-schedule-invalid = Il programma deve essere uno tra: hourly, daily, weekly, o none.
+config-modal-restock-day-label = Giorno della settimana (solo settimanale)
+config-modal-restock-mode-label = Modalità di rifornimento
+config-modal-restock-mode-full = Completo (ripristina al massimo)
+config-modal-restock-mode-incremental = Incrementale (aggiungi quantità)
 config-error-time-format-invalid = L'orario deve essere nel formato HH:MM (es., 14:30).
-config-error-day-of-week-invalid = Il giorno della settimana deve essere 0-6 (Lunedì=0, Domenica=6).
-config-error-mode-invalid = La modalità deve essere "full" o "incremental".
 config-error-increment-positive = La quantità di incremento deve essere un intero positivo.
 
 # ==========================================
@@ -754,12 +754,13 @@ config-label-restock-daily = alle { $time } UTC
 config-label-restock-weekly = il { $day } alle { $time } UTC
 config-label-restock-mode = {"**"}Modalità:{"**"} { $mode }
 config-label-restock-full = Rifornimento completo
-config-label-restock-incremental = Aggiungi { $amount } per ciclo (fino al massimo)
+config-label-restock-incremental = Incrementale (quantità per articolo)
 config-label-restock-disabled = {"**"}Programma rifornimento:{"**"} Disabilitato
 config-label-item-stock-limits = {"**"}Limiti scorte oggetti{"**"}
 config-msg-no-items-in-shop = Nessun oggetto in questo negozio.
 config-label-stock-with-available = Max: { $max } | Disponibili: { $available }
-config-label-stock-reserved = | Riservati: { $reserved }
+config-label-stock-increment = Rifornimento: +{ $increment }/ciclo
+config-label-stock-reserved = Riservati: { $reserved }
 config-label-stock-not-initialized = Max: { $max } | Disponibili: (non inizializzato)
 config-label-stock-unlimited = Scorte: Illimitate
 

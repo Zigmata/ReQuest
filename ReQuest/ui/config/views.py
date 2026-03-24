@@ -3440,7 +3440,6 @@ class ConfigStockLimitsView(LocaleLayoutView):
             minute = restock_config.get(RestockFields.MINUTE, 0)
             day_of_week = restock_config.get(RestockFields.DAY_OF_WEEK, 0)
             mode = restock_config.get(RestockFields.MODE, RestockMode.FULL.value)
-            increment = restock_config.get(RestockFields.INCREMENT_AMOUNT, 1)
 
             day_name_keys = [
                 'common-day-monday', 'common-day-tuesday', 'common-day-wednesday',
@@ -3470,8 +3469,7 @@ class ConfigStockLimitsView(LocaleLayoutView):
             mode_text = (
                 t(DEFAULT_LOCALE, 'config-label-restock-full')
                 if mode == RestockMode.FULL.value
-                else t(DEFAULT_LOCALE, 'config-label-restock-incremental',
-                       **{'amount': str(increment)})
+                else t(DEFAULT_LOCALE, 'config-label-restock-incremental')
             )
             schedule_text += '\n' + t(DEFAULT_LOCALE, 'config-label-restock-mode', **{'mode': mode_text})
         else:
@@ -3512,8 +3510,16 @@ class ConfigStockLimitsView(LocaleLayoutView):
                             t(DEFAULT_LOCALE, 'config-label-stock-with-available',
                               **{'max': str(max_stock), 'available': str(current_available)})
                         )
+                        # Show per-item restock increment when mode is incremental
+                        restock_mode = restock_config.get(RestockFields.MODE, RestockMode.FULL.value)
+                        if restock_config.get(RestockFields.ENABLED) and restock_mode == RestockMode.INCREMENTAL.value:
+                            increment = item.get(ShopFields.RESTOCK_INCREMENT, 1)
+                            stock_text += ' | ' + t(
+                                DEFAULT_LOCALE, 'config-label-stock-increment',
+                                **{'increment': str(increment)}
+                            )
                         if reserved > 0:
-                            stock_text += t(
+                            stock_text += ' | ' + t(
                                 DEFAULT_LOCALE, 'config-label-stock-reserved',
                                 **{'reserved': str(reserved)}
                             )

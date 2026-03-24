@@ -291,6 +291,8 @@ config-modal-label-max-stock = Maximum Stock
 config-modal-placeholder-max-stock = Enter max stock (e.g., 10)
 config-modal-label-current-stock = Current Stock
 config-modal-placeholder-current-stock = Enter current available stock
+config-modal-label-restock-increment = Restock Increment (per cycle)
+config-modal-placeholder-restock-increment = Amount added per restock cycle (default: 1)
 config-error-max-stock-positive = Maximum stock must be a positive integer.
 config-error-current-stock-non-negative = Current stock must be a non-negative integer.
 config-error-current-exceeds-max = Current stock cannot exceed maximum stock.
@@ -298,21 +300,19 @@ config-error-item-not-in-shop = Item "{ $itemName }" not found in shop.
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = Configure Restock Schedule
-config-modal-label-schedule = Schedule (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Enter: hourly, daily, weekly, or none
+config-modal-restock-schedule-label = Schedule
+config-modal-restock-schedule-none = None (Disabled)
+config-modal-restock-schedule-hourly = Hourly
+config-modal-restock-schedule-daily = Daily
+config-modal-restock-schedule-weekly = Weekly
 config-modal-label-time = Time (HH:MM in UTC)
 config-modal-desc-current-time = Current time: { $utcTime }
 config-modal-placeholder-time = e.g., 14:30 for 2:30 PM UTC
-config-modal-label-day-of-week = Day of Week (0=Mon, 6=Sun) - Weekly only
-config-modal-placeholder-day-of-week = Enter 0-6 (Monday=0, Sunday=6)
-config-modal-label-mode = Mode (full/incremental)
-config-modal-placeholder-mode = full = reset to max, incremental = add amount
-config-modal-label-increment = Increment Amount (for incremental mode)
-config-modal-placeholder-increment = Amount to add per restock cycle
-config-error-schedule-invalid = Schedule must be one of: hourly, daily, weekly, or none.
+config-modal-restock-day-label = Day of Week (Weekly only)
+config-modal-restock-mode-label = Restock Mode
+config-modal-restock-mode-full = Full (reset to max)
+config-modal-restock-mode-incremental = Incremental (add amount)
 config-error-time-format-invalid = Time must be in HH:MM format (e.g., 14:30).
-config-error-day-of-week-invalid = Day of week must be 0-6 (Monday=0, Sunday=6).
-config-error-mode-invalid = Mode must be either "full" or "incremental".
 config-error-increment-positive = Increment amount must be a positive integer.
 
 # ==========================================
@@ -760,12 +760,13 @@ config-label-restock-daily = at { $time } UTC
 config-label-restock-weekly = on { $day } at { $time } UTC
 config-label-restock-mode = {"**"}Mode:{"**"} { $mode }
 config-label-restock-full = Full restock
-config-label-restock-incremental = Add { $amount } per cycle (up to max)
+config-label-restock-incremental = Incremental (per-item amounts)
 config-label-restock-disabled = {"**"}Restock Schedule:{"**"} Disabled
 config-label-item-stock-limits = {"**"}Item Stock Limits{"**"}
 config-msg-no-items-in-shop = No items in this shop.
 config-label-stock-with-available = Max: { $max } | Available: { $available }
-config-label-stock-reserved = | Reserved: { $reserved }
+config-label-stock-increment = Restock: +{ $increment }/cycle
+config-label-stock-reserved = Reserved: { $reserved }
 config-label-stock-not-initialized = Max: { $max } | Available: (not initialized)
 config-label-stock-unlimited = Stock: Unlimited
 

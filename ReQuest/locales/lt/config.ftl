@@ -285,6 +285,8 @@ config-modal-label-max-stock = Didžiausios atsargos
 config-modal-placeholder-max-stock = Įveskite maks. atsargas (pvz., 10)
 config-modal-label-current-stock = Dabartinės atsargos
 config-modal-placeholder-current-stock = Įveskite dabartines turimas atsargas
+config-modal-label-restock-increment = Papildymo žingsnis (per ciklą)
+config-modal-placeholder-restock-increment = Kiekis pridedamas per ciklą (numatytasis: 1)
 config-error-max-stock-positive = Didžiausios atsargos turi būti teigiamas sveikasis skaičius.
 config-error-current-stock-non-negative = Dabartinės atsargos turi būti neneigiamas sveikasis skaičius.
 config-error-current-exceeds-max = Dabartinės atsargos negali viršyti didžiausių atsargų.
@@ -292,21 +294,19 @@ config-error-item-not-in-shop = Daiktas „{ $itemName }" nerastas parduotuvėje
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = Konfigūruoti papildymo tvarkaraštį
-config-modal-label-schedule = Tvarkaraštis (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Įveskite: hourly, daily, weekly arba none
+config-modal-restock-schedule-label = Grafikas
+config-modal-restock-schedule-none = Nėra (Išjungta)
+config-modal-restock-schedule-hourly = Kas valandą
+config-modal-restock-schedule-daily = Kasdien
+config-modal-restock-schedule-weekly = Kas savaitę
 config-modal-label-time = Laikas (HH:MM UTC formatu)
 config-modal-desc-current-time = Dabartinis laikas: { $utcTime }
 config-modal-placeholder-time = pvz., 14:30 reiškia 14:30 UTC
-config-modal-label-day-of-week = Savaitės diena (0=Pirm., 6=Sekm.) - Tik savaitiniam
-config-modal-placeholder-day-of-week = Įveskite 0-6 (Pirmadienis=0, Sekmadienis=6)
-config-modal-label-mode = Režimas (full/incremental)
-config-modal-placeholder-mode = full = grąžinti iki maks., incremental = pridėti kiekį
-config-modal-label-increment = Papildymo kiekis (incrementaliam režimui)
-config-modal-placeholder-increment = Pridedamas kiekis per papildymo ciklą
-config-error-schedule-invalid = Tvarkaraštis turi būti vienas iš: hourly, daily, weekly arba none.
+config-modal-restock-day-label = Savaitės diena (tik kas savaitę)
+config-modal-restock-mode-label = Papildymo režimas
+config-modal-restock-mode-full = Pilnas (atstatyti iki maks.)
+config-modal-restock-mode-incremental = Laipsniškas (pridėti kiekį)
 config-error-time-format-invalid = Laikas turi būti HH:MM formatu (pvz., 14:30).
-config-error-day-of-week-invalid = Savaitės diena turi būti 0-6 (Pirmadienis=0, Sekmadienis=6).
-config-error-mode-invalid = Režimas turi būti „full" arba „incremental".
 config-error-increment-positive = Papildymo kiekis turi būti teigiamas sveikasis skaičius.
 
 # ==========================================
@@ -754,12 +754,13 @@ config-label-restock-daily = { $time } UTC
 config-label-restock-weekly = { $day } { $time } UTC
 config-label-restock-mode = {"**"}Režimas:{"**"} { $mode }
 config-label-restock-full = Pilnas papildymas
-config-label-restock-incremental = Pridėti { $amount } per ciklą (iki maks.)
+config-label-restock-incremental = Laipsniškas (kiekiai pagal prekę)
 config-label-restock-disabled = {"**"}Papildymo tvarkaraštis:{"**"} Išjungta
 config-label-item-stock-limits = {"**"}Daiktų atsargų limitai{"**"}
 config-msg-no-items-in-shop = Šioje parduotuvėje nėra daiktų.
 config-label-stock-with-available = Maks.: { $max } | Turima: { $available }
-config-label-stock-reserved = | Rezervuota: { $reserved }
+config-label-stock-increment = Papildymas: +{ $increment }/ciklą
+config-label-stock-reserved = Rezervuota: { $reserved }
 config-label-stock-not-initialized = Maks.: { $max } | Turima: (neinicializuota)
 config-label-stock-unlimited = Atsargos: Neribotos
 

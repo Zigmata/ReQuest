@@ -285,6 +285,8 @@ config-modal-label-max-stock = Maximális készlet
 config-modal-placeholder-max-stock = Add meg a maximális készletet (pl. 10)
 config-modal-label-current-stock = Jelenlegi készlet
 config-modal-placeholder-current-stock = Add meg a jelenleg elérhető készletet
+config-modal-label-restock-increment = Feltöltési lépés (ciklusonként)
+config-modal-placeholder-restock-increment = Ciklusonként hozzáadott mennyiség (alapértelmezett: 1)
 config-error-max-stock-positive = A maximális készletnek pozitív egész számnak kell lennie.
 config-error-current-stock-non-negative = A jelenlegi készletnek nemnegatív egész számnak kell lennie.
 config-error-current-exceeds-max = A jelenlegi készlet nem haladhatja meg a maximális készletet.
@@ -292,21 +294,19 @@ config-error-item-not-in-shop = A(z) „{ $itemName }" tárgy nem található a 
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = Feltöltési ütemezés beállítása
-config-modal-label-schedule = Ütemezés (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Írd be: hourly, daily, weekly, vagy none
+config-modal-restock-schedule-label = Ütemezés
+config-modal-restock-schedule-none = Nincs (Kikapcsolva)
+config-modal-restock-schedule-hourly = Óránként
+config-modal-restock-schedule-daily = Naponta
+config-modal-restock-schedule-weekly = Hetente
 config-modal-label-time = Időpont (ÓÓ:PP UTC-ben)
 config-modal-desc-current-time = Jelenlegi idő: { $utcTime }
 config-modal-placeholder-time = pl. 14:30 = 14:30 UTC
-config-modal-label-day-of-week = Hét napja (0=Hé, 6=Va) - Csak hetihez
-config-modal-placeholder-day-of-week = Adj meg 0-6 között (Hétfő=0, Vasárnap=6)
-config-modal-label-mode = Mód (full/incremental)
-config-modal-placeholder-mode = full = visszaállítás maximumra, incremental = összeg hozzáadása
-config-modal-label-increment = Növekményes összeg (incremental módhoz)
-config-modal-placeholder-increment = Feltöltési ciklusonként hozzáadandó mennyiség
-config-error-schedule-invalid = Az ütemezésnek a következők egyikének kell lennie: hourly, daily, weekly, vagy none.
+config-modal-restock-day-label = A hét napja (csak hetente)
+config-modal-restock-mode-label = Feltöltési mód
+config-modal-restock-mode-full = Teljes (visszaállítás maximumra)
+config-modal-restock-mode-incremental = Fokozatos (mennyiség hozzáadása)
 config-error-time-format-invalid = Az időpontnak ÓÓ:PP formátumúnak kell lennie (pl. 14:30).
-config-error-day-of-week-invalid = A hét napjának 0-6 közöttinek kell lennie (Hétfő=0, Vasárnap=6).
-config-error-mode-invalid = A módnak „full" vagy „incremental" értékűnek kell lennie.
 config-error-increment-positive = A növekményes összegnek pozitív egész számnak kell lennie.
 
 # ==========================================
@@ -754,12 +754,13 @@ config-label-restock-daily = { $time } UTC-kor
 config-label-restock-weekly = { $day } { $time } UTC-kor
 config-label-restock-mode = {"**"}Mód:{"**"} { $mode }
 config-label-restock-full = Teljes feltöltés
-config-label-restock-incremental = { $amount } hozzáadása ciklusonként (maximum erejéig)
+config-label-restock-incremental = Fokozatos (tételenkénti mennyiségek)
 config-label-restock-disabled = {"**"}Feltöltési ütemezés:{"**"} Letiltva
 config-label-item-stock-limits = {"**"}Tárgy készletkorlátok{"**"}
 config-msg-no-items-in-shop = Nincsenek tárgyak ebben a boltban.
 config-label-stock-with-available = Max: { $max } | Elérhető: { $available }
-config-label-stock-reserved = | Foglalt: { $reserved }
+config-label-stock-increment = Feltöltés: +{ $increment }/ciklus
+config-label-stock-reserved = Foglalt: { $reserved }
 config-label-stock-not-initialized = Max: { $max } | Elérhető: (nincs inicializálva)
 config-label-stock-unlimited = Készlet: Korlátlan
 

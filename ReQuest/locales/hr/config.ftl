@@ -285,6 +285,8 @@ config-modal-label-max-stock = Maksimalne zalihe
 config-modal-placeholder-max-stock = Unesite maks. zalihe (npr. 10)
 config-modal-label-current-stock = Trenutne zalihe
 config-modal-placeholder-current-stock = Unesite trenutne raspoložive zalihe
+config-modal-label-restock-increment = Korak nadopune (po ciklusu)
+config-modal-placeholder-restock-increment = Količina po ciklusu nadopune (zadano: 1)
 config-error-max-stock-positive = Maksimalne zalihe moraju biti pozitivan cijeli broj.
 config-error-current-stock-non-negative = Trenutne zalihe moraju biti nenegativan cijeli broj.
 config-error-current-exceeds-max = Trenutne zalihe ne mogu premašiti maksimalne zalihe.
@@ -292,21 +294,19 @@ config-error-item-not-in-shop = Predmet "{ $itemName }" nije pronađen u trgovin
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = Konfiguriraj raspored dopune
-config-modal-label-schedule = Raspored (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Unesite: hourly, daily, weekly ili none
+config-modal-restock-schedule-label = Raspored
+config-modal-restock-schedule-none = Ništa (Onemogućeno)
+config-modal-restock-schedule-hourly = Svaki sat
+config-modal-restock-schedule-daily = Dnevno
+config-modal-restock-schedule-weekly = Tjedno
 config-modal-label-time = Vrijeme (HH:MM u UTC)
 config-modal-desc-current-time = Trenutno vrijeme: { $utcTime }
 config-modal-placeholder-time = npr. 14:30 za 14:30 UTC
-config-modal-label-day-of-week = Dan u tjednu (0=Pon, 6=Ned) - Samo za weekly
-config-modal-placeholder-day-of-week = Unesite 0-6 (Ponedjeljak=0, Nedjelja=6)
-config-modal-label-mode = Način (full/incremental)
-config-modal-placeholder-mode = full = resetiraj na maks., incremental = dodaj količinu
-config-modal-label-increment = Količina povećanja (za incremental način)
-config-modal-placeholder-increment = Količina za dodavanje po ciklusu dopune
-config-error-schedule-invalid = Raspored mora biti jedan od: hourly, daily, weekly ili none.
+config-modal-restock-day-label = Dan u tjednu (samo tjedno)
+config-modal-restock-mode-label = Način nadopune
+config-modal-restock-mode-full = Potpuna (resetiraj na maksimum)
+config-modal-restock-mode-incremental = Postupna (dodaj količinu)
 config-error-time-format-invalid = Vrijeme mora biti u formatu HH:MM (npr. 14:30).
-config-error-day-of-week-invalid = Dan u tjednu mora biti 0-6 (Ponedjeljak=0, Nedjelja=6).
-config-error-mode-invalid = Način mora biti "full" ili "incremental".
 config-error-increment-positive = Količina povećanja mora biti pozitivan cijeli broj.
 
 # ==========================================
@@ -754,12 +754,13 @@ config-label-restock-daily = u { $time } UTC
 config-label-restock-weekly = { $day } u { $time } UTC
 config-label-restock-mode = {"**"}Način:{"**"} { $mode }
 config-label-restock-full = Potpuna dopuna
-config-label-restock-incremental = Dodaj { $amount } po ciklusu (do maks.)
+config-label-restock-incremental = Postupna (količine po artiklu)
 config-label-restock-disabled = {"**"}Raspored dopune:{"**"} Onemogućeno
 config-label-item-stock-limits = {"**"}Ograničenja zaliha predmeta{"**"}
 config-msg-no-items-in-shop = Nema predmeta u ovoj trgovini.
 config-label-stock-with-available = Maks.: { $max } | Raspoloživo: { $available }
-config-label-stock-reserved = | Rezervirano: { $reserved }
+config-label-stock-increment = Nadopuna: +{ $increment }/ciklus
+config-label-stock-reserved = Rezervirano: { $reserved }
 config-label-stock-not-initialized = Maks.: { $max } | Raspoloživo: (nije inicijalizirano)
 config-label-stock-unlimited = Zalihe: Neograničeno
 

@@ -285,6 +285,8 @@ config-modal-label-max-stock = 最大在庫数
 config-modal-placeholder-max-stock = 最大在庫数を入力してください（例: 10）
 config-modal-label-current-stock = 現在の在庫数
 config-modal-placeholder-current-stock = 現在の利用可能な在庫数を入力してください
+config-modal-label-restock-increment = 補充量（サイクルごと）
+config-modal-placeholder-restock-increment = サイクルごとの補充量（デフォルト: 1）
 config-error-max-stock-positive = 最大在庫数は正の整数でなければなりません。
 config-error-current-stock-non-negative = 現在の在庫数は0以上の整数でなければなりません。
 config-error-current-exceeds-max = 現在の在庫数は最大在庫数を超えることはできません。
@@ -292,21 +294,19 @@ config-error-item-not-in-shop = アイテム「{ $itemName }」がショップ�
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = 補充スケジュールの設定
-config-modal-label-schedule = スケジュール（hourly/daily/weekly/none）
-config-modal-placeholder-schedule = hourly、daily、weekly、またはnoneを入力してください
+config-modal-restock-schedule-label = スケジュール
+config-modal-restock-schedule-none = なし（無効）
+config-modal-restock-schedule-hourly = 毎時
+config-modal-restock-schedule-daily = 毎日
+config-modal-restock-schedule-weekly = 毎週
 config-modal-label-time = 時間（UTC で HH:MM）
 config-modal-desc-current-time = 現在の時間: { $utcTime }
 config-modal-placeholder-time = 例: 14:30（UTC 午後2時30分）
-config-modal-label-day-of-week = 曜日（0=月、6=日）- weeklyのみ
-config-modal-placeholder-day-of-week = 0-6を入力してください（月曜日=0、日曜日=6）
-config-modal-label-mode = モード（full/incremental）
-config-modal-placeholder-mode = full = 最大まで補充、incremental = 数量を加算
-config-modal-label-increment = 追加数量（incrementalモード用）
-config-modal-placeholder-increment = 補充サイクルごとに追加する数量
-config-error-schedule-invalid = スケジュールは hourly、daily、weekly、または none のいずれかでなければなりません。
+config-modal-restock-day-label = 曜日（毎週のみ）
+config-modal-restock-mode-label = 補充モード
+config-modal-restock-mode-full = 完全（最大にリセット）
+config-modal-restock-mode-incremental = 段階的（数量を追加）
 config-error-time-format-invalid = 時間は HH:MM 形式で入力してください（例: 14:30）。
-config-error-day-of-week-invalid = 曜日は0-6でなければなりません（月曜日=0、日曜日=6）。
-config-error-mode-invalid = モードは「full」または「incremental」でなければなりません。
 config-error-increment-positive = 追加数量は正の整数でなければなりません。
 
 # ==========================================
@@ -752,12 +752,13 @@ config-label-restock-daily = 毎日 { $time } UTC
 config-label-restock-weekly = 毎週 { $day } { $time } UTC
 config-label-restock-mode = {"**"}モード:{"**"} { $mode }
 config-label-restock-full = 全補充
-config-label-restock-incremental = サイクルごとに { $amount } 追加（最大まで）
+config-label-restock-incremental = 段階的（アイテムごとの数量）
 config-label-restock-disabled = {"**"}補充スケジュール:{"**"} 無効
 config-label-item-stock-limits = {"**"}アイテム在庫制限{"**"}
 config-msg-no-items-in-shop = このショップにはアイテムがありません。
 config-label-stock-with-available = 最大: { $max } | 在庫: { $available }
-config-label-stock-reserved = | 予約済み: { $reserved }
+config-label-stock-increment = 補充: +{ $increment }/サイクル
+config-label-stock-reserved = 予約済み: { $reserved }
 config-label-stock-not-initialized = 最大: { $max } | 在庫:（未初期化）
 config-label-stock-unlimited = 在庫: 無制限
 

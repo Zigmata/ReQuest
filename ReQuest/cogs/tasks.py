@@ -191,7 +191,6 @@ class Tasks(Cog):
         :param restock_config: The restocking configuration
         """
         mode = restock_config.get(RestockFields.MODE, RestockMode.FULL.value)
-        increment_amount = restock_config.get(RestockFields.INCREMENT_AMOUNT, 1)
 
         shop_stock = shop_data.get(ShopFields.SHOP_STOCK, [])
         restocked_items = []  # List of (item_name, amount_added)
@@ -212,7 +211,11 @@ class Tasks(Cog):
                 await set_available_stock(self.bot, guild_id, channel_id, item_name, max_stock)
                 amount_added = max_stock - current_available
             else:
-                # Increment available up to maxStock
+                # Increment available up to maxStock, using per-item increment (default 1)
+                try:
+                    increment_amount = max(1, int(item.get(ShopFields.RESTOCK_INCREMENT, 1)))
+                except (TypeError, ValueError):
+                    increment_amount = 1
                 await increment_available_stock(self.bot, guild_id, channel_id, item_name,
                                                 increment_amount, max_stock)
                 amount_added = min(increment_amount, max_stock - current_available)

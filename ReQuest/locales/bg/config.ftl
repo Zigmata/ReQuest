@@ -285,6 +285,8 @@ config-modal-label-max-stock = Максимална наличност
 config-modal-placeholder-max-stock = Въведете максимална наличност (напр. 10)
 config-modal-label-current-stock = Текуща наличност
 config-modal-placeholder-current-stock = Въведете текущата налична наличност
+config-modal-label-restock-increment = Стъпка на зареждане (на цикъл)
+config-modal-placeholder-restock-increment = Количество за зареждане на цикъл (по подразбиране: 1)
 config-error-max-stock-positive = Максималната наличност трябва да е положително цяло число.
 config-error-current-stock-non-negative = Текущата наличност трябва да е неотрицателно цяло число.
 config-error-current-exceeds-max = Текущата наличност не може да надвишава максималната.
@@ -292,21 +294,19 @@ config-error-item-not-in-shop = Предметът "{ $itemName }" не е на�
 
 # RestockScheduleModal
 config-modal-title-restock-schedule = Конфигуриране на график за презареждане
-config-modal-label-schedule = График (hourly/daily/weekly/none)
-config-modal-placeholder-schedule = Въведете: hourly, daily, weekly или none
+config-modal-restock-schedule-label = Разписание
+config-modal-restock-schedule-none = Няма (Деактивирано)
+config-modal-restock-schedule-hourly = На всеки час
+config-modal-restock-schedule-daily = Ежедневно
+config-modal-restock-schedule-weekly = Ежеседмично
 config-modal-label-time = Час (ЧЧ:ММ в UTC)
 config-modal-desc-current-time = Текущо време: { $utcTime }
 config-modal-placeholder-time = напр. 14:30 за 14:30 UTC
-config-modal-label-day-of-week = Ден от седмицата (0=Пон, 6=Нед) - Само за weekly
-config-modal-placeholder-day-of-week = Въведете 0-6 (Понеделник=0, Неделя=6)
-config-modal-label-mode = Режим (full/incremental)
-config-modal-placeholder-mode = full = нулиране до макс, incremental = добавяне на количество
-config-modal-label-increment = Количество за добавяне (за incremental режим)
-config-modal-placeholder-increment = Количество за добавяне при всеки цикъл на презареждане
-config-error-schedule-invalid = Графикът трябва да е един от: hourly, daily, weekly или none.
+config-modal-restock-day-label = Ден от седмицата (само за ежеседмично)
+config-modal-restock-mode-label = Режим на зареждане
+config-modal-restock-mode-full = Пълно (нулиране до максимум)
+config-modal-restock-mode-incremental = Постепенно (добавяне на количество)
 config-error-time-format-invalid = Часът трябва да е във формат ЧЧ:ММ (напр. 14:30).
-config-error-day-of-week-invalid = Денят от седмицата трябва да е 0-6 (Понеделник=0, Неделя=6).
-config-error-mode-invalid = Режимът трябва да е "full" или "incremental".
 config-error-increment-positive = Количеството за добавяне трябва да е положително цяло число.
 
 # ==========================================
@@ -754,12 +754,13 @@ config-label-restock-daily = в { $time } UTC
 config-label-restock-weekly = в { $day } в { $time } UTC
 config-label-restock-mode = {"**"}Режим:{"**"} { $mode }
 config-label-restock-full = Пълно презареждане
-config-label-restock-incremental = Добавяне на { $amount } на цикъл (до максимум)
+config-label-restock-incremental = Постепенно (количества по артикул)
 config-label-restock-disabled = {"**"}График за презареждане:{"**"} Изключен
 config-label-item-stock-limits = {"**"}Лимити на наличност на предмети{"**"}
 config-msg-no-items-in-shop = Няма предмети в този магазин.
 config-label-stock-with-available = Макс: { $max } | Налични: { $available }
-config-label-stock-reserved = | Запазени: { $reserved }
+config-label-stock-increment = Зареждане: +{ $increment }/цикъл
+config-label-stock-reserved = Запазени: { $reserved }
 config-label-stock-not-initialized = Макс: { $max } | Налични: (не е инициализирано)
 config-label-stock-unlimited = Наличност: Неограничена
 

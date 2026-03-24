@@ -42,6 +42,7 @@ class ShopFields:
     AVAILABLE = 'available'
     RESERVED = 'reserved'
     COSTS = 'costs'
+    RESTOCK_INCREMENT = 'restockIncrement'
     ENABLED = 'enabled'
     CHANNEL_TYPE = 'channelType'
     PARENT_FORUM_ID = 'parentForumId'
