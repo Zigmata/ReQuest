@@ -73,8 +73,8 @@ the GNU GPL v3 and will always be shared freely, forever.
 ## Installation
 
 ### Dependencies
-- MongoDB version 5 or later.
-- Python version 3.12 or later.
+- MongoDB version 7 or later.
+- Python version 3.13 or later.
 - A Discord bot application, using the process outlined [here](https://discord.com/developers/docs/getting-started).
 
 > You'll need to read and understand bot scopes, permissions, and privileged intents for the bot to function. ReQuest
@@ -145,7 +145,10 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: # Give MongoDB an initial root password
     volumes:
       - /path/to/your/db/files:/data/db # Persist database, replace with your desired host path
+    stop_grace_period: 30s
     restart: unless-stopped
+    networks:
+      - request-network
   
   redis:
     image: redis:alpine
@@ -158,6 +161,8 @@ services:
       - /path/to/redis.conf:/usr/local/etc/redis/redis.conf # Mount custom redis config, replace with your desired host path
     command: redis-server /usr/local/etc/redis/redis.conf # Start redis with custom config
     restart: unless-stopped
+    networks:
+      - request-network
 
   request:
     image: zigmata/request:latest
@@ -175,7 +180,7 @@ services:
       GUILD_DB: guilds
       MEMBER_DB: members
       CONFIG_DB: config
-      VERSION: 1.3.5 # Doesn't affect functionality, just for info with the `/support` command
+      VERSION: 1.3.6 # Doesn't affect functionality, just for info with the `/support` command
       LOAD_EXTENSIONS: >-
         admin,
         config,
@@ -192,6 +197,12 @@ services:
       - mongodb
       - redis
     restart: unless-stopped
+    networks:
+      - request-network
+
+networks:
+  request-network:
+    driver: bridge
 ```
 
 ### Docker Installation Notes
@@ -203,7 +214,9 @@ services:
       the appropriate lines as needed.
 - You will not need to expose any ports past your host firewall if your containers are on the same docker bridge 
   network, and you are not going to access the databases (for example, via mongosh) from outside their containers. 
-  Docker creates this bridge network by default if no network definitions are provided.
+  Docker creates this bridge network by default if no network definitions are provided. The above example defines a 
+  network for the purpose of segregating the bot and its databases from any other containers you may be running, but you
+  can omit this and use the default bridge network if you prefer.
 - If your bot runs on a publicly-accessible host, it is strongly recommended to research and implement best practices
   regarding mongoDB user authentication, least-privilege database access, and persistent database volume file security.
   You will also need to modify your docker-compose accordingly for specific volume mounts, users, etc. Guidance on these
