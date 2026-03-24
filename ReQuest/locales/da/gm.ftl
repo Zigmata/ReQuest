@@ -71,7 +71,7 @@ gm-error-invalid-xp-value = XP-værdi skal være et positivt heltal!
 
 # GM confirm modals
 gm-modal-title-cancel-quest = Annuller quest
-gm-modal-label-cancel-quest = Skriv CONFIRM for at annullere questen.
+gm-modal-label-cancel-quest = Skriv BEKRÆFT for at annullere questen.
 gm-modal-title-remove-from-quest = Fjern karakter fra quest
 gm-modal-label-remove-from-quest = Bekræft fjernelse af karakter?
 

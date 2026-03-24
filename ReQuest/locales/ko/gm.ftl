@@ -71,7 +71,7 @@ gm-error-invalid-xp-value = XP 값은 양의 정수여야 합니다!
 
 # GM 확인 모달
 gm-modal-title-cancel-quest = Quest 취소
-gm-modal-label-cancel-quest = Quest를 취소하려면 CONFIRM을 입력하세요.
+gm-modal-label-cancel-quest = Quest를 취소하려면 확인을 입력하세요.
 gm-modal-title-remove-from-quest = Quest에서 캐릭터 제거
 gm-modal-label-remove-from-quest = 캐릭터 제거를 확인하시겠습니까?
 
@@ -138,8 +138,8 @@ gm-title-player-management = GM - 플레이어 관리
 gm-desc-player-management =
     이 명령어들은 컨텍스트 메뉴로 이동되었습니다. 플레이어의 프로필을 우클릭(데스크톱) 또는 길게 누르기(모바일)하여 다음 메뉴 옵션을 사용하세요:
 
-    - {"**"}Modify Player{"**"}: 플레이어의 아이템과 경험치를 추가하거나 제거합니다.
-    - {"**"}View Player{"**"}: 플레이어의 활성 캐릭터 세부 사항을 확인합니다.
+    - {"**"}플레이어 수정{"**"}: 플레이어의 아이템과 경험치를 추가하거나 제거합니다.
+    - {"**"}플레이어 보기{"**"}: 플레이어의 활성 캐릭터 세부 사항을 확인합니다.
 gm-title-remove-player = Quest에서 플레이어 제거 - { $questTitle }
 gm-desc-remove-player-notes =
     __{"**"}플레이어 제거 참고 사항{"**"}__
@@ -147,7 +147,7 @@ gm-desc-remove-player-notes =
     - 아래 드롭다운에서 Quest 명단에서 제거할 플레이어를 선택하세요.
     - 대기 목록에 플레이어가 있는 경우, 목록의 첫 번째 플레이어가 파티로 승격됩니다.
     - 제거된 플레이어의 개인 보상은 Quest에서 삭제됩니다.
-    - 이전 기여에 대해 플레이어에게 보상을 지급하려면 `Modify Player` 컨텍스트 메뉴를 사용하여 직접 보상을 지급하세요.
+    - 이전 기여에 대해 플레이어에게 보상을 지급하려면 `플레이어 수정` 컨텍스트 메뉴를 사용하여 직접 보상을 지급하세요.
 gm-label-no-players-in-roster = Quest 명단에 플레이어가 없습니다
 gm-title-character-sheet = { $characterName }의 캐릭터 시트 (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}경험치:{"**"}__

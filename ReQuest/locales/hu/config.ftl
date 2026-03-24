@@ -93,7 +93,7 @@ config-modal-label-remove-denomination = Eltávolítod a(z) { $denominationName 
 config-modal-label-remove-currency = Eltávolítod a(z) { $currencyName } valutát?
 config-modal-label-shop-removal-warning = FIGYELEM: Ez a művelet visszafordíthatatlan!
 config-modal-label-kit-deletion-warning = FIGYELEM: Visszafordíthatatlan!
-config-modal-label-remove-stock-limit = Írd be: CONFIRM a készletkorlát eltávolításához
+config-modal-label-remove-stock-limit = Írd be: MEGERŐSÍT a készletkorlát eltávolításához
 config-modal-label-clear-shop = Az összes tárgy törlése ebből a boltból?
 
 # Error messages from buttons

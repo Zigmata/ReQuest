@@ -71,7 +71,7 @@ gm-error-invalid-xp-value = Vrijednost XP-a mora biti pozitivan cijeli broj!
 
 # GM confirm modals
 gm-modal-title-cancel-quest = Otkaži quest
-gm-modal-label-cancel-quest = Upišite CONFIRM za otkazivanje questa.
+gm-modal-label-cancel-quest = Upišite POTVRDI za otkazivanje questa.
 gm-modal-title-remove-from-quest = Ukloni lika iz questa
 gm-modal-label-remove-from-quest = Potvrditi uklanjanje lika?
 
@@ -138,8 +138,8 @@ gm-title-player-management = Voditelj igre - Upravljanje igračima
 gm-desc-player-management =
     Ove naredbe su premještene u kontekstualne izbornike. Desnom tipkom miša kliknite (desktop) ili dugo pritisnite (mobilni) na profil igrača za sljedeće opcije izbornika:
 
-    - {"**"}Modify Player{"**"}: Dodajte ili uklonite predmete i iskustvo od igrača.
-    - {"**"}View Player{"**"}: Pregledajte detalje aktivnog lika igrača.
+    - {"**"}Izmijeni Igrača{"**"}: Dodajte ili uklonite predmete i iskustvo od igrača.
+    - {"**"}Pregledaj Igrača{"**"}: Pregledajte detalje aktivnog lika igrača.
 gm-title-remove-player = Ukloni igrača iz questa - { $questTitle }
 gm-desc-remove-player-notes =
     __{"**"}Napomene o uklanjanju igrača{"**"}__
@@ -147,7 +147,7 @@ gm-desc-remove-player-notes =
     - Odaberite igrača iz padajućeg izbornika ispod kako biste ga uklonili sa sastava questa.
     - Ako su igrači na listi čekanja, prvi igrač na listi bit će promaknut u družinu.
     - Individualne nagrade za uklonjenog igrača bit će obrisane iz questa.
-    - Ako želite nagraditi igrača za prethodne doprinose, koristite kontekstualni izbornik `Modify Player` za izravno izdavanje nagrada.
+    - Ako želite nagraditi igrača za prethodne doprinose, koristite kontekstualni izbornik `Izmijeni Igrača` za izravno izdavanje nagrada.
 gm-label-no-players-in-roster = Nema igrača u sastavu questa
 gm-title-character-sheet = List lika za { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Bodovi iskustva:{"**"}__

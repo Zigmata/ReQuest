@@ -16,7 +16,7 @@ admin-msg-commands-cleared = Commando's gewist.
 # Admin buttons
 admin-btn-shutdown = Afsluiten
 admin-modal-title-confirm-shutdown = Bevestig afsluiting
-admin-modal-label-shutdown-warning = Waarschuwing! Dit zal de bot afsluiten. Typ CONFIRM om door te gaan.
+admin-modal-label-shutdown-warning = Waarschuwing! Dit zal de bot afsluiten. Typ BEVESTIG om door te gaan.
 admin-msg-shutting-down = Wordt afgesloten!
 admin-btn-add-server = Nieuwe server toevoegen
 admin-btn-load-cog = Cog laden

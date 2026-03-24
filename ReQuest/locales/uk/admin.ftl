@@ -16,7 +16,7 @@ admin-msg-commands-cleared = Команди очищено.
 # Кнопки адміністрування
 admin-btn-shutdown = Вимкнути
 admin-modal-title-confirm-shutdown = Підтвердження вимкнення
-admin-modal-label-shutdown-warning = Увага! Це вимкне бота. Введіть CONFIRM для продовження.
+admin-modal-label-shutdown-warning = Увага! Це вимкне бота. Введіть ПІДТВЕРДИТИ для продовження.
 admin-msg-shutting-down = Вимикаюсь!
 admin-btn-add-server = Додати новий сервер
 admin-btn-load-cog = Завантажити ког

@@ -16,7 +16,7 @@ admin-msg-commands-cleared = Kommandoer ryddet.
 # Admin buttons
 admin-btn-shutdown = Luk ned
 admin-modal-title-confirm-shutdown = Bekræft nedlukning
-admin-modal-label-shutdown-warning = Advarsel! Dette vil lukke botten ned. Skriv CONFIRM for at fortsætte.
+admin-modal-label-shutdown-warning = Advarsel! Dette vil lukke botten ned. Skriv BEKRÆFT for at fortsætte.
 admin-msg-shutting-down = Lukker ned!
 admin-btn-add-server = Tilføj ny server
 admin-btn-load-cog = Indlæs Cog

@@ -71,7 +71,7 @@ gm-error-invalid-xp-value = XP değeri pozitif bir tam sayı olmalıdır!
 
 # GM confirm modals
 gm-modal-title-cancel-quest = Quest'i İptal Et
-gm-modal-label-cancel-quest = Quest'i iptal etmek için CONFIRM yazın.
+gm-modal-label-cancel-quest = Quest'i iptal etmek için ONAYLA yazın.
 gm-modal-title-remove-from-quest = Karakteri quest'ten kaldır
 gm-modal-label-remove-from-quest = Karakter kaldırma onaylansın mı?
 
@@ -138,8 +138,8 @@ gm-title-player-management = GM - Oyuncu Yönetimi
 gm-desc-player-management =
     Bu komutlar bağlam menülerine taşınmıştır. Aşağıdaki menü seçenekleri için bir oyuncunun profiline sağ tıklayın (masaüstü) veya uzun basın (mobil):
 
-    - {"**"}Modify Player{"**"}: Bir oyuncuya eşya ve deneyim ekleyin veya kaldırın.
-    - {"**"}View Player{"**"}: Bir oyuncunun aktif karakter detaylarını görüntüleyin.
+    - {"**"}Oyuncuyu Düzenle{"**"}: Bir oyuncuya eşya ve deneyim ekleyin veya kaldırın.
+    - {"**"}Oyuncuyu Görüntüle{"**"}: Bir oyuncunun aktif karakter detaylarını görüntüleyin.
 gm-title-remove-player = Oyuncuyu Quest'ten Kaldır - { $questTitle }
 gm-desc-remove-player-notes =
     __{"**"}Oyuncu Kaldırma Notları{"**"}__
@@ -147,7 +147,7 @@ gm-desc-remove-player-notes =
     - Quest kadrosundan kaldırmak için aşağıdaki açılır menüden bir oyuncu seçin.
     - Bekleme listesinde oyuncu varsa, listedeki ilk oyuncu gruba yükseltilir.
     - Kaldırılan oyuncunun bireysel ödülleri quest'ten silinir.
-    - Oyuncuyu önceki katkıları için ödüllendirmek isterseniz, doğrudan ödül vermek için `Modify Player` bağlam menüsünü kullanın.
+    - Oyuncuyu önceki katkıları için ödüllendirmek isterseniz, doğrudan ödül vermek için `Oyuncuyu Düzenle` bağlam menüsünü kullanın.
 gm-label-no-players-in-roster = Quest kadrosunda oyuncu yok
 gm-title-character-sheet = { $characterName } için Karakter Sayfası (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Deneyim Puanları:{"**"}__

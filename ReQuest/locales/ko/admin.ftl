@@ -16,7 +16,7 @@ admin-msg-commands-cleared = 명령어가 초기화되었습니다.
 # 관리 버튼
 admin-btn-shutdown = 종료
 admin-modal-title-confirm-shutdown = 종료 확인
-admin-modal-label-shutdown-warning = 경고! 봇이 종료됩니다. 계속하려면 CONFIRM을 입력하세요.
+admin-modal-label-shutdown-warning = 경고! 봇이 종료됩니다. 계속하려면 확인을 입력하세요.
 admin-msg-shutting-down = 종료 중입니다!
 admin-btn-add-server = 새 서버 추가
 admin-btn-load-cog = 코그 로드

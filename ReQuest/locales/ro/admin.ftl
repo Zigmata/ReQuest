@@ -16,7 +16,7 @@ admin-msg-commands-cleared = Comenzile au fost șterse.
 # Admin buttons
 admin-btn-shutdown = Oprire
 admin-modal-title-confirm-shutdown = Confirmă oprirea
-admin-modal-label-shutdown-warning = Atenție! Acest lucru va opri botul. Tastați CONFIRM pentru a continua.
+admin-modal-label-shutdown-warning = Atenție! Acest lucru va opri botul. Tastați CONFIRMĂ pentru a continua.
 admin-msg-shutting-down = Se oprește!
 admin-btn-add-server = Adaugă server nou
 admin-btn-load-cog = Încarcă modul

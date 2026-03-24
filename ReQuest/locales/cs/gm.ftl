@@ -71,7 +71,7 @@ gm-error-invalid-xp-value = Hodnota XP musí být kladné celé číslo!
 
 # GM confirm modals
 gm-modal-title-cancel-quest = Zrušit quest
-gm-modal-label-cancel-quest = Napište CONFIRM pro zrušení questu.
+gm-modal-label-cancel-quest = Napište POTVRDIT pro zrušení questu.
 gm-modal-title-remove-from-quest = Odebrat postavu z questu
 gm-modal-label-remove-from-quest = Potvrdit odebrání postavy?
 
@@ -138,8 +138,8 @@ gm-title-player-management = Game Master - Správa hráčů
 gm-desc-player-management =
     Tyto příkazy byly přesunuty do kontextových menu. Klikněte pravým tlačítkem (desktop) nebo dlouze stiskněte (mobilní) profil hráče pro následující možnosti menu:
 
-    - {"**"}Modify Player{"**"}: Přidejte nebo odeberte předměty a zkušenosti hráči.
-    - {"**"}View Player{"**"}: Zobrazte detaily aktivní postavy hráče.
+    - {"**"}Upravit hráče{"**"}: Přidejte nebo odeberte předměty a zkušenosti hráči.
+    - {"**"}Zobrazit hráče{"**"}: Zobrazte detaily aktivní postavy hráče.
 gm-title-remove-player = Odebrat hráče z questu - { $questTitle }
 gm-desc-remove-player-notes =
     __{"**"}Poznámky k odebrání hráče{"**"}__
@@ -147,7 +147,7 @@ gm-desc-remove-player-notes =
     - Z rozbalovacího seznamu níže vyberte hráče, kterého chcete odebrat ze soupisky questu.
     - Pokud jsou na čekací listině nějací hráči, první hráč na seznamu bude povýšen do skupiny.
     - Individuální odměny pro odebraného hráče budou z questu smazány.
-    - Pokud chcete hráče odměnit za předchozí příspěvky, použijte kontextové menu `Modify Player` k přímému vydání odměn.
+    - Pokud chcete hráče odměnit za předchozí příspěvky, použijte kontextové menu `Upravit hráče` k přímému vydání odměn.
 gm-label-no-players-in-roster = Žádní hráči na soupisce questu
 gm-title-character-sheet = List postavy pro { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Body zkušeností:{"**"}__

@@ -16,7 +16,7 @@ admin-msg-commands-cleared = Đã xóa lệnh.
 # Admin buttons
 admin-btn-shutdown = Tắt máy
 admin-modal-title-confirm-shutdown = Xác nhận tắt máy
-admin-modal-label-shutdown-warning = Cảnh báo! Thao tác này sẽ tắt bot. Nhập CONFIRM để tiếp tục.
+admin-modal-label-shutdown-warning = Cảnh báo! Thao tác này sẽ tắt bot. Nhập XÁC NHẬN để tiếp tục.
 admin-msg-shutting-down = Đang tắt máy!
 admin-btn-add-server = Thêm máy chủ mới
 admin-btn-load-cog = Tải Cog

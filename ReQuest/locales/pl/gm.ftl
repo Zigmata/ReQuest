@@ -71,7 +71,7 @@ gm-error-invalid-xp-value = Wartość XP musi być dodatnią liczbą całkowitą
 
 # GM confirm modals
 gm-modal-title-cancel-quest = Anuluj quest
-gm-modal-label-cancel-quest = Wpisz CONFIRM, aby anulować quest.
+gm-modal-label-cancel-quest = Wpisz POTWIERDŹ, aby anulować quest.
 gm-modal-title-remove-from-quest = Usuń postać z questu
 gm-modal-label-remove-from-quest = Potwierdzić usunięcie postaci?
 
@@ -138,8 +138,8 @@ gm-title-player-management = Mistrz Gry - Zarządzanie graczami
 gm-desc-player-management =
     Te komendy zostały przeniesione do menu kontekstowych. Kliknij prawym przyciskiem myszy (komputer) lub przytrzymaj (telefon) profil gracza, aby uzyskać dostęp do następujących opcji:
 
-    - {"**"}Modify Player{"**"}: Dodaj lub usuń przedmioty i doświadczenie gracza.
-    - {"**"}View Player{"**"}: Wyświetl szczegóły aktywnej postaci gracza.
+    - {"**"}Modyfikuj Gracza{"**"}: Dodaj lub usuń przedmioty i doświadczenie gracza.
+    - {"**"}Podgląd Gracza{"**"}: Wyświetl szczegóły aktywnej postaci gracza.
 gm-title-remove-player = Usuń gracza z questu - { $questTitle }
 gm-desc-remove-player-notes =
     __{"**"}Uwagi dotyczące usuwania gracza{"**"}__
@@ -147,7 +147,7 @@ gm-desc-remove-player-notes =
     - Wybierz gracza z listy rozwijanej poniżej, aby usunąć go z listy uczestników questu.
     - Jeśli jacyś gracze są na liście oczekujących, pierwszy gracz z listy zostanie awansowany do drużyny.
     - Indywidualne nagrody dla usuniętego gracza zostaną usunięte z questu.
-    - Jeśli chcesz nagrodzić gracza za wcześniejszy wkład, użyj menu kontekstowego `Modify Player`, aby przyznać mu nagrody bezpośrednio.
+    - Jeśli chcesz nagrodzić gracza za wcześniejszy wkład, użyj menu kontekstowego `Modyfikuj Gracza`, aby przyznać mu nagrody bezpośrednio.
 gm-label-no-players-in-roster = Brak graczy na liście uczestników questu
 gm-title-character-sheet = Karta postaci: { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Punkty doświadczenia:{"**"}__

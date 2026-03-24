@@ -16,7 +16,7 @@ admin-msg-commands-cleared = Perintah dihapus.
 # Admin buttons
 admin-btn-shutdown = Matikan
 admin-modal-title-confirm-shutdown = Konfirmasi Mematikan
-admin-modal-label-shutdown-warning = Peringatan! Ini akan mematikan bot. Ketik CONFIRM untuk melanjutkan.
+admin-modal-label-shutdown-warning = Peringatan! Ini akan mematikan bot. Ketik KONFIRMASI untuk melanjutkan.
 admin-msg-shutting-down = Mematikan!
 admin-btn-add-server = Tambah Server Baru
 admin-btn-load-cog = Muat Cog

@@ -93,7 +93,7 @@ config-modal-label-remove-denomination = Видалити { $denominationName }?
 config-modal-label-remove-currency = Видалити { $currencyName }?
 config-modal-label-shop-removal-warning = УВАГА: Ця дія незворотна!
 config-modal-label-kit-deletion-warning = УВАГА: Незворотно!
-config-modal-label-remove-stock-limit = Введіть CONFIRM для видалення обмеження запасів
+config-modal-label-remove-stock-limit = Введіть ПІДТВЕРДИТИ для видалення обмеження запасів
 config-modal-label-clear-shop = Очистити всі предмети з цього магазину?
 
 # Повідомлення про помилки з кнопок
@@ -572,7 +572,7 @@ config-desc-quest-archive = Необов'язковий канал, куди п�
 config-label-quest-archive-default = {"**"}Архів квестів:{"**"} Не налаштовано
 
 config-label-gm-transaction-log = {"**"}Журнал транзакцій GM:{"**"} { $channel }
-config-desc-gm-transaction-log = Необов'язковий канал, де записуються транзакції GM (тобто команди "Modify Player").
+config-desc-gm-transaction-log = Необов'язковий канал, де записуються транзакції GM (тобто команди "Змінити Гравця").
 config-label-gm-transaction-log-default = {"**"}Журнал транзакцій GM:{"**"} Не налаштовано
 
 config-label-player-transaction-log = {"**"}Журнал транзакцій гравців:{"**"} { $channel }

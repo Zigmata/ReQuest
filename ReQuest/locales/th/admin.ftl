@@ -16,7 +16,7 @@ admin-msg-commands-cleared = ล้างคำสั่งแล้ว
 # Admin buttons
 admin-btn-shutdown = ปิดระบบ
 admin-modal-title-confirm-shutdown = ยืนยันการปิดระบบ
-admin-modal-label-shutdown-warning = คำเตือน! การดำเนินการนี้จะปิดบอท พิมพ์ CONFIRM เพื่อดำเนินการ
+admin-modal-label-shutdown-warning = คำเตือน! การดำเนินการนี้จะปิดบอท พิมพ์ ยืนยัน เพื่อดำเนินการ
 admin-msg-shutting-down = กำลังปิดระบบ!
 admin-btn-add-server = เพิ่มเซิร์ฟเวอร์ใหม่
 admin-btn-load-cog = โหลด Cog

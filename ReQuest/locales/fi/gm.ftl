@@ -71,7 +71,7 @@ gm-error-invalid-xp-value = XP-arvon on oltava positiivinen kokonaisluku!
 
 # GM confirm modals
 gm-modal-title-cancel-quest = Peruuta quest
-gm-modal-label-cancel-quest = Kirjoita CONFIRM peruuttaaksesi questin.
+gm-modal-label-cancel-quest = Kirjoita VAHVISTA peruuttaaksesi questin.
 gm-modal-title-remove-from-quest = Poista hahmo questistä
 gm-modal-label-remove-from-quest = Vahvista hahmon poisto?
 

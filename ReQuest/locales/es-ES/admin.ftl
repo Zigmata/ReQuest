@@ -14,7 +14,7 @@ admin-msg-commands-cleared = Comandos borrados.
 # Botones de administración
 admin-btn-shutdown = Apagar
 admin-modal-title-confirm-shutdown = Confirmar apagado
-admin-modal-label-shutdown-warning = ¡Aviso! Esto apagará el bot. Escribid CONFIRM para continuar.
+admin-modal-label-shutdown-warning = ¡Aviso! Esto apagará el bot. Escribid CONFIRMAR para continuar.
 admin-msg-shutting-down = ¡Apagando!
 admin-btn-add-server = Añadir nuevo servidor
 admin-btn-load-cog = Cargar Cog

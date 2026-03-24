@@ -16,7 +16,7 @@ admin-msg-commands-cleared = コマンドがクリアされました。
 # Admin buttons
 admin-btn-shutdown = シャットダウン
 admin-modal-title-confirm-shutdown = シャットダウンの確認
-admin-modal-label-shutdown-warning = 警告！ボットがシャットダウンします。続行するには CONFIRM と入力してください。
+admin-modal-label-shutdown-warning = 警告！ボットがシャットダウンします。続行するには 確認 と入力してください。
 admin-msg-shutting-down = シャットダウン中です！
 admin-btn-add-server = 新しいサーバーを追加
 admin-btn-load-cog = Cogを読み込む

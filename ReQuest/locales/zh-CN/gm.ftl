@@ -71,7 +71,7 @@ gm-error-invalid-xp-value = 经验值必须是正整数！
 
 # GM confirm modals
 gm-modal-title-cancel-quest = 取消 Quest
-gm-modal-label-cancel-quest = 输入 CONFIRM 以取消 Quest。
+gm-modal-label-cancel-quest = 输入 确认 以取消 Quest。
 gm-modal-title-remove-from-quest = 从 Quest 中移除角色
 gm-modal-label-remove-from-quest = 确认移除角色？
 
@@ -136,8 +136,8 @@ gm-title-player-management = GM - 玩家管理
 gm-desc-player-management =
     这些命令已迁移至右键菜单。在电脑上右键点击（桌面端）或长按（移动端）玩家资料以获取以下菜单选项：
 
-    - {"**"}Modify Player{"**"}：添加或移除玩家的物品和经验值。
-    - {"**"}View Player{"**"}：查看玩家的活跃角色详情。
+    - {"**"}修改玩家{"**"}：添加或移除玩家的物品和经验值。
+    - {"**"}查看玩家{"**"}：查看玩家的活跃角色详情。
 gm-title-remove-player = 从 Quest 中移除玩家 - { $questTitle }
 gm-desc-remove-player-notes =
     __{"**"}玩家移除说明{"**"}__
@@ -145,7 +145,7 @@ gm-desc-remove-player-notes =
     - 从下方下拉菜单中选择要从 Quest 名单中移除的玩家。
     - 如果有玩家在等待列表中，列表中的第一位玩家将被提升到队伍中。
     - 被移除玩家的个人奖励将从 Quest 中删除。
-    - 如果您想奖励该玩家之前的贡献，请使用 `Modify Player` 右键菜单直接向他们发放奖励。
+    - 如果您想奖励该玩家之前的贡献，请使用 `修改玩家` 右键菜单直接向他们发放奖励。
 gm-label-no-players-in-roster = Quest 名单中没有玩家
 gm-title-character-sheet = { $characterName } 的角色信息（<@{ $memberId }>）
 gm-label-experience-points = __{"**"}经验值：{"**"}__

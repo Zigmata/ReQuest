@@ -71,7 +71,7 @@ gm-error-invalid-xp-value = 経験値は正の整数でなければなりませ�
 
 # GM confirm modals
 gm-modal-title-cancel-quest = Quest のキャンセル
-gm-modal-label-cancel-quest = Quest をキャンセルするには CONFIRM と入力してください。
+gm-modal-label-cancel-quest = Quest をキャンセルするには 確認 と入力してください。
 gm-modal-title-remove-from-quest = Quest からキャラクターを削除
 gm-modal-label-remove-from-quest = キャラクターの削除を確認しますか？
 
@@ -138,8 +138,8 @@ gm-title-player-management = GM - プレイヤー管理
 gm-desc-player-management =
     これらのコマンドはコンテキストメニューに移行しました。プレイヤーのプロフィールを右クリック（デスクトップ）または長押し（モバイル）して、以下のメニューオプションにアクセスしてください：
 
-    - {"**"}Modify Player{"**"}: プレイヤーのアイテムや経験値を追加・削除します。
-    - {"**"}View Player{"**"}: プレイヤーの有効なキャラクターの詳細を表示します。
+    - {"**"}プレイヤーを変更{"**"}: プレイヤーのアイテムや経験値を追加・削除します。
+    - {"**"}プレイヤーを表示{"**"}: プレイヤーの有効なキャラクターの詳細を表示します。
 gm-title-remove-player = Quest からプレイヤーを削除 - { $questTitle }
 gm-desc-remove-player-notes =
     __{"**"}プレイヤー削除に関する注意事項{"**"}__
@@ -147,7 +147,7 @@ gm-desc-remove-player-notes =
     - 以下のドロップダウンからプレイヤーを選択して、Quest の名簿から削除します。
     - ウェイトリストにプレイヤーがいる場合、リストの最初のプレイヤーがパーティーに昇格します。
     - 削除されたプレイヤーの個別報酬は Quest から削除されます。
-    - 以前の貢献に対してプレイヤーに報酬を付与する場合は、`Modify Player` コンテキストメニューを使用して直接報酬を付与してください。
+    - 以前の貢献に対してプレイヤーに報酬を付与する場合は、`プレイヤーを変更` コンテキストメニューを使用して直接報酬を付与してください。
 gm-label-no-players-in-roster = Quest の名簿にプレイヤーがいません
 gm-title-character-sheet = { $characterName } のキャラクターシート (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}経験値:{"**"}__

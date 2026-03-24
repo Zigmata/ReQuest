@@ -93,7 +93,7 @@ config-modal-label-remove-denomination = Удалить { $denominationName }?
 config-modal-label-remove-currency = Удалить { $currencyName }?
 config-modal-label-shop-removal-warning = ВНИМАНИЕ: Это действие необратимо!
 config-modal-label-kit-deletion-warning = ВНИМАНИЕ: Необратимо!
-config-modal-label-remove-stock-limit = Введите CONFIRM для удаления лимита запасов
+config-modal-label-remove-stock-limit = Введите ПОДТВЕРДИТЬ для удаления лимита запасов
 config-modal-label-clear-shop = Очистить все предметы из этого магазина?
 
 # Сообщения об ошибках кнопок

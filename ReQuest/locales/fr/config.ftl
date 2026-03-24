@@ -93,7 +93,7 @@ config-modal-label-remove-denomination = Retirer { $denominationName } ?
 config-modal-label-remove-currency = Retirer { $currencyName } ?
 config-modal-label-shop-removal-warning = ATTENTION : Cette action est irréversible !
 config-modal-label-kit-deletion-warning = ATTENTION : Irréversible !
-config-modal-label-remove-stock-limit = Tapez CONFIRM pour supprimer la limite de stock
+config-modal-label-remove-stock-limit = Tapez CONFIRMER pour supprimer la limite de stock
 config-modal-label-clear-shop = Supprimer tous les articles de cette boutique ?
 
 # Messages d'erreur des boutons

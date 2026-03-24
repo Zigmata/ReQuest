@@ -71,7 +71,7 @@ gm-error-invalid-xp-value = Valoarea XP trebuie să fie un număr întreg poziti
 
 # GM confirm modals
 gm-modal-title-cancel-quest = Anulează quest
-gm-modal-label-cancel-quest = Tastați CONFIRM pentru a anula quest-ul.
+gm-modal-label-cancel-quest = Tastați CONFIRMĂ pentru a anula quest-ul.
 gm-modal-title-remove-from-quest = Elimină personajul din quest
 gm-modal-label-remove-from-quest = Confirmați eliminarea personajului?
 
@@ -138,8 +138,8 @@ gm-title-player-management = Game Master - Gestionare jucători
 gm-desc-player-management =
     Aceste comenzi au fost mutate în meniurile contextuale. Faceți clic dreapta (desktop) sau apăsați lung (mobil) pe profilul unui jucător pentru următoarele opțiuni de meniu:
 
-    - {"**"}Modify Player{"**"}: Adăugați sau eliminați obiecte și experiență de la un jucător.
-    - {"**"}View Player{"**"}: Vizualizați detaliile personajului activ al unui jucător.
+    - {"**"}Modifică Jucător{"**"}: Adăugați sau eliminați obiecte și experiență de la un jucător.
+    - {"**"}Vizualizare Jucător{"**"}: Vizualizați detaliile personajului activ al unui jucător.
 gm-title-remove-player = Eliminare jucător din quest - { $questTitle }
 gm-desc-remove-player-notes =
     __{"**"}Note privind eliminarea jucătorului{"**"}__
@@ -147,7 +147,7 @@ gm-desc-remove-player-notes =
     - Alegeți un jucător din meniul derulant de mai jos pentru a-l elimina de pe lista quest-ului.
     - Dacă sunt jucători pe lista de așteptare, primul jucător din listă va fi promovat în echipă.
     - Recompensele individuale pentru jucătorul eliminat vor fi șterse din quest.
-    - Dacă doriți să recompensați jucătorul pentru contribuțiile anterioare, folosiți meniul contextual `Modify Player` pentru a-i acorda recompensele direct.
+    - Dacă doriți să recompensați jucătorul pentru contribuțiile anterioare, folosiți meniul contextual `Modifică Jucător` pentru a-i acorda recompensele direct.
 gm-label-no-players-in-roster = Niciun jucător pe lista quest-ului
 gm-title-character-sheet = Fișa personajului pentru { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Puncte de experiență:{"**"}__

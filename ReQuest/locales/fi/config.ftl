@@ -94,7 +94,7 @@ config-modal-label-remove-denomination = Poistetaanko { $denominationName }?
 config-modal-label-remove-currency = Poistetaanko { $currencyName }?
 config-modal-label-shop-removal-warning = VAROITUS: Tätä toimintoa ei voi kumota!
 config-modal-label-kit-deletion-warning = VAROITUS: Peruuttamaton!
-config-modal-label-remove-stock-limit = Kirjoita CONFIRM poistaaksesi varastorajan
+config-modal-label-remove-stock-limit = Kirjoita VAHVISTA poistaaksesi varastorajan
 config-modal-label-clear-shop = Tyhjennä kaikki tuotteet tästä kaupasta?
 
 # Error messages from buttons

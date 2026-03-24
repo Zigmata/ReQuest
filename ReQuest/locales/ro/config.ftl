@@ -93,7 +93,7 @@ config-modal-label-remove-denomination = Eliminați { $denominationName }?
 config-modal-label-remove-currency = Eliminați { $currencyName }?
 config-modal-label-shop-removal-warning = ATENȚIE: Această acțiune este ireversibilă!
 config-modal-label-kit-deletion-warning = ATENȚIE: Ireversibil!
-config-modal-label-remove-stock-limit = Tastați CONFIRM pentru a elimina limita de stoc
+config-modal-label-remove-stock-limit = Tastați CONFIRMĂ pentru a elimina limita de stoc
 config-modal-label-clear-shop = Goliți toate articolele din acest magazin?
 
 # Error messages from buttons

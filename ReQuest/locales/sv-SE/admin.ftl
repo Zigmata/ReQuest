@@ -16,7 +16,7 @@ admin-msg-commands-cleared = Kommandon rensade.
 # Admin buttons
 admin-btn-shutdown = Stäng av
 admin-modal-title-confirm-shutdown = Bekräfta avstängning
-admin-modal-label-shutdown-warning = Varning! Detta stänger av boten. Skriv CONFIRM för att fortsätta.
+admin-modal-label-shutdown-warning = Varning! Detta stänger av boten. Skriv BEKRÄFTA för att fortsätta.
 admin-msg-shutting-down = Stänger av!
 admin-btn-add-server = Lägg till ny server
 admin-btn-load-cog = Ladda Cog

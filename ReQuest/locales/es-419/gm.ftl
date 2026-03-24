@@ -71,7 +71,7 @@ gm-error-invalid-xp-value = ¡El valor de XP debe ser un número entero positivo
 
 # Modales de confirmación de GM
 gm-modal-title-cancel-quest = Cancelar Quest
-gm-modal-label-cancel-quest = Escribe CONFIRM para cancelar el quest.
+gm-modal-label-cancel-quest = Escribe CONFIRMAR para cancelar el quest.
 gm-modal-title-remove-from-quest = Eliminar personaje del quest
 gm-modal-label-remove-from-quest = ¿Confirmar eliminación del personaje?
 
@@ -138,8 +138,8 @@ gm-title-player-management = Game Master - Administración de Jugadores
 gm-desc-player-management =
     Estos comandos se han migrado a menús contextuales. Haz clic derecho (escritorio) o mantén presionado (móvil) el perfil de un jugador para las siguientes opciones de menú:
 
-    - {"**"}Modify Player{"**"}: Agregar o eliminar objetos y experiencia de un jugador.
-    - {"**"}View Player{"**"}: Ver los detalles del personaje activo de un jugador.
+    - {"**"}Modificar Jugador{"**"}: Agregar o eliminar objetos y experiencia de un jugador.
+    - {"**"}Ver Jugador{"**"}: Ver los detalles del personaje activo de un jugador.
 gm-title-remove-player = Eliminar Jugador del Quest - { $questTitle }
 gm-desc-remove-player-notes =
     __{"**"}Notas sobre la Eliminación de Jugadores{"**"}__
@@ -147,7 +147,7 @@ gm-desc-remove-player-notes =
     - Elige un jugador del menú desplegable a continuación para eliminarlo de la lista del quest.
     - Si hay jugadores en la lista de espera, el primer jugador de la lista será promovido al grupo.
     - Las recompensas individuales del jugador eliminado serán borradas del quest.
-    - Si deseas recompensar al jugador por contribuciones previas, usa el menú contextual `Modify Player` para emitirle recompensas directamente.
+    - Si deseas recompensar al jugador por contribuciones previas, usa el menú contextual `Modificar Jugador` para emitirle recompensas directamente.
 gm-label-no-players-in-roster = No hay jugadores en la lista del quest
 gm-title-character-sheet = Hoja de Personaje de { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Puntos de Experiencia:{"**"}__

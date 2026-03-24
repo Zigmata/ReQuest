@@ -16,7 +16,7 @@ admin-msg-commands-cleared = Naredbe obrisane.
 # Admin buttons
 admin-btn-shutdown = Isključi
 admin-modal-title-confirm-shutdown = Potvrdi isključivanje
-admin-modal-label-shutdown-warning = Upozorenje! Ovo će isključiti bota. Upišite CONFIRM za nastavak.
+admin-modal-label-shutdown-warning = Upozorenje! Ovo će isključiti bota. Upišite POTVRDI za nastavak.
 admin-msg-shutting-down = Isključujem!
 admin-btn-add-server = Dodaj novi poslužitelj
 admin-btn-load-cog = Učitaj Cog

@@ -16,7 +16,7 @@ admin-msg-commands-cleared = कमांड साफ़ कर दिए ग�
 # Admin buttons
 admin-btn-shutdown = बंद करें
 admin-modal-title-confirm-shutdown = बंद करने की पुष्टि करें
-admin-modal-label-shutdown-warning = चेतावनी! यह बॉट को बंद कर देगा। आगे बढ़ने के लिए CONFIRM टाइप करें।
+admin-modal-label-shutdown-warning = चेतावनी! यह बॉट को बंद कर देगा। आगे बढ़ने के लिए पुष्टि टाइप करें।
 admin-msg-shutting-down = बंद हो रहा है!
 admin-btn-add-server = नया सर्वर जोड़ें
 admin-btn-load-cog = Cog लोड करें

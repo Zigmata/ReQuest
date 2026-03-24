@@ -16,7 +16,7 @@ admin-msg-commands-cleared = Komennot tyhjennetty.
 # Admin buttons
 admin-btn-shutdown = Sammuta
 admin-modal-title-confirm-shutdown = Vahvista sammutus
-admin-modal-label-shutdown-warning = Varoitus! Tämä sammuttaa botin. Kirjoita CONFIRM jatkaaksesi.
+admin-modal-label-shutdown-warning = Varoitus! Tämä sammuttaa botin. Kirjoita VAHVISTA jatkaaksesi.
 admin-msg-shutting-down = Sammutetaan!
 admin-btn-add-server = Lisää uusi palvelin
 admin-btn-load-cog = Lataa Cog

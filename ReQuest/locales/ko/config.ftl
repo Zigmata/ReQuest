@@ -93,7 +93,7 @@ config-modal-label-remove-denomination = { $denominationName }을(를) 제거하
 config-modal-label-remove-currency = { $currencyName }을(를) 제거하시겠습니까?
 config-modal-label-shop-removal-warning = 경고: 이 작업은 되돌릴 수 없습니다!
 config-modal-label-kit-deletion-warning = 경고: 되돌릴 수 없습니다!
-config-modal-label-remove-stock-limit = 재고 한도를 제거하려면 CONFIRM을 입력하세요
+config-modal-label-remove-stock-limit = 재고 한도를 제거하려면 확인을 입력하세요
 config-modal-label-clear-shop = 이 상점의 모든 아이템을 삭제하시겠습니까?
 
 # 버튼의 오류 메시지
@@ -572,7 +572,7 @@ config-desc-quest-archive = 완료된 Quest가 요약 정보와 함께 이동되
 config-label-quest-archive-default = {"**"}Quest 보관소:{"**"} 미설정
 
 config-label-gm-transaction-log = {"**"}GM 거래 기록:{"**"} { $channel }
-config-desc-gm-transaction-log = GM 거래(예: Modify Player 명령어)가 기록되는 선택적 채널입니다.
+config-desc-gm-transaction-log = GM 거래(예: 플레이어 수정 명령어)가 기록되는 선택적 채널입니다.
 config-label-gm-transaction-log-default = {"**"}GM 거래 기록:{"**"} 미설정
 
 config-label-player-transaction-log = {"**"}플레이어 거래 기록:{"**"} { $channel }

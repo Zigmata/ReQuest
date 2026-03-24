@@ -16,7 +16,7 @@ admin-msg-commands-cleared = Příkazy vymazány.
 # Admin buttons
 admin-btn-shutdown = Vypnout
 admin-modal-title-confirm-shutdown = Potvrdit vypnutí
-admin-modal-label-shutdown-warning = Varování! Tím se bot vypne. Napište CONFIRM pro pokračování.
+admin-modal-label-shutdown-warning = Varování! Tím se bot vypne. Napište POTVRDIT pro pokračování.
 admin-msg-shutting-down = Vypínám!
 admin-btn-add-server = Přidat nový server
 admin-btn-load-cog = Načíst Cog

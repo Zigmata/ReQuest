@@ -71,7 +71,7 @@ gm-error-invalid-xp-value = XP reikšmė turi būti teigiamas sveikasis skaičiu
 
 # GM confirm modals
 gm-modal-title-cancel-quest = Atšaukti quest'ą
-gm-modal-label-cancel-quest = Įveskite CONFIRM, kad atšauktumėte quest'ą.
+gm-modal-label-cancel-quest = Įveskite PATVIRTINTI, kad atšauktumėte quest'ą.
 gm-modal-title-remove-from-quest = Pašalinti personažą iš quest'o
 gm-modal-label-remove-from-quest = Patvirtinti personažo pašalinimą?
 
@@ -138,8 +138,8 @@ gm-title-player-management = GM - Žaidėjų valdymas
 gm-desc-player-management =
     Šios komandos perkeltos į kontekstinius meniu. Dešiniuoju pelės mygtuku spustelėkite (kompiuteryje) arba ilgai paspauskite (mobiliajame) žaidėjo profilį, kad gautumėte šias meniu parinktis:
 
-    - {"**"}Modify Player{"**"}: Pridėti arba pašalinti daiktus ir patirtį žaidėjui.
-    - {"**"}View Player{"**"}: Peržiūrėti žaidėjo aktyvaus personažo informaciją.
+    - {"**"}Modifikuoti Žaidėją{"**"}: Pridėti arba pašalinti daiktus ir patirtį žaidėjui.
+    - {"**"}Peržiūrėti Žaidėją{"**"}: Peržiūrėti žaidėjo aktyvaus personažo informaciją.
 gm-title-remove-player = Pašalinti žaidėją iš quest'o - { $questTitle }
 gm-desc-remove-player-notes =
     __{"**"}Žaidėjo pašalinimo pastabos{"**"}__
@@ -147,7 +147,7 @@ gm-desc-remove-player-notes =
     - Pasirinkite žaidėją iš žemiau esančio sąrašo, kad pašalintumėte jį iš quest'o sąrašo.
     - Jei yra žaidėjų laukimo sąraše, pirmas žaidėjas sąraše bus pakeltas į grupę.
     - Individualūs pašalinto žaidėjo atlygiai bus ištrinti iš quest'o.
-    - Jei norite apdovanoti žaidėją už ankstesnį indėlį, naudokite kontekstinį meniu `Modify Player`, kad tiesiogiai skirtumėte atlygius.
+    - Jei norite apdovanoti žaidėją už ankstesnį indėlį, naudokite kontekstinį meniu `Modifikuoti Žaidėją`, kad tiesiogiai skirtumėte atlygius.
 gm-label-no-players-in-roster = Quest'o sąraše nėra žaidėjų
 gm-title-character-sheet = Personažo lapas: { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Patirties taškai:{"**"}__

@@ -93,7 +93,7 @@ config-modal-label-remove-denomination = Hapus { $denominationName }?
 config-modal-label-remove-currency = Hapus { $currencyName }?
 config-modal-label-shop-removal-warning = PERINGATAN: Tindakan ini tidak dapat dibatalkan!
 config-modal-label-kit-deletion-warning = PERINGATAN: Tidak dapat dibatalkan!
-config-modal-label-remove-stock-limit = Ketik CONFIRM untuk menghapus batas stok
+config-modal-label-remove-stock-limit = Ketik KONFIRMASI untuk menghapus batas stok
 config-modal-label-clear-shop = Kosongkan semua item dari toko ini?
 
 # Error messages from buttons
@@ -572,7 +572,7 @@ config-desc-quest-archive = Kanal opsional tempat quest yang selesai akan dipind
 config-label-quest-archive-default = {"**"}Arsip Quest:{"**"} Belum Dikonfigurasi
 
 config-label-gm-transaction-log = {"**"}Log Transaksi GM:{"**"} { $channel }
-config-desc-gm-transaction-log = Kanal opsional tempat transaksi GM (misalnya perintah Modify Player) dicatat.
+config-desc-gm-transaction-log = Kanal opsional tempat transaksi GM (misalnya perintah Modifikasi Pemain) dicatat.
 config-label-gm-transaction-log-default = {"**"}Log Transaksi GM:{"**"} Belum Dikonfigurasi
 
 config-label-player-transaction-log = {"**"}Log Transaksi Pemain:{"**"} { $channel }

@@ -16,7 +16,7 @@ admin-msg-commands-cleared = Befehle gelöscht.
 # Admin-Schaltflächen
 admin-btn-shutdown = Herunterfahren
 admin-modal-title-confirm-shutdown = Herunterfahren bestätigen
-admin-modal-label-shutdown-warning = Warnung! Dies wird den Bot herunterfahren. Geben Sie CONFIRM ein, um fortzufahren.
+admin-modal-label-shutdown-warning = Warnung! Dies wird den Bot herunterfahren. Geben Sie BESTÄTIGEN ein, um fortzufahren.
 admin-msg-shutting-down = Wird heruntergefahren!
 admin-btn-add-server = Neuen Server hinzufügen
 admin-btn-load-cog = Cog laden

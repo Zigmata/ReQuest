@@ -71,7 +71,7 @@ gm-error-invalid-xp-value = ค่า XP ต้องเป็นจำนวน
 
 # GM confirm modals
 gm-modal-title-cancel-quest = ยกเลิก Quest
-gm-modal-label-cancel-quest = พิมพ์ CONFIRM เพื่อยกเลิก quest
+gm-modal-label-cancel-quest = พิมพ์ ยืนยัน เพื่อยกเลิก quest
 gm-modal-title-remove-from-quest = ลบตัวละครออกจาก quest
 gm-modal-label-remove-from-quest = ยืนยันการลบตัวละคร?
 

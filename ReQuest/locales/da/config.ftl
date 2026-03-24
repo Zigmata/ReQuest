@@ -93,7 +93,7 @@ config-modal-label-remove-denomination = Fjern { $denominationName }?
 config-modal-label-remove-currency = Fjern { $currencyName }?
 config-modal-label-shop-removal-warning = ADVARSEL: Denne handling er irreversibel!
 config-modal-label-kit-deletion-warning = ADVARSEL: Irreversibelt!
-config-modal-label-remove-stock-limit = Skriv CONFIRM for at fjerne lagergrænsen
+config-modal-label-remove-stock-limit = Skriv BEKRÆFT for at fjerne lagergrænsen
 config-modal-label-clear-shop = Ryd alle varer fra denne butik?
 
 # Error messages from buttons

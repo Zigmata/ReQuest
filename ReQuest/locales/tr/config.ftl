@@ -93,7 +93,7 @@ config-modal-label-remove-denomination = { $denominationName } kaldırılsın m�
 config-modal-label-remove-currency = { $currencyName } kaldırılsın mı?
 config-modal-label-shop-removal-warning = UYARI: Bu işlem geri alınamaz!
 config-modal-label-kit-deletion-warning = UYARI: Geri alınamaz!
-config-modal-label-remove-stock-limit = Stok limitini kaldırmak için CONFIRM yazın
+config-modal-label-remove-stock-limit = Stok limitini kaldırmak için ONAYLA yazın
 config-modal-label-clear-shop = Bu mağazadaki tüm öğeleri temizle?
 
 # Error messages from buttons

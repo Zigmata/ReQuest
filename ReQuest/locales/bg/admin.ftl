@@ -16,7 +16,7 @@ admin-msg-commands-cleared = Командите са изчистени.
 # Admin buttons
 admin-btn-shutdown = Изключване
 admin-modal-title-confirm-shutdown = Потвърждение за изключване
-admin-modal-label-shutdown-warning = Внимание! Това ще изключи бота. Напишете CONFIRM, за да продължите.
+admin-modal-label-shutdown-warning = Внимание! Това ще изключи бота. Напишете ПОТВЪРДИ, за да продължите.
 admin-msg-shutting-down = Изключване!
 admin-btn-add-server = Добавяне на нов сървър
 admin-btn-load-cog = Зареждане на Cog

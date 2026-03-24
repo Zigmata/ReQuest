@@ -93,7 +93,7 @@ config-modal-label-remove-denomination = { $denominationName } verwijderen?
 config-modal-label-remove-currency = { $currencyName } verwijderen?
 config-modal-label-shop-removal-warning = WAARSCHUWING: Deze actie is onomkeerbaar!
 config-modal-label-kit-deletion-warning = WAARSCHUWING: Onomkeerbaar!
-config-modal-label-remove-stock-limit = Typ CONFIRM om de voorraadlimiet te verwijderen
+config-modal-label-remove-stock-limit = Typ BEVESTIG om de voorraadlimiet te verwijderen
 config-modal-label-clear-shop = Alle items uit deze winkel verwijderen?
 
 # Error messages from buttons

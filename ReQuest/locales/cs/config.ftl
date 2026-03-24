@@ -93,7 +93,7 @@ config-modal-label-remove-denomination = Odebrat { $denominationName }?
 config-modal-label-remove-currency = Odebrat { $currencyName }?
 config-modal-label-shop-removal-warning = VAROVÁNÍ: Tato akce je nevratná!
 config-modal-label-kit-deletion-warning = VAROVÁNÍ: Nevratné!
-config-modal-label-remove-stock-limit = Napište CONFIRM pro odebrání limitu zásob
+config-modal-label-remove-stock-limit = Napište POTVRDIT pro odebrání limitu zásob
 config-modal-label-clear-shop = Vymazat všechny předměty z tohoto obchodu?
 
 # Error messages from buttons
@@ -572,7 +572,7 @@ config-desc-quest-archive = Volitelný kanál, kam se přesunou dokončené ques
 config-label-quest-archive-default = {"**"}Archiv questů:{"**"} Není nakonfigurován
 
 config-label-gm-transaction-log = {"**"}Protokol transakcí GM:{"**"} { $channel }
-config-desc-gm-transaction-log = Volitelný kanál, kde se zaznamenávají transakce GM (tj. příkazy Modify Player).
+config-desc-gm-transaction-log = Volitelný kanál, kde se zaznamenávají transakce GM (tj. příkazy Upravit hráče).
 config-label-gm-transaction-log-default = {"**"}Protokol transakcí GM:{"**"} Není nakonfigurován
 
 config-label-player-transaction-log = {"**"}Protokol transakcí hráčů:{"**"} { $channel }

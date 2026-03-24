@@ -93,7 +93,7 @@ config-modal-label-remove-denomination = Fjerne { $denominationName }?
 config-modal-label-remove-currency = Fjerne { $currencyName }?
 config-modal-label-shop-removal-warning = ADVARSEL: Denne handlingen kan ikke angres!
 config-modal-label-kit-deletion-warning = ADVARSEL: Kan ikke angres!
-config-modal-label-remove-stock-limit = Skriv CONFIRM for å fjerne lagergrensen
+config-modal-label-remove-stock-limit = Skriv BEKREFT for å fjerne lagergrensen
 config-modal-label-clear-shop = Fjern alle gjenstander fra denne butikken?
 
 # Error messages from buttons

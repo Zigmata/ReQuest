@@ -16,7 +16,7 @@ admin-msg-commands-cleared = Οι εντολές διαγράφηκαν.
 # Admin buttons
 admin-btn-shutdown = Τερματισμός
 admin-modal-title-confirm-shutdown = Επιβεβαίωση Τερματισμού
-admin-modal-label-shutdown-warning = Προειδοποίηση! Αυτό θα τερματίσει το bot. Πληκτρολογήστε CONFIRM για να συνεχίσετε.
+admin-modal-label-shutdown-warning = Προειδοποίηση! Αυτό θα τερματίσει το bot. Πληκτρολογήστε ΕΠΙΒΕΒΑΙΩΣΗ για να συνεχίσετε.
 admin-msg-shutting-down = Γίνεται τερματισμός!
 admin-btn-add-server = Προσθήκη Νέου Διακομιστή
 admin-btn-load-cog = Φόρτωση Cog

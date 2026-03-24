@@ -93,7 +93,7 @@ config-modal-label-remove-denomination = { $denominationName } हटाएँ?
 config-modal-label-remove-currency = { $currencyName } हटाएँ?
 config-modal-label-shop-removal-warning = चेतावनी: यह कार्रवाई अपरिवर्तनीय है!
 config-modal-label-kit-deletion-warning = चेतावनी: अपरिवर्तनीय!
-config-modal-label-remove-stock-limit = स्टॉक सीमा हटाने के लिए CONFIRM टाइप करें
+config-modal-label-remove-stock-limit = स्टॉक सीमा हटाने के लिए पुष्टि टाइप करें
 config-modal-label-clear-shop = इस दुकान से सभी आइटम हटाएँ?
 
 # Error messages from buttons

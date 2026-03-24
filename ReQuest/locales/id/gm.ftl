@@ -71,7 +71,7 @@ gm-error-invalid-xp-value = Nilai XP harus berupa bilangan bulat positif!
 
 # GM confirm modals
 gm-modal-title-cancel-quest = Batalkan Quest
-gm-modal-label-cancel-quest = Ketik CONFIRM untuk membatalkan quest.
+gm-modal-label-cancel-quest = Ketik KONFIRMASI untuk membatalkan quest.
 gm-modal-title-remove-from-quest = Keluarkan karakter dari quest
 gm-modal-label-remove-from-quest = Konfirmasi pengeluaran karakter?
 
@@ -138,8 +138,8 @@ gm-title-player-management = GM - Manajemen Pemain
 gm-desc-player-management =
     Perintah ini telah dipindahkan ke menu konteks. Klik kanan (desktop) atau tekan lama (seluler) profil pemain untuk opsi menu berikut:
 
-    - {"**"}Modify Player{"**"}: Tambah atau hapus barang dan pengalaman dari pemain.
-    - {"**"}View Player{"**"}: Lihat detail karakter aktif pemain.
+    - {"**"}Modifikasi Pemain{"**"}: Tambah atau hapus barang dan pengalaman dari pemain.
+    - {"**"}Lihat Pemain{"**"}: Lihat detail karakter aktif pemain.
 gm-title-remove-player = Keluarkan Pemain dari Quest - { $questTitle }
 gm-desc-remove-player-notes =
     __{"**"}Catatan Pengeluaran Pemain{"**"}__
@@ -147,7 +147,7 @@ gm-desc-remove-player-notes =
     - Pilih pemain dari dropdown di bawah untuk mengeluarkan mereka dari daftar rombongan quest.
     - Jika ada pemain di daftar tunggu, pemain pertama dalam daftar akan dipromosikan ke rombongan.
     - Hadiah individu untuk pemain yang dikeluarkan akan dihapus dari quest.
-    - Jika Anda ingin memberi hadiah kepada pemain atas kontribusi sebelumnya, gunakan menu konteks `Modify Player` untuk memberikan hadiah langsung.
+    - Jika Anda ingin memberi hadiah kepada pemain atas kontribusi sebelumnya, gunakan menu konteks `Modifikasi Pemain` untuk memberikan hadiah langsung.
 gm-label-no-players-in-roster = Tidak ada pemain di daftar rombongan quest
 gm-title-character-sheet = Lembar Karakter untuk { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Poin Pengalaman:{"**"}__

@@ -93,7 +93,7 @@ config-modal-label-remove-denomination = Премахване на { $denominati
 config-modal-label-remove-currency = Премахване на { $currencyName }?
 config-modal-label-shop-removal-warning = ВНИМАНИЕ: Това действие е необратимо!
 config-modal-label-kit-deletion-warning = ВНИМАНИЕ: Необратимо!
-config-modal-label-remove-stock-limit = Напишете CONFIRM, за да премахнете лимита на наличност
+config-modal-label-remove-stock-limit = Напишете ПОТВЪРДИ, за да премахнете лимита на наличност
 config-modal-label-clear-shop = Изчистване на всички предмети от този магазин?
 
 # Error messages from buttons

@@ -71,7 +71,7 @@ gm-error-invalid-xp-value = XP मान एक धनात्मक पूर�
 
 # GM confirm modals
 gm-modal-title-cancel-quest = Quest रद्द करें
-gm-modal-label-cancel-quest = Quest रद्द करने के लिए CONFIRM टाइप करें।
+gm-modal-label-cancel-quest = Quest रद्द करने के लिए पुष्टि टाइप करें।
 gm-modal-title-remove-from-quest = चरित्र को quest से हटाएँ
 gm-modal-label-remove-from-quest = चरित्र हटाने की पुष्टि करें?
 
@@ -147,7 +147,7 @@ gm-desc-remove-player-notes =
     - Quest सूची से हटाने के लिए नीचे ड्रॉपडाउन से एक खिलाड़ी चुनें।
     - यदि कोई खिलाड़ी प्रतीक्षा सूची में है, तो सूची का पहला खिलाड़ी पार्टी में प्रमोट किया जाएगा।
     - हटाए गए खिलाड़ी के व्यक्तिगत पुरस्कार quest से हटा दिए जाएँगे।
-    - यदि आप पूर्व योगदान के लिए खिलाड़ी को पुरस्कृत करना चाहते हैं, तो सीधे पुरस्कार जारी करने के लिए `Modify Player` संदर्भ मेनू का उपयोग करें।
+    - यदि आप पूर्व योगदान के लिए खिलाड़ी को पुरस्कृत करना चाहते हैं, तो सीधे पुरस्कार जारी करने के लिए `खिलाड़ी संशोधित करें` संदर्भ मेनू का उपयोग करें।
 gm-label-no-players-in-roster = Quest सूची में कोई खिलाड़ी नहीं
 gm-title-character-sheet = { $characterName } का चरित्र पत्र (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}अनुभव अंक:{"**"}__

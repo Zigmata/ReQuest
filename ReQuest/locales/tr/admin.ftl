@@ -16,7 +16,7 @@ admin-msg-commands-cleared = Komutlar temizlendi.
 # Admin buttons
 admin-btn-shutdown = Kapat
 admin-modal-title-confirm-shutdown = Kapatmayı Onayla
-admin-modal-label-shutdown-warning = Uyarı! Bu işlem botu kapatacaktır. Devam etmek için CONFIRM yazın.
+admin-modal-label-shutdown-warning = Uyarı! Bu işlem botu kapatacaktır. Devam etmek için ONAYLA yazın.
 admin-msg-shutting-down = Kapatılıyor!
 admin-btn-add-server = Yeni Sunucu Ekle
 admin-btn-load-cog = Cog Yükle

@@ -93,7 +93,7 @@ config-modal-label-remove-denomination = 移除 { $denominationName }？
 config-modal-label-remove-currency = 移除 { $currencyName }？
 config-modal-label-shop-removal-warning = 警告：此操作無法復原！
 config-modal-label-kit-deletion-warning = 警告：無法復原！
-config-modal-label-remove-stock-limit = 輸入 CONFIRM 以移除庫存限制
+config-modal-label-remove-stock-limit = 輸入 確認 以移除庫存限制
 config-modal-label-clear-shop = 清空此商店的所有物品？
 
 # Error messages from buttons

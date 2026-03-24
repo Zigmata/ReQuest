@@ -16,7 +16,7 @@ admin-msg-commands-cleared = Comandi cancellati.
 # Pulsanti admin
 admin-btn-shutdown = Spegni
 admin-modal-title-confirm-shutdown = Conferma spegnimento
-admin-modal-label-shutdown-warning = Attenzione! Questo spegnerà il bot. Digita CONFIRM per procedere.
+admin-modal-label-shutdown-warning = Attenzione! Questo spegnerà il bot. Digita CONFERMA per procedere.
 admin-msg-shutting-down = Spegnimento in corso!
 admin-btn-add-server = Aggiungi nuovo server
 admin-btn-load-cog = Carica Cog

@@ -16,7 +16,7 @@ admin-msg-commands-cleared = 命令已清除。
 # Admin buttons
 admin-btn-shutdown = 关机
 admin-modal-title-confirm-shutdown = 确认关机
-admin-modal-label-shutdown-warning = 警告！这将关闭机器人。输入 CONFIRM 以继续。
+admin-modal-label-shutdown-warning = 警告！这将关闭机器人。输入 确认 以继续。
 admin-msg-shutting-down = 正在关闭！
 admin-btn-add-server = 添加新服务器
 admin-btn-load-cog = 加载 Cog

@@ -16,7 +16,7 @@ admin-msg-commands-cleared = Parancsok törölve.
 # Admin buttons
 admin-btn-shutdown = Leállítás
 admin-modal-title-confirm-shutdown = Leállítás megerősítése
-admin-modal-label-shutdown-warning = Figyelem! Ez leállítja a botot. Írd be: CONFIRM a folytatáshoz.
+admin-modal-label-shutdown-warning = Figyelem! Ez leállítja a botot. Írd be: MEGERŐSÍT a folytatáshoz.
 admin-msg-shutting-down = Leállítás folyamatban!
 admin-btn-add-server = Új szerver hozzáadása
 admin-btn-load-cog = Cog betöltése

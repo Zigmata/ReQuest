@@ -93,7 +93,7 @@ config-modal-label-remove-denomination = Xóa { $denominationName }?
 config-modal-label-remove-currency = Xóa { $currencyName }?
 config-modal-label-shop-removal-warning = CẢNH BÁO: Hành động này không thể hoàn tác!
 config-modal-label-kit-deletion-warning = CẢNH BÁO: Không thể hoàn tác!
-config-modal-label-remove-stock-limit = Nhập CONFIRM để xóa giới hạn tồn kho
+config-modal-label-remove-stock-limit = Nhập XÁC NHẬN để xóa giới hạn tồn kho
 config-modal-label-clear-shop = Xóa tất cả vật phẩm khỏi cửa hàng này?
 
 # Error messages from buttons

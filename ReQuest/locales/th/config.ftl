@@ -93,7 +93,7 @@ config-modal-label-remove-denomination = ลบ { $denominationName }?
 config-modal-label-remove-currency = ลบ { $currencyName }?
 config-modal-label-shop-removal-warning = คำเตือน: การดำเนินการนี้ไม่สามารถย้อนกลับได้!
 config-modal-label-kit-deletion-warning = คำเตือน: ไม่สามารถย้อนกลับได้!
-config-modal-label-remove-stock-limit = พิมพ์ CONFIRM เพื่อลบขีดจำกัดสินค้าคงเหลือ
+config-modal-label-remove-stock-limit = พิมพ์ ยืนยัน เพื่อลบขีดจำกัดสินค้าคงเหลือ
 config-modal-label-clear-shop = ล้างสินค้าทั้งหมดจากร้านค้านี้?
 
 # Error messages from buttons
@@ -572,7 +572,7 @@ config-desc-quest-archive = ช่องสำหรับย้าย Quest ท
 config-label-quest-archive-default = {"**"}คลัง Quest:{"**"} ไม่ได้ตั้งค่า
 
 config-label-gm-transaction-log = {"**"}บันทึกธุรกรรม GM:{"**"} { $channel }
-config-desc-gm-transaction-log = ช่องสำหรับบันทึกธุรกรรม GM (เช่น คำสั่ง Modify Player) (ไม่บังคับ)
+config-desc-gm-transaction-log = ช่องสำหรับบันทึกธุรกรรม GM (เช่น คำสั่ง แก้ไขผู้เล่น) (ไม่บังคับ)
 config-label-gm-transaction-log-default = {"**"}บันทึกธุรกรรม GM:{"**"} ไม่ได้ตั้งค่า
 
 config-label-player-transaction-log = {"**"}บันทึกธุรกรรมผู้เล่น:{"**"} { $channel }

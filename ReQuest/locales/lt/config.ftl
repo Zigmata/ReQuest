@@ -93,7 +93,7 @@ config-modal-label-remove-denomination = Pašalinti { $denominationName }?
 config-modal-label-remove-currency = Pašalinti { $currencyName }?
 config-modal-label-shop-removal-warning = DĖMESIO: Šio veiksmo negalima atšaukti!
 config-modal-label-kit-deletion-warning = DĖMESIO: Negrįžtamas veiksmas!
-config-modal-label-remove-stock-limit = Įveskite CONFIRM, kad pašalintumėte atsargų limitą
+config-modal-label-remove-stock-limit = Įveskite PATVIRTINTI, kad pašalintumėte atsargų limitą
 config-modal-label-clear-shop = Išvalyti visus daiktus iš šios parduotuvės?
 
 # Error messages from buttons

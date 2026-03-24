@@ -93,7 +93,7 @@ config-modal-label-remove-denomination = { $denominationName } entfernen?
 config-modal-label-remove-currency = { $currencyName } entfernen?
 config-modal-label-shop-removal-warning = WARNUNG: Diese Aktion ist unwiderruflich!
 config-modal-label-kit-deletion-warning = WARNUNG: Unwiderruflich!
-config-modal-label-remove-stock-limit = Geben Sie CONFIRM ein, um die Bestandsgrenze zu entfernen
+config-modal-label-remove-stock-limit = Geben Sie BESTÄTIGEN ein, um die Bestandsgrenze zu entfernen
 config-modal-label-clear-shop = Alle Artikel aus diesem Laden entfernen?
 
 # Fehlermeldungen von Schaltflächen

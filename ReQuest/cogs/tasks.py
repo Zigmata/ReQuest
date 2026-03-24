@@ -206,6 +206,9 @@ class Tasks(Cog):
             current_stock = await get_item_stock(self.bot, guild_id, channel_id, item_name)
             current_available = current_stock[ShopFields.AVAILABLE] if current_stock else 0
 
+            if current_available >= max_stock:
+                continue  # Already at or above max, skip
+
             if mode == RestockMode.FULL.value:
                 # Set available to maxStock
                 await set_available_stock(self.bot, guild_id, channel_id, item_name, max_stock)

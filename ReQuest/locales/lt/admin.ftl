@@ -16,7 +16,7 @@ admin-msg-commands-cleared = Komandos išvalytos.
 # Admin buttons
 admin-btn-shutdown = Išjungti
 admin-modal-title-confirm-shutdown = Patvirtinti išjungimą
-admin-modal-label-shutdown-warning = Dėmesio! Tai išjungs botą. Įveskite CONFIRM, kad tęstumėte.
+admin-modal-label-shutdown-warning = Dėmesio! Tai išjungs botą. Įveskite PATVIRTINTI, kad tęstumėte.
 admin-msg-shutting-down = Išsijungiama!
 admin-btn-add-server = Pridėti naują serverį
 admin-btn-load-cog = Įkelti Cog

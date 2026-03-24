@@ -93,7 +93,7 @@ config-modal-label-remove-denomination = Ukloniti { $denominationName }?
 config-modal-label-remove-currency = Ukloniti { $currencyName }?
 config-modal-label-shop-removal-warning = UPOZORENJE: Ova radnja je nepovratna!
 config-modal-label-kit-deletion-warning = UPOZORENJE: Nepovratno!
-config-modal-label-remove-stock-limit = Upišite CONFIRM za uklanjanje ograničenja zaliha
+config-modal-label-remove-stock-limit = Upišite POTVRDI za uklanjanje ograničenja zaliha
 config-modal-label-clear-shop = Isprazniti sve predmete iz ove trgovine?
 
 # Error messages from buttons
@@ -572,7 +572,7 @@ config-desc-quest-archive = Neobavezni kanal u koji se premještaju dovršeni qu
 config-label-quest-archive-default = {"**"}Arhiva questova:{"**"} Nije konfigurirano
 
 config-label-gm-transaction-log = {"**"}Dnevnik GM transakcija:{"**"} { $channel }
-config-desc-gm-transaction-log = Neobavezni kanal u koji se bilježe GM transakcije (tj. naredbe Modify Player).
+config-desc-gm-transaction-log = Neobavezni kanal u koji se bilježe GM transakcije (tj. naredbe Izmijeni Igrača).
 config-label-gm-transaction-log-default = {"**"}Dnevnik GM transakcija:{"**"} Nije konfigurirano
 
 config-label-player-transaction-log = {"**"}Dnevnik transakcija igrača:{"**"} { $channel }

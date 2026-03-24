@@ -16,7 +16,7 @@ admin-msg-commands-cleared = Команды очищены.
 # Кнопки администрирования
 admin-btn-shutdown = Выключить
 admin-modal-title-confirm-shutdown = Подтверждение выключения
-admin-modal-label-shutdown-warning = Внимание! Бот будет выключен. Введите CONFIRM для продолжения.
+admin-modal-label-shutdown-warning = Внимание! Бот будет выключен. Введите ПОДТВЕРДИТЬ для продолжения.
 admin-msg-shutting-down = Выключаюсь!
 admin-btn-add-server = Добавить сервер
 admin-btn-load-cog = Загрузить модуль

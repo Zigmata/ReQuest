@@ -93,7 +93,7 @@ config-modal-label-remove-denomination = { $denominationName } を削除しま�
 config-modal-label-remove-currency = { $currencyName } を削除しますか？
 config-modal-label-shop-removal-warning = 警告：この操作は元に戻せません！
 config-modal-label-kit-deletion-warning = 警告：元に戻せません！
-config-modal-label-remove-stock-limit = 在庫制限を削除するには CONFIRM と入力してください
+config-modal-label-remove-stock-limit = 在庫制限を削除するには 確認 と入力してください
 config-modal-label-clear-shop = このショップのすべてのアイテムをクリアしますか？
 
 # Error messages from buttons
@@ -572,7 +572,7 @@ config-desc-quest-archive = 完了した Quest がサマリー情報とともに
 config-label-quest-archive-default = {"**"}Quest アーカイブ:{"**"} 未設定
 
 config-label-gm-transaction-log = {"**"}GM 取引ログ:{"**"} { $channel }
-config-desc-gm-transaction-log = GM の取引（Modify Player コマンドなど）が記録されるオプションのチャンネルです。
+config-desc-gm-transaction-log = GM の取引（プレイヤーを変更 コマンドなど）が記録されるオプションのチャンネルです。
 config-label-gm-transaction-log-default = {"**"}GM 取引ログ:{"**"} 未設定
 
 config-label-player-transaction-log = {"**"}プレイヤー取引ログ:{"**"} { $channel }

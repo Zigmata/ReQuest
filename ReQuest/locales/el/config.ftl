@@ -93,7 +93,7 @@ config-modal-label-remove-denomination = Αφαίρεση { $denominationName };
 config-modal-label-remove-currency = Αφαίρεση { $currencyName };
 config-modal-label-shop-removal-warning = ΠΡΟΕΙΔΟΠΟΙΗΣΗ: Αυτή η ενέργεια είναι μη αναστρέψιμη!
 config-modal-label-kit-deletion-warning = ΠΡΟΕΙΔΟΠΟΙΗΣΗ: Μη αναστρέψιμη!
-config-modal-label-remove-stock-limit = Πληκτρολογήστε CONFIRM για αφαίρεση του ορίου αποθέματος
+config-modal-label-remove-stock-limit = Πληκτρολογήστε ΕΠΙΒΕΒΑΙΩΣΗ για αφαίρεση του ορίου αποθέματος
 config-modal-label-clear-shop = Εκκαθάριση όλων των αντικειμένων από αυτό το κατάστημα;
 
 # Error messages from buttons

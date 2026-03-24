@@ -93,7 +93,7 @@ config-modal-label-remove-denomination = Usunąć { $denominationName }?
 config-modal-label-remove-currency = Usunąć { $currencyName }?
 config-modal-label-shop-removal-warning = UWAGA: Ta operacja jest nieodwracalna!
 config-modal-label-kit-deletion-warning = UWAGA: Nieodwracalne!
-config-modal-label-remove-stock-limit = Wpisz CONFIRM, aby usunąć limit zapasów
+config-modal-label-remove-stock-limit = Wpisz POTWIERDŹ, aby usunąć limit zapasów
 config-modal-label-clear-shop = Wyczyścić wszystkie przedmioty z tego sklepu?
 
 # Error messages from buttons
@@ -572,7 +572,7 @@ config-desc-quest-archive = Opcjonalny kanał, do którego ukończone questy zos
 config-label-quest-archive-default = {"**"}Archiwum questów:{"**"} Nie skonfigurowano
 
 config-label-gm-transaction-log = {"**"}Dziennik transakcji GM:{"**"} { $channel }
-config-desc-gm-transaction-log = Opcjonalny kanał, w którym rejestrowane są transakcje GM (np. komendy Modify Player).
+config-desc-gm-transaction-log = Opcjonalny kanał, w którym rejestrowane są transakcje GM (np. komendy Modyfikuj Gracza).
 config-label-gm-transaction-log-default = {"**"}Dziennik transakcji GM:{"**"} Nie skonfigurowano
 
 config-label-player-transaction-log = {"**"}Dziennik transakcji graczy:{"**"} { $channel }

@@ -71,7 +71,7 @@ gm-error-invalid-xp-value = Il valore XP deve essere un intero positivo!
 
 # Modali di conferma GM
 gm-modal-title-cancel-quest = Annulla quest
-gm-modal-label-cancel-quest = Digita CONFIRM per annullare la quest.
+gm-modal-label-cancel-quest = Digita CONFERMA per annullare la quest.
 gm-modal-title-remove-from-quest = Rimuovi personaggio dalla quest
 gm-modal-label-remove-from-quest = Confermare la rimozione del personaggio?
 
