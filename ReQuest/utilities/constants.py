@@ -25,6 +25,7 @@ class QuestFields:
     LOCK_STATE = 'lockState'
     REWARDS = 'rewards'
     PARTY_ROLE_ID = 'partyRoleId'
+    QUEST_ROLE_MODE = 'questRoleMode'
     XP = 'xp'
 
 
@@ -41,6 +42,7 @@ class ShopFields:
     AVAILABLE = 'available'
     RESERVED = 'reserved'
     COSTS = 'costs'
+    RESTOCK_INCREMENT = 'restockIncrement'
     ENABLED = 'enabled'
     CHANNEL_TYPE = 'channelType'
     PARENT_FORUM_ID = 'parentForumId'
@@ -68,6 +70,15 @@ class ConfigFields:
     INVENTORY_TYPE = 'inventoryType'
     NEW_CHARACTER_WEALTH = 'newCharacterWealth'
     QUEST_WAIT_LIST = 'questWaitList'
+    QUEST_ROLE_MODE = 'questRoleMode'
+    QUEST_ROLE_ASSIGNMENTS = 'questRoleAssignments'
+
+
+MAX_QUEST_ROLES_PER_GM = 20
+
+FIRST_RESTOCK_GRACE_HOURLY = 2   # minutes
+FIRST_RESTOCK_GRACE_DAILY = 10   # minutes
+FIRST_RESTOCK_GRACE_WEEKLY = 30  # minutes
 
 
 class RoleplayFields:
@@ -156,4 +167,8 @@ class DatabaseCollections:
     SHOP_STOCK = 'shopStock'
     SHOPS = 'shops'
     STATIC_KITS = 'staticKits'
+    USER_LOCALE = 'userLocale'
+    GUILD_LOCALE = 'guildLocale'
+    QUEST_ROLE_MODE = 'questRoleMode'
+    QUEST_ROLE_ASSIGNMENTS = 'questRoleAssignments'
     CHARACTERS = 'characters'

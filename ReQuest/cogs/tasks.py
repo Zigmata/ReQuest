@@ -1,12 +1,16 @@
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import discord
 from discord.ext import commands, tasks
 from discord.ext.commands import Cog
 
 from ReQuest.ui.common.enums import ScheduleType, RestockMode
-from ReQuest.utilities.constants import CommonFields, ShopFields, RestockFields, DatabaseCollections
+from ReQuest.utilities.constants import (
+    CommonFields, ShopFields, RestockFields, DatabaseCollections,
+    FIRST_RESTOCK_GRACE_HOURLY, FIRST_RESTOCK_GRACE_DAILY, FIRST_RESTOCK_GRACE_WEEKLY
+)
+from ReQuest.utilities.localizer import t, resolve_guild_locale
 from ReQuest.utilities.supportFunctions import (
     cleanup_expired_carts,
     get_last_restock,
@@ -109,6 +113,10 @@ class Tasks(Cog):
         """
         Determine if restocking should occur based on schedule.
 
+        Uses a "has the target time passed since the last restock?" approach
+        rather than exact minute matching, so the check is resilient to loop
+        drift and doesn't require the tick to land on the exact target minute.
+
         :param restock_config: The shop's restock configuration
         :param last_restock: The last restock datetime or None
         :param now: The current datetime (UTC)
@@ -121,35 +129,55 @@ class Tasks(Cog):
         target_day = restock_config.get(RestockFields.DAY_OF_WEEK, 0)  # 0 = Monday
 
         if schedule == ScheduleType.HOURLY.value:
-            # Check time with a tolerance of 1 minute
-            minute_diff = (now.minute - target_minute) % 60
-            if minute_diff in (0, 1):
-                if last_restock is None:
-                    return True
+            # The target time this hour
+            target_time = now.replace(minute=target_minute, second=0, microsecond=0)
 
-                # Checks with a 1-minute buffer
-                time_diff = now - last_restock
-                if time_diff.total_seconds() >= 3600 - 60:
-                    return True
+            # Haven't reached target minute yet this hour
+            if now < target_time:
+                return False
+
+            if last_restock is None:
+                # First-ever restock: only fire if close to target to avoid an
+                # immediate catch-up restock on first bot start mid-hour.
+                return (now - target_time) <= timedelta(minutes=FIRST_RESTOCK_GRACE_HOURLY)
+
+            # Normal case: restock if we haven't restocked since this hour's target
+            return last_restock < target_time
 
         elif schedule == ScheduleType.DAILY.value:
-            # Check if we're at target hour:minute
-            if now.hour == target_hour and now.minute == target_minute:
-                if last_restock is None:
-                    return True
-                # Check if it's a different day
-                if now.date() > last_restock.date():
-                    return True
+            # Build today's target time
+            target_time = now.replace(hour=target_hour, minute=target_minute, second=0, microsecond=0)
+
+            # Haven't reached target time yet today
+            if now < target_time:
+                return False
+
+            if last_restock is None:
+                # First-ever restock: only fire if close to target to avoid
+                # a catch-up restock on first bot start late in the day.
+                return (now - target_time) <= timedelta(minutes=FIRST_RESTOCK_GRACE_DAILY)
+
+            return last_restock < target_time
 
         elif schedule == ScheduleType.WEEKLY.value:
-            # Check if correct day, hour, minute
-            if now.weekday() == target_day and now.hour == target_hour and now.minute == target_minute:
-                if last_restock is None:
-                    return True
-                # Check if at least 6 days have passed (to avoid issues at day boundaries)
-                time_diff = now - last_restock
-                if time_diff.days >= 6:
-                    return True
+            # Calculate this week's target day (Mon=0 anchor)
+            this_monday = now.date() - timedelta(days=now.weekday())
+            target_date = this_monday + timedelta(days=target_day)
+            target_time = datetime(
+                target_date.year, target_date.month, target_date.day,
+                target_hour, target_minute, 0, 0, timezone.utc
+            )
+
+            # Haven't reached target time yet this week
+            if now < target_time:
+                return False
+
+            if last_restock is None:
+                # First-ever restock: only fire if close to target to avoid
+                # a catch-up restock on first bot start days after the target.
+                return (now - target_time) <= timedelta(minutes=FIRST_RESTOCK_GRACE_WEEKLY)
+
+            return last_restock < target_time
 
         return False
 
@@ -163,7 +191,6 @@ class Tasks(Cog):
         :param restock_config: The restocking configuration
         """
         mode = restock_config.get(RestockFields.MODE, RestockMode.FULL.value)
-        increment_amount = restock_config.get(RestockFields.INCREMENT_AMOUNT, 1)
 
         shop_stock = shop_data.get(ShopFields.SHOP_STOCK, [])
         restocked_items = []  # List of (item_name, amount_added)
@@ -179,12 +206,19 @@ class Tasks(Cog):
             current_stock = await get_item_stock(self.bot, guild_id, channel_id, item_name)
             current_available = current_stock[ShopFields.AVAILABLE] if current_stock else 0
 
+            if current_available >= max_stock:
+                continue  # Already at or above max, skip
+
             if mode == RestockMode.FULL.value:
                 # Set available to maxStock
                 await set_available_stock(self.bot, guild_id, channel_id, item_name, max_stock)
                 amount_added = max_stock - current_available
             else:
-                # Increment available up to maxStock
+                # Increment available up to maxStock, using per-item increment (default 1)
+                try:
+                    increment_amount = max(1, int(item.get(ShopFields.RESTOCK_INCREMENT, 1)))
+                except (TypeError, ValueError):
+                    increment_amount = 1
                 await increment_available_stock(self.bot, guild_id, channel_id, item_name,
                                                 increment_amount, max_stock)
                 amount_added = min(increment_amount, max_stock - current_available)
@@ -210,6 +244,8 @@ class Tasks(Cog):
             if not channel:
                 return
 
+            locale = await resolve_guild_locale(self.bot, guild_id)
+
             # Build the item list (cap at 20 items)
             max_display = 20
             item_lines = []
@@ -218,17 +254,17 @@ class Tasks(Cog):
 
             if len(restocked_items) > max_display:
                 remaining = len(restocked_items) - max_display
-                item_lines.append(f". . . and {remaining} more.")
+                item_lines.append(t(locale, 'shop-restock-more-items', remaining=remaining))
 
             description = "\n".join(item_lines)
 
             embed = discord.Embed(
-                title="Shop Restocked!",
+                title=t(locale, 'shop-embed-title-restocked'),
                 description=description,
                 color=discord.Color.green(),
                 timestamp=datetime.now(timezone.utc)
             )
-            embed.set_footer(text=f"{len(restocked_items)} item{'s' if len(restocked_items) != 1 else ''} restocked")
+            embed.set_footer(text=t(locale, 'shop-embed-footer-restocked', count=len(restocked_items)))
 
             await channel.send(embed=embed)
         except Exception as e:

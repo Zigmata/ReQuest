@@ -4,13 +4,26 @@ import discord
 import discord.ui
 from discord.ui import Modal
 
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, set_locale_context
 from ReQuest.utilities.supportFunctions import log_exception, UserFeedbackError
 
 logger = logging.getLogger(__name__)
 
 
-class ConfirmModal(Modal):
-    def __init__(self, title: str, prompt_label: str, prompt_placeholder: str, confirm_callback):
+class LocaleModal(Modal):
+    """Modal subclass that propagates locale via context var before on_submit."""
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        locale = getattr(self, '_locale', None) or getattr(self, 'locale', None) or DEFAULT_LOCALE
+        set_locale_context(locale)
+        return True
+
+
+class ConfirmModal(LocaleModal):
+    def __init__(self, title: str, prompt_label: str, confirm_callback, locale=None):
+        self._locale = locale or DEFAULT_LOCALE
+        self.confirm_word = t(self._locale, 'common-confirm-word')
+        prompt_placeholder = t(self._locale, 'common-confirm-placeholder', confirmWord=self.confirm_word)
         if len(title) > 45:
             title = title[:42] + '...'
         if len(prompt_label) > 45:
@@ -23,31 +36,36 @@ class ConfirmModal(Modal):
             label=prompt_label,
             placeholder=prompt_placeholder,
             required=True,
-            max_length=7
+            max_length=len(self.confirm_word)
         )
         self.add_item(self.prompt)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            if self.prompt.value.strip() == 'CONFIRM':
+            if self.prompt.value.strip() == self.confirm_word:
                 await self.confirm_callback(interaction)
             else:
-                raise UserFeedbackError('Confirmation Failed: Operation cancelled.')
+                raise UserFeedbackError(
+                    t(self._locale, 'common-confirm-failed'),
+                    message_id='common-confirm-failed'
+                )
         except Exception as e:
             await log_exception(e, interaction)
 
 
-class PageJumpModal(Modal):
+class PageJumpModal(LocaleModal):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title='Go to Page',
+            title=t(self._locale, 'common-page-jump-title'),
             timeout=180
         )
         self.calling_view = calling_view
         self.page_number_input = discord.ui.TextInput(
-            label='Page Number',
+            label=t(self._locale, 'common-page-jump-label'),
             custom_id='page_number_input',
-            placeholder=f'Enter a number from 1 to {self.calling_view.total_pages}',
+            placeholder=t(self._locale, 'common-page-jump-placeholder', totalPages=str(self.calling_view.total_pages)),
             required=True,
             max_length=len(str(self.calling_view.total_pages))
         )

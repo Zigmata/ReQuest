@@ -3,13 +3,18 @@ import logging
 import discord
 from discord.ui import Select, RoleSelect, ChannelSelect
 
-from ReQuest.ui.common.enums import InventoryType, RoleplayMode, ScheduleType, DayOfWeek
-from ReQuest.utilities.constants import ConfigFields, CommonFields, RoleplayFields, DatabaseCollections
+from ReQuest.ui.common.enums import InventoryType, QuestRoleMode, RoleplayMode, ScheduleType, DayOfWeek
+from ReQuest.ui.info.selects import (LOCALE_LABELS, LOCALE_DESCRIPTIONS, LOCALE_EMOJI,
+                                     LOCALES_PER_PAGE, get_config_locale_total_pages)
+from ReQuest.utilities.constants import (ConfigFields, CommonFields, RoleplayFields,
+                                         DatabaseCollections, MAX_QUEST_ROLES_PER_GM)
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, SUPPORTED_LOCALES
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     setup_view,
     get_cached_data,
-    update_cached_data
+    update_cached_data,
+    delete_cached_data
 )
 
 logger = logging.getLogger(__name__)
@@ -23,7 +28,7 @@ class SingleChannelConfigSelect(ChannelSelect):
 
         super().__init__(
             channel_types=channel_types,
-            placeholder=f'Search for your {config_name} Channel',
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-channel', **{'configName': config_name}),
             custom_id=f'config_{config_type}_channel_select'
         )
         self.calling_view = calling_view
@@ -49,7 +54,7 @@ class SingleChannelConfigSelect(ChannelSelect):
 class QuestAnnounceRoleSelect(RoleSelect):
     def __init__(self, calling_view):
         super().__init__(
-            placeholder='Choose your Quest Announcement Role',
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-announce-role'),
             custom_id='quest_announce_role_select'
         )
         self.calling_view = calling_view
@@ -74,7 +79,7 @@ class QuestAnnounceRoleSelect(RoleSelect):
 class AddGMRoleSelect(RoleSelect):
     def __init__(self, calling_view):
         super().__init__(
-            placeholder='Choose your GM Role(s)',
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-gm-roles'),
             custom_id='add_gm_role_select',
             max_values=25
         )
@@ -91,7 +96,10 @@ class AddGMRoleSelect(RoleSelect):
             )
             if not query:
                 for value in self.values:
-                    update_data = {'$push': {ConfigFields.GM_ROLES: {CommonFields.MENTION: value.mention, CommonFields.NAME: value.name}}}
+                    update_data = {
+                        '$push': {ConfigFields.GM_ROLES: {
+                            CommonFields.MENTION: value.mention,
+                            CommonFields.NAME: value.name}}}
                     await update_cached_data(
                         bot=bot,
                         mongo_database=bot.gdb,
@@ -107,7 +115,10 @@ class AddGMRoleSelect(RoleSelect):
                             matches += 1
 
                     if matches == 0:
-                        update_data = {'$push': {ConfigFields.GM_ROLES: {CommonFields.MENTION: value.mention, CommonFields.NAME: value.name}}}
+                        update_data = {
+                            '$push': {ConfigFields.GM_ROLES: {
+                                CommonFields.MENTION: value.mention,
+                                CommonFields.NAME: value.name}}}
                         await update_cached_data(
                             bot=bot,
                             mongo_database=bot.gdb,
@@ -126,14 +137,14 @@ class ConfigWaitListSelect(Select):
     def __init__(self, calling_view):
         super().__init__(
             options=[
-                discord.SelectOption(label='0 (Disabled)', value='0'),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-disabled'), value='0'),
                 discord.SelectOption(label='1', value='1'),
                 discord.SelectOption(label='2', value='2'),
                 discord.SelectOption(label='3', value='3'),
                 discord.SelectOption(label='4', value='4'),
                 discord.SelectOption(label='5', value='5')
             ],
-            placeholder='Select Wait List size',
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-wait-list'),
             custom_id='config_wait_list_select'
         )
         self.calling_view = calling_view
@@ -158,19 +169,23 @@ class ConfigWaitListSelect(Select):
 class InventoryTypeSelect(Select):
     def __init__(self, calling_view):
         super().__init__(
-            placeholder='Select Inventory Mode',
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-inventory-mode'),
             options=[
-                discord.SelectOption(label='Disabled', value=InventoryType.DISABLED.value,
-                                     description='Players start with empty inventories.'),
-                discord.SelectOption(label='Selection', value=InventoryType.SELECTION.value,
-                                     description='Players choose items freely from the New Character Shop.'),
-                discord.SelectOption(label='Purchase', value=InventoryType.PURCHASE.value,
-                                     description='Players purchase items from the New Character Shop with a given '
-                                                 'amount of currency.'),
-                discord.SelectOption(label='Open', value=InventoryType.OPEN.value,
-                                     description='Players manually input their own inventories.'),
-                discord.SelectOption(label='Static', value=InventoryType.STATIC.value,
-                                     description='Players are given a predefined starting inventory.')
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-disabled-label'),
+                                     value=InventoryType.DISABLED.value,
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-disabled')),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-selection'),
+                                     value=InventoryType.SELECTION.value,
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-selection')),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-purchase'),
+                                     value=InventoryType.PURCHASE.value,
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-purchase')),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-open'),
+                                     value=InventoryType.OPEN.value,
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-open')),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-static'),
+                                     value=InventoryType.STATIC.value,
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-static')),
             ],
             custom_id='inventory_type_select'
         )
@@ -196,7 +211,7 @@ class RoleplayChannelSelect(ChannelSelect):
     def __init__(self, calling_view):
         super().__init__(
             channel_types=[discord.ChannelType.text, discord.ChannelType.forum, discord.ChannelType.category],
-            placeholder='Select Eligible Channels',
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-rp-channels'),
             min_values=0,
             max_values=25,
             custom_id='rp_channel_select'
@@ -234,17 +249,17 @@ class RoleplayChannelSelect(ChannelSelect):
 class RoleplayModeSelect(Select):
     def __init__(self, calling_view):
         super().__init__(
-            placeholder='Select Mode',
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-rp-mode'),
             options=[
                 discord.SelectOption(
-                    label='Scheduled',
+                    label=t(DEFAULT_LOCALE, 'config-select-option-scheduled'),
                     value=RoleplayMode.SCHEDULED.value,
-                    description='Rewards are granted once within a specified reset period.'
+                    description=t(DEFAULT_LOCALE, 'config-select-desc-scheduled')
                 ),
                 discord.SelectOption(
-                    label='Accrued',
+                    label=t(DEFAULT_LOCALE, 'config-select-option-accrued'),
                     value=RoleplayMode.ACCRUED.value,
-                    description='Rewards are repeatedly granted based on specified activity levels.'
+                    description=t(DEFAULT_LOCALE, 'config-select-desc-accrued')
                 )
             ],
             custom_id='rp_mode_select'
@@ -270,11 +285,17 @@ class RoleplayModeSelect(Select):
 class RoleplayResetSelect(Select):
     def __init__(self, calling_view):
         super().__init__(
-            placeholder='Select Reset Period',
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-reset-period'),
             options=[
-                discord.SelectOption(label='Hourly', value=ScheduleType.HOURLY.value, description='Resets every hour.'),
-                discord.SelectOption(label='Daily', value=ScheduleType.DAILY.value, description='Resets every 24 hours.'),
-                discord.SelectOption(label='Weekly', value=ScheduleType.WEEKLY.value, description='Resets every 7 days.')
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-hourly'),
+                                     value=ScheduleType.HOURLY.value,
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-hourly')),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-daily'),
+                                     value=ScheduleType.DAILY.value,
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-daily')),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-weekly'),
+                                     value=ScheduleType.WEEKLY.value,
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-weekly'))
             ],
             custom_id='rp_reset_select'
         )
@@ -299,15 +320,15 @@ class RoleplayResetSelect(Select):
 class RoleplayResetDaySelect(Select):
     def __init__(self, calling_view):
         super().__init__(
-            placeholder='Select Reset Day',
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-reset-day'),
             options=[
-                discord.SelectOption(label='Monday', value=DayOfWeek.MONDAY.value),
-                discord.SelectOption(label='Tuesday', value=DayOfWeek.TUESDAY.value),
-                discord.SelectOption(label='Wednesday', value=DayOfWeek.WEDNESDAY.value),
-                discord.SelectOption(label='Thursday', value=DayOfWeek.THURSDAY.value),
-                discord.SelectOption(label='Friday', value=DayOfWeek.FRIDAY.value),
-                discord.SelectOption(label='Saturday', value=DayOfWeek.SATURDAY.value),
-                discord.SelectOption(label='Sunday', value=DayOfWeek.SUNDAY.value)
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'common-day-monday'), value=DayOfWeek.MONDAY.value),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'common-day-tuesday'), value=DayOfWeek.TUESDAY.value),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'common-day-wednesday'), value=DayOfWeek.WEDNESDAY.value),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'common-day-thursday'), value=DayOfWeek.THURSDAY.value),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'common-day-friday'), value=DayOfWeek.FRIDAY.value),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'common-day-saturday'), value=DayOfWeek.SATURDAY.value),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'common-day-sunday'), value=DayOfWeek.SUNDAY.value)
             ],
             custom_id='rp_reset_day_select'
         )
@@ -333,10 +354,13 @@ class RoleplayResetTimeSelect(Select):
     def __init__(self, calling_view):
         options = []
         for hour in range(0, 24):
-            options.append(discord.SelectOption(label=f'{hour:02}:00 UTC', value=f'{hour}'))
+            options.append(discord.SelectOption(
+                label=t(DEFAULT_LOCALE, 'config-select-option-utc-time', **{'hour': f'{hour:02}'}),
+                value=f'{hour}'
+            ))
 
         super().__init__(
-            placeholder='Select Reset Time (UTC)',
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-reset-time'),
             options=options,
             custom_id='rp_reset_time_select'
         )
@@ -363,7 +387,7 @@ class ForumChannelSelect(ChannelSelect):
     def __init__(self, calling_view):
         super().__init__(
             channel_types=[discord.ChannelType.forum],
-            placeholder='Select a forum channel',
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-forum-channel'),
             custom_id='forum_channel_select'
         )
         self.calling_view = calling_view
@@ -374,7 +398,7 @@ class ForumChannelSelect(ChannelSelect):
             self.calling_view.selected_thread = None  # Reset thread selection
 
             forum = interaction.guild.get_channel(self.values[0].id)
-            self.calling_view.forum_threads = [t for t in forum.threads if not t.archived and not t.locked][:25]
+            self.calling_view.forum_threads = [th for th in forum.threads if not th.archived and not th.locked][:25]
 
             self.calling_view.build_view()
             await interaction.response.edit_message(view=self.calling_view)
@@ -395,25 +419,25 @@ class ForumThreadSelect(Select):
                     options.append(discord.SelectOption(
                         label=thread.name[:100],  # Discord label limit
                         value=str(thread.id),
-                        description=f'Thread ID: {thread.id}'
+                        description=t(DEFAULT_LOCALE, 'config-select-desc-thread-id', **{'threadId': str(thread.id)})
                     ))
             else:
                 # Provide a placeholder option if no threads found
                 options.append(discord.SelectOption(
-                    label='No active threads found',
+                    label=t(DEFAULT_LOCALE, 'config-select-option-no-threads'),
                     value='none',
-                    description='Create a new thread or check archived threads'
+                    description=t(DEFAULT_LOCALE, 'config-select-desc-no-threads')
                 ))
 
         if not options:
             options.append(discord.SelectOption(
-                label='Select a forum first',
+                label=t(DEFAULT_LOCALE, 'config-select-option-select-forum-first'),
                 value='none',
-                description='Please select a forum channel above'
+                description=t(DEFAULT_LOCALE, 'config-select-desc-select-forum-first')
             ))
 
         super().__init__(
-            placeholder='Select a thread',
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-thread'),
             options=options,
             custom_id='forum_thread_select'
         )
@@ -424,7 +448,7 @@ class ForumThreadSelect(Select):
             selected_value = self.values[0]
             if selected_value == 'none':
                 await interaction.response.send_message(
-                    'Please select a valid thread or create a new one.',
+                    t(DEFAULT_LOCALE, 'config-error-select-valid-thread'),
                     ephemeral=True
                 )
                 return
@@ -446,8 +470,198 @@ class ForumThreadSelect(Select):
                 await interaction.response.edit_message(view=self.calling_view)
             else:
                 await interaction.response.send_message(
-                    'Could not find the selected thread. It may have been deleted or archived.',
+                    t(DEFAULT_LOCALE, 'config-error-thread-not-found'),
                     ephemeral=True
                 )
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ConfigLanguageSelect(Select):
+    def __init__(self, calling_view):
+        super().__init__(
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-server-language'),
+            options=[],
+            custom_id='config_language_select'
+        )
+        self.calling_view = calling_view
+
+    def populate(self, locale, current_guild_locale=None, page=0):
+        self.options.clear()
+        # Page 0 reserves one slot for the "Default" option
+        per_page_0 = LOCALES_PER_PAGE - 1
+        if page == 0:
+            self.options.append(discord.SelectOption(
+                label=t(locale, 'config-select-option-default'),
+                description=t(locale, 'config-select-desc-default'),
+                value='default',
+                default=(current_guild_locale is None)
+            ))
+            page_locales = SUPPORTED_LOCALES[:per_page_0]
+        else:
+            start = per_page_0 + (page - 1) * LOCALES_PER_PAGE
+            end = start + LOCALES_PER_PAGE
+            page_locales = SUPPORTED_LOCALES[start:end]
+
+        total_pages = get_config_locale_total_pages()
+        if total_pages > 1:
+            self.placeholder = t(locale, 'info-language-select-placeholder-paged',
+                                 current=page + 1, total=total_pages)
+        else:
+            self.placeholder = t(locale, 'config-select-placeholder-server-language')
+
+        for supported_locale in page_locales:
+            self.options.append(discord.SelectOption(
+                label=t(locale, LOCALE_LABELS[supported_locale]),
+                description=t(locale, LOCALE_DESCRIPTIONS[supported_locale]),
+                emoji=LOCALE_EMOJI.get(supported_locale),
+                value=supported_locale,
+                default=(supported_locale == current_guild_locale)
+            ))
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            selected = self.values[0]
+            bot = interaction.client
+
+            if selected == 'default':
+                await delete_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.GUILD_LOCALE,
+                    search_filter={CommonFields.ID: interaction.guild_id}
+                )
+            else:
+                await update_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.GUILD_LOCALE,
+                    query={CommonFields.ID: interaction.guild_id},
+                    update_data={'$set': {'locale': selected}}
+                )
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class QuestRoleModeSelect(Select):
+    def __init__(self, calling_view):
+        super().__init__(
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-quest-role-mode'),
+            options=[
+                discord.SelectOption(
+                    label=t(DEFAULT_LOCALE, 'config-select-option-quest-role-disabled'),
+                    value=QuestRoleMode.DISABLED.value,
+                    description=t(DEFAULT_LOCALE, 'config-select-desc-quest-role-disabled')
+                ),
+                discord.SelectOption(
+                    label=t(DEFAULT_LOCALE, 'config-select-option-quest-role-temporary'),
+                    value=QuestRoleMode.TEMPORARY.value,
+                    description=t(DEFAULT_LOCALE, 'config-select-desc-quest-role-temporary')
+                ),
+                discord.SelectOption(
+                    label=t(DEFAULT_LOCALE, 'config-select-option-quest-role-static'),
+                    value=QuestRoleMode.STATIC.value,
+                    description=t(DEFAULT_LOCALE, 'config-select-desc-quest-role-static')
+                ),
+            ],
+            custom_id='quest_role_mode_select'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUEST_ROLE_MODE,
+                query={'_id': interaction.guild_id},
+                update_data={'$set': {ConfigFields.QUEST_ROLE_MODE: self.values[0]}}
+            )
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class AddGMQuestRoleSelect(RoleSelect):
+    def __init__(self, calling_view, member_id):
+        import uuid
+        super().__init__(
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-add-quest-role'),
+            custom_id=f'add_gm_quest_role_select:{uuid.uuid4().hex[:8]}',
+            max_values=MAX_QUEST_ROLES_PER_GM
+        )
+        self.calling_view = calling_view
+        self.member_id = member_id
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            guild_id = interaction.guild_id
+
+            query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUEST_ROLE_ASSIGNMENTS,
+                query={'_id': guild_id}
+            )
+            existing = []
+            if query:
+                existing = query.get(ConfigFields.QUEST_ROLE_ASSIGNMENTS, [])
+
+            max_roles_per_gm = MAX_QUEST_ROLES_PER_GM
+            member_id_str = str(self.member_id)
+            member_existing = [a for a in existing if a['userId'] == member_id_str]
+
+            bot_top_role = interaction.guild.me.top_role
+            new_assignments = []
+            rejected_roles = []
+            for role in self.values:
+                # Reject roles the bot cannot manage
+                if role.managed or role.is_default() or role >= bot_top_role:
+                    rejected_roles.append(role)
+                    continue
+
+                already_assigned = any(
+                    a['userId'] == member_id_str and a['roleId'] == role.id
+                    for a in existing
+                )
+                if not already_assigned:
+                    if len(member_existing) + len(new_assignments) >= max_roles_per_gm:
+                        break
+                    new_assignments.append({
+                        'userId': member_id_str,
+                        'roleId': role.id,
+                        'roleName': role.name
+                    })
+
+            if new_assignments:
+                await update_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.QUEST_ROLE_ASSIGNMENTS,
+                    query={'_id': guild_id},
+                    update_data={'$push': {ConfigFields.QUEST_ROLE_ASSIGNMENTS: {'$each': new_assignments}}}
+                )
+
+            locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
+            at_limit = len(member_existing) + len(new_assignments) >= max_roles_per_gm
+            if rejected_roles or at_limit:
+                messages = []
+                if rejected_roles:
+                    rejected_list = ', '.join(r.mention for r in rejected_roles)
+                    messages.append(t(locale, 'config-error-unmanageable-roles', roles=rejected_list))
+                if at_limit:
+                    messages.append(t(locale, 'config-error-quest-role-limit', limit=str(max_roles_per_gm)))
+                self.calling_view.error_message = '\n'.join(messages)
+            else:
+                self.calling_view.error_message = None
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)

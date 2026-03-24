@@ -4,10 +4,11 @@ from titlecase import titlecase
 import discord
 import discord.ui
 import shortuuid
-from discord.ui import Modal
+from ReQuest.ui.common.modals import LocaleModal
 
 from ReQuest.ui.common.enums import RewardType
 from ReQuest.utilities.constants import QuestFields, ConfigFields, CommonFields, DatabaseCollections
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_locale, resolve_user_locale, resolve_guild_locale
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
@@ -26,47 +27,74 @@ from ReQuest.utilities.supportFunctions import (
 logger = logging.getLogger(__name__)
 
 
-class CreateQuestModal(Modal):
-    def __init__(self, calling_view):
+class CreateQuestModal(LocaleModal):
+    def __init__(self, calling_view, quest_role_mode='temporary', assigned_roles=None):
         super().__init__(
-            title='Create New Quest',
+            title=t(DEFAULT_LOCALE, 'gm-modal-title-create-quest'),
             timeout=None
         )
         self.calling_view = calling_view
+        self.quest_role_mode = quest_role_mode
+        self.quest_party_role_text_input = None
+        self.quest_party_role_label = None
+
         self.quest_title_text_input = discord.ui.TextInput(
-            label='Quest Title',
+            label=t(DEFAULT_LOCALE, 'gm-modal-label-quest-title'),
             custom_id='quest_title_text_input',
-            placeholder='Title of your quest'
+            placeholder=t(DEFAULT_LOCALE, 'gm-modal-placeholder-quest-title')
         )
         self.quest_restrictions_text_input = discord.ui.TextInput(
-            label='Restrictions',
+            label=t(DEFAULT_LOCALE, 'gm-modal-label-restrictions'),
             custom_id='quest_restrictions_text_input',
-            placeholder='Restrictions, if any, such as player levels',
+            placeholder=t(DEFAULT_LOCALE, 'gm-modal-placeholder-restrictions'),
             required=False
         )
         self.quest_party_size_text_input = discord.ui.TextInput(
-            label='Maximum Party Size',
+            label=t(DEFAULT_LOCALE, 'gm-modal-label-max-party'),
             custom_id='quest_party_size_text_input',
-            placeholder='Max size of the party for this quest',
+            placeholder=t(DEFAULT_LOCALE, 'gm-modal-placeholder-max-party'),
             max_length=2
         )
-        self.quest_party_role_text_input = discord.ui.TextInput(
-            label='Party Role',
-            custom_id='quest_party_role',
-            placeholder='Create a role for this quest (Optional)',
-            required=False
-        )
         self.quest_description_text_input = discord.ui.TextInput(
-            label='Description',
+            label=t(DEFAULT_LOCALE, 'gm-modal-label-description'),
             style=discord.TextStyle.paragraph,
             custom_id='quest_description_text_input',
-            placeholder='Write the details of your quest here'
+            placeholder=t(DEFAULT_LOCALE, 'gm-modal-placeholder-description')
         )
 
         self.add_item(self.quest_title_text_input)
         self.add_item(self.quest_restrictions_text_input)
         self.add_item(self.quest_party_size_text_input)
-        self.add_item(self.quest_party_role_text_input)
+
+        if quest_role_mode == 'temporary':
+            self.quest_party_role_text_input = discord.ui.TextInput(
+                label=t(DEFAULT_LOCALE, 'gm-modal-label-party-role'),
+                custom_id='quest_party_role',
+                placeholder=t(DEFAULT_LOCALE, 'gm-modal-placeholder-party-role'),
+                required=False
+            )
+            self.add_item(self.quest_party_role_text_input)
+        elif quest_role_mode == 'static' and assigned_roles:
+            options = [discord.SelectOption(
+                label=t(DEFAULT_LOCALE, 'gm-select-option-no-role'),
+                value='none'
+            )]
+            for role_assignment in assigned_roles:
+                options.append(discord.SelectOption(
+                    label=role_assignment['roleName'],
+                    value=str(role_assignment['roleId'])
+                ))
+            role_select = discord.ui.Select(
+                placeholder=t(DEFAULT_LOCALE, 'gm-modal-desc-select-party-role'),
+                options=options,
+                custom_id='quest_party_role_select'
+            )
+            self.quest_party_role_label = discord.ui.Label(
+                text=t(DEFAULT_LOCALE, 'gm-modal-label-select-party-role'),
+                component=role_select
+            )
+            self.add_item(self.quest_party_role_label)
+
         self.add_item(self.quest_description_text_input)
 
     async def on_submit(self, interaction: discord.Interaction):
@@ -74,7 +102,6 @@ class CreateQuestModal(Modal):
             title = self.quest_title_text_input.value
             restrictions = self.quest_restrictions_text_input.value
             max_party_size = int(self.quest_party_size_text_input.value)
-            party_role_name = self.quest_party_role_text_input.value
             description = self.quest_description_text_input.value
 
             guild = interaction.guild
@@ -83,40 +110,52 @@ class CreateQuestModal(Modal):
             bot = interaction.client
             max_wait_list_size = 0
 
-            # Validate the party role name, if provided
             party_role_id = None
-            if party_role_name:
-                default_forbidden_names = [
-                    'everyone',
-                    'administrator',
-                    'game master',
-                    'gm',
-                ]
-                custom_forbidden_names = []
-                config_query = await get_cached_data(
-                    bot=bot,
-                    mongo_database=bot.gdb,
-                    collection_name=DatabaseCollections.FORBIDDEN_ROLES,
-                    query={CommonFields.ID: guild_id}
-                )
-                if config_query and config_query[ConfigFields.FORBIDDEN_ROLES]:
-                    for name in config_query[ConfigFields.FORBIDDEN_ROLES]:
-                        custom_forbidden_names.append(name)
 
-                if (party_role_name.lower() in default_forbidden_names or
-                        party_role_name.lower() in custom_forbidden_names):
-                    raise UserFeedbackError('The name provided for the party role is forbidden.')
+            if self.quest_role_mode == 'temporary' and self.quest_party_role_text_input:
+                party_role_name = self.quest_party_role_text_input.value
+                if party_role_name:
+                    default_forbidden_names = [
+                        'everyone',
+                        'administrator',
+                        'game master',
+                        'gm',
+                    ]
+                    custom_forbidden_names = []
+                    config_query = await get_cached_data(
+                        bot=bot,
+                        mongo_database=bot.gdb,
+                        collection_name=DatabaseCollections.FORBIDDEN_ROLES,
+                        query={CommonFields.ID: guild_id}
+                    )
+                    if config_query and config_query[ConfigFields.FORBIDDEN_ROLES]:
+                        for name in config_query[ConfigFields.FORBIDDEN_ROLES]:
+                            custom_forbidden_names.append(name)
 
-                for role in guild.roles:
-                    if role.name.lower() == party_role_name.lower():
-                        raise UserFeedbackError('A role with that name already exists in this server.')
+                    if (party_role_name.lower() in default_forbidden_names or
+                            party_role_name.lower() in custom_forbidden_names):
+                        raise UserFeedbackError(
+                            t(DEFAULT_LOCALE, 'gm-error-forbidden-role-name'),
+                            message_id='gm-error-forbidden-role-name'
+                        )
 
-                party_role = await guild.create_role(
-                    name=party_role_name,
-                    reason=f'Automated party role creation from ReQuest for quest ID {quest_id}. Requested by '
-                           f'game master: {interaction.user.mention}.'
-                )
-                party_role_id = party_role.id
+                    for role in guild.roles:
+                        if role.name.lower() == party_role_name.lower():
+                            raise UserFeedbackError(
+                                t(DEFAULT_LOCALE, 'gm-error-role-already-exists'),
+                                message_id='gm-error-role-already-exists'
+                            )
+
+                    party_role = await guild.create_role(
+                        name=party_role_name,
+                        reason=f'Automated party role creation from ReQuest for quest ID {quest_id}. Requested by '
+                               f'game master: {interaction.user.mention}.'
+                    )
+                    party_role_id = party_role.id
+            elif self.quest_role_mode == 'static' and self.quest_party_role_label:
+                selected_value = self.quest_party_role_label.component.values[0]
+                if selected_value != 'none':
+                    party_role_id = int(selected_value)
 
             # Get the server's wait list configuration
             wait_list_query = await get_cached_data(
@@ -139,8 +178,8 @@ class CreateQuestModal(Modal):
             # Inform user if quest channel is not set. Otherwise, get the channel string
             if not quest_channel_query:
                 raise UserFeedbackError(
-                    'A channel has not yet been designated for quest posts. Contact a server admin to configure the '
-                    'Quest Channel.'
+                    t(DEFAULT_LOCALE, 'gm-error-no-quest-channel'),
+                    message_id='gm-error-no-quest-channel'
                 )
             else:
                 quest_channel_mention = quest_channel_query[ConfigFields.QUEST_CHANNEL]
@@ -174,8 +213,12 @@ class CreateQuestModal(Modal):
                     await ping_msg.delete()
                 except discord.errors.Forbidden:
                     raise UserFeedbackError(
-                        f'Could not ping announce role {announce_role} in channel {quest_channel.mention}. Check '
-                        f'channel and ReQuest role permissions with your server admin(s).')
+                        t(
+                            DEFAULT_LOCALE, 'gm-error-cannot-ping-announce',
+                            role=str(announce_role), channel=quest_channel.mention
+                        ),
+                        message_id='gm-error-cannot-ping-announce'
+                    )
 
             quest = {
                 QuestFields.GUILD_ID: guild_id,
@@ -188,6 +231,7 @@ class CreateQuestModal(Modal):
                 QuestFields.GM: author_id,
                 QuestFields.PARTY: party,
                 QuestFields.PARTY_ROLE_ID: party_role_id,
+                QuestFields.QUEST_ROLE_MODE: self.quest_role_mode,
                 QuestFields.WAIT_LIST: wait_list,
                 QuestFields.MAX_WAIT_LIST_SIZE: max_wait_list_size,
                 QuestFields.LOCK_STATE: lock_state,
@@ -196,7 +240,7 @@ class CreateQuestModal(Modal):
 
             from ReQuest.ui.gm.views import QuestPostView
             view = QuestPostView(quest)
-            await view.setup()
+            await view.setup(bot=bot)
             msg = await quest_channel.send(embed=view.embed, view=view)
             quest[QuestFields.MESSAGE_ID] = msg.id
 
@@ -216,9 +260,9 @@ class CreateQuestModal(Modal):
             await log_exception(e, interaction)
 
 
-class EditQuestModal(Modal):
+class EditQuestModal(LocaleModal):
     def __init__(self, calling_view, quest):
-        header = f'Editing {quest[QuestFields.TITLE]}'
+        header = t(DEFAULT_LOCALE, 'gm-modal-title-editing-quest', questTitle=quest[QuestFields.TITLE])
         if len(header) > 45:
             header = header[:42] + '...'
         super().__init__(
@@ -236,28 +280,28 @@ class EditQuestModal(Modal):
 
         # Build the text inputs w/ the existing values
         self.title_text_input = discord.ui.TextInput(
-            label='Title',
+            label=t(DEFAULT_LOCALE, 'gm-modal-label-title'),
             style=discord.TextStyle.short,
             default=title,
             custom_id='title_text_input',
             required=False
         )
         self.restrictions_text_input = discord.ui.TextInput(
-            label='Restrictions',
+            label=t(DEFAULT_LOCALE, 'gm-modal-label-restrictions'),
             style=discord.TextStyle.short,
             default=restrictions,
             custom_id='restrictions_text_input',
             required=False
         )
         self.max_party_size_text_input = discord.ui.TextInput(
-            label='Max Party Size',
+            label=t(DEFAULT_LOCALE, 'gm-modal-label-max-party-size'),
             style=discord.TextStyle.short,
             default=max_party_size,
             custom_id='max_party_size_text_input',
             required=False
         )
         self.description_text_input = discord.ui.TextInput(
-            label='Description',
+            label=t(DEFAULT_LOCALE, 'gm-modal-label-description'),
             style=discord.TextStyle.paragraph,
             default=description,
             custom_id='description_text_input',
@@ -320,10 +364,10 @@ class EditQuestModal(Modal):
             await log_exception(e, interaction)
 
 
-class RewardsModal(Modal):
+class RewardsModal(LocaleModal):
     def __init__(self, caller, calling_view, reward_type: RewardType):
         super().__init__(
-            title='Add Reward',
+            title=t(DEFAULT_LOCALE, 'gm-modal-title-add-reward'),
             timeout=600
         )
         self.caller = caller
@@ -340,10 +384,10 @@ class RewardsModal(Modal):
             xp_value = rewards.get(QuestFields.XP)
             xp_default = str(xp_value) if xp_value is not None else '0'
             self.xp_input = discord.ui.TextInput(
-                label='Experience Points',
+                label=t(DEFAULT_LOCALE, 'gm-modal-label-experience'),
                 style=discord.TextStyle.short,
                 custom_id='experience_text_input',
-                placeholder='Enter a number',
+                placeholder=t(DEFAULT_LOCALE, 'gm-modal-placeholder-experience'),
                 default=xp_default,
                 required=False
             )
@@ -355,12 +399,10 @@ class RewardsModal(Modal):
             items_default = '\n'.join(lines)
 
         self.item_input = discord.ui.TextInput(
-            label='Items',
+            label=t(DEFAULT_LOCALE, 'gm-modal-label-items'),
             style=discord.TextStyle.paragraph,
             custom_id='items_text_input',
-            placeholder='item: quantity\n'
-                        'item2: quantity\n'
-                        'etc.',
+            placeholder=t(DEFAULT_LOCALE, 'gm-modal-placeholder-items'),
             default=items_default,
             required=False
         )
@@ -371,7 +413,13 @@ class RewardsModal(Modal):
             xp = 0
             items = None
             if self.xp_enabled and hasattr(self, 'xp_input') and self.xp_input.value:
-                xp = int(self.xp_input.value)
+                try:
+                    xp = int(self.xp_input.value)
+                except ValueError:
+                    raise UserFeedbackError(
+                        t(DEFAULT_LOCALE, 'gm-error-invalid-xp-value'),
+                        message_id='gm-error-invalid-xp-value'
+                    )
             if self.item_input.value:
                 if self.item_input.value.lower() == 'none':
                     items = 'none'
@@ -383,8 +431,8 @@ class RewardsModal(Modal):
                             items[titlecase(item_name.strip())] = int(quantity.strip())
                         except ValueError:
                             raise UserFeedbackError(
-                                f'Invalid item format: "{item}". Each item must be on a new line, and in the format '
-                                f'"Name: Quantity".'
+                                t(DEFAULT_LOCALE, 'gm-error-invalid-item-format', item=item),
+                                message_id='gm-error-invalid-item-format'
                             )
 
             await self.caller.modal_callback(interaction, xp, items)
@@ -392,18 +440,18 @@ class RewardsModal(Modal):
             await log_exception(e, interaction)
 
 
-class QuestSummaryModal(Modal):
+class QuestSummaryModal(LocaleModal):
     def __init__(self, calling_view):
         super().__init__(
-            title='Add Quest Summary',
+            title=t(DEFAULT_LOCALE, 'gm-modal-title-add-summary'),
             timeout=None
         )
         self.calling_view = calling_view
         self.summary_input = discord.ui.TextInput(
-            label='Summary',
+            label=t(DEFAULT_LOCALE, 'gm-modal-label-summary'),
             style=discord.TextStyle.paragraph,
             custom_id='summary_input',
-            placeholder='Add a story summary of the quest'
+            placeholder=t(DEFAULT_LOCALE, 'gm-modal-placeholder-summary')
         )
         self.add_item(self.summary_input)
 
@@ -414,10 +462,10 @@ class QuestSummaryModal(Modal):
             await log_exception(e, interaction)
 
 
-class ModPlayerModal(Modal):
+class ModPlayerModal(LocaleModal):
     def __init__(self, member: discord.Member, character_id, character_data, xp_enabled=True):
         super().__init__(
-            title=f'Modifying {member.name}',
+            title=t(DEFAULT_LOCALE, 'gm-modal-title-modifying-player', playerName=member.name),
             timeout=600
         )
         self.member = member
@@ -427,19 +475,17 @@ class ModPlayerModal(Modal):
 
         if self.xp_enabled:
             self.experience_text_input = discord.ui.TextInput(
-                label='Experience Points',
-                placeholder='Enter a positive or negative number.',
+                label=t(DEFAULT_LOCALE, 'gm-modal-label-experience'),
+                placeholder=t(DEFAULT_LOCALE, 'gm-modal-placeholder-xp-add-remove'),
                 custom_id='experience_text_input',
                 required=False
             )
             self.add_item(self.experience_text_input)
 
         self.inventory_text_input = discord.ui.TextInput(
-            label='Inventory',
+            label=t(DEFAULT_LOCALE, 'gm-modal-label-inventory'),
             style=discord.TextStyle.paragraph,
-            placeholder='item: quantity\n'
-                        'item2: quantity\n'
-                        'etc.',
+            placeholder=t(DEFAULT_LOCALE, 'gm-modal-placeholder-inventory-modify'),
             custom_id='inventory_text_input',
             required=False
         )
@@ -502,18 +548,9 @@ class ModPlayerModal(Modal):
                         item_changes[item_name.lower()] = (item_changes.get(item_name.lower(), 0) +
                                                            int(quantity))
 
-            mod_summary_embed = discord.Embed(
-                title=f'GM Player Modification Report',
-                description=(
-                    f'Game Master: {interaction.user.mention}\n'
-                    f'Recipient: {self.member.mention} as `{self.character_data[CommonFields.NAME]}`'
-                ),
-                type='rich'
-            )
-
+            # Apply DB changes
             if self.xp_enabled and xp:
                 await update_character_experience(interaction, self.member.id, self.character_id, xp)
-                mod_summary_embed.add_field(name='Experience', value=xp)
 
             for base_currency_name, total_value in currency_changes.items():
                 if total_value == 0:
@@ -521,39 +558,72 @@ class ModPlayerModal(Modal):
                 await update_character_inventory(interaction, self.member.id, self.character_id,
                                                  base_currency_name, total_value)
 
-                display_value = f"{total_value:.2f}" if isinstance(total_value,
-                                                                   float) and total_value % 1 != 0 else str(total_value)
-                mod_summary_embed.add_field(name=escape_markdown(titlecase(base_currency_name)), value=display_value)
-
             for item_name, quantity in item_changes.items():
                 if quantity == 0:
                     continue
                 await update_character_inventory(interaction, self.member.id, self.character_id,
                                                  item_name.lower(), int(quantity))
-                mod_summary_embed.add_field(name=escape_markdown(titlecase(item_name)), value=int(quantity))
 
             transaction_id = shortuuid.uuid()[:12]
-            mod_summary_embed.set_footer(text=f'Transaction ID: {transaction_id}')
+            description = (
+                f'Game Master: {interaction.user.mention}\n'
+                f'Recipient: {self.member.mention} as `{self.character_data[CommonFields.NAME]}`'
+            )
 
+            def build_mod_embed(loc):
+                embed = discord.Embed(
+                    title=t(loc, 'gm-embed-title-mod-report'),
+                    description=description,
+                    type='rich'
+                )
+                if self.xp_enabled and xp:
+                    embed.add_field(name=t(loc, 'gm-embed-field-experience'), value=xp)
+                for cn, tv in currency_changes.items():
+                    if tv == 0:
+                        continue
+                    dv = f"{tv:.2f}" if isinstance(tv, float) and tv % 1 != 0 else str(tv)
+                    embed.add_field(name=escape_markdown(titlecase(cn)), value=dv)
+                for itn, qty in item_changes.items():
+                    if qty == 0:
+                        continue
+                    embed.add_field(name=escape_markdown(titlecase(itn)), value=int(qty))
+                embed.set_footer(text=t(loc, 'common-embed-footer-transaction-id', transactionId=transaction_id))
+                return embed
+
+            # Ephemeral response to GM in their locale
+            caller_locale = await resolve_locale(interaction)
+            guild_locale = await resolve_guild_locale(bot, guild_id)
+
+            caller_embed = build_mod_embed(caller_locale)
+            await interaction.response.send_message(embed=caller_embed, ephemeral=True)
+
+            # Log channel in guild locale
             if log_channel:
-                await log_channel.send(embed=mod_summary_embed)
+                if guild_locale != caller_locale:
+                    await log_channel.send(embed=build_mod_embed(guild_locale))
+                else:
+                    await log_channel.send(embed=caller_embed)
 
-            await interaction.response.send_message(embed=mod_summary_embed, ephemeral=True)
+            # DM to target member in their locale
             try:
-                await self.member.send(embed=mod_summary_embed)
+                member_locale = await resolve_user_locale(bot, self.member.id, guild_id)
+                if member_locale != caller_locale:
+                    await self.member.send(embed=build_mod_embed(member_locale))
+                else:
+                    await self.member.send(embed=caller_embed)
             except discord.errors.Forbidden as e:
                 logger.warning(f'Could not send DM to {self.member} regarding GM modification: {e}')
         except Exception as e:
             await log_exception(e, interaction)
 
 
-class ReviewSubmissionInputModal(Modal):
+class ReviewSubmissionInputModal(LocaleModal):
     def __init__(self, calling_view):
-        super().__init__(title="Review Submission", timeout=180)
+        super().__init__(title=t(DEFAULT_LOCALE, 'gm-modal-title-review-submission'), timeout=180)
         self.calling_view = calling_view
         self.submission_id_text_input = discord.ui.TextInput(
-            label="Submission ID",
-            placeholder="Enter the 8-char ID",
+            label=t(DEFAULT_LOCALE, 'gm-modal-label-submission-id'),
+            placeholder=t(DEFAULT_LOCALE, 'gm-modal-placeholder-submission-id'),
             min_length=8,
             max_length=8
         )
@@ -573,7 +643,10 @@ class ReviewSubmissionInputModal(Modal):
             )
 
             if not data:
-                await interaction.response.send_message("Submission not found.", ephemeral=True)
+                await interaction.response.send_message(
+                    t(DEFAULT_LOCALE, 'gm-error-submission-not-found'),
+                    ephemeral=True
+                )
                 return
 
             currency_config = await get_cached_data(

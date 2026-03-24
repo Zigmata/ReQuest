@@ -3,17 +3,17 @@ import json
 import logging
 import re
 import traceback
+from datetime import datetime, timezone, timedelta
 from typing import Tuple
 
 import discord
 import shortuuid
 from discord import app_commands
 from titlecase import titlecase
-from datetime import datetime, timezone, timedelta
 
 from ReQuest.utilities.constants import (
     CharacterFields, QuestFields, ShopFields, CurrencyFields,
-    ConfigFields, RoleplayFields, RestockFields, CartFields, ContainerFields, CommonFields,
+    ConfigFields, RestockFields, CartFields, ContainerFields, CommonFields,
     DatabaseCollections
 )
 
@@ -23,8 +23,34 @@ logger = logging.getLogger(__name__)
 class UserFeedbackError(Exception):
     """
     This is used for errors that should be reported to the user directly but do not need to log a stack trace.
+
+    Supports optional lazy localization via message_id and variables.
+    Existing usage (raw string) continues to work unchanged.
     """
-    pass
+
+    def __init__(self, message, *, message_id=None, **variables):
+        self.message_id = message_id
+        self.variables = variables
+        super().__init__(message)
+
+    def resolve(self, locale):
+        if self.message_id:
+            from ReQuest.utilities.localizer import t
+            return t(locale, self.message_id, **self.variables)
+        return str(self)
+
+
+def check_role_hierarchy(guild: discord.Guild, role: discord.Role):
+    """Raises UserFeedbackError if the bot cannot manage the given role due to hierarchy."""
+    from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
+    bot_top_role = guild.me.top_role
+    if role >= bot_top_role:
+        raise UserFeedbackError(
+            t(DEFAULT_LOCALE, 'gm-error-role-hierarchy', roleName=role.name, roleId=str(role.id)),
+            message_id='gm-error-role-hierarchy',
+            roleName=role.name,
+            roleId=str(role.id)
+        )
 
 
 def build_cache_key(database_name, identifier, collection_name):
@@ -246,21 +272,30 @@ async def log_exception(exception, interaction=None):
     """
     Logs an exception and sends a user-friendly message if interaction is provided.
     """
-    report_string = (
-        f'An exception occurred:\n\n'
-        f'```{str(exception)}```\n'
-        f'If this error is unexpected, or you suspect the bot is not functioning correctly, please submit a bug report '
-        f'in the [Official ReQuest Support Discord](https://discord.gg/Zq37gj4).'
-    )
+    from ReQuest.utilities.localizer import resolve_locale, t, DEFAULT_LOCALE
+
+    locale = DEFAULT_LOCALE
+    if interaction:
+        try:
+            locale = await resolve_locale(interaction)
+        except Exception:
+            pass
+
+    if isinstance(exception, app_commands.CommandInvokeError):
+        exception = exception.original
+
+    # Resolve the display message for UserFeedbackError
+    exception_text = str(exception)
+    if isinstance(exception, UserFeedbackError):
+        exception_text = exception.resolve(locale)
+
+    report_string = t(locale, 'error-report-description', exception=exception_text)
     error_embed = discord.Embed(
-        title='⚠️ Oops!',
+        title=t(locale, 'error-oops-title'),
         description=report_string,
         color=discord.Color.red(),
         type='rich'
     )
-
-    if isinstance(exception, app_commands.CommandInvokeError):
-        exception = exception.original
 
     if isinstance(exception, (UserFeedbackError, app_commands.CheckFailure)):
         logger.debug(f'User feedback triggered: {exception}\nUser: {interaction.user.id if interaction else "Unknown"}')
@@ -399,7 +434,10 @@ async def trade_currency(interaction, currency_name, amount, sending_member_id, 
         query={CommonFields.ID: receiving_member_id}
     )
     sender_character_id = sender_data[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
-    sender_currency = sender_data[CharacterFields.CHARACTERS][sender_character_id][CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {})
+    sender_currency = (
+        sender_data[CharacterFields.CHARACTERS][sender_character_id][CharacterFields.ATTRIBUTES]
+        .get(CharacterFields.CURRENCY, {})
+    )
     receiver_character_id = receiver_data[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
 
     currency_config = await get_cached_data(
@@ -414,7 +452,8 @@ async def trade_currency(interaction, currency_name, amount, sending_member_id, 
 
     can_afford, message = check_sufficient_funds(sender_currency, currency_config, currency_name, amount)
     if not can_afford:
-        raise UserFeedbackError(f'The transaction cannot be completed:\n{message}')
+        raise UserFeedbackError(f'The transaction cannot be completed:\n{message}',
+                                message_id='error-transaction-cannot-complete', reason=message)
 
     await update_character_inventory(interaction, sending_member_id, sender_character_id, currency_name, -amount)
     await update_character_inventory(interaction, receiving_member_id, receiver_character_id, currency_name, amount)
@@ -431,8 +470,14 @@ async def trade_currency(interaction, currency_name, amount, sending_member_id, 
         collection_name=DatabaseCollections.CHARACTERS,
         query={CommonFields.ID: receiving_member_id}
     )
-    updated_sender_currency = updated_sender_data[CharacterFields.CHARACTERS][sender_character_id][CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY)
-    updated_receiver_currency = updated_receiver_data[CharacterFields.CHARACTERS][receiver_character_id][CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY)
+    updated_sender_currency = (
+        updated_sender_data[CharacterFields.CHARACTERS][sender_character_id][CharacterFields.ATTRIBUTES]
+        .get(CharacterFields.CURRENCY)
+    )
+    updated_receiver_currency = (
+        updated_receiver_data[CharacterFields.CHARACTERS][receiver_character_id][CharacterFields.ATTRIBUTES]
+        .get(CharacterFields.CURRENCY)
+    )
 
     return updated_sender_currency, updated_receiver_currency
 
@@ -465,7 +510,10 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
     quantity_owned = get_total_item_quantity(sender_character, item_name)
     if quantity_owned < quantity:
         raise UserFeedbackError(f'You have {quantity_owned}x {titlecase(normalized_item_name)} but are trying to give '
-                                f'{quantity}.')
+                                f'{quantity}.',
+                                message_id='error-insufficient-item-trade',
+                                itemName=titlecase(normalized_item_name), owned=str(quantity_owned),
+                                quantity=str(quantity))
 
     # Get item locations and remove items (loose items first, then containers)
     locations = get_item_locations(sender_character, item_name)
@@ -492,7 +540,10 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
                     break
         else:
             # Remove from container
-            container_items = sender_character[CharacterFields.ATTRIBUTES][CharacterFields.CONTAINERS][container_id].get(CharacterFields.ITEMS, {})
+            container_items = (
+                sender_character[CharacterFields.ATTRIBUTES][CharacterFields.CONTAINERS][container_id]
+                .get(CharacterFields.ITEMS, {})
+            )
             for key in list(container_items.keys()):
                 if key.lower() == normalized_item_name:
                     container_items[key] -= remove_from_here
@@ -518,11 +569,16 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
 
     # Update sender's character data
     sender_update = {
-        f'{CharacterFields.CHARACTERS}.{sender_character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}': sender_character[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
+        f'{CharacterFields.CHARACTERS}.{sender_character_id}.{CharacterFields.ATTRIBUTES}'
+        f'.{CharacterFields.INVENTORY}': sender_character[CharacterFields.ATTRIBUTES]
+        .get(CharacterFields.INVENTORY, {})
     }
     # Include container updates if containers exist
     if sender_character[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS):
-        sender_update[f'{CharacterFields.CHARACTERS}.{sender_character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}'] = sender_character[CharacterFields.ATTRIBUTES][CharacterFields.CONTAINERS]
+        sender_update[
+            f'{CharacterFields.CHARACTERS}.{sender_character_id}'
+            f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}'
+        ] = sender_character[CharacterFields.ATTRIBUTES][CharacterFields.CONTAINERS]
 
     await update_cached_data(
         bot=bot,
@@ -538,7 +594,10 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
         mongo_database=bot.mdb,
         collection_name=DatabaseCollections.CHARACTERS,
         query={CommonFields.ID: receiving_member_id},
-        update_data={'$set': {f'{CharacterFields.CHARACTERS}.{receiver_character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}': receiver_inventory}}
+        update_data={'$set': {
+            f'{CharacterFields.CHARACTERS}.{receiver_character_id}'
+            f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}': receiver_inventory
+        }}
     )
 
 
@@ -555,11 +614,11 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
             query={CommonFields.ID: player_id}
         )
         if not player_data:
-            raise UserFeedbackError('Player data not found.')
+            raise UserFeedbackError('Player data not found.', message_id='error-player-not-found')
 
         character_data = player_data[CharacterFields.CHARACTERS].get(character_id)
         if not character_data:
-            raise UserFeedbackError('Character data not found.')
+            raise UserFeedbackError('Character data not found.', message_id='error-character-not-found')
 
         currency_query = await get_cached_data(
             bot=bot,
@@ -575,13 +634,16 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
         if is_currency:
             denomination_map, _ = get_denomination_map(currency_query, normalized_item_name)
             if not denomination_map:
-                raise UserFeedbackError(f"Currency {item_name} could not be processed.")
+                raise UserFeedbackError(f"Currency {item_name} could not be processed.",
+                                        message_id='error-currency-process-failed', currencyName=item_name)
 
             min_value = min(denomination_map.values())
             if min_value <= 0:
                 raise Exception(f"Currency {currency_parent_name} has a non-positive denomination value.")
 
-            character_currency = normalize_currency_keys(character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {}))
+            character_currency = normalize_currency_keys(
+                character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {})
+            )
 
             total_in_lowest_denom = 0.0
             for denom, value in denomination_map.items():
@@ -593,7 +655,8 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
 
             tolerance = 1e-9
             if total_in_lowest_denom < -tolerance:
-                raise UserFeedbackError(f"Insufficient funds to cover this transaction.")
+                raise UserFeedbackError("Insufficient funds to cover this transaction.",
+                                        message_id='error-insufficient-funds-transaction')
 
             if total_in_lowest_denom < 0:
                 total_in_lowest_denom = 0
@@ -606,7 +669,9 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
                     new_character_currency[denom] = qty
                     total_in_lowest_denom %= denom_value_in_lowest
 
-            final_wallet = normalize_currency_keys(character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {}))
+            final_wallet = normalize_currency_keys(
+                character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {})
+            )
 
             for denom_name in denomination_map.keys():
                 if denom_name in new_character_currency:
@@ -621,10 +686,15 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
                 mongo_database=bot.mdb,
                 collection_name=DatabaseCollections.CHARACTERS,
                 query={CommonFields.ID: player_id},
-                update_data={'$set': {f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CURRENCY}': character_currency_db}}
+                update_data={'$set': {
+                    f'{CharacterFields.CHARACTERS}.{character_id}'
+                    f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.CURRENCY}': character_currency_db
+                }}
             )
         else:
-            character_inventory = normalize_currency_keys(character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {}))
+            character_inventory = normalize_currency_keys(
+                character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
+            )
             found_key = normalized_item_name
 
             if found_key in character_inventory:
@@ -634,7 +704,8 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
             elif quantity > 0:
                 character_inventory[normalized_item_name] = int(quantity)
             elif quantity < 0:
-                raise UserFeedbackError(f"Insufficient item(s): {titlecase(item_name)}")
+                raise UserFeedbackError(f"Insufficient item(s): {titlecase(item_name)}",
+                                        message_id='error-insufficient-items', itemName=titlecase(item_name))
 
             inventory_for_db = {titlecase(k): v for k, v in character_inventory.items()}
 
@@ -643,7 +714,10 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
                 mongo_database=bot.mdb,
                 collection_name=DatabaseCollections.CHARACTERS,
                 query={CommonFields.ID: player_id},
-                update_data={'$set': {f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}': inventory_for_db}}
+                update_data={'$set': {
+                    f'{CharacterFields.CHARACTERS}.{character_id}'
+                    f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}': inventory_for_db
+                }}
             )
     except Exception as e:
         await log_exception(e, interaction)
@@ -660,11 +734,11 @@ async def update_character_experience(interaction, player_id: int, character_id:
             query={CommonFields.ID: player_id}
         )
         if not player_data:
-            raise UserFeedbackError('Player data not found.')
+            raise UserFeedbackError('Player data not found.', message_id='error-player-not-found')
 
         character_data = player_data[CharacterFields.CHARACTERS].get(character_id)
         if not character_data:
-            raise UserFeedbackError('Character data not found.')
+            raise UserFeedbackError('Character data not found.', message_id='error-character-not-found')
 
         if character_data[CharacterFields.ATTRIBUTES][CharacterFields.EXPERIENCE]:
             character_data[CharacterFields.ATTRIBUTES][CharacterFields.EXPERIENCE] += amount
@@ -682,14 +756,19 @@ async def update_character_experience(interaction, player_id: int, character_id:
         await log_exception(e, interaction)
 
 
-async def update_quest_embed(quest: dict) -> discord.Embed | None:
+async def update_quest_embed(quest: dict, locale: str | None = None) -> discord.Embed | None:
     """
     Updates a quest embed based on the current quest data.
 
     :param quest: The quest data dictionary
+    :param locale: Locale to use for static labels (defaults to DEFAULT_LOCALE)
 
     :return: Updated discord.Embed object
     """
+    from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
+    if locale is None:
+        locale = DEFAULT_LOCALE
+
     try:
         embed = discord.Embed()
 
@@ -706,22 +785,24 @@ async def update_quest_embed(quest: dict) -> discord.Embed | None:
         lock_state = quest[QuestFields.LOCK_STATE]
 
         # Format the main embed body
+        gm_label = t(locale, 'common-embed-label-gm')
         if restrictions:
+            restrictions_label = t(locale, 'common-embed-label-party-restrictions')
             post_description = (
-                f'**GM:** <@!{gm}>\n'
-                f'**Party Restrictions:** {restrictions}\n\n'
+                f'{gm_label} <@!{gm}>\n'
+                f'{restrictions_label} {restrictions}\n\n'
                 f'{description}\n\n'
                 f'------'
             )
         else:
             post_description = (
-                f'**GM:** <@!{gm}>\n\n'
+                f'{gm_label} <@!{gm}>\n\n'
                 f'{description}\n\n'
                 f'------'
             )
 
         if lock_state:
-            title = title + ' (LOCKED)'
+            title = title + ' ' + t(locale, 'common-label-locked')
 
         current_party_size = len(party)
         current_wait_list_size = 0
@@ -752,8 +833,8 @@ async def update_quest_embed(quest: dict) -> discord.Embed | None:
         if formatted_party:
             party_string = '\n'.join(formatted_party)
         else:
-            party_string = 'None'
-        embed.add_field(name=f'__Party ({current_party_size}/{max_party_size})__',
+            party_string = t(locale, 'common-label-none')
+        embed.add_field(name=f'{t(locale, "common-embed-field-party")} ({current_party_size}/{max_party_size})',
                         value=party_string)
 
         # Add a wait list field if one is present, unless the quest is being archived.
@@ -761,12 +842,17 @@ async def update_quest_embed(quest: dict) -> discord.Embed | None:
             if formatted_wait_list:
                 wait_list_string = '\n'.join(formatted_wait_list)
             else:
-                wait_list_string = 'None'
+                wait_list_string = t(locale, 'common-label-none')
 
-            embed.add_field(name=f'__Wait List ({current_wait_list_size}/{max_wait_list_size})__',
-                            value=wait_list_string)
+            embed.add_field(
+                name=(
+                    f'{t(locale, "common-embed-field-wait-list")}'
+                    f' ({current_wait_list_size}/{max_wait_list_size})'
+                ),
+                value=wait_list_string
+            )
 
-        embed.set_footer(text='Quest ID: ' + quest_id)
+        embed.set_footer(text=t(locale, 'common-embed-footer-quest-id', questId=quest_id))
 
         return embed
     except Exception as e:
@@ -786,7 +872,14 @@ def find_member_and_character_id_in_lists(lists, selected_member_id):
 async def setup_view(view, interaction: discord.Interaction):
     """
     Dynamically sets up a view by inspecting its setup method for required parameters.
+    Resolves and propagates the user's locale to the view before calling setup().
     """
+    from ReQuest.utilities.localizer import resolve_locale, set_locale_context
+
+    locale = await resolve_locale(interaction)
+    set_locale_context(locale)
+    view.locale = locale
+
     setup_function = view.setup
     sig = inspect.signature(setup_function)
     params = sig.parameters
@@ -824,7 +917,8 @@ def get_denomination_map(currency_config: dict, currency_name: str) -> Tuple[dic
         return None, None
 
     parent_currency_config = next(
-        (currency for currency in currency_config[CurrencyFields.CURRENCIES] if currency[CommonFields.NAME].lower() == parent_name.lower()),
+        (currency for currency in currency_config[CurrencyFields.CURRENCIES]
+         if currency[CommonFields.NAME].lower() == parent_name.lower()),
         None
     )
 
@@ -852,6 +946,8 @@ def check_sufficient_funds(player_currency: dict, currency_config: dict, cost_cu
              - A boolean indicating if the player has sufficient funds
              - A message string indicating success or the reason for failure
     """
+    from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
+
     try:
         if cost_amount <= 0:
             return True, "OK"
@@ -859,15 +955,15 @@ def check_sufficient_funds(player_currency: dict, currency_config: dict, cost_cu
         denomination_map, _ = get_denomination_map(currency_config, cost_currency_name.lower())
 
         if not denomination_map:
-            return False, f"Currency '{cost_currency_name}' is not configured on this server."
+            return False, t(DEFAULT_LOCALE, 'error-currency-not-configured', currencyName=cost_currency_name)
 
         cost_name_lower = cost_currency_name.lower()
         if cost_name_lower not in denomination_map:
-            return False, f"Cost currency '{cost_currency_name}' is not part of its own currency system."
+            return False, t(DEFAULT_LOCALE, 'error-cost-currency-system-mismatch', currencyName=cost_currency_name)
 
         min_value = min(denomination_map.values())
         if min_value <= 0:
-            return False, "Currency configuration error: 0 or negative denomination value."
+            return False, t(DEFAULT_LOCALE, 'error-currency-config-error')
 
         norm_player_currency = normalize_currency_keys(player_currency)
         player_total_value = 0.0
@@ -881,13 +977,13 @@ def check_sufficient_funds(player_currency: dict, currency_config: dict, cost_cu
 
         tolerance = 1e-9
         if player_total_value + tolerance < cost_total_value:
-            return False, "Insufficient funds."
+            return False, t(DEFAULT_LOCALE, 'error-insufficient-funds')
 
         return True, "OK"
     except Exception as e:
         logger.error(f"Error in check_sufficient_funds: {e}")
         logger.error(traceback.format_exc())
-        return False, f"An error occurred during currency validation: {e}"
+        return False, t(DEFAULT_LOCALE, 'error-currency-validation', error=str(e))
 
 
 def apply_item_change_local(character_data: dict, item_name: str, quantity: int) -> dict:
@@ -912,9 +1008,12 @@ def apply_item_change_local(character_data: dict, item_name: str, quantity: int)
     elif quantity > 0:
         inventory[item_name.lower()] = int(quantity)
     elif quantity < 0:
-        raise UserFeedbackError(f"Insufficient item(s): {titlecase(item_name)}")
+        raise UserFeedbackError(f"Insufficient item(s): {titlecase(item_name)}",
+                                message_id='error-insufficient-items', itemName=titlecase(item_name))
 
-    character_data[CharacterFields.ATTRIBUTES][CharacterFields.INVENTORY] = {titlecase(k): v for k, v in inventory.items()}
+    character_data[CharacterFields.ATTRIBUTES][CharacterFields.INVENTORY] = {
+        titlecase(k): v for k, v in inventory.items()
+    }
     return character_data
 
 
@@ -933,17 +1032,21 @@ def apply_currency_change_local(character_data: dict, currency_config: dict, ite
     is_currency, currency_parent_name = find_currency_or_denomination(currency_config, normalized_item_name)
 
     if not is_currency:
-        raise UserFeedbackError(f'{item_name} is not a valid currency.')
+        raise UserFeedbackError(f'{item_name} is not a valid currency.',
+                                message_id='error-invalid-currency', itemName=item_name)
 
     denomination_map, _ = get_denomination_map(currency_config, normalized_item_name)
     if not denomination_map:
-        raise UserFeedbackError(f'Currency {item_name} could not be processed.')
+        raise UserFeedbackError(f'Currency {item_name} could not be processed.',
+                                message_id='error-currency-process-failed', currencyName=item_name)
 
     min_value = min(denomination_map.values())
     if min_value <= 0:
         raise Exception(f'Currency {currency_parent_name} has a non-positive denomination value.')
 
-    character_currency = normalize_currency_keys(character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {}))
+    character_currency = normalize_currency_keys(
+        character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {})
+    )
 
     total_in_lowest_denom = 0.0
     for denom, value in denomination_map.items():
@@ -955,7 +1058,8 @@ def apply_currency_change_local(character_data: dict, currency_config: dict, ite
 
     tolerance = 1e-9
     if total_in_lowest_denom < -tolerance:
-        raise UserFeedbackError('Insufficient funds for this transaction.')
+        raise UserFeedbackError('Insufficient funds for this transaction.',
+                                message_id='error-insufficient-funds-for-transaction')
     if total_in_lowest_denom < 0:
         total_in_lowest_denom = 0.0
 
@@ -967,14 +1071,18 @@ def apply_currency_change_local(character_data: dict, currency_config: dict, ite
             new_character_currency[denom] = qty
             total_in_lowest_denom %= denom_value_in_lowest
 
-    final_wallet = normalize_currency_keys(character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {}))
+    final_wallet = normalize_currency_keys(
+        character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {})
+    )
     for denom_name in denomination_map.keys():
         if denom_name in new_character_currency:
             final_wallet[denom_name] = new_character_currency[denom_name]
         elif denom_name in final_wallet:
             del final_wallet[denom_name]
 
-    character_data[CharacterFields.ATTRIBUTES][CharacterFields.CURRENCY] = {titlecase(k): v for k, v in final_wallet.items() if v > 0}
+    character_data[CharacterFields.ATTRIBUTES][CharacterFields.CURRENCY] = {
+        titlecase(k): v for k, v in final_wallet.items() if v > 0
+    }
     return character_data
 
 
@@ -1102,6 +1210,7 @@ def format_currency_amount(amount, currency_name, currency_config) -> str:
     :return: A formatted amount string (e.g. '50' for integer, '2.50' for double)
     """
     _, _, is_double = get_base_currency_info(currency_config, currency_name)
+    amount = float(amount)
 
     if is_double:
         return f'{amount:.2f}'
@@ -1161,9 +1270,10 @@ def format_complex_cost(costs: list, currency_config: dict) -> str:
 
     :return: A formatted cost string
     """
+    from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 
     if not costs:
-        return 'Free'
+        return t(DEFAULT_LOCALE, 'common-label-free')
 
     option_strings = []
     for option in costs:
@@ -1174,7 +1284,7 @@ def format_complex_cost(costs: list, currency_config: dict) -> str:
             option_strings.append(' + '.join(component_strings))
 
     if not option_strings:
-        return 'Free'
+        return t(DEFAULT_LOCALE, 'common-label-free')
 
     return ' OR\n'.join(option_strings)
 
@@ -1407,7 +1517,9 @@ async def release_stock(bot, guild_id: int, channel_id: str, item_name: str,
             {
                 '$set': {
                     f'{path}.{ShopFields.AVAILABLE}': new_available,
-                    f'{path}.{ShopFields.RESERVED}': {'$max': [0, {'$subtract': [f'${path}.{ShopFields.RESERVED}', quantity]}]}
+                    f'{path}.{ShopFields.RESERVED}': {
+                        '$max': [0, {'$subtract': [f'${path}.{ShopFields.RESERVED}', quantity]}]
+                    }
                 }
             }
         ]
@@ -1441,7 +1553,9 @@ async def finalize_stock(bot, guild_id: int, channel_id: str, item_name: str, qu
         [
             {
                 '$set': {
-                    f'{path}.{ShopFields.RESERVED}': {'$max': [0, {'$subtract': [f'${path}.{ShopFields.RESERVED}', quantity]}]}
+                    f'{path}.{ShopFields.RESERVED}': {
+                        '$max': [0, {'$subtract': [f'${path}.{ShopFields.RESERVED}', quantity]}]
+                    }
                 }
             }
         ]
@@ -1500,7 +1614,9 @@ async def increment_available_stock(bot, guild_id: int, channel_id: str, item_na
         [
             {
                 '$set': {
-                    f'{path}.{ShopFields.AVAILABLE}': {'$min': [max_stock, {'$add': [f'${path}.{ShopFields.AVAILABLE}', increment]}]}
+                    f'{path}.{ShopFields.AVAILABLE}': {
+                        '$min': [max_stock, {'$add': [f'${path}.{ShopFields.AVAILABLE}', increment]}]
+                    }
                 }
             }
         ]
@@ -1689,34 +1805,6 @@ async def get_or_create_cart(bot, guild_id: int, user_id: int, channel_id: str) 
     return new_cart
 
 
-async def update_cart_expiry(bot, guild_id: int, user_id: int, channel_id: str):
-    """
-    Extends the cart expiry to now + TTL.
-
-    :param bot: The Discord bot instance
-    :param guild_id: The guild ID
-    :param user_id: The user ID
-    :param channel_id: The shop channel ID
-    """
-    cart_id = build_cart_id(guild_id, user_id, channel_id)
-    now = datetime.now(timezone.utc)
-    expires_at = now + timedelta(minutes=CART_TTL_MINUTES)
-
-    await update_cached_data(
-        bot=bot,
-        mongo_database=bot.gdb,
-        collection_name=DatabaseCollections.SHOP_CARTS,
-        query={CommonFields.ID: cart_id},
-        update_data={
-            '$set': {
-                CartFields.UPDATED_AT: now.isoformat(),
-                CartFields.EXPIRES_AT: expires_at.isoformat()
-            }
-        },
-        cache_id=cart_id
-    )
-
-
 async def add_item_to_cart(bot, guild_id: int, user_id: int, channel_id: str,
                            item: dict, option_index: int = 0) -> bool:
     """
@@ -1878,13 +1966,15 @@ async def update_cart_item_quantity(bot, guild_id: int, user_id: int, channel_id
 
     :return: Tuple of (success, message)
     """
+    from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
+
     cart = await get_cart(bot, guild_id, user_id, channel_id)
     if not cart:
-        return False, "Cart not found."
+        return False, t(DEFAULT_LOCALE, 'error-cart-not-found')
 
     items = cart.get(CartFields.ITEMS, {})
     if cart_key not in items:
-        return False, "Item not in cart."
+        return False, t(DEFAULT_LOCALE, 'error-item-not-in-cart')
 
     cart_item = items[cart_key]
     item = cart_item[CartFields.ITEM]
@@ -1894,7 +1984,7 @@ async def update_cart_item_quantity(bot, guild_id: int, user_id: int, channel_id
     if new_quantity <= 0:
         # Remove item entirely
         await remove_item_from_cart(bot, guild_id, user_id, channel_id, cart_key, current_quantity)
-        return True, "Item removed from cart."
+        return True, t(DEFAULT_LOCALE, 'shop-msg-item-removed')
 
     quantity_diff = new_quantity - current_quantity
     has_stock_limit = item.get(ShopFields.MAX_STOCK) is not None
@@ -1906,7 +1996,7 @@ async def update_cart_item_quantity(bot, guild_id: int, user_id: int, channel_id
             item_quantity = item.get(CommonFields.QUANTITY, 1)
             success = await reserve_stock(bot, guild_id, channel_id, item_name, quantity_diff * item_quantity)
             if not success:
-                return False, "Not enough stock available."
+                return False, t(DEFAULT_LOCALE, 'error-not-enough-stock')
 
         # Update quantity
         now = datetime.now(timezone.utc)
@@ -1931,7 +2021,7 @@ async def update_cart_item_quantity(bot, guild_id: int, user_id: int, channel_id
         # Reducing quantity, release stock
         await remove_item_from_cart(bot, guild_id, user_id, channel_id, cart_key, abs(quantity_diff))
 
-    return True, "Cart updated."
+    return True, t(DEFAULT_LOCALE, 'shop-msg-cart-updated')
 
 
 async def clear_cart_and_release_stock(bot, guild_id: int, user_id: int, channel_id: str):
@@ -2074,13 +2164,15 @@ def get_containers_sorted(character_data: dict) -> list[dict]:
 
     Each dict: {'id': str|None, 'name': str, 'items': dict, 'count': int}
     """
+    from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
+
     result = []
 
     # Loose items (root inventory) is always first
     loose_items = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
     result.append({
         'id': None,
-        'name': 'Loose Items',
+        'name': t(DEFAULT_LOCALE, 'common-label-loose-items'),
         'items': loose_items,
         'count': len(loose_items)
     })
@@ -2096,7 +2188,7 @@ def get_containers_sorted(character_data: dict) -> list[dict]:
         items = container_data.get(ContainerFields.ITEMS, {})
         result.append({
             'id': container_id,
-            'name': container_data.get(ContainerFields.NAME, 'Unknown'),
+            'name': container_data.get(ContainerFields.NAME, t(DEFAULT_LOCALE, 'common-label-unknown')),
             'items': items,
             'count': len(items)
         })
@@ -2119,12 +2211,14 @@ def get_container_items(character_data: dict, container_id: str | None) -> dict:
 
 def get_container_name(character_data: dict, container_id: str | None) -> str:
     """Returns the name of a container. None returns 'Loose Items'."""
+    from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
+
     if container_id is None:
-        return 'Loose Items'
+        return t(DEFAULT_LOCALE, 'common-label-loose-items')
 
     containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
     container = containers.get(container_id, {})
-    return container.get(ContainerFields.NAME, 'Unknown')
+    return container.get(ContainerFields.NAME, t(DEFAULT_LOCALE, 'common-label-unknown'))
 
 
 def get_total_item_quantity(character_data: dict, item_name: str) -> int:
@@ -2157,6 +2251,8 @@ def get_item_locations(character_data: dict, item_name: str) -> list[dict]:
     Returns list of dicts for everywhere this item exists.
     Each dict: {'id': str|None, 'name': str, 'quantity': int}
     """
+    from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
+
     item_name_lower = item_name.lower()
     locations = []
 
@@ -2164,7 +2260,7 @@ def get_item_locations(character_data: dict, item_name: str) -> list[dict]:
     inventory = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
     for name, qty in inventory.items():
         if name.lower() == item_name_lower and qty > 0:
-            locations.append({'id': None, 'name': 'Loose Items', 'quantity': qty})
+            locations.append({'id': None, 'name': t(DEFAULT_LOCALE, 'common-label-loose-items'), 'quantity': qty})
 
     # Check all containers
     containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
@@ -2174,7 +2270,7 @@ def get_item_locations(character_data: dict, item_name: str) -> list[dict]:
             if name.lower() == item_name_lower and qty > 0:
                 locations.append({
                     'id': container_id,
-                    'name': container_data.get(ContainerFields.NAME, 'Unknown'),
+                    'name': container_data.get(ContainerFields.NAME, t(DEFAULT_LOCALE, 'common-label-unknown')),
                     'quantity': qty
                 })
 
@@ -2197,10 +2293,12 @@ def get_next_container_order(character_data: dict) -> int:
 
 def container_name_exists(character_data: dict, name: str, exclude_id: str | None = None) -> bool:
     """Check if a container name already exists (case-insensitive)."""
+    from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
+
     name_lower = name.lower()
 
     # Check against "Loose Items"
-    if name_lower == 'loose items':
+    if name_lower == t(DEFAULT_LOCALE, 'common-label-loose-items').lower():
         return True
 
     containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
@@ -2222,10 +2320,13 @@ async def create_container(bot, player_id: int, character_id: str, name: str) ->
     name = name.strip()
 
     if not name:
-        raise UserFeedbackError('Container name cannot be empty.')
+        raise UserFeedbackError('Container name cannot be empty.',
+                                message_id='error-container-name-empty')
 
     if len(name) > MAX_CONTAINER_NAME_LENGTH:
-        raise UserFeedbackError(f'Container name cannot exceed {MAX_CONTAINER_NAME_LENGTH} characters.')
+        raise UserFeedbackError(f'Container name cannot exceed {MAX_CONTAINER_NAME_LENGTH} characters.',
+                                message_id='error-container-name-too-long',
+                                maxLength=str(MAX_CONTAINER_NAME_LENGTH))
 
     player_data = await get_cached_data(
         bot=bot,
@@ -2234,17 +2335,20 @@ async def create_container(bot, player_id: int, character_id: str, name: str) ->
         query={CommonFields.ID: player_id}
     )
     if not player_data:
-        raise UserFeedbackError('Player data not found.')
+        raise UserFeedbackError('Player data not found.', message_id='error-player-not-found')
 
     character_data = player_data[CharacterFields.CHARACTERS].get(character_id)
     if not character_data:
-        raise UserFeedbackError('Character not found.')
+        raise UserFeedbackError('Character not found.', message_id='error-character-not-found')
 
     if get_container_count(character_data) >= MAX_CONTAINERS_PER_PLAYER:
-        raise UserFeedbackError(f'You cannot create more than {MAX_CONTAINERS_PER_PLAYER} containers.')
+        raise UserFeedbackError(f'You cannot create more than {MAX_CONTAINERS_PER_PLAYER} containers.',
+                                message_id='error-max-containers-reached',
+                                maxContainers=str(MAX_CONTAINERS_PER_PLAYER))
 
     if container_name_exists(character_data, name):
-        raise UserFeedbackError(f'A container named "{name}" already exists.')
+        raise UserFeedbackError(f'A container named "{name}" already exists.',
+                                message_id='error-container-name-exists', containerName=name)
 
     container_id = str(shortuuid.uuid())
     order = get_next_container_order(character_data)
@@ -2255,7 +2359,9 @@ async def create_container(bot, player_id: int, character_id: str, name: str) ->
         collection_name=DatabaseCollections.CHARACTERS,
         query={CommonFields.ID: player_id},
         update_data={'$set': {
-            f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}.{container_id}': {
+            f'{CharacterFields.CHARACTERS}.{character_id}'
+            f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}'
+            f'.{container_id}': {
                 ContainerFields.NAME: name,
                 ContainerFields.ORDER: order,
                 ContainerFields.ITEMS: {}
@@ -2275,10 +2381,13 @@ async def rename_container(bot, player_id: int, character_id: str,
     new_name = new_name.strip()
 
     if not new_name:
-        raise UserFeedbackError('Container name cannot be empty.')
+        raise UserFeedbackError('Container name cannot be empty.',
+                                message_id='error-container-name-empty')
 
     if len(new_name) > MAX_CONTAINER_NAME_LENGTH:
-        raise UserFeedbackError(f'Container name cannot exceed {MAX_CONTAINER_NAME_LENGTH} characters.')
+        raise UserFeedbackError(f'Container name cannot exceed {MAX_CONTAINER_NAME_LENGTH} characters.',
+                                message_id='error-container-name-too-long',
+                                maxLength=str(MAX_CONTAINER_NAME_LENGTH))
 
     player_data = await get_cached_data(
         bot=bot,
@@ -2287,25 +2396,30 @@ async def rename_container(bot, player_id: int, character_id: str,
         query={CommonFields.ID: player_id}
     )
     if not player_data:
-        raise UserFeedbackError('Player data not found.')
+        raise UserFeedbackError('Player data not found.', message_id='error-player-not-found')
 
     character_data = player_data[CharacterFields.CHARACTERS].get(character_id)
     if not character_data:
-        raise UserFeedbackError('Character not found.')
+        raise UserFeedbackError('Character not found.', message_id='error-character-not-found')
 
     containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
     if container_id not in containers:
-        raise UserFeedbackError('Container not found.')
+        raise UserFeedbackError('Container not found.', message_id='error-container-not-found')
 
     if container_name_exists(character_data, new_name, exclude_id=container_id):
-        raise UserFeedbackError(f'A container named "{new_name}" already exists.')
+        raise UserFeedbackError(f'A container named "{new_name}" already exists.',
+                                message_id='error-container-name-exists', containerName=new_name)
 
     await update_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
         collection_name=DatabaseCollections.CHARACTERS,
         query={CommonFields.ID: player_id},
-        update_data={'$set': {f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}.{container_id}.{ContainerFields.NAME}': new_name}}
+        update_data={'$set': {
+            f'{CharacterFields.CHARACTERS}.{character_id}'
+            f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}'
+            f'.{container_id}.{ContainerFields.NAME}': new_name
+        }}
     )
 
 
@@ -2330,15 +2444,15 @@ async def delete_container(bot, player_id: int, character_id: str,
     )
 
     if not player_data:
-        raise UserFeedbackError('Player data not found.')
+        raise UserFeedbackError('Player data not found.', message_id='error-player-not-found')
 
     character_data = player_data[CharacterFields.CHARACTERS].get(character_id)
     if not character_data:
-        raise UserFeedbackError('Character not found.')
+        raise UserFeedbackError('Character not found.', message_id='error-character-not-found')
 
     containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
     if container_id not in containers:
-        raise UserFeedbackError('Container not found.')
+        raise UserFeedbackError('Container not found.', message_id='error-container-not-found')
 
     container = containers[container_id]
     items_to_move = container.get(ContainerFields.ITEMS, {})
@@ -2367,8 +2481,15 @@ async def delete_container(bot, player_id: int, character_id: str,
             collection_name=DatabaseCollections.CHARACTERS,
             query={CommonFields.ID: player_id},
             update_data={
-                '$set': {f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}': new_inventory},
-                '$unset': {f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}.{container_id}': ''}
+                '$set': {
+                    f'{CharacterFields.CHARACTERS}.{character_id}'
+                    f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}': new_inventory
+                },
+                '$unset': {
+                    f'{CharacterFields.CHARACTERS}.{character_id}'
+                    f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}'
+                    f'.{container_id}': ''
+                }
             }
         )
     else:
@@ -2377,7 +2498,11 @@ async def delete_container(bot, player_id: int, character_id: str,
             mongo_database=bot.mdb,
             collection_name=DatabaseCollections.CHARACTERS,
             query={CommonFields.ID: player_id},
-            update_data={'$unset': {f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}.{container_id}': ''}}
+            update_data={'$unset': {
+                f'{CharacterFields.CHARACTERS}.{character_id}'
+                f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}'
+                f'.{container_id}': ''
+            }}
         )
 
     return items_count
@@ -2397,14 +2522,14 @@ async def reorder_container(bot, player_id: int, character_id: str,
     )
 
     if not player_data:
-        raise UserFeedbackError('Player data not found.')
+        raise UserFeedbackError('Player data not found.', message_id='error-player-not-found')
     character_data = player_data[CharacterFields.CHARACTERS].get(character_id)
     if not character_data:
-        raise UserFeedbackError('Character not found.')
+        raise UserFeedbackError('Character not found.', message_id='error-character-not-found')
 
     containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
     if container_id not in containers:
-        raise UserFeedbackError('Container not found.')
+        raise UserFeedbackError('Container not found.', message_id='error-container-not-found')
 
     # Sort containers by order
     sorted_containers = sorted(containers.items(), key=lambda x: x[1].get(ContainerFields.ORDER, 0))
@@ -2416,7 +2541,7 @@ async def reorder_container(bot, player_id: int, character_id: str,
             break
 
     if current_index is None:
-        raise UserFeedbackError('Container not found.')
+        raise UserFeedbackError('Container not found.', message_id='error-container-not-found')
 
     target_index = current_index + direction
 
@@ -2437,8 +2562,12 @@ async def reorder_container(bot, player_id: int, character_id: str,
         collection_name=DatabaseCollections.CHARACTERS,
         query={CommonFields.ID: player_id},
         update_data={'$set': {
-            f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}.{current_container_id}.{ContainerFields.ORDER}': target_order,
-            f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}.{target_container_id}.{ContainerFields.ORDER}': current_order
+            f'{CharacterFields.CHARACTERS}.{character_id}'
+            f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}'
+            f'.{current_container_id}.{ContainerFields.ORDER}': target_order,
+            f'{CharacterFields.CHARACTERS}.{character_id}'
+            f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}'
+            f'.{target_container_id}.{ContainerFields.ORDER}': current_order
         }}
     )
 
@@ -2455,10 +2584,12 @@ async def move_item_between_containers(
     Raises UserFeedbackError if insufficient quantity in source.
     """
     if source_container_id == dest_container_id:
-        raise UserFeedbackError('Item is already in this container.')
+        raise UserFeedbackError('Item is already in this container.',
+                                message_id='error-item-already-in-container')
 
     if quantity < 1:
-        raise UserFeedbackError('Quantity must be at least 1.')
+        raise UserFeedbackError('Quantity must be at least 1.',
+                                message_id='error-quantity-minimum')
 
     player_data = await get_cached_data(
         bot=bot,
@@ -2467,24 +2598,32 @@ async def move_item_between_containers(
         query={CommonFields.ID: player_id}
     )
     if not player_data:
-        raise UserFeedbackError('Player data not found.')
+        raise UserFeedbackError('Player data not found.', message_id='error-player-not-found')
 
     character_data = player_data[CharacterFields.CHARACTERS].get(character_id)
     if not character_data:
-        raise UserFeedbackError('Character not found.')
+        raise UserFeedbackError('Character not found.', message_id='error-character-not-found')
 
     item_name_lower = item_name.lower()
 
     # Get source items
     if source_container_id is None:
         source_items = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
-        source_path = f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}'
+        source_path = (
+            f'{CharacterFields.CHARACTERS}.{character_id}'
+            f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}'
+        )
     else:
         containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
         if source_container_id not in containers:
-            raise UserFeedbackError('Source container not found.')
+            raise UserFeedbackError('Source container not found.',
+                                    message_id='error-source-container-not-found')
         source_items = containers[source_container_id].get(ContainerFields.ITEMS, {})
-        source_path = f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}.{source_container_id}.{ContainerFields.ITEMS}'
+        source_path = (
+            f'{CharacterFields.CHARACTERS}.{character_id}'
+            f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}'
+            f'.{source_container_id}.{ContainerFields.ITEMS}'
+        )
 
     # Find item in source (case-insensitive)
     source_key = None
@@ -2496,21 +2635,32 @@ async def move_item_between_containers(
             break
 
     if source_key is None:
-        raise UserFeedbackError(f'Item "{item_name}" not found in the source container.')
+        raise UserFeedbackError(f'Item "{item_name}" not found in the source container.',
+                                message_id='error-item-not-in-source', itemName=item_name)
 
     if source_qty < quantity:
-        raise UserFeedbackError(f'Insufficient quantity. You have {source_qty} in this container.')
+        raise UserFeedbackError(f'Insufficient quantity. You have {source_qty} in this container.',
+                                message_id='error-insufficient-quantity-in-container',
+                                available=str(source_qty))
 
     # Get destination items
     if dest_container_id is None:
         dest_items = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
-        dest_path = f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}'
+        dest_path = (
+            f'{CharacterFields.CHARACTERS}.{character_id}'
+            f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}'
+        )
     else:
         containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
         if dest_container_id not in containers:
-            raise UserFeedbackError('Destination container not found.')
+            raise UserFeedbackError('Destination container not found.',
+                                    message_id='error-dest-container-not-found')
         dest_items = containers[dest_container_id].get(ContainerFields.ITEMS, {})
-        dest_path = f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}.{dest_container_id}.{ContainerFields.ITEMS}'
+        dest_path = (
+            f'{CharacterFields.CHARACTERS}.{character_id}'
+            f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}'
+            f'.{dest_container_id}.{ContainerFields.ITEMS}'
+        )
 
     # Find existing item in destination (case-insensitive)
     dest_key = None
@@ -2564,7 +2714,8 @@ async def consume_item_from_container(
     Raises UserFeedbackError if insufficient quantity.
     """
     if quantity < 1:
-        raise UserFeedbackError('Quantity must be at least 1.')
+        raise UserFeedbackError('Quantity must be at least 1.',
+                                message_id='error-quantity-minimum')
 
     player_data = await get_cached_data(
         bot=bot,
@@ -2573,24 +2724,31 @@ async def consume_item_from_container(
         query={CommonFields.ID: player_id}
     )
     if not player_data:
-        raise UserFeedbackError('Player data not found.')
+        raise UserFeedbackError('Player data not found.', message_id='error-player-not-found')
 
     character_data = player_data[CharacterFields.CHARACTERS].get(character_id)
     if not character_data:
-        raise UserFeedbackError('Character not found.')
+        raise UserFeedbackError('Character not found.', message_id='error-character-not-found')
 
     item_name_lower = item_name.lower()
 
     # Get container items
     if container_id is None:
         items = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
-        path = f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}'
+        path = (
+            f'{CharacterFields.CHARACTERS}.{character_id}'
+            f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}'
+        )
     else:
         containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
         if container_id not in containers:
-            raise UserFeedbackError('Container not found.')
+            raise UserFeedbackError('Container not found.', message_id='error-container-not-found')
         items = containers[container_id].get(ContainerFields.ITEMS, {})
-        path = f'{CharacterFields.CHARACTERS}.{character_id}.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}.{container_id}.{ContainerFields.ITEMS}'
+        path = (
+            f'{CharacterFields.CHARACTERS}.{character_id}'
+            f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.CONTAINERS}'
+            f'.{container_id}.{ContainerFields.ITEMS}'
+        )
 
     # Find item (case-insensitive)
     item_key = None
@@ -2602,10 +2760,13 @@ async def consume_item_from_container(
             break
 
     if item_key is None:
-        raise UserFeedbackError(f'Item "{item_name}" not found in this container.')
+        raise UserFeedbackError(f'Item "{item_name}" not found in this container.',
+                                message_id='error-item-not-in-container', itemName=item_name)
 
     if current_qty < quantity:
-        raise UserFeedbackError(f'You only have {current_qty} of this item in this container.')
+        raise UserFeedbackError(f'You only have {current_qty} of this item in this container.',
+                                message_id='error-insufficient-quantity-consume',
+                                available=str(current_qty))
 
     new_qty = current_qty - quantity
 
@@ -2630,6 +2791,8 @@ def format_inventory_by_container(character_data: dict, currency_config: dict | 
     Formats the full inventory grouped by container for display/printing.
     Returns a formatted string.
     """
+    from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
+
     lines = []
     containers = get_containers_sorted(character_data)
 
@@ -2648,11 +2811,11 @@ def format_inventory_by_container(character_data: dict, currency_config: dict | 
     if player_currency and currency_config:
         currency_lines = format_currency_display(player_currency, currency_config)
         if currency_lines:
-            lines.append('**Currency**')
+            lines.append(f'**{t(DEFAULT_LOCALE, "common-label-currency")}**')
             for currency_line in currency_lines:
                 lines.append(currency_line)
 
-    return '\n'.join(lines) if lines else 'Inventory is empty.'
+    return '\n'.join(lines) if lines else t(DEFAULT_LOCALE, 'common-label-inventory-empty')
 
 
 async def get_guild_member(guild: discord.Guild, user_id: int) -> discord.Member | None:

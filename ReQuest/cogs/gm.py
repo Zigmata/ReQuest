@@ -6,6 +6,7 @@ from discord.ext.commands import Cog
 from ReQuest.ui.gm import views, modals
 from ReQuest.utilities.checks import has_gm_or_mod
 from ReQuest.utilities.constants import CharacterFields, CommonFields, DatabaseCollections
+from ReQuest.utilities.localizer import resolve_locale, set_locale_context, t
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     get_cached_data,
@@ -19,11 +20,11 @@ class GameMaster(Cog):
         super().__init__()
         self.bot = bot
         self.mod_player_menu = app_commands.ContextMenu(
-            name='Modify Player',
+            name=app_commands.locale_str('Modify Player'),
             callback=self.mod_player_menu
         )
         self.view_player_menu = app_commands.ContextMenu(
-            name='View Player',
+            name=app_commands.locale_str('View Player'),
             callback=self.view_player
         )
         self.bot.tree.add_command(self.mod_player_menu)
@@ -34,14 +35,17 @@ class GameMaster(Cog):
         self.bot.tree.remove_command(self.view_player_menu.name, type=self.view_player_menu.type)
 
     @has_gm_or_mod()
-    @app_commands.command(name='gm')
+    @app_commands.command(
+        name='gm',
+        description=app_commands.locale_str('Game Master Menus')
+    )
     @app_commands.guild_only()
     async def gm(self, interaction):
-        """
-        Game Master Menus
-        """
         try:
+            locale = await resolve_locale(interaction)
+            set_locale_context(locale)
             view = views.GMBaseView()
+            view.locale = locale
             await interaction.response.send_message(view=view, ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)
@@ -53,6 +57,8 @@ class GameMaster(Cog):
         Add or remove items or experience from a player.
         """
         try:
+            locale = await resolve_locale(interaction)
+            set_locale_context(locale)
             bot = interaction.client
             guild_id = str(interaction.guild_id)
             player_query = await get_cached_data(
@@ -62,10 +68,13 @@ class GameMaster(Cog):
                 query={CommonFields.ID: member.id}
             )
             if not player_query:
-                raise UserFeedbackError('The target player does not have any registered characters.')
+                raise UserFeedbackError(t(locale, 'error-no-characters'), message_id='error-no-characters')
 
             if guild_id not in player_query[CharacterFields.ACTIVE_CHARACTERS]:
-                raise UserFeedbackError('The target player does not have a character activated on this server.')
+                raise UserFeedbackError(
+                    t(locale, 'error-no-active-character-target'),
+                    message_id='error-no-active-character-target'
+                )
 
             active_character_id = player_query[CharacterFields.ACTIVE_CHARACTERS][guild_id]
             character_data = player_query[CharacterFields.CHARACTERS][active_character_id]
@@ -82,6 +91,8 @@ class GameMaster(Cog):
         View a player's active character.
         """
         try:
+            locale = await resolve_locale(interaction)
+            set_locale_context(locale)
             bot = interaction.client
             guild_id = str(interaction.guild_id)
             player_query = await get_cached_data(
@@ -91,10 +102,13 @@ class GameMaster(Cog):
                 query={CommonFields.ID: member.id}
             )
             if not player_query:
-                raise UserFeedbackError('The target player does not have any registered characters.')
+                raise UserFeedbackError(t(locale, 'error-no-characters'), message_id='error-no-characters')
 
             if guild_id not in player_query[CharacterFields.ACTIVE_CHARACTERS]:
-                raise UserFeedbackError('The target player does not have a character activated on this server.')
+                raise UserFeedbackError(
+                    t(locale, 'error-no-active-character-target'),
+                    message_id='error-no-active-character-target'
+                )
 
             active_character_id = player_query[CharacterFields.ACTIVE_CHARACTERS][guild_id]
             character_data = player_query[CharacterFields.CHARACTERS][active_character_id]

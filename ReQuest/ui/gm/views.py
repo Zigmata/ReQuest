@@ -6,7 +6,6 @@ from typing import Any, Dict, Iterator, Tuple
 import discord
 from discord.ui import (
     View,
-    LayoutView,
     Container,
     TextDisplay,
     Separator,
@@ -18,9 +17,10 @@ from titlecase import titlecase
 
 from ReQuest.ui.common.buttons import MenuDoneButton, BackButton
 from ReQuest.ui.common.modals import PageJumpModal
-from ReQuest.ui.common.views import MenuBaseView
+from ReQuest.ui.common.views import MenuBaseView, LocaleLayoutView
 from ReQuest.ui.gm import buttons, selects
 from ReQuest.utilities.constants import CharacterFields, QuestFields, ConfigFields, CommonFields, DatabaseCollections
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_guild_locale, resolve_user_locale
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
@@ -39,7 +39,8 @@ from ReQuest.utilities.supportFunctions import (
     replace_cached_data,
     escape_markdown,
     get_guild_member,
-    build_cache_key
+    build_cache_key,
+    check_role_hierarchy
 )
 
 logger = logging.getLogger(__name__)
@@ -47,22 +48,23 @@ logger = logging.getLogger(__name__)
 
 class GMBaseView(MenuBaseView):
     def __init__(self):
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            title='Game Master - Main Menu',
+            title=t(locale, 'gm-title-main-menu'),
             menu_items=[
                 {
-                    'name': 'Quests',
-                    'description': 'Functions for creating, posting, and managing quests.',
+                    'name': t(locale, 'gm-menu-quests'),
+                    'description': t(locale, 'gm-menu-desc-quests'),
                     'view_class': GMQuestMenuView
                 },
                 {
-                    'name': 'Players',
-                    'description': 'Player management information.',
+                    'name': t(locale, 'gm-menu-players'),
+                    'description': t(locale, 'gm-menu-desc-players'),
                     'view_class': GMPlayerMenuView
                 },
                 {
-                    'name': 'Character Approvals',
-                    'description': 'Review pending inventory submissions.',
+                    'name': t(locale, 'gm-menu-approvals'),
+                    'description': t(locale, 'gm-menu-desc-approvals'),
                     'view_class': GMApprovalsView
                 }
             ],
@@ -70,7 +72,7 @@ class GMBaseView(MenuBaseView):
         )
 
 
-class GMQuestMenuView(LayoutView):
+class GMQuestMenuView(LocaleLayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         self.quests = []
@@ -86,7 +88,9 @@ class GMQuestMenuView(LayoutView):
                 query = {QuestFields.GUILD_ID: guild.id}
                 cache_id = f'guild_quests:{guild.id}'
             else:
-                query = {QuestFields.GUILD_ID: guild.id, QuestFields.GM: user.id}
+                query = {
+                    QuestFields.GUILD_ID: guild.id, QuestFields.GM: user.id
+                }
                 cache_id = f'gm_quests:{guild.id}:{user.id}'
 
             self.quests = await get_cached_data(
@@ -115,20 +119,21 @@ class GMQuestMenuView(LayoutView):
 
     def build_view(self):
         self.clear_items()
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
         header_section = Section(accessory=BackButton(GMBaseView))
-        header_section.add_item(TextDisplay('**Game Master - Quests**'))
+        header_section.add_item(TextDisplay(f'**{t(locale, "gm-title-quest-management")}**'))
         container.add_item(header_section)
         container.add_item(Separator())
 
         create_quest_section = Section(accessory=buttons.CreateQuestButton(self))
-        create_quest_section.add_item(TextDisplay('Create and post a new quest.'))
+        create_quest_section.add_item(TextDisplay(t(locale, 'gm-desc-create-quest')))
         container.add_item(create_quest_section)
         container.add_item(Separator())
 
         if not self.quests:
-            container.add_item(TextDisplay("No quests found."))
+            container.add_item(TextDisplay(t(locale, 'gm-msg-no-quests')))
         else:
             start = self.current_page * self.items_per_page
             end = start + self.items_per_page
@@ -137,7 +142,7 @@ class GMQuestMenuView(LayoutView):
             for quest in page_items:
                 title = quest.get(QuestFields.TITLE, 'Untitled')
                 quest_id = quest.get(QuestFields.QUEST_ID, 'Unknown')
-                lock_state = " (Locked)" if quest.get(QuestFields.LOCK_STATE) else ""
+                lock_state = f" {t(locale, 'gm-label-quest-locked')}" if quest.get(QuestFields.LOCK_STATE) else ""
 
                 info_text = f"**{title}**{lock_state}\nID: `{quest_id}`"
 
@@ -150,7 +155,7 @@ class GMQuestMenuView(LayoutView):
         if self.total_pages > 1:
             nav_row = ActionRow()
             prev_button = Button(
-                label='Previous',
+                label=t(locale, 'common-btn-previous'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='gm_q_prev',
                 disabled=(self.current_page == 0)
@@ -159,7 +164,7 @@ class GMQuestMenuView(LayoutView):
             nav_row.add_item(prev_button)
 
             page_display = Button(
-                label=f'Page {self.current_page + 1}/{self.total_pages}',
+                label=t(locale, 'common-page-display', current=self.current_page + 1, total=self.total_pages),
                 style=discord.ButtonStyle.secondary,
                 custom_id='gm_q_page'
             )
@@ -167,7 +172,7 @@ class GMQuestMenuView(LayoutView):
             nav_row.add_item(page_display)
 
             next_button = Button(
-                label='Next',
+                label=t(locale, 'common-btn-next'),
                 style=discord.ButtonStyle.secondary,
                 custom_id='gm_q_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -196,7 +201,7 @@ class GMQuestMenuView(LayoutView):
             await log_exception(e, interaction)
 
 
-class ManageQuestsView(LayoutView):
+class ManageQuestsView(LocaleLayoutView):
     def __init__(self, quest):
         super().__init__(timeout=None)
         self.selected_quest = quest
@@ -209,13 +214,18 @@ class ManageQuestsView(LayoutView):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.QUESTS,
-                query={QuestFields.GUILD_ID: self.selected_quest[QuestFields.GUILD_ID], QuestFields.QUEST_ID: self.selected_quest[QuestFields.QUEST_ID]},
+                query={
+                    QuestFields.GUILD_ID: self.selected_quest[QuestFields.GUILD_ID],
+                    QuestFields.QUEST_ID: self.selected_quest[QuestFields.QUEST_ID]
+                },
                 cache_id=f"{self.selected_quest[QuestFields.GUILD_ID]}:{self.selected_quest[QuestFields.QUEST_ID]}"
             )
             if query:
                 self.selected_quest = query
 
-            self.xp_enabled = await get_xp_config(bot, self.selected_quest[QuestFields.GUILD_ID])
+            self.xp_enabled = await get_xp_config(
+                bot, self.selected_quest[QuestFields.GUILD_ID]
+            )
 
             self.build_view()
         except Exception as e:
@@ -223,6 +233,7 @@ class ManageQuestsView(LayoutView):
 
     def build_view(self):
         self.clear_items()
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
         quest = self.selected_quest
@@ -230,43 +241,44 @@ class ManageQuestsView(LayoutView):
         quest_id = quest.get(QuestFields.QUEST_ID, 'Unknown')
 
         header_section = Section(accessory=BackButton(GMQuestMenuView))
-        header_section.add_item(TextDisplay(f'**Manage Quest - {title}** `{quest_id}`'))
+        header_section.add_item(TextDisplay(
+            f'**{t(locale, "gm-title-manage-quest", questTitle=title, questId=quest_id)}**'
+        ))
         container.add_item(header_section)
         container.add_item(Separator())
 
         edit_section = Section(accessory=buttons.EditQuestButton(self))
-        edit_section.add_item(TextDisplay('Edit quest details such as title, description, and party size.'))
+        edit_section.add_item(TextDisplay(t(locale, 'gm-desc-edit-quest')))
         container.add_item(edit_section)
 
-        ready_status = "Locked/Ready" if quest.get(QuestFields.LOCK_STATE) else "Open"
+        ready_status = (
+            t(locale, 'gm-label-ready-locked')
+            if quest.get(QuestFields.LOCK_STATE)
+            else t(locale, 'gm-label-ready-open')
+        )
         toggle_section = Section(accessory=buttons.ToggleReadyButton(self))
-        toggle_section.add_item(TextDisplay(
-            f'Toggle ready state (Current: **{ready_status}**)\n'
-            f'- Locks the quest roster and notifies party members that the quest will begin soon. If a role is '
-            f'configured, it will be assigned to party members when locked.\n'
-            f'- Unlocks the roster when set to Open.'
-        ))
+        toggle_section.add_item(TextDisplay(t(locale, 'gm-desc-toggle-ready', status=ready_status)))
         container.add_item(toggle_section)
 
         rewards_section = Section(accessory=buttons.RewardsMenuButton(self))
-        rewards_section.add_item(TextDisplay('Configure rewards for the selected quest.'))
+        rewards_section.add_item(TextDisplay(t(locale, 'gm-desc-configure-rewards')))
         container.add_item(rewards_section)
 
         complete_quest_button = buttons.CompleteQuestButton(self)
         complete_quest_button.disabled = not quest.get(QuestFields.PARTY)
         complete_section = Section(accessory=complete_quest_button)
-        complete_section.add_item(TextDisplay('Complete a quest. Issues rewards, if any, to party members.'))
+        complete_section.add_item(TextDisplay(t(locale, 'gm-desc-complete-quest')))
         container.add_item(complete_section)
 
         remove_player_button = buttons.RemovePlayerButton(self)
         remove_player_button.disabled = not quest.get(QuestFields.PARTY)
         remove_player_section = Section(accessory=remove_player_button)
-        remove_player_section.add_item(TextDisplay('Remove a player from the quest roster and notify them.'))
+        remove_player_section.add_item(TextDisplay(t(locale, 'gm-desc-remove-player')))
         container.add_item(remove_player_section)
         container.add_item(Separator())
 
         cancel_section = Section(accessory=buttons.CancelQuestButton(self))
-        cancel_section.add_item(TextDisplay('Cancel the quest and delete it from the quest board.'))
+        cancel_section.add_item(TextDisplay(t(locale, 'gm-desc-cancel-quest')))
         container.add_item(cancel_section)
 
         self.add_item(container)
@@ -277,7 +289,6 @@ class ManageQuestsView(LayoutView):
             bot = interaction.client
             quest = self.selected_quest
             guild_id = interaction.guild_id
-            user_id = interaction.user.id
             guild = interaction.guild
 
             # Fetch the quest channel
@@ -288,7 +299,10 @@ class ManageQuestsView(LayoutView):
                 query={CommonFields.ID: guild_id}
             )
             if not channel_id_query:
-                raise UserFeedbackError('Quest channel has not been set!')
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'gm-error-quest-channel-not-set'),
+                    message_id='gm-error-quest-channel-not-set'
+                )
             channel_id = strip_id(channel_id_query[ConfigFields.QUEST_CHANNEL])
             channel = interaction.client.get_channel(channel_id)
 
@@ -301,6 +315,8 @@ class ManageQuestsView(LayoutView):
             if quest[QuestFields.PARTY_ROLE_ID]:
                 role_id = quest[QuestFields.PARTY_ROLE_ID]
                 role = guild.get_role(role_id)
+                if role:
+                    check_role_hierarchy(guild, role)
 
             party = quest[QuestFields.PARTY]
             title = quest[QuestFields.TITLE]
@@ -327,12 +343,15 @@ class ManageQuestsView(LayoutView):
                             # If the quest has a party role configured, assign it to each party member
                             if role:
                                 tasks.append(member.add_roles(role))
-                            tasks.append(member.send(f'Game Master <@{user_id}> has marked your quest, **"{title}"**, '
-                                                     f'ready to start!'))
+                            member_locale = await resolve_user_locale(bot, int(key), guild_id)
+                            tasks.append(member.send(t(member_locale, 'gm-dm-quest-ready', questTitle=title)))
                         else:
-                            logger.warning(f'Could not find member {key} in guild {guild_id} to notify about quest '
-                                           f'ready state.')
-                await interaction.user.send('Quest roster locked and party notified!')
+                            logger.warning(
+                                f'Could not find member {key} in guild '
+                                f'{guild_id} to notify about quest ready state.'
+                            )
+                gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                await interaction.user.send(t(gm_locale, 'gm-dm-roster-locked'))
             # Unlocks a quest if members are not ready
             else:
                 # Remove the role from the players
@@ -343,7 +362,10 @@ class ManageQuestsView(LayoutView):
                             if member:
                                 tasks.append(member.remove_roles(role))
                             else:
-                                logger.warning(f'Could not find member {key} in guild {guild_id} to remove quest role.')
+                                logger.warning(
+                                    f'Could not find member {key} in guild '
+                                    f'{guild_id} to remove quest role.'
+                                )
 
                 # Unlock the quest
                 await update_cached_data(
@@ -356,7 +378,8 @@ class ManageQuestsView(LayoutView):
                 )
                 quest[QuestFields.LOCK_STATE] = False
 
-                await interaction.user.send('Quest roster has been unlocked.')
+                gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                await interaction.user.send(t(gm_locale, 'gm-dm-roster-unlocked'))
 
             if tasks:
                 results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -370,7 +393,7 @@ class ManageQuestsView(LayoutView):
 
             # Create a fresh quest view, and update the original post message
             quest_view = QuestPostView(quest)
-            await quest_view.setup()
+            await quest_view.setup(bot=interaction.client)
             await message.edit(embed=quest_view.embed, view=quest_view)
 
             await setup_view(self, interaction)
@@ -392,7 +415,10 @@ class ManageQuestsView(LayoutView):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.QUESTS,
-                query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: self.selected_quest[QuestFields.QUEST_ID]},
+                query={
+                    QuestFields.GUILD_ID: guild_id,
+                    QuestFields.QUEST_ID: self.selected_quest[QuestFields.QUEST_ID]
+                },
                 cache_id=f'{guild_id}:{self.selected_quest[QuestFields.QUEST_ID]}'
             )
 
@@ -413,7 +439,7 @@ class ManageQuestsView(LayoutView):
             rewards = quest[QuestFields.REWARDS]
 
             if not party:
-                raise UserFeedbackError('You cannot complete a quest with an empty roster. Try cancelling instead.')
+                raise UserFeedbackError(t(DEFAULT_LOCALE, 'gm-error-empty-roster'), message_id='gm-error-empty-roster')
 
             archive_channel = None
             archive_query = await get_cached_data(
@@ -425,13 +451,56 @@ class ManageQuestsView(LayoutView):
             if archive_query:
                 archive_channel = guild.get_channel(strip_id(archive_query[ConfigFields.ARCHIVE_CHANNEL]))
 
-            # Check if a party role was configured, and delete it
+            # Check if a party role was configured, and handle cleanup
+            failed_members = []
             party_role_id = quest[QuestFields.PARTY_ROLE_ID]
             if party_role_id:
                 role = guild.get_role(party_role_id)
                 if role:
-                    await role.delete(
-                        reason=f'Quest ID {quest[QuestFields.QUEST_ID]} was completed by {interaction.user.mention}.')
+                    check_role_hierarchy(guild, role)
+                    role_mode = quest.get(QuestFields.QUEST_ROLE_MODE, 'temporary')
+                    if role_mode == 'static':
+                        if not guild.chunked:
+                            await guild.chunk()
+                        remove_tasks = []
+                        remove_members = []
+                        for entry in party:
+                            for player_id in entry:
+                                member = guild.get_member(int(player_id))
+                                if member:
+                                    remove_tasks.append(member.remove_roles(role))
+                                    remove_members.append(member)
+                        failed_members = []
+                        if remove_tasks:
+                            results = await asyncio.gather(*remove_tasks, return_exceptions=True)
+                            for member, result in zip(remove_members, results):
+                                if isinstance(result, Exception):
+                                    logger.warning(
+                                        f'Failed to remove role {role.name} from '
+                                        f'{member} (ID: {member.id}): {result}'
+                                    )
+                                    failed_members.append(member)
+                    else:
+                        await role.delete(
+                            reason=(
+                                f'Quest ID {quest[QuestFields.QUEST_ID]} was '
+                                f'completed by {interaction.user.mention}.'
+                            )
+                        )
+                else:
+                    logger.warning(f'Quest role {party_role_id} no longer exists in guild {guild_id}. '
+                                   f'Skipping role cleanup for completed quest {quest[QuestFields.QUEST_ID]}.')
+                    try:
+                        gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                        await interaction.user.send(
+                            t(
+                                gm_locale, 'gm-dm-role-not-found',
+                                roleId=str(party_role_id),
+                                questTitle=quest[QuestFields.TITLE]
+                            )
+                        )
+                    except discord.errors.Forbidden:
+                        logger.warning(f'Could not DM {interaction.user.id} about missing quest role.')
 
             # Get party members and message them with results
             reward_summary = []
@@ -449,8 +518,6 @@ class ManageQuestsView(LayoutView):
                     # Get character data
                     character_id = next(iter(character_info))
                     character = character_info[character_id]
-                    reward_summary.append(f'<@!{player_id}> as {character[CommonFields.NAME]}:')
-
                     # Prep reward data
                     total_xp = xp_per_member
                     if not xp_enabled:
@@ -468,28 +535,46 @@ class ManageQuestsView(LayoutView):
                             combined_items[item] = combined_items.get(item, 0) + quantity
 
                     # Update the character's XP and inventory
+                    member_reward_lines = []
                     if xp_enabled and total_xp > 0:
-                        reward_summary.append(f'Experience: {total_xp}')
+                        member_reward_lines.append(f'Experience: {total_xp}')
                         await update_character_experience(interaction, int(player_id), character_id, total_xp)
                     for item_name, quantity in combined_items.items():
-                        reward_summary.append(f'{item_name}: {quantity}')
-                        await update_character_inventory(interaction, int(player_id), character_id, item_name, quantity)
+                        member_reward_lines.append(f'{item_name}: {quantity}')
+                        await update_character_inventory(
+                            interaction, int(player_id), character_id,
+                            item_name, quantity
+                        )
+
+                    # Only include this member in the reward summary if they received something
+                    if member_reward_lines:
+                        reward_summary.append(f'<@!{player_id}> as {character[CommonFields.NAME]}:')
+                        reward_summary.extend(member_reward_lines)
 
                     # Send reward summary to player
                     reward_strings = self.build_reward_summary(total_xp, combined_items, xp_enabled)
-                    dm_embed = discord.Embed(title=f'Quest Complete: {title}', type='rich')
+                    member_locale = await resolve_user_locale(bot, int(player_id), guild_id)
+                    dm_embed = discord.Embed(
+                        title=t(member_locale, 'gm-embed-title-quest-complete', questTitle=title),
+                        type='rich'
+                    )
                     if reward_strings:
-                        dm_embed.add_field(name='Rewards', value='\n'.join(reward_strings))
+                        dm_embed.add_field(
+                            name=t(member_locale, 'gm-embed-field-rewards'),
+                            value='\n'.join(reward_strings)
+                        )
                     try:
                         await member.send(embed=dm_embed)
                     except discord.errors.Forbidden as e:
                         logger.warning(f'Could not DM {member.id} about quest completion rewards: {e}')
 
             # Build an embed for feedback
+            guild_locale = await resolve_guild_locale(bot, guild_id)
+
             quest_embed = discord.Embed(
-                title=f'QUEST COMPLETED: {title}',
+                title=t(guild_locale, 'gm-embed-title-quest-completed', questTitle=title),
                 description=(
-                    f'**GM:** <@!{gm}>\n\n'
+                    f'{t(guild_locale, "common-embed-label-gm")} <@!{gm}>\n\n'
                     f'{description}\n\n'
                     f'------'
                 ),
@@ -503,13 +588,17 @@ class ManageQuestsView(LayoutView):
                         character = player[str(member_id)][str(character_id)]
                         formatted_party.append(f'- <@!{member_id}> as {character[CommonFields.NAME]}')
 
-            quest_embed.add_field(name=f'__Party__', value='\n'.join(formatted_party))
-            quest_embed.set_footer(text='Quest ID: ' + quest_id)
+            quest_embed.add_field(name=t(guild_locale, 'gm-embed-field-party'), value='\n'.join(formatted_party))
+            quest_embed.set_footer(text=t(guild_locale, 'common-embed-footer-quest-id', questId=quest_id))
 
             if summary:
-                quest_embed.add_field(name='Summary', value=summary, inline=False)
+                quest_embed.add_field(name=t(guild_locale, 'gm-embed-field-summary'), value=summary, inline=False)
             if reward_summary:
-                quest_embed.add_field(name='Rewards', value='\n'.join(reward_summary), inline=True)
+                quest_embed.add_field(
+                    name=t(guild_locale, 'gm-embed-field-rewards'),
+                    value='\n'.join(reward_summary),
+                    inline=True
+                )
 
             # If an archive channel is configured, post the archived post
             if archive_channel:
@@ -547,6 +636,14 @@ class ManageQuestsView(LayoutView):
             # Message feedback to the GM
             await interaction.user.send(embed=quest_embed)
 
+            # Warn GM about any failed role removals
+            if failed_members:
+                gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                failed_list = ', '.join(f'{m.mention}' for m in failed_members)
+                await interaction.user.send(
+                    t(gm_locale, 'gm-dm-role-removal-failed', roleName=role.name, members=failed_list)
+                )
+
             # Check if GM rewards are enabled, and reward the GM accordingly
             gm_rewards_query = await get_cached_data(
                 bot=bot,
@@ -557,6 +654,7 @@ class ManageQuestsView(LayoutView):
             if gm_rewards_query:
                 experience = gm_rewards_query.get(CharacterFields.EXPERIENCE)
                 items = gm_rewards_query.get(CommonFields.ITEMS)
+                gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
 
                 character_query = await get_cached_data(
                     bot=bot,
@@ -566,39 +664,46 @@ class ManageQuestsView(LayoutView):
                 )
 
                 if not character_query:
-                    character_string = ('Your server admin has configured rewards for Game Masters when they complete '
-                                        'quests. However, since you have no registered characters, your rewards could '
-                                        'not be automatically issued at this time.')
+                    character_string = t(gm_locale, 'gm-dm-rewards-no-characters')
                 else:
                     if str(guild_id) not in character_query.get(CharacterFields.ACTIVE_CHARACTERS, {}):
-                        character_string = ('Your server admin has configured rewards for Game Masters when they '
-                                            'complete quests. However, since you have no active character on this '
-                                            'server, your rewards could not be automatically issued at this time.')
+                        character_string = t(gm_locale, 'gm-dm-rewards-no-active-character')
                     else:
                         active_character_id = character_query[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
-                        character_string = (f'The following has been awarded to your active character, '
-                                            f'{character_query[CharacterFields.CHARACTERS][active_character_id][CharacterFields.NAME]}')
+                        characters = character_query[CharacterFields.CHARACTERS]
+                        character_name = characters[active_character_id][CharacterFields.NAME]
+                        character_string = t(
+                            gm_locale, 'gm-dm-rewards-issued',
+                            characterName=character_name
+                        )
                         if experience and xp_enabled:
-                            await update_character_experience(interaction, interaction.user.id, active_character_id,
-                                                              experience)
+                            await update_character_experience(
+                                interaction, interaction.user.id,
+                                active_character_id, experience
+                            )
                         if items:
                             for item_name, quantity in items.items():
-                                await update_character_inventory(interaction, interaction.user.id, active_character_id,
-                                                                 item_name, quantity)
+                                await update_character_inventory(
+                                    interaction, interaction.user.id,
+                                    active_character_id, item_name, quantity
+                                )
 
                 gm_rewards_embed = discord.Embed(
-                    title='GM Rewards Issued',
+                    title=t(gm_locale, 'gm-embed-title-gm-rewards'),
                     description=character_string,
                     color=discord.Color.gold(),
                     type='rich'
                 )
                 if experience and xp_enabled:
-                    gm_rewards_embed.add_field(name='Experience', value=experience)
+                    gm_rewards_embed.add_field(name=t(gm_locale, 'gm-embed-field-experience'), value=experience)
                 if items:
                     item_strings = []
                     for item_name, quantity in items.items():
                         item_strings.append(f'{escape_markdown(titlecase(item_name))}: {quantity}')
-                    gm_rewards_embed.add_field(name='Items', value='\n'.join(item_strings))
+                    gm_rewards_embed.add_field(
+                        name=t(gm_locale, 'gm-embed-field-items'),
+                        value='\n'.join(item_strings)
+                    )
 
                 try:
                     await interaction.user.send(embed=gm_rewards_embed)
@@ -623,7 +728,7 @@ class ManageQuestsView(LayoutView):
         return reward_strings
 
 
-class RewardsMenuView(LayoutView):
+class RewardsMenuView(LocaleLayoutView):
     def __init__(self, calling_view):
         super().__init__(timeout=None)
         self.calling_view = calling_view
@@ -680,7 +785,7 @@ class RewardsMenuView(LayoutView):
 
             options = self._build_party_member_options(self.quest)
             if options:
-                self.party_member_select.placeholder = 'Select a party member'
+                self.party_member_select.placeholder = t(DEFAULT_LOCALE, 'gm-select-placeholder-party-member')
                 self.party_member_select.disabled = False
                 self.party_member_select.options = options
             else:
@@ -778,30 +883,27 @@ class RewardsMenuView(LayoutView):
         return '\n'.join(lines) if lines else 'None'
 
 
-class GMPlayerMenuView(LayoutView):
+class GMPlayerMenuView(LocaleLayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         self.build_view()
 
     def build_view(self):
+        self.clear_items()
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
         header_section = Section(accessory=BackButton(GMBaseView))
-        header_section.add_item(TextDisplay('**Game Master - Player Management**'))
+        header_section.add_item(TextDisplay(f'**{t(locale, "gm-title-player-management")}**'))
         container.add_item(header_section)
         container.add_item(Separator())
 
-        container.add_item(TextDisplay(
-            'These commands have migrated to context menus. Right-click (desktop) or long-press (mobile) a player\'s '
-            'profile for the following menu options:\n\n'
-            '- **Modify Player**: Add or remove items and experience from a player.\n'
-            '- **View Player**: View a player\'s active character details.'
-        ))
+        container.add_item(TextDisplay(t(locale, 'gm-desc-player-management')))
 
         self.add_item(container)
 
 
-class RemovePlayerView(LayoutView):
+class RemovePlayerView(LocaleLayoutView):
     def __init__(self, quest):
         super().__init__(timeout=None)
         self.quest = quest
@@ -812,21 +914,18 @@ class RemovePlayerView(LayoutView):
         self.build_view()
 
     def build_view(self):
+        self.clear_items()
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
         header_section = Section(accessory=buttons.BackToManageQuestButton(self.quest))
-        header_section.add_item(TextDisplay(f'**Remove Player from Quest - {self.quest[QuestFields.TITLE]}**'))
+        header_section.add_item(TextDisplay(
+            f'**{t(locale, "gm-title-remove-player", questTitle=self.quest[QuestFields.TITLE])}**'
+        ))
         container.add_item(header_section)
         container.add_item(Separator())
 
-        container.add_item(TextDisplay(
-            '__**Player Removal Notes**__\n\n'
-            '- Choose a player from the dropdown below to remove them from the quest roster.\n'
-            '- If any players are on a wait list, the first player on the list will be promoted to the party.\n'
-            '- Individual rewards for the removed player will be deleted from the quest.\n'
-            '- If you wish to reward the player for prior contributions, use the `Modify Player` context menu to issue '
-            'them rewards directly.'
-        ))
+        container.add_item(TextDisplay(t(locale, 'gm-desc-remove-player-notes')))
 
         remove_player_select_row = ActionRow(self.remove_player_select)
         container.add_item(remove_player_select_row)
@@ -845,16 +944,24 @@ class RemovePlayerView(LayoutView):
                     for member_id in player:
                         for character_id in player[str(member_id)]:
                             character = player[str(member_id)][str(character_id)]
-                            options.append(discord.SelectOption(label=f'{character[CommonFields.NAME]}', value=member_id))
+                            options.append(discord.SelectOption(
+                                label=f'{character[CommonFields.NAME]}',
+                                value=member_id
+                            ))
             if wait_list:
                 for player in wait_list:
                     for member_id in player:
                         for character_id in player[str(member_id)]:
                             character = player[str(member_id)][str(character_id)]
-                            options.append(discord.SelectOption(label=f'{character[CommonFields.NAME]}', value=member_id))
+                            options.append(discord.SelectOption(
+                                label=f'{character[CommonFields.NAME]}',
+                                value=member_id
+                            ))
             if not party and not wait_list:
-                options.append(discord.SelectOption(label='No players in quest roster', value='None'))
-                self.remove_player_select.placeholder = 'No players in quest roster'
+                locale = getattr(self, 'locale', DEFAULT_LOCALE)
+                no_players_text = t(locale, 'gm-label-no-players-in-roster')
+                options.append(discord.SelectOption(label=no_players_text, value='None'))
+                self.remove_player_select.placeholder = no_players_text
                 self.remove_player_select.disabled = True
 
             self.remove_player_select.options = options
@@ -896,11 +1003,27 @@ class RemovePlayerView(LayoutView):
             role = None
             if lock_state and party_role_id:
                 role = guild.get_role(party_role_id)
+                if role:
+                    check_role_hierarchy(guild, role)
 
                 # Remove the role from the member
-                if member:
+                if role and member:
                     await member.remove_roles(role)
-                else:
+                elif not role:
+                    logger.warning(f'Quest role {party_role_id} no longer exists in guild {guild_id}. '
+                                   f'Skipping role removal for member {removed_member_id}.')
+                    try:
+                        gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                        await interaction.user.send(
+                            t(
+                                gm_locale, 'gm-dm-role-not-found',
+                                roleId=str(party_role_id),
+                                questTitle=quest[QuestFields.TITLE]
+                            )
+                        )
+                    except discord.errors.Forbidden:
+                        logger.warning(f'Could not DM {interaction.user.id} about missing quest role.')
+                elif not member:
                     logger.warning(f'Could not find member {removed_member_id} in guild {guild_id} to remove quest '
                                    f'role.')
 
@@ -911,14 +1034,21 @@ class RemovePlayerView(LayoutView):
                 if removed_member_id in waiting_player:
                     wait_list.remove(waiting_player)
                     player_found = True
-                    removal_message = f'The Game Master for **{quest[QuestFields.TITLE]}** has removed you from the wait list.'
+                    removal_message = t(
+                        DEFAULT_LOCALE, 'gm-dm-player-removed-waitlist',
+                        questTitle=quest[QuestFields.TITLE]
+                    )
                     break
 
             # If they're not in the wait list, they must be in the party
             if not player_found:
                 for player in party:
                     if removed_member_id in player:
-                        removal_message = f'The Game Master for **{quest[QuestFields.TITLE]}** has removed you from the party.'
+                        removed_locale = await resolve_user_locale(bot, int(removed_member_id), guild_id)
+                        removal_message = t(
+                            removed_locale, 'gm-dm-player-removed',
+                            questTitle=quest[QuestFields.TITLE]
+                        )
                         party.remove(player)
 
                         # If there is a wait list, promote the first entry into the party
@@ -930,8 +1060,11 @@ class RemovePlayerView(LayoutView):
                                 new_member = await get_guild_member(guild, int(key))
                                 if new_member:
                                     try:
-                                        await new_member.send(f'You have been added to the party for '
-                                                              f'**{quest[QuestFields.TITLE]}**, due to a player dropping!')
+                                        promoted_locale = await resolve_user_locale(bot, int(key), guild_id)
+                                        await new_member.send(t(
+                                            promoted_locale, 'gm-dm-party-promotion',
+                                            questTitle=quest[QuestFields.TITLE]
+                                        ))
 
                                         # If a role is set, assign it to the player
                                         if role and lock_state:
@@ -961,7 +1094,8 @@ class RemovePlayerView(LayoutView):
             # Give the GM some feedback that the changes applied
             gm_member = await get_guild_member(guild, interaction.user.id)
             if gm_member:
-                await gm_member.send(f'Player removed and quest roster updated!')
+                gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                await gm_member.send(t(gm_locale, 'gm-msg-player-removed'))
             else:
                 logger.warning(f'Could not find GM member {interaction.user.id} in guild {guild_id} to notify about '
                                f'player removal from quest.')
@@ -984,8 +1118,10 @@ class RemovePlayerView(LayoutView):
                 except Exception as e:
                     logger.error(f'Error sending removal DM to {member.id}: {e}')
             else:
-                logger.warning(f'Could not find member {removed_member_id} in guild {guild_id} to notify about removal '
-                               f'from quest.')
+                logger.warning(
+                    f'Could not find member {removed_member_id} in guild '
+                    f'{guild_id} to notify about removal from quest.'
+                )
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -1004,14 +1140,20 @@ class QuestPostView(View):
         self.add_item(self.join_button)
         self.add_item(self.leave_button)
 
-    async def setup(self):
+    async def setup(self, bot=None):
         try:
-            self.embed = await update_quest_embed(self.quest)
+            guild_locale = DEFAULT_LOCALE
+            if bot:
+                guild_id = self.quest.get(QuestFields.GUILD_ID)
+                if guild_id:
+                    guild_locale = await resolve_guild_locale(bot, guild_id)
+            self.embed = await update_quest_embed(self.quest, locale=guild_locale)
         except Exception as e:
             await log_exception(e)
 
     async def join_callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             guild_id = interaction.guild_id
             user_id = interaction.user.id
@@ -1030,7 +1172,13 @@ class QuestPostView(View):
             for player in current_party:
                 if str(user_id) in player:
                     for character_id, character_data in player[str(user_id)].items():
-                        raise UserFeedbackError(f'You are already on this quest as {character_data[CommonFields.NAME]}')
+                        raise UserFeedbackError(
+                            t(
+                                DEFAULT_LOCALE, 'gm-error-already-on-quest',
+                                characterName=character_data[CommonFields.NAME]
+                            ),
+                            message_id='gm-error-already-on-quest'
+                        )
             max_wait_list_size = quest[QuestFields.MAX_WAIT_LIST_SIZE]
             max_party_size = quest[QuestFields.MAX_PARTY_SIZE]
 
@@ -1044,15 +1192,16 @@ class QuestPostView(View):
                     CharacterFields.ACTIVE_CHARACTERS not in player_characters or
                     str(guild_id) not in player_characters[CharacterFields.ACTIVE_CHARACTERS]):
                 raise UserFeedbackError(
-                    'You do not have an active character on this server. Use the `/player` menus to create a new '
-                    'character, or activate an existing one on this server.'
+                    t(DEFAULT_LOCALE, 'gm-error-no-active-character-long'),
+                    message_id='gm-error-no-active-character-long'
                 )
             active_character_id = player_characters[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
             active_character = player_characters[CharacterFields.CHARACTERS][active_character_id]
 
             if quest[QuestFields.LOCK_STATE]:
                 raise UserFeedbackError(
-                    f'Error joining quest **{quest[QuestFields.TITLE]}**: The quest is locked and not accepting new players.'
+                    t(DEFAULT_LOCALE, 'gm-error-quest-locked', questTitle=quest[QuestFields.TITLE]),
+                    message_id='gm-error-quest-locked'
                 )
             else:
                 new_player_entry = {f'{user_id}': {f'{active_character_id}': active_character}}
@@ -1083,7 +1232,10 @@ class QuestPostView(View):
 
                     # Otherwise, inform the user that the party/wait list is full
                     else:
-                        raise UserFeedbackError(f'Error joining quest **{quest[QuestFields.TITLE]}**: The quest roster is full!')
+                        raise UserFeedbackError(
+                            t(DEFAULT_LOCALE, 'gm-error-quest-full', questTitle=quest[QuestFields.TITLE]),
+                            message_id='gm-error-quest-full'
+                        )
                 # If there is no wait list, this section formats the embed without it
                 else:
                     # If there is room in the party, add the user.
@@ -1098,15 +1250,19 @@ class QuestPostView(View):
                         )
                         self.quest[QuestFields.PARTY].append(new_player_entry)
                     else:
-                        raise UserFeedbackError(f'Error joining quest **{quest[QuestFields.TITLE]}**: The quest roster is full!')
+                        raise UserFeedbackError(
+                            t(DEFAULT_LOCALE, 'gm-error-quest-full', questTitle=quest[QuestFields.TITLE]),
+                            message_id='gm-error-quest-full'
+                        )
 
                 await setup_view(self, interaction)
-                await interaction.response.edit_message(embed=self.embed, view=self)
+                await interaction.edit_original_response(embed=self.embed, view=self)
         except Exception as e:
             await log_exception(e, interaction)
 
     async def leave_callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             guild_id = interaction.guild_id
             user_id = interaction.user.id
@@ -1129,7 +1285,10 @@ class QuestPostView(View):
                     if str(user_id) in player:
                         in_wait_list = True
             if not in_party and not in_wait_list:
-                raise UserFeedbackError(f'You are not signed up for this quest.')
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'gm-error-not-signed-up'),
+                    message_id='gm-error-not-signed-up'
+                )
 
             if in_wait_list:
                 for player in wait_list:
@@ -1153,8 +1312,11 @@ class QuestPostView(View):
                     # Notify the member they have been moved into the main party
                     if new_member:
                         try:
-                            await new_member.send(f'You have been added to the party for '
-                                                  f'**{quest[QuestFields.TITLE]}**, due to a player dropping!')
+                            promoted_locale = await resolve_user_locale(bot, int(key), guild_id)
+                            await new_member.send(t(
+                                promoted_locale, 'gm-dm-party-promotion',
+                                questTitle=quest[QuestFields.TITLE]
+                            ))
                         except discord.errors.Forbidden as e:
                             logger.warning(f'Could not DM {new_member.id} about party promotion: {e}')
                         except Exception as e:
@@ -1166,13 +1328,32 @@ class QuestPostView(View):
                 party_role_id = quest[QuestFields.PARTY_ROLE_ID]
                 if lock_state and party_role_id:
                     role = guild.get_role(party_role_id)
+                    if role:
+                        check_role_hierarchy(guild, role)
 
-                    # Get the member object and remove the role
-                    member = await get_guild_member(guild, user_id)
-                    if member:
-                        await member.remove_roles(role)
-                    if new_member:
-                        await new_member.add_roles(role)
+                        # Get the member object and remove the role
+                        member = await get_guild_member(guild, user_id)
+                        if member:
+                            await member.remove_roles(role)
+                        if new_member:
+                            await new_member.add_roles(role)
+                    else:
+                        logger.warning(f'Quest role {party_role_id} no longer exists in guild {guild.id}. '
+                                       f'Skipping role update for quest {quest[QuestFields.QUEST_ID]}.')
+                        try:
+                            gm_id = quest[QuestFields.GM]
+                            gm_member = await get_guild_member(guild, gm_id)
+                            if gm_member:
+                                gm_locale = await resolve_user_locale(bot, gm_id, guild_id)
+                                await gm_member.send(
+                                    t(
+                                        gm_locale, 'gm-dm-role-not-found',
+                                        roleId=str(party_role_id),
+                                        questTitle=quest[QuestFields.TITLE]
+                                    )
+                                )
+                        except discord.errors.Forbidden:
+                            logger.warning(f'Could not DM GM {quest[QuestFields.GM]} about missing quest role.')
 
             # Update the database
             await replace_cached_data(
@@ -1185,13 +1366,13 @@ class QuestPostView(View):
             )
 
             # Refresh the query with the new document and edit the post
-            await self.setup()
-            await interaction.response.edit_message(embed=self.embed, view=self)
+            await self.setup(bot=bot)
+            await interaction.edit_original_response(embed=self.embed, view=self)
         except Exception as e:
             await log_exception(e, interaction)
 
 
-class ViewCharacterView(LayoutView):
+class ViewCharacterView(LocaleLayoutView):
     def __init__(self, member_id, character_data, currency_config, xp_enabled=True):
         super().__init__(timeout=None)
 
@@ -1200,16 +1381,20 @@ class ViewCharacterView(LayoutView):
         name = character_data.get(CommonFields.NAME, 'Unknown')
         xp = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.EXPERIENCE, None)
 
-        container.add_item(TextDisplay(content=f'**Character Sheet for {name} (<@{member_id}>)**'))
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
+        container.add_item(TextDisplay(content=t(
+            locale, 'gm-title-character-sheet',
+            characterName=name, memberId=str(member_id)
+        )))
         container.add_item(Separator())
 
         if xp_enabled and xp is not None:
-            container.add_item(TextDisplay(f'__**Experience Points:**__\n{xp}'))
+            container.add_item(TextDisplay(f'{t(locale, "gm-label-experience-points")}\n{xp}'))
             container.add_item(Separator())
 
         # Display inventory grouped by container
         inventory_display = format_inventory_by_container(character_data, currency_config)
-        container.add_item(TextDisplay(f'__**Possessions**__\n\n{inventory_display}'))
+        container.add_item(TextDisplay(f'{t(locale, "gm-label-possessions")}\n\n{inventory_display}'))
 
         self.add_item(container)
 
@@ -1220,27 +1405,29 @@ class ViewCharacterView(LayoutView):
 
 # ----- Approval Queue -----
 
-class GMApprovalsView(LayoutView):
+class GMApprovalsView(LocaleLayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         self.review_button = buttons.ReviewSubmissionButton(self)
         self.build_view()
 
     def build_view(self):
+        self.clear_items()
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
         header = Section(accessory=BackButton(GMBaseView))
-        header.add_item(TextDisplay("**Game Master - Inventory Approvals**"))
+        header.add_item(TextDisplay(f'**{t(locale, "gm-title-approvals")}**'))
         container.add_item(header)
         container.add_item(Separator())
 
         section = Section(accessory=self.review_button)
-        section.add_item(TextDisplay("Enter a Submission ID to review and approve/deny it."))
+        section.add_item(TextDisplay(t(locale, 'gm-desc-review-submission')))
         container.add_item(section)
 
         self.add_item(container)
 
 
-class ReviewSubmissionView(LayoutView):
+class ReviewSubmissionView(LocaleLayoutView):
     def __init__(self, submission_data, currency_config):
         super().__init__(timeout=None)
         self.currency_config = currency_config
@@ -1248,18 +1435,22 @@ class ReviewSubmissionView(LayoutView):
         self.build_view()
 
     def build_view(self):
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
         header = Section(accessory=BackButton(GMApprovalsView))
-        header.add_item(TextDisplay(f'**Reviewing: {self.data["character_name"]}**'))
+        header.add_item(TextDisplay(
+            f'**{t(locale, "gm-title-reviewing", characterName=self.data["character_name"])}**'
+        ))
         container.add_item(header)
         container.add_item(Separator())
 
         items = self.data.get(CommonFields.ITEMS, {})
         currency = self.data.get('currency', {})
 
-        description = '**Items:**\n' + ('\n'.join([f'{k}: {v}' for k, v in sorted(items.items())]) or 'None')
+        items_str = '\n'.join([f'{k}: {v}' for k, v in sorted(items.items())]) or 'None'
+        description = f'{t(locale, "gm-label-items")}\n' + items_str
         currency_labels = format_consolidated_totals(currency, self.currency_config)
-        description += '\n\n**Currency:**\n' + ('\n'.join(currency_labels) or 'None')
+        description += f'\n\n{t(locale, "gm-label-currency")}\n' + ('\n'.join(currency_labels) or 'None')
 
         container.add_item(TextDisplay(description))
 
@@ -1272,6 +1463,7 @@ class ReviewSubmissionView(LayoutView):
 
     async def approve(self, interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             character_id = self.data['character_id']
             user_id = self.data['user_id']
@@ -1291,11 +1483,10 @@ class ReviewSubmissionView(LayoutView):
             )
 
             approval_embed = discord.Embed(
-                title='Inventory Update Approved',
-                description=(
-                    f'The inventory for **{self.data["character_name"]}** has been approved by '
-                    f'{interaction.user.mention}.'
-                ),
+                title=t(DEFAULT_LOCALE, 'gm-embed-title-approved'),
+                description=t(DEFAULT_LOCALE, 'gm-embed-desc-approved',
+                              characterName=self.data["character_name"],
+                              approver=interaction.user.mention),
                 color=discord.Color.green(),
                 type='rich'
             )
@@ -1307,11 +1498,10 @@ class ReviewSubmissionView(LayoutView):
 
             # Either refresh GM view, or delete original response if in thread since it will be archived.
             if interaction.channel_id == thread_id:
-                await interaction.response.defer()
                 await interaction.followup.delete_message(interaction.message.id)
             else:
                 view = GMApprovalsView()
-                await interaction.response.edit_message(view=view)
+                await interaction.edit_original_response(view=view)
 
             # Lock/Archive thread
             await thread.edit(locked=True, archived=True)
@@ -1320,6 +1510,7 @@ class ReviewSubmissionView(LayoutView):
 
     async def deny(self, interaction):
         try:
+            await interaction.response.defer()
             # Same logic as above but for denials
             bot = interaction.client
             submission_id = self.data['submission_id']
@@ -1333,11 +1524,10 @@ class ReviewSubmissionView(LayoutView):
             )
 
             denial_embed = discord.Embed(
-                title='Inventory Update Denied',
-                description=(
-                    f'The inventory for **{self.data["character_name"]}** has been denied by '
-                    f'{interaction.user.mention}.'
-                ),
+                title=t(DEFAULT_LOCALE, 'gm-embed-title-denied'),
+                description=t(DEFAULT_LOCALE, 'gm-embed-desc-denied',
+                              characterName=self.data["character_name"],
+                              denier=interaction.user.mention),
                 color=discord.Color.red(),
                 type='rich'
             )
@@ -1347,11 +1537,10 @@ class ReviewSubmissionView(LayoutView):
             await thread.send(embed=denial_embed)
 
             if interaction.channel_id == thread_id:
-                await interaction.response.defer()
                 await interaction.followup.delete_message(interaction.message.id)
             else:
                 view = GMApprovalsView()
-                await interaction.response.edit_message(view=view)
+                await interaction.edit_original_response(view=view)
 
             await thread.edit(locked=True, archived=True)
         except Exception as e:
