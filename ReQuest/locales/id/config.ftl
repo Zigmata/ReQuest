@@ -760,7 +760,7 @@ config-label-item-stock-limits = {"**"}Batas Stok Barang{"**"}
 config-msg-no-items-in-shop = Tidak ada barang di toko ini.
 config-label-stock-with-available = Maks: { $max } | Tersedia: { $available }
 config-label-stock-increment = Pengisian: +{ $increment }/siklus
-config-label-stock-reserved = | Dipesan: { $reserved }
+config-label-stock-reserved = Dipesan: { $reserved }
 config-label-stock-not-initialized = Maks: { $max } | Tersedia: (belum diinisialisasi)
 config-label-stock-unlimited = Stok: Tidak Terbatas
 

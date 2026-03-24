@@ -760,7 +760,7 @@ config-label-item-stock-limits = {"**"}Daiktų atsargų limitai{"**"}
 config-msg-no-items-in-shop = Šioje parduotuvėje nėra daiktų.
 config-label-stock-with-available = Maks.: { $max } | Turima: { $available }
 config-label-stock-increment = Papildymas: +{ $increment }/ciklą
-config-label-stock-reserved = | Rezervuota: { $reserved }
+config-label-stock-reserved = Rezervuota: { $reserved }
 config-label-stock-not-initialized = Maks.: { $max } | Turima: (neinicializuota)
 config-label-stock-unlimited = Atsargos: Neribotos
 

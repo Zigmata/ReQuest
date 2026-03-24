@@ -760,7 +760,7 @@ config-label-item-stock-limits = {"**"}Voorraadlimieten per voorwerp{"**"}
 config-msg-no-items-in-shop = Geen voorwerpen in deze winkel.
 config-label-stock-with-available = Max: { $max } | Beschikbaar: { $available }
 config-label-stock-increment = Aanvulling: +{ $increment }/cyclus
-config-label-stock-reserved = | Gereserveerd: { $reserved }
+config-label-stock-reserved = Gereserveerd: { $reserved }
 config-label-stock-not-initialized = Max: { $max } | Beschikbaar: (niet geïnitialiseerd)
 config-label-stock-unlimited = Voorraad: Onbeperkt
 

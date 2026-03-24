@@ -760,7 +760,7 @@ config-label-item-stock-limits = {"**"}वस्तु स्टॉक सीम
 config-msg-no-items-in-shop = इस दुकान में कोई वस्तु नहीं।
 config-label-stock-with-available = अधिकतम: { $max } | उपलब्ध: { $available }
 config-label-stock-increment = पुनःपूर्ति: +{ $increment }/चक्र
-config-label-stock-reserved = | आरक्षित: { $reserved }
+config-label-stock-reserved = आरक्षित: { $reserved }
 config-label-stock-not-initialized = अधिकतम: { $max } | उपलब्ध: (आरंभ नहीं)
 config-label-stock-unlimited = स्टॉक: असीमित
 

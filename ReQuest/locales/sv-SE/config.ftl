@@ -760,7 +760,7 @@ config-label-item-stock-limits = {"**"}Lagergränser för föremål{"**"}
 config-msg-no-items-in-shop = Inga föremål i denna butik.
 config-label-stock-with-available = Max: { $max } | Tillgängligt: { $available }
 config-label-stock-increment = Påfyllning: +{ $increment }/cykel
-config-label-stock-reserved = | Reserverat: { $reserved }
+config-label-stock-reserved = Reserverat: { $reserved }
 config-label-stock-not-initialized = Max: { $max } | Tillgängligt: (ej initialiserat)
 config-label-stock-unlimited = Lager: Obegränsat
 

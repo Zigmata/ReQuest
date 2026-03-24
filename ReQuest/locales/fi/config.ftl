@@ -761,7 +761,7 @@ config-label-item-stock-limits = {"**"}Esineiden varastorajat{"**"}
 config-msg-no-items-in-shop = Kaupassa ei ole esineitä.
 config-label-stock-with-available = Maks: { $max } | Saatavilla: { $available }
 config-label-stock-increment = Täydennys: +{ $increment }/kierros
-config-label-stock-reserved = | Varattu: { $reserved }
+config-label-stock-reserved = Varattu: { $reserved }
 config-label-stock-not-initialized = Maks: { $max } | Saatavilla: (ei alustettu)
 config-label-stock-unlimited = Varasto: Rajoittamaton
 

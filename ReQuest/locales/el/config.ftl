@@ -760,7 +760,7 @@ config-label-item-stock-limits = {"**"}Όρια Αποθέματος Αντικ�
 config-msg-no-items-in-shop = Δεν υπάρχουν αντικείμενα σε αυτό το κατάστημα.
 config-label-stock-with-available = Μέγιστο: { $max } | Διαθέσιμο: { $available }
 config-label-stock-increment = Ανεφοδιασμός: +{ $increment }/κύκλο
-config-label-stock-reserved = | Δεσμευμένο: { $reserved }
+config-label-stock-reserved = Δεσμευμένο: { $reserved }
 config-label-stock-not-initialized = Μέγιστο: { $max } | Διαθέσιμο: (δεν αρχικοποιήθηκε)
 config-label-stock-unlimited = Απόθεμα: Απεριόριστο
 

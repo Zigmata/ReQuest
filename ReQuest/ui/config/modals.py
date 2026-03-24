@@ -58,8 +58,7 @@ SHOP_SCHEMA = {
                 "dayOfWeek": {"type": "integer", "minimum": 0, "maximum": 6},
                 "hour": {"type": "integer", "minimum": 0, "maximum": 23},
                 "minute": {"type": "integer", "minimum": 0, "maximum": 59},
-                "mode": {"type": "string", "enum": ["full", "incremental"]},
-                "incrementAmount": {"type": "integer", "minimum": 1}
+                "mode": {"type": "string", "enum": ["full", "incremental"]}
             }
         },
         "shopStock": {
@@ -71,6 +70,7 @@ SHOP_SCHEMA = {
                     "description": {"type": "string"},
                     "quantity": {"type": "integer", "minimum": 1},
                     "maxStock": {"type": "integer", "minimum": 1},
+                    "restockIncrement": {"type": "integer", "minimum": 1},
                     "costs": {
                         "type": "array",
                         "items": {

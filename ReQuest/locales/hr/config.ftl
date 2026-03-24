@@ -760,7 +760,7 @@ config-label-item-stock-limits = {"**"}Ograničenja zaliha predmeta{"**"}
 config-msg-no-items-in-shop = Nema predmeta u ovoj trgovini.
 config-label-stock-with-available = Maks.: { $max } | Raspoloživo: { $available }
 config-label-stock-increment = Nadopuna: +{ $increment }/ciklus
-config-label-stock-reserved = | Rezervirano: { $reserved }
+config-label-stock-reserved = Rezervirano: { $reserved }
 config-label-stock-not-initialized = Maks.: { $max } | Raspoloživo: (nije inicijalizirano)
 config-label-stock-unlimited = Zalihe: Neograničeno
 

@@ -758,7 +758,7 @@ config-label-item-stock-limits = {"**"}アイテム在庫制限{"**"}
 config-msg-no-items-in-shop = このショップにはアイテムがありません。
 config-label-stock-with-available = 最大: { $max } | 在庫: { $available }
 config-label-stock-increment = 補充: +{ $increment }/サイクル
-config-label-stock-reserved = | 予約済み: { $reserved }
+config-label-stock-reserved = 予約済み: { $reserved }
 config-label-stock-not-initialized = 最大: { $max } | 在庫:（未初期化）
 config-label-stock-unlimited = 在庫: 無制限
 

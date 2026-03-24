@@ -760,7 +760,7 @@ config-label-item-stock-limits = {"**"}Limite de stoc obiecte{"**"}
 config-msg-no-items-in-shop = Niciun obiect în acest magazin.
 config-label-stock-with-available = Maxim: { $max } | Disponibil: { $available }
 config-label-stock-increment = Reaprovizionare: +{ $increment }/ciclu
-config-label-stock-reserved = | Rezervat: { $reserved }
+config-label-stock-reserved = Rezervat: { $reserved }
 config-label-stock-not-initialized = Maxim: { $max } | Disponibil: (neinițializat)
 config-label-stock-unlimited = Stoc: Nelimitat
 

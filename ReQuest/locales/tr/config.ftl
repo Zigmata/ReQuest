@@ -760,7 +760,7 @@ config-label-item-stock-limits = {"**"}Eşya Stok Limitleri{"**"}
 config-msg-no-items-in-shop = Bu mağazada eşya yok.
 config-label-stock-with-available = Maks: { $max } | Mevcut: { $available }
 config-label-stock-increment = Yenileme: +{ $increment }/döngü
-config-label-stock-reserved = | Rezerve: { $reserved }
+config-label-stock-reserved = Rezerve: { $reserved }
 config-label-stock-not-initialized = Maks: { $max } | Mevcut: (başlatılmamış)
 config-label-stock-unlimited = Stok: Sınırsız
 

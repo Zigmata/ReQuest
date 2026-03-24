@@ -212,7 +212,10 @@ class Tasks(Cog):
                 amount_added = max_stock - current_available
             else:
                 # Increment available up to maxStock, using per-item increment (default 1)
-                increment_amount = item.get(ShopFields.RESTOCK_INCREMENT, 1)
+                try:
+                    increment_amount = max(1, int(item.get(ShopFields.RESTOCK_INCREMENT, 1)))
+                except (TypeError, ValueError):
+                    increment_amount = 1
                 await increment_available_stock(self.bot, guild_id, channel_id, item_name,
                                                 increment_amount, max_stock)
                 amount_added = min(increment_amount, max_stock - current_available)

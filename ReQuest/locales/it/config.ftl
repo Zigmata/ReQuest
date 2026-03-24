@@ -760,7 +760,7 @@ config-label-item-stock-limits = {"**"}Limiti scorte oggetti{"**"}
 config-msg-no-items-in-shop = Nessun oggetto in questo negozio.
 config-label-stock-with-available = Max: { $max } | Disponibili: { $available }
 config-label-stock-increment = Rifornimento: +{ $increment }/ciclo
-config-label-stock-reserved = | Riservati: { $reserved }
+config-label-stock-reserved = Riservati: { $reserved }
 config-label-stock-not-initialized = Max: { $max } | Disponibili: (non inizializzato)
 config-label-stock-unlimited = Scorte: Illimitate
 
