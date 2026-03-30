@@ -19,7 +19,7 @@ from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
 from ReQuest.ui.common.enums import InventoryType
 from ReQuest.ui.player import buttons, selects
 from ReQuest.utilities.constants import (
-    CharacterFields, ConfigFields, CommonFields, ShopFields, DatabaseCollections
+    CharacterFields, ConfigFields, CommonFields, ShopFields, DatabaseCollections, DisplayLimits
 )
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_guild_locale, resolve_locale
 from ReQuest.utilities.supportFunctions import (
@@ -44,7 +44,8 @@ from ReQuest.utilities.supportFunctions import (
     get_container_name,
     get_container_items,
     escape_markdown,
-    decode_mongo_key
+    decode_mongo_key,
+    truncate_text
 )
 
 logger = logging.getLogger(__name__)
@@ -577,7 +578,7 @@ class ContainerItemsView(LocaleLayoutView):
 
             items_display = []
             for item_name, quantity in page_items:
-                items_display.append(f'• {item_name}: **{quantity}**')
+                items_display.append(f'• {truncate_text(item_name, DisplayLimits.ITEM_NAME)}: **{quantity}**')
 
             container.add_item(TextDisplay('\n'.join(items_display)))
             container.add_item(Separator())
@@ -1608,7 +1609,7 @@ class NewCharacterShopView(LocaleLayoutView):
                     display += f" {t(locale, 'player-label-in-cart', quantity=item_quantity_in_cart)}"
 
             if description := item.get('description'):
-                display += f"\n*{description}*"
+                display += f"\n*{truncate_text(description, DisplayLimits.ITEM_DESCRIPTION)}*"
 
             section.add_item(TextDisplay(display))
             container.add_item(section)

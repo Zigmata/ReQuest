@@ -22,7 +22,7 @@ from ReQuest.ui.common.enums import ShopChannelType, RestockMode, ScheduleType
 from ReQuest.ui.common.modals import LocaleModal
 from ReQuest.utilities.constants import (
     CharacterFields, ConfigFields, CurrencyFields, QuestFields, ShopFields, RestockFields, RoleplayFields, CommonFields,
-    DatabaseCollections
+    DatabaseCollections, DisplayLimits
 )
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.supportFunctions import (
@@ -608,14 +608,16 @@ class ConfigShopDetailsModal(LocaleModal):
             custom_id='shop_name_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-name'),
             default=name_default,
-            required=True
+            required=True,
+            max_length=DisplayLimits.SHOP_NAME
         )
         self.shop_keeper_text_input = discord.ui.TextInput(
             label=t(DEFAULT_LOCALE, 'config-modal-label-shopkeeper-name'),
             custom_id='shop_keeper_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shopkeeper-name'),
             default=keeper_default,
-            required=False
+            required=False,
+            max_length=DisplayLimits.SHOPKEEPER_NAME
         )
         self.shop_description_text_input = discord.ui.TextInput(
             label=t(DEFAULT_LOCALE, 'config-modal-label-shop-description'),
@@ -767,13 +769,15 @@ class ForumThreadShopModal(LocaleModal):
             label=t(DEFAULT_LOCALE, 'config-modal-label-shop-name'),
             custom_id='shop_name_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-name'),
-            required=True
+            required=True,
+            max_length=DisplayLimits.SHOP_NAME
         )
         self.shop_keeper_input = discord.ui.TextInput(
             label=t(DEFAULT_LOCALE, 'config-modal-label-shopkeeper-name'),
             custom_id='shop_keeper_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shopkeeper-name'),
-            required=False
+            required=False,
+            max_length=DisplayLimits.SHOPKEEPER_NAME
         )
         self.shop_description_input = discord.ui.TextInput(
             label=t(DEFAULT_LOCALE, 'config-modal-label-shop-description'),
@@ -990,7 +994,8 @@ class ShopItemModal(LocaleModal):
             label=t(DEFAULT_LOCALE, 'config-modal-label-item-name'),
             custom_id='item_name_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-name'),
-            default=name_default
+            default=name_default,
+            max_length=DisplayLimits.ITEM_NAME
         )
         self.item_description_text_input = discord.ui.TextInput(
             label=t(DEFAULT_LOCALE, 'config-modal-label-item-description'),
@@ -1254,7 +1259,8 @@ class NewCharacterShopItemModal(LocaleModal):
             label=t(DEFAULT_LOCALE, 'config-modal-label-item-name'),
             custom_id='item_name_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-name'),
-            default=name_default
+            default=name_default,
+            max_length=DisplayLimits.ITEM_NAME
         )
         self.add_item(self.item_name_text_input)
 
@@ -1637,7 +1643,8 @@ class StaticKitItemModal(LocaleModal):
             label=t(DEFAULT_LOCALE, 'config-modal-label-item-name'),
             custom_id='item_name_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-name'),
-            default=name_default
+            default=name_default,
+            max_length=DisplayLimits.ITEM_NAME
         )
         self.description_text_input = discord.ui.TextInput(
             label=t(DEFAULT_LOCALE, 'config-modal-label-item-description'),

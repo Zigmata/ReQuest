@@ -172,3 +172,13 @@ class DatabaseCollections:
     QUEST_ROLE_MODE = 'questRoleMode'
     QUEST_ROLE_ASSIGNMENTS = 'questRoleAssignments'
     CHARACTERS = 'characters'
+
+
+class DisplayLimits:
+    """Character limits for TextDisplay components. Discord enforces a 4000-char aggregate limit."""
+    TEXT_DISPLAY_MAX = 4000
+    SHOP_NAME = 50
+    SHOPKEEPER_NAME = 32
+    SHOP_DESCRIPTION = 300
+    ITEM_NAME = 50
+    ITEM_DESCRIPTION = 256

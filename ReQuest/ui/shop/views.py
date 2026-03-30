@@ -19,7 +19,7 @@ from titlecase import titlecase
 from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.shop import buttons
 from ReQuest.utilities.constants import (
-    CharacterFields, ConfigFields, ShopFields, CommonFields, CartFields, DatabaseCollections
+    CharacterFields, ConfigFields, ShopFields, CommonFields, CartFields, DatabaseCollections, DisplayLimits
 )
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_guild_locale
 from ReQuest.utilities.supportFunctions import (
@@ -40,7 +40,8 @@ from ReQuest.utilities.supportFunctions import (
     log_exception,
     UserFeedbackError,
     escape_markdown,
-    encode_mongo_key
+    encode_mongo_key,
+    truncate_text
 )
 
 logger = logging.getLogger(__name__)
@@ -110,11 +111,14 @@ class ShopBaseView(LocaleLayoutView):
             header_items = []
 
             if shop_name := self.shop_data.get(ShopFields.SHOP_NAME):
-                header_items.append(TextDisplay(f'**{shop_name}**'))
+                header_items.append(TextDisplay(f'**{truncate_text(shop_name, DisplayLimits.SHOP_NAME)}**'))
             if shop_keeper := self.shop_data.get(ShopFields.SHOP_KEEPER):
-                header_items.append(TextDisplay(t(locale, 'shop-label-shopkeeper', **{'name': shop_keeper})))
+                keeper = truncate_text(shop_keeper, DisplayLimits.SHOPKEEPER_NAME)
+                header_items.append(TextDisplay(t(locale, 'shop-label-shopkeeper', **{'name': keeper})))
             if shop_description := self.shop_data.get(ShopFields.SHOP_DESCRIPTION):
-                header_items.append(TextDisplay(f'*{shop_description}*'))
+                header_items.append(
+                    TextDisplay(f'*{truncate_text(shop_description, DisplayLimits.SHOP_DESCRIPTION)}*')
+                )
 
             if shop_image := self.shop_data.get(ShopFields.SHOP_IMAGE):
                 shop_image = Thumbnail(media=f'{shop_image}')
@@ -170,7 +174,7 @@ class ShopBaseView(LocaleLayoutView):
                         content += f'\n*{t(locale, "shop-label-stock-available", **{"available": available})}*'
 
                 if item_description:
-                    content += f'\n*{escape_markdown(item_description)}*'
+                    content += f'\n*{truncate_text(escape_markdown(item_description), DisplayLimits.ITEM_DESCRIPTION)}*'
 
                 section.add_item(TextDisplay(content))
                 container.add_item(section)
@@ -382,7 +386,8 @@ class ShopCartView(LocaleLayoutView):
                     edit_button = buttons.EditCartItemButton(item_key, quantity)
                     section = Section(accessory=edit_button)
 
-                    item_line = (f'**{escape_markdown(item[CommonFields.NAME])}** x{quantity} '
+                    item_name = truncate_text(escape_markdown(item[CommonFields.NAME]), DisplayLimits.ITEM_NAME)
+                    item_line = (f'**{item_name}** x{quantity} '
                                  f'(Total: {total_item_quantity}) - {price_string}')
                     section.add_item(TextDisplay(item_line))
                     container.add_item(section)
