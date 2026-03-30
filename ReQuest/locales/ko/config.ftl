@@ -252,6 +252,7 @@ config-modal-title-kit-currency = 키트 화폐 추가
 config-modal-placeholder-currency-eg = 예: 골드
 config-modal-placeholder-amount-eg = 예: 100
 config-error-amount-must-be-number = 금액은 숫자여야 합니다.
+config-error-amount-exceeds-maximum = 금액은 { $max }을(를) 초과할 수 없습니다.
 config-error-no-currencies-on-server = 서버에 설정된 화폐가 없습니다.
 config-error-currency-not-found-short = 화폐 "{ $currency }"을(를) 찾을 수 없습니다.
 config-error-denomination-not-found = 화폐 설정에서 단위 "{ $denomination }"을(를) 찾을 수 없습니다.

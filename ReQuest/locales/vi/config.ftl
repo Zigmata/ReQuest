@@ -252,6 +252,7 @@ config-modal-title-kit-currency = Thêm tiền tệ bộ trang bị
 config-modal-placeholder-currency-eg = Ví dụ: Vàng
 config-modal-placeholder-amount-eg = Ví dụ: 100
 config-error-amount-must-be-number = Số lượng phải là một số.
+config-error-amount-exceeds-maximum = Số tiền không được vượt quá { $max }.
 config-error-no-currencies-on-server = Chưa cấu hình tiền tệ trên máy chủ.
 config-error-currency-not-found-short = Không tìm thấy tiền tệ "{ $currency }".
 config-error-denomination-not-found = Không tìm thấy mệnh giá "{ $denomination }" trong cấu hình tiền tệ.

@@ -252,6 +252,7 @@ config-modal-title-kit-currency = Pridėti rinkinio valiutą
 config-modal-placeholder-currency-eg = pvz., Auksas
 config-modal-placeholder-amount-eg = pvz., 100
 config-error-amount-must-be-number = Suma turi būti skaičius.
+config-error-amount-exceeds-maximum = Suma negali viršyti { $max }.
 config-error-no-currencies-on-server = Serveryje nėra sukonfigūruotų valiutų.
 config-error-currency-not-found-short = Valiuta „{ $currency }" nerasta.
 config-error-denomination-not-found = Nominalas „{ $denomination }" nerastas valiutos konfigūracijoje.

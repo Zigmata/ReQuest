@@ -264,6 +264,7 @@ player-embed-field-receipt = 영수증
 # 화폐 사용 오류
 player-error-amount-not-number = 금액은 숫자여야 합니다.
 player-error-amount-positive = 양수 금액을 사용해야 합니다.
+player-error-amount-exceeds-maximum = 금액은 { $max }을(를) 초과할 수 없습니다.
 player-error-no-active-character-server = 이 서버에서 활성화된 캐릭터가 없습니다.
 player-error-no-currency-config = 이 서버에 화폐 설정이 없습니다.
 

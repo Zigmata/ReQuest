@@ -1420,6 +1420,10 @@ class StaticKitConfirmView(LocaleLayoutView):
         self.kit_data = kit_data
         self.currency_config = currency_config
 
+        self.items_per_page = 9
+        self.current_page = 0
+        self.total_pages = 1
+
         self.build_view()
 
     def build_view(self):
@@ -1439,28 +1443,34 @@ class StaticKitConfirmView(LocaleLayoutView):
             container.add_item(Separator())
 
         items = self.kit_data.get(CommonFields.ITEMS, [])
-        # Decode currency keys for display
         currency = {decode_mongo_key(k): v for k, v in self.kit_data.get(CharacterFields.CURRENCY, {}).items()}
 
-        details = []
+        # Build combined list of detail lines
+        detail_lines = []
+        if currency:
+            curr_strs = format_consolidated_totals(currency, self.currency_config)
+            for s in curr_strs:
+                detail_lines.append(f'- {s}')
         if items:
-            details.append(t(locale, 'player-label-items-heading'))
             for item in items:
-                details.append(
+                detail_lines.append(
                     f'- {item.get(CommonFields.QUANTITY, 1)}x '
                     f'{escape_markdown(titlecase(item.get(CommonFields.NAME)))}'
                 )
 
-        if currency:
-            details.append(f'\n{t(locale, "player-label-currency-heading")}')
-            curr_strs = format_consolidated_totals(currency, self.currency_config)
-            for s in curr_strs:
-                details.append(f'- {s}')
+        if not detail_lines:
+            container.add_item(TextDisplay(t(locale, 'player-msg-kit-empty')))
+        else:
+            self.total_pages = math.ceil(len(detail_lines) / self.items_per_page)
+            if self.current_page >= self.total_pages:
+                self.current_page = max(0, self.total_pages - 1)
 
-        if not details:
-            details.append(t(locale, 'player-msg-kit-empty'))
+            start = self.current_page * self.items_per_page
+            end = start + self.items_per_page
+            page_lines = detail_lines[start:end]
 
-        container.add_item(TextDisplay('\n'.join(details)))
+            container.add_item(TextDisplay('\n'.join(page_lines)))
+
         container.add_item(Separator())
 
         actions = ActionRow()
@@ -1469,6 +1479,52 @@ class StaticKitConfirmView(LocaleLayoutView):
         container.add_item(actions)
 
         self.add_item(container)
+
+        if self.total_pages > 1:
+            nav_row = ActionRow()
+            prev_button = Button(
+                label=t(locale, 'common-btn-prev'),
+                style=discord.ButtonStyle.secondary,
+                custom_id='kit_confirm_prev',
+                disabled=(self.current_page == 0)
+            )
+            prev_button.callback = self.prev_page
+
+            page_display = Button(
+                label=t(locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages),
+                style=discord.ButtonStyle.secondary,
+                custom_id='kit_confirm_page'
+            )
+            page_display.callback = self.show_page_jump_modal
+
+            next_button = Button(
+                label=t(locale, 'common-btn-next'),
+                style=discord.ButtonStyle.secondary,
+                custom_id='kit_confirm_next',
+                disabled=(self.current_page >= self.total_pages - 1)
+            )
+            next_button.callback = self.next_page
+
+            nav_row.add_item(prev_button)
+            nav_row.add_item(page_display)
+            nav_row.add_item(next_button)
+            self.add_item(nav_row)
+
+    async def prev_page(self, interaction):
+        self.current_page -= 1
+        self.build_view()
+        await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction):
+        self.current_page += 1
+        self.build_view()
+        await interaction.response.edit_message(view=self)
+
+    async def show_page_jump_modal(self, interaction):
+        try:
+            await interaction.response.send_modal(common_modals.PageJumpModal(self))
+        except Exception as e:
+            await log_exception(e, interaction)
 
     async def submit(self, interaction):
         items = {

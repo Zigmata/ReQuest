@@ -252,6 +252,7 @@ config-modal-title-kit-currency = किट मुद्रा जोड़े�
 config-modal-placeholder-currency-eg = उदा., Gold
 config-modal-placeholder-amount-eg = उदा., 100
 config-error-amount-must-be-number = राशि एक संख्या होनी चाहिए।
+config-error-amount-exceeds-maximum = राशि { $max } से अधिक नहीं हो सकती।
 config-error-no-currencies-on-server = सर्वर पर कोई मुद्रा कॉन्फ़िगर नहीं है।
 config-error-currency-not-found-short = मुद्रा "{ $currency }" नहीं मिली।
 config-error-denomination-not-found = मूल्यवर्ग "{ $denomination }" मुद्रा कॉन्फ़िगरेशन में नहीं मिला।

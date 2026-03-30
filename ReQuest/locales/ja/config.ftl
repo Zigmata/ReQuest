@@ -252,6 +252,7 @@ config-modal-title-kit-currency = キット通貨を追加
 config-modal-placeholder-currency-eg = 例: ゴールド
 config-modal-placeholder-amount-eg = 例: 100
 config-error-amount-must-be-number = 金額は数値でなければなりません。
+config-error-amount-exceeds-maximum = 金額は { $max } を超えることはできません。
 config-error-no-currencies-on-server = サーバーに通貨が設定されていません。
 config-error-currency-not-found-short = 通貨「{ $currency }」が見つかりません。
 config-error-denomination-not-found = 額面「{ $denomination }」が通貨設定に見つかりません。

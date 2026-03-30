@@ -1074,6 +1074,12 @@ class ShopItemModal(LocaleModal):
                                   **{'amount': amount_string, 'currency': currency_name}),
                                 message_id='config-error-cost-amount-invalid'
                             )
+                        if amount > DisplayLimits.MAX_CURRENCY_AMOUNT:
+                            raise UserFeedbackError(
+                                t(DEFAULT_LOCALE, 'config-error-amount-exceeds-maximum',
+                                  **{'max': str(DisplayLimits.MAX_CURRENCY_AMOUNT)}),
+                                message_id='config-error-amount-exceeds-maximum'
+                            )
 
                         currency_key = currency_name.lower()
                         currency_config = await get_cached_data(
@@ -1339,6 +1345,12 @@ class NewCharacterShopItemModal(LocaleModal):
                                       **{'amount': amount_str, 'currency': currency_name}),
                                     message_id='config-error-amount-invalid-short'
                                 )
+                            if amount > DisplayLimits.MAX_CURRENCY_AMOUNT:
+                                raise UserFeedbackError(
+                                    t(DEFAULT_LOCALE, 'config-error-amount-exceeds-maximum',
+                                      **{'max': str(DisplayLimits.MAX_CURRENCY_AMOUNT)}),
+                                    message_id='config-error-amount-exceeds-maximum'
+                                )
 
                             currency_key = currency_name.lower()
                             currency_config = await get_cached_data(
@@ -1511,6 +1523,12 @@ class ConfigNewCharacterWealthModal(LocaleModal):
             if not self.amount_text_input.value.replace('.', '', 1).isdigit():
                 raise ValueError('Amount must be a number.')
             amount = float(self.amount_text_input.value)
+            if amount > DisplayLimits.MAX_CURRENCY_AMOUNT:
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-amount-exceeds-maximum',
+                      **{'max': str(DisplayLimits.MAX_CURRENCY_AMOUNT)}),
+                    message_id='config-error-amount-exceeds-maximum'
+                )
 
             if amount <= 0:
                 await update_cached_data(
@@ -1743,6 +1761,12 @@ class StaticKitCurrencyModal(LocaleModal):
                     message_id='config-error-amount-must-be-number'
                 )
             amount = float(self.amount_text_input.value)
+            if amount > DisplayLimits.MAX_CURRENCY_AMOUNT:
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-amount-exceeds-maximum',
+                      **{'max': str(DisplayLimits.MAX_CURRENCY_AMOUNT)}),
+                    message_id='config-error-amount-exceeds-maximum'
+                )
 
             currency_config = await get_cached_data(
                 bot=bot,

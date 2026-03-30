@@ -252,6 +252,7 @@ config-modal-title-kit-currency = Dodaj valutu seta
 config-modal-placeholder-currency-eg = npr. Zlato
 config-modal-placeholder-amount-eg = npr. 100
 config-error-amount-must-be-number = Iznos mora biti broj.
+config-error-amount-exceeds-maximum = Iznos ne može premašiti { $max }.
 config-error-no-currencies-on-server = Nijedna valuta nije konfigurirana na poslužitelju.
 config-error-currency-not-found-short = Valuta "{ $currency }" nije pronađena.
 config-error-denomination-not-found = Apoen "{ $denomination }" nije pronađen u konfiguraciji valute.

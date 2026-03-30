@@ -264,6 +264,7 @@ player-embed-field-receipt = レシート
 # Spend currency errors
 player-error-amount-not-number = 金額は数値でなければなりません。
 player-error-amount-positive = 正の金額を使用してください。
+player-error-amount-exceeds-maximum = 金額は { $max } を超えることはできません。
 player-error-no-active-character-server = このサーバーで有効なキャラクターがいません。
 player-error-no-currency-config = このサーバーの通貨設定が見つかりません。
 

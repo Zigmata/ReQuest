@@ -264,6 +264,7 @@ player-embed-field-receipt = Receipt
 # Spend currency errors
 player-error-amount-not-number = Amount must be a number.
 player-error-amount-positive = You must spend a positive amount.
+player-error-amount-exceeds-maximum = Amount cannot exceed { $max }.
 player-error-no-active-character-server = You do not have an active character on this server.
 player-error-no-currency-config = A currency configuration was not found for this server.
 

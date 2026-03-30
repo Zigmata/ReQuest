@@ -252,6 +252,7 @@ config-modal-title-kit-currency = Dodaj walutę do zestawu
 config-modal-placeholder-currency-eg = np. Gold
 config-modal-placeholder-amount-eg = np. 100
 config-error-amount-must-be-number = Kwota musi być liczbą.
+config-error-amount-exceeds-maximum = Kwota nie może przekraczać { $max }.
 config-error-no-currencies-on-server = Na serwerze nie skonfigurowano walut.
 config-error-currency-not-found-short = Waluta "{ $currency }" nie została znaleziona.
 config-error-denomination-not-found = Nominał "{ $denomination }" nie został znaleziony w konfiguracji waluty.

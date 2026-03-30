@@ -264,6 +264,7 @@ player-embed-field-receipt = Recibo
 # Errores de gastar moneda
 player-error-amount-not-number = La cantidad debe ser un número.
 player-error-amount-positive = Debes gastar una cantidad positiva.
+player-error-amount-exceeds-maximum = El monto no puede exceder { $max }.
 player-error-no-active-character-server = No tienes un personaje activo en este servidor.
 player-error-no-currency-config = No se encontró una configuración de moneda para este servidor.
 

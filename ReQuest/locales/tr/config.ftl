@@ -252,6 +252,7 @@ config-modal-title-kit-currency = Kit Para Birimi Ekle
 config-modal-placeholder-currency-eg = ör. Altın
 config-modal-placeholder-amount-eg = ör. 100
 config-error-amount-must-be-number = Miktar bir sayı olmalıdır.
+config-error-amount-exceeds-maximum = Miktar { $max } değerini aşamaz.
 config-error-no-currencies-on-server = Sunucuda para birimi yapılandırılmamış.
 config-error-currency-not-found-short = "{ $currency }" para birimi bulunamadı.
 config-error-denomination-not-found = "{ $denomination }" birimi para birimi yapılandırmasında bulunamadı.

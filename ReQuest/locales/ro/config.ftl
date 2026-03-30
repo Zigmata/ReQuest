@@ -252,6 +252,7 @@ config-modal-title-kit-currency = Adaugă monedă la kit
 config-modal-placeholder-currency-eg = de ex., Aur
 config-modal-placeholder-amount-eg = de ex., 100
 config-error-amount-must-be-number = Suma trebuie să fie un număr.
+config-error-amount-exceeds-maximum = Suma nu poate depăși { $max }.
 config-error-no-currencies-on-server = Nicio monedă configurată pe server.
 config-error-currency-not-found-short = Moneda „{ $currency }" nu a fost găsită.
 config-error-denomination-not-found = Denominația „{ $denomination }" nu a fost găsită în configurarea monedei.

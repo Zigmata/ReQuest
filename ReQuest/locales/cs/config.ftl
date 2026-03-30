@@ -252,6 +252,7 @@ config-modal-title-kit-currency = Přidat měnu do sady
 config-modal-placeholder-currency-eg = např. Gold
 config-modal-placeholder-amount-eg = např. 100
 config-error-amount-must-be-number = Částka musí být číslo.
+config-error-amount-exceeds-maximum = Částka nesmí překročit { $max }.
 config-error-no-currencies-on-server = Na serveru nejsou nakonfigurovány žádné měny.
 config-error-currency-not-found-short = Měna „{ $currency }" nebyla nalezena.
 config-error-denomination-not-found = Nominální hodnota „{ $denomination }" nebyla nalezena v konfiguraci měny.

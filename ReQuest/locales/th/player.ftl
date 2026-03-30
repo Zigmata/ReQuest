@@ -264,6 +264,7 @@ player-embed-field-receipt = ใบเสร็จ
 # Spend currency errors
 player-error-amount-not-number = จำนวนต้องเป็นตัวเลข
 player-error-amount-positive = คุณต้องใช้จำนวนที่เป็นบวก
+player-error-amount-exceeds-maximum = จำนวนต้องไม่เกิน { $max }
 player-error-no-active-character-server = คุณไม่มีตัวละครที่ใช้งานอยู่บนเซิร์ฟเวอร์นี้
 player-error-no-currency-config = ไม่พบการตั้งค่าสกุลเงินสำหรับเซิร์ฟเวอร์นี้
 

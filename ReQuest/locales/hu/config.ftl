@@ -252,6 +252,7 @@ config-modal-title-kit-currency = Készlet valuta hozzáadása
 config-modal-placeholder-currency-eg = pl. Arany
 config-modal-placeholder-amount-eg = pl. 100
 config-error-amount-must-be-number = Az összegnek számnak kell lennie.
+config-error-amount-exceeds-maximum = Az összeg nem haladhatja meg a { $max } értéket.
 config-error-no-currencies-on-server = Nincsenek valuták konfigurálva a szerveren.
 config-error-currency-not-found-short = A(z) „{ $currency }" valuta nem található.
 config-error-denomination-not-found = A(z) „{ $denomination }" címlet nem található a valutakonfigurációban.

@@ -264,6 +264,7 @@ player-embed-field-receipt = Paragon
 # Spend currency errors
 player-error-amount-not-number = Kwota musi być liczbą.
 player-error-amount-positive = Musisz wydać kwotę dodatnią.
+player-error-amount-exceeds-maximum = Kwota nie może przekraczać { $max }.
 player-error-no-active-character-server = Nie masz aktywnej postaci na tym serwerze.
 player-error-no-currency-config = Nie znaleziono konfiguracji waluty dla tego serwera.
 

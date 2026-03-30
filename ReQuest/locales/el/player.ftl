@@ -264,6 +264,7 @@ player-embed-field-receipt = Απόδειξη
 # Spend currency errors
 player-error-amount-not-number = Το ποσό πρέπει να είναι αριθμός.
 player-error-amount-positive = Πρέπει να ξοδέψετε θετικό ποσό.
+player-error-amount-exceeds-maximum = Το ποσό δεν μπορεί να υπερβαίνει το { $max }.
 player-error-no-active-character-server = Δεν έχετε ενεργό χαρακτήρα σε αυτόν τον διακομιστή.
 player-error-no-currency-config = Δεν βρέθηκε ρύθμιση νομίσματος για αυτόν τον διακομιστή.
 

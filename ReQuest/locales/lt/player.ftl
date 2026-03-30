@@ -264,6 +264,7 @@ player-embed-field-receipt = Kvitas
 # Spend currency errors
 player-error-amount-not-number = Suma turi būti skaičius.
 player-error-amount-positive = Turite išleisti teigiamą sumą.
+player-error-amount-exceeds-maximum = Suma negali viršyti { $max }.
 player-error-no-active-character-server = Neturite aktyvaus veikėjo šiame serveryje.
 player-error-no-currency-config = Šiam serveriui nerasta valiutos konfigūracija.
 

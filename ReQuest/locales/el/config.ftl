@@ -252,6 +252,7 @@ config-modal-title-kit-currency = Προσθήκη Νομίσματος Κιτ
 config-modal-placeholder-currency-eg = π.χ., Χρυσός
 config-modal-placeholder-amount-eg = π.χ., 100
 config-error-amount-must-be-number = Το ποσό πρέπει να είναι αριθμός.
+config-error-amount-exceeds-maximum = Το ποσό δεν μπορεί να υπερβαίνει το { $max }.
 config-error-no-currencies-on-server = Δεν έχουν ρυθμιστεί νομίσματα στον διακομιστή.
 config-error-currency-not-found-short = Το νόμισμα "{ $currency }" δεν βρέθηκε.
 config-error-denomination-not-found = Η ονομαστική αξία "{ $denomination }" δεν βρέθηκε στη ρύθμιση νομισμάτων.

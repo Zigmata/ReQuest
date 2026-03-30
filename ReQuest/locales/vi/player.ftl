@@ -264,6 +264,7 @@ player-embed-field-receipt = Biên lai
 # Spend currency errors
 player-error-amount-not-number = Số lượng phải là một con số.
 player-error-amount-positive = Bạn phải chi một số lượng dương.
+player-error-amount-exceeds-maximum = Số tiền không được vượt quá { $max }.
 player-error-no-active-character-server = Bạn không có nhân vật đang hoạt động trên máy chủ này.
 player-error-no-currency-config = Không tìm thấy cấu hình tiền tệ cho máy chủ này.
 

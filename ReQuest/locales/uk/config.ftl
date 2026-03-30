@@ -252,6 +252,7 @@ config-modal-title-kit-currency = Додати валюту набору
 config-modal-placeholder-currency-eg = напр., Золото
 config-modal-placeholder-amount-eg = напр., 100
 config-error-amount-must-be-number = Сума має бути числом.
+config-error-amount-exceeds-maximum = Сума не може перевищувати { $max }.
 config-error-no-currencies-on-server = На сервері валюти не налаштовано.
 config-error-currency-not-found-short = Валюту "{ $currency }" не знайдено.
 config-error-denomination-not-found = Номінал "{ $denomination }" не знайдено в конфігурації валюти.

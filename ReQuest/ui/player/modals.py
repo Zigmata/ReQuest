@@ -8,7 +8,7 @@ import shortuuid
 from ReQuest.ui.common.modals import LocaleModal
 
 from ReQuest.ui.common.enums import InventoryType
-from ReQuest.utilities.constants import CharacterFields, ConfigFields, CommonFields, DatabaseCollections
+from ReQuest.utilities.constants import CharacterFields, ConfigFields, CommonFields, DatabaseCollections, DisplayLimits
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_user_locale, resolve_guild_locale
 from ReQuest.utilities.supportFunctions import (
     find_currency_or_denomination,
@@ -465,6 +465,12 @@ class SpendCurrencyModal(LocaleModal):
                 raise UserFeedbackError(
                     t(locale, 'player-error-amount-positive'),
                     message_id='player-error-amount-positive'
+                )
+            if amount > DisplayLimits.MAX_CURRENCY_AMOUNT:
+                raise UserFeedbackError(
+                    t(locale, 'player-error-amount-exceeds-maximum',
+                      **{'max': str(DisplayLimits.MAX_CURRENCY_AMOUNT)}),
+                    message_id='player-error-amount-exceeds-maximum'
                 )
 
             bot = interaction.client

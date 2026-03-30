@@ -264,6 +264,7 @@ player-embed-field-receipt = 收据
 # Spend currency errors
 player-error-amount-not-number = 金额必须是数字。
 player-error-amount-positive = 您必须花费正数金额。
+player-error-amount-exceeds-maximum = 金额不能超过 { $max }。
 player-error-no-active-character-server = 您在此服务器上没有活跃角色。
 player-error-no-currency-config = 未找到此服务器的货币配置。
 

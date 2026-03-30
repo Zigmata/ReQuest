@@ -264,6 +264,7 @@ player-embed-field-receipt = Квитанция
 # Ошибки траты валюты
 player-error-amount-not-number = Сумма должна быть числом.
 player-error-amount-positive = Сумма должна быть положительной.
+player-error-amount-exceeds-maximum = Сумма не может превышать { $max }.
 player-error-no-active-character-server = У вас нет активного персонажа на этом сервере.
 player-error-no-currency-config = Конфигурация валюты для этого сервера не найдена.
 

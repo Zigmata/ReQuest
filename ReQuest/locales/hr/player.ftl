@@ -264,6 +264,7 @@ player-embed-field-receipt = Račun
 # Spend currency errors
 player-error-amount-not-number = Iznos mora biti broj.
 player-error-amount-positive = Morate potrošiti pozitivan iznos.
+player-error-amount-exceeds-maximum = Iznos ne može premašiti { $max }.
 player-error-no-active-character-server = Nemate aktivnog lika na ovom poslužitelju.
 player-error-no-currency-config = Konfiguracija valute nije pronađena za ovaj poslužitelj.
 

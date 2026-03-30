@@ -264,6 +264,7 @@ player-embed-field-receipt = Nyugta
 # Spend currency errors
 player-error-amount-not-number = Az összegnek számnak kell lennie.
 player-error-amount-positive = Pozitív összeget kell költened.
+player-error-amount-exceeds-maximum = Az összeg nem haladhatja meg a { $max } értéket.
 player-error-no-active-character-server = Nincs aktív karaktered ezen a szerveren.
 player-error-no-currency-config = Nem található valutakonfiguráció ehhez a szerverhez.
 

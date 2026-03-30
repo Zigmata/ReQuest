@@ -252,6 +252,7 @@ config-modal-title-kit-currency = 新增套組貨幣
 config-modal-placeholder-currency-eg = 例如：Gold
 config-modal-placeholder-amount-eg = 例如：100
 config-error-amount-must-be-number = 金額必須為數字。
+config-error-amount-exceeds-maximum = 金額不能超過 { $max }。
 config-error-no-currencies-on-server = 伺服器上未設定任何貨幣。
 config-error-currency-not-found-short = 找不到貨幣「{ $currency }」。
 config-error-denomination-not-found = 在貨幣設定中找不到面額「{ $denomination }」。
