@@ -1078,7 +1078,8 @@ class ShopItemModal(LocaleModal):
                             raise UserFeedbackError(
                                 t(DEFAULT_LOCALE, 'config-error-amount-exceeds-maximum',
                                   **{'max': str(DisplayLimits.MAX_CURRENCY_AMOUNT)}),
-                                message_id='config-error-amount-exceeds-maximum'
+                                message_id='config-error-amount-exceeds-maximum',
+                                max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)
                             )
 
                         currency_key = currency_name.lower()
@@ -1349,7 +1350,8 @@ class NewCharacterShopItemModal(LocaleModal):
                                 raise UserFeedbackError(
                                     t(DEFAULT_LOCALE, 'config-error-amount-exceeds-maximum',
                                       **{'max': str(DisplayLimits.MAX_CURRENCY_AMOUNT)}),
-                                    message_id='config-error-amount-exceeds-maximum'
+                                    message_id='config-error-amount-exceeds-maximum',
+                                    max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)
                                 )
 
                             currency_key = currency_name.lower()
@@ -1503,7 +1505,8 @@ class ConfigNewCharacterWealthModal(LocaleModal):
             label=t(DEFAULT_LOCALE, 'config-modal-label-amount'),
             custom_id='amount_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-amount'),
-            default=current_amount if current_amount is not None else ''
+            default=current_amount if current_amount is not None else '',
+            max_length=10
         )
         self.currency_name_text_input = discord.ui.TextInput(
             label=t(DEFAULT_LOCALE, 'config-modal-label-currency-name'),
@@ -1527,7 +1530,8 @@ class ConfigNewCharacterWealthModal(LocaleModal):
                 raise UserFeedbackError(
                     t(DEFAULT_LOCALE, 'config-error-amount-exceeds-maximum',
                       **{'max': str(DisplayLimits.MAX_CURRENCY_AMOUNT)}),
-                    message_id='config-error-amount-exceeds-maximum'
+                    message_id='config-error-amount-exceeds-maximum',
+                    max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)
                 )
 
             if amount <= 0:
@@ -1746,7 +1750,8 @@ class StaticKitCurrencyModal(LocaleModal):
         self.amount_text_input = discord.ui.TextInput(
             label=t(DEFAULT_LOCALE, 'config-modal-label-amount'),
             custom_id='amount_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-amount-eg')
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-amount-eg'),
+            max_length=10
         )
         self.add_item(self.currency_name_text_input)
         self.add_item(self.amount_text_input)
@@ -1765,7 +1770,8 @@ class StaticKitCurrencyModal(LocaleModal):
                 raise UserFeedbackError(
                     t(DEFAULT_LOCALE, 'config-error-amount-exceeds-maximum',
                       **{'max': str(DisplayLimits.MAX_CURRENCY_AMOUNT)}),
-                    message_id='config-error-amount-exceeds-maximum'
+                    message_id='config-error-amount-exceeds-maximum',
+                    max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)
                 )
 
             currency_config = await get_cached_data(
@@ -1796,37 +1802,29 @@ class StaticKitCurrencyModal(LocaleModal):
                 )
 
             converted_amount = amount * multiplier
+            if converted_amount > DisplayLimits.MAX_CURRENCY_AMOUNT:
+                raise UserFeedbackError(
+                    t(DEFAULT_LOCALE, 'config-error-amount-exceeds-maximum',
+                      **{'max': str(DisplayLimits.MAX_CURRENCY_AMOUNT)}),
+                    message_id='config-error-amount-exceeds-maximum',
+                    max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)
+                )
 
             kit_id = self.calling_view.kit_id
-
-            query = await get_cached_data(
-                bot=bot,
-                mongo_database=bot.gdb,
-                collection_name=DatabaseCollections.STATIC_KITS,
-                query={CommonFields.ID: interaction.guild_id}
-            )
-
-            existing_amount = 0
-
             encoded_currency = encode_mongo_key(parent_name)
-            if query and 'kits' in query:
-                existing_amount = (query['kits'].get(kit_id, {})
-                                   .get(CharacterFields.CURRENCY, {}).get(encoded_currency, 0))
-
-            final_amount = existing_amount + converted_amount
 
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.STATIC_KITS,
                 query={CommonFields.ID: interaction.guild_id},
-                update_data={'$set': {f'kits.{kit_id}.currency.{encoded_currency}': final_amount}}
+                update_data={'$set': {f'kits.{kit_id}.currency.{encoded_currency}': converted_amount}}
             )
 
             if CharacterFields.CURRENCY not in self.calling_view.kit_data:
                 self.calling_view.kit_data[CharacterFields.CURRENCY] = {}
 
-            self.calling_view.kit_data[CharacterFields.CURRENCY][encoded_currency] = final_amount
+            self.calling_view.kit_data[CharacterFields.CURRENCY][encoded_currency] = converted_amount
 
             self.calling_view.build_view()
             await interaction.response.edit_message(view=self.calling_view)

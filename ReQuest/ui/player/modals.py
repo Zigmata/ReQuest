@@ -444,7 +444,8 @@ class SpendCurrencyModal(LocaleModal):
             label=t(DEFAULT_LOCALE, 'player-modal-label-currency-amount'),
             placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-currency-amount'),
             custom_id='currency_amount_text_input',
-            required=True
+            required=True,
+            max_length=10
         )
         self.add_item(self.currency_name_text_input)
         self.add_item(self.currency_amount_text_input)
@@ -470,7 +471,8 @@ class SpendCurrencyModal(LocaleModal):
                 raise UserFeedbackError(
                     t(locale, 'player-error-amount-exceeds-maximum',
                       **{'max': str(DisplayLimits.MAX_CURRENCY_AMOUNT)}),
-                    message_id='player-error-amount-exceeds-maximum'
+                    message_id='player-error-amount-exceeds-maximum',
+                    max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)
                 )
 
             bot = interaction.client
