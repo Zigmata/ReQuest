@@ -252,7 +252,11 @@ def strip_id(mention: str) -> int:
 
 def truncate_text(text: str, max_length: int) -> str:
     """Truncates text to max_length, appending '...' if truncated."""
-    if not text or len(text) <= max_length:
+    if not text:
+        return ''
+    if max_length < 4:
+        return text[:max(max_length, 0)]
+    if len(text) <= max_length:
         return text
     return text[:max_length - 3] + '...'
 

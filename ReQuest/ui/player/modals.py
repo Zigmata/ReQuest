@@ -1,4 +1,5 @@
 import logging
+import math
 from datetime import datetime, timezone
 from titlecase import titlecase
 
@@ -456,6 +457,8 @@ class SpendCurrencyModal(LocaleModal):
             currency_name = self.currency_name_text_input.value.strip()
             try:
                 amount = float(self.currency_amount_text_input.value.strip())
+                if not math.isfinite(amount):
+                    raise ValueError
             except ValueError:
                 raise UserFeedbackError(
                     t(locale, 'player-error-amount-not-number'),

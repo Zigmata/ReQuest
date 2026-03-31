@@ -2557,7 +2557,7 @@ class EditStaticKitView(LocaleLayoutView):
                     if item_data[CommonFields.QUANTITY] > 1:
                         display += f' (x{item_data[CommonFields.QUANTITY]})'
                     if item_data.get('description'):
-                        desc = truncate_text(escape_markdown(item_data['description']), DisplayLimits.ITEM_DESCRIPTION)
+                        desc = escape_markdown(truncate_text(item_data['description'], DisplayLimits.ITEM_DESCRIPTION))
                         display += f'\n*{desc}*'
 
                     container.add_item(TextDisplay(display))
@@ -3307,7 +3307,7 @@ class EditShopView(LocaleLayoutView):
             display_string = f'**{item_text}** - {cost_string}'
 
             if item_description:
-                desc = truncate_text(escape_markdown(item_description), DisplayLimits.ITEM_DESCRIPTION)
+                desc = escape_markdown(truncate_text(item_description, DisplayLimits.ITEM_DESCRIPTION))
                 display_string += f'\n*{desc}*'
 
             container.add_item(TextDisplay(display_string))

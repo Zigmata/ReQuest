@@ -174,7 +174,7 @@ class ShopBaseView(LocaleLayoutView):
                         content += f'\n*{t(locale, "shop-label-stock-available", **{"available": available})}*'
 
                 if item_description:
-                    content += f'\n*{truncate_text(escape_markdown(item_description), DisplayLimits.ITEM_DESCRIPTION)}*'
+                    content += f'\n*{escape_markdown(truncate_text(item_description, DisplayLimits.ITEM_DESCRIPTION))}*'
 
                 section.add_item(TextDisplay(content))
                 container.add_item(section)
@@ -386,7 +386,7 @@ class ShopCartView(LocaleLayoutView):
                     edit_button = buttons.EditCartItemButton(item_key, quantity)
                     section = Section(accessory=edit_button)
 
-                    item_name = truncate_text(escape_markdown(item[CommonFields.NAME]), DisplayLimits.ITEM_NAME)
+                    item_name = escape_markdown(truncate_text(item[CommonFields.NAME], DisplayLimits.ITEM_NAME))
                     item_line = (f'**{item_name}** x{quantity} '
                                  f'(Total: {total_item_quantity}) - {price_string}')
                     section.add_item(TextDisplay(item_line))
