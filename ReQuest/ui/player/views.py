@@ -1455,7 +1455,7 @@ class StaticKitConfirmView(LocaleLayoutView):
             for item in items:
                 detail_lines.append(
                     f'- {item.get(CommonFields.QUANTITY, 1)}x '
-                    f'{escape_markdown(titlecase(item.get(CommonFields.NAME)))}'
+                    f'{escape_markdown(truncate_text(titlecase(item.get(CommonFields.NAME)), DisplayLimits.ITEM_NAME))}'
                 )
 
         if not detail_lines:
