@@ -252,6 +252,7 @@ config-modal-title-kit-currency = Tambah Mata Uang Kit
 config-modal-placeholder-currency-eg = contoh: Gold
 config-modal-placeholder-amount-eg = contoh: 100
 config-error-amount-must-be-number = Jumlah harus berupa angka.
+config-error-amount-exceeds-maximum = Jumlah tidak boleh melebihi { $max }.
 config-error-no-currencies-on-server = Tidak ada mata uang yang dikonfigurasi di server.
 config-error-currency-not-found-short = Mata uang "{ $currency }" tidak ditemukan.
 config-error-denomination-not-found = Denominasi "{ $denomination }" tidak ditemukan dalam konfigurasi mata uang.
@@ -853,6 +854,7 @@ config-desc-manage-assignments =
     Peran harus lebih rendah dari peran tertinggi ReQuest dalam hierarki server.
 config-msg-no-gm-members = Tidak ditemukan anggota dengan peran GM di server ini.
 config-label-no-roles-assigned = Tidak ada peran quest yang ditetapkan
+config-label-more-roles = (+{ $count } lagi)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Kelola Peran Quest — { $gmName }{"**"}

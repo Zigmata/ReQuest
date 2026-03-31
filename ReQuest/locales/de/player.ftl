@@ -264,6 +264,7 @@ player-embed-field-receipt = Beleg
 # Währung-ausgeben-Fehler
 player-error-amount-not-number = Der Betrag muss eine Zahl sein.
 player-error-amount-positive = Sie müssen einen positiven Betrag ausgeben.
+player-error-amount-exceeds-maximum = Der Betrag darf { $max } nicht überschreiten.
 player-error-no-active-character-server = Sie haben keinen aktiven Charakter auf diesem Server.
 player-error-no-currency-config = Für diesen Server wurde keine Währungskonfiguration gefunden.
 

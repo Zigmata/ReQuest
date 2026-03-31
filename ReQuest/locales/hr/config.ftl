@@ -252,6 +252,7 @@ config-modal-title-kit-currency = Dodaj valutu seta
 config-modal-placeholder-currency-eg = npr. Zlato
 config-modal-placeholder-amount-eg = npr. 100
 config-error-amount-must-be-number = Iznos mora biti broj.
+config-error-amount-exceeds-maximum = Iznos ne može premašiti { $max }.
 config-error-no-currencies-on-server = Nijedna valuta nije konfigurirana na poslužitelju.
 config-error-currency-not-found-short = Valuta "{ $currency }" nije pronađena.
 config-error-denomination-not-found = Apoen "{ $denomination }" nije pronađen u konfiguraciji valute.
@@ -853,6 +854,7 @@ config-desc-manage-assignments =
     Uloge moraju biti niže od najviše uloge ReQuesta u hijerarhiji poslužitelja.
 config-msg-no-gm-members = Na ovom poslužitelju nisu pronađeni članovi s GM ulogom.
 config-label-no-roles-assigned = Nema dodijeljenih uloga questa
+config-label-more-roles = (+{ $count } više)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Upravljanje ulogama questa — { $gmName }{"**"}

@@ -264,6 +264,7 @@ player-embed-field-receipt = Makbuz
 # Spend currency errors
 player-error-amount-not-number = Miktar bir sayı olmalıdır.
 player-error-amount-positive = Pozitif bir miktar harcamalısınız.
+player-error-amount-exceeds-maximum = Miktar { $max } değerini aşamaz.
 player-error-no-active-character-server = Bu sunucuda aktif bir karakteriniz yok.
 player-error-no-currency-config = Bu sunucu için para birimi yapılandırması bulunamadı.
 

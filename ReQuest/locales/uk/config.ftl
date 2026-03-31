@@ -252,6 +252,7 @@ config-modal-title-kit-currency = Додати валюту набору
 config-modal-placeholder-currency-eg = напр., Золото
 config-modal-placeholder-amount-eg = напр., 100
 config-error-amount-must-be-number = Сума має бути числом.
+config-error-amount-exceeds-maximum = Сума не може перевищувати { $max }.
 config-error-no-currencies-on-server = На сервері валюти не налаштовано.
 config-error-currency-not-found-short = Валюту "{ $currency }" не знайдено.
 config-error-denomination-not-found = Номінал "{ $denomination }" не знайдено в конфігурації валюти.
@@ -853,6 +854,7 @@ config-desc-manage-assignments =
     Ролі мають бути нижче найвищої ролі ReQuest в ієрархії сервера.
 config-msg-no-gm-members = На цьому сервері не знайдено учасників з роллю Ведучого Гри.
 config-label-no-roles-assigned = Ролі квестів не призначені
+config-label-more-roles = (+{ $count } ще)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Керування ролями квестів — { $gmName }{"**"}

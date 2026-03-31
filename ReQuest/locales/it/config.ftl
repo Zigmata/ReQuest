@@ -252,6 +252,7 @@ config-modal-title-kit-currency = Aggiungi valuta al kit
 config-modal-placeholder-currency-eg = es., Oro
 config-modal-placeholder-amount-eg = es., 100
 config-error-amount-must-be-number = L'importo deve essere un numero.
+config-error-amount-exceeds-maximum = L'importo non può superare { $max }.
 config-error-no-currencies-on-server = Nessuna valuta configurata sul server.
 config-error-currency-not-found-short = Valuta "{ $currency }" non trovata.
 config-error-denomination-not-found = Denominazione "{ $denomination }" non trovata nella configurazione della valuta.
@@ -853,6 +854,7 @@ config-desc-manage-assignments =
     I ruoli devono essere inferiori al ruolo più alto di ReQuest nella gerarchia del server.
 config-msg-no-gm-members = Nessun membro con ruolo GM trovato su questo server.
 config-label-no-roles-assigned = Nessun ruolo quest assegnato
+config-label-more-roles = (+{ $count } altri)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Gestisci ruoli quest — { $gmName }{"**"}

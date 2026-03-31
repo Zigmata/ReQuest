@@ -252,6 +252,7 @@ config-modal-title-kit-currency = Készlet valuta hozzáadása
 config-modal-placeholder-currency-eg = pl. Arany
 config-modal-placeholder-amount-eg = pl. 100
 config-error-amount-must-be-number = Az összegnek számnak kell lennie.
+config-error-amount-exceeds-maximum = Az összeg nem haladhatja meg a { $max } értéket.
 config-error-no-currencies-on-server = Nincsenek valuták konfigurálva a szerveren.
 config-error-currency-not-found-short = A(z) „{ $currency }" valuta nem található.
 config-error-denomination-not-found = A(z) „{ $denomination }" címlet nem található a valutakonfigurációban.
@@ -853,6 +854,7 @@ config-desc-manage-assignments =
     A szerepeknek a ReQuest legmagasabb szerepe alatt kell lenniük a szerver hierarchiában.
 config-msg-no-gm-members = Nem találhatók GM szereppel rendelkező tagok ezen a szerveren.
 config-label-no-roles-assigned = Nincsenek kiosztott quest szerepek
+config-label-more-roles = (+{ $count } további)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Quest szerepek kezelése — { $gmName }{"**"}

@@ -252,6 +252,7 @@ config-modal-title-kit-currency = Thêm tiền tệ bộ trang bị
 config-modal-placeholder-currency-eg = Ví dụ: Vàng
 config-modal-placeholder-amount-eg = Ví dụ: 100
 config-error-amount-must-be-number = Số lượng phải là một số.
+config-error-amount-exceeds-maximum = Số tiền không được vượt quá { $max }.
 config-error-no-currencies-on-server = Chưa cấu hình tiền tệ trên máy chủ.
 config-error-currency-not-found-short = Không tìm thấy tiền tệ "{ $currency }".
 config-error-denomination-not-found = Không tìm thấy mệnh giá "{ $denomination }" trong cấu hình tiền tệ.
@@ -853,6 +854,7 @@ config-desc-manage-assignments =
     Vai trò phải thấp hơn vai trò cao nhất của ReQuest trong hệ thống phân cấp máy chủ.
 config-msg-no-gm-members = Không tìm thấy thành viên nào có vai trò GM trên máy chủ này.
 config-label-no-roles-assigned = Chưa gán vai trò quest nào
+config-label-more-roles = (+{ $count } nữa)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Quản lý vai trò Quest — { $gmName }{"**"}

@@ -264,6 +264,7 @@ player-embed-field-receipt = Bewijs
 # Spend currency errors
 player-error-amount-not-number = Bedrag moet een getal zijn.
 player-error-amount-positive = Je moet een positief bedrag uitgeven.
+player-error-amount-exceeds-maximum = Het bedrag mag niet hoger zijn dan { $max }.
 player-error-no-active-character-server = Je hebt geen actief personage op deze server.
 player-error-no-currency-config = Er is geen valutaconfiguratie gevonden voor deze server.
 

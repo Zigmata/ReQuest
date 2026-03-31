@@ -40,7 +40,8 @@ from ReQuest.utilities.supportFunctions import (
     escape_markdown,
     get_guild_member,
     build_cache_key,
-    check_role_hierarchy
+    check_role_hierarchy,
+    truncate_text
 )
 
 logger = logging.getLogger(__name__)
@@ -144,7 +145,7 @@ class GMQuestMenuView(LocaleLayoutView):
                 quest_id = quest.get(QuestFields.QUEST_ID, 'Unknown')
                 lock_state = f" {t(locale, 'gm-label-quest-locked')}" if quest.get(QuestFields.LOCK_STATE) else ""
 
-                info_text = f"**{title}**{lock_state}\nID: `{quest_id}`"
+                info_text = f"**{truncate_text(title, 80)}**{lock_state}\nID: `{quest_id}`"
 
                 section = Section(accessory=buttons.ManageQuestRowButton(quest))
                 section.add_item(TextDisplay(info_text))

@@ -252,6 +252,7 @@ config-modal-title-kit-currency = Kitvaluta toevoegen
 config-modal-placeholder-currency-eg = bijv. Goud
 config-modal-placeholder-amount-eg = bijv. 100
 config-error-amount-must-be-number = Bedrag moet een getal zijn.
+config-error-amount-exceeds-maximum = Het bedrag mag niet hoger zijn dan { $max }.
 config-error-no-currencies-on-server = Geen valuta's geconfigureerd op de server.
 config-error-currency-not-found-short = Valuta "{ $currency }" niet gevonden.
 config-error-denomination-not-found = Denominatie "{ $denomination }" niet gevonden in de valutaconfiguratie.
@@ -853,6 +854,7 @@ config-desc-manage-assignments =
     Rollen moeten lager zijn dan de hoogste rol van ReQuest in de serverhiërarchie.
 config-msg-no-gm-members = Er zijn geen leden met een GM-rol gevonden op deze server.
 config-label-no-roles-assigned = Geen questrollen toegewezen
+config-label-more-roles = (+{ $count } meer)
 
 ## GM questrol toewijzing weergave
 config-title-gm-quest-role-assign = {"**"}Questrollen beheren — { $gmName }{"**"}

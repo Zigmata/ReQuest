@@ -264,6 +264,7 @@ player-embed-field-receipt = Kuitti
 # Spend currency errors
 player-error-amount-not-number = Summan on oltava numero.
 player-error-amount-positive = Käytettävän summan on oltava positiivinen.
+player-error-amount-exceeds-maximum = Summa ei voi ylittää { $max }.
 player-error-no-active-character-server = Sinulla ei ole aktiivista hahmoa tällä palvelimella.
 player-error-no-currency-config = Tälle palvelimelle ei löytynyt valuuttamääritystä.
 

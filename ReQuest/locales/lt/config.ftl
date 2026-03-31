@@ -252,6 +252,7 @@ config-modal-title-kit-currency = Pridėti rinkinio valiutą
 config-modal-placeholder-currency-eg = pvz., Auksas
 config-modal-placeholder-amount-eg = pvz., 100
 config-error-amount-must-be-number = Suma turi būti skaičius.
+config-error-amount-exceeds-maximum = Suma negali viršyti { $max }.
 config-error-no-currencies-on-server = Serveryje nėra sukonfigūruotų valiutų.
 config-error-currency-not-found-short = Valiuta „{ $currency }" nerasta.
 config-error-denomination-not-found = Nominalas „{ $denomination }" nerastas valiutos konfigūracijoje.
@@ -853,6 +854,7 @@ config-desc-manage-assignments =
     Rolės turi būti žemesnės nei aukščiausia ReQuest rolė serverio hierarchijoje.
 config-msg-no-gm-members = Šiame serveryje nerasta narių su GM role.
 config-label-no-roles-assigned = Nėra priskirtų quest rolių
+config-label-more-roles = (+{ $count } daugiau)
 
 ## GM quest rolių priskyrimo rodinys
 config-title-gm-quest-role-assign = {"**"}Valdyti quest roles — { $gmName }{"**"}

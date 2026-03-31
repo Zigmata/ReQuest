@@ -252,6 +252,7 @@ config-modal-title-kit-currency = 添加套装货币
 config-modal-placeholder-currency-eg = 例如：Gold
 config-modal-placeholder-amount-eg = 例如：100
 config-error-amount-must-be-number = 金额必须是数字。
+config-error-amount-exceeds-maximum = 金额不能超过 { $max }。
 config-error-no-currencies-on-server = 服务器未配置任何货币。
 config-error-currency-not-found-short = 未找到货币"{ $currency }"。
 config-error-denomination-not-found = 在货币配置中未找到面额"{ $denomination }"。
@@ -852,6 +853,7 @@ config-desc-manage-assignments =
     角色必须低于 ReQuest 在服务器层级中的最高角色。
 config-msg-no-gm-members = 在此服务器上未找到拥有 GM 角色的成员。
 config-label-no-roles-assigned = 未分配 Quest 角色
+config-label-more-roles = (+{ $count } 更多)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}管理 Quest 角色 — { $gmName }{"**"}

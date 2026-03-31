@@ -25,7 +25,7 @@ from ReQuest.ui.config import buttons, selects
 from ReQuest.ui.config.buttons import AddShopJSONButton
 from ReQuest.utilities.constants import (
     ConfigFields, CurrencyFields, ShopFields, RestockFields, RoleplayFields, CommonFields,
-    DatabaseCollections, MAX_QUEST_ROLES_PER_GM
+    DatabaseCollections, DisplayLimits, MAX_QUEST_ROLES_PER_GM
 )
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.supportFunctions import (
@@ -40,7 +40,8 @@ from ReQuest.utilities.supportFunctions import (
     get_shop_stock,
     escape_markdown,
     encode_mongo_key,
-    decode_mongo_key
+    decode_mongo_key,
+    truncate_text
 )
 
 logger = logging.getLogger(__name__)
@@ -1646,7 +1647,12 @@ class ConfigStaticQuestRolesView(LocaleLayoutView):
                     if a['userId'] == str(member.id)
                 ]
                 if member_assignments:
-                    role_names = ', '.join(f'<@&{a["roleId"]}>' for a in member_assignments)
+                    max_display = 10
+                    displayed = member_assignments[:max_display]
+                    role_names = ', '.join(f'<@&{a["roleId"]}>' for a in displayed)
+                    if len(member_assignments) > max_display:
+                        remaining = len(member_assignments) - max_display
+                        role_names += ' ' + t(DEFAULT_LOCALE, 'config-label-more-roles', count=remaining)
                 else:
                     role_names = t(DEFAULT_LOCALE, 'config-label-no-roles-assigned')
 
@@ -2501,7 +2507,9 @@ class EditStaticKitView(LocaleLayoutView):
         container.add_item(header_section)
 
         if description := self.kit_data.get('description'):
-            container.add_item(TextDisplay(f"*{description}*"))
+            container.add_item(
+                TextDisplay(f"*{truncate_text(description, DisplayLimits.ITEM_DESCRIPTION)}*")
+            )
         container.add_item(Separator())
 
         kit_actions = ActionRow()
@@ -2549,7 +2557,8 @@ class EditStaticKitView(LocaleLayoutView):
                     if item_data[CommonFields.QUANTITY] > 1:
                         display += f' (x{item_data[CommonFields.QUANTITY]})'
                     if item_data.get('description'):
-                        display += f'\n*{escape_markdown(item_data["description"])}*'
+                        desc = escape_markdown(truncate_text(item_data['description'], DisplayLimits.ITEM_DESCRIPTION))
+                        display += f'\n*{desc}*'
 
                     container.add_item(TextDisplay(display))
                     container.add_item(item_actions)
@@ -3249,12 +3258,15 @@ class EditShopView(LocaleLayoutView):
         ))]
 
         if shop_keeper := self.shop_data.get(ShopFields.SHOP_KEEPER):
+            keeper = truncate_text(shop_keeper, DisplayLimits.SHOPKEEPER_NAME)
             header_items.append(TextDisplay(t(
                 DEFAULT_LOCALE, 'config-label-shop-shopkeeper',
-                **{'name': shop_keeper}
+                **{'name': keeper}
             )))
         if shop_description := self.shop_data.get(ShopFields.SHOP_DESCRIPTION):
-            header_items.append(TextDisplay(f'*{shop_description}*'))
+            header_items.append(
+                TextDisplay(f'*{truncate_text(shop_description, DisplayLimits.SHOP_DESCRIPTION)}*')
+            )
 
         if shop_image := self.shop_data.get(ShopFields.SHOP_IMAGE):
             shop_image = Thumbnail(media=f'{shop_image}')
@@ -3295,7 +3307,8 @@ class EditShopView(LocaleLayoutView):
             display_string = f'**{item_text}** - {cost_string}'
 
             if item_description:
-                display_string += f'\n*{escape_markdown(item_description)}*'
+                desc = escape_markdown(truncate_text(item_description, DisplayLimits.ITEM_DESCRIPTION))
+                display_string += f'\n*{desc}*'
 
             container.add_item(TextDisplay(display_string))
 

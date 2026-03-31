@@ -258,6 +258,7 @@ config-modal-title-kit-currency = Add Kit Currency
 config-modal-placeholder-currency-eg = e.g., Gold
 config-modal-placeholder-amount-eg = e.g., 100
 config-error-amount-must-be-number = Amount must be a number.
+config-error-amount-exceeds-maximum = Amount cannot exceed { $max }.
 config-error-no-currencies-on-server = No currencies configured on server.
 config-error-currency-not-found-short = Currency "{ $currency }" not found.
 config-error-denomination-not-found = Denomination "{ $denomination }" not found in currency configuration.
@@ -854,6 +855,7 @@ config-desc-manage-assignments =
     Roles must be lower than ReQuest's highest role in the server hierarchy.
 config-msg-no-gm-members = No members with a GM role were found on this server.
 config-label-no-roles-assigned = No quest roles assigned
+config-label-more-roles = (+{ $count } more)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Manage Quest Roles — { $gmName }{"**"}

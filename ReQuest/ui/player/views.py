@@ -19,7 +19,7 @@ from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
 from ReQuest.ui.common.enums import InventoryType
 from ReQuest.ui.player import buttons, selects
 from ReQuest.utilities.constants import (
-    CharacterFields, ConfigFields, CommonFields, ShopFields, DatabaseCollections
+    CharacterFields, ConfigFields, CommonFields, ShopFields, DatabaseCollections, DisplayLimits
 )
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_guild_locale, resolve_locale
 from ReQuest.utilities.supportFunctions import (
@@ -44,7 +44,8 @@ from ReQuest.utilities.supportFunctions import (
     get_container_name,
     get_container_items,
     escape_markdown,
-    decode_mongo_key
+    decode_mongo_key,
+    truncate_text
 )
 
 logger = logging.getLogger(__name__)
@@ -577,7 +578,7 @@ class ContainerItemsView(LocaleLayoutView):
 
             items_display = []
             for item_name, quantity in page_items:
-                items_display.append(f'• {item_name}: **{quantity}**')
+                items_display.append(f'• {escape_markdown(truncate_text(item_name, DisplayLimits.ITEM_NAME))}: **{quantity}**')
 
             container.add_item(TextDisplay('\n'.join(items_display)))
             container.add_item(Separator())
@@ -1419,6 +1420,10 @@ class StaticKitConfirmView(LocaleLayoutView):
         self.kit_data = kit_data
         self.currency_config = currency_config
 
+        self.items_per_page = 9
+        self.current_page = 0
+        self.total_pages = 1
+
         self.build_view()
 
     def build_view(self):
@@ -1434,32 +1439,38 @@ class StaticKitConfirmView(LocaleLayoutView):
 
         description = self.kit_data.get('description')
         if description:
-            container.add_item(TextDisplay(escape_markdown(description)))
+            container.add_item(TextDisplay(escape_markdown(truncate_text(description, DisplayLimits.ITEM_DESCRIPTION))))
             container.add_item(Separator())
 
         items = self.kit_data.get(CommonFields.ITEMS, [])
-        # Decode currency keys for display
         currency = {decode_mongo_key(k): v for k, v in self.kit_data.get(CharacterFields.CURRENCY, {}).items()}
 
-        details = []
-        if items:
-            details.append(t(locale, 'player-label-items-heading'))
-            for item in items:
-                details.append(
-                    f'- {item.get(CommonFields.QUANTITY, 1)}x '
-                    f'{escape_markdown(titlecase(item.get(CommonFields.NAME)))}'
-                )
-
+        # Build combined list of detail lines
+        detail_lines = []
         if currency:
-            details.append(f'\n{t(locale, "player-label-currency-heading")}')
             curr_strs = format_consolidated_totals(currency, self.currency_config)
             for s in curr_strs:
-                details.append(f'- {s}')
+                detail_lines.append(f'- {s}')
+        if items:
+            for item in items:
+                detail_lines.append(
+                    f'- {item.get(CommonFields.QUANTITY, 1)}x '
+                    f'{escape_markdown(truncate_text(titlecase(item.get(CommonFields.NAME)), DisplayLimits.ITEM_NAME))}'
+                )
 
-        if not details:
-            details.append(t(locale, 'player-msg-kit-empty'))
+        if not detail_lines:
+            container.add_item(TextDisplay(t(locale, 'player-msg-kit-empty')))
+        else:
+            self.total_pages = math.ceil(len(detail_lines) / self.items_per_page)
+            if self.current_page >= self.total_pages:
+                self.current_page = max(0, self.total_pages - 1)
 
-        container.add_item(TextDisplay('\n'.join(details)))
+            start = self.current_page * self.items_per_page
+            end = start + self.items_per_page
+            page_lines = detail_lines[start:end]
+
+            container.add_item(TextDisplay('\n'.join(page_lines)))
+
         container.add_item(Separator())
 
         actions = ActionRow()
@@ -1468,6 +1479,54 @@ class StaticKitConfirmView(LocaleLayoutView):
         container.add_item(actions)
 
         self.add_item(container)
+
+        if self.total_pages > 1:
+            nav_row = ActionRow()
+            prev_button = Button(
+                label=t(locale, 'common-btn-prev'),
+                style=discord.ButtonStyle.secondary,
+                custom_id='kit_confirm_prev',
+                disabled=(self.current_page == 0)
+            )
+            prev_button.callback = self.prev_page
+
+            page_display = Button(
+                label=t(locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages),
+                style=discord.ButtonStyle.secondary,
+                custom_id='kit_confirm_page'
+            )
+            page_display.callback = self.show_page_jump_modal
+
+            next_button = Button(
+                label=t(locale, 'common-btn-next'),
+                style=discord.ButtonStyle.secondary,
+                custom_id='kit_confirm_next',
+                disabled=(self.current_page >= self.total_pages - 1)
+            )
+            next_button.callback = self.next_page
+
+            nav_row.add_item(prev_button)
+            nav_row.add_item(page_display)
+            nav_row.add_item(next_button)
+            self.add_item(nav_row)
+
+    async def prev_page(self, interaction):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction):
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def show_page_jump_modal(self, interaction):
+        try:
+            await interaction.response.send_modal(common_modals.PageJumpModal(self))
+        except Exception as e:
+            await log_exception(e, interaction)
 
     async def submit(self, interaction):
         items = {
@@ -1608,7 +1667,7 @@ class NewCharacterShopView(LocaleLayoutView):
                     display += f" {t(locale, 'player-label-in-cart', quantity=item_quantity_in_cart)}"
 
             if description := item.get('description'):
-                display += f"\n*{description}*"
+                display += f"\n*{escape_markdown(truncate_text(description, DisplayLimits.ITEM_DESCRIPTION))}*"
 
             section.add_item(TextDisplay(display))
             container.add_item(section)

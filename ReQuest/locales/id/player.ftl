@@ -264,6 +264,7 @@ player-embed-field-receipt = Kuitansi
 # Spend currency errors
 player-error-amount-not-number = Jumlah harus berupa angka.
 player-error-amount-positive = Anda harus membelanjakan jumlah yang positif.
+player-error-amount-exceeds-maximum = Jumlah tidak boleh melebihi { $max }.
 player-error-no-active-character-server = Anda tidak memiliki karakter aktif di server ini.
 player-error-no-currency-config = Konfigurasi mata uang tidak ditemukan untuk server ini.
 

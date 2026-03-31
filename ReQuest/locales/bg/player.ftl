@@ -264,6 +264,7 @@ player-embed-field-receipt = Разписка
 # Spend currency errors
 player-error-amount-not-number = Сумата трябва да е число.
 player-error-amount-positive = Трябва да похарчите положителна сума.
+player-error-amount-exceeds-maximum = Сумата не може да надвишава { $max }.
 player-error-no-active-character-server = Нямате активен персонаж на този сървър.
 player-error-no-currency-config = Конфигурация на валута не е намерена за този сървър.
 

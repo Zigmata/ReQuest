@@ -253,6 +253,7 @@ config-modal-title-kit-currency = Lisää varustesarjan valuutta
 config-modal-placeholder-currency-eg = esim. Kulta
 config-modal-placeholder-amount-eg = esim. 100
 config-error-amount-must-be-number = Summan on oltava numero.
+config-error-amount-exceeds-maximum = Summa ei voi ylittää { $max }.
 config-error-no-currencies-on-server = Palvelimelle ei ole määritetty valuuttoja.
 config-error-currency-not-found-short = Valuuttaa "{ $currency }" ei löytynyt.
 config-error-denomination-not-found = Nimellisarvoa "{ $denomination }" ei löytynyt valuuttamäärittelystä.
@@ -854,6 +855,7 @@ config-desc-manage-assignments =
     Roolien on oltava alempana kuin ReQuestin korkein rooli palvelinhierarkiassa.
 config-msg-no-gm-members = Palvelimelta ei löytynyt jäseniä, joilla on GM-rooli.
 config-label-no-roles-assigned = Quest-rooleja ei ole määritetty
+config-label-more-roles = (+{ $count } lisää)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Hallinnoi quest-rooleja — { $gmName }{"**"}

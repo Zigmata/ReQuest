@@ -252,6 +252,7 @@ config-modal-title-kit-currency = Legg til settvaluta
 config-modal-placeholder-currency-eg = f.eks. Gull
 config-modal-placeholder-amount-eg = f.eks. 100
 config-error-amount-must-be-number = Beløp må være et tall.
+config-error-amount-exceeds-maximum = Beløpet kan ikke overstige { $max }.
 config-error-no-currencies-on-server = Ingen valutaer konfigurert på serveren.
 config-error-currency-not-found-short = Valutaen "{ $currency }" ble ikke funnet.
 config-error-denomination-not-found = Valøren "{ $denomination }" ble ikke funnet i valutakonfigurasjonen.
@@ -853,6 +854,7 @@ config-desc-manage-assignments =
     Roller må være lavere enn ReQuests høyeste rolle i serverhierarkiet.
 config-msg-no-gm-members = Ingen medlemmer med en spilllederrolle ble funnet på denne serveren.
 config-label-no-roles-assigned = Ingen quest-roller tildelt
+config-label-more-roles = (+{ $count } til)
 
 ## GM quest-rolletildeling visning
 config-title-gm-quest-role-assign = {"**"}Administrer quest-roller — { $gmName }{"**"}

@@ -264,6 +264,7 @@ player-embed-field-receipt = Kvitto
 # Spend currency errors
 player-error-amount-not-number = Beloppet måste vara ett nummer.
 player-error-amount-positive = Du måste spendera ett positivt belopp.
+player-error-amount-exceeds-maximum = Beloppet får inte överstiga { $max }.
 player-error-no-active-character-server = Du har ingen aktiv karaktär på denna server.
 player-error-no-currency-config = Ingen valutakonfiguration hittades för denna server.
 

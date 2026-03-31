@@ -264,6 +264,7 @@ player-embed-field-receipt = Účtenka
 # Spend currency errors
 player-error-amount-not-number = Částka musí být číslo.
 player-error-amount-positive = Musíte utratit kladnou částku.
+player-error-amount-exceeds-maximum = Částka nesmí překročit { $max }.
 player-error-no-active-character-server = Na tomto serveru nemáte aktivní postavu.
 player-error-no-currency-config = Konfigurace měny pro tento server nebyla nalezena.
 

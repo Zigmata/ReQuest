@@ -264,6 +264,7 @@ player-embed-field-receipt = Chitanță
 # Spend currency errors
 player-error-amount-not-number = Suma trebuie să fie un număr.
 player-error-amount-positive = Trebuie să cheltuiți o sumă pozitivă.
+player-error-amount-exceeds-maximum = Suma nu poate depăși { $max }.
 player-error-no-active-character-server = Nu aveți un personaj activ pe acest server.
 player-error-no-currency-config = Configurarea monedei nu a fost găsită pentru acest server.
 

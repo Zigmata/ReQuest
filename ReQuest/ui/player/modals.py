@@ -1,4 +1,5 @@
 import logging
+import math
 from datetime import datetime, timezone
 from titlecase import titlecase
 
@@ -8,7 +9,7 @@ import shortuuid
 from ReQuest.ui.common.modals import LocaleModal
 
 from ReQuest.ui.common.enums import InventoryType
-from ReQuest.utilities.constants import CharacterFields, ConfigFields, CommonFields, DatabaseCollections
+from ReQuest.utilities.constants import CharacterFields, ConfigFields, CommonFields, DatabaseCollections, DisplayLimits
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_user_locale, resolve_guild_locale
 from ReQuest.utilities.supportFunctions import (
     find_currency_or_denomination,
@@ -444,7 +445,8 @@ class SpendCurrencyModal(LocaleModal):
             label=t(DEFAULT_LOCALE, 'player-modal-label-currency-amount'),
             placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-currency-amount'),
             custom_id='currency_amount_text_input',
-            required=True
+            required=True,
+            max_length=13
         )
         self.add_item(self.currency_name_text_input)
         self.add_item(self.currency_amount_text_input)
@@ -455,6 +457,8 @@ class SpendCurrencyModal(LocaleModal):
             currency_name = self.currency_name_text_input.value.strip()
             try:
                 amount = float(self.currency_amount_text_input.value.strip())
+                if not math.isfinite(amount):
+                    raise ValueError
             except ValueError:
                 raise UserFeedbackError(
                     t(locale, 'player-error-amount-not-number'),
@@ -465,6 +469,13 @@ class SpendCurrencyModal(LocaleModal):
                 raise UserFeedbackError(
                     t(locale, 'player-error-amount-positive'),
                     message_id='player-error-amount-positive'
+                )
+            if amount > DisplayLimits.MAX_CURRENCY_AMOUNT:
+                raise UserFeedbackError(
+                    t(locale, 'player-error-amount-exceeds-maximum',
+                      **{'max': str(DisplayLimits.MAX_CURRENCY_AMOUNT)}),
+                    message_id='player-error-amount-exceeds-maximum',
+                    max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)
                 )
 
             bot = interaction.client

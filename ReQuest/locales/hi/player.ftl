@@ -264,6 +264,7 @@ player-embed-field-receipt = रसीद
 # Spend currency errors
 player-error-amount-not-number = राशि एक संख्या होनी चाहिए।
 player-error-amount-positive = आपको एक धनात्मक राशि खर्च करनी होगी।
+player-error-amount-exceeds-maximum = राशि { $max } से अधिक नहीं हो सकती।
 player-error-no-active-character-server = इस सर्वर पर आपका कोई सक्रिय चरित्र नहीं है।
 player-error-no-currency-config = इस सर्वर के लिए मुद्रा कॉन्फ़िगरेशन नहीं मिला।
 

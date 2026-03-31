@@ -252,6 +252,7 @@ config-modal-title-kit-currency = เพิ่มสกุลเงินใน�
 config-modal-placeholder-currency-eg = เช่น Gold
 config-modal-placeholder-amount-eg = เช่น 100
 config-error-amount-must-be-number = จำนวนต้องเป็นตัวเลข
+config-error-amount-exceeds-maximum = จำนวนต้องไม่เกิน { $max }
 config-error-no-currencies-on-server = ไม่มีสกุลเงินที่ตั้งค่าบนเซิร์ฟเวอร์
 config-error-currency-not-found-short = ไม่พบสกุลเงิน "{ $currency }"
 config-error-denomination-not-found = ไม่พบหน่วยย่อย "{ $denomination }" ในการตั้งค่าสกุลเงิน
@@ -853,6 +854,7 @@ config-desc-manage-assignments =
     บทบาทต้องอยู่ต่ำกว่าบทบาทสูงสุดของ ReQuest ในลำดับชั้นของเซิร์ฟเวอร์
 config-msg-no-gm-members = ไม่พบสมาชิกที่มีบทบาท GM บนเซิร์ฟเวอร์นี้
 config-label-no-roles-assigned = ไม่มีบทบาท quest ที่กำหนด
+config-label-more-roles = (+{ $count } เพิ่มเติม)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}จัดการบทบาท Quest — { $gmName }{"**"}

@@ -264,6 +264,7 @@ player-embed-field-receipt = Kvittering
 # Spend currency errors
 player-error-amount-not-number = Beløb skal være et tal.
 player-error-amount-positive = Du skal bruge et positivt beløb.
+player-error-amount-exceeds-maximum = Beløbet må ikke overstige { $max }.
 player-error-no-active-character-server = Du har ikke en aktiv karakter på denne server.
 player-error-no-currency-config = Der blev ikke fundet en valutakonfiguration for denne server.
 
