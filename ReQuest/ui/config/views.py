@@ -1647,7 +1647,12 @@ class ConfigStaticQuestRolesView(LocaleLayoutView):
                     if a['userId'] == str(member.id)
                 ]
                 if member_assignments:
-                    role_names = ', '.join(f'<@&{a["roleId"]}>' for a in member_assignments)
+                    max_display = 10
+                    displayed = member_assignments[:max_display]
+                    role_names = ', '.join(f'<@&{a["roleId"]}>' for a in displayed)
+                    if len(member_assignments) > max_display:
+                        remaining = len(member_assignments) - max_display
+                        role_names += f' (+{remaining} more)'
                 else:
                     role_names = t(DEFAULT_LOCALE, 'config-label-no-roles-assigned')
 
