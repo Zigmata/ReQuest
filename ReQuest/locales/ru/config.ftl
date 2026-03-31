@@ -854,6 +854,7 @@ config-desc-manage-assignments =
     Роли должны быть ниже наивысшей роли ReQuest в иерархии сервера.
 config-msg-no-gm-members = На этом сервере не найдены участники с ролью GM.
 config-label-no-roles-assigned = Роли квестов не назначены
+config-label-more-roles = (+{ $count } ещё)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Управление ролями квестов — { $gmName }{"**"}

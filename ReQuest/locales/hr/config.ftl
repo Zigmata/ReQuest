@@ -854,6 +854,7 @@ config-desc-manage-assignments =
     Uloge moraju biti niže od najviše uloge ReQuesta u hijerarhiji poslužitelja.
 config-msg-no-gm-members = Na ovom poslužitelju nisu pronađeni članovi s GM ulogom.
 config-label-no-roles-assigned = Nema dodijeljenih uloga questa
+config-label-more-roles = (+{ $count } više)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Upravljanje ulogama questa — { $gmName }{"**"}

@@ -852,6 +852,7 @@ config-desc-manage-assignments =
     ロールはサーバー階層で ReQuest の最上位ロールより下位である必要があります。
 config-msg-no-gm-members = このサーバーに GM ロールを持つメンバーが見つかりません。
 config-label-no-roles-assigned = Quest ロールが割り当てられていません
+config-label-more-roles = (+{ $count } 件)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Quest ロールの管理 — { $gmName }{"**"}

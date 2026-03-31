@@ -854,6 +854,7 @@ config-desc-manage-assignments =
     Roller, sunucu hiyerarşisinde ReQuest'in en yüksek rolünün altında olmalıdır.
 config-msg-no-gm-members = Bu sunucuda GM rolüne sahip üye bulunamadı.
 config-label-no-roles-assigned = Atanmış quest rolü yok
+config-label-more-roles = (+{ $count } daha fazla)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Quest Rollerini Yönet — { $gmName }{"**"}

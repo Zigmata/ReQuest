@@ -854,6 +854,7 @@ config-desc-manage-assignments =
     역할은 서버 계층에서 ReQuest의 최상위 역할보다 낮아야 합니다.
 config-msg-no-gm-members = 이 서버에서 GM 역할을 가진 멤버를 찾을 수 없습니다.
 config-label-no-roles-assigned = 할당된 Quest 역할 없음
+config-label-more-roles = (+{ $count }개 더)
 
 ## GM Quest 역할 할당 뷰
 config-title-gm-quest-role-assign = {"**"}Quest 역할 관리 — { $gmName }{"**"}

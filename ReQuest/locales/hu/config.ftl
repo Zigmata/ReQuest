@@ -854,6 +854,7 @@ config-desc-manage-assignments =
     A szerepeknek a ReQuest legmagasabb szerepe alatt kell lenniük a szerver hierarchiában.
 config-msg-no-gm-members = Nem találhatók GM szereppel rendelkező tagok ezen a szerveren.
 config-label-no-roles-assigned = Nincsenek kiosztott quest szerepek
+config-label-more-roles = (+{ $count } további)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Quest szerepek kezelése — { $gmName }{"**"}

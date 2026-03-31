@@ -700,6 +700,7 @@ config-desc-manage-assignments =
     Los roles deben estar por debajo del rol más alto de ReQuest en la jerarquía del servidor.
 config-msg-no-gm-members = No se han encontrado miembros con un rol de GM en este servidor.
 config-label-no-roles-assigned = No hay roles de quest asignados
+config-label-more-roles = (+{ $count } más)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Gestionar roles de quest — { $gmName }{"**"}

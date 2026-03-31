@@ -854,6 +854,7 @@ config-desc-manage-assignments =
     Roller måste vara lägre än ReQuests högsta roll i serverhierarkin.
 config-msg-no-gm-members = Inga medlemmar med en GM-roll hittades på denna server.
 config-label-no-roles-assigned = Inga quest-roller tilldelade
+config-label-more-roles = (+{ $count } till)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Hantera quest-roller — { $gmName }{"**"}

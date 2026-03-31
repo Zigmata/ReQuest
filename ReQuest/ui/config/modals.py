@@ -1506,7 +1506,7 @@ class ConfigNewCharacterWealthModal(LocaleModal):
             custom_id='amount_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-amount'),
             default=current_amount if current_amount is not None else '',
-            max_length=10
+            max_length=13
         )
         self.currency_name_text_input = discord.ui.TextInput(
             label=t(DEFAULT_LOCALE, 'config-modal-label-currency-name'),
@@ -1751,7 +1751,7 @@ class StaticKitCurrencyModal(LocaleModal):
             label=t(DEFAULT_LOCALE, 'config-modal-label-amount'),
             custom_id='amount_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-amount-eg'),
-            max_length=10
+            max_length=13
         )
         self.add_item(self.currency_name_text_input)
         self.add_item(self.amount_text_input)

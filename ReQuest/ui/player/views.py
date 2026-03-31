@@ -578,7 +578,7 @@ class ContainerItemsView(LocaleLayoutView):
 
             items_display = []
             for item_name, quantity in page_items:
-                items_display.append(f'• {truncate_text(item_name, DisplayLimits.ITEM_NAME)}: **{quantity}**')
+                items_display.append(f'• {escape_markdown(truncate_text(item_name, DisplayLimits.ITEM_NAME))}: **{quantity}**')
 
             container.add_item(TextDisplay('\n'.join(items_display)))
             container.add_item(Separator())
@@ -1439,7 +1439,7 @@ class StaticKitConfirmView(LocaleLayoutView):
 
         description = self.kit_data.get('description')
         if description:
-            container.add_item(TextDisplay(escape_markdown(description)))
+            container.add_item(TextDisplay(escape_markdown(truncate_text(description, DisplayLimits.ITEM_DESCRIPTION))))
             container.add_item(Separator())
 
         items = self.kit_data.get(CommonFields.ITEMS, [])
@@ -1511,14 +1511,16 @@ class StaticKitConfirmView(LocaleLayoutView):
             self.add_item(nav_row)
 
     async def prev_page(self, interaction):
-        self.current_page -= 1
-        self.build_view()
-        await interaction.response.edit_message(view=self)
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
 
     async def next_page(self, interaction):
-        self.current_page += 1
-        self.build_view()
-        await interaction.response.edit_message(view=self)
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
 
     async def show_page_jump_modal(self, interaction):
         try:
@@ -1665,7 +1667,7 @@ class NewCharacterShopView(LocaleLayoutView):
                     display += f" {t(locale, 'player-label-in-cart', quantity=item_quantity_in_cart)}"
 
             if description := item.get('description'):
-                display += f"\n*{truncate_text(description, DisplayLimits.ITEM_DESCRIPTION)}*"
+                display += f"\n*{escape_markdown(truncate_text(description, DisplayLimits.ITEM_DESCRIPTION))}*"
 
             section.add_item(TextDisplay(display))
             container.add_item(section)

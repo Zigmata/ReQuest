@@ -853,6 +853,7 @@ config-desc-manage-assignments =
     Os cargos devem estar abaixo do cargo mais alto do ReQuest na hierarquia do servidor.
 config-msg-no-gm-members = Nenhum membro com cargo de Mestre foi encontrado neste servidor.
 config-label-no-roles-assigned = Nenhum cargo de quest atribuído
+config-label-more-roles = (+{ $count } mais)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Gerenciar Cargos de Quest — { $gmName }{"**"}

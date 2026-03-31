@@ -854,6 +854,7 @@ config-desc-manage-assignments =
     身分組必須低於 ReQuest 在伺服器階層中的最高身分組。
 config-msg-no-gm-members = 在此伺服器上未找到擁有 GM 身分組的成員。
 config-label-no-roles-assigned = 未指派 Quest 身分組
+config-label-more-roles = (+{ $count } 更多)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}管理 Quest 身分組 — { $gmName }{"**"}

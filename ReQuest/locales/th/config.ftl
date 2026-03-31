@@ -854,6 +854,7 @@ config-desc-manage-assignments =
     บทบาทต้องอยู่ต่ำกว่าบทบาทสูงสุดของ ReQuest ในลำดับชั้นของเซิร์ฟเวอร์
 config-msg-no-gm-members = ไม่พบสมาชิกที่มีบทบาท GM บนเซิร์ฟเวอร์นี้
 config-label-no-roles-assigned = ไม่มีบทบาท quest ที่กำหนด
+config-label-more-roles = (+{ $count } เพิ่มเติม)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}จัดการบทบาท Quest — { $gmName }{"**"}

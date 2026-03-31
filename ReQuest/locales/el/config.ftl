@@ -854,6 +854,7 @@ config-desc-manage-assignments =
     Οι ρόλοι πρέπει να είναι χαμηλότεροι από τον υψηλότερο ρόλο του ReQuest στην ιεραρχία του διακομιστή.
 config-msg-no-gm-members = Δεν βρέθηκαν μέλη με ρόλο GM σε αυτόν τον διακομιστή.
 config-label-no-roles-assigned = Δεν έχουν ανατεθεί ρόλοι quest
+config-label-more-roles = (+{ $count } ακόμη)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Διαχείριση Ρόλων Quest — { $gmName }{"**"}

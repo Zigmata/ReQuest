@@ -855,6 +855,7 @@ config-desc-manage-assignments =
     Roolien on oltava alempana kuin ReQuestin korkein rooli palvelinhierarkiassa.
 config-msg-no-gm-members = Palvelimelta ei löytynyt jäseniä, joilla on GM-rooli.
 config-label-no-roles-assigned = Quest-rooleja ei ole määritetty
+config-label-more-roles = (+{ $count } lisää)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Hallinnoi quest-rooleja — { $gmName }{"**"}

@@ -446,7 +446,7 @@ class SpendCurrencyModal(LocaleModal):
             placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-currency-amount'),
             custom_id='currency_amount_text_input',
             required=True,
-            max_length=10
+            max_length=13
         )
         self.add_item(self.currency_name_text_input)
         self.add_item(self.currency_amount_text_input)

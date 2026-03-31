@@ -854,6 +854,7 @@ config-desc-manage-assignments =
     भूमिकाएँ सर्वर पदानुक्रम में ReQuest की सबसे ऊँची भूमिका से नीचे होनी चाहिए।
 config-msg-no-gm-members = इस सर्वर पर GM भूमिका वाला कोई सदस्य नहीं मिला।
 config-label-no-roles-assigned = कोई quest भूमिका असाइन नहीं है
+config-label-more-roles = (+{ $count } और)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Quest भूमिकाएँ प्रबंधित करें — { $gmName }{"**"}

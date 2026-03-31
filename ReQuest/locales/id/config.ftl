@@ -854,6 +854,7 @@ config-desc-manage-assignments =
     Peran harus lebih rendah dari peran tertinggi ReQuest dalam hierarki server.
 config-msg-no-gm-members = Tidak ditemukan anggota dengan peran GM di server ini.
 config-label-no-roles-assigned = Tidak ada peran quest yang ditetapkan
+config-label-more-roles = (+{ $count } lagi)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Kelola Peran Quest — { $gmName }{"**"}
