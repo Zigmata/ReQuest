@@ -172,6 +172,7 @@ class DatabaseCollections:
     QUEST_ROLE_MODE = 'questRoleMode'
     QUEST_ROLE_ASSIGNMENTS = 'questRoleAssignments'
     CHARACTERS = 'characters'
+    PENDING_CHARACTERS = 'pendingCharacters'
 
 
 class DisplayLimits:

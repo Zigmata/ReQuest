@@ -146,6 +146,15 @@ player-msg-no-characters = 등록된 캐릭터가 없습니다.
 player-label-active = (활성)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}진행 중인 캐릭터: { $characterName }{"**"}
+    캐릭터 등록이 인벤토리 설정을 기다리고 있습니다.
+player-btn-resume = 계속
+player-btn-discard = 삭제
+player-modal-title-discard-character = 캐릭터 삭제
+player-modal-label-discard-confirm = { $characterName }을(를) 삭제하시겠습니까?
+
 # 캐릭터 제거 확인
 player-modal-title-confirm-char-removal = 캐릭터 제거 확인
 player-modal-label-confirm-char-delete = { $characterName }을(를) 삭제하시겠습니까?
@@ -307,3 +316,32 @@ player-embed-desc-starting-inventory = 플레이어: { $playerMention } (`{ $cha
 player-embed-field-items-received = 받은 아이템
 player-embed-field-currency-received-label = 받은 화폐
 player-label-untitled = 제목 없음
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Inventory Submission: { $characterName }{"**"}
+    Submitted by { $userMention }
+player-approval-post-items = 아이템
+player-approval-post-currency = 화폐
+player-approval-resolved = 이 제출물은 처리되었습니다.
+player-approval-btn-approve = 승인
+player-approval-btn-deny = 거부
+player-approval-btn-edit = 편집
+player-approval-error-no-permission = 이 작업을 수행할 권한이 없습니다.
+player-approval-error-not-submitter = 원래 제출자만 이 제출물을 편집할 수 있습니다.
+player-approval-thread-instructions =
+    This thread was created for the approval of a character's starting inventory.
+    A Game Master will review the submission and approve or deny it.
+    The submitting player may use the Edit button to modify and re-submit.
+    Once approved or denied, this thread will be locked.
+player-msg-submission-updated = 제출물이 업데이트되었습니다.
+
+# Approval DM notifications
+player-dm-title-approved = 캐릭터 승인됨
+player-dm-desc-approved =
+    Your character {"**"}{ $characterName }{"**"} has been approved
+    by { $approver } in {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = 캐릭터 거부됨
+player-dm-desc-denied =
+    Your character {"**"}{ $characterName }{"**"} has been denied
+    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.

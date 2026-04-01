@@ -146,6 +146,15 @@ player-msg-no-characters = Vous n'avez aucun personnage enregistré.
 player-label-active = (Actif)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Personnage en cours : { $characterName }{"**"}
+    L'inscription de votre personnage est en attente de configuration d'inventaire.
+player-btn-resume = Reprendre
+player-btn-discard = Abandonner
+player-modal-title-discard-character = Abandonner le personnage
+player-modal-label-discard-confirm = Abandonner { $characterName } ?
+
 # Confirmation de retrait de personnage
 player-modal-title-confirm-char-removal = Confirmer le retrait du personnage
 player-modal-label-confirm-char-delete = Supprimer { $characterName } ?
@@ -307,3 +316,32 @@ player-embed-desc-starting-inventory = Joueur : { $playerMention } en tant que `
 player-embed-field-items-received = Objets reçus
 player-embed-field-currency-received-label = Monnaie reçue
 player-label-untitled = Sans titre
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Inventory Submission: { $characterName }{"**"}
+    Submitted by { $userMention }
+player-approval-post-items = Objets
+player-approval-post-currency = Monnaie
+player-approval-resolved = Cette soumission a été traitée.
+player-approval-btn-approve = Approuver
+player-approval-btn-deny = Refuser
+player-approval-btn-edit = Modifier
+player-approval-error-no-permission = Vous n'avez pas la permission d'effectuer cette action.
+player-approval-error-not-submitter = Seul le soumetteur original peut modifier cette soumission.
+player-approval-thread-instructions =
+    This thread was created for the approval of a character's starting inventory.
+    A Game Master will review the submission and approve or deny it.
+    The submitting player may use the Edit button to modify and re-submit.
+    Once approved or denied, this thread will be locked.
+player-msg-submission-updated = Votre soumission a été mise à jour.
+
+# Approval DM notifications
+player-dm-title-approved = Personnage approuvé
+player-dm-desc-approved =
+    Your character {"**"}{ $characterName }{"**"} has been approved
+    by { $approver } in {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Personnage refusé
+player-dm-desc-denied =
+    Your character {"**"}{ $characterName }{"**"} has been denied
+    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.

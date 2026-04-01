@@ -324,24 +324,6 @@ class CharacterRegisterModal(LocaleModal):
             character_name = self.name_text_input.value
             character_note = self.note_text_input.value
 
-            await update_cached_data(
-                bot=bot,
-                mongo_database=bot.mdb,
-                collection_name=DatabaseCollections.CHARACTERS,
-                query={CommonFields.ID: member_id},
-                update_data={'$set': {f'{CharacterFields.ACTIVE_CHARACTERS}.{guild_id}': character_id,
-                                      f'{CharacterFields.CHARACTERS}.{character_id}': {
-                                          CharacterFields.NAME: character_name,
-                                          'note': character_note,
-                                          'registeredDate': date,
-                                          CharacterFields.ATTRIBUTES: {
-                                              'level': None,
-                                              CharacterFields.EXPERIENCE: None,
-                                              CharacterFields.INVENTORY: {},
-                                              CharacterFields.CURRENCY: {}
-                                          }}}}
-            )
-
             inventory_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -354,12 +336,59 @@ class CharacterRegisterModal(LocaleModal):
             )
 
             if inventory_type == InventoryType.DISABLED.value:
+                # No inventory wizard needed — create character immediately
+                await update_cached_data(
+                    bot=bot,
+                    mongo_database=bot.mdb,
+                    collection_name=DatabaseCollections.CHARACTERS,
+                    query={CommonFields.ID: member_id},
+                    update_data={'$set': {
+                        f'{CharacterFields.ACTIVE_CHARACTERS}.{guild_id}': character_id,
+                        f'{CharacterFields.CHARACTERS}.{character_id}': {
+                            CharacterFields.NAME: character_name,
+                            'note': character_note,
+                            'registeredDate': date,
+                            CharacterFields.ATTRIBUTES: {
+                                'level': None,
+                                CharacterFields.EXPERIENCE: None,
+                                CharacterFields.INVENTORY: {},
+                                CharacterFields.CURRENCY: {}
+                            }
+                        }
+                    }}
+                )
                 await setup_view(self.calling_view, interaction)
                 await interaction.response.edit_message(view=self.calling_view)
             else:
-                from ReQuest.ui.player.views import NewCharacterWizardView
+                # Store pending character and enter inventory wizard
+                pending_character = {
+                    'character_id': character_id,
+                    'name': character_name,
+                    'note': character_note,
+                    'registered_date': date,
+                    'inventory_type': inventory_type
+                }
+                pending_id = f'{member_id}_{guild_id}'
+                await update_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.PENDING_CHARACTERS,
+                    query={CommonFields.ID: pending_id},
+                    update_data={'$set': {
+                        'user_id': member_id,
+                        'guild_id': guild_id,
+                        'character_id': character_id,
+                        'name': character_name,
+                        'note': character_note,
+                        'registered_date': date,
+                        'inventory_type': inventory_type,
+                        'wizard_state': {},
+                        'created_at': date
+                    }}
+                )
 
-                view = NewCharacterWizardView(character_id, character_name, inventory_type)
+                from ReQuest.ui.player.views import NewCharacterWizardView
+                view = NewCharacterWizardView(pending_character, inventory_type)
                 await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)

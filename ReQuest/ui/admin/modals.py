@@ -6,7 +6,7 @@ from ReQuest.ui.common.modals import LocaleModal
 
 from ReQuest.utilities.constants import DatabaseCollections
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
-from ReQuest.utilities.supportFunctions import log_exception, update_cached_data
+from ReQuest.utilities.supportFunctions import log_exception, setup_view, update_cached_data
 
 logger = logging.getLogger(__name__)
 
@@ -49,17 +49,7 @@ class AllowServerModal(LocaleModal):
 
             interaction.client.allow_list.append(guild_id)
 
-            view = self.calling_view
-
-            if view.remove_guild_allowlist_select.disabled:
-                view.remove_guild_allowlist_select.disabled = False
-                view.remove_guild_allowlist_select.placeholder = t(self._locale, 'admin-select-placeholder-server')
-                view.remove_guild_allowlist_select.options.clear()
-
-            view.remove_guild_allowlist_select.options.append(
-                discord.SelectOption(label=input_name, value=str(guild_id))
-            )
-
+            await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)

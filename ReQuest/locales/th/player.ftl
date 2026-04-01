@@ -146,6 +146,15 @@ player-msg-no-characters = คุณไม่มีตัวละครที�
 player-label-active = (ใช้งานอยู่)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}ตัวละครที่กำลังดำเนินการ: { $characterName }{"**"}
+    การลงทะเบียนตัวละครของคุณรอการตั้งค่าสิ่งของ
+player-btn-resume = ดำเนินการต่อ
+player-btn-discard = ยกเลิก
+player-modal-title-discard-character = ยกเลิกตัวละคร
+player-modal-label-discard-confirm = ยกเลิก { $characterName }?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = ยืนยันการลบตัวละคร
 player-modal-label-confirm-char-delete = ลบ { $characterName }?
@@ -307,3 +316,32 @@ player-embed-desc-starting-inventory = ผู้เล่น: { $playerMention }
 player-embed-field-items-received = ไอเทมที่ได้รับ
 player-embed-field-currency-received-label = สกุลเงินที่ได้รับ
 player-label-untitled = ไม่มีชื่อ
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Inventory Submission: { $characterName }{"**"}
+    Submitted by { $userMention }
+player-approval-post-items = สิ่งของ
+player-approval-post-currency = สกุลเงิน
+player-approval-resolved = คำขอนี้ได้รับการดำเนินการแล้ว
+player-approval-btn-approve = อนุมัติ
+player-approval-btn-deny = ปฏิเสธ
+player-approval-btn-edit = แก้ไข
+player-approval-error-no-permission = คุณไม่มีสิทธิ์ดำเนินการนี้
+player-approval-error-not-submitter = เฉพาะผู้ส่งดั้งเดิมเท่านั้นที่สามารถแก้ไขคำขอนี้ได้
+player-approval-thread-instructions =
+    This thread was created for the approval of a character's starting inventory.
+    A Game Master will review the submission and approve or deny it.
+    The submitting player may use the Edit button to modify and re-submit.
+    Once approved or denied, this thread will be locked.
+player-msg-submission-updated = คำขอของคุณได้รับการอัปเดตแล้ว
+
+# Approval DM notifications
+player-dm-title-approved = ตัวละครได้รับอนุมัติ
+player-dm-desc-approved =
+    Your character {"**"}{ $characterName }{"**"} has been approved
+    by { $approver } in {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = ตัวละครถูกปฏิเสธ
+player-dm-desc-denied =
+    Your character {"**"}{ $characterName }{"**"} has been denied
+    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.

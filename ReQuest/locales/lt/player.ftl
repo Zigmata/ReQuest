@@ -146,6 +146,15 @@ player-msg-no-characters = Neturite registruotų veikėjų.
 player-label-active = (Aktyvus)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Kuriamas veikėjas: { $characterName }{"**"}
+    Jūsų veikėjo registracija laukia inventoriaus nustatymo.
+player-btn-resume = Tęsti
+player-btn-discard = Atmesti
+player-modal-title-discard-character = Atmesti veikėją
+player-modal-label-discard-confirm = Atmesti { $characterName }?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Patvirtinti veikėjo pašalinimą
 player-modal-label-confirm-char-delete = Ištrinti { $characterName }?
@@ -307,3 +316,32 @@ player-embed-desc-starting-inventory = Žaidėjas: { $playerMention } kaip `{ $c
 player-embed-field-items-received = Gauti daiktai
 player-embed-field-currency-received-label = Gauta valiuta
 player-label-untitled = Be pavadinimo
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Inventory Submission: { $characterName }{"**"}
+    Submitted by { $userMention }
+player-approval-post-items = Daiktai
+player-approval-post-currency = Valiuta
+player-approval-resolved = Ši paraiška buvo išspręsta.
+player-approval-btn-approve = Patvirtinti
+player-approval-btn-deny = Atmesti
+player-approval-btn-edit = Redaguoti
+player-approval-error-no-permission = Neturite leidimo atlikti šį veiksmą.
+player-approval-error-not-submitter = Tik pradinis pateikėjas gali redaguoti šią paraišką.
+player-approval-thread-instructions =
+    This thread was created for the approval of a character's starting inventory.
+    A Game Master will review the submission and approve or deny it.
+    The submitting player may use the Edit button to modify and re-submit.
+    Once approved or denied, this thread will be locked.
+player-msg-submission-updated = Jūsų paraiška atnaujinta.
+
+# Approval DM notifications
+player-dm-title-approved = Veikėjas patvirtintas
+player-dm-desc-approved =
+    Your character {"**"}{ $characterName }{"**"} has been approved
+    by { $approver } in {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Veikėjas atmestas
+player-dm-desc-denied =
+    Your character {"**"}{ $characterName }{"**"} has been denied
+    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.

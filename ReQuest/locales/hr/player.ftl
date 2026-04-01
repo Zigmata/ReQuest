@@ -146,6 +146,15 @@ player-msg-no-characters = Nemate registriranih likova.
 player-label-active = (Aktivan)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Lik u tijeku: { $characterName }{"**"}
+    Registracija vašeg lika čeka postavljanje inventara.
+player-btn-resume = Nastavi
+player-btn-discard = Odbaci
+player-modal-title-discard-character = Odbaci lik
+player-modal-label-discard-confirm = Odbaci { $characterName }?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Potvrdi uklanjanje lika
 player-modal-label-confirm-char-delete = Obrisati { $characterName }?
@@ -307,3 +316,32 @@ player-embed-desc-starting-inventory = Igrač: { $playerMention } kao `{ $charac
 player-embed-field-items-received = Primljeni predmeti
 player-embed-field-currency-received-label = Primljena valuta
 player-label-untitled = Bez naslova
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Inventory Submission: { $characterName }{"**"}
+    Submitted by { $userMention }
+player-approval-post-items = Predmeti
+player-approval-post-currency = Valuta
+player-approval-resolved = Ovaj zahtjev je riješen.
+player-approval-btn-approve = Odobri
+player-approval-btn-deny = Odbij
+player-approval-btn-edit = Uredi
+player-approval-error-no-permission = Nemate dozvolu za ovu radnju.
+player-approval-error-not-submitter = Samo izvorni podnositelj može urediti ovaj zahtjev.
+player-approval-thread-instructions =
+    This thread was created for the approval of a character's starting inventory.
+    A Game Master will review the submission and approve or deny it.
+    The submitting player may use the Edit button to modify and re-submit.
+    Once approved or denied, this thread will be locked.
+player-msg-submission-updated = Vaš zahtjev je ažuriran.
+
+# Approval DM notifications
+player-dm-title-approved = Lik odobren
+player-dm-desc-approved =
+    Your character {"**"}{ $characterName }{"**"} has been approved
+    by { $approver } in {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Lik odbijen
+player-dm-desc-denied =
+    Your character {"**"}{ $characterName }{"**"} has been denied
+    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.

@@ -146,6 +146,15 @@ player-msg-no-characters = आपका कोई चरित्र पंज�
 player-label-active = (सक्रिय)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}प्रगति में चरित्र: { $characterName }{"**"}
+    आपका चरित्र पंजीकरण इन्वेंटरी सेटअप की प्रतीक्षा कर रहा है।
+player-btn-resume = जारी रखें
+player-btn-discard = त्यागें
+player-modal-title-discard-character = चरित्र त्यागें
+player-modal-label-discard-confirm = { $characterName } त्यागें?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = चरित्र हटाने की पुष्टि करें
 player-modal-label-confirm-char-delete = { $characterName } हटाएँ?
@@ -307,3 +316,32 @@ player-embed-desc-starting-inventory = खिलाड़ी: { $playerMention }
 player-embed-field-items-received = प्राप्त वस्तुएँ
 player-embed-field-currency-received-label = प्राप्त मुद्रा
 player-label-untitled = बिना शीर्षक
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Inventory Submission: { $characterName }{"**"}
+    Submitted by { $userMention }
+player-approval-post-items = वस्तुएं
+player-approval-post-currency = मुद्रा
+player-approval-resolved = यह अनुरोध हल हो गया है।
+player-approval-btn-approve = स्वीकृत
+player-approval-btn-deny = अस्वीकृत
+player-approval-btn-edit = संपादित
+player-approval-error-no-permission = आपको यह कार्य करने की अनुमति नहीं है।
+player-approval-error-not-submitter = केवल मूल प्रस्तुतकर्ता ही इस अनुरोध को संपादित कर सकता है।
+player-approval-thread-instructions =
+    This thread was created for the approval of a character's starting inventory.
+    A Game Master will review the submission and approve or deny it.
+    The submitting player may use the Edit button to modify and re-submit.
+    Once approved or denied, this thread will be locked.
+player-msg-submission-updated = आपका अनुरोध अपडेट किया गया है।
+
+# Approval DM notifications
+player-dm-title-approved = चरित्र स्वीकृत
+player-dm-desc-approved =
+    Your character {"**"}{ $characterName }{"**"} has been approved
+    by { $approver } in {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = चरित्र अस्वीकृत
+player-dm-desc-denied =
+    Your character {"**"}{ $characterName }{"**"} has been denied
+    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.

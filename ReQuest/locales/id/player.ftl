@@ -146,6 +146,15 @@ player-msg-no-characters = Anda tidak memiliki karakter yang terdaftar.
 player-label-active = (Aktif)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Karakter dalam proses: { $characterName }{"**"}
+    Pendaftaran karakter Anda menunggu pengaturan inventaris.
+player-btn-resume = Lanjutkan
+player-btn-discard = Buang
+player-modal-title-discard-character = Buang karakter
+player-modal-label-discard-confirm = Buang { $characterName }?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Konfirmasi Penghapusan Karakter
 player-modal-label-confirm-char-delete = Hapus { $characterName }?
@@ -307,3 +316,32 @@ player-embed-desc-starting-inventory = Pemain: { $playerMention } sebagai `{ $ch
 player-embed-field-items-received = Barang yang Diterima
 player-embed-field-currency-received-label = Mata Uang yang Diterima
 player-label-untitled = Tanpa Judul
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Inventory Submission: { $characterName }{"**"}
+    Submitted by { $userMention }
+player-approval-post-items = Item
+player-approval-post-currency = Mata Uang
+player-approval-resolved = Pengajuan ini telah diselesaikan.
+player-approval-btn-approve = Setujui
+player-approval-btn-deny = Tolak
+player-approval-btn-edit = Edit
+player-approval-error-no-permission = Anda tidak memiliki izin untuk melakukan tindakan ini.
+player-approval-error-not-submitter = Hanya pengirim asli yang dapat mengedit pengajuan ini.
+player-approval-thread-instructions =
+    This thread was created for the approval of a character's starting inventory.
+    A Game Master will review the submission and approve or deny it.
+    The submitting player may use the Edit button to modify and re-submit.
+    Once approved or denied, this thread will be locked.
+player-msg-submission-updated = Pengajuan Anda telah diperbarui.
+
+# Approval DM notifications
+player-dm-title-approved = Karakter disetujui
+player-dm-desc-approved =
+    Your character {"**"}{ $characterName }{"**"} has been approved
+    by { $approver } in {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Karakter ditolak
+player-dm-desc-denied =
+    Your character {"**"}{ $characterName }{"**"} has been denied
+    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.

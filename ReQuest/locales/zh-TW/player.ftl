@@ -146,6 +146,15 @@ player-msg-no-characters = 您沒有已註冊的角色。
 player-label-active = （已啟用）
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}角色建立中: { $characterName }{"**"}
+    您的角色註冊正在等待物品欄設定。
+player-btn-resume = 繼續
+player-btn-discard = 放棄
+player-modal-title-discard-character = 放棄角色
+player-modal-label-discard-confirm = 放棄 { $characterName }？
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = 確認移除角色
 player-modal-label-confirm-char-delete = 刪除 { $characterName }？
@@ -307,3 +316,32 @@ player-embed-desc-starting-inventory = 玩家：{ $playerMention }，角色 `{ $
 player-embed-field-items-received = 已獲得物品
 player-embed-field-currency-received-label = 已獲得貨幣
 player-label-untitled = 無標題
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Inventory Submission: { $characterName }{"**"}
+    Submitted by { $userMention }
+player-approval-post-items = 物品
+player-approval-post-currency = 貨幣
+player-approval-resolved = 此提交已處理。
+player-approval-btn-approve = 批准
+player-approval-btn-deny = 拒絕
+player-approval-btn-edit = 編輯
+player-approval-error-no-permission = 您沒有執行此操作的權限。
+player-approval-error-not-submitter = 只有原始提交者才能編輯此提交。
+player-approval-thread-instructions =
+    This thread was created for the approval of a character's starting inventory.
+    A Game Master will review the submission and approve or deny it.
+    The submitting player may use the Edit button to modify and re-submit.
+    Once approved or denied, this thread will be locked.
+player-msg-submission-updated = 您的提交已更新。
+
+# Approval DM notifications
+player-dm-title-approved = 角色已批准
+player-dm-desc-approved =
+    Your character {"**"}{ $characterName }{"**"} has been approved
+    by { $approver } in {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = 角色已拒絕
+player-dm-desc-denied =
+    Your character {"**"}{ $characterName }{"**"} has been denied
+    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.

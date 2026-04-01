@@ -146,6 +146,15 @@ player-msg-no-characters = Nemáte žádné zaregistrované postavy.
 player-label-active = (Aktivní)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Rozpracovaná postava: { $characterName }{"**"}
+    Registrace vaší postavy čeká na nastavení inventáře.
+player-btn-resume = Pokračovat
+player-btn-discard = Zahodit
+player-modal-title-discard-character = Zahodit postavu
+player-modal-label-discard-confirm = Zahodit { $characterName }?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Potvrdit odebrání postavy
 player-modal-label-confirm-char-delete = Smazat { $characterName }?
@@ -307,3 +316,32 @@ player-embed-desc-starting-inventory = Hráč: { $playerMention } jako `{ $chara
 player-embed-field-items-received = Obdržené předměty
 player-embed-field-currency-received-label = Obdržená měna
 player-label-untitled = Bez názvu
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Inventory Submission: { $characterName }{"**"}
+    Submitted by { $userMention }
+player-approval-post-items = Předměty
+player-approval-post-currency = Měna
+player-approval-resolved = Tento požadavek byl vyřešen.
+player-approval-btn-approve = Schválit
+player-approval-btn-deny = Zamítnout
+player-approval-btn-edit = Upravit
+player-approval-error-no-permission = Nemáte oprávnění k provedení této akce.
+player-approval-error-not-submitter = Pouze původní odesílatel může tuto žádost upravit.
+player-approval-thread-instructions =
+    This thread was created for the approval of a character's starting inventory.
+    A Game Master will review the submission and approve or deny it.
+    The submitting player may use the Edit button to modify and re-submit.
+    Once approved or denied, this thread will be locked.
+player-msg-submission-updated = Vaše žádost byla aktualizována.
+
+# Approval DM notifications
+player-dm-title-approved = Postava schválena
+player-dm-desc-approved =
+    Your character {"**"}{ $characterName }{"**"} has been approved
+    by { $approver } in {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Postava zamítnuta
+player-dm-desc-denied =
+    Your character {"**"}{ $characterName }{"**"} has been denied
+    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.

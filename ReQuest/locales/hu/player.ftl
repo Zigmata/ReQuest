@@ -146,6 +146,15 @@ player-msg-no-characters = Nincsenek regisztrált karaktereid.
 player-label-active = (Aktív)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Folyamatban lévő karakter: { $characterName }{"**"}
+    A karakter regisztrációja a felszerelés beállítására vár.
+player-btn-resume = Folytatás
+player-btn-discard = Elvetés
+player-modal-title-discard-character = Karakter elvetése
+player-modal-label-discard-confirm = { $characterName } elvetése?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Karakter eltávolításának megerősítése
 player-modal-label-confirm-char-delete = Törlöd a következőt: { $characterName }?
@@ -307,3 +316,32 @@ player-embed-desc-starting-inventory = Játékos: { $playerMention } mint `{ $ch
 player-embed-field-items-received = Kapott tárgyak
 player-embed-field-currency-received-label = Kapott valuta
 player-label-untitled = Névtelen
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Inventory Submission: { $characterName }{"**"}
+    Submitted by { $userMention }
+player-approval-post-items = Tárgyak
+player-approval-post-currency = Pénznem
+player-approval-resolved = Ez a beadvány feldolgozásra került.
+player-approval-btn-approve = Jóváhagyás
+player-approval-btn-deny = Elutasítás
+player-approval-btn-edit = Szerkesztés
+player-approval-error-no-permission = Nincs jogosultságod ehhez a művelethez.
+player-approval-error-not-submitter = Csak az eredeti benyújtó szerkesztheti ezt a beadványt.
+player-approval-thread-instructions =
+    This thread was created for the approval of a character's starting inventory.
+    A Game Master will review the submission and approve or deny it.
+    The submitting player may use the Edit button to modify and re-submit.
+    Once approved or denied, this thread will be locked.
+player-msg-submission-updated = A beadványod frissítve lett.
+
+# Approval DM notifications
+player-dm-title-approved = Karakter jóváhagyva
+player-dm-desc-approved =
+    Your character {"**"}{ $characterName }{"**"} has been approved
+    by { $approver } in {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Karakter elutasítva
+player-dm-desc-denied =
+    Your character {"**"}{ $characterName }{"**"} has been denied
+    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.

@@ -146,6 +146,15 @@ player-msg-no-characters = Δεν έχετε εγγεγραμμένους χαρ
 player-label-active = (Ενεργός)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Χαρακτήρας σε εξέλιξη: { $characterName }{"**"}
+    Η εγγραφή του χαρακτήρα σας αναμένει ρύθμιση εξοπλισμού.
+player-btn-resume = Συνέχεια
+player-btn-discard = Απόρριψη
+player-modal-title-discard-character = Απόρριψη χαρακτήρα
+player-modal-label-discard-confirm = Απόρριψη { $characterName };
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Επιβεβαίωση Αφαίρεσης Χαρακτήρα
 player-modal-label-confirm-char-delete = Διαγραφή { $characterName };
@@ -307,3 +316,32 @@ player-embed-desc-starting-inventory = Παίκτης: { $playerMention } ως `
 player-embed-field-items-received = Αντικείμενα που Λήφθηκαν
 player-embed-field-currency-received-label = Νόμισμα που Λήφθηκε
 player-label-untitled = Χωρίς Τίτλο
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Inventory Submission: { $characterName }{"**"}
+    Submitted by { $userMention }
+player-approval-post-items = Αντικείμενα
+player-approval-post-currency = Νόμισμα
+player-approval-resolved = Αυτή η υποβολή έχει επιλυθεί.
+player-approval-btn-approve = Έγκριση
+player-approval-btn-deny = Απόρριψη
+player-approval-btn-edit = Επεξεργασία
+player-approval-error-no-permission = Δεν έχετε δικαίωμα για αυτή την ενέργεια.
+player-approval-error-not-submitter = Μόνο ο αρχικός υποβάλλων μπορεί να επεξεργαστεί αυτή την υποβολή.
+player-approval-thread-instructions =
+    This thread was created for the approval of a character's starting inventory.
+    A Game Master will review the submission and approve or deny it.
+    The submitting player may use the Edit button to modify and re-submit.
+    Once approved or denied, this thread will be locked.
+player-msg-submission-updated = Η υποβολή σας ενημερώθηκε.
+
+# Approval DM notifications
+player-dm-title-approved = Χαρακτήρας εγκρίθηκε
+player-dm-desc-approved =
+    Your character {"**"}{ $characterName }{"**"} has been approved
+    by { $approver } in {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Χαρακτήρας απορρίφθηκε
+player-dm-desc-denied =
+    Your character {"**"}{ $characterName }{"**"} has been denied
+    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.

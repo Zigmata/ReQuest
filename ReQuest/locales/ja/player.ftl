@@ -146,6 +146,15 @@ player-msg-no-characters = 登録されたキャラクターがいません。
 player-label-active = （有効）
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}作成中のキャラクター: { $characterName }{"**"}
+    キャラクター登録はインベントリの設定を待っています。
+player-btn-resume = 再開
+player-btn-discard = 破棄
+player-modal-title-discard-character = キャラクター破棄
+player-modal-label-discard-confirm = { $characterName } を破棄しますか？
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = キャラクター削除の確認
 player-modal-label-confirm-char-delete = { $characterName } を削除しますか？
@@ -307,3 +316,32 @@ player-embed-desc-starting-inventory = プレイヤー: { $playerMention }（{ $
 player-embed-field-items-received = 受け取ったアイテム
 player-embed-field-currency-received-label = 受け取った通貨
 player-label-untitled = 無題
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Inventory Submission: { $characterName }{"**"}
+    Submitted by { $userMention }
+player-approval-post-items = アイテム
+player-approval-post-currency = 通貨
+player-approval-resolved = この申請は処理済みです。
+player-approval-btn-approve = 承認
+player-approval-btn-deny = 拒否
+player-approval-btn-edit = 編集
+player-approval-error-no-permission = この操作を行う権限がありません。
+player-approval-error-not-submitter = 元の提出者のみがこの申請を編集できます。
+player-approval-thread-instructions =
+    This thread was created for the approval of a character's starting inventory.
+    A Game Master will review the submission and approve or deny it.
+    The submitting player may use the Edit button to modify and re-submit.
+    Once approved or denied, this thread will be locked.
+player-msg-submission-updated = 申請が更新されました。
+
+# Approval DM notifications
+player-dm-title-approved = キャラクター承認
+player-dm-desc-approved =
+    Your character {"**"}{ $characterName }{"**"} has been approved
+    by { $approver } in {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = キャラクター拒否
+player-dm-desc-denied =
+    Your character {"**"}{ $characterName }{"**"} has been denied
+    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.

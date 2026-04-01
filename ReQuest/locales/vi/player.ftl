@@ -146,6 +146,15 @@ player-msg-no-characters = Bạn chưa đăng ký nhân vật nào.
 player-label-active = (Đang hoạt động)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Nhân vật đang xử lý: { $characterName }{"**"}
+    Đăng ký nhân vật của bạn đang chờ thiết lập trang bị.
+player-btn-resume = Tiếp tục
+player-btn-discard = Hủy bỏ
+player-modal-title-discard-character = Hủy nhân vật
+player-modal-label-discard-confirm = Hủy { $characterName }?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Xác nhận Xóa Nhân vật
 player-modal-label-confirm-char-delete = Xóa { $characterName }?
@@ -307,3 +316,32 @@ player-embed-desc-starting-inventory = Người chơi: { $playerMention } với 
 player-embed-field-items-received = Vật phẩm Nhận được
 player-embed-field-currency-received-label = Tiền tệ Nhận được
 player-label-untitled = Không có tiêu đề
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Inventory Submission: { $characterName }{"**"}
+    Submitted by { $userMention }
+player-approval-post-items = Vật phẩm
+player-approval-post-currency = Tiền tệ
+player-approval-resolved = Yêu cầu này đã được xử lý.
+player-approval-btn-approve = Phê duyệt
+player-approval-btn-deny = Từ chối
+player-approval-btn-edit = Chỉnh sửa
+player-approval-error-no-permission = Bạn không có quyền thực hiện hành động này.
+player-approval-error-not-submitter = Chỉ người gửi ban đầu mới có thể chỉnh sửa yêu cầu này.
+player-approval-thread-instructions =
+    This thread was created for the approval of a character's starting inventory.
+    A Game Master will review the submission and approve or deny it.
+    The submitting player may use the Edit button to modify and re-submit.
+    Once approved or denied, this thread will be locked.
+player-msg-submission-updated = Yêu cầu của bạn đã được cập nhật.
+
+# Approval DM notifications
+player-dm-title-approved = Nhân vật đã được phê duyệt
+player-dm-desc-approved =
+    Your character {"**"}{ $characterName }{"**"} has been approved
+    by { $approver } in {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Nhân vật đã bị từ chối
+player-dm-desc-denied =
+    Your character {"**"}{ $characterName }{"**"} has been denied
+    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.

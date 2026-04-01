@@ -12,7 +12,7 @@ from pymongo import AsyncMongoClient as MongoClient
 import redis.asyncio as redis
 
 from ReQuest.ui.gm.views import QuestPostView
-from ReQuest.utilities.constants import QuestFields
+from ReQuest.utilities.constants import QuestFields, DatabaseCollections
 from ReQuest.utilities.supportFunctions import attempt_delete, log_exception
 
 log_level = os.getenv('LOG_LEVEL', 'INFO').upper()
@@ -134,6 +134,20 @@ class ReQuest(commands.Bot):
             except Exception as e:
                 quest_id = quest.get(QuestFields.QUEST_ID, 'unknown')
                 logger.error(f'Unexpected error loading view for quest {quest_id}: {e}')
+
+        # Reload persistent views for pending approval submissions
+        from ReQuest.ui.player.views import ApprovalPostView
+        approval_collection = self.gdb[DatabaseCollections.APPROVALS]
+        approval_cursor = approval_collection.find({'status': 'pending', 'message_id': {'$exists': True}})
+        for doc in await approval_cursor.to_list(length=None):
+            try:
+                submission_id = doc['submission_id']
+                message_id = doc['message_id']
+                self.add_view(view=ApprovalPostView(submission_id), message_id=message_id)
+            except (KeyError, TypeError) as e:
+                logger.error(f'Failed to load approval view {doc.get("submission_id", "unknown")}: {e}')
+            except Exception as e:
+                logger.error(f'Unexpected error loading approval view {doc.get("submission_id", "unknown")}: {e}')
 
     async def close(self):
         await super().close()

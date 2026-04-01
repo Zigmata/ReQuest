@@ -21,7 +21,8 @@ from ReQuest.ui.player import buttons, selects
 from ReQuest.utilities.constants import (
     CharacterFields, ConfigFields, CommonFields, ShopFields, DatabaseCollections, DisplayLimits
 )
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_guild_locale, resolve_locale
+from ReQuest.utilities.checks import is_gm_or_mod
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_guild_locale, resolve_locale, resolve_user_locale
 from ReQuest.utilities.supportFunctions import (
     log_exception,
     strip_id,
@@ -45,7 +46,8 @@ from ReQuest.utilities.supportFunctions import (
     get_container_items,
     escape_markdown,
     decode_mongo_key,
-    truncate_text
+    truncate_text,
+    delete_cached_data
 )
 
 logger = logging.getLogger(__name__)
@@ -113,6 +115,7 @@ class CharacterBaseView(LocaleLayoutView):
         self.active_character_id = None
         self.sorted_characters = []
         self.xp_enabled = True
+        self.pending_character = None
 
         self.items_per_page = 6
         self.current_page = 0
@@ -148,6 +151,15 @@ class CharacterBaseView(LocaleLayoutView):
 
             self.xp_enabled = await get_xp_config(interaction.client, interaction.guild_id)
 
+            # Check for a pending character registration on this guild
+            pending_id = f'{interaction.user.id}_{interaction.guild_id}'
+            self.pending_character = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.PENDING_CHARACTERS,
+                query={CommonFields.ID: pending_id}
+            )
+
             self.build_view()
         except Exception as e:
             await log_exception(e, interaction)
@@ -162,7 +174,23 @@ class CharacterBaseView(LocaleLayoutView):
         container.add_item(header_section)
         container.add_item(Separator())
 
-        register_section = Section(accessory=buttons.RegisterCharacterButton(self))
+        # Show pending character section if one exists for this guild
+        if self.pending_character:
+            pending_name = self.pending_character.get('name', '')
+            container.add_item(TextDisplay(
+                t(locale, 'player-title-character-in-progress', characterName=pending_name)
+            ))
+            pending_actions = ActionRow()
+            pending_actions.add_item(buttons.ResumeWizardButton(self))
+            pending_actions.add_item(buttons.DiscardPendingCharacterButton(self))
+            container.add_item(pending_actions)
+            container.add_item(Separator())
+
+        # Disable registration if a pending character exists
+        register_button = buttons.RegisterCharacterButton(self)
+        if self.pending_character:
+            register_button.disabled = True
+        register_section = Section(accessory=register_button)
         register_section.add_item(TextDisplay(t(locale, 'player-desc-register-character')))
         container.add_item(register_section)
         container.add_item(Separator())
@@ -1230,10 +1258,11 @@ class PlayerBoardView(LocaleLayoutView):
 
 
 class NewCharacterWizardView(LocaleLayoutView):
-    def __init__(self, character_id, character_name, inventory_type):
+    def __init__(self, pending_character, inventory_type):
         super().__init__(timeout=None)
-        self.character_id = character_id
-        self.character_name = character_name
+        self.pending_character = pending_character
+        self.character_id = pending_character['character_id']
+        self.character_name = pending_character['name']
         self.inventory_type = inventory_type
 
         self.build_view()
@@ -1265,14 +1294,15 @@ class NewCharacterWizardView(LocaleLayoutView):
         self.add_item(container)
 
     async def submit_open_inventory(self, interaction, items):
-        await _handle_submission(interaction, self.character_id, self.character_name, items, {})
+        await _handle_submission(interaction, self.pending_character, items, {})
 
 
 class StaticKitSelectView(LocaleLayoutView):
-    def __init__(self, character_id, character_name):
+    def __init__(self, pending_character):
         super().__init__(timeout=None)
-        self.character_id = character_id
-        self.character_name = character_name
+        self.pending_character = pending_character
+        self.character_id = pending_character['character_id']
+        self.character_name = pending_character['name']
         self.kits = {}
         self.currency_config = None
         self.sorted_kits = []
@@ -1412,10 +1442,11 @@ class StaticKitSelectView(LocaleLayoutView):
 
 
 class StaticKitConfirmView(LocaleLayoutView):
-    def __init__(self, character_id, character_name, kit_id, kit_data, currency_config):
+    def __init__(self, pending_character, kit_id, kit_data, currency_config):
         super().__init__(timeout=None)
-        self.character_id = character_id
-        self.character_name = character_name
+        self.pending_character = pending_character
+        self.character_id = pending_character['character_id']
+        self.character_name = pending_character['name']
         self.kit_id = kit_id
         self.kit_data = kit_data
         self.currency_config = currency_config
@@ -1535,7 +1566,7 @@ class StaticKitConfirmView(LocaleLayoutView):
         }
         # Decode currency keys for display
         currency = {decode_mongo_key(k): v for k, v in self.kit_data.get(CharacterFields.CURRENCY, {}).items()}
-        await _handle_submission(interaction, self.character_id, self.character_name, items, currency)
+        await _handle_submission(interaction, self.pending_character, items, currency)
 
 
 class NewCharacterComplexItemPurchaseView(LocaleLayoutView):
@@ -1577,10 +1608,11 @@ class NewCharacterComplexItemPurchaseView(LocaleLayoutView):
 
 
 class NewCharacterShopView(LocaleLayoutView):
-    def __init__(self, character_id, character_name, inventory_type):
+    def __init__(self, pending_character, inventory_type):
         super().__init__(timeout=None)
-        self.character_id = character_id
-        self.character_name = character_name
+        self.pending_character = pending_character
+        self.character_id = pending_character['character_id']
+        self.character_name = pending_character['name']
         self.inventory_type = inventory_type
         self.shop_stock = []
         self.cart = {}
@@ -1925,15 +1957,333 @@ class NewCharacterCartView(LocaleLayoutView):
             if self.shop_view.inventory_type == InventoryType.PURCHASE.value else {}
         )
 
-        await _handle_submission(interaction, self.shop_view.character_id, self.shop_view.character_name,
-                                 self.cart_items, currency_to_give)
+        await _handle_submission(interaction, self.shop_view.pending_character, self.cart_items, currency_to_give)
 
 
-async def _handle_submission(interaction, character_id, character_name, items, currency):
+class ApprovalPostView(LocaleLayoutView):
+    """Persistent view posted in forum threads for GM approval of character submissions."""
+
+    def __init__(self, submission_id):
+        super().__init__(timeout=None)
+        self.submission_id = submission_id
+        self.submission_data = None
+        self.currency_config = None
+        self.resolved = False
+
+        self.items_per_page = 9
+        self.current_page = 0
+        self.total_pages = 1
+
+    async def setup(self, bot):
+        self.submission_data = await bot.gdb[DatabaseCollections.APPROVALS].find_one(
+            {'submission_id': self.submission_id}
+        )
+        if not self.submission_data:
+            self.resolved = True
+        else:
+            guild_id = self.submission_data.get('guild_id')
+            self.currency_config = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.CURRENCY,
+                query={CommonFields.ID: guild_id}
+            )
+        self.build_view()
+
+    def build_view(self):
+        self.clear_items()
+        locale = getattr(self, 'locale', None) or DEFAULT_LOCALE
+        container = Container()
+
+        if self.resolved or not self.submission_data:
+            container.add_item(TextDisplay(t(locale, 'player-approval-resolved')))
+            self.add_item(container)
+            return
+
+        character_name = self.submission_data.get('character_name', '')
+        user_id = self.submission_data.get('user_id')
+        items = self.submission_data.get('items', {})
+        currency = self.submission_data.get('currency', {})
+
+        # Header
+        container.add_item(TextDisplay(
+            t(locale, 'player-approval-post-header',
+              characterName=character_name, userMention=f'<@{user_id}>')
+        ))
+        container.add_item(Separator())
+
+        # Build combined detail lines (currency first, then items)
+        detail_lines = []
+        if currency:
+            detail_lines.append(f'**{t(locale, "player-approval-post-currency")}**')
+            currency_labels = format_consolidated_totals(currency, self.currency_config)
+            for label in currency_labels:
+                detail_lines.append(f'- {label}')
+
+        if items:
+            detail_lines.append(f'**{t(locale, "player-approval-post-items")}**')
+            for name, quantity in sorted(items.items()):
+                quantity_label = f'{quantity}x ' if quantity > 1 else ''
+                detail_lines.append(
+                    f'- {quantity_label}{escape_markdown(truncate_text(name, DisplayLimits.ITEM_NAME))}'
+                )
+
+        if not detail_lines:
+            container.add_item(TextDisplay(t(locale, 'common-label-none')))
+        else:
+            self.total_pages = math.ceil(len(detail_lines) / self.items_per_page)
+            if self.current_page >= self.total_pages:
+                self.current_page = max(0, self.total_pages - 1)
+
+            start = self.current_page * self.items_per_page
+            end = start + self.items_per_page
+            container.add_item(TextDisplay('\n'.join(detail_lines[start:end])))
+
+        container.add_item(Separator())
+
+        # Action buttons
+        actions = ActionRow()
+        actions.add_item(buttons.ApprovalApproveButton(self.submission_id))
+        actions.add_item(buttons.ApprovalDenyButton(self.submission_id))
+        actions.add_item(buttons.ApprovalEditButton(self.submission_id))
+        container.add_item(actions)
+
+        self.add_item(container)
+
+        # Pagination
+        if self.total_pages > 1:
+            nav_row = ActionRow()
+            prev_button = Button(
+                label=t(locale, 'common-btn-prev'),
+                style=discord.ButtonStyle.secondary,
+                custom_id=f'approval_prev_{self.submission_id}',
+                disabled=(self.current_page == 0)
+            )
+            prev_button.callback = self.prev_page
+
+            page_display = Button(
+                label=t(locale, 'common-page-label',
+                        current=self.current_page + 1, total=self.total_pages),
+                style=discord.ButtonStyle.secondary,
+                custom_id=f'approval_page_{self.submission_id}'
+            )
+
+            next_button = Button(
+                label=t(locale, 'common-btn-next'),
+                style=discord.ButtonStyle.secondary,
+                custom_id=f'approval_next_{self.submission_id}',
+                disabled=(self.current_page >= self.total_pages - 1)
+            )
+            next_button.callback = self.next_page
+
+            nav_row.add_item(prev_button)
+            nav_row.add_item(page_display)
+            nav_row.add_item(next_button)
+            self.add_item(nav_row)
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        await super().interaction_check(interaction)
+        if self.resolved:
+            return False
+
+        custom_id = interaction.data.get('custom_id', '')
+
+        # Approve/Deny: require GM or mod
+        if custom_id.startswith(('approve_sub_', 'deny_sub_')):
+            if not await is_gm_or_mod(interaction.client, interaction.guild, interaction.user):
+                locale = getattr(self, 'locale', DEFAULT_LOCALE)
+                await interaction.response.send_message(
+                    t(locale, 'player-approval-error-no-permission'), ephemeral=True
+                )
+                return False
+            return True
+
+        # Edit: require original submitter
+        if custom_id.startswith('edit_sub_'):
+            submitter_id = self.submission_data.get('user_id')
+            if interaction.user.id != submitter_id:
+                locale = getattr(self, 'locale', DEFAULT_LOCALE)
+                await interaction.response.send_message(
+                    t(locale, 'player-approval-error-not-submitter'), ephemeral=True
+                )
+                return False
+            return True
+
+        # Pagination: allow anyone who can see the thread
+        return True
+
+    async def prev_page(self, interaction):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction):
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def approve(self, interaction):
+        try:
+            await interaction.response.defer()
+            bot = interaction.client
+            guild_id = self.submission_data['guild_id']
+            user_id = self.submission_data['user_id']
+            pending_character = self.submission_data.get('pending_character', {})
+            character_id = pending_character.get('character_id', self.submission_data.get('character_id'))
+            character_name = pending_character.get('name', self.submission_data.get('character_name'))
+
+            # Create the character in the CHARACTERS collection
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.mdb,
+                collection_name=DatabaseCollections.CHARACTERS,
+                query={CommonFields.ID: user_id},
+                update_data={'$set': {
+                    f'{CharacterFields.ACTIVE_CHARACTERS}.{guild_id}': character_id,
+                    f'{CharacterFields.CHARACTERS}.{character_id}': {
+                        CharacterFields.NAME: character_name,
+                        'note': pending_character.get('note', ''),
+                        'registeredDate': pending_character.get('registered_date'),
+                        CharacterFields.ATTRIBUTES: {
+                            'level': None,
+                            CharacterFields.EXPERIENCE: None,
+                            CharacterFields.INVENTORY: {},
+                            CharacterFields.CURRENCY: {}
+                        }
+                    }
+                }}
+            )
+
+            # Apply inventory items and currency
+            for name, quantity in self.submission_data.get('items', {}).items():
+                await update_character_inventory(interaction, user_id, character_id, name, quantity)
+            for name, quantity in self.submission_data.get('currency', {}).items():
+                await update_character_inventory(interaction, user_id, character_id, name, quantity)
+
+            # Delete the approval record
+            await delete_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.APPROVALS,
+                search_filter={'submission_id': self.submission_id},
+                cache_id=f'approval_submission:{self.submission_id}'
+            )
+
+            # Update view to resolved state
+            self.resolved = True
+            self.build_view()
+            await interaction.edit_original_response(view=self)
+
+            # DM the player
+            try:
+                user = await bot.fetch_user(user_id)
+                user_locale = await resolve_user_locale(bot, user_id, guild_id)
+                guild = bot.get_guild(guild_id)
+                guild_name = guild.name if guild else 'Unknown'
+                dm_embed = discord.Embed(
+                    title=t(user_locale, 'player-dm-title-approved'),
+                    description=t(user_locale, 'player-dm-desc-approved',
+                                  characterName=character_name,
+                                  approver=interaction.user.display_name,
+                                  guildName=guild_name),
+                    color=discord.Color.green()
+                )
+                await user.send(embed=dm_embed)
+            except discord.errors.Forbidden:
+                logger.warning(f'Could not DM user {user_id} about approval — DMs may be disabled.')
+
+            # Lock and archive the thread
+            thread = interaction.channel
+            if isinstance(thread, discord.Thread):
+                await thread.edit(locked=True, archived=True)
+
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def deny(self, interaction):
+        try:
+            await interaction.response.defer()
+            bot = interaction.client
+            user_id = self.submission_data['user_id']
+            guild_id = self.submission_data['guild_id']
+            character_name = self.submission_data.get('character_name', '')
+
+            # Delete the approval record (character was never created)
+            await delete_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.APPROVALS,
+                search_filter={'submission_id': self.submission_id},
+                cache_id=f'approval_submission:{self.submission_id}'
+            )
+
+            # Update view to resolved state
+            self.resolved = True
+            self.build_view()
+            await interaction.edit_original_response(view=self)
+
+            # DM the player
+            try:
+                user = await bot.fetch_user(user_id)
+                user_locale = await resolve_user_locale(bot, user_id, guild_id)
+                guild = bot.get_guild(guild_id)
+                guild_name = guild.name if guild else 'Unknown'
+                dm_embed = discord.Embed(
+                    title=t(user_locale, 'player-dm-title-denied'),
+                    description=t(user_locale, 'player-dm-desc-denied',
+                                  characterName=character_name,
+                                  denier=interaction.user.display_name,
+                                  guildName=guild_name),
+                    color=discord.Color.red()
+                )
+                await user.send(embed=dm_embed)
+            except discord.errors.Forbidden:
+                logger.warning(f'Could not DM user {user_id} about denial — DMs may be disabled.')
+
+            # Lock and archive the thread
+            thread = interaction.channel
+            if isinstance(thread, discord.Thread):
+                await thread.edit(locked=True, archived=True)
+
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def edit(self, interaction):
+        try:
+            # Re-open the inventory wizard for the submitting player
+            pending_character = self.submission_data.get('pending_character', {})
+            if not pending_character:
+                # Backwards compat: build from flat fields
+                pending_character = {
+                    'character_id': self.submission_data.get('character_id'),
+                    'name': self.submission_data.get('character_name'),
+                    'note': '',
+                    'registered_date': self.submission_data.get('timestamp'),
+                    'inventory_type': 'open'
+                }
+
+            inventory_type = pending_character.get('inventory_type', 'open')
+
+            # Store the submission_id so _handle_submission can update instead of insert
+            pending_character['submission_id'] = self.submission_id
+
+            view = NewCharacterWizardView(pending_character, inventory_type)
+            await interaction.response.send_message(view=view, ephemeral=True)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+async def _handle_submission(interaction, pending_character, items, currency):
     try:
         locale = getattr(interaction, '_locale_override', DEFAULT_LOCALE)
         guild_id = interaction.guild_id
         bot = interaction.client
+        member_id = interaction.user.id
+        character_id = pending_character['character_id']
+        character_name = pending_character['name']
+
         currency_config = await get_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
@@ -1951,72 +2301,132 @@ async def _handle_submission(interaction, character_id, character_name, items, c
         channel_id = strip_id(approval_query[ConfigFields.APPROVAL_QUEUE_CHANNEL]) if approval_query else None
         forum_channel = bot.get_channel(channel_id) if channel_id else None
 
-        submission_data = {
-            'guild_id': guild_id,
-            'user_id': interaction.user.id,
-            'character_id': character_id,
-            'character_name': character_name,
-            'items': items,
-            'currency': currency,
-            'status': 'pending',
-            'timestamp': discord.utils.utcnow()
-        }
+        # Clean up the pending character record
+        pending_id = f'{member_id}_{guild_id}'
+        await delete_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name=DatabaseCollections.PENDING_CHARACTERS,
+            search_filter={CommonFields.ID: pending_id},
+            cache_id=pending_id
+        )
+
+        # Check if this is a re-submission (edit flow from ApprovalPostView)
+        existing_submission_id = pending_character.pop('submission_id', None)
 
         if forum_channel and isinstance(forum_channel, discord.ForumChannel):
-            # Create Embed for Forum Post
-            embed = discord.Embed(
-                title=t(locale, 'player-embed-title-approval', characterName=character_name),
-                description=t(locale, 'player-embed-desc-submitted-by', userMention=interaction.user.mention),
-                color=discord.Color.blue()
-            )
-            embed.set_author(name=interaction.user.display_name,
-                             icon_url=interaction.user.avatar.url if interaction.user.avatar else None)
+            guild_locale = await resolve_guild_locale(bot, guild_id)
 
-            item_labels = [f'{k}: {v}' for k, v in items.items()]
-            embed.add_field(
-                name=t(locale, 'player-embed-field-items'),
-                value='\n'.join(item_labels) or t(locale, 'common-label-none'), inline=False
-            )
+            if existing_submission_id:
+                # Edit re-submission: update the existing APPROVALS doc and refresh the forum post
+                submission_id = existing_submission_id
+                await bot.gdb[DatabaseCollections.APPROVALS].update_one(
+                    {'submission_id': submission_id},
+                    {'$set': {
+                        'pending_character': pending_character,
+                        'items': items,
+                        'currency': currency,
+                        'timestamp': discord.utils.utcnow()
+                    }}
+                )
 
-            currency_labels = format_consolidated_totals(currency, currency_config)
-            embed.add_field(
-                name=t(locale, 'player-embed-field-currency-received'),
-                value='\n'.join(currency_labels) or t(locale, 'common-label-none'), inline=False
-            )
+                # Refresh the forum post view
+                approval_doc = await bot.gdb[DatabaseCollections.APPROVALS].find_one(
+                    {'submission_id': submission_id}
+                )
+                if approval_doc and approval_doc.get('message_id'):
+                    thread_id = approval_doc.get('thread_id')
+                    thread = bot.get_channel(thread_id)
+                    if thread:
+                        message = thread.get_partial_message(approval_doc['message_id'])
+                        approval_view = ApprovalPostView(submission_id)
+                        approval_view.locale = guild_locale
+                        await approval_view.setup(bot)
+                        await message.edit(view=approval_view)
 
-            submission_id = shortuuid.uuid()[:8]
-            embed.set_footer(text=t(locale, 'player-embed-footer-submission-id', submissionId=submission_id))
+                await interaction.response.send_message(
+                    t(locale, 'player-msg-submission-updated'), ephemeral=True
+                )
+            else:
+                # New submission: create thread with ApprovalPostView
+                submission_id = shortuuid.uuid()[:8]
+                submission_data = {
+                    'guild_id': guild_id,
+                    'user_id': member_id,
+                    'pending_character': pending_character,
+                    'character_id': character_id,
+                    'character_name': character_name,
+                    'items': items,
+                    'currency': currency,
+                    'status': 'pending',
+                    'timestamp': discord.utils.utcnow(),
+                    'submission_id': submission_id
+                }
 
-            # Create Thread
-            thread_name = t(locale, 'player-label-approval-thread', characterName=character_name)
-            thread_message = await forum_channel.create_thread(name=thread_name, embed=embed)
+                # Create ApprovalPostView for the forum thread
+                approval_view = ApprovalPostView(submission_id)
+                approval_view.submission_data = submission_data
+                approval_view.currency_config = currency_config
+                approval_view.locale = guild_locale
+                approval_view.build_view()
 
-            # Store submission in DB (Needed for GM to approve later)
-            submission_data['thread_id'] = thread_message.thread.id
-            submission_data['submission_id'] = submission_id
+                thread_name = t(guild_locale, 'player-label-approval-thread', characterName=character_name)
+                thread_message = await forum_channel.create_thread(name=thread_name, view=approval_view)
 
-            await bot.gdb[DatabaseCollections.APPROVALS].insert_one(submission_data)
+                thread = thread_message.thread
+                submission_data['thread_id'] = thread.id
+                submission_data['message_id'] = thread_message.message.id
 
-            # Reset the view to Character Base View
-            new_view = CharacterBaseView()
-            await setup_view(new_view, interaction)
-            await interaction.response.edit_message(view=new_view)
+                await bot.gdb[DatabaseCollections.APPROVALS].insert_one(submission_data)
 
-            confirmation_embed = discord.Embed(
-                title=t(locale, 'player-embed-title-submission-sent'),
-                description=t(locale, 'player-embed-desc-submission-sent',
-                              characterName=character_name,
-                              threadUrl=thread_message.thread.jump_url),
-                color=discord.Color.green()
-            )
-            await interaction.followup.send(embed=confirmation_embed, ephemeral=True)
+                # Register persistent view for bot restarts
+                bot.add_view(ApprovalPostView(submission_id), message_id=thread_message.message.id)
+
+                # Send canned instructions in the thread
+                await thread.send(t(guild_locale, 'player-approval-thread-instructions'))
+
+                # Return player to character list
+                new_view = CharacterBaseView()
+                await setup_view(new_view, interaction)
+                await interaction.response.edit_message(view=new_view)
+
+                confirmation_embed = discord.Embed(
+                    title=t(locale, 'player-embed-title-submission-sent'),
+                    description=t(locale, 'player-embed-desc-submission-sent',
+                                  characterName=character_name,
+                                  threadUrl=thread.jump_url),
+                    color=discord.Color.green()
+                )
+                await interaction.followup.send(embed=confirmation_embed, ephemeral=True)
 
         else:
+            # Direct-apply path: create character and apply inventory immediately
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.mdb,
+                collection_name=DatabaseCollections.CHARACTERS,
+                query={CommonFields.ID: member_id},
+                update_data={'$set': {
+                    f'{CharacterFields.ACTIVE_CHARACTERS}.{guild_id}': character_id,
+                    f'{CharacterFields.CHARACTERS}.{character_id}': {
+                        CharacterFields.NAME: character_name,
+                        'note': pending_character.get('note', ''),
+                        'registeredDate': pending_character.get('registered_date'),
+                        CharacterFields.ATTRIBUTES: {
+                            'level': None,
+                            CharacterFields.EXPERIENCE: None,
+                            CharacterFields.INVENTORY: {},
+                            CharacterFields.CURRENCY: {}
+                        }
+                    }
+                }}
+            )
+
             for name, quantity in items.items():
-                await update_character_inventory(interaction, interaction.user.id, character_id, name, quantity)
+                await update_character_inventory(interaction, member_id, character_id, name, quantity)
 
             for name, quantity in currency.items():
-                await update_character_inventory(interaction, interaction.user.id, character_id, name, quantity)
+                await update_character_inventory(interaction, member_id, character_id, name, quantity)
 
             report_embed = discord.Embed(
                 title=t(locale, 'player-embed-title-starting-inventory'),

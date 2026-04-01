@@ -146,6 +146,15 @@ player-msg-no-characters = Sinulla ei ole rekisteröityjä hahmoja.
 player-label-active = (Aktiivinen)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Hahmo kesken: { $characterName }{"**"}
+    Hahmosi rekisteröinti odottaa varusteluettelon määritystä.
+player-btn-resume = Jatka
+player-btn-discard = Hylkää
+player-modal-title-discard-character = Hylkää hahmo
+player-modal-label-discard-confirm = Hylkää { $characterName }?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Vahvista hahmon poisto
 player-modal-label-confirm-char-delete = Poistetaanko { $characterName }?
@@ -307,3 +316,32 @@ player-embed-desc-starting-inventory = Pelaaja: { $playerMention } hahmona `{ $c
 player-embed-field-items-received = Saadut esineet
 player-embed-field-currency-received-label = Saatu valuutta
 player-label-untitled = Nimetön
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Inventory Submission: { $characterName }{"**"}
+    Submitted by { $userMention }
+player-approval-post-items = Esineet
+player-approval-post-currency = Valuutta
+player-approval-resolved = Tämä hakemus on käsitelty.
+player-approval-btn-approve = Hyväksy
+player-approval-btn-deny = Hylkää
+player-approval-btn-edit = Muokkaa
+player-approval-error-no-permission = Sinulla ei ole oikeutta tähän toimintoon.
+player-approval-error-not-submitter = Vain alkuperäinen lähettäjä voi muokata tätä hakemusta.
+player-approval-thread-instructions =
+    This thread was created for the approval of a character's starting inventory.
+    A Game Master will review the submission and approve or deny it.
+    The submitting player may use the Edit button to modify and re-submit.
+    Once approved or denied, this thread will be locked.
+player-msg-submission-updated = Hakemuksesi on päivitetty.
+
+# Approval DM notifications
+player-dm-title-approved = Hahmo hyväksytty
+player-dm-desc-approved =
+    Your character {"**"}{ $characterName }{"**"} has been approved
+    by { $approver } in {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Hahmo hylätty
+player-dm-desc-denied =
+    Your character {"**"}{ $characterName }{"**"} has been denied
+    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.

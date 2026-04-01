@@ -146,6 +146,15 @@ player-msg-no-characters = Je hebt geen geregistreerde personages.
 player-label-active = (Actief)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Karakter in voortgang: { $characterName }{"**"}
+    Je karakterregistratie wacht op inventarisconfiguratie.
+player-btn-resume = Hervatten
+player-btn-discard = Verwijderen
+player-modal-title-discard-character = Karakter verwijderen
+player-modal-label-discard-confirm = { $characterName } verwijderen?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Bevestig personageverwijdering
 player-modal-label-confirm-char-delete = { $characterName } verwijderen?
@@ -307,3 +316,32 @@ player-embed-desc-starting-inventory = Speler: { $playerMention } als `{ $charac
 player-embed-field-items-received = Ontvangen voorwerpen
 player-embed-field-currency-received-label = Ontvangen valuta
 player-label-untitled = Zonder titel
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Inventory Submission: { $characterName }{"**"}
+    Submitted by { $userMention }
+player-approval-post-items = Voorwerpen
+player-approval-post-currency = Valuta
+player-approval-resolved = Deze inzending is afgehandeld.
+player-approval-btn-approve = Goedkeuren
+player-approval-btn-deny = Afwijzen
+player-approval-btn-edit = Bewerken
+player-approval-error-no-permission = Je hebt geen toestemming voor deze actie.
+player-approval-error-not-submitter = Alleen de originele indiener kan deze inzending bewerken.
+player-approval-thread-instructions =
+    This thread was created for the approval of a character's starting inventory.
+    A Game Master will review the submission and approve or deny it.
+    The submitting player may use the Edit button to modify and re-submit.
+    Once approved or denied, this thread will be locked.
+player-msg-submission-updated = Je inzending is bijgewerkt.
+
+# Approval DM notifications
+player-dm-title-approved = Karakter goedgekeurd
+player-dm-desc-approved =
+    Your character {"**"}{ $characterName }{"**"} has been approved
+    by { $approver } in {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Karakter afgewezen
+player-dm-desc-denied =
+    Your character {"**"}{ $characterName }{"**"} has been denied
+    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.

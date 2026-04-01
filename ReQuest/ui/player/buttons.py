@@ -49,6 +49,118 @@ class RegisterCharacterButton(Button):
             await log_exception(e, interaction)
 
 
+class ResumeWizardButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label=t(DEFAULT_LOCALE, 'player-btn-resume'),
+            style=ButtonStyle.primary,
+            custom_id='resume_wizard_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            pending = self.calling_view.pending_character
+            pending_character = {
+                'character_id': pending['character_id'],
+                'name': pending['name'],
+                'note': pending.get('note', ''),
+                'registered_date': pending['registered_date'],
+                'inventory_type': pending['inventory_type']
+            }
+            from ReQuest.ui.player.views import NewCharacterWizardView
+            view = NewCharacterWizardView(pending_character, pending['inventory_type'])
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class DiscardPendingCharacterButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label=t(DEFAULT_LOCALE, 'player-btn-discard'),
+            style=ButtonStyle.danger,
+            custom_id='discard_pending_character_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
+            pending_name = self.calling_view.pending_character.get('name', '')
+
+            async def confirm_discard(confirm_interaction):
+                pending_id = f'{confirm_interaction.user.id}_{confirm_interaction.guild_id}'
+                await delete_cached_data(
+                    bot=confirm_interaction.client,
+                    mongo_database=confirm_interaction.client.gdb,
+                    collection_name=DatabaseCollections.PENDING_CHARACTERS,
+                    search_filter={CommonFields.ID: pending_id},
+                    cache_id=pending_id
+                )
+                from ReQuest.ui.player.views import CharacterBaseView
+                view = CharacterBaseView()
+                await setup_view(view, confirm_interaction)
+                await confirm_interaction.response.edit_message(view=view)
+
+            modal = common_modals.ConfirmModal(
+                title=t(locale, 'player-modal-title-discard-character'),
+                prompt_label=t(locale, 'player-modal-label-discard-confirm', characterName=pending_name),
+                confirm_callback=confirm_discard,
+                locale=locale
+            )
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+# ----- APPROVAL POST BUTTONS -----
+
+class ApprovalApproveButton(Button):
+    def __init__(self, submission_id):
+        super().__init__(
+            label=t(DEFAULT_LOCALE, 'player-approval-btn-approve'),
+            style=ButtonStyle.success,
+            custom_id=f'approve_sub_{submission_id}'
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await self.view.approve(interaction)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ApprovalDenyButton(Button):
+    def __init__(self, submission_id):
+        super().__init__(
+            label=t(DEFAULT_LOCALE, 'player-approval-btn-deny'),
+            style=ButtonStyle.danger,
+            custom_id=f'deny_sub_{submission_id}'
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await self.view.deny(interaction)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ApprovalEditButton(Button):
+    def __init__(self, submission_id):
+        super().__init__(
+            label=t(DEFAULT_LOCALE, 'player-approval-btn-edit'),
+            style=ButtonStyle.secondary,
+            custom_id=f'edit_sub_{submission_id}'
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await self.view.edit(interaction)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
 class RemoveCharacterButton(Button):
     def __init__(self, calling_view, character_id, character_name):
         super().__init__(
@@ -263,8 +375,7 @@ class OpenStartingShopButton(Button):
         try:
             from ReQuest.ui.player.views import NewCharacterShopView
             view = NewCharacterShopView(
-                self.calling_view.character_id,
-                self.calling_view.character_name,
+                self.calling_view.pending_character,
                 self.calling_view.inventory_type
             )
             await setup_view(view, interaction)
@@ -286,8 +397,7 @@ class SelectStaticKitButton(Button):
         try:
             from ReQuest.ui.player.views import StaticKitSelectView
             view = StaticKitSelectView(
-                self.calling_view.character_id,
-                self.calling_view.character_name
+                self.calling_view.pending_character
             )
             await setup_view(view, interaction)
             await interaction.response.edit_message(view=view)
@@ -483,8 +593,7 @@ class SelectKitOptionButton(Button):
             from ReQuest.ui.player.views import StaticKitConfirmView
 
             view = StaticKitConfirmView(
-                self.view.character_id,
-                self.view.character_name,
+                self.view.pending_character,
                 self.kit_id,
                 self.kit_data,
                 self.view.currency_config
@@ -522,8 +631,7 @@ class KitBackButton(Button):
             from ReQuest.ui.player.views import StaticKitSelectView
 
             view = StaticKitSelectView(
-                self.view.character_id,
-                self.view.character_name
+                self.view.pending_character
             )
             await setup_view(view, interaction)
             await interaction.response.edit_message(view=view)

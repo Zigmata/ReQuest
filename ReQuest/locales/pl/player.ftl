@@ -146,6 +146,15 @@ player-msg-no-characters = Nie masz zarejestrowanych postaci.
 player-label-active = (Aktywna)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Postać w toku: { $characterName }{"**"}
+    Rejestracja twojej postaci oczekuje na konfigurację ekwipunku.
+player-btn-resume = Wznów
+player-btn-discard = Odrzuć
+player-modal-title-discard-character = Odrzuć postać
+player-modal-label-discard-confirm = Odrzucić { $characterName }?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Potwierdź usunięcie postaci
 player-modal-label-confirm-char-delete = Usunąć { $characterName }?
@@ -307,3 +316,32 @@ player-embed-desc-starting-inventory = Gracz: { $playerMention } jako `{ $charac
 player-embed-field-items-received = Otrzymane przedmioty
 player-embed-field-currency-received-label = Otrzymana waluta
 player-label-untitled = Bez tytułu
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Inventory Submission: { $characterName }{"**"}
+    Submitted by { $userMention }
+player-approval-post-items = Przedmioty
+player-approval-post-currency = Waluta
+player-approval-resolved = To zgłoszenie zostało rozpatrzone.
+player-approval-btn-approve = Zatwierdź
+player-approval-btn-deny = Odrzuć
+player-approval-btn-edit = Edytuj
+player-approval-error-no-permission = Nie masz uprawnień do tej czynności.
+player-approval-error-not-submitter = Tylko oryginalny nadawca może edytować to zgłoszenie.
+player-approval-thread-instructions =
+    This thread was created for the approval of a character's starting inventory.
+    A Game Master will review the submission and approve or deny it.
+    The submitting player may use the Edit button to modify and re-submit.
+    Once approved or denied, this thread will be locked.
+player-msg-submission-updated = Twoje zgłoszenie zostało zaktualizowane.
+
+# Approval DM notifications
+player-dm-title-approved = Postać zatwierdzona
+player-dm-desc-approved =
+    Your character {"**"}{ $characterName }{"**"} has been approved
+    by { $approver } in {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Postać odrzucona
+player-dm-desc-denied =
+    Your character {"**"}{ $characterName }{"**"} has been denied
+    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.
