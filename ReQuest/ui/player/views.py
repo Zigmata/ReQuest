@@ -5,6 +5,7 @@ import discord
 import shortuuid
 from discord.ui import (
     Container,
+    LayoutView,
     Section,
     TextDisplay,
     Separator,
@@ -2257,6 +2258,11 @@ class ApprovalPostView(LocaleLayoutView):
             for name, quantity in self.submission_data.get('currency', {}).items():
                 await update_character_inventory(interaction, user_id, character_id, name, quantity)
 
+            # Revoke granted forum permissions and lock/archive thread
+            thread = interaction.channel
+            if isinstance(thread, discord.Thread):
+                await self._revoke_submitter_permissions(thread, bot, guild_id, user_id, self.submission_id)
+
             # Delete the approval record
             await delete_cached_data(
                 bot=bot,
@@ -2291,10 +2297,8 @@ class ApprovalPostView(LocaleLayoutView):
             except discord.errors.Forbidden:
                 logger.warning(f'Could not DM user {user_id} about approval — DMs may be disabled.')
 
-            # Revoke thread permissions and lock/archive
-            thread = interaction.channel
+            # Lock and archive the thread
             if isinstance(thread, discord.Thread):
-                await self._revoke_submitter_permissions(thread, bot, guild_id, user_id)
                 await thread.edit(locked=True, archived=True)
 
         except Exception as e:
@@ -2316,6 +2320,11 @@ class ApprovalPostView(LocaleLayoutView):
             user_id = self.submission_data['user_id']
             guild_id = self.submission_data['guild_id']
             character_name = self.submission_data.get('character_name', '')
+
+            # Revoke granted forum permissions and lock/archive thread
+            thread = interaction.channel
+            if isinstance(thread, discord.Thread):
+                await self._revoke_submitter_permissions(thread, bot, guild_id, user_id, self.submission_id)
 
             # Delete the approval record (character was never created)
             await delete_cached_data(
@@ -2355,27 +2364,39 @@ class ApprovalPostView(LocaleLayoutView):
             except discord.errors.Forbidden:
                 logger.warning(f'Could not DM user {user_id} about denial — DMs may be disabled.')
 
-            # Revoke thread permissions and lock/archive
-            thread = interaction.channel
+            # Lock and archive the thread
             if isinstance(thread, discord.Thread):
-                await self._revoke_submitter_permissions(thread, bot, guild_id, user_id)
                 await thread.edit(locked=True, archived=True)
 
         except Exception as e:
             await log_exception(e, interaction)
 
     @staticmethod
-    async def _revoke_submitter_permissions(thread, bot, guild_id, user_id):
-        """Revoke permissions that were granted to the submitter on thread creation."""
+    async def _revoke_submitter_permissions(thread, bot, guild_id, user_id, submission_id):
+        """Revoke only the forum channel permissions that were granted by the bot."""
         try:
+            doc = await bot.gdb[DatabaseCollections.APPROVALS].find_one(
+                {'submission_id': submission_id}, {'granted_permissions': 1}
+            )
+            granted = (doc or {}).get('granted_permissions', [])
+            if not granted:
+                return
             guild = bot.get_guild(guild_id)
             if not guild:
                 return
-            member = guild.get_member(user_id)
-            if member:
-                await thread.set_permissions(member, overwrite=None)
+            member = guild.get_member(user_id) or await guild.fetch_member(user_id)
+            forum_channel = thread.parent
+            if not forum_channel:
+                return
+            overwrite = forum_channel.overwrites_for(member)
+            for perm in granted:
+                setattr(overwrite, perm, None)
+            if overwrite.is_empty():
+                await forum_channel.set_permissions(member, overwrite=None)
+            else:
+                await forum_channel.set_permissions(member, overwrite=overwrite)
         except Exception as e:
-            logger.warning(f'Could not revoke thread permissions for user {user_id}: {e}')
+            logger.warning(f'Could not revoke forum access for user {user_id}: {e}')
 
     async def edit(self, interaction):
         try:
@@ -2471,9 +2492,11 @@ async def _handle_submission(interaction, pending_character, items, currency):
                         await approval_view.setup(bot)
                         await message.edit(view=approval_view)
 
-                await interaction.response.send_message(
-                    t(locale, 'player-msg-submission-updated'), ephemeral=True
-                )
+                confirmation_view = LayoutView()
+                container = Container(accent_colour=discord.Colour.green())
+                container.add_item(TextDisplay(t(locale, 'player-msg-submission-updated')))
+                confirmation_view.add_item(container)
+                await interaction.response.edit_message(view=confirmation_view)
             else:
                 # New submission: create thread with ApprovalPostView
                 submission_id = shortuuid.uuid()[:8]
@@ -2509,19 +2532,23 @@ async def _handle_submission(interaction, pending_character, items, currency):
                 # Register persistent view for bot restarts
                 bot.add_view(ApprovalPostView(submission_id), message_id=thread_message.message.id)
 
-                # Grant thread permissions to submitter if they can't see the forum channel
+                # Grant forum channel access to submitter for any missing permissions
                 try:
                     forum_perms = forum_channel.permissions_for(interaction.user)
-                    if not (forum_perms.view_channel and forum_perms.send_messages_in_threads
-                            and forum_perms.read_message_history):
-                        await thread.set_permissions(
-                            interaction.user,
-                            view_channel=True,
-                            send_messages_in_threads=True,
-                            read_message_history=True
+                    needed = {
+                        'view_channel': not forum_perms.view_channel,
+                        'send_messages_in_threads': not forum_perms.send_messages_in_threads,
+                        'read_message_history': not forum_perms.read_message_history,
+                    }
+                    granted = {k: True for k, v in needed.items() if v}
+                    if granted:
+                        await forum_channel.set_permissions(interaction.user, **granted)
+                        await bot.gdb[DatabaseCollections.APPROVALS].update_one(
+                            {'submission_id': submission_id},
+                            {'$set': {'granted_permissions': list(granted.keys())}}
                         )
                 except Exception as e:
-                    logger.warning(f'Could not set thread permissions for user {member_id}: {e}')
+                    logger.warning(f'Could not grant forum access for user {member_id}: {e}')
 
                 # Send canned instructions in the thread
                 await thread.send(t(
