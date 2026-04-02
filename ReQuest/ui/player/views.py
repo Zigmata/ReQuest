@@ -2243,6 +2243,18 @@ class ApprovalPostView(LocaleLayoutView):
         try:
             await interaction.response.defer()
             bot = interaction.client
+
+            # Atomically claim the submission to prevent concurrent approve/deny
+            claimed = await bot.gdb[DatabaseCollections.APPROVALS].find_one_and_update(
+                {'submission_id': self.submission_id, 'status': 'pending'},
+                {'$set': {'status': 'approved'}}
+            )
+            if not claimed:
+                self.resolved = True
+                self.build_view()
+                await interaction.edit_original_response(view=self)
+                return
+
             guild_id = self.submission_data['guild_id']
             user_id = self.submission_data['user_id']
             pending_character = self.submission_data.get('pending_character', {})
@@ -2336,6 +2348,18 @@ class ApprovalPostView(LocaleLayoutView):
         try:
             await interaction.response.defer()
             bot = interaction.client
+
+            # Atomically claim the submission to prevent concurrent approve/deny
+            claimed = await bot.gdb[DatabaseCollections.APPROVALS].find_one_and_update(
+                {'submission_id': self.submission_id, 'status': 'pending'},
+                {'$set': {'status': 'denied'}}
+            )
+            if not claimed:
+                self.resolved = True
+                self.build_view()
+                await interaction.edit_original_response(view=self)
+                return
+
             user_id = self.submission_data['user_id']
             guild_id = self.submission_data['guild_id']
             character_name = self.submission_data.get('character_name', '')

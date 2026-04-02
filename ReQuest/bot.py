@@ -137,6 +137,7 @@ class ReQuest(commands.Bot):
 
         # Reload persistent views for pending approval submissions
         from ReQuest.ui.player.views import ApprovalPostView
+        from ReQuest.utilities.localizer import resolve_guild_locale
         approval_collection = self.gdb[DatabaseCollections.APPROVALS]
         approval_cursor = approval_collection.find({'status': 'pending', 'message_id': {'$exists': True}})
         for doc in await approval_cursor.to_list(length=None):
@@ -144,6 +145,7 @@ class ReQuest(commands.Bot):
                 submission_id = doc['submission_id']
                 message_id = doc['message_id']
                 view = ApprovalPostView(submission_id)
+                view.locale = await resolve_guild_locale(self, doc['guild_id'])
                 await view.setup(self)
                 self.add_view(view=view, message_id=message_id)
             except (KeyError, TypeError) as e:
