@@ -2085,7 +2085,7 @@ class ApprovalPostView(LocaleLayoutView):
         locale = getattr(self, 'locale', None) or DEFAULT_LOCALE
         container = Container()
 
-        if self.resolved or not self.submission_data:
+        if not self.submission_data:
             container.add_item(TextDisplay(t(locale, 'player-approval-resolved')))
             self.add_item(container)
             return
@@ -2152,8 +2152,8 @@ class ApprovalPostView(LocaleLayoutView):
 
         self.add_item(container)
 
-        # Pagination
-        if self.total_pages > 1:
+        # Pagination (only when not resolved)
+        if not self.resolved and self.total_pages > 1:
             nav_row = ActionRow()
             prev_button = Button(
                 label=t(locale, 'common-btn-prev'),
@@ -2187,10 +2187,8 @@ class ApprovalPostView(LocaleLayoutView):
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         await super().interaction_check(interaction)
         if self.resolved:
-            locale = getattr(self, 'locale', DEFAULT_LOCALE)
-            await interaction.response.send_message(
-                t(locale, 'player-approval-resolved'), ephemeral=True
-            )
+            self.build_view()
+            await interaction.response.edit_message(view=self)
             return False
 
         custom_id = interaction.data.get('custom_id', '')
