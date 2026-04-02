@@ -2470,18 +2470,19 @@ async def _handle_submission(interaction, pending_character, items, currency):
         channel_id = strip_id(approval_query[ConfigFields.APPROVAL_QUEUE_CHANNEL]) if approval_query else None
         forum_channel = bot.get_channel(channel_id) if channel_id else None
 
-        # Clean up the pending character record
-        pending_id = f'{member_id}_{guild_id}'
-        await delete_cached_data(
-            bot=bot,
-            mongo_database=bot.gdb,
-            collection_name=DatabaseCollections.PENDING_CHARACTERS,
-            search_filter={CommonFields.ID: pending_id},
-            cache_id=pending_id
-        )
-
         # Check if this is a re-submission (edit flow from ApprovalPostView)
         existing_submission_id = pending_character.pop('submission_id', None)
+
+        # Clean up the pending character record (only exists for new submissions)
+        if not existing_submission_id:
+            pending_id = f'{member_id}_{guild_id}'
+            await delete_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.PENDING_CHARACTERS,
+                search_filter={CommonFields.ID: pending_id},
+                cache_id=pending_id
+            )
 
         if forum_channel and isinstance(forum_channel, discord.ForumChannel):
             guild_locale = await resolve_guild_locale(bot, guild_id)
