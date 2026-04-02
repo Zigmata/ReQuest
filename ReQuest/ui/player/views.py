@@ -1257,6 +1257,81 @@ class PlayerBoardView(LocaleLayoutView):
             await log_exception(e, interaction)
 
 
+class ValidationErrorView(LocaleLayoutView):
+    """Paginated view for displaying input validation errors."""
+
+    def __init__(self, errors, calling_view):
+        super().__init__(timeout=None)
+        self.errors = errors
+        self.calling_view = calling_view
+        self.items_per_page = 15
+        self.current_page = 0
+        self.total_pages = max(1, math.ceil(len(errors) / self.items_per_page))
+        self.build_view()
+
+    def build_view(self):
+        self.clear_items()
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
+        container = Container()
+
+        container.add_item(TextDisplay(f'**{t(locale, "player-validation-error-title")}**'))
+        container.add_item(Separator())
+
+        start = self.current_page * self.items_per_page
+        end = start + self.items_per_page
+        page_errors = self.errors[start:end]
+        container.add_item(TextDisplay('\n'.join(f'- {e}' for e in page_errors)))
+        container.add_item(Separator())
+
+        actions = ActionRow()
+        actions.add_item(buttons.ValidationRetryButton(self))
+        container.add_item(actions)
+
+        self.add_item(container)
+
+        if self.total_pages > 1:
+            nav_row = ActionRow()
+            prev_button = Button(
+                label=t(locale, 'common-btn-prev'),
+                style=discord.ButtonStyle.secondary,
+                custom_id='val_err_prev',
+                disabled=(self.current_page == 0)
+            )
+            prev_button.callback = self.prev_page
+
+            page_display = Button(
+                label=t(locale, 'common-page-label',
+                        current=self.current_page + 1, total=self.total_pages),
+                style=discord.ButtonStyle.secondary,
+                custom_id='val_err_page'
+            )
+
+            next_button = Button(
+                label=t(locale, 'common-btn-next'),
+                style=discord.ButtonStyle.secondary,
+                custom_id='val_err_next',
+                disabled=(self.current_page >= self.total_pages - 1)
+            )
+            next_button.callback = self.next_page
+
+            nav_row.add_item(prev_button)
+            nav_row.add_item(page_display)
+            nav_row.add_item(next_button)
+            self.add_item(nav_row)
+
+    async def prev_page(self, interaction):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction):
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+
 class NewCharacterWizardView(LocaleLayoutView):
     def __init__(self, pending_character, inventory_type):
         super().__init__(timeout=None)

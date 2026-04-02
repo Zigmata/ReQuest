@@ -294,6 +294,10 @@ player-error-invalid-quantity = Netinkamas kiekis „{ $name }": „{ $quantity 
 player-error-input-errors-header = Inventoriaus įvedimo klaidos:
 player-msg-no-valid-items = Nepateikta tinkamų daiktų. Inicializuojama su tuščiu inventoriumi.
 
+# Validation error view
+player-validation-error-title = Įvesties klaidos
+player-validation-btn-retry = Bandyti dar kartą
+
 # Cart quantity validation
 player-error-enter-valid-number = Įveskite tinkamą teigiamą skaičių.
 

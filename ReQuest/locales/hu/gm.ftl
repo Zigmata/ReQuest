@@ -12,9 +12,6 @@ gm-btn-manage-individual-rewards = Egyéni jutalmak kezelése
 gm-btn-join = Csatlakozás
 gm-btn-leave = Kilépés
 gm-btn-complete-quest = Quest befejezése
-gm-btn-review-submission = Beküldés felülvizsgálata
-gm-btn-approve = Jóváhagyás
-gm-btn-deny = Elutasítás
 
 # GM modals
 gm-modal-title-create-quest = Új quest létrehozása
@@ -49,9 +46,6 @@ gm-modal-placeholder-inventory-modify =
     tárgy: mennyiség
     tárgy2: mennyiség
     stb.
-gm-modal-title-review-submission = Beküldés felülvizsgálata
-gm-modal-label-submission-id = Beküldés ID
-gm-modal-placeholder-submission-id = Add meg a 8 karakteres ID-t
 
 # GM errors
 gm-error-forbidden-role-name = A csapatszerephez megadott név tiltott.
@@ -59,7 +53,6 @@ gm-error-role-already-exists = Ilyen nevű szerep már létezik ezen a szerveren
 gm-error-no-quest-channel = Még nincs kijelölt csatorna a quest bejegyzésekhez. Kérd meg a szerver adminisztrátort a Quest csatorna konfigurálására.
 gm-error-cannot-ping-announce = Nem sikerült a bejelentési szerep ({ $role }) pingelése a(z) { $channel } csatornában. Ellenőrizd a csatorna és a ReQuest szerep jogosultságait a szerver adminisztrátoroddal.
 gm-error-invalid-item-format = Érvénytelen tárgyformátum: „{ $item }". Minden tárgyat új sorba kell írni, „Név: Mennyiség" formátumban.
-gm-error-submission-not-found = A beküldés nem található.
 gm-error-already-on-quest = Már részt veszel ezen a questen mint { $characterName }.
 gm-error-no-active-character-long = Nincs aktív karaktered ezen a szerveren. Használd a `/player` parancsot karakter regisztrálásához vagy aktiválásához.
 gm-error-quest-locked = Hiba a(z) {"**"}{ $questTitle }{"**"} questhez való csatlakozásnál: A quest zárolva van a GM által.
@@ -116,8 +109,6 @@ gm-menu-quests = Questek
 gm-menu-desc-quests = Questek létrehozása, szerkesztése és kezelése.
 gm-menu-players = Játékosok
 gm-menu-desc-players = Játékos leltárak kezelése és karakterek módosítása.
-gm-menu-approvals = Karakter jóváhagyások
-gm-menu-desc-approvals = Karakter beküldések felülvizsgálata és jóváhagyása/elutasítása.
 
 gm-title-quest-management = GM - Quest kezelés
 gm-desc-create-quest = Új quest létrehozása.
@@ -156,15 +147,6 @@ gm-label-currency-heading = {"**"}Valuta{"**"}
 gm-msg-inventory-empty = A leltár üres.
 
 # GM approvals
-gm-title-approvals = GM - Leltár jóváhagyások
-gm-desc-review-submission = Adj meg egy Beküldés ID-t a felülvizsgálathoz és jóváhagyáshoz/elutasításhoz.
-gm-title-reviewing = Felülvizsgálat: { $characterName }
-gm-label-items = {"**"}Tárgyak:{"**"}
-gm-label-currency = {"**"}Valuta:{"**"}
-gm-embed-title-approved = Leltár frissítés jóváhagyva
-gm-embed-desc-approved = A(z) {"**"}{ $characterName }{"**"} leltára jóváhagyva { $approver } által.
-gm-embed-title-denied = Leltár frissítés elutasítva
-gm-embed-desc-denied = A(z) {"**"}{ $characterName }{"**"} leltára elutasítva { $denier } által.
 
 gm-modal-label-select-party-role = Csapat szerep
 gm-modal-desc-select-party-role = Válassz egy szerepet a quest csapatához való hozzárendeléshez.

@@ -12,9 +12,6 @@ gm-btn-manage-individual-rewards = Einzelbelohnungen verwalten
 gm-btn-join = Beitreten
 gm-btn-leave = Verlassen
 gm-btn-complete-quest = Quest abschließen
-gm-btn-review-submission = Einreichung prüfen
-gm-btn-approve = Genehmigen
-gm-btn-deny = Ablehnen
 
 # GM-Dialoge
 gm-modal-title-create-quest = Neuen Quest erstellen
@@ -49,9 +46,6 @@ gm-modal-placeholder-inventory-modify =
     Gegenstand: Menge
     Gegenstand2: Menge
     usw.
-gm-modal-title-review-submission = Einreichung prüfen
-gm-modal-label-submission-id = Einreichungs-ID
-gm-modal-placeholder-submission-id = Geben Sie die 8-stellige ID ein
 
 # GM-Fehler
 gm-error-forbidden-role-name = Der angegebene Name für die Gruppenrolle ist verboten.
@@ -59,7 +53,6 @@ gm-error-role-already-exists = Eine Rolle mit diesem Namen existiert bereits auf
 gm-error-no-quest-channel = Es wurde noch kein Kanal für Quest-Beiträge festgelegt. Wenden Sie sich an einen Serveradministrator, um den Quest-Kanal zu konfigurieren.
 gm-error-cannot-ping-announce = Ankündigungsrolle { $role } konnte im Kanal { $channel } nicht gepingt werden. Überprüfen Sie die Kanal- und ReQuest-Rollenberechtigungen mit Ihrem/Ihren Serveradministrator(en).
 gm-error-invalid-item-format = Ungültiges Gegenstandsformat: "{ $item }". Jeder Gegenstand muss in einer neuen Zeile stehen und das Format "Name: Menge" haben.
-gm-error-submission-not-found = Einreichung nicht gefunden.
 gm-error-already-on-quest = Sie sind bereits als { $characterName } bei diesem Quest dabei.
 gm-error-no-active-character-long = Sie haben keinen aktiven Charakter auf diesem Server. Verwenden Sie `/player`, um einen Charakter zu registrieren oder zu aktivieren.
 gm-error-quest-locked = Fehler beim Beitreten zum Quest {"**"}{ $questTitle }{"**"}: Der Quest ist vom GM gesperrt.
@@ -116,8 +109,6 @@ gm-menu-quests = Quests
 gm-menu-desc-quests = Quests erstellen, bearbeiten und verwalten.
 gm-menu-players = Spieler
 gm-menu-desc-players = Spielerinventare verwalten und Charaktere bearbeiten.
-gm-menu-approvals = Charaktergenehmigungen
-gm-menu-desc-approvals = Charaktereinreichungen prüfen und genehmigen/ablehnen.
 
 gm-title-quest-management = Spielleiter - Quest-Verwaltung
 gm-desc-create-quest = Einen neuen Quest erstellen.
@@ -156,15 +147,6 @@ gm-label-currency-heading = {"**"}Währung{"**"}
 gm-msg-inventory-empty = Das Inventar ist leer.
 
 # GM-Genehmigungen
-gm-title-approvals = Spielleiter - Inventargenehmigungen
-gm-desc-review-submission = Geben Sie eine Einreichungs-ID ein, um sie zu prüfen und zu genehmigen/ablehnen.
-gm-title-reviewing = Prüfung: { $characterName }
-gm-label-items = {"**"}Gegenstände:{"**"}
-gm-label-currency = {"**"}Währung:{"**"}
-gm-embed-title-approved = Inventaraktualisierung genehmigt
-gm-embed-desc-approved = Das Inventar für {"**"}{ $characterName }{"**"} wurde von { $approver } genehmigt.
-gm-embed-title-denied = Inventaraktualisierung abgelehnt
-gm-embed-desc-denied = Das Inventar für {"**"}{ $characterName }{"**"} wurde von { $denier } abgelehnt.
 
 gm-modal-label-select-party-role = Gruppenrolle
 gm-modal-desc-select-party-role = Wählen Sie eine Rolle für die Quest-Gruppe aus.

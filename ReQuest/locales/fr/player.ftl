@@ -294,6 +294,10 @@ player-error-invalid-quantity = Quantité invalide pour « { $name } » : « { $
 player-error-input-errors-header = Erreurs dans la saisie de l'inventaire :
 player-msg-no-valid-items = Aucun objet valide fourni. Initialisation avec un inventaire vide.
 
+# Validation error view
+player-validation-error-title = Erreurs de saisie
+player-validation-btn-retry = Réessayer
+
 # Validation de quantité dans le panier
 player-error-enter-valid-number = Veuillez entrer un nombre positif valide.
 

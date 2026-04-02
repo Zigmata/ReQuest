@@ -294,6 +294,10 @@ player-error-invalid-quantity = "{ $name }" के लिए अमान्य 
 player-error-input-errors-header = सामान इनपुट में त्रुटियाँ:
 player-msg-no-valid-items = कोई मान्य वस्तु नहीं दी गई। खाली सामान से आरंभ किया जा रहा है।
 
+# Validation error view
+player-validation-error-title = इनपुट त्रुटियां
+player-validation-btn-retry = पुनः प्रयास करें
+
 # Cart quantity validation
 player-error-enter-valid-number = कृपया एक मान्य धनात्मक संख्या दर्ज करें।
 

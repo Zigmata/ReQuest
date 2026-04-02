@@ -12,9 +12,6 @@ gm-btn-manage-individual-rewards = Gestionează recompense individuale
 gm-btn-join = Alătură-te
 gm-btn-leave = Părăsește
 gm-btn-complete-quest = Finalizează quest
-gm-btn-review-submission = Revizuiește trimiterea
-gm-btn-approve = Aprobă
-gm-btn-deny = Respinge
 
 # GM modals
 gm-modal-title-create-quest = Creează quest nou
@@ -49,9 +46,6 @@ gm-modal-placeholder-inventory-modify =
     obiect: cantitate
     obiect2: cantitate
     etc.
-gm-modal-title-review-submission = Revizuiește trimiterea
-gm-modal-label-submission-id = ID trimitere
-gm-modal-placeholder-submission-id = Introduceți ID-ul de 8 caractere
 
 # GM errors
 gm-error-forbidden-role-name = Numele furnizat pentru rolul echipei este interzis.
@@ -59,7 +53,6 @@ gm-error-role-already-exists = Un rol cu acel nume există deja pe acest server.
 gm-error-no-quest-channel = Un canal nu a fost încă desemnat pentru postările de quest. Contactați un administrator de server pentru a configura canalul de quest-uri.
 gm-error-cannot-ping-announce = Nu s-a putut notifica rolul de anunțare { $role } în canalul { $channel }. Verificați permisiunile canalului și ale rolului ReQuest cu administratorii serverului.
 gm-error-invalid-item-format = Format de obiect invalid: „{ $item }". Fiecare obiect trebuie să fie pe o linie nouă, în formatul „Nume: Cantitate".
-gm-error-submission-not-found = Trimiterea nu a fost găsită.
 gm-error-already-on-quest = Sunteți deja pe acest quest ca { $characterName }.
 gm-error-no-active-character-long = Nu aveți un personaj activ pe acest server. Folosiți `/player` pentru a înregistra sau activa un personaj.
 gm-error-quest-locked = Eroare la alăturarea la quest-ul {"**"}{ $questTitle }{"**"}: Quest-ul este blocat de GM.
@@ -116,8 +109,6 @@ gm-menu-quests = Quest-uri
 gm-menu-desc-quests = Creați, editați și gestionați quest-uri.
 gm-menu-players = Jucători
 gm-menu-desc-players = Gestionați inventarele jucătorilor și modificați personajele.
-gm-menu-approvals = Aprobări personaje
-gm-menu-desc-approvals = Revizuiți și aprobați/respingeți trimiterile de personaje.
 
 gm-title-quest-management = Game Master - Gestionare quest-uri
 gm-desc-create-quest = Creați un quest nou.
@@ -156,15 +147,6 @@ gm-label-currency-heading = {"**"}Monedă{"**"}
 gm-msg-inventory-empty = Inventarul este gol.
 
 # GM approvals
-gm-title-approvals = Game Master - Aprobări inventar
-gm-desc-review-submission = Introduceți un ID de trimitere pentru a-l revizui și aproba/respinge.
-gm-title-reviewing = Revizuire: { $characterName }
-gm-label-items = {"**"}Obiecte:{"**"}
-gm-label-currency = {"**"}Monedă:{"**"}
-gm-embed-title-approved = Actualizare inventar aprobată
-gm-embed-desc-approved = Inventarul pentru {"**"}{ $characterName }{"**"} a fost aprobat de { $approver }.
-gm-embed-title-denied = Actualizare inventar respinsă
-gm-embed-desc-denied = Inventarul pentru {"**"}{ $characterName }{"**"} a fost respins de { $denier }.
 
 gm-modal-label-select-party-role = Rol echipă
 gm-modal-desc-select-party-role = Selectați un rol de atribuit echipei quest-ului.

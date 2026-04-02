@@ -294,6 +294,10 @@ player-error-invalid-quantity = "{ $name }"의 잘못된 수량: "{ $quantity }"
 player-error-input-errors-header = 인벤토리 입력 오류:
 player-msg-no-valid-items = 유효한 아이템이 제공되지 않았습니다. 빈 인벤토리로 초기화합니다.
 
+# Validation error view
+player-validation-error-title = 입력 오류
+player-validation-btn-retry = 다시 시도
+
 # 장바구니 수량 유효성 검사
 player-error-enter-valid-number = 유효한 양수를 입력해 주세요.
 

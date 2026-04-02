@@ -294,6 +294,10 @@ player-error-invalid-quantity = 「{ $name }」的數量無效：「{ $quantity 
 player-error-input-errors-header = 背包輸入中的錯誤：
 player-msg-no-valid-items = 未提供有效的物品。以空背包初始化。
 
+# Validation error view
+player-validation-error-title = 輸入錯誤
+player-validation-btn-retry = 重試
+
 # Cart quantity validation
 player-error-enter-valid-number = 請輸入有效的正數。
 

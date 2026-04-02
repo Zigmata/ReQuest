@@ -161,6 +161,24 @@ class ApprovalEditButton(Button):
             await log_exception(e, interaction)
 
 
+class ValidationRetryButton(Button):
+    def __init__(self, calling_view):
+        super().__init__(
+            label=t(DEFAULT_LOCALE, 'player-validation-btn-retry'),
+            style=ButtonStyle.primary,
+            custom_id='validation_retry_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.send_modal(
+                modals.OpenInventoryInputModal(self.calling_view.calling_view)
+            )
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
 class RemoveCharacterButton(Button):
     def __init__(self, calling_view, character_id, character_name):
         super().__init__(

@@ -294,6 +294,10 @@ player-error-invalid-quantity = Neplatné množství pro „{ $name }": „{ $qu
 player-error-input-errors-header = Chyby ve vstupu inventáře:
 player-msg-no-valid-items = Nebyly zadány žádné platné předměty. Inicializace s prázdným inventářem.
 
+# Validation error view
+player-validation-error-title = Chyby vstupu
+player-validation-btn-retry = Zkusit znovu
+
 # Cart quantity validation
 player-error-enter-valid-number = Zadejte prosím platné kladné číslo.
 

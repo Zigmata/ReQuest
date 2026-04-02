@@ -294,6 +294,10 @@ player-error-invalid-quantity = Невалидно количество за "{ 
 player-error-input-errors-header = Грешки при въвеждане на инвентар:
 player-msg-no-valid-items = Няма предоставени валидни предмети. Инициализиране с празен инвентар.
 
+# Validation error view
+player-validation-error-title = Грешки при въвеждане
+player-validation-btn-retry = Опитайте отново
+
 # Cart quantity validation
 player-error-enter-valid-number = Моля, въведете валидно положително число.
 

@@ -294,6 +294,10 @@ player-error-invalid-quantity = 「{ $name }」の数量「{ $quantity }」が�
 player-error-input-errors-header = インベントリ入力のエラー:
 player-msg-no-valid-items = 有効なアイテムが入力されていません。空のインベントリで初期化します。
 
+# Validation error view
+player-validation-error-title = 入力エラー
+player-validation-btn-retry = もう一度
+
 # Cart quantity validation
 player-error-enter-valid-number = 有効な正の数値を入力してください。
 

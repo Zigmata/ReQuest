@@ -294,6 +294,10 @@ player-error-invalid-quantity = Nieprawidłowa ilość dla "{ $name }": "{ $quan
 player-error-input-errors-header = Błędy w danych ekwipunku:
 player-msg-no-valid-items = Nie podano prawidłowych przedmiotów. Inicjalizacja z pustym ekwipunkiem.
 
+# Validation error view
+player-validation-error-title = Błędy wejściowe
+player-validation-btn-retry = Spróbuj ponownie
+
 # Cart quantity validation
 player-error-enter-valid-number = Proszę wpisać prawidłową liczbę dodatnią.
 

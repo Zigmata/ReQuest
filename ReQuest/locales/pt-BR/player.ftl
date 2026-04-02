@@ -294,6 +294,10 @@ player-error-invalid-quantity = Quantidade inválida para "{ $name }": "{ $quant
 player-error-input-errors-header = Erros na entrada de inventário:
 player-msg-no-valid-items = Nenhum item válido fornecido. Inicializando inventário vazio.
 
+# Validation error view
+player-validation-error-title = Erros de entrada
+player-validation-btn-retry = Tentar novamente
+
 # Cart quantity validation
 player-error-enter-valid-number = Insira um número positivo válido.
 

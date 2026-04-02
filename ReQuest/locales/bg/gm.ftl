@@ -12,9 +12,6 @@ gm-btn-manage-individual-rewards = Управление на индивидуа�
 gm-btn-join = Присъединяване
 gm-btn-leave = Напускане
 gm-btn-complete-quest = Завършване на quest
-gm-btn-review-submission = Преглед на заявка
-gm-btn-approve = Одобри
-gm-btn-deny = Отхвърли
 
 # GM modals
 gm-modal-title-create-quest = Създаване на нов quest
@@ -49,9 +46,6 @@ gm-modal-placeholder-inventory-modify =
     предмет: количество
     предмет2: количество
     и т.н.
-gm-modal-title-review-submission = Преглед на заявка
-gm-modal-label-submission-id = ID на заявка
-gm-modal-placeholder-submission-id = Въведете 8-символния ID
 
 # GM errors
 gm-error-forbidden-role-name = Предоставеното име за ролята на групата е забранено.
@@ -59,7 +53,6 @@ gm-error-role-already-exists = Роля с това име вече същест
 gm-error-no-quest-channel = Все още не е определен канал за публикуване на куестове. Свържете се с администратор на сървъра, за да конфигурира канала за куестове.
 gm-error-cannot-ping-announce = Не може да се спомене ролята за обявления { $role } в канал { $channel }. Проверете правата на канала и ролята на ReQuest с вашия администратор(и).
 gm-error-invalid-item-format = Невалиден формат на предмет: "{ $item }". Всеки предмет трябва да е на нов ред във формат "Име: Количество".
-gm-error-submission-not-found = Заявката не е намерена.
 gm-error-already-on-quest = Вече сте в този quest като { $characterName }.
 gm-error-no-active-character-long = Нямате активен персонаж на този сървър. Използвайте `/player`, за да регистрирате или активирате персонаж.
 gm-error-quest-locked = Грешка при присъединяване към quest {"**"}{ $questTitle }{"**"}: Куестът е заключен от GM.
@@ -116,8 +109,6 @@ gm-menu-quests = Куестове
 gm-menu-desc-quests = Създаване, редактиране и управление на куестове.
 gm-menu-players = Играчи
 gm-menu-desc-players = Управление на инвентарите на играчите и промяна на персонажи.
-gm-menu-approvals = Одобрения на персонажи
-gm-menu-desc-approvals = Преглед и одобрение/отхвърляне на заявки за персонажи.
 
 gm-title-quest-management = GM - Управление на куестове
 gm-desc-create-quest = Създаване на нов quest.
@@ -156,15 +147,6 @@ gm-label-currency-heading = {"**"}Валута{"**"}
 gm-msg-inventory-empty = Инвентарът е празен.
 
 # GM approvals
-gm-title-approvals = GM - Одобрения на инвентар
-gm-desc-review-submission = Въведете ID на заявка, за да я прегледате и одобрите/отхвърлите.
-gm-title-reviewing = Преглед: { $characterName }
-gm-label-items = {"**"}Предмети:{"**"}
-gm-label-currency = {"**"}Валута:{"**"}
-gm-embed-title-approved = Обновяването на инвентара е одобрено
-gm-embed-desc-approved = Инвентарът за {"**"}{ $characterName }{"**"} беше одобрен от { $approver }.
-gm-embed-title-denied = Обновяването на инвентара е отхвърлено
-gm-embed-desc-denied = Инвентарът за {"**"}{ $characterName }{"**"} беше отхвърлен от { $denier }.
 
 gm-modal-label-select-party-role = Роля за групата
 gm-modal-desc-select-party-role = Изберете роля за присвояване на групата на куеста.

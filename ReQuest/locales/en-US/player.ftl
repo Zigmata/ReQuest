@@ -294,6 +294,10 @@ player-error-invalid-quantity = Invalid quantity for "{ $name }": "{ $quantity }
 player-error-input-errors-header = Errors in inventory input:
 player-msg-no-valid-items = No valid items provided. Initializing with empty inventory.
 
+# Validation error view
+player-validation-error-title = Input Errors
+player-validation-btn-retry = Try Again
+
 # Cart quantity validation
 player-error-enter-valid-number = Please enter a valid positive number.
 

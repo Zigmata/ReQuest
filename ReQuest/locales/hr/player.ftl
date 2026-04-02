@@ -294,6 +294,10 @@ player-error-invalid-quantity = Neispravna količina za "{ $name }": "{ $quantit
 player-error-input-errors-header = Greške u unosu inventara:
 player-msg-no-valid-items = Nema valjanih predmeta. Inicijalizacija s praznim inventarom.
 
+# Validation error view
+player-validation-error-title = Greške unosa
+player-validation-btn-retry = Pokušaj ponovo
+
 # Cart quantity validation
 player-error-enter-valid-number = Unesite valjani pozitivan broj.
 

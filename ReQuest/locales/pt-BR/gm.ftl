@@ -12,9 +12,6 @@ gm-btn-manage-individual-rewards = Gerenciar recompensas individuais
 gm-btn-join = Entrar
 gm-btn-leave = Sair
 gm-btn-complete-quest = Concluir Quest
-gm-btn-review-submission = Revisar Envio
-gm-btn-approve = Aprovar
-gm-btn-deny = Rejeitar
 
 # GM modals
 gm-modal-title-create-quest = Criar Nova Quest
@@ -49,9 +46,6 @@ gm-modal-placeholder-inventory-modify =
     item: quantidade
     item2: quantidade
     etc.
-gm-modal-title-review-submission = Revisar Envio
-gm-modal-label-submission-id = ID do Envio
-gm-modal-placeholder-submission-id = Insira o ID de 8 caract.
 
 # GM errors
 gm-error-forbidden-role-name = O nome fornecido para o cargo do grupo é proibido.
@@ -59,7 +53,6 @@ gm-error-role-already-exists = Já existe um cargo com esse nome neste servidor.
 gm-error-no-quest-channel = Um canal ainda não foi definido para postagens de quests. Entre em contato com um administrador do servidor para configurar o canal de quests.
 gm-error-cannot-ping-announce = Não foi possível mencionar o cargo { $role } no canal { $channel }. Verifique as permissões do canal e do ReQuest com o(s) administrador(es) do servidor.
 gm-error-invalid-item-format = Formato de item inválido: "{ $item }". Cada item deve estar em uma nova linha, no formato "Nome: Quantidade".
-gm-error-submission-not-found = Envio não encontrado.
 gm-error-already-on-quest = Você já está nesta quest como { $characterName }.
 gm-error-no-active-character-long = Você não possui um personagem ativo neste servidor. Use `/player` para registrar ou ativar um personagem.
 gm-error-quest-locked = Erro ao entrar na quest {"**"}{ $questTitle }{"**"}: A quest está bloqueada pelo Mestre.
@@ -116,8 +109,6 @@ gm-menu-quests = Quests
 gm-menu-desc-quests = Criar, editar e gerenciar quests.
 gm-menu-players = Jogadores
 gm-menu-desc-players = Gerenciar inventários dos jogadores e modificar personagens.
-gm-menu-approvals = Aprovações de Personagens
-gm-menu-desc-approvals = Revisar e aprovar/rejeitar envios de personagens.
 
 gm-title-quest-management = Mestre - Gerenciamento de Quests
 gm-desc-create-quest = Criar uma nova quest.
@@ -156,15 +147,6 @@ gm-label-currency-heading = {"**"}Moeda{"**"}
 gm-msg-inventory-empty = O inventário está vazio.
 
 # GM approvals
-gm-title-approvals = Mestre - Aprovações de Inventário
-gm-desc-review-submission = Insira um ID de Envio para revisar e aprovar/rejeitar.
-gm-title-reviewing = Revisando: { $characterName }
-gm-label-items = {"**"}Itens:{"**"}
-gm-label-currency = {"**"}Moeda:{"**"}
-gm-embed-title-approved = Atualização de Inventário Aprovada
-gm-embed-desc-approved = O inventário de {"**"}{ $characterName }{"**"} foi aprovado por { $approver }.
-gm-embed-title-denied = Atualização de Inventário Rejeitada
-gm-embed-desc-denied = O inventário de {"**"}{ $characterName }{"**"} foi rejeitado por { $denier }.
 
 gm-modal-label-select-party-role = Cargo do Grupo
 gm-modal-desc-select-party-role = Selecione um cargo para atribuir ao grupo da quest.

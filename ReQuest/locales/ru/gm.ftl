@@ -12,9 +12,6 @@ gm-btn-manage-individual-rewards = Управление индивидуальн
 gm-btn-join = Вступить
 gm-btn-leave = Покинуть
 gm-btn-complete-quest = Завершить квест
-gm-btn-review-submission = Проверить заявку
-gm-btn-approve = Одобрить
-gm-btn-deny = Отклонить
 
 # Модальные окна GM
 gm-modal-title-create-quest = Создание нового квеста
@@ -49,9 +46,6 @@ gm-modal-placeholder-inventory-modify =
     предмет: количество
     предмет2: количество
     и т.д.
-gm-modal-title-review-submission = Проверка заявки
-gm-modal-label-submission-id = ID заявки
-gm-modal-placeholder-submission-id = Введите 8-символьный ID
 
 # Ошибки GM
 gm-error-forbidden-role-name = Указанное название роли отряда является запрещённым.
@@ -59,7 +53,6 @@ gm-error-role-already-exists = Роль с таким названием уже 
 gm-error-no-quest-channel = Канал для публикации квестов ещё не назначен. Обратитесь к администратору сервера для настройки канала квестов.
 gm-error-cannot-ping-announce = Не удалось упомянуть роль для анонсов { $role } в канале { $channel }. Проверьте права канала и роли ReQuest с администратором(ами) сервера.
 gm-error-invalid-item-format = Неверный формат предмета: "{ $item }". Каждый предмет должен быть на отдельной строке в формате "Название: Количество".
-gm-error-submission-not-found = Заявка не найдена.
 gm-error-already-on-quest = Вы уже участвуете в этом квесте как { $characterName }.
 gm-error-no-active-character-long = У вас нет активного персонажа на этом сервере. Используйте `/player` для регистрации или активации персонажа.
 gm-error-quest-locked = Ошибка при вступлении в квест {"**"}{ $questTitle }{"**"}: Квест заблокирован GM.
@@ -116,8 +109,6 @@ gm-menu-quests = Квесты
 gm-menu-desc-quests = Создание, редактирование и управление квестами.
 gm-menu-players = Игроки
 gm-menu-desc-players = Управление инвентарями игроков и изменение персонажей.
-gm-menu-approvals = Одобрение персонажей
-gm-menu-desc-approvals = Проверка и одобрение/отклонение заявок на персонажей.
 
 gm-title-quest-management = Мастер Игры - Управление квестами
 gm-desc-create-quest = Создать новый квест.
@@ -156,15 +147,6 @@ gm-label-currency-heading = {"**"}Валюта{"**"}
 gm-msg-inventory-empty = Инвентарь пуст.
 
 # Одобрение заявок GM
-gm-title-approvals = Мастер Игры - Одобрение инвентарей
-gm-desc-review-submission = Введите ID заявки для проверки и одобрения/отклонения.
-gm-title-reviewing = Проверка: { $characterName }
-gm-label-items = {"**"}Предметы:{"**"}
-gm-label-currency = {"**"}Валюта:{"**"}
-gm-embed-title-approved = Обновление инвентаря одобрено
-gm-embed-desc-approved = Инвентарь персонажа {"**"}{ $characterName }{"**"} одобрен { $approver }.
-gm-embed-title-denied = Обновление инвентаря отклонено
-gm-embed-desc-denied = Инвентарь персонажа {"**"}{ $characterName }{"**"} отклонён { $denier }.
 
 gm-modal-label-select-party-role = Роль отряда
 gm-modal-desc-select-party-role = Выберите роль для назначения отряду квеста.

@@ -294,6 +294,10 @@ player-error-invalid-quantity = Недійсна кількість для "{ $n
 player-error-input-errors-header = Помилки у введенні інвентарю:
 player-msg-no-valid-items = Дійсних предметів не надано. Ініціалізація з порожнім інвентарем.
 
+# Validation error view
+player-validation-error-title = Помилки введення
+player-validation-btn-retry = Спробувати знову
+
 # Перевірка кількості в кошику
 player-error-enter-valid-number = Будь ласка, введіть дійсне додатне число.
 

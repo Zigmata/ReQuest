@@ -294,6 +294,10 @@ player-error-invalid-quantity = Érvénytelen mennyiség „{ $name }" tárgyhoz
 player-error-input-errors-header = Hibák a leltár megadásában:
 player-msg-no-valid-items = Nem adtál meg érvényes tárgyakat. Üres leltár inicializálása.
 
+# Validation error view
+player-validation-error-title = Beviteli hibák
+player-validation-btn-retry = Újrapróbálás
+
 # Cart quantity validation
 player-error-enter-valid-number = Kérjük, adj meg egy érvényes pozitív számot.
 

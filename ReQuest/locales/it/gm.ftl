@@ -12,9 +12,6 @@ gm-btn-manage-individual-rewards = Gestisci ricompense individuali
 gm-btn-join = Unisciti
 gm-btn-leave = Abbandona
 gm-btn-complete-quest = Completa quest
-gm-btn-review-submission = Esamina richiesta
-gm-btn-approve = Approva
-gm-btn-deny = Rifiuta
 
 # Modali GM
 gm-modal-title-create-quest = Crea nuova quest
@@ -49,9 +46,6 @@ gm-modal-placeholder-inventory-modify =
     oggetto: quantità
     oggetto2: quantità
     ecc.
-gm-modal-title-review-submission = Esamina richiesta
-gm-modal-label-submission-id = ID richiesta
-gm-modal-placeholder-submission-id = Inserisci l'ID di 8 caratteri
 
 # Errori GM
 gm-error-forbidden-role-name = Il nome fornito per il ruolo del gruppo è vietato.
@@ -59,7 +53,6 @@ gm-error-role-already-exists = Un ruolo con quel nome esiste già in questo serv
 gm-error-no-quest-channel = Non è stato ancora designato un canale per i post delle quest. Contatta un amministratore del server per configurare il canale quest.
 gm-error-cannot-ping-announce = Impossibile menzionare il ruolo di annuncio { $role } nel canale { $channel }. Verifica i permessi del canale e del ruolo ReQuest con gli amministratori del server.
 gm-error-invalid-item-format = Formato oggetto non valido: "{ $item }". Ogni oggetto deve essere su una nuova riga, nel formato "Nome: Quantità".
-gm-error-submission-not-found = Richiesta non trovata.
 gm-error-already-on-quest = Sei già in questa quest come { $characterName }.
 gm-error-no-active-character-long = Non hai un personaggio attivo su questo server. Usa `/player` per registrare o attivare un personaggio.
 gm-error-quest-locked = Errore nell'unirsi alla quest {"**"}{ $questTitle }{"**"}: La quest è bloccata dal GM.
@@ -116,8 +109,6 @@ gm-menu-quests = Quest
 gm-menu-desc-quests = Crea, modifica e gestisci le quest.
 gm-menu-players = Giocatori
 gm-menu-desc-players = Gestisci gli inventari dei giocatori e modifica i personaggi.
-gm-menu-approvals = Approvazioni personaggi
-gm-menu-desc-approvals = Esamina e approva/rifiuta le richieste dei personaggi.
 
 gm-title-quest-management = Game Master - Gestione quest
 gm-desc-create-quest = Crea una nuova quest.
@@ -156,15 +147,6 @@ gm-label-currency-heading = {"**"}Valuta{"**"}
 gm-msg-inventory-empty = L'inventario è vuoto.
 
 # Approvazioni GM
-gm-title-approvals = Game Master - Approvazioni inventario
-gm-desc-review-submission = Inserisci un ID richiesta per esaminarla e approvarla/rifiutarla.
-gm-title-reviewing = In esame: { $characterName }
-gm-label-items = {"**"}Oggetti:{"**"}
-gm-label-currency = {"**"}Valuta:{"**"}
-gm-embed-title-approved = Aggiornamento inventario approvato
-gm-embed-desc-approved = L'inventario di {"**"}{ $characterName }{"**"} è stato approvato da { $approver }.
-gm-embed-title-denied = Aggiornamento inventario rifiutato
-gm-embed-desc-denied = L'inventario di {"**"}{ $characterName }{"**"} è stato rifiutato da { $denier }.
 
 gm-modal-label-select-party-role = Ruolo del gruppo
 gm-modal-desc-select-party-role = Seleziona un ruolo da assegnare al gruppo della quest.

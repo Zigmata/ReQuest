@@ -12,9 +12,6 @@ gm-btn-manage-individual-rewards = Hallinnoi yksilöpalkintoja
 gm-btn-join = Liity
 gm-btn-leave = Poistu
 gm-btn-complete-quest = Suorita quest
-gm-btn-review-submission = Tarkista hakemus
-gm-btn-approve = Hyväksy
-gm-btn-deny = Hylkää
 
 # GM modals
 gm-modal-title-create-quest = Luo uusi quest
@@ -49,9 +46,6 @@ gm-modal-placeholder-inventory-modify =
     esine: määrä
     esine2: määrä
     jne.
-gm-modal-title-review-submission = Tarkista hakemus
-gm-modal-label-submission-id = Hakemustunnus
-gm-modal-placeholder-submission-id = Syötä 8 merkin tunnus
 
 # GM errors
 gm-error-forbidden-role-name = Ryhmäroolille annettu nimi on kielletty.
@@ -59,7 +53,6 @@ gm-error-role-already-exists = Samanniminen rooli on jo olemassa tällä palveli
 gm-error-no-quest-channel = Quest-julkaisuja varten ei ole vielä määritetty kanavaa. Ota yhteyttä palvelimen ylläpitäjään quest-kanavan määrittämiseksi.
 gm-error-cannot-ping-announce = Ilmoitusroolia { $role } ei voitu pingata kanavassa { $channel }. Tarkista kanavan ja ReQuest-roolin oikeudet palvelimen ylläpitäjän kanssa.
 gm-error-invalid-item-format = Virheellinen esinemuoto: "{ $item }". Jokainen esine on oltava omalla rivillään muodossa "Nimi: Määrä".
-gm-error-submission-not-found = Hakemusta ei löytynyt.
 gm-error-already-on-quest = Olet jo tässä questissä hahmona { $characterName }.
 gm-error-no-active-character-long = Sinulla ei ole aktiivista hahmoa tällä palvelimella. Käytä `/player`-komentoa rekisteröidäksesi tai aktivoidaksesi hahmon.
 gm-error-quest-locked = Virhe liittyessä questiin {"**"}{ $questTitle }{"**"}: Quest on GM:n lukitsema.
@@ -116,8 +109,6 @@ gm-menu-quests = Questit
 gm-menu-desc-quests = Luo, muokkaa ja hallinnoi questejä.
 gm-menu-players = Pelaajat
 gm-menu-desc-players = Hallinnoi pelaajien inventaarioita ja muokkaa hahmoja.
-gm-menu-approvals = Hahmojen hyväksynnät
-gm-menu-desc-approvals = Tarkista ja hyväksy/hylkää hahmohakemukset.
 
 gm-title-quest-management = Pelinjohtaja - Questien hallinta
 gm-desc-create-quest = Luo uusi quest.
@@ -156,15 +147,6 @@ gm-label-currency-heading = {"**"}Valuutta{"**"}
 gm-msg-inventory-empty = Inventaario on tyhjä.
 
 # GM approvals
-gm-title-approvals = Pelinjohtaja - Inventaarion hyväksynnät
-gm-desc-review-submission = Syötä hakemustunnus tarkistaaksesi ja hyväksyäksesi/hylätäksesi sen.
-gm-title-reviewing = Tarkistetaan: { $characterName }
-gm-label-items = {"**"}Esineet:{"**"}
-gm-label-currency = {"**"}Valuutta:{"**"}
-gm-embed-title-approved = Inventaarion päivitys hyväksytty
-gm-embed-desc-approved = Hahmon {"**"}{ $characterName }{"**"} inventaario on hyväksytty, hyväksyjä: { $approver }.
-gm-embed-title-denied = Inventaarion päivitys hylätty
-gm-embed-desc-denied = Hahmon {"**"}{ $characterName }{"**"} inventaario on hylätty, hylkääjä: { $denier }.
 
 gm-modal-label-select-party-role = Ryhmärooli
 gm-modal-desc-select-party-role = Valitse rooli, joka annetaan questin ryhmälle.

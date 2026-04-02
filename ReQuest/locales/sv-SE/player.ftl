@@ -294,6 +294,10 @@ player-error-invalid-quantity = Ogiltigt antal för "{ $name }": "{ $quantity }"
 player-error-input-errors-header = Fel i inventarieinmatning:
 player-msg-no-valid-items = Inga giltiga föremål angavs. Initialiserar med tomt inventarie.
 
+# Validation error view
+player-validation-error-title = Inmatningsfel
+player-validation-btn-retry = Försök igen
+
 # Cart quantity validation
 player-error-enter-valid-number = Ange ett giltigt positivt nummer.
 

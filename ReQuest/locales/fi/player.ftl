@@ -294,6 +294,10 @@ player-error-invalid-quantity = Virheellinen määrä esineelle "{ $name }": "{ 
 player-error-input-errors-header = Virheitä inventaarion syötteessä:
 player-msg-no-valid-items = Kelvollisia esineitä ei annettu. Alustetaan tyhjällä inventaariolla.
 
+# Validation error view
+player-validation-error-title = Syötevirheet
+player-validation-btn-retry = Yritä uudelleen
+
 # Cart quantity validation
 player-error-enter-valid-number = Syötä kelvollinen positiivinen numero.
 

@@ -294,6 +294,10 @@ player-error-invalid-quantity = Ungültige Menge für "{ $name }": "{ $quantity 
 player-error-input-errors-header = Fehler bei der Inventareingabe:
 player-msg-no-valid-items = Keine gültigen Gegenstände angegeben. Initialisierung mit leerem Inventar.
 
+# Validation error view
+player-validation-error-title = Eingabefehler
+player-validation-btn-retry = Erneut versuchen
+
 # Warenkorbmengen-Validierung
 player-error-enter-valid-number = Bitte geben Sie eine gültige positive Zahl ein.
 

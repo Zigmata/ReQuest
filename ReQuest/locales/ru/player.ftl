@@ -294,6 +294,10 @@ player-error-invalid-quantity = Неверное количество для "{ 
 player-error-input-errors-header = Ошибки во вводе инвентаря:
 player-msg-no-valid-items = Допустимые предметы не указаны. Инвентарь инициализирован пустым.
 
+# Validation error view
+player-validation-error-title = Ошибки ввода
+player-validation-btn-retry = Попробовать снова
+
 # Проверка количества в корзине
 player-error-enter-valid-number = Введите допустимое положительное число.
 

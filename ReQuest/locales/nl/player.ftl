@@ -294,6 +294,10 @@ player-error-invalid-quantity = Ongeldige hoeveelheid voor "{ $name }": "{ $quan
 player-error-input-errors-header = Fouten in inventarisinvoer:
 player-msg-no-valid-items = Geen geldige voorwerpen opgegeven. Inventaris wordt leeg geïnitialiseerd.
 
+# Validation error view
+player-validation-error-title = Invoerfouten
+player-validation-btn-retry = Opnieuw proberen
+
 # Cart quantity validation
 player-error-enter-valid-number = Voer een geldig positief getal in.
 

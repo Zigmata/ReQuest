@@ -12,9 +12,6 @@ gm-btn-manage-individual-rewards = Manage Individual Rewards
 gm-btn-join = Join
 gm-btn-leave = Leave
 gm-btn-complete-quest = Complete Quest
-gm-btn-review-submission = Review Submission
-gm-btn-approve = Approve
-gm-btn-deny = Deny
 
 # GM modals
 gm-modal-title-create-quest = Create New Quest
@@ -49,9 +46,6 @@ gm-modal-placeholder-inventory-modify =
     item: quantity
     item2: quantity
     etc.
-gm-modal-title-review-submission = Review Submission
-gm-modal-label-submission-id = Submission ID
-gm-modal-placeholder-submission-id = Enter the 8-char ID
 
 # GM errors
 gm-error-forbidden-role-name = The name provided for the party role is forbidden.
@@ -59,7 +53,6 @@ gm-error-role-already-exists = A role with that name already exists in this serv
 gm-error-no-quest-channel = A channel has not yet been designated for quest posts. Contact a server admin to configure the Quest Channel.
 gm-error-cannot-ping-announce = Could not ping announce role { $role } in channel { $channel }. Check channel and ReQuest role permissions with your server admin(s).
 gm-error-invalid-item-format = Invalid item format: "{ $item }". Each item must be on a new line, and in the format "Name: Quantity".
-gm-error-submission-not-found = Submission not found.
 gm-error-already-on-quest = You are already on this quest as { $characterName }.
 gm-error-no-active-character-long = You do not have an active character on this server. Use `/player` to register or activate a character.
 gm-error-quest-locked = Error joining quest {"**"}{ $questTitle }{"**"}: The quest is locked by the GM.
@@ -126,8 +119,6 @@ gm-menu-quests = Quests
 gm-menu-desc-quests = Create, edit, and manage quests.
 gm-menu-players = Players
 gm-menu-desc-players = Manage player inventories and modify characters.
-gm-menu-approvals = Character Approvals
-gm-menu-desc-approvals = Review and approve/deny character submissions.
 
 gm-title-quest-management = Game Master - Quest Management
 gm-desc-create-quest = Create a new quest.
@@ -166,12 +157,3 @@ gm-label-currency-heading = {"**"}Currency{"**"}
 gm-msg-inventory-empty = Inventory is empty.
 
 # GM approvals
-gm-title-approvals = Game Master - Inventory Approvals
-gm-desc-review-submission = Enter a Submission ID to review and approve/deny it.
-gm-title-reviewing = Reviewing: { $characterName }
-gm-label-items = {"**"}Items:{"**"}
-gm-label-currency = {"**"}Currency:{"**"}
-gm-embed-title-approved = Inventory Update Approved
-gm-embed-desc-approved = The inventory for {"**"}{ $characterName }{"**"} has been approved by { $approver }.
-gm-embed-title-denied = Inventory Update Denied
-gm-embed-desc-denied = The inventory for {"**"}{ $characterName }{"**"} has been denied by { $denier }.

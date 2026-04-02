@@ -12,9 +12,6 @@ gm-btn-manage-individual-rewards = 管理个人奖励
 gm-btn-join = 加入
 gm-btn-leave = 离开
 gm-btn-complete-quest = 完成 Quest
-gm-btn-review-submission = 审核提交
-gm-btn-approve = 批准
-gm-btn-deny = 拒绝
 
 # GM modals
 gm-modal-title-create-quest = 创建新 Quest
@@ -49,9 +46,6 @@ gm-modal-placeholder-inventory-modify =
     物品: 数量
     物品2: 数量
     以此类推。
-gm-modal-title-review-submission = 审核提交
-gm-modal-label-submission-id = 提交 ID
-gm-modal-placeholder-submission-id = 输入 8 位 ID
 
 # GM errors
 gm-error-forbidden-role-name = 为队伍角色提供的名称被禁止使用。
@@ -59,7 +53,6 @@ gm-error-role-already-exists = 此服务器中已存在同名角色。
 gm-error-no-quest-channel = 尚未指定 Quest 发布频道。请联系服务器管理员配置 Quest 频道。
 gm-error-cannot-ping-announce = 无法在频道 { $channel } 中提及公告角色 { $role }。请与服务器管理员检查频道和 ReQuest 角色权限。
 gm-error-invalid-item-format = 无效的物品格式："{ $item }"。每个物品必须在新行上，格式为"名称: 数量"。
-gm-error-submission-not-found = 未找到提交内容。
 gm-error-already-on-quest = 您已经以 { $characterName } 的身份参加了此 Quest。
 gm-error-no-active-character-long = 您在此服务器上没有活跃角色。请使用 `/player` 注册或激活角色。
 gm-error-quest-locked = 加入 Quest {"**"}{ $questTitle }{"**"} 时出错：Quest 已被 GM 锁定。
@@ -114,8 +107,6 @@ gm-menu-quests = Quest
 gm-menu-desc-quests = 创建、编辑和管理 Quest。
 gm-menu-players = 玩家
 gm-menu-desc-players = 管理玩家物品栏和修改角色。
-gm-menu-approvals = 角色审批
-gm-menu-desc-approvals = 审核并批准/拒绝角色提交。
 
 gm-title-quest-management = GM - Quest 管理
 gm-desc-create-quest = 创建新的 Quest。
@@ -154,15 +145,6 @@ gm-label-currency-heading = {"**"}货币{"**"}
 gm-msg-inventory-empty = 物品栏为空。
 
 # GM approvals
-gm-title-approvals = GM - 物品栏审批
-gm-desc-review-submission = 输入提交 ID 以审核并批准/拒绝。
-gm-title-reviewing = 审核中：{ $characterName }
-gm-label-items = {"**"}物品：{"**"}
-gm-label-currency = {"**"}货币：{"**"}
-gm-embed-title-approved = 物品栏更新已批准
-gm-embed-desc-approved = {"**"}{ $characterName }{"**"} 的物品栏已由 { $approver } 批准。
-gm-embed-title-denied = 物品栏更新已拒绝
-gm-embed-desc-denied = {"**"}{ $characterName }{"**"} 的物品栏已由 { $denier } 拒绝。
 
 gm-modal-label-select-party-role = 队伍角色
 gm-modal-desc-select-party-role = 选择要分配给 Quest 队伍的角色。

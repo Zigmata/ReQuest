@@ -294,6 +294,10 @@ player-error-invalid-quantity = Ugyldig antall for "{ $name }": "{ $quantity }".
 player-error-input-errors-header = Feil i inventarinntasting:
 player-msg-no-valid-items = Ingen gyldige gjenstander oppgitt. Initialiserer med tomt inventar.
 
+# Validation error view
+player-validation-error-title = Inndatafeil
+player-validation-btn-retry = Prøv igjen
+
 # Cart quantity validation
 player-error-enter-valid-number = Vennligst skriv inn et gyldig positivt tall.
 

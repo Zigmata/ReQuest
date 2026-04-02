@@ -294,6 +294,10 @@ player-error-invalid-quantity = "{ $name }" için geçersiz miktar: "{ $quantity
 player-error-input-errors-header = Envanter girişinde hatalar:
 player-msg-no-valid-items = Geçerli eşya sağlanmadı. Boş envanter ile başlatılıyor.
 
+# Validation error view
+player-validation-error-title = Giriş hataları
+player-validation-btn-retry = Tekrar dene
+
 # Cart quantity validation
 player-error-enter-valid-number = Lütfen geçerli bir pozitif sayı girin.
 

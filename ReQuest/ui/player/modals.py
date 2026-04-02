@@ -440,15 +440,17 @@ class OpenInventoryInputModal(LocaleModal):
                     items[name] = int(quantity)
 
             if errors:
-                error_message = t(locale, 'player-error-input-errors-header') + '\n- ' + '\n- '.join(errors)
-                await interaction.response.send_message(error_message, ephemeral=True)
+                from ReQuest.ui.player.views import ValidationErrorView
+                error_view = ValidationErrorView(errors, self.calling_view)
+                await interaction.response.edit_message(view=error_view)
                 return
 
             if not items:
-                await interaction.response.send_message(
-                    t(locale, 'player-msg-no-valid-items'),
-                    ephemeral=True
+                from ReQuest.ui.player.views import ValidationErrorView
+                error_view = ValidationErrorView(
+                    [t(locale, 'player-msg-no-valid-items')], self.calling_view
                 )
+                await interaction.response.edit_message(view=error_view)
                 return
 
             await self.calling_view.submit_open_inventory(interaction, items)

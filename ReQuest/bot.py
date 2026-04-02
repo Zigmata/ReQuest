@@ -143,8 +143,6 @@ class ReQuest(commands.Bot):
             try:
                 submission_id = doc['submission_id']
                 message_id = doc['message_id']
-                logger.info('Loading approval view for submission ID: {}'.format(submission_id))
-                logger.info('Message ID for approval view: {}'.format(message_id))
                 view = ApprovalPostView(submission_id)
                 await view.setup(self)
                 self.add_view(view=view, message_id=message_id)

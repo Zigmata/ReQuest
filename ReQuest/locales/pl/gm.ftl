@@ -12,9 +12,6 @@ gm-btn-manage-individual-rewards = Zarządzaj indywidualnymi nagrodami
 gm-btn-join = Dołącz
 gm-btn-leave = Opuść
 gm-btn-complete-quest = Ukończ quest
-gm-btn-review-submission = Przeglądaj zgłoszenie
-gm-btn-approve = Zatwierdź
-gm-btn-deny = Odrzuć
 
 # GM modals
 gm-modal-title-create-quest = Utwórz nowy quest
@@ -49,9 +46,6 @@ gm-modal-placeholder-inventory-modify =
     przedmiot: ilość
     przedmiot2: ilość
     itd.
-gm-modal-title-review-submission = Przeglądaj zgłoszenie
-gm-modal-label-submission-id = ID zgłoszenia
-gm-modal-placeholder-submission-id = Wpisz 8-znakowe ID
 
 # GM errors
 gm-error-forbidden-role-name = Podana nazwa roli drużyny jest zabroniona.
@@ -59,7 +53,6 @@ gm-error-role-already-exists = Rola o tej nazwie już istnieje na tym serwerze.
 gm-error-no-quest-channel = Nie wyznaczono jeszcze kanału dla postów questowych. Skontaktuj się z administratorem serwera, aby skonfigurować kanał questów.
 gm-error-cannot-ping-announce = Nie udało się pingować roli ogłoszeń { $role } na kanale { $channel }. Sprawdź uprawnienia kanału i roli ReQuest z administratorem(-ami) serwera.
 gm-error-invalid-item-format = Nieprawidłowy format przedmiotu: "{ $item }". Każdy przedmiot musi być w osobnej linii, w formacie "Nazwa: Ilość".
-gm-error-submission-not-found = Nie znaleziono zgłoszenia.
 gm-error-already-on-quest = Już jesteś w tym queście jako { $characterName }.
 gm-error-no-active-character-long = Nie masz aktywnej postaci na tym serwerze. Użyj `/player`, aby zarejestrować lub aktywować postać.
 gm-error-quest-locked = Błąd dołączania do questu {"**"}{ $questTitle }{"**"}: Quest jest zablokowany przez GM.
@@ -116,8 +109,6 @@ gm-menu-quests = Questy
 gm-menu-desc-quests = Twórz, edytuj i zarządzaj questami.
 gm-menu-players = Gracze
 gm-menu-desc-players = Zarządzaj ekwipunkami graczy i modyfikuj postacie.
-gm-menu-approvals = Zatwierdzanie postaci
-gm-menu-desc-approvals = Przeglądaj i zatwierdzaj/odrzucaj zgłoszenia postaci.
 
 gm-title-quest-management = Mistrz Gry - Zarządzanie questami
 gm-desc-create-quest = Utwórz nowy quest.
@@ -156,15 +147,6 @@ gm-label-currency-heading = {"**"}Waluta{"**"}
 gm-msg-inventory-empty = Ekwipunek jest pusty.
 
 # GM approvals
-gm-title-approvals = Mistrz Gry - Zatwierdzanie ekwipunków
-gm-desc-review-submission = Wpisz ID zgłoszenia, aby je przejrzeć i zatwierdzić/odrzucić.
-gm-title-reviewing = Przeglądanie: { $characterName }
-gm-label-items = {"**"}Przedmioty:{"**"}
-gm-label-currency = {"**"}Waluta:{"**"}
-gm-embed-title-approved = Aktualizacja ekwipunku zatwierdzona
-gm-embed-desc-approved = Ekwipunek postaci {"**"}{ $characterName }{"**"} został zatwierdzony przez { $approver }.
-gm-embed-title-denied = Aktualizacja ekwipunku odrzucona
-gm-embed-desc-denied = Ekwipunek postaci {"**"}{ $characterName }{"**"} został odrzucony przez { $denier }.
 
 gm-modal-label-select-party-role = Rola drużyny
 gm-modal-desc-select-party-role = Wybierz rolę do przypisania drużynie questowej.

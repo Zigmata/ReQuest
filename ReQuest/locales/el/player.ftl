@@ -294,6 +294,10 @@ player-error-invalid-quantity = Μη έγκυρη ποσότητα για "{ $na
 player-error-input-errors-header = Σφάλματα στην εισαγωγή εξοπλισμού:
 player-msg-no-valid-items = Δεν δόθηκαν έγκυρα αντικείμενα. Αρχικοποίηση με κενό εξοπλισμό.
 
+# Validation error view
+player-validation-error-title = Σφάλματα εισαγωγής
+player-validation-btn-retry = Δοκιμάστε ξανά
+
 # Cart quantity validation
 player-error-enter-valid-number = Παρακαλώ εισάγετε έγκυρο θετικό αριθμό.
 

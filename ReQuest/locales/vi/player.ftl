@@ -294,6 +294,10 @@ player-error-invalid-quantity = Số lượng không hợp lệ cho "{ $name }":
 player-error-input-errors-header = Lỗi trong dữ liệu kho đồ nhập vào:
 player-msg-no-valid-items = Không có vật phẩm hợp lệ. Khởi tạo với kho đồ trống.
 
+# Validation error view
+player-validation-error-title = Lỗi nhập liệu
+player-validation-btn-retry = Thử lại
+
 # Cart quantity validation
 player-error-enter-valid-number = Vui lòng nhập một số dương hợp lệ.
 

@@ -294,6 +294,10 @@ player-error-invalid-quantity = Jumlah tidak valid untuk "{ $name }": "{ $quanti
 player-error-input-errors-header = Kesalahan pada input inventaris:
 player-msg-no-valid-items = Tidak ada barang yang valid. Menginisialisasi dengan inventaris kosong.
 
+# Validation error view
+player-validation-error-title = Kesalahan input
+player-validation-btn-retry = Coba lagi
+
 # Cart quantity validation
 player-error-enter-valid-number = Silakan masukkan angka positif yang valid.
 

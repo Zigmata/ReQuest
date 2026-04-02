@@ -294,6 +294,10 @@ player-error-invalid-quantity = Cantitate invalidă pentru „{ $name }": „{ $
 player-error-input-errors-header = Erori la introducerea inventarului:
 player-msg-no-valid-items = Niciun obiect valid furnizat. Se inițializează cu inventar gol.
 
+# Validation error view
+player-validation-error-title = Erori de introducere
+player-validation-btn-retry = Încearcă din nou
+
 # Cart quantity validation
 player-error-enter-valid-number = Vă rugăm să introduceți un număr pozitiv valid.
 

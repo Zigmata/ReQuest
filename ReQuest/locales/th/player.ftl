@@ -294,6 +294,10 @@ player-error-invalid-quantity = จำนวนไม่ถูกต้องส
 player-error-input-errors-header = ข้อผิดพลาดในการกรอกคลังไอเทม:
 player-msg-no-valid-items = ไม่มีไอเทมที่ถูกต้อง เริ่มต้นด้วยคลังไอเทมว่าง
 
+# Validation error view
+player-validation-error-title = ข้อผิดพลาดในการป้อนข้อมูล
+player-validation-btn-retry = ลองอีกครั้ง
+
 # Cart quantity validation
 player-error-enter-valid-number = กรุณากรอกตัวเลขบวกที่ถูกต้อง
 
