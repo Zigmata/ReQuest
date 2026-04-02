@@ -330,12 +330,26 @@ player-approval-btn-edit = Chỉnh sửa
 player-approval-error-no-permission = Bạn không có quyền thực hiện hành động này.
 player-approval-error-not-submitter = Chỉ người gửi ban đầu mới có thể chỉnh sửa yêu cầu này.
 player-approval-thread-instructions =
-    This thread was created for the approval of a character's starting inventory.
+    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
     A Game Master will review the submission and approve or deny it.
-    The submitting player may use the Edit button to modify and re-submit.
     Once approved or denied, this thread will be locked.
+
+    {"**"}Game Masters:{"**"} Discuss any required changes with your
+    player until the inventory is in an acceptable state. Only use
+    the `Deny` button for irreconcilable submissions.
+
+    { $playerMention }: Use the `Edit` button to make any changes
+    requested here by a Game Master.
+player-approval-approved-by = Yêu cầu này đã được phê duyệt bởi { $approver }.
+player-approval-denied-by = Yêu cầu này đã bị từ chối bởi { $denier }.
+player-approval-deny-reason = Lý do: { $reason }
 player-msg-submission-updated = Yêu cầu của bạn đã được cập nhật.
 
+
+# Denial modal
+player-modal-title-deny-reason = Từ chối yêu cầu
+player-modal-label-deny-reason = Lý do từ chối
+player-modal-placeholder-deny-reason = Tùy chọn: giải thích lý do từ chối
 # Approval DM notifications
 player-dm-title-approved = Nhân vật đã được phê duyệt
 player-dm-desc-approved =
@@ -344,4 +358,4 @@ player-dm-desc-approved =
 player-dm-title-denied = Nhân vật đã bị từ chối
 player-dm-desc-denied =
     Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.
+    by { $denier } in {"**"}{ $guildName }{"**"}.

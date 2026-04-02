@@ -330,12 +330,26 @@ player-approval-btn-edit = Uredi
 player-approval-error-no-permission = Nemate dozvolu za ovu radnju.
 player-approval-error-not-submitter = Samo izvorni podnositelj može urediti ovaj zahtjev.
 player-approval-thread-instructions =
-    This thread was created for the approval of a character's starting inventory.
+    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
     A Game Master will review the submission and approve or deny it.
-    The submitting player may use the Edit button to modify and re-submit.
     Once approved or denied, this thread will be locked.
+
+    {"**"}Game Masters:{"**"} Discuss any required changes with your
+    player until the inventory is in an acceptable state. Only use
+    the `Deny` button for irreconcilable submissions.
+
+    { $playerMention }: Use the `Edit` button to make any changes
+    requested here by a Game Master.
+player-approval-approved-by = Ovaj zahtjev je odobren od { $approver }.
+player-approval-denied-by = Ovaj zahtjev je odbijen od { $denier }.
+player-approval-deny-reason = Razlog: { $reason }
 player-msg-submission-updated = Vaš zahtjev je ažuriran.
 
+
+# Denial modal
+player-modal-title-deny-reason = Odbij zahtjev
+player-modal-label-deny-reason = Razlog odbijanja
+player-modal-placeholder-deny-reason = Neobvezno: objasnite razlog odbijanja
 # Approval DM notifications
 player-dm-title-approved = Lik odobren
 player-dm-desc-approved =
@@ -344,4 +358,4 @@ player-dm-desc-approved =
 player-dm-title-denied = Lik odbijen
 player-dm-desc-denied =
     Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.
+    by { $denier } in {"**"}{ $guildName }{"**"}.

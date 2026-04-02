@@ -121,7 +121,7 @@ class ReQuest(commands.Bot):
 
         # If the bot is restarted with any existing quests, this reloads their views so they can be interacted with.
         quests = []
-        quest_collection = self.gdb['quests']
+        quest_collection = self.gdb[DatabaseCollections.QUESTS]
         cursor = quest_collection.find()
         for document in await cursor.to_list(length=None):
             quests.append(document)
@@ -143,7 +143,11 @@ class ReQuest(commands.Bot):
             try:
                 submission_id = doc['submission_id']
                 message_id = doc['message_id']
-                self.add_view(view=ApprovalPostView(submission_id), message_id=message_id)
+                logger.info('Loading approval view for submission ID: {}'.format(submission_id))
+                logger.info('Message ID for approval view: {}'.format(message_id))
+                view = ApprovalPostView(submission_id)
+                await view.setup(self)
+                self.add_view(view=view, message_id=message_id)
             except (KeyError, TypeError) as e:
                 logger.error(f'Failed to load approval view {doc.get("submission_id", "unknown")}: {e}')
             except Exception as e:

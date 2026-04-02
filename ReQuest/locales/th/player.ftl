@@ -330,12 +330,26 @@ player-approval-btn-edit = แก้ไข
 player-approval-error-no-permission = คุณไม่มีสิทธิ์ดำเนินการนี้
 player-approval-error-not-submitter = เฉพาะผู้ส่งดั้งเดิมเท่านั้นที่สามารถแก้ไขคำขอนี้ได้
 player-approval-thread-instructions =
-    This thread was created for the approval of a character's starting inventory.
+    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
     A Game Master will review the submission and approve or deny it.
-    The submitting player may use the Edit button to modify and re-submit.
     Once approved or denied, this thread will be locked.
+
+    {"**"}Game Masters:{"**"} Discuss any required changes with your
+    player until the inventory is in an acceptable state. Only use
+    the `Deny` button for irreconcilable submissions.
+
+    { $playerMention }: Use the `Edit` button to make any changes
+    requested here by a Game Master.
+player-approval-approved-by = คำขอนี้ได้รับการอนุมัติจาก { $approver }
+player-approval-denied-by = คำขอนี้ถูกปฏิเสธโดย { $denier }
+player-approval-deny-reason = เหตุผล: { $reason }
 player-msg-submission-updated = คำขอของคุณได้รับการอัปเดตแล้ว
 
+
+# Denial modal
+player-modal-title-deny-reason = ปฏิเสธคำขอ
+player-modal-label-deny-reason = เหตุผลในการปฏิเสธ
+player-modal-placeholder-deny-reason = ไม่บังคับ: อธิบายเหตุผลที่ปฏิเสธ
 # Approval DM notifications
 player-dm-title-approved = ตัวละครได้รับอนุมัติ
 player-dm-desc-approved =
@@ -344,4 +358,4 @@ player-dm-desc-approved =
 player-dm-title-denied = ตัวละครถูกปฏิเสธ
 player-dm-desc-denied =
     Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.
+    by { $denier } in {"**"}{ $guildName }{"**"}.

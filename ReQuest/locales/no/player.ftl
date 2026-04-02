@@ -330,12 +330,26 @@ player-approval-btn-edit = Rediger
 player-approval-error-no-permission = Du har ikke tillatelse til denne handlingen.
 player-approval-error-not-submitter = Kun den opprinnelige innsenderen kan redigere denne innsendingen.
 player-approval-thread-instructions =
-    This thread was created for the approval of a character's starting inventory.
+    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
     A Game Master will review the submission and approve or deny it.
-    The submitting player may use the Edit button to modify and re-submit.
     Once approved or denied, this thread will be locked.
+
+    {"**"}Game Masters:{"**"} Discuss any required changes with your
+    player until the inventory is in an acceptable state. Only use
+    the `Deny` button for irreconcilable submissions.
+
+    { $playerMention }: Use the `Edit` button to make any changes
+    requested here by a Game Master.
+player-approval-approved-by = Denne innsendingen ble godkjent av { $approver }.
+player-approval-denied-by = Denne innsendingen ble avslått av { $denier }.
+player-approval-deny-reason = Grunn: { $reason }
 player-msg-submission-updated = Innsendingen din er oppdatert.
 
+
+# Denial modal
+player-modal-title-deny-reason = Avslå innsending
+player-modal-label-deny-reason = Grunn for avslag
+player-modal-placeholder-deny-reason = Valgfritt: forklar grunnen til avslaget
 # Approval DM notifications
 player-dm-title-approved = Karakter godkjent
 player-dm-desc-approved =
@@ -344,4 +358,4 @@ player-dm-desc-approved =
 player-dm-title-denied = Karakter avslått
 player-dm-desc-denied =
     Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.
+    by { $denier } in {"**"}{ $guildName }{"**"}.

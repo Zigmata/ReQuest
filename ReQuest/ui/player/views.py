@@ -1969,6 +1969,9 @@ class ApprovalPostView(LocaleLayoutView):
         self.submission_data = None
         self.currency_config = None
         self.resolved = False
+        self.resolved_by = None
+        self.resolved_action = None  # 'approved' or 'denied'
+        self.deny_reason = None
 
         self.items_per_page = 9
         self.current_page = 0
@@ -1995,7 +1998,12 @@ class ApprovalPostView(LocaleLayoutView):
         locale = getattr(self, 'locale', None) or DEFAULT_LOCALE
         container = Container()
 
-        if self.resolved or not self.submission_data:
+        if self.resolved and not self.submission_data:
+            container.add_item(TextDisplay(t(locale, 'player-approval-resolved')))
+            self.add_item(container)
+            return
+
+        if not self.submission_data:
             container.add_item(TextDisplay(t(locale, 'player-approval-resolved')))
             self.add_item(container)
             return
@@ -2041,12 +2049,24 @@ class ApprovalPostView(LocaleLayoutView):
 
         container.add_item(Separator())
 
-        # Action buttons
-        actions = ActionRow()
-        actions.add_item(buttons.ApprovalApproveButton(self.submission_id))
-        actions.add_item(buttons.ApprovalDenyButton(self.submission_id))
-        actions.add_item(buttons.ApprovalEditButton(self.submission_id))
-        container.add_item(actions)
+        if self.resolved:
+            # Show resolution info instead of buttons
+            if self.resolved_action == 'approved':
+                container.add_item(TextDisplay(
+                    t(locale, 'player-approval-approved-by', approver=self.resolved_by)
+                ))
+            elif self.resolved_action == 'denied':
+                deny_text = t(locale, 'player-approval-denied-by', denier=self.resolved_by)
+                if self.deny_reason:
+                    deny_text += f'\n{t(locale, "player-approval-deny-reason", reason=self.deny_reason)}'
+                container.add_item(TextDisplay(deny_text))
+        else:
+            # Action buttons
+            actions = ActionRow()
+            actions.add_item(buttons.ApprovalApproveButton(self.submission_id))
+            actions.add_item(buttons.ApprovalDenyButton(self.submission_id))
+            actions.add_item(buttons.ApprovalEditButton(self.submission_id))
+            container.add_item(actions)
 
         self.add_item(container)
 
@@ -2173,6 +2193,8 @@ class ApprovalPostView(LocaleLayoutView):
 
             # Update view to resolved state
             self.resolved = True
+            self.resolved_by = interaction.user.mention
+            self.resolved_action = 'approved'
             self.build_view()
             await interaction.edit_original_response(view=self)
 
@@ -2194,15 +2216,25 @@ class ApprovalPostView(LocaleLayoutView):
             except discord.errors.Forbidden:
                 logger.warning(f'Could not DM user {user_id} about approval — DMs may be disabled.')
 
-            # Lock and archive the thread
+            # Revoke thread permissions and lock/archive
             thread = interaction.channel
             if isinstance(thread, discord.Thread):
+                await self._revoke_submitter_permissions(thread, bot, guild_id, user_id)
                 await thread.edit(locked=True, archived=True)
 
         except Exception as e:
             await log_exception(e, interaction)
 
     async def deny(self, interaction):
+        try:
+            # Present the GM with a reason modal
+            from ReQuest.ui.player import modals as player_modals
+            modal = player_modals.DenyReasonModal(self)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def _process_denial(self, interaction, reason=''):
         try:
             await interaction.response.defer()
             bot = interaction.client
@@ -2221,6 +2253,9 @@ class ApprovalPostView(LocaleLayoutView):
 
             # Update view to resolved state
             self.resolved = True
+            self.resolved_by = interaction.user.mention
+            self.resolved_action = 'denied'
+            self.deny_reason = reason or None
             self.build_view()
             await interaction.edit_original_response(view=self)
 
@@ -2230,25 +2265,42 @@ class ApprovalPostView(LocaleLayoutView):
                 user_locale = await resolve_user_locale(bot, user_id, guild_id)
                 guild = bot.get_guild(guild_id)
                 guild_name = guild.name if guild else 'Unknown'
+                description = t(user_locale, 'player-dm-desc-denied',
+                                characterName=character_name,
+                                denier=interaction.user.display_name,
+                                guildName=guild_name)
+                if reason:
+                    description += f'\n\n{t(user_locale, "player-approval-deny-reason", reason=reason)}'
                 dm_embed = discord.Embed(
                     title=t(user_locale, 'player-dm-title-denied'),
-                    description=t(user_locale, 'player-dm-desc-denied',
-                                  characterName=character_name,
-                                  denier=interaction.user.display_name,
-                                  guildName=guild_name),
+                    description=description,
                     color=discord.Color.red()
                 )
                 await user.send(embed=dm_embed)
             except discord.errors.Forbidden:
                 logger.warning(f'Could not DM user {user_id} about denial — DMs may be disabled.')
 
-            # Lock and archive the thread
+            # Revoke thread permissions and lock/archive
             thread = interaction.channel
             if isinstance(thread, discord.Thread):
+                await self._revoke_submitter_permissions(thread, bot, guild_id, user_id)
                 await thread.edit(locked=True, archived=True)
 
         except Exception as e:
             await log_exception(e, interaction)
+
+    @staticmethod
+    async def _revoke_submitter_permissions(thread, bot, guild_id, user_id):
+        """Revoke permissions that were granted to the submitter on thread creation."""
+        try:
+            guild = bot.get_guild(guild_id)
+            if not guild:
+                return
+            member = guild.get_member(user_id)
+            if member:
+                await thread.set_permissions(member, overwrite=None)
+        except Exception as e:
+            logger.warning(f'Could not revoke thread permissions for user {user_id}: {e}')
 
     async def edit(self, interaction):
         try:
@@ -2382,8 +2434,26 @@ async def _handle_submission(interaction, pending_character, items, currency):
                 # Register persistent view for bot restarts
                 bot.add_view(ApprovalPostView(submission_id), message_id=thread_message.message.id)
 
+                # Grant thread permissions to submitter if they can't see the forum channel
+                try:
+                    forum_perms = forum_channel.permissions_for(interaction.user)
+                    if not (forum_perms.view_channel and forum_perms.send_messages_in_threads
+                            and forum_perms.read_message_history):
+                        await thread.set_permissions(
+                            interaction.user,
+                            view_channel=True,
+                            send_messages_in_threads=True,
+                            read_message_history=True
+                        )
+                except Exception as e:
+                    logger.warning(f'Could not set thread permissions for user {member_id}: {e}')
+
                 # Send canned instructions in the thread
-                await thread.send(t(guild_locale, 'player-approval-thread-instructions'))
+                await thread.send(t(
+                    guild_locale, 'player-approval-thread-instructions',
+                    characterName=character_name,
+                    playerMention=interaction.user.mention
+                ))
 
                 # Return player to character list
                 new_view = CharacterBaseView()

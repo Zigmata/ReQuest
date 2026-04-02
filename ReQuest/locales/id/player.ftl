@@ -330,12 +330,26 @@ player-approval-btn-edit = Edit
 player-approval-error-no-permission = Anda tidak memiliki izin untuk melakukan tindakan ini.
 player-approval-error-not-submitter = Hanya pengirim asli yang dapat mengedit pengajuan ini.
 player-approval-thread-instructions =
-    This thread was created for the approval of a character's starting inventory.
+    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
     A Game Master will review the submission and approve or deny it.
-    The submitting player may use the Edit button to modify and re-submit.
     Once approved or denied, this thread will be locked.
+
+    {"**"}Game Masters:{"**"} Discuss any required changes with your
+    player until the inventory is in an acceptable state. Only use
+    the `Deny` button for irreconcilable submissions.
+
+    { $playerMention }: Use the `Edit` button to make any changes
+    requested here by a Game Master.
+player-approval-approved-by = Pengajuan ini disetujui oleh { $approver }.
+player-approval-denied-by = Pengajuan ini ditolak oleh { $denier }.
+player-approval-deny-reason = Alasan: { $reason }
 player-msg-submission-updated = Pengajuan Anda telah diperbarui.
 
+
+# Denial modal
+player-modal-title-deny-reason = Tolak pengajuan
+player-modal-label-deny-reason = Alasan penolakan
+player-modal-placeholder-deny-reason = Opsional: jelaskan alasan penolakan
 # Approval DM notifications
 player-dm-title-approved = Karakter disetujui
 player-dm-desc-approved =
@@ -344,4 +358,4 @@ player-dm-desc-approved =
 player-dm-title-denied = Karakter ditolak
 player-dm-desc-denied =
     Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.
+    by { $denier } in {"**"}{ $guildName }{"**"}.

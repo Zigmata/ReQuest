@@ -330,12 +330,26 @@ player-approval-btn-edit = Επεξεργασία
 player-approval-error-no-permission = Δεν έχετε δικαίωμα για αυτή την ενέργεια.
 player-approval-error-not-submitter = Μόνο ο αρχικός υποβάλλων μπορεί να επεξεργαστεί αυτή την υποβολή.
 player-approval-thread-instructions =
-    This thread was created for the approval of a character's starting inventory.
+    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
     A Game Master will review the submission and approve or deny it.
-    The submitting player may use the Edit button to modify and re-submit.
     Once approved or denied, this thread will be locked.
+
+    {"**"}Game Masters:{"**"} Discuss any required changes with your
+    player until the inventory is in an acceptable state. Only use
+    the `Deny` button for irreconcilable submissions.
+
+    { $playerMention }: Use the `Edit` button to make any changes
+    requested here by a Game Master.
+player-approval-approved-by = Αυτή η υποβολή εγκρίθηκε από { $approver }.
+player-approval-denied-by = Αυτή η υποβολή απορρίφθηκε από { $denier }.
+player-approval-deny-reason = Αιτία: { $reason }
 player-msg-submission-updated = Η υποβολή σας ενημερώθηκε.
 
+
+# Denial modal
+player-modal-title-deny-reason = Απόρριψη υποβολής
+player-modal-label-deny-reason = Αιτία απόρριψης
+player-modal-placeholder-deny-reason = Προαιρετικό: εξηγήστε γιατί απορρίφθηκε
 # Approval DM notifications
 player-dm-title-approved = Χαρακτήρας εγκρίθηκε
 player-dm-desc-approved =
@@ -344,4 +358,4 @@ player-dm-desc-approved =
 player-dm-title-denied = Χαρακτήρας απορρίφθηκε
 player-dm-desc-denied =
     Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.
+    by { $denier } in {"**"}{ $guildName }{"**"}.

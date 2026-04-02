@@ -330,12 +330,26 @@ player-approval-btn-edit = 編輯
 player-approval-error-no-permission = 您沒有執行此操作的權限。
 player-approval-error-not-submitter = 只有原始提交者才能編輯此提交。
 player-approval-thread-instructions =
-    This thread was created for the approval of a character's starting inventory.
+    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
     A Game Master will review the submission and approve or deny it.
-    The submitting player may use the Edit button to modify and re-submit.
     Once approved or denied, this thread will be locked.
+
+    {"**"}Game Masters:{"**"} Discuss any required changes with your
+    player until the inventory is in an acceptable state. Only use
+    the `Deny` button for irreconcilable submissions.
+
+    { $playerMention }: Use the `Edit` button to make any changes
+    requested here by a Game Master.
+player-approval-approved-by = 此提交已被 { $approver } 批准。
+player-approval-denied-by = 此提交已被 { $denier } 拒絕。
+player-approval-deny-reason = 原因: { $reason }
 player-msg-submission-updated = 您的提交已更新。
 
+
+# Denial modal
+player-modal-title-deny-reason = 拒絕提交
+player-modal-label-deny-reason = 拒絕原因
+player-modal-placeholder-deny-reason = 可選: 說明拒絕原因
 # Approval DM notifications
 player-dm-title-approved = 角色已批准
 player-dm-desc-approved =
@@ -344,4 +358,4 @@ player-dm-desc-approved =
 player-dm-title-denied = 角色已拒絕
 player-dm-desc-denied =
     Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.
+    by { $denier } in {"**"}{ $guildName }{"**"}.

@@ -330,12 +330,26 @@ player-approval-btn-edit = Editează
 player-approval-error-no-permission = Nu ai permisiunea de a efectua această acțiune.
 player-approval-error-not-submitter = Doar expeditorul original poate edita această cerere.
 player-approval-thread-instructions =
-    This thread was created for the approval of a character's starting inventory.
+    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
     A Game Master will review the submission and approve or deny it.
-    The submitting player may use the Edit button to modify and re-submit.
     Once approved or denied, this thread will be locked.
+
+    {"**"}Game Masters:{"**"} Discuss any required changes with your
+    player until the inventory is in an acceptable state. Only use
+    the `Deny` button for irreconcilable submissions.
+
+    { $playerMention }: Use the `Edit` button to make any changes
+    requested here by a Game Master.
+player-approval-approved-by = Această cerere a fost aprobată de { $approver }.
+player-approval-denied-by = Această cerere a fost respinsă de { $denier }.
+player-approval-deny-reason = Motiv: { $reason }
 player-msg-submission-updated = Cererea ta a fost actualizată.
 
+
+# Denial modal
+player-modal-title-deny-reason = Respinge cererea
+player-modal-label-deny-reason = Motivul respingerii
+player-modal-placeholder-deny-reason = Opțional: explicați motivul respingerii
 # Approval DM notifications
 player-dm-title-approved = Personaj aprobat
 player-dm-desc-approved =
@@ -344,4 +358,4 @@ player-dm-desc-approved =
 player-dm-title-denied = Personaj respins
 player-dm-desc-denied =
     Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.
+    by { $denier } in {"**"}{ $guildName }{"**"}.

@@ -457,6 +457,31 @@ class OpenInventoryInputModal(LocaleModal):
             await log_exception(e, interaction)
 
 
+class DenyReasonModal(LocaleModal):
+    def __init__(self, approval_view):
+        super().__init__(
+            title=t(DEFAULT_LOCALE, 'player-modal-title-deny-reason'),
+            timeout=180
+        )
+        self.approval_view = approval_view
+        self.reason_input = discord.ui.TextInput(
+            label=t(DEFAULT_LOCALE, 'player-modal-label-deny-reason'),
+            style=discord.TextStyle.paragraph,
+            custom_id='deny_reason_input',
+            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-deny-reason'),
+            required=False,
+            max_length=500
+        )
+        self.add_item(self.reason_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            reason = self.reason_input.value.strip() if self.reason_input.value else ''
+            await self.approval_view._process_denial(interaction, reason)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
 class SpendCurrencyModal(LocaleModal):
     def __init__(self, calling_view):
         super().__init__(

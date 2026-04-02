@@ -330,12 +330,26 @@ player-approval-btn-edit = 編集
 player-approval-error-no-permission = この操作を行う権限がありません。
 player-approval-error-not-submitter = 元の提出者のみがこの申請を編集できます。
 player-approval-thread-instructions =
-    This thread was created for the approval of a character's starting inventory.
+    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
     A Game Master will review the submission and approve or deny it.
-    The submitting player may use the Edit button to modify and re-submit.
     Once approved or denied, this thread will be locked.
+
+    {"**"}Game Masters:{"**"} Discuss any required changes with your
+    player until the inventory is in an acceptable state. Only use
+    the `Deny` button for irreconcilable submissions.
+
+    { $playerMention }: Use the `Edit` button to make any changes
+    requested here by a Game Master.
+player-approval-approved-by = この申請は { $approver } によって承認されました。
+player-approval-denied-by = この申請は { $denier } によって拒否されました。
+player-approval-deny-reason = 理由: { $reason }
 player-msg-submission-updated = 申請が更新されました。
 
+
+# Denial modal
+player-modal-title-deny-reason = 申請を拒否
+player-modal-label-deny-reason = 拒否理由
+player-modal-placeholder-deny-reason = 任意: 拒否の理由を説明してください
 # Approval DM notifications
 player-dm-title-approved = キャラクター承認
 player-dm-desc-approved =
@@ -344,4 +358,4 @@ player-dm-desc-approved =
 player-dm-title-denied = キャラクター拒否
 player-dm-desc-denied =
     Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.
+    by { $denier } in {"**"}{ $guildName }{"**"}.

@@ -329,12 +329,26 @@ player-approval-btn-deny = Deny
 player-approval-btn-edit = Edit
 player-approval-error-no-permission = You do not have permission to perform this action.
 player-approval-error-not-submitter = Only the original submitter can edit this submission.
+player-approval-approved-by = This submission was approved by { $approver }.
+player-approval-denied-by = This submission was denied by { $denier }.
+player-approval-deny-reason = Reason: { $reason }
 player-approval-thread-instructions =
-    This thread was created for the approval of a character's starting inventory.
+    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
     A Game Master will review the submission and approve or deny it.
-    The submitting player may use the Edit button to modify and re-submit.
     Once approved or denied, this thread will be locked.
+
+    {"**"}Game Masters:{"**"} Discuss any required changes with your
+    player until the inventory is in an acceptable state. Only use
+    the `Deny` button for irreconcilable submissions.
+
+    { $playerMention }: Use the `Edit` button to make any changes
+    requested here by a Game Master.
 player-msg-submission-updated = Your submission has been updated.
+
+# Denial modal
+player-modal-title-deny-reason = Deny Submission
+player-modal-label-deny-reason = Reason for denial
+player-modal-placeholder-deny-reason = Optional: explain why the submission was denied
 
 # Approval DM notifications
 player-dm-title-approved = Character Approved
@@ -344,4 +358,4 @@ player-dm-desc-approved =
 player-dm-title-denied = Character Denied
 player-dm-desc-denied =
     Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.
+    by { $denier } in {"**"}{ $guildName }{"**"}.

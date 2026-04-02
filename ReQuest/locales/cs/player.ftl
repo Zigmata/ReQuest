@@ -330,12 +330,26 @@ player-approval-btn-edit = Upravit
 player-approval-error-no-permission = Nemáte oprávnění k provedení této akce.
 player-approval-error-not-submitter = Pouze původní odesílatel může tuto žádost upravit.
 player-approval-thread-instructions =
-    This thread was created for the approval of a character's starting inventory.
+    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
     A Game Master will review the submission and approve or deny it.
-    The submitting player may use the Edit button to modify and re-submit.
     Once approved or denied, this thread will be locked.
+
+    {"**"}Game Masters:{"**"} Discuss any required changes with your
+    player until the inventory is in an acceptable state. Only use
+    the `Deny` button for irreconcilable submissions.
+
+    { $playerMention }: Use the `Edit` button to make any changes
+    requested here by a Game Master.
+player-approval-approved-by = Tento požadavek byl schválen uživatelem { $approver }.
+player-approval-denied-by = Tento požadavek byl zamítnut uživatelem { $denier }.
+player-approval-deny-reason = Důvod: { $reason }
 player-msg-submission-updated = Vaše žádost byla aktualizována.
 
+
+# Denial modal
+player-modal-title-deny-reason = Zamítnout požadavek
+player-modal-label-deny-reason = Důvod zamítnutí
+player-modal-placeholder-deny-reason = Volitelné: vysvětlete důvod zamítnutí
 # Approval DM notifications
 player-dm-title-approved = Postava schválena
 player-dm-desc-approved =
@@ -344,4 +358,4 @@ player-dm-desc-approved =
 player-dm-title-denied = Postava zamítnuta
 player-dm-desc-denied =
     Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.
+    by { $denier } in {"**"}{ $guildName }{"**"}.

@@ -330,12 +330,26 @@ player-approval-btn-edit = Szerkesztés
 player-approval-error-no-permission = Nincs jogosultságod ehhez a művelethez.
 player-approval-error-not-submitter = Csak az eredeti benyújtó szerkesztheti ezt a beadványt.
 player-approval-thread-instructions =
-    This thread was created for the approval of a character's starting inventory.
+    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
     A Game Master will review the submission and approve or deny it.
-    The submitting player may use the Edit button to modify and re-submit.
     Once approved or denied, this thread will be locked.
+
+    {"**"}Game Masters:{"**"} Discuss any required changes with your
+    player until the inventory is in an acceptable state. Only use
+    the `Deny` button for irreconcilable submissions.
+
+    { $playerMention }: Use the `Edit` button to make any changes
+    requested here by a Game Master.
+player-approval-approved-by = Ezt a beadványt { $approver } jóváhagyta.
+player-approval-denied-by = Ezt a beadványt { $denier } elutasította.
+player-approval-deny-reason = Indok: { $reason }
 player-msg-submission-updated = A beadványod frissítve lett.
 
+
+# Denial modal
+player-modal-title-deny-reason = Beadvány elutasítása
+player-modal-label-deny-reason = Elutasítás indoka
+player-modal-placeholder-deny-reason = Opcionális: magyarázza el az elutasítás okát
 # Approval DM notifications
 player-dm-title-approved = Karakter jóváhagyva
 player-dm-desc-approved =
@@ -344,4 +358,4 @@ player-dm-desc-approved =
 player-dm-title-denied = Karakter elutasítva
 player-dm-desc-denied =
     Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.
+    by { $denier } in {"**"}{ $guildName }{"**"}.

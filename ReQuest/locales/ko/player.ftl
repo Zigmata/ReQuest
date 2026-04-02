@@ -330,12 +330,26 @@ player-approval-btn-edit = 편집
 player-approval-error-no-permission = 이 작업을 수행할 권한이 없습니다.
 player-approval-error-not-submitter = 원래 제출자만 이 제출물을 편집할 수 있습니다.
 player-approval-thread-instructions =
-    This thread was created for the approval of a character's starting inventory.
+    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
     A Game Master will review the submission and approve or deny it.
-    The submitting player may use the Edit button to modify and re-submit.
     Once approved or denied, this thread will be locked.
+
+    {"**"}Game Masters:{"**"} Discuss any required changes with your
+    player until the inventory is in an acceptable state. Only use
+    the `Deny` button for irreconcilable submissions.
+
+    { $playerMention }: Use the `Edit` button to make any changes
+    requested here by a Game Master.
+player-approval-approved-by = 이 제출물은 { $approver }에 의해 승인되었습니다.
+player-approval-denied-by = 이 제출물은 { $denier }에 의해 거부되었습니다.
+player-approval-deny-reason = 사유: { $reason }
 player-msg-submission-updated = 제출물이 업데이트되었습니다.
 
+
+# Denial modal
+player-modal-title-deny-reason = 제출물 거부
+player-modal-label-deny-reason = 거부 사유
+player-modal-placeholder-deny-reason = 선택사항: 거부 사유를 설명하세요
 # Approval DM notifications
 player-dm-title-approved = 캐릭터 승인됨
 player-dm-desc-approved =
@@ -344,4 +358,4 @@ player-dm-desc-approved =
 player-dm-title-denied = 캐릭터 거부됨
 player-dm-desc-denied =
     Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}. You may re-submit.
+    by { $denier } in {"**"}{ $guildName }{"**"}.
