@@ -1306,6 +1306,7 @@ class ValidationErrorView(LocaleLayoutView):
                 style=discord.ButtonStyle.secondary,
                 custom_id='val_err_page'
             )
+            page_display.callback = self.show_page_jump_modal
 
             next_button = Button(
                 label=t(locale, 'common-btn-next'),
@@ -1331,6 +1332,16 @@ class ValidationErrorView(LocaleLayoutView):
             self.current_page += 1
             self.build_view()
             await interaction.response.edit_message(view=self)
+
+    async def show_page_jump_modal(self, interaction):
+        try:
+            await interaction.response.send_modal(common_modals.PageJumpModal(self))
+        except Exception as e:
+            locale = getattr(self, 'locale', DEFAULT_LOCALE)
+            logger.error(f'Failed to send PageJumpModal: {e}')
+            await interaction.response.send_message(
+                t(locale, 'common-error-page-selector'), ephemeral=True
+            )
 
 
 class NewCharacterWizardView(LocaleLayoutView):
@@ -2074,12 +2085,7 @@ class ApprovalPostView(LocaleLayoutView):
         locale = getattr(self, 'locale', None) or DEFAULT_LOCALE
         container = Container()
 
-        if self.resolved and not self.submission_data:
-            container.add_item(TextDisplay(t(locale, 'player-approval-resolved')))
-            self.add_item(container)
-            return
-
-        if not self.submission_data:
+        if self.resolved or not self.submission_data:
             container.add_item(TextDisplay(t(locale, 'player-approval-resolved')))
             self.add_item(container)
             return
@@ -2163,6 +2169,7 @@ class ApprovalPostView(LocaleLayoutView):
                 style=discord.ButtonStyle.secondary,
                 custom_id=f'approval_page_{self.submission_id}'
             )
+            page_display.callback = self.show_page_jump_modal
 
             next_button = Button(
                 label=t(locale, 'common-btn-next'),
@@ -2180,6 +2187,10 @@ class ApprovalPostView(LocaleLayoutView):
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         await super().interaction_check(interaction)
         if self.resolved:
+            locale = getattr(self, 'locale', DEFAULT_LOCALE)
+            await interaction.response.send_message(
+                t(locale, 'player-approval-resolved'), ephemeral=True
+            )
             return False
 
         custom_id = interaction.data.get('custom_id', '')
@@ -2219,6 +2230,16 @@ class ApprovalPostView(LocaleLayoutView):
             self.current_page += 1
             self.build_view()
             await interaction.response.edit_message(view=self)
+
+    async def show_page_jump_modal(self, interaction):
+        try:
+            await interaction.response.send_modal(common_modals.PageJumpModal(self))
+        except Exception as e:
+            locale = getattr(self, 'locale', DEFAULT_LOCALE)
+            logger.error(f'Failed to send PageJumpModal: {e}')
+            await interaction.response.send_message(
+                t(locale, 'common-error-page-selector'), ephemeral=True
+            )
 
     async def approve(self, interaction):
         try:
@@ -2401,8 +2422,10 @@ class ApprovalPostView(LocaleLayoutView):
     async def edit(self, interaction):
         try:
             # Re-open the inventory wizard for the submitting player
-            pending_character = self.submission_data.get('pending_character', {})
-            if not pending_character:
+            pending_character = self.submission_data.get('pending_character')
+            if pending_character:
+                pending_character = dict(pending_character)
+            else:
                 # Backwards compat: build from flat fields
                 pending_character = {
                     'character_id': self.submission_data.get('character_id'),
@@ -2468,6 +2491,12 @@ async def _handle_submission(interaction, pending_character, items, currency):
             if existing_submission_id:
                 # Edit re-submission: update the existing APPROVALS doc and refresh the forum post
                 submission_id = existing_submission_id
+                confirmation_view = LayoutView()
+                container = Container(accent_colour=discord.Colour.green())
+                container.add_item(TextDisplay(t(locale, 'player-msg-submission-updated')))
+                confirmation_view.add_item(container)
+                await interaction.response.edit_message(view=confirmation_view)
+
                 await bot.gdb[DatabaseCollections.APPROVALS].update_one(
                     {'submission_id': submission_id},
                     {'$set': {
@@ -2491,14 +2520,10 @@ async def _handle_submission(interaction, pending_character, items, currency):
                         approval_view.locale = guild_locale
                         await approval_view.setup(bot)
                         await message.edit(view=approval_view)
-
-                confirmation_view = LayoutView()
-                container = Container(accent_colour=discord.Colour.green())
-                container.add_item(TextDisplay(t(locale, 'player-msg-submission-updated')))
-                confirmation_view.add_item(container)
-                await interaction.response.edit_message(view=confirmation_view)
             else:
                 # New submission: create thread with ApprovalPostView
+                await interaction.response.defer()
+
                 submission_id = shortuuid.uuid()[:8]
                 submission_data = {
                     'guild_id': guild_id,
@@ -2529,9 +2554,6 @@ async def _handle_submission(interaction, pending_character, items, currency):
 
                 await bot.gdb[DatabaseCollections.APPROVALS].insert_one(submission_data)
 
-                # Register persistent view for bot restarts
-                bot.add_view(ApprovalPostView(submission_id), message_id=thread_message.message.id)
-
                 # Grant forum channel access to submitter for any missing permissions
                 try:
                     forum_perms = forum_channel.permissions_for(interaction.user)
@@ -2560,7 +2582,7 @@ async def _handle_submission(interaction, pending_character, items, currency):
                 # Return player to character list
                 new_view = CharacterBaseView()
                 await setup_view(new_view, interaction)
-                await interaction.response.edit_message(view=new_view)
+                await interaction.edit_original_response(view=new_view)
 
                 confirmation_embed = discord.Embed(
                     title=t(locale, 'player-embed-title-submission-sent'),
@@ -2573,6 +2595,8 @@ async def _handle_submission(interaction, pending_character, items, currency):
 
         else:
             # Direct-apply path: create character and apply inventory immediately
+            await interaction.response.defer()
+
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
@@ -2633,7 +2657,7 @@ async def _handle_submission(interaction, pending_character, items, currency):
 
             view = CharacterBaseView()
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
             await interaction.followup.send(embed=report_embed, ephemeral=True)
 
     except Exception as e:
