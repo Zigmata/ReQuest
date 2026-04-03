@@ -2275,7 +2275,7 @@ class ApprovalPostView(LocaleLayoutView):
             user_id = claimed[ApprovalFields.USER_ID]
             pending_character = claimed.get(ApprovalFields.PENDING_CHARACTER, {})
             character_id = pending_character.get(
-                CharacterFields.CHARACTER_ID, claimed.get(ApprovalFields.CHARACTER_ID)
+                ApprovalFields.CHARACTER_ID, claimed.get(ApprovalFields.CHARACTER_ID)
             )
             character_name = pending_character.get(
                 CommonFields.NAME, claimed.get(ApprovalFields.CHARACTER_NAME)
