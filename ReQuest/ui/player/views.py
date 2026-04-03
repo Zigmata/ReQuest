@@ -20,7 +20,7 @@ from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
 from ReQuest.ui.common.enums import InventoryType
 from ReQuest.ui.player import buttons, selects
 from ReQuest.utilities.constants import (
-    CharacterFields, ConfigFields, CommonFields, ShopFields, DatabaseCollections, DisplayLimits
+    ApprovalFields, CharacterFields, ConfigFields, CommonFields, ShopFields, DatabaseCollections, DisplayLimits
 )
 from ReQuest.utilities.checks import is_gm_or_mod
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_guild_locale, resolve_locale, resolve_user_locale
@@ -2058,6 +2058,7 @@ class ApprovalPostView(LocaleLayoutView):
     def __init__(self, submission_id):
         super().__init__(timeout=None)
         self.submission_id = submission_id
+        self.locale = DEFAULT_LOCALE
         self.submission_data = None
         self.currency_config = None
         self.resolved = False
@@ -2071,12 +2072,12 @@ class ApprovalPostView(LocaleLayoutView):
 
     async def setup(self, bot):
         self.submission_data = await bot.gdb[DatabaseCollections.APPROVALS].find_one(
-            {'submission_id': self.submission_id}
+            {ApprovalFields.SUBMISSION_ID: self.submission_id}
         )
         if not self.submission_data:
             self.resolved = True
         else:
-            guild_id = self.submission_data.get('guild_id')
+            guild_id = self.submission_data.get(ApprovalFields.GUILD_ID)
             if not self.locale or self.locale == DEFAULT_LOCALE:
                 self.locale = await resolve_guild_locale(bot, guild_id)
             self.currency_config = await get_cached_data(
@@ -2097,10 +2098,10 @@ class ApprovalPostView(LocaleLayoutView):
             self.add_item(container)
             return
 
-        character_name = self.submission_data.get('character_name', '')
-        user_id = self.submission_data.get('user_id')
-        items = self.submission_data.get('items', {})
-        currency = self.submission_data.get('currency', {})
+        character_name = self.submission_data.get(ApprovalFields.CHARACTER_NAME, '')
+        user_id = self.submission_data.get(ApprovalFields.USER_ID)
+        items = self.submission_data.get(ApprovalFields.ITEMS, {})
+        currency = self.submission_data.get(ApprovalFields.CURRENCY, {})
 
         # Header
         container.add_item(TextDisplay(
@@ -2142,11 +2143,11 @@ class ApprovalPostView(LocaleLayoutView):
 
         if self.resolved:
             # Show resolution info instead of buttons
-            if self.resolved_action == 'approved':
+            if self.resolved_action == ApprovalFields.STATUS_APPROVED:
                 container.add_item(TextDisplay(
                     t(locale, 'player-approval-approved-by', approver=self.resolved_by)
                 ))
-            elif self.resolved_action == 'denied':
+            elif self.resolved_action == ApprovalFields.STATUS_DENIED:
                 deny_text = t(locale, 'player-approval-denied-by', denier=self.resolved_by)
                 if self.deny_reason:
                     deny_text += f'\n{t(locale, "player-approval-deny-reason", reason=self.deny_reason)}'
@@ -2216,7 +2217,7 @@ class ApprovalPostView(LocaleLayoutView):
 
         # Edit: require original submitter
         if custom_id.startswith('edit_sub_'):
-            submitter_id = self.submission_data.get('user_id')
+            submitter_id = self.submission_data.get(ApprovalFields.USER_ID)
             if interaction.user.id != submitter_id:
                 caller_locale = await resolve_locale(interaction)
                 await interaction.response.send_message(
@@ -2258,8 +2259,9 @@ class ApprovalPostView(LocaleLayoutView):
 
             # Atomically claim the submission to prevent concurrent approve/deny
             claimed = await bot.gdb[DatabaseCollections.APPROVALS].find_one_and_update(
-                {'submission_id': self.submission_id, 'status': 'pending'},
-                {'$set': {'status': 'processing'}}
+                {ApprovalFields.SUBMISSION_ID: self.submission_id,
+                 ApprovalFields.STATUS: ApprovalFields.STATUS_PENDING},
+                {'$set': {ApprovalFields.STATUS: ApprovalFields.STATUS_PROCESSING}}
             )
             if not claimed:
                 self.resolved = True
@@ -2269,15 +2271,19 @@ class ApprovalPostView(LocaleLayoutView):
 
             # Use the claimed doc as the authoritative data source (may have been edited since view loaded)
             self.submission_data = claimed
-            guild_id = claimed['guild_id']
-            user_id = claimed['user_id']
-            pending_character = claimed.get('pending_character', {})
-            character_id = pending_character.get('character_id', claimed.get('character_id'))
-            character_name = pending_character.get('name', claimed.get('character_name'))
+            guild_id = claimed[ApprovalFields.GUILD_ID]
+            user_id = claimed[ApprovalFields.USER_ID]
+            pending_character = claimed.get(ApprovalFields.PENDING_CHARACTER, {})
+            character_id = pending_character.get(
+                CharacterFields.CHARACTER_ID, claimed.get(ApprovalFields.CHARACTER_ID)
+            )
+            character_name = pending_character.get(
+                CommonFields.NAME, claimed.get(ApprovalFields.CHARACTER_NAME)
+            )
 
             # Build the full character document with inventory and currency pre-populated
-            inventory = {titlecase(k): int(v) for k, v in claimed.get('items', {}).items()}
-            currency = {titlecase(k): int(v) for k, v in claimed.get('currency', {}).items()}
+            inventory = {titlecase(k): int(v) for k, v in claimed.get(ApprovalFields.ITEMS, {}).items()}
+            currency = {titlecase(k): int(v) for k, v in claimed.get(ApprovalFields.CURRENCY, {}).items()}
 
             # Create the character in the CHARACTERS collection
             await update_cached_data(
@@ -2291,7 +2297,8 @@ class ApprovalPostView(LocaleLayoutView):
                         CharacterFields.NAME: character_name,
                         'note': pending_character.get('note', ''),
                         'registeredDate': (
-                            pending_character.get('registered_date') or claimed.get('timestamp')
+                            pending_character.get('registered_date')
+                            or claimed.get(ApprovalFields.TIMESTAMP)
                         ),
                         CharacterFields.ATTRIBUTES: {
                             'level': None,
@@ -2313,7 +2320,7 @@ class ApprovalPostView(LocaleLayoutView):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.APPROVALS,
-                search_filter={'submission_id': self.submission_id},
+                search_filter={ApprovalFields.SUBMISSION_ID: self.submission_id},
                 cache_id=f'approval_submission:{self.submission_id}'
             )
 
@@ -2323,7 +2330,7 @@ class ApprovalPostView(LocaleLayoutView):
             # Update view to resolved state
             self.resolved = True
             self.resolved_by = interaction.user.mention
-            self.resolved_action = 'approved'
+            self.resolved_action = ApprovalFields.STATUS_APPROVED
             self.build_view()
             await interaction.edit_original_response(view=self)
 
@@ -2352,8 +2359,9 @@ class ApprovalPostView(LocaleLayoutView):
         except Exception as e:
             if claimed:
                 await bot.gdb[DatabaseCollections.APPROVALS].update_one(
-                    {'submission_id': self.submission_id, 'status': 'processing'},
-                    {'$set': {'status': 'pending'}}
+                    {ApprovalFields.SUBMISSION_ID: self.submission_id,
+                     ApprovalFields.STATUS: ApprovalFields.STATUS_PROCESSING},
+                    {'$set': {ApprovalFields.STATUS: ApprovalFields.STATUS_PENDING}}
                 )
             await log_exception(e, interaction)
 
@@ -2374,8 +2382,9 @@ class ApprovalPostView(LocaleLayoutView):
 
             # Atomically claim the submission to prevent concurrent approve/deny
             claimed = await bot.gdb[DatabaseCollections.APPROVALS].find_one_and_update(
-                {'submission_id': self.submission_id, 'status': 'pending'},
-                {'$set': {'status': 'processing'}}
+                {ApprovalFields.SUBMISSION_ID: self.submission_id,
+                 ApprovalFields.STATUS: ApprovalFields.STATUS_PENDING},
+                {'$set': {ApprovalFields.STATUS: ApprovalFields.STATUS_PROCESSING}}
             )
             if not claimed:
                 self.resolved = True
@@ -2385,9 +2394,9 @@ class ApprovalPostView(LocaleLayoutView):
 
             # Use the claimed doc as the authoritative data source
             self.submission_data = claimed
-            user_id = claimed['user_id']
-            guild_id = claimed['guild_id']
-            character_name = claimed.get('character_name', '')
+            user_id = claimed[ApprovalFields.USER_ID]
+            guild_id = claimed[ApprovalFields.GUILD_ID]
+            character_name = claimed.get(ApprovalFields.CHARACTER_NAME, '')
 
             # Revoke granted forum permissions
             thread = interaction.channel
@@ -2399,7 +2408,7 @@ class ApprovalPostView(LocaleLayoutView):
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.APPROVALS,
-                search_filter={'submission_id': self.submission_id},
+                search_filter={ApprovalFields.SUBMISSION_ID: self.submission_id},
                 cache_id=f'approval_submission:{self.submission_id}'
             )
 
@@ -2409,7 +2418,7 @@ class ApprovalPostView(LocaleLayoutView):
             # Update view to resolved state
             self.resolved = True
             self.resolved_by = interaction.user.mention
-            self.resolved_action = 'denied'
+            self.resolved_action = ApprovalFields.STATUS_DENIED
             self.deny_reason = reason or None
             self.build_view()
             await interaction.edit_original_response(view=self)
@@ -2442,8 +2451,9 @@ class ApprovalPostView(LocaleLayoutView):
         except Exception as e:
             if claimed:
                 await bot.gdb[DatabaseCollections.APPROVALS].update_one(
-                    {'submission_id': self.submission_id, 'status': 'processing'},
-                    {'$set': {'status': 'pending'}}
+                    {ApprovalFields.SUBMISSION_ID: self.submission_id,
+                     ApprovalFields.STATUS: ApprovalFields.STATUS_PROCESSING},
+                    {'$set': {ApprovalFields.STATUS: ApprovalFields.STATUS_PENDING}}
                 )
             await log_exception(e, interaction)
 
@@ -2452,9 +2462,10 @@ class ApprovalPostView(LocaleLayoutView):
         """Revoke only the forum channel permissions that were granted by the bot."""
         try:
             doc = await bot.gdb[DatabaseCollections.APPROVALS].find_one(
-                {'submission_id': submission_id}, {'granted_permissions': 1}
+                {ApprovalFields.SUBMISSION_ID: submission_id},
+                {ApprovalFields.GRANTED_PERMISSIONS: 1}
             )
-            granted = (doc or {}).get('granted_permissions', [])
+            granted = (doc or {}).get(ApprovalFields.GRANTED_PERMISSIONS, [])
             if not granted:
                 return
             guild = bot.get_guild(guild_id)
@@ -2477,16 +2488,16 @@ class ApprovalPostView(LocaleLayoutView):
     async def edit(self, interaction):
         try:
             # Re-open the inventory wizard for the submitting player
-            pending_character = self.submission_data.get('pending_character')
+            pending_character = self.submission_data.get(ApprovalFields.PENDING_CHARACTER)
             if pending_character:
                 pending_character = dict(pending_character)
             else:
                 # Backwards compat: build from flat fields
                 pending_character = {
-                    'character_id': self.submission_data.get('character_id'),
-                    'name': self.submission_data.get('character_name'),
+                    'character_id': self.submission_data.get(ApprovalFields.CHARACTER_ID),
+                    'name': self.submission_data.get(ApprovalFields.CHARACTER_NAME),
                     'note': '',
-                    'registered_date': self.submission_data.get('timestamp'),
+                    'registered_date': self.submission_data.get(ApprovalFields.TIMESTAMP),
                     'inventory_type': 'open'
                 }
 
@@ -2540,12 +2551,14 @@ async def _handle_submission(interaction, pending_character, items, currency):
                 await interaction.response.defer()
 
                 result = await bot.gdb[DatabaseCollections.APPROVALS].update_one(
-                    {'submission_id': submission_id, 'status': 'pending', 'user_id': member_id},
+                    {ApprovalFields.SUBMISSION_ID: submission_id,
+                     ApprovalFields.STATUS: ApprovalFields.STATUS_PENDING,
+                     ApprovalFields.USER_ID: member_id},
                     {'$set': {
-                        'pending_character': pending_character,
-                        'items': items,
-                        'currency': currency,
-                        'timestamp': discord.utils.utcnow()
+                        ApprovalFields.PENDING_CHARACTER: pending_character,
+                        ApprovalFields.ITEMS: items,
+                        ApprovalFields.CURRENCY: currency,
+                        ApprovalFields.TIMESTAMP: discord.utils.utcnow()
                     }}
                 )
 
@@ -2565,13 +2578,13 @@ async def _handle_submission(interaction, pending_character, items, currency):
 
                 # Refresh the forum post view
                 approval_doc = await bot.gdb[DatabaseCollections.APPROVALS].find_one(
-                    {'submission_id': submission_id}
+                    {ApprovalFields.SUBMISSION_ID: submission_id}
                 )
-                if approval_doc and approval_doc.get('message_id'):
-                    thread_id = approval_doc.get('thread_id')
+                if approval_doc and approval_doc.get(ApprovalFields.MESSAGE_ID):
+                    thread_id = approval_doc.get(ApprovalFields.THREAD_ID)
                     thread = bot.get_channel(thread_id)
                     if thread:
-                        message = thread.get_partial_message(approval_doc['message_id'])
+                        message = thread.get_partial_message(approval_doc[ApprovalFields.MESSAGE_ID])
                         approval_view = ApprovalPostView(submission_id)
                         approval_view.locale = guild_locale
                         await approval_view.setup(bot)
@@ -2582,16 +2595,16 @@ async def _handle_submission(interaction, pending_character, items, currency):
 
                 submission_id = shortuuid.uuid()[:8]
                 submission_data = {
-                    'guild_id': guild_id,
-                    'user_id': member_id,
-                    'pending_character': pending_character,
-                    'character_id': character_id,
-                    'character_name': character_name,
-                    'items': items,
-                    'currency': currency,
-                    'status': 'pending',
-                    'timestamp': discord.utils.utcnow(),
-                    'submission_id': submission_id
+                    ApprovalFields.GUILD_ID: guild_id,
+                    ApprovalFields.USER_ID: member_id,
+                    ApprovalFields.PENDING_CHARACTER: pending_character,
+                    ApprovalFields.CHARACTER_ID: character_id,
+                    ApprovalFields.CHARACTER_NAME: character_name,
+                    ApprovalFields.ITEMS: items,
+                    ApprovalFields.CURRENCY: currency,
+                    ApprovalFields.STATUS: ApprovalFields.STATUS_PENDING,
+                    ApprovalFields.TIMESTAMP: discord.utils.utcnow(),
+                    ApprovalFields.SUBMISSION_ID: submission_id
                 }
 
                 # Create ApprovalPostView for the forum thread
@@ -2605,8 +2618,8 @@ async def _handle_submission(interaction, pending_character, items, currency):
                 thread_message = await forum_channel.create_thread(name=thread_name, view=approval_view)
 
                 thread = thread_message.thread
-                submission_data['thread_id'] = thread.id
-                submission_data['message_id'] = thread_message.message.id
+                submission_data[ApprovalFields.THREAD_ID] = thread.id
+                submission_data[ApprovalFields.MESSAGE_ID] = thread_message.message.id
 
                 await bot.gdb[DatabaseCollections.APPROVALS].insert_one(submission_data)
 
@@ -2638,8 +2651,8 @@ async def _handle_submission(interaction, pending_character, items, currency):
                         if granted:
                             await forum_channel.set_permissions(interaction.user, overwrite=overwrite)
                             await bot.gdb[DatabaseCollections.APPROVALS].update_one(
-                                {'submission_id': submission_id},
-                                {'$set': {'granted_permissions': granted}}
+                                {ApprovalFields.SUBMISSION_ID: submission_id},
+                                {'$set': {ApprovalFields.GRANTED_PERMISSIONS: granted}}
                             )
                 except Exception as e:
                     logger.warning(f'Could not grant forum access for user {member_id}: {e}')

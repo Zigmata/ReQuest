@@ -139,6 +139,28 @@ class CommonFields:
     ITEMS = 'items'
 
 
+class ApprovalFields:
+    SUBMISSION_ID = 'submission_id'
+    GUILD_ID = 'guild_id'
+    USER_ID = 'user_id'
+    CHARACTER_ID = 'character_id'
+    CHARACTER_NAME = 'character_name'
+    PENDING_CHARACTER = 'pending_character'
+    THREAD_ID = 'thread_id'
+    MESSAGE_ID = 'message_id'
+    STATUS = 'status'
+    TIMESTAMP = 'timestamp'
+    GRANTED_PERMISSIONS = 'granted_permissions'
+    ITEMS = 'items'
+    CURRENCY = 'currency'
+
+    # Status values
+    STATUS_PENDING = 'pending'
+    STATUS_PROCESSING = 'processing'
+    STATUS_APPROVED = 'approved'
+    STATUS_DENIED = 'denied'
+
+
 class DatabaseCollections:
     SERVER_ALLOWLIST = 'serverAllowlist'
     ANNOUNCE_ROLE = 'announceRole'

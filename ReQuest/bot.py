@@ -12,7 +12,7 @@ from pymongo import AsyncMongoClient as MongoClient
 import redis.asyncio as redis
 
 from ReQuest.ui.gm.views import QuestPostView
-from ReQuest.utilities.constants import QuestFields, DatabaseCollections
+from ReQuest.utilities.constants import ApprovalFields, QuestFields, DatabaseCollections
 from ReQuest.utilities.supportFunctions import attempt_delete, log_exception
 
 log_level = os.getenv('LOG_LEVEL', 'INFO').upper()
@@ -142,23 +142,28 @@ class ReQuest(commands.Bot):
 
         # Revert any submissions stuck in 'processing' from a prior interrupted shutdown
         await approval_collection.update_many(
-            {'status': 'processing'},
-            {'$set': {'status': 'pending'}}
+            {ApprovalFields.STATUS: ApprovalFields.STATUS_PROCESSING},
+            {'$set': {ApprovalFields.STATUS: ApprovalFields.STATUS_PENDING}}
         )
 
-        approval_cursor = approval_collection.find({'status': 'pending', 'message_id': {'$exists': True}})
+        approval_cursor = approval_collection.find(
+            {ApprovalFields.STATUS: ApprovalFields.STATUS_PENDING,
+             ApprovalFields.MESSAGE_ID: {'$exists': True}}
+        )
         for doc in await approval_cursor.to_list(length=None):
             try:
-                submission_id = doc['submission_id']
-                message_id = doc['message_id']
+                submission_id = doc[ApprovalFields.SUBMISSION_ID]
+                message_id = doc[ApprovalFields.MESSAGE_ID]
                 view = ApprovalPostView(submission_id)
-                view.locale = await resolve_guild_locale(self, doc['guild_id'])
+                view.locale = await resolve_guild_locale(self, doc[ApprovalFields.GUILD_ID])
                 await view.setup(self)
                 self.add_view(view=view, message_id=message_id)
             except (KeyError, TypeError) as e:
-                logger.error(f'Failed to load approval view {doc.get("submission_id", "unknown")}: {e}')
+                logger.error(f'Failed to load approval view '
+                             f'{doc.get(ApprovalFields.SUBMISSION_ID, "unknown")}: {e}')
             except Exception as e:
-                logger.error(f'Unexpected error loading approval view {doc.get("submission_id", "unknown")}: {e}')
+                logger.error(f'Unexpected error loading approval view '
+                             f'{doc.get(ApprovalFields.SUBMISSION_ID, "unknown")}: {e}')
 
     async def close(self):
         await super().close()
