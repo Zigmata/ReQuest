@@ -146,6 +146,15 @@ player-msg-no-characters = 您没有已注册的角色。
 player-label-active = （已激活）
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}角色创建中: { $characterName }{"**"}
+    您的角色注册正在等待物品栏设置。
+player-btn-resume = 继续
+player-btn-discard = 放弃
+player-modal-title-discard-character = 放弃角色
+player-modal-label-discard-confirm = 放弃 { $characterName }？
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = 确认移除角色
 player-modal-label-confirm-char-delete = 删除 { $characterName }？
@@ -285,6 +294,10 @@ player-error-invalid-quantity = "{ $name }"的数量无效："{ $quantity }"。�
 player-error-input-errors-header = 物品栏输入中的错误：
 player-msg-no-valid-items = 未提供有效物品。将以空物品栏初始化。
 
+# Validation error view
+player-validation-error-title = 输入错误
+player-validation-btn-retry = 重试
+
 # Cart quantity validation
 player-error-enter-valid-number = 请输入有效的正数。
 
@@ -307,3 +320,46 @@ player-embed-desc-starting-inventory = 玩家：{ $playerMention }，角色为 `
 player-embed-field-items-received = 获得的物品
 player-embed-field-currency-received-label = 获得的货币
 player-label-untitled = 无标题
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}物品清单提交: { $characterName }{"**"}
+    提交者: { $userMention }
+player-approval-post-items = 物品
+player-approval-post-currency = 货币
+player-approval-resolved = 此提交已处理。
+player-approval-btn-approve = 批准
+player-approval-btn-deny = 拒绝
+player-approval-btn-edit = 编辑
+player-approval-error-no-permission = 您没有执行此操作的权限。
+player-approval-error-not-submitter = 只有原始提交者才能编辑此提交。
+player-approval-thread-instructions =
+    此讨论串是为审批 {"**"}{ $characterName }{"**"} 而创建的。
+    游戏主持人将审核提交并批准或拒绝。
+    一旦批准或拒绝，此讨论串将被锁定。
+
+    {"**"}游戏主持人:{"**"} 与您的玩家讨论所需的更改，
+    直到物品清单处于可接受的状态。仅对无法调和的
+    提交使用 `拒绝` 按钮。
+
+    { $playerMention }: 使用 `编辑` 按钮进行游戏主持人
+    在此要求的任何更改。
+player-approval-approved-by = 此提交已被 { $approver } 批准。
+player-approval-denied-by = 此提交已被 { $denier } 拒绝。
+player-approval-deny-reason = 原因: { $reason }
+player-msg-submission-updated = 您的提交已更新。
+
+
+# Denial modal
+player-modal-title-deny-reason = 拒绝提交
+player-modal-label-deny-reason = 拒绝原因
+player-modal-placeholder-deny-reason = 可选: 说明拒绝原因
+# Approval DM notifications
+player-dm-title-approved = 角色已批准
+player-dm-desc-approved =
+    您的角色 {"**"}{ $characterName }{"**"} 已被 { $approver }
+    在 {"**"}{ $guildName }{"**"} 中批准！
+player-dm-title-denied = 角色已拒绝
+player-dm-desc-denied =
+    您的角色 {"**"}{ $characterName }{"**"} 已被 { $denier }
+    在 {"**"}{ $guildName }{"**"} 中拒绝。

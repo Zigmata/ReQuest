@@ -146,6 +146,15 @@ player-msg-no-characters = आपका कोई चरित्र पंज�
 player-label-active = (सक्रिय)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}प्रगति में चरित्र: { $characterName }{"**"}
+    आपका चरित्र पंजीकरण इन्वेंटरी सेटअप की प्रतीक्षा कर रहा है।
+player-btn-resume = जारी रखें
+player-btn-discard = त्यागें
+player-modal-title-discard-character = चरित्र त्यागें
+player-modal-label-discard-confirm = { $characterName } त्यागें?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = चरित्र हटाने की पुष्टि करें
 player-modal-label-confirm-char-delete = { $characterName } हटाएँ?
@@ -285,6 +294,10 @@ player-error-invalid-quantity = "{ $name }" के लिए अमान्य 
 player-error-input-errors-header = सामान इनपुट में त्रुटियाँ:
 player-msg-no-valid-items = कोई मान्य वस्तु नहीं दी गई। खाली सामान से आरंभ किया जा रहा है।
 
+# Validation error view
+player-validation-error-title = इनपुट त्रुटियां
+player-validation-btn-retry = पुनः प्रयास करें
+
 # Cart quantity validation
 player-error-enter-valid-number = कृपया एक मान्य धनात्मक संख्या दर्ज करें।
 
@@ -307,3 +320,46 @@ player-embed-desc-starting-inventory = खिलाड़ी: { $playerMention }
 player-embed-field-items-received = प्राप्त वस्तुएँ
 player-embed-field-currency-received-label = प्राप्त मुद्रा
 player-label-untitled = बिना शीर्षक
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}सामान सबमिशन: { $characterName }{"**"}
+    { $userMention } द्वारा सबमिट
+player-approval-post-items = वस्तुएं
+player-approval-post-currency = मुद्रा
+player-approval-resolved = यह अनुरोध हल हो गया है।
+player-approval-btn-approve = स्वीकृत
+player-approval-btn-deny = अस्वीकृत
+player-approval-btn-edit = संपादित
+player-approval-error-no-permission = आपको यह कार्य करने की अनुमति नहीं है।
+player-approval-error-not-submitter = केवल मूल प्रस्तुतकर्ता ही इस अनुरोध को संपादित कर सकता है।
+player-approval-thread-instructions =
+    यह थ्रेड {"**"}{ $characterName }{"**"} की स्वीकृति के लिए बनाया गया था।
+    एक Game Master सबमिशन की समीक्षा करेगा और इसे स्वीकृत या अस्वीकृत करेगा।
+    स्वीकृत या अस्वीकृत होने के बाद, यह थ्रेड लॉक कर दिया जाएगा।
+
+    {"**"}Game Masters:{"**"} अपने खिलाड़ी के साथ आवश्यक बदलावों पर
+    चर्चा करें जब तक सामान स्वीकार्य स्थिति में न हो। `अस्वीकृत`
+    बटन का उपयोग केवल असमाधेय सबमिशन के लिए करें।
+
+    { $playerMention }: Game Master द्वारा यहाँ अनुरोधित बदलाव करने
+    के लिए `संपादित` बटन का उपयोग करें।
+player-approval-approved-by = यह अनुरोध { $approver } द्वारा स्वीकृत किया गया।
+player-approval-denied-by = यह अनुरोध { $denier } द्वारा अस्वीकृत किया गया।
+player-approval-deny-reason = कारण: { $reason }
+player-msg-submission-updated = आपका अनुरोध अपडेट किया गया है।
+
+
+# Denial modal
+player-modal-title-deny-reason = अनुरोध अस्वीकार
+player-modal-label-deny-reason = अस्वीकृति का कारण
+player-modal-placeholder-deny-reason = वैकल्पिक: अस्वीकृति का कारण बताएं
+# Approval DM notifications
+player-dm-title-approved = चरित्र स्वीकृत
+player-dm-desc-approved =
+    आपका चरित्र {"**"}{ $characterName }{"**"} को { $approver } द्वारा
+    {"**"}{ $guildName }{"**"} में स्वीकृत किया गया है!
+player-dm-title-denied = चरित्र अस्वीकृत
+player-dm-desc-denied =
+    आपका चरित्र {"**"}{ $characterName }{"**"} को { $denier } द्वारा
+    {"**"}{ $guildName }{"**"} में अस्वीकृत किया गया है।

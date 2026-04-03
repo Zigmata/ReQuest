@@ -12,9 +12,6 @@ gm-btn-manage-individual-rewards = Hantera individuella belöningar
 gm-btn-join = Gå med
 gm-btn-leave = Lämna
 gm-btn-complete-quest = Avsluta quest
-gm-btn-review-submission = Granska inlämning
-gm-btn-approve = Godkänn
-gm-btn-deny = Neka
 
 # GM modals
 gm-modal-title-create-quest = Skapa ny quest
@@ -49,9 +46,6 @@ gm-modal-placeholder-inventory-modify =
     föremål: antal
     föremål2: antal
     osv.
-gm-modal-title-review-submission = Granska inlämning
-gm-modal-label-submission-id = Inlämnings-ID
-gm-modal-placeholder-submission-id = Ange det 8-teckens ID
 
 # GM errors
 gm-error-forbidden-role-name = Namnet som angetts för grupprollen är förbjudet.
@@ -59,7 +53,6 @@ gm-error-role-already-exists = En roll med det namnet finns redan på denna serv
 gm-error-no-quest-channel = Ingen kanal har ännu angetts för quest-inlägg. Kontakta en serveradministratör för att konfigurera quest-kanalen.
 gm-error-cannot-ping-announce = Kunde inte pinga aviseringsrollen { $role } i kanalen { $channel }. Kontrollera kanal- och ReQuest-rollbehörigheter med din serveradministratör.
 gm-error-invalid-item-format = Ogiltigt föremålsformat: "{ $item }". Varje föremål måste vara på en ny rad, i formatet "Namn: Antal".
-gm-error-submission-not-found = Inlämningen hittades inte.
 gm-error-already-on-quest = Du är redan med i denna quest som { $characterName }.
 gm-error-no-active-character-long = Du har ingen aktiv karaktär på denna server. Använd `/player` för att registrera eller aktivera en karaktär.
 gm-error-quest-locked = Fel vid anslutning till quest {"**"}{ $questTitle }{"**"}: Questen är låst av GM.
@@ -116,8 +109,6 @@ gm-menu-quests = Quests
 gm-menu-desc-quests = Skapa, redigera och hantera quests.
 gm-menu-players = Spelare
 gm-menu-desc-players = Hantera spelarinventarier och ändra karaktärer.
-gm-menu-approvals = Karaktärsgodkännanden
-gm-menu-desc-approvals = Granska och godkänn/neka karaktärsinlämningar.
 
 gm-title-quest-management = GM - Quest-hantering
 gm-desc-create-quest = Skapa en ny quest.
@@ -156,15 +147,6 @@ gm-label-currency-heading = {"**"}Valuta{"**"}
 gm-msg-inventory-empty = Inventariet är tomt.
 
 # GM approvals
-gm-title-approvals = GM - Inventariegodkännanden
-gm-desc-review-submission = Ange ett inlämnings-ID för att granska och godkänna/neka det.
-gm-title-reviewing = Granskar: { $characterName }
-gm-label-items = {"**"}Föremål:{"**"}
-gm-label-currency = {"**"}Valuta:{"**"}
-gm-embed-title-approved = Inventarieuppdatering godkänd
-gm-embed-desc-approved = Inventariet för {"**"}{ $characterName }{"**"} har godkänts av { $approver }.
-gm-embed-title-denied = Inventarieuppdatering nekad
-gm-embed-desc-denied = Inventariet för {"**"}{ $characterName }{"**"} har nekats av { $denier }.
 
 gm-modal-label-select-party-role = Grupproll
 gm-modal-desc-select-party-role = Välj en roll att tilldela quest-gruppen.

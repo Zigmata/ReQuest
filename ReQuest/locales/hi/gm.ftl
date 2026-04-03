@@ -12,9 +12,6 @@ gm-btn-manage-individual-rewards = व्यक्तिगत पुरस्�
 gm-btn-join = शामिल हों
 gm-btn-leave = छोड़ें
 gm-btn-complete-quest = Quest पूर्ण करें
-gm-btn-review-submission = सबमिशन समीक्षा करें
-gm-btn-approve = स्वीकृत करें
-gm-btn-deny = अस्वीकृत करें
 
 # GM modals
 gm-modal-title-create-quest = नई Quest बनाएँ
@@ -49,9 +46,6 @@ gm-modal-placeholder-inventory-modify =
     वस्तु: मात्रा
     वस्तु2: मात्रा
     आदि।
-gm-modal-title-review-submission = सबमिशन समीक्षा
-gm-modal-label-submission-id = सबमिशन ID
-gm-modal-placeholder-submission-id = 8-अक्षर का ID दर्ज करें
 
 # GM errors
 gm-error-forbidden-role-name = पार्टी भूमिका के लिए दिया गया नाम प्रतिबंधित है।
@@ -59,7 +53,6 @@ gm-error-role-already-exists = इस सर्वर में उस नाम
 gm-error-no-quest-channel = Quest पोस्ट के लिए अभी तक कोई चैनल निर्धारित नहीं किया गया है। Quest चैनल कॉन्फ़िगर करने के लिए सर्वर एडमिन से संपर्क करें।
 gm-error-cannot-ping-announce = चैनल { $channel } में घोषणा भूमिका { $role } को पिंग नहीं किया जा सका। अपने सर्वर एडमिन से चैनल और ReQuest भूमिका अनुमतियाँ जाँचें।
 gm-error-invalid-item-format = अमान्य वस्तु प्रारूप: "{ $item }"। प्रत्येक वस्तु एक नई पंक्ति में होनी चाहिए, और प्रारूप "नाम: मात्रा" होना चाहिए।
-gm-error-submission-not-found = सबमिशन नहीं मिली।
 gm-error-already-on-quest = आप पहले से इस quest में { $characterName } के रूप में हैं।
 gm-error-no-active-character-long = इस सर्वर पर आपका कोई सक्रिय चरित्र नहीं है। चरित्र पंजीकृत या सक्रिय करने के लिए `/player` का उपयोग करें।
 gm-error-quest-locked = Quest {"**"}{ $questTitle }{"**"} में शामिल होने में त्रुटि: Quest GM द्वारा लॉक है।
@@ -116,8 +109,6 @@ gm-menu-quests = Quests
 gm-menu-desc-quests = Quest बनाएँ, संपादित करें और प्रबंधित करें।
 gm-menu-players = खिलाड़ी
 gm-menu-desc-players = खिलाड़ी सामान प्रबंधित करें और चरित्रों में बदलाव करें।
-gm-menu-approvals = चरित्र स्वीकृतियाँ
-gm-menu-desc-approvals = चरित्र सबमिशन की समीक्षा करें और स्वीकृत/अस्वीकृत करें।
 
 gm-title-quest-management = GM - Quest प्रबंधन
 gm-desc-create-quest = एक नई quest बनाएँ।
@@ -156,15 +147,6 @@ gm-label-currency-heading = {"**"}मुद्रा{"**"}
 gm-msg-inventory-empty = सामान खाली है।
 
 # GM approvals
-gm-title-approvals = GM - सामान स्वीकृतियाँ
-gm-desc-review-submission = समीक्षा और स्वीकृत/अस्वीकृत करने के लिए सबमिशन ID दर्ज करें।
-gm-title-reviewing = समीक्षा: { $characterName }
-gm-label-items = {"**"}वस्तुएँ:{"**"}
-gm-label-currency = {"**"}मुद्रा:{"**"}
-gm-embed-title-approved = सामान अपडेट स्वीकृत
-gm-embed-desc-approved = {"**"}{ $characterName }{"**"} का सामान { $approver } द्वारा स्वीकृत किया गया है।
-gm-embed-title-denied = सामान अपडेट अस्वीकृत
-gm-embed-desc-denied = {"**"}{ $characterName }{"**"} का सामान { $denier } द्वारा अस्वीकृत किया गया है।
 
 gm-modal-label-select-party-role = पार्टी भूमिका
 gm-modal-desc-select-party-role = Quest पार्टी को असाइन करने के लिए एक भूमिका चुनें।

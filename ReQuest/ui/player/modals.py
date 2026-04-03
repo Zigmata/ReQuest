@@ -294,20 +294,22 @@ class TradeModal(LocaleModal):
 
 class CharacterRegisterModal(LocaleModal):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'player-modal-title-register'),
+            title=t(locale, 'player-modal-title-register'),
             timeout=180
         )
         self.name_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'player-modal-label-char-name'),
+            label=t(locale, 'player-modal-label-char-name'),
             custom_id='character_name_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-char-name'),
+            placeholder=t(locale, 'player-modal-placeholder-char-name'),
             max_length=40
         )
         self.note_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'player-modal-label-char-note'),
+            label=t(locale, 'player-modal-label-char-note'),
             custom_id='character_note_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-char-note'),
+            placeholder=t(locale, 'player-modal-placeholder-char-note'),
             max_length=80
         )
         self.add_item(self.name_text_input)
@@ -324,24 +326,6 @@ class CharacterRegisterModal(LocaleModal):
             character_name = self.name_text_input.value
             character_note = self.note_text_input.value
 
-            await update_cached_data(
-                bot=bot,
-                mongo_database=bot.mdb,
-                collection_name=DatabaseCollections.CHARACTERS,
-                query={CommonFields.ID: member_id},
-                update_data={'$set': {f'{CharacterFields.ACTIVE_CHARACTERS}.{guild_id}': character_id,
-                                      f'{CharacterFields.CHARACTERS}.{character_id}': {
-                                          CharacterFields.NAME: character_name,
-                                          'note': character_note,
-                                          'registeredDate': date,
-                                          CharacterFields.ATTRIBUTES: {
-                                              'level': None,
-                                              CharacterFields.EXPERIENCE: None,
-                                              CharacterFields.INVENTORY: {},
-                                              CharacterFields.CURRENCY: {}
-                                          }}}}
-            )
-
             inventory_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -354,12 +338,60 @@ class CharacterRegisterModal(LocaleModal):
             )
 
             if inventory_type == InventoryType.DISABLED.value:
+                # No inventory wizard needed — create character immediately
+                await update_cached_data(
+                    bot=bot,
+                    mongo_database=bot.mdb,
+                    collection_name=DatabaseCollections.CHARACTERS,
+                    query={CommonFields.ID: member_id},
+                    update_data={'$set': {
+                        f'{CharacterFields.ACTIVE_CHARACTERS}.{guild_id}': character_id,
+                        f'{CharacterFields.CHARACTERS}.{character_id}': {
+                            CharacterFields.NAME: character_name,
+                            'note': character_note,
+                            'registeredDate': date,
+                            CharacterFields.ATTRIBUTES: {
+                                'level': None,
+                                CharacterFields.EXPERIENCE: None,
+                                CharacterFields.INVENTORY: {},
+                                CharacterFields.CURRENCY: {}
+                            }
+                        }
+                    }}
+                )
                 await setup_view(self.calling_view, interaction)
                 await interaction.response.edit_message(view=self.calling_view)
             else:
-                from ReQuest.ui.player.views import NewCharacterWizardView
+                # Store pending character and enter inventory wizard
+                pending_character = {
+                    'character_id': character_id,
+                    'name': character_name,
+                    'note': character_note,
+                    'registered_date': date,
+                    'inventory_type': inventory_type
+                }
+                pending_id = f'{member_id}_{guild_id}'
+                await update_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.PENDING_CHARACTERS,
+                    query={CommonFields.ID: pending_id},
+                    update_data={'$set': {
+                        'user_id': member_id,
+                        'guild_id': guild_id,
+                        'character_id': character_id,
+                        'name': character_name,
+                        'note': character_note,
+                        'registered_date': date,
+                        'inventory_type': inventory_type,
+                        'wizard_state': {},
+                        'created_at': date
+                    }}
+                )
 
-                view = NewCharacterWizardView(character_id, character_name, inventory_type)
+                from ReQuest.ui.player.views import NewCharacterWizardView
+                locale = getattr(self, '_locale', DEFAULT_LOCALE)
+                view = NewCharacterWizardView(pending_character, inventory_type, locale=locale)
                 await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
@@ -367,14 +399,16 @@ class CharacterRegisterModal(LocaleModal):
 
 class OpenInventoryInputModal(LocaleModal):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'player-modal-title-starting-inventory'),
+            title=t(locale, 'player-modal-title-starting-inventory'),
             timeout=600
         )
         self.calling_view = calling_view
         self.items_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'player-modal-label-inventory'),
-            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-inventory-input'),
+            label=t(locale, 'player-modal-label-inventory'),
+            placeholder=t(locale, 'player-modal-placeholder-inventory-input'),
             style=discord.TextStyle.paragraph,
             required=False
         )
@@ -411,15 +445,9 @@ class OpenInventoryInputModal(LocaleModal):
                     items[name] = int(quantity)
 
             if errors:
-                error_message = t(locale, 'player-error-input-errors-header') + '\n- ' + '\n- '.join(errors)
-                await interaction.response.send_message(error_message, ephemeral=True)
-                return
-
-            if not items:
-                await interaction.response.send_message(
-                    t(locale, 'player-msg-no-valid-items'),
-                    ephemeral=True
-                )
+                from ReQuest.ui.player.views import ValidationErrorView
+                error_view = ValidationErrorView(errors, self.calling_view)
+                await interaction.response.edit_message(view=error_view)
                 return
 
             await self.calling_view.submit_open_inventory(interaction, items)
@@ -428,22 +456,50 @@ class OpenInventoryInputModal(LocaleModal):
             await log_exception(e, interaction)
 
 
+class DenyReasonModal(LocaleModal):
+    def __init__(self, approval_view):
+        locale = getattr(approval_view, 'locale', DEFAULT_LOCALE)
+        super().__init__(
+            title=t(locale, 'player-modal-title-deny-reason'),
+            timeout=180
+        )
+        self.approval_view = approval_view
+        self.reason_input = discord.ui.TextInput(
+            label=t(locale, 'player-modal-label-deny-reason'),
+            style=discord.TextStyle.paragraph,
+            custom_id='deny_reason_input',
+            placeholder=t(locale, 'player-modal-placeholder-deny-reason'),
+            required=False,
+            max_length=500
+        )
+        self.add_item(self.reason_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            reason = self.reason_input.value.strip() if self.reason_input.value else ''
+            await self.approval_view._process_denial(interaction, reason)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
 class SpendCurrencyModal(LocaleModal):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'player-modal-title-spend-currency'),
+            title=t(locale, 'player-modal-title-spend-currency'),
             timeout=180
         )
         self.calling_view = calling_view
         self.currency_name_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'player-modal-label-currency-name'),
-            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-currency-name'),
+            label=t(locale, 'player-modal-label-currency-name'),
+            placeholder=t(locale, 'player-modal-placeholder-currency-name'),
             custom_id='currency_name_text_input',
             required=True
         )
         self.currency_amount_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'player-modal-label-currency-amount'),
-            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-currency-amount'),
+            label=t(locale, 'player-modal-label-currency-amount'),
+            placeholder=t(locale, 'player-modal-placeholder-currency-amount'),
             custom_id='currency_amount_text_input',
             required=True,
             max_length=13
@@ -626,21 +682,23 @@ class SpendCurrencyModal(LocaleModal):
 
 class CreatePlayerPostModal(LocaleModal):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'player-modal-title-create-post'),
+            title=t(locale, 'player-modal-title-create-post'),
             timeout=600
         )
         self.title_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'player-modal-label-post-title'),
+            label=t(locale, 'player-modal-label-post-title'),
             custom_id='title_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-post-title'),
+            placeholder=t(locale, 'player-modal-placeholder-post-title'),
             max_length=80
         )
         self.content_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'player-modal-label-post-content'),
+            label=t(locale, 'player-modal-label-post-content'),
             style=discord.TextStyle.paragraph,
             custom_id='content_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-post-content')
+            placeholder=t(locale, 'player-modal-placeholder-post-content')
         )
         self.calling_view = calling_view
         self.add_item(self.title_text_input)
@@ -657,25 +715,27 @@ class CreatePlayerPostModal(LocaleModal):
 
 class EditPlayerPostModal(LocaleModal):
     def __init__(self, calling_view, post):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'player-modal-title-edit-post'),
+            title=t(locale, 'player-modal-title-edit-post'),
             timeout=600
         )
         self.calling_view = calling_view
         self.post = post
         self.title_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'player-modal-label-post-title'),
+            label=t(locale, 'player-modal-label-post-title'),
             custom_id='title_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-post-title'),
+            placeholder=t(locale, 'player-modal-placeholder-post-title'),
             default=post['title'],
             max_length=80,
             required=False
         )
         self.content_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'player-modal-label-post-content'),
+            label=t(locale, 'player-modal-label-post-content'),
             style=discord.TextStyle.paragraph,
             custom_id='content_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-post-content'),
+            placeholder=t(locale, 'player-modal-placeholder-post-content'),
             default=post['content'],
             required=False
         )
@@ -693,19 +753,21 @@ class EditPlayerPostModal(LocaleModal):
 
 class WizardEditCartItemModal(LocaleModal):
     def __init__(self, cart_view, item_key, current_quantity):
+        locale = getattr(cart_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'player-modal-title-edit-cart-qty'),
+            title=t(locale, 'player-modal-title-edit-cart-qty'),
             timeout=600
         )
         self.cart_view = cart_view
         self.item_key = item_key
 
         self.quantity_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'player-modal-label-cart-qty'),
+            label=t(locale, 'player-modal-label-cart-qty'),
             default=str(current_quantity),
             min_length=1,
             max_length=5,
-            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-cart-qty'),
+            placeholder=t(locale, 'player-modal-placeholder-cart-qty'),
             custom_id='wiz_cart_qty_input'
         )
         self.add_item(self.quantity_text_input)
@@ -738,14 +800,16 @@ class WizardEditCartItemModal(LocaleModal):
 
 class CreateContainerModal(LocaleModal):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'player-modal-title-create-container'),
+            title=t(locale, 'player-modal-title-create-container'),
             timeout=180
         )
         self.calling_view = calling_view
         self.name_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'player-modal-label-container-name'),
-            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-container-name'),
+            label=t(locale, 'player-modal-label-container-name'),
+            placeholder=t(locale, 'player-modal-placeholder-container-name'),
             custom_id='container_name_input',
             max_length=50,
             required=True
@@ -770,15 +834,17 @@ class CreateContainerModal(LocaleModal):
 
 class RenameContainerModal(LocaleModal):
     def __init__(self, calling_view, container_id: str, current_name: str):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'player-modal-title-rename-container'),
+            title=t(locale, 'player-modal-title-rename-container'),
             timeout=180
         )
         self.calling_view = calling_view
         self.container_id = container_id
         self.name_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'player-modal-label-new-container-name'),
-            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-new-container-name'),
+            label=t(locale, 'player-modal-label-new-container-name'),
+            placeholder=t(locale, 'player-modal-placeholder-new-container-name'),
             custom_id='container_rename_input',
             default=current_name,
             max_length=50,
@@ -805,8 +871,10 @@ class RenameContainerModal(LocaleModal):
 
 class ConsumeFromContainerModal(LocaleModal):
     def __init__(self, calling_view, item_name: str, max_quantity: int):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'player-modal-title-consume'),
+            title=t(locale, 'player-modal-title-consume'),
             timeout=180
         )
         self.calling_view = calling_view
@@ -814,8 +882,8 @@ class ConsumeFromContainerModal(LocaleModal):
         self.max_quantity = max_quantity
 
         self.quantity_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'player-modal-label-consume-qty', maxQuantity=max_quantity),
-            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-consume-qty'),
+            label=t(locale, 'player-modal-label-consume-qty', maxQuantity=max_quantity),
+            placeholder=t(locale, 'player-modal-placeholder-consume-qty'),
             custom_id='consume_quantity_input',
             default='1',
             required=True
@@ -952,8 +1020,10 @@ class ConsumeFromContainerModal(LocaleModal):
 
 class MoveItemQuantityModal(LocaleModal):
     def __init__(self, calling_view, item_name: str, max_quantity: int):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'player-modal-title-move-item'),
+            title=t(locale, 'player-modal-title-move-item'),
             timeout=180
         )
         self.calling_view = calling_view
@@ -961,8 +1031,8 @@ class MoveItemQuantityModal(LocaleModal):
         self.max_quantity = max_quantity
 
         self.quantity_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'player-modal-label-move-qty', maxQuantity=max_quantity),
-            placeholder=t(DEFAULT_LOCALE, 'player-modal-placeholder-move-qty'),
+            label=t(locale, 'player-modal-label-move-qty', maxQuantity=max_quantity),
+            placeholder=t(locale, 'player-modal-placeholder-move-qty'),
             custom_id='move_quantity_input',
             default=str(max_quantity),
             required=True

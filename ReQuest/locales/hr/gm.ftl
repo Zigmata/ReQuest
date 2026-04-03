@@ -12,9 +12,6 @@ gm-btn-manage-individual-rewards = Upravljaj individualnim nagradama
 gm-btn-join = Pridruži se
 gm-btn-leave = Napusti
 gm-btn-complete-quest = Dovrši quest
-gm-btn-review-submission = Pregledaj prijavu
-gm-btn-approve = Odobri
-gm-btn-deny = Odbij
 
 # GM modals
 gm-modal-title-create-quest = Stvori novi quest
@@ -49,9 +46,6 @@ gm-modal-placeholder-inventory-modify =
     predmet: količina
     predmet2: količina
     itd.
-gm-modal-title-review-submission = Pregledaj prijavu
-gm-modal-label-submission-id = ID prijave
-gm-modal-placeholder-submission-id = Unesite 8-znakovni ID
 
 # GM errors
 gm-error-forbidden-role-name = Navedeni naziv za ulogu družine je zabranjen.
@@ -59,7 +53,6 @@ gm-error-role-already-exists = Uloga s tim nazivom već postoji na ovom posluži
 gm-error-no-quest-channel = Kanal za objave questova još nije određen. Kontaktirajte administratora poslužitelja za konfiguraciju kanala za questove.
 gm-error-cannot-ping-announce = Nije moguće pingovati ulogu za objave { $role } u kanalu { $channel }. Provjerite dozvole kanala i uloge ReQuesta s administratorima poslužitelja.
 gm-error-invalid-item-format = Neispravan format predmeta: "{ $item }". Svaki predmet mora biti u novom retku, u formatu "Naziv: Količina".
-gm-error-submission-not-found = Prijava nije pronađena.
 gm-error-already-on-quest = Već ste na ovom questu kao { $characterName }.
 gm-error-no-active-character-long = Nemate aktivnog lika na ovom poslužitelju. Koristite `/player` za registraciju ili aktivaciju lika.
 gm-error-quest-locked = Greška pri pridruživanju questu {"**"}{ $questTitle }{"**"}: Quest je zaključan od strane GM-a.
@@ -116,8 +109,6 @@ gm-menu-quests = Questovi
 gm-menu-desc-quests = Stvorite, uredite i upravljajte questovima.
 gm-menu-players = Igrači
 gm-menu-desc-players = Upravljajte inventarima igrača i mijenjajte likove.
-gm-menu-approvals = Odobrenja likova
-gm-menu-desc-approvals = Pregledajte i odobrite/odbijte prijave likova.
 
 gm-title-quest-management = Voditelj igre - Upravljanje questovima
 gm-desc-create-quest = Stvorite novi quest.
@@ -156,15 +147,6 @@ gm-label-currency-heading = {"**"}Valuta{"**"}
 gm-msg-inventory-empty = Inventar je prazan.
 
 # GM approvals
-gm-title-approvals = Voditelj igre - Odobrenja inventara
-gm-desc-review-submission = Unesite ID prijave za pregled i odobrenje/odbijanje.
-gm-title-reviewing = Pregled: { $characterName }
-gm-label-items = {"**"}Predmeti:{"**"}
-gm-label-currency = {"**"}Valuta:{"**"}
-gm-embed-title-approved = Ažuriranje inventara odobreno
-gm-embed-desc-approved = Inventar za {"**"}{ $characterName }{"**"} je odobren od strane { $approver }.
-gm-embed-title-denied = Ažuriranje inventara odbijeno
-gm-embed-desc-denied = Inventar za {"**"}{ $characterName }{"**"} je odbijen od strane { $denier }.
 
 gm-modal-label-select-party-role = Uloga družine
 gm-modal-desc-select-party-role = Odaberite ulogu za dodjelu družini questa.

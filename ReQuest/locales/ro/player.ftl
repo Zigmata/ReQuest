@@ -146,6 +146,15 @@ player-msg-no-characters = Nu aveți personaje înregistrate.
 player-label-active = (Activ)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Personaj în curs: { $characterName }{"**"}
+    Înregistrarea personajului tău așteaptă configurarea inventarului.
+player-btn-resume = Reia
+player-btn-discard = Renunță
+player-modal-title-discard-character = Renunță la personaj
+player-modal-label-discard-confirm = Renunți la { $characterName }?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Confirmă eliminarea personajului
 player-modal-label-confirm-char-delete = Ștergeți { $characterName }?
@@ -285,6 +294,10 @@ player-error-invalid-quantity = Cantitate invalidă pentru „{ $name }": „{ $
 player-error-input-errors-header = Erori la introducerea inventarului:
 player-msg-no-valid-items = Niciun obiect valid furnizat. Se inițializează cu inventar gol.
 
+# Validation error view
+player-validation-error-title = Erori de introducere
+player-validation-btn-retry = Încearcă din nou
+
 # Cart quantity validation
 player-error-enter-valid-number = Vă rugăm să introduceți un număr pozitiv valid.
 
@@ -307,3 +320,46 @@ player-embed-desc-starting-inventory = Jucător: { $playerMention } ca `{ $chara
 player-embed-field-items-received = Obiecte primite
 player-embed-field-currency-received-label = Monedă primită
 player-label-untitled = Fără titlu
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Cerere de Inventar: { $characterName }{"**"}
+    Trimis de { $userMention }
+player-approval-post-items = Obiecte
+player-approval-post-currency = Monedă
+player-approval-resolved = Această cerere a fost rezolvată.
+player-approval-btn-approve = Aprobă
+player-approval-btn-deny = Respinge
+player-approval-btn-edit = Editează
+player-approval-error-no-permission = Nu ai permisiunea de a efectua această acțiune.
+player-approval-error-not-submitter = Doar expeditorul original poate edita această cerere.
+player-approval-thread-instructions =
+    Acest fir a fost creat pentru aprobarea lui {"**"}{ $characterName }{"**"}.
+    Un Game Master va revizui cererea și o va aproba sau respinge.
+    Odată aprobată sau respinsă, acest fir va fi blocat.
+
+    {"**"}Game Masters:{"**"} Discutați orice modificări necesare cu
+    jucătorul dvs. până când inventarul este într-o stare acceptabilă.
+    Folosiți butonul `Respinge` doar pentru cereri ireconciliabile.
+
+    { $playerMention }: Folosește butonul `Editează` pentru a face orice
+    modificări solicitate aici de un Game Master.
+player-approval-approved-by = Această cerere a fost aprobată de { $approver }.
+player-approval-denied-by = Această cerere a fost respinsă de { $denier }.
+player-approval-deny-reason = Motiv: { $reason }
+player-msg-submission-updated = Cererea ta a fost actualizată.
+
+
+# Denial modal
+player-modal-title-deny-reason = Respinge cererea
+player-modal-label-deny-reason = Motivul respingerii
+player-modal-placeholder-deny-reason = Opțional: explicați motivul respingerii
+# Approval DM notifications
+player-dm-title-approved = Personaj aprobat
+player-dm-desc-approved =
+    Personajul tău {"**"}{ $characterName }{"**"} a fost aprobat
+    de { $approver } în {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Personaj respins
+player-dm-desc-denied =
+    Personajul tău {"**"}{ $characterName }{"**"} a fost respins
+    de { $denier } în {"**"}{ $guildName }{"**"}.

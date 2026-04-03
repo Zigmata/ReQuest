@@ -613,7 +613,7 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
 
 
 async def update_character_inventory(interaction: discord.Interaction, player_id: int, character_id: str,
-                                     item_name: str, quantity: float):
+                                     item_name: str, quantity: float, raise_on_error: bool = False):
     try:
         bot = interaction.client
         normalized_item_name = item_name.lower()
@@ -731,6 +731,8 @@ async def update_character_inventory(interaction: discord.Interaction, player_id
                 }}
             )
     except Exception as e:
+        if raise_on_error:
+            raise
         await log_exception(e, interaction)
 
 

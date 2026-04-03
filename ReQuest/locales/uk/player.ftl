@@ -146,6 +146,15 @@ player-msg-no-characters = У вас немає зареєстрованих п�
 player-label-active = (Активний)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Персонаж у процесі: { $characterName }{"**"}
+    Реєстрація вашого персонажа очікує на налаштування інвентарю.
+player-btn-resume = Продовжити
+player-btn-discard = Скасувати
+player-modal-title-discard-character = Скасувати персонажа
+player-modal-label-discard-confirm = Скасувати { $characterName }?
+
 # Підтвердження видалення персонажа
 player-modal-title-confirm-char-removal = Підтвердження видалення персонажа
 player-modal-label-confirm-char-delete = Видалити { $characterName }?
@@ -285,6 +294,10 @@ player-error-invalid-quantity = Недійсна кількість для "{ $n
 player-error-input-errors-header = Помилки у введенні інвентарю:
 player-msg-no-valid-items = Дійсних предметів не надано. Ініціалізація з порожнім інвентарем.
 
+# Validation error view
+player-validation-error-title = Помилки введення
+player-validation-btn-retry = Спробувати знову
+
 # Перевірка кількості в кошику
 player-error-enter-valid-number = Будь ласка, введіть дійсне додатне число.
 
@@ -307,3 +320,46 @@ player-embed-desc-starting-inventory = Гравець: { $playerMention } як `
 player-embed-field-items-received = Отримані предмети
 player-embed-field-currency-received-label = Отримана валюта
 player-label-untitled = Без назви
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Подання інвентарю: { $characterName }{"**"}
+    Подано { $userMention }
+player-approval-post-items = Предмети
+player-approval-post-currency = Валюта
+player-approval-resolved = Цю заявку було оброблено.
+player-approval-btn-approve = Схвалити
+player-approval-btn-deny = Відхилити
+player-approval-btn-edit = Редагувати
+player-approval-error-no-permission = У вас немає дозволу на цю дію.
+player-approval-error-not-submitter = Тільки первісний відправник може редагувати цю заявку.
+player-approval-thread-instructions =
+    Цю гілку створено для схвалення {"**"}{ $characterName }{"**"}.
+    Майстер гри перегляне подання та схвалить або відхилить його.
+    Після схвалення або відхилення цю гілку буде заблоковано.
+
+    {"**"}Майстри гри:{"**"} Обговоріть необхідні зміни з вашим
+    гравцем, доки інвентар не буде в прийнятному стані. Використовуйте
+    кнопку `Відхилити` лише для непримиренних подань.
+
+    { $playerMention }: Використовуйте кнопку `Редагувати`, щоб внести
+    зміни, запитані тут Майстром гри.
+player-approval-approved-by = Цю заявку було схвалено { $approver }.
+player-approval-denied-by = Цю заявку було відхилено { $denier }.
+player-approval-deny-reason = Причина: { $reason }
+player-msg-submission-updated = Вашу заявку оновлено.
+
+
+# Denial modal
+player-modal-title-deny-reason = Відхилити заявку
+player-modal-label-deny-reason = Причина відхилення
+player-modal-placeholder-deny-reason = Необов'язково: поясніть причину відхилення
+# Approval DM notifications
+player-dm-title-approved = Персонаж схвалений
+player-dm-desc-approved =
+    Ваш персонаж {"**"}{ $characterName }{"**"} був схвалений
+    { $approver } на сервері {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Персонаж відхилений
+player-dm-desc-denied =
+    Ваш персонаж {"**"}{ $characterName }{"**"} був відхилений
+    { $denier } на сервері {"**"}{ $guildName }{"**"}.

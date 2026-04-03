@@ -146,6 +146,15 @@ player-msg-no-characters = У вас нет зарегистрированных
 player-label-active = (Активен)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Персонаж в процессе: { $characterName }{"**"}
+    Регистрация вашего персонажа ожидает настройки инвентаря.
+player-btn-resume = Продолжить
+player-btn-discard = Отменить
+player-modal-title-discard-character = Отменить персонажа
+player-modal-label-discard-confirm = Отменить { $characterName }?
+
 # Подтверждение удаления персонажа
 player-modal-title-confirm-char-removal = Подтверждение удаления персонажа
 player-modal-label-confirm-char-delete = Удалить { $characterName }?
@@ -285,6 +294,10 @@ player-error-invalid-quantity = Неверное количество для "{ 
 player-error-input-errors-header = Ошибки во вводе инвентаря:
 player-msg-no-valid-items = Допустимые предметы не указаны. Инвентарь инициализирован пустым.
 
+# Validation error view
+player-validation-error-title = Ошибки ввода
+player-validation-btn-retry = Попробовать снова
+
 # Проверка количества в корзине
 player-error-enter-valid-number = Введите допустимое положительное число.
 
@@ -307,3 +320,46 @@ player-embed-desc-starting-inventory = Игрок: { $playerMention } как `{ 
 player-embed-field-items-received = Полученные предметы
 player-embed-field-currency-received-label = Полученная валюта
 player-label-untitled = Без названия
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Заявка на инвентарь: { $characterName }{"**"}
+    Отправлено { $userMention }
+player-approval-post-items = Предметы
+player-approval-post-currency = Валюта
+player-approval-resolved = Эта заявка была обработана.
+player-approval-btn-approve = Одобрить
+player-approval-btn-deny = Отклонить
+player-approval-btn-edit = Редактировать
+player-approval-error-no-permission = У вас нет разрешения на это действие.
+player-approval-error-not-submitter = Только первоначальный отправитель может редактировать эту заявку.
+player-approval-thread-instructions =
+    Эта ветка создана для одобрения {"**"}{ $characterName }{"**"}.
+    Мастер игры рассмотрит заявку и одобрит или отклонит её.
+    После одобрения или отклонения эта ветка будет заблокирована.
+
+    {"**"}Мастера игры:{"**"} Обсудите необходимые изменения с вашим
+    игроком, пока инвентарь не будет в приемлемом состоянии. Используйте
+    кнопку `Отклонить` только для неисправимых заявок.
+
+    { $playerMention }: Используйте кнопку `Редактировать`, чтобы внести
+    любые изменения, запрошенные здесь Мастером игры.
+player-approval-approved-by = Эта заявка была одобрена { $approver }.
+player-approval-denied-by = Эта заявка была отклонена { $denier }.
+player-approval-deny-reason = Причина: { $reason }
+player-msg-submission-updated = Ваша заявка обновлена.
+
+
+# Denial modal
+player-modal-title-deny-reason = Отклонить заявку
+player-modal-label-deny-reason = Причина отклонения
+player-modal-placeholder-deny-reason = Необязательно: объясните причину отклонения
+# Approval DM notifications
+player-dm-title-approved = Персонаж одобрен
+player-dm-desc-approved =
+    Ваш персонаж {"**"}{ $characterName }{"**"} был одобрен
+    { $approver } в {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Персонаж отклонён
+player-dm-desc-denied =
+    Ваш персонаж {"**"}{ $characterName }{"**"} был отклонён
+    { $denier } в {"**"}{ $guildName }{"**"}.

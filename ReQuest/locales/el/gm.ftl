@@ -12,9 +12,6 @@ gm-btn-manage-individual-rewards = Διαχείριση Ατομικών Αντ�
 gm-btn-join = Συμμετοχή
 gm-btn-leave = Αποχώρηση
 gm-btn-complete-quest = Ολοκλήρωση Quest
-gm-btn-review-submission = Εξέταση Υποβολής
-gm-btn-approve = Έγκριση
-gm-btn-deny = Απόρριψη
 
 # GM modals
 gm-modal-title-create-quest = Δημιουργία Νέου Quest
@@ -49,9 +46,6 @@ gm-modal-placeholder-inventory-modify =
     αντικείμενο: ποσότητα
     αντικείμενο2: ποσότητα
     κ.λπ.
-gm-modal-title-review-submission = Εξέταση Υποβολής
-gm-modal-label-submission-id = ID Υποβολής
-gm-modal-placeholder-submission-id = Εισάγετε το 8-ψήφιο ID
 
 # GM errors
 gm-error-forbidden-role-name = Το όνομα που δόθηκε για τον ρόλο ομάδας δεν επιτρέπεται.
@@ -59,7 +53,6 @@ gm-error-role-already-exists = Ένας ρόλος με αυτό το όνομα
 gm-error-no-quest-channel = Δεν έχει οριστεί κανάλι για δημοσιεύσεις quest. Επικοινωνήστε με τον διαχειριστή του διακομιστή για να ρυθμίσει το Κανάλι Quest.
 gm-error-cannot-ping-announce = Δεν ήταν δυνατή η ειδοποίηση του ρόλου { $role } στο κανάλι { $channel }. Ελέγξτε τα δικαιώματα καναλιού και ρόλου ReQuest με τον/τους διαχειριστή/-ές του διακομιστή σας.
 gm-error-invalid-item-format = Μη έγκυρη μορφή αντικειμένου: "{ $item }". Κάθε αντικείμενο πρέπει να είναι σε νέα γραμμή, στη μορφή "Όνομα: Ποσότητα".
-gm-error-submission-not-found = Η υποβολή δεν βρέθηκε.
 gm-error-already-on-quest = Είστε ήδη σε αυτό το quest ως { $characterName }.
 gm-error-no-active-character-long = Δεν έχετε ενεργό χαρακτήρα σε αυτόν τον διακομιστή. Χρησιμοποιήστε `/player` για να εγγράψετε ή να ενεργοποιήσετε έναν χαρακτήρα.
 gm-error-quest-locked = Σφάλμα συμμετοχής στο quest {"**"}{ $questTitle }{"**"}: Το quest είναι κλειδωμένο από τον GM.
@@ -116,8 +109,6 @@ gm-menu-quests = Quest
 gm-menu-desc-quests = Δημιουργία, επεξεργασία και διαχείριση quest.
 gm-menu-players = Παίκτες
 gm-menu-desc-players = Διαχείριση εξοπλισμού παικτών και τροποποίηση χαρακτήρων.
-gm-menu-approvals = Εγκρίσεις Χαρακτήρων
-gm-menu-desc-approvals = Εξέταση και έγκριση/απόρριψη υποβολών χαρακτήρων.
 
 gm-title-quest-management = Game Master - Διαχείριση Quest
 gm-desc-create-quest = Δημιουργία νέου quest.
@@ -156,15 +147,6 @@ gm-label-currency-heading = {"**"}Νόμισμα{"**"}
 gm-msg-inventory-empty = Ο εξοπλισμός είναι άδειος.
 
 # GM approvals
-gm-title-approvals = Game Master - Εγκρίσεις Εξοπλισμού
-gm-desc-review-submission = Εισάγετε ένα ID Υποβολής για εξέταση και έγκριση/απόρριψη.
-gm-title-reviewing = Εξέταση: { $characterName }
-gm-label-items = {"**"}Αντικείμενα:{"**"}
-gm-label-currency = {"**"}Νόμισμα:{"**"}
-gm-embed-title-approved = Ενημέρωση Εξοπλισμού Εγκρίθηκε
-gm-embed-desc-approved = Ο εξοπλισμός του {"**"}{ $characterName }{"**"} εγκρίθηκε από τον/την { $approver }.
-gm-embed-title-denied = Ενημέρωση Εξοπλισμού Απορρίφθηκε
-gm-embed-desc-denied = Ο εξοπλισμός του {"**"}{ $characterName }{"**"} απορρίφθηκε από τον/την { $denier }.
 
 gm-modal-label-select-party-role = Ρόλος Ομάδας
 gm-modal-desc-select-party-role = Επιλέξτε έναν ρόλο για ανάθεση στην ομάδα του quest.

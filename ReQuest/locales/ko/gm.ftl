@@ -12,9 +12,6 @@ gm-btn-manage-individual-rewards = 개인 보상 관리
 gm-btn-join = 참가
 gm-btn-leave = 탈퇴
 gm-btn-complete-quest = Quest 완료
-gm-btn-review-submission = 제출 검토
-gm-btn-approve = 승인
-gm-btn-deny = 거부
 
 # GM 모달
 gm-modal-title-create-quest = 새 Quest 생성
@@ -49,9 +46,6 @@ gm-modal-placeholder-inventory-modify =
     아이템: 수량
     아이템2: 수량
     등등.
-gm-modal-title-review-submission = 제출 검토
-gm-modal-label-submission-id = 제출 ID
-gm-modal-placeholder-submission-id = 8자리 ID를 입력하세요
 
 # GM 오류
 gm-error-forbidden-role-name = 파티 역할에 제공된 이름은 금지되어 있습니다.
@@ -59,7 +53,6 @@ gm-error-role-already-exists = 이 서버에 해당 이름의 역할이 이미 �
 gm-error-no-quest-channel = Quest 게시용 채널이 아직 지정되지 않았습니다. 서버 관리자에게 Quest 채널 설정을 요청하세요.
 gm-error-cannot-ping-announce = { $channel } 채널에서 알림 역할 { $role }을(를) 멘션할 수 없습니다. 서버 관리자에게 채널 및 ReQuest 역할 권한을 확인하세요.
 gm-error-invalid-item-format = 잘못된 아이템 형식: "{ $item }". 각 아이템은 새 줄에 "이름: 수량" 형식으로 입력해야 합니다.
-gm-error-submission-not-found = 제출을 찾을 수 없습니다.
 gm-error-already-on-quest = 이미 { $characterName }(으)로 이 Quest에 참가 중입니다.
 gm-error-no-active-character-long = 이 서버에서 활성화된 캐릭터가 없습니다. `/player`를 사용하여 캐릭터를 등록하거나 활성화하세요.
 gm-error-quest-locked = Quest {"**"}{ $questTitle }{"**"} 참가 오류: Quest가 GM에 의해 잠겨 있습니다.
@@ -116,8 +109,6 @@ gm-menu-quests = Quest
 gm-menu-desc-quests = Quest를 생성, 편집 및 관리합니다.
 gm-menu-players = 플레이어
 gm-menu-desc-players = 플레이어 인벤토리를 관리하고 캐릭터를 수정합니다.
-gm-menu-approvals = 캐릭터 승인
-gm-menu-desc-approvals = 캐릭터 제출을 검토하고 승인/거부합니다.
 
 gm-title-quest-management = GM - Quest 관리
 gm-desc-create-quest = 새 Quest를 생성합니다.
@@ -156,15 +147,6 @@ gm-label-currency-heading = {"**"}화폐{"**"}
 gm-msg-inventory-empty = 인벤토리가 비어 있습니다.
 
 # GM 승인
-gm-title-approvals = GM - 인벤토리 승인
-gm-desc-review-submission = 제출 ID를 입력하여 검토하고 승인/거부합니다.
-gm-title-reviewing = 검토 중: { $characterName }
-gm-label-items = {"**"}아이템:{"**"}
-gm-label-currency = {"**"}화폐:{"**"}
-gm-embed-title-approved = 인벤토리 업데이트 승인됨
-gm-embed-desc-approved = {"**"}{ $characterName }{"**"}의 인벤토리가 { $approver }에 의해 승인되었습니다.
-gm-embed-title-denied = 인벤토리 업데이트 거부됨
-gm-embed-desc-denied = {"**"}{ $characterName }{"**"}의 인벤토리가 { $denier }에 의해 거부되었습니다.
 
 gm-modal-label-select-party-role = 파티 역할
 gm-modal-desc-select-party-role = Quest 파티에 할당할 역할을 선택하세요.

@@ -146,6 +146,15 @@ player-msg-no-characters = Du har ingen registrerte karakterer.
 player-label-active = (Aktiv)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Karakter pågår: { $characterName }{"**"}
+    Karakterregistreringen din venter på inventaroppsett.
+player-btn-resume = Gjenoppta
+player-btn-discard = Forkast
+player-modal-title-discard-character = Forkast karakter
+player-modal-label-discard-confirm = Forkaste { $characterName }?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Bekreft fjerning av karakter
 player-modal-label-confirm-char-delete = Slette { $characterName }?
@@ -285,6 +294,10 @@ player-error-invalid-quantity = Ugyldig antall for "{ $name }": "{ $quantity }".
 player-error-input-errors-header = Feil i inventarinntasting:
 player-msg-no-valid-items = Ingen gyldige gjenstander oppgitt. Initialiserer med tomt inventar.
 
+# Validation error view
+player-validation-error-title = Inndatafeil
+player-validation-btn-retry = Prøv igjen
+
 # Cart quantity validation
 player-error-enter-valid-number = Vennligst skriv inn et gyldig positivt tall.
 
@@ -307,3 +320,46 @@ player-embed-desc-starting-inventory = Spiller: { $playerMention } som `{ $chara
 player-embed-field-items-received = Gjenstander mottatt
 player-embed-field-currency-received-label = Valuta mottatt
 player-label-untitled = Uten tittel
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Inventarinnsending: { $characterName }{"**"}
+    Sendt inn av { $userMention }
+player-approval-post-items = Gjenstander
+player-approval-post-currency = Valuta
+player-approval-resolved = Denne innsendingen er behandlet.
+player-approval-btn-approve = Godkjenn
+player-approval-btn-deny = Avslå
+player-approval-btn-edit = Rediger
+player-approval-error-no-permission = Du har ikke tillatelse til denne handlingen.
+player-approval-error-not-submitter = Kun den opprinnelige innsenderen kan redigere denne innsendingen.
+player-approval-thread-instructions =
+    Denne tråden ble opprettet for godkjenning av {"**"}{ $characterName }{"**"}.
+    En spilleder vil gjennomgå innsendingen og godkjenne eller avslå den.
+    Når den er godkjent eller avslått, vil denne tråden bli låst.
+
+    {"**"}Spilledere:{"**"} Diskuter eventuelle nødvendige endringer med
+    spilleren din til inventaret er i en akseptabel tilstand. Bruk
+    `Avslå`-knappen kun for uforenlige innsendinger.
+
+    { $playerMention }: Bruk `Rediger`-knappen for å gjøre endringer
+    som er forespurt her av en spilleder.
+player-approval-approved-by = Denne innsendingen ble godkjent av { $approver }.
+player-approval-denied-by = Denne innsendingen ble avslått av { $denier }.
+player-approval-deny-reason = Grunn: { $reason }
+player-msg-submission-updated = Innsendingen din er oppdatert.
+
+
+# Denial modal
+player-modal-title-deny-reason = Avslå innsending
+player-modal-label-deny-reason = Grunn for avslag
+player-modal-placeholder-deny-reason = Valgfritt: forklar grunnen til avslaget
+# Approval DM notifications
+player-dm-title-approved = Karakter godkjent
+player-dm-desc-approved =
+    Karakteren din {"**"}{ $characterName }{"**"} har blitt godkjent
+    av { $approver } i {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Karakter avslått
+player-dm-desc-denied =
+    Karakteren din {"**"}{ $characterName }{"**"} har blitt avslått
+    av { $denier } i {"**"}{ $guildName }{"**"}.

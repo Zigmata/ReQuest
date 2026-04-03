@@ -12,9 +12,6 @@ gm-btn-manage-individual-rewards = Quản lý phần thưởng cá nhân
 gm-btn-join = Tham gia
 gm-btn-leave = Rời đi
 gm-btn-complete-quest = Hoàn thành Quest
-gm-btn-review-submission = Xem xét đơn gửi
-gm-btn-approve = Duyệt
-gm-btn-deny = Từ chối
 
 # GM modals
 gm-modal-title-create-quest = Tạo Quest mới
@@ -49,9 +46,6 @@ gm-modal-placeholder-inventory-modify =
     vật phẩm: số lượng
     vật phẩm2: số lượng
     v.v.
-gm-modal-title-review-submission = Xem xét đơn gửi
-gm-modal-label-submission-id = ID đơn gửi
-gm-modal-placeholder-submission-id = Nhập ID 8 ký tự
 
 # GM errors
 gm-error-forbidden-role-name = Tên vai trò đội hình này bị cấm.
@@ -59,7 +53,6 @@ gm-error-role-already-exists = Vai trò có tên đó đã tồn tại trong má
 gm-error-no-quest-channel = Chưa chỉ định kênh cho bài đăng quest. Liên hệ quản trị viên máy chủ để cấu hình kênh Quest.
 gm-error-cannot-ping-announce = Không thể ping vai trò thông báo { $role } trong kênh { $channel }. Kiểm tra quyền kênh và vai trò ReQuest với quản trị viên máy chủ.
 gm-error-invalid-item-format = Định dạng vật phẩm không hợp lệ: "{ $item }". Mỗi vật phẩm phải nằm trên một dòng riêng, theo định dạng "Tên: Số lượng".
-gm-error-submission-not-found = Không tìm thấy đơn gửi.
 gm-error-already-on-quest = Bạn đã tham gia quest này với nhân vật { $characterName }.
 gm-error-no-active-character-long = Bạn không có nhân vật đang hoạt động trên máy chủ này. Sử dụng `/player` để đăng ký hoặc kích hoạt nhân vật.
 gm-error-quest-locked = Lỗi tham gia quest {"**"}{ $questTitle }{"**"}: Quest đã bị GM khóa.
@@ -116,8 +109,6 @@ gm-menu-quests = Quest
 gm-menu-desc-quests = Tạo, sửa và quản lý quest.
 gm-menu-players = Người chơi
 gm-menu-desc-players = Quản lý kho đồ và chỉnh sửa nhân vật người chơi.
-gm-menu-approvals = Duyệt nhân vật
-gm-menu-desc-approvals = Xem xét và duyệt/từ chối đơn gửi nhân vật.
 
 gm-title-quest-management = GM - Quản lý Quest
 gm-desc-create-quest = Tạo quest mới.
@@ -156,15 +147,6 @@ gm-label-currency-heading = {"**"}Tiền tệ{"**"}
 gm-msg-inventory-empty = Kho đồ trống.
 
 # GM approvals
-gm-title-approvals = GM - Duyệt kho đồ
-gm-desc-review-submission = Nhập ID đơn gửi để xem xét và duyệt/từ chối.
-gm-title-reviewing = Đang xem xét: { $characterName }
-gm-label-items = {"**"}Vật phẩm:{"**"}
-gm-label-currency = {"**"}Tiền tệ:{"**"}
-gm-embed-title-approved = Cập nhật kho đồ đã được duyệt
-gm-embed-desc-approved = Kho đồ của {"**"}{ $characterName }{"**"} đã được { $approver } duyệt.
-gm-embed-title-denied = Cập nhật kho đồ bị từ chối
-gm-embed-desc-denied = Kho đồ của {"**"}{ $characterName }{"**"} đã bị { $denier } từ chối.
 
 gm-modal-label-select-party-role = Vai trò đội hình
 gm-modal-desc-select-party-role = Chọn vai trò để gán cho đội hình quest.

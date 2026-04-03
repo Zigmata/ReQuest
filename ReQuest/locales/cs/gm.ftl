@@ -12,9 +12,6 @@ gm-btn-manage-individual-rewards = Spravovat individuální odměny
 gm-btn-join = Připojit se
 gm-btn-leave = Odejít
 gm-btn-complete-quest = Dokončit quest
-gm-btn-review-submission = Přezkoumat podání
-gm-btn-approve = Schválit
-gm-btn-deny = Zamítnout
 
 # GM modals
 gm-modal-title-create-quest = Vytvořit nový quest
@@ -49,9 +46,6 @@ gm-modal-placeholder-inventory-modify =
     předmět: množství
     předmět2: množství
     atd.
-gm-modal-title-review-submission = Přezkoumat podání
-gm-modal-label-submission-id = ID podání
-gm-modal-placeholder-submission-id = Zadejte 8znakové ID
 
 # GM errors
 gm-error-forbidden-role-name = Zadaný název role skupiny je zakázaný.
@@ -59,7 +53,6 @@ gm-error-role-already-exists = Role s tímto názvem na tomto serveru již exist
 gm-error-no-quest-channel = Pro příspěvky questů nebyl dosud určen kanál. Kontaktujte administrátora serveru pro konfiguraci kanálu questů.
 gm-error-cannot-ping-announce = Nepodařilo se pingnout roli pro oznámení { $role } v kanálu { $channel }. Zkontrolujte oprávnění kanálu a role ReQuest s administrátory serveru.
 gm-error-invalid-item-format = Neplatný formát předmětu: „{ $item }". Každý předmět musí být na novém řádku ve formátu „Název: Množství".
-gm-error-submission-not-found = Podání nebylo nalezeno.
 gm-error-already-on-quest = Tohoto questu se již účastníte jako { $characterName }.
 gm-error-no-active-character-long = Na tomto serveru nemáte aktivní postavu. Použijte `/player` k registraci nebo aktivaci postavy.
 gm-error-quest-locked = Chyba při připojování ke questu {"**"}{ $questTitle }{"**"}: Quest je zamčen GM.
@@ -116,8 +109,6 @@ gm-menu-quests = Questy
 gm-menu-desc-quests = Vytvářejte, upravujte a spravujte questy.
 gm-menu-players = Hráči
 gm-menu-desc-players = Spravujte inventáře hráčů a upravujte postavy.
-gm-menu-approvals = Schvalování postav
-gm-menu-desc-approvals = Přezkoumávejte a schvalujte/zamítejte podání postav.
 
 gm-title-quest-management = Game Master - Správa questů
 gm-desc-create-quest = Vytvořte nový quest.
@@ -156,15 +147,6 @@ gm-label-currency-heading = {"**"}Měna{"**"}
 gm-msg-inventory-empty = Inventář je prázdný.
 
 # GM approvals
-gm-title-approvals = Game Master - Schvalování inventáře
-gm-desc-review-submission = Zadejte ID podání pro přezkoumání a schválení/zamítnutí.
-gm-title-reviewing = Přezkoumávání: { $characterName }
-gm-label-items = {"**"}Předměty:{"**"}
-gm-label-currency = {"**"}Měna:{"**"}
-gm-embed-title-approved = Aktualizace inventáře schválena
-gm-embed-desc-approved = Inventář pro {"**"}{ $characterName }{"**"} byl schválen uživatelem { $approver }.
-gm-embed-title-denied = Aktualizace inventáře zamítnuta
-gm-embed-desc-denied = Inventář pro {"**"}{ $characterName }{"**"} byl zamítnut uživatelem { $denier }.
 
 gm-modal-label-select-party-role = Role skupiny
 gm-modal-desc-select-party-role = Vyberte roli k přiřazení skupině questu.

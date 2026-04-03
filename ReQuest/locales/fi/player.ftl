@@ -146,6 +146,15 @@ player-msg-no-characters = Sinulla ei ole rekisteröityjä hahmoja.
 player-label-active = (Aktiivinen)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Hahmo kesken: { $characterName }{"**"}
+    Hahmosi rekisteröinti odottaa varusteluettelon määritystä.
+player-btn-resume = Jatka
+player-btn-discard = Hylkää
+player-modal-title-discard-character = Hylkää hahmo
+player-modal-label-discard-confirm = Hylkää { $characterName }?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Vahvista hahmon poisto
 player-modal-label-confirm-char-delete = Poistetaanko { $characterName }?
@@ -285,6 +294,10 @@ player-error-invalid-quantity = Virheellinen määrä esineelle "{ $name }": "{ 
 player-error-input-errors-header = Virheitä inventaarion syötteessä:
 player-msg-no-valid-items = Kelvollisia esineitä ei annettu. Alustetaan tyhjällä inventaariolla.
 
+# Validation error view
+player-validation-error-title = Syötevirheet
+player-validation-btn-retry = Yritä uudelleen
+
 # Cart quantity validation
 player-error-enter-valid-number = Syötä kelvollinen positiivinen numero.
 
@@ -307,3 +320,46 @@ player-embed-desc-starting-inventory = Pelaaja: { $playerMention } hahmona `{ $c
 player-embed-field-items-received = Saadut esineet
 player-embed-field-currency-received-label = Saatu valuutta
 player-label-untitled = Nimetön
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Inventaariohakemus: { $characterName }{"**"}
+    Lähettäjä: { $userMention }
+player-approval-post-items = Esineet
+player-approval-post-currency = Valuutta
+player-approval-resolved = Tämä hakemus on käsitelty.
+player-approval-btn-approve = Hyväksy
+player-approval-btn-deny = Hylkää
+player-approval-btn-edit = Muokkaa
+player-approval-error-no-permission = Sinulla ei ole oikeutta tähän toimintoon.
+player-approval-error-not-submitter = Vain alkuperäinen lähettäjä voi muokata tätä hakemusta.
+player-approval-thread-instructions =
+    Tämä ketju luotiin hahmon {"**"}{ $characterName }{"**"} hyväksyntää varten.
+    Pelinjohtaja tarkistaa hakemuksen ja hyväksyy tai hylkää sen.
+    Hyväksynnän tai hylkäyksen jälkeen tämä ketju lukitaan.
+
+    {"**"}Pelinjohtajat:{"**"} Keskustelkaa tarvittavista muutoksista
+    pelaajan kanssa, kunnes inventaario on hyväksyttävässä tilassa. Käyttäkää
+    `Hylkää`-painiketta vain sovittamattomien hakemusten kohdalla.
+
+    { $playerMention }: Käytä `Muokkaa`-painiketta tehdäksesi pelinjohtajan
+    täällä pyytämät muutokset.
+player-approval-approved-by = Tämä hakemus hyväksyttiin käyttäjältä { $approver }.
+player-approval-denied-by = Tämä hakemus hylättiin käyttäjältä { $denier }.
+player-approval-deny-reason = Syy: { $reason }
+player-msg-submission-updated = Hakemuksesi on päivitetty.
+
+
+# Denial modal
+player-modal-title-deny-reason = Hylkää hakemus
+player-modal-label-deny-reason = Hylkäyksen syy
+player-modal-placeholder-deny-reason = Valinnainen: selitä miksi hakemus hylättiin
+# Approval DM notifications
+player-dm-title-approved = Hahmo hyväksytty
+player-dm-desc-approved =
+    Hahmosi {"**"}{ $characterName }{"**"} on hyväksytty
+    käyttäjältä { $approver } palvelimella {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Hahmo hylätty
+player-dm-desc-denied =
+    Hahmosi {"**"}{ $characterName }{"**"} on hylätty
+    käyttäjältä { $denier } palvelimella {"**"}{ $guildName }{"**"}.

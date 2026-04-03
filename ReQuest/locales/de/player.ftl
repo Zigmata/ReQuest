@@ -146,6 +146,15 @@ player-msg-no-characters = Sie haben keine registrierten Charaktere.
 player-label-active = (Aktiv)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Charakter in Bearbeitung: { $characterName }{"**"}
+    Deine Charakterregistrierung wartet auf die Inventareinrichtung.
+player-btn-resume = Fortsetzen
+player-btn-discard = Verwerfen
+player-modal-title-discard-character = Charakter verwerfen
+player-modal-label-discard-confirm = { $characterName } verwerfen?
+
 # Charakterentfernung bestätigen
 player-modal-title-confirm-char-removal = Charakterentfernung bestätigen
 player-modal-label-confirm-char-delete = { $characterName } löschen?
@@ -285,6 +294,10 @@ player-error-invalid-quantity = Ungültige Menge für "{ $name }": "{ $quantity 
 player-error-input-errors-header = Fehler bei der Inventareingabe:
 player-msg-no-valid-items = Keine gültigen Gegenstände angegeben. Initialisierung mit leerem Inventar.
 
+# Validation error view
+player-validation-error-title = Eingabefehler
+player-validation-btn-retry = Erneut versuchen
+
 # Warenkorbmengen-Validierung
 player-error-enter-valid-number = Bitte geben Sie eine gültige positive Zahl ein.
 
@@ -307,3 +320,46 @@ player-embed-desc-starting-inventory = Spieler: { $playerMention } als `{ $chara
 player-embed-field-items-received = Erhaltene Gegenstände
 player-embed-field-currency-received-label = Erhaltene Währung
 player-label-untitled = Ohne Titel
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Inventareinreichung: { $characterName }{"**"}
+    Eingereicht von { $userMention }
+player-approval-post-items = Gegenstände
+player-approval-post-currency = Währung
+player-approval-resolved = Diese Einreichung wurde bearbeitet.
+player-approval-btn-approve = Genehmigen
+player-approval-btn-deny = Ablehnen
+player-approval-btn-edit = Bearbeiten
+player-approval-error-no-permission = Du hast keine Berechtigung für diese Aktion.
+player-approval-error-not-submitter = Nur der ursprüngliche Einreicher kann diese Einreichung bearbeiten.
+player-approval-thread-instructions =
+    Dieser Thread wurde zur Genehmigung von {"**"}{ $characterName }{"**"} erstellt.
+    Ein Game Master wird die Einreichung prüfen und genehmigen oder ablehnen.
+    Nach der Genehmigung oder Ablehnung wird dieser Thread gesperrt.
+
+    {"**"}Game Masters:{"**"} Besprecht alle erforderlichen Änderungen mit
+    eurem Spieler, bis das Inventar in einem akzeptablen Zustand ist.
+    Verwendet den `Ablehnen`-Button nur für unvereinbare Einreichungen.
+
+    { $playerMention }: Verwende den `Bearbeiten`-Button, um hier von einem
+    Game Master angeforderte Änderungen vorzunehmen.
+player-approval-approved-by = Diese Einreichung wurde von { $approver } genehmigt.
+player-approval-denied-by = Diese Einreichung wurde von { $denier } abgelehnt.
+player-approval-deny-reason = Grund: { $reason }
+player-msg-submission-updated = Deine Einreichung wurde aktualisiert.
+
+
+# Denial modal
+player-modal-title-deny-reason = Einreichung ablehnen
+player-modal-label-deny-reason = Grund der Ablehnung
+player-modal-placeholder-deny-reason = Optional: Grund der Ablehnung angeben
+# Approval DM notifications
+player-dm-title-approved = Charakter genehmigt
+player-dm-desc-approved =
+    Dein Charakter {"**"}{ $characterName }{"**"} wurde von { $approver }
+    in {"**"}{ $guildName }{"**"} genehmigt!
+player-dm-title-denied = Charakter abgelehnt
+player-dm-desc-denied =
+    Dein Charakter {"**"}{ $characterName }{"**"} wurde von { $denier }
+    in {"**"}{ $guildName }{"**"} abgelehnt.

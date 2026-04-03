@@ -12,7 +12,7 @@ from pymongo import AsyncMongoClient as MongoClient
 import redis.asyncio as redis
 
 from ReQuest.ui.gm.views import QuestPostView
-from ReQuest.utilities.constants import QuestFields
+from ReQuest.utilities.constants import ApprovalFields, QuestFields, DatabaseCollections
 from ReQuest.utilities.supportFunctions import attempt_delete, log_exception
 
 log_level = os.getenv('LOG_LEVEL', 'INFO').upper()
@@ -120,12 +120,8 @@ class ReQuest(commands.Bot):
             await self.load_allow_list()
 
         # If the bot is restarted with any existing quests, this reloads their views so they can be interacted with.
-        quests = []
-        quest_collection = self.gdb['quests']
-        cursor = quest_collection.find()
-        for document in await cursor.to_list(length=None):
-            quests.append(document)
-        for quest in quests:
+        quest_collection = self.gdb[DatabaseCollections.QUESTS]
+        async for quest in quest_collection.find():
             try:
                 self.add_view(view=QuestPostView(quest), message_id=quest[QuestFields.MESSAGE_ID])
             except (KeyError, TypeError) as e:
@@ -134,6 +130,36 @@ class ReQuest(commands.Bot):
             except Exception as e:
                 quest_id = quest.get(QuestFields.QUEST_ID, 'unknown')
                 logger.error(f'Unexpected error loading view for quest {quest_id}: {e}')
+
+        # Reload persistent views for pending approval submissions
+        from ReQuest.ui.player.views import ApprovalPostView
+        from ReQuest.utilities.localizer import resolve_guild_locale
+        approval_collection = self.gdb[DatabaseCollections.APPROVALS]
+
+        # Revert any submissions stuck in 'processing' from a prior interrupted shutdown
+        await approval_collection.update_many(
+            {ApprovalFields.STATUS: ApprovalFields.STATUS_PROCESSING},
+            {'$set': {ApprovalFields.STATUS: ApprovalFields.STATUS_PENDING}}
+        )
+
+        approval_cursor = approval_collection.find(
+            {ApprovalFields.STATUS: ApprovalFields.STATUS_PENDING,
+             ApprovalFields.MESSAGE_ID: {'$exists': True}}
+        )
+        async for doc in approval_cursor:
+            try:
+                submission_id = doc[ApprovalFields.SUBMISSION_ID]
+                message_id = doc[ApprovalFields.MESSAGE_ID]
+                view = ApprovalPostView(submission_id)
+                view.locale = await resolve_guild_locale(self, doc[ApprovalFields.GUILD_ID])
+                await view.setup(self)
+                self.add_view(view=view, message_id=message_id)
+            except (KeyError, TypeError) as e:
+                logger.error(f'Failed to load approval view '
+                             f'{doc.get(ApprovalFields.SUBMISSION_ID, "unknown")}: {e}')
+            except Exception as e:
+                logger.error(f'Unexpected error loading approval view '
+                             f'{doc.get(ApprovalFields.SUBMISSION_ID, "unknown")}: {e}')
 
     async def close(self):
         await super().close()

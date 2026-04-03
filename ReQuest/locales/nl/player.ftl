@@ -146,6 +146,15 @@ player-msg-no-characters = Je hebt geen geregistreerde personages.
 player-label-active = (Actief)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Karakter in voortgang: { $characterName }{"**"}
+    Je karakterregistratie wacht op inventarisconfiguratie.
+player-btn-resume = Hervatten
+player-btn-discard = Verwijderen
+player-modal-title-discard-character = Karakter verwijderen
+player-modal-label-discard-confirm = { $characterName } verwijderen?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Bevestig personageverwijdering
 player-modal-label-confirm-char-delete = { $characterName } verwijderen?
@@ -285,6 +294,10 @@ player-error-invalid-quantity = Ongeldige hoeveelheid voor "{ $name }": "{ $quan
 player-error-input-errors-header = Fouten in inventarisinvoer:
 player-msg-no-valid-items = Geen geldige voorwerpen opgegeven. Inventaris wordt leeg geïnitialiseerd.
 
+# Validation error view
+player-validation-error-title = Invoerfouten
+player-validation-btn-retry = Opnieuw proberen
+
 # Cart quantity validation
 player-error-enter-valid-number = Voer een geldig positief getal in.
 
@@ -307,3 +320,46 @@ player-embed-desc-starting-inventory = Speler: { $playerMention } als `{ $charac
 player-embed-field-items-received = Ontvangen voorwerpen
 player-embed-field-currency-received-label = Ontvangen valuta
 player-label-untitled = Zonder titel
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Inventarisinzending: { $characterName }{"**"}
+    Ingediend door { $userMention }
+player-approval-post-items = Voorwerpen
+player-approval-post-currency = Valuta
+player-approval-resolved = Deze inzending is afgehandeld.
+player-approval-btn-approve = Goedkeuren
+player-approval-btn-deny = Afwijzen
+player-approval-btn-edit = Bewerken
+player-approval-error-no-permission = Je hebt geen toestemming voor deze actie.
+player-approval-error-not-submitter = Alleen de originele indiener kan deze inzending bewerken.
+player-approval-thread-instructions =
+    Deze thread is aangemaakt voor de goedkeuring van {"**"}{ $characterName }{"**"}.
+    Een Game Master zal de inzending beoordelen en goedkeuren of afwijzen.
+    Na goedkeuring of afwijzing wordt deze thread vergrendeld.
+
+    {"**"}Game Masters:{"**"} Bespreek eventuele vereiste wijzigingen met je
+    speler totdat de inventaris in een acceptabele staat is. Gebruik de
+    `Afwijzen`-knop alleen voor onverenigbare inzendingen.
+
+    { $playerMention }: Gebruik de `Bewerken`-knop om wijzigingen aan te
+    brengen die hier door een Game Master zijn gevraagd.
+player-approval-approved-by = Deze inzending is goedgekeurd door { $approver }.
+player-approval-denied-by = Deze inzending is afgewezen door { $denier }.
+player-approval-deny-reason = Reden: { $reason }
+player-msg-submission-updated = Je inzending is bijgewerkt.
+
+
+# Denial modal
+player-modal-title-deny-reason = Inzending afwijzen
+player-modal-label-deny-reason = Reden van afwijzing
+player-modal-placeholder-deny-reason = Optioneel: leg uit waarom de inzending is afgewezen
+# Approval DM notifications
+player-dm-title-approved = Karakter goedgekeurd
+player-dm-desc-approved =
+    Je personage {"**"}{ $characterName }{"**"} is goedgekeurd
+    door { $approver } in {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Karakter afgewezen
+player-dm-desc-denied =
+    Je personage {"**"}{ $characterName }{"**"} is afgewezen
+    door { $denier } in {"**"}{ $guildName }{"**"}.

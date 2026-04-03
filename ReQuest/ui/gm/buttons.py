@@ -488,33 +488,6 @@ class CompleteQuestButton(Button):
             await log_exception(e, interaction)
 
 
-class ReviewSubmissionButton(Button):
-    def __init__(self, calling_view):
-        super().__init__(label=t(DEFAULT_LOCALE, 'gm-btn-review-submission'), style=ButtonStyle.success)
-        self.calling_view = calling_view
-
-    async def callback(self, interaction):
-        await interaction.response.send_modal(modals.ReviewSubmissionInputModal(self.calling_view))
-
-
-class ApproveSubmissionButton(Button):
-    def __init__(self, calling_view):
-        super().__init__(label=t(DEFAULT_LOCALE, 'gm-btn-approve'), style=ButtonStyle.success)
-        self.calling_view = calling_view
-
-    async def callback(self, interaction):
-        await self.calling_view.approve(interaction)
-
-
-class DenySubmissionButton(Button):
-    def __init__(self, calling_view):
-        super().__init__(label=t(DEFAULT_LOCALE, 'gm-btn-deny'), style=ButtonStyle.danger)
-        self.calling_view = calling_view
-
-    async def callback(self, interaction):
-        await self.calling_view.deny(interaction)
-
-
 class ManageQuestRowButton(Button):
     def __init__(self, quest):
         super().__init__(

@@ -146,6 +146,15 @@ player-msg-no-characters = Nemáte žádné zaregistrované postavy.
 player-label-active = (Aktivní)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Rozpracovaná postava: { $characterName }{"**"}
+    Registrace vaší postavy čeká na nastavení inventáře.
+player-btn-resume = Pokračovat
+player-btn-discard = Zahodit
+player-modal-title-discard-character = Zahodit postavu
+player-modal-label-discard-confirm = Zahodit { $characterName }?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Potvrdit odebrání postavy
 player-modal-label-confirm-char-delete = Smazat { $characterName }?
@@ -285,6 +294,10 @@ player-error-invalid-quantity = Neplatné množství pro „{ $name }": „{ $qu
 player-error-input-errors-header = Chyby ve vstupu inventáře:
 player-msg-no-valid-items = Nebyly zadány žádné platné předměty. Inicializace s prázdným inventářem.
 
+# Validation error view
+player-validation-error-title = Chyby vstupu
+player-validation-btn-retry = Zkusit znovu
+
 # Cart quantity validation
 player-error-enter-valid-number = Zadejte prosím platné kladné číslo.
 
@@ -307,3 +320,46 @@ player-embed-desc-starting-inventory = Hráč: { $playerMention } jako `{ $chara
 player-embed-field-items-received = Obdržené předměty
 player-embed-field-currency-received-label = Obdržená měna
 player-label-untitled = Bez názvu
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Podání inventáře: { $characterName }{"**"}
+    Podáno uživatelem { $userMention }
+player-approval-post-items = Předměty
+player-approval-post-currency = Měna
+player-approval-resolved = Tento požadavek byl vyřešen.
+player-approval-btn-approve = Schválit
+player-approval-btn-deny = Zamítnout
+player-approval-btn-edit = Upravit
+player-approval-error-no-permission = Nemáte oprávnění k provedení této akce.
+player-approval-error-not-submitter = Pouze původní odesílatel může tuto žádost upravit.
+player-approval-thread-instructions =
+    Toto vlákno bylo vytvořeno pro schválení {"**"}{ $characterName }{"**"}.
+    Game Master podání přezkoumá a schválí nebo zamítne.
+    Po schválení nebo zamítnutí bude toto vlákno uzamčeno.
+
+    {"**"}Game Masters:{"**"} Diskutujte s hráčem o všech
+    požadovaných změnách, dokud inventář nebude v přijatelném stavu.
+    Tlačítko `Zamítnout` použijte pouze pro neslučitelná podání.
+
+    { $playerMention }: Použijte tlačítko `Upravit` k provedení změn
+    požadovaných zde Game Masterem.
+player-approval-approved-by = Tento požadavek byl schválen uživatelem { $approver }.
+player-approval-denied-by = Tento požadavek byl zamítnut uživatelem { $denier }.
+player-approval-deny-reason = Důvod: { $reason }
+player-msg-submission-updated = Vaše žádost byla aktualizována.
+
+
+# Denial modal
+player-modal-title-deny-reason = Zamítnout požadavek
+player-modal-label-deny-reason = Důvod zamítnutí
+player-modal-placeholder-deny-reason = Volitelné: vysvětlete důvod zamítnutí
+# Approval DM notifications
+player-dm-title-approved = Postava schválena
+player-dm-desc-approved =
+    Vaše postava {"**"}{ $characterName }{"**"} byla schválena
+    uživatelem { $approver } na serveru {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Postava zamítnuta
+player-dm-desc-denied =
+    Vaše postava {"**"}{ $characterName }{"**"} byla zamítnuta
+    uživatelem { $denier } na serveru {"**"}{ $guildName }{"**"}.

@@ -146,6 +146,15 @@ player-msg-no-characters = Anda tidak memiliki karakter yang terdaftar.
 player-label-active = (Aktif)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Karakter dalam proses: { $characterName }{"**"}
+    Pendaftaran karakter Anda menunggu pengaturan inventaris.
+player-btn-resume = Lanjutkan
+player-btn-discard = Buang
+player-modal-title-discard-character = Buang karakter
+player-modal-label-discard-confirm = Buang { $characterName }?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Konfirmasi Penghapusan Karakter
 player-modal-label-confirm-char-delete = Hapus { $characterName }?
@@ -285,6 +294,10 @@ player-error-invalid-quantity = Jumlah tidak valid untuk "{ $name }": "{ $quanti
 player-error-input-errors-header = Kesalahan pada input inventaris:
 player-msg-no-valid-items = Tidak ada barang yang valid. Menginisialisasi dengan inventaris kosong.
 
+# Validation error view
+player-validation-error-title = Kesalahan input
+player-validation-btn-retry = Coba lagi
+
 # Cart quantity validation
 player-error-enter-valid-number = Silakan masukkan angka positif yang valid.
 
@@ -307,3 +320,47 @@ player-embed-desc-starting-inventory = Pemain: { $playerMention } sebagai `{ $ch
 player-embed-field-items-received = Barang yang Diterima
 player-embed-field-currency-received-label = Mata Uang yang Diterima
 player-label-untitled = Tanpa Judul
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Pengajuan Inventaris: { $characterName }{"**"}
+    Diajukan oleh { $userMention }
+player-approval-post-items = Item
+player-approval-post-currency = Mata Uang
+player-approval-resolved = Pengajuan ini telah diselesaikan.
+player-approval-btn-approve = Setujui
+player-approval-btn-deny = Tolak
+player-approval-btn-edit = Edit
+player-approval-error-no-permission = Anda tidak memiliki izin untuk melakukan tindakan ini.
+player-approval-error-not-submitter = Hanya pengirim asli yang dapat mengedit pengajuan ini.
+player-approval-thread-instructions =
+    Thread ini dibuat untuk persetujuan {"**"}{ $characterName }{"**"}.
+    Seorang Game Master akan meninjau pengajuan dan menyetujui atau menolaknya.
+    Setelah disetujui atau ditolak, thread ini akan dikunci.
+
+    {"**"}Game Master:{"**"} Diskusikan perubahan yang diperlukan
+    dengan pemain Anda hingga inventaris dalam keadaan yang dapat
+    diterima. Gunakan tombol `Tolak` hanya untuk pengajuan yang
+    tidak dapat direkonsiliasi.
+
+    { $playerMention }: Gunakan tombol `Edit` untuk melakukan
+    perubahan yang diminta di sini oleh Game Master.
+player-approval-approved-by = Pengajuan ini disetujui oleh { $approver }.
+player-approval-denied-by = Pengajuan ini ditolak oleh { $denier }.
+player-approval-deny-reason = Alasan: { $reason }
+player-msg-submission-updated = Pengajuan Anda telah diperbarui.
+
+
+# Denial modal
+player-modal-title-deny-reason = Tolak pengajuan
+player-modal-label-deny-reason = Alasan penolakan
+player-modal-placeholder-deny-reason = Opsional: jelaskan alasan penolakan
+# Approval DM notifications
+player-dm-title-approved = Karakter disetujui
+player-dm-desc-approved =
+    Karakter Anda {"**"}{ $characterName }{"**"} telah disetujui
+    oleh { $approver } di {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Karakter ditolak
+player-dm-desc-denied =
+    Karakter Anda {"**"}{ $characterName }{"**"} telah ditolak
+    oleh { $denier } di {"**"}{ $guildName }{"**"}.

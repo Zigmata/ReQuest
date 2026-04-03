@@ -146,6 +146,15 @@ player-msg-no-characters = Você não possui personagens registrados.
 player-label-active = (Ativo)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Personagem em andamento: { $characterName }{"**"}
+    O registro do seu personagem aguarda a configuração do inventário.
+player-btn-resume = Retomar
+player-btn-discard = Descartar
+player-modal-title-discard-character = Descartar personagem
+player-modal-label-discard-confirm = Descartar { $characterName }?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Confirmar Remoção de Personagem
 player-modal-label-confirm-char-delete = Excluir { $characterName }?
@@ -285,6 +294,10 @@ player-error-invalid-quantity = Quantidade inválida para "{ $name }": "{ $quant
 player-error-input-errors-header = Erros na entrada de inventário:
 player-msg-no-valid-items = Nenhum item válido fornecido. Inicializando inventário vazio.
 
+# Validation error view
+player-validation-error-title = Erros de entrada
+player-validation-btn-retry = Tentar novamente
+
 # Cart quantity validation
 player-error-enter-valid-number = Insira um número positivo válido.
 
@@ -307,3 +320,46 @@ player-embed-desc-starting-inventory = Jogador: { $playerMention } como `{ $char
 player-embed-field-items-received = Itens Recebidos
 player-embed-field-currency-received-label = Moeda Recebida
 player-label-untitled = Sem título
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Submissão de Inventário: { $characterName }{"**"}
+    Enviado por { $userMention }
+player-approval-post-items = Itens
+player-approval-post-currency = Moeda
+player-approval-resolved = Esta submissão foi resolvida.
+player-approval-btn-approve = Aprovar
+player-approval-btn-deny = Recusar
+player-approval-btn-edit = Editar
+player-approval-error-no-permission = Você não tem permissão para realizar esta ação.
+player-approval-error-not-submitter = Apenas o remetente original pode editar esta submissão.
+player-approval-thread-instructions =
+    Este tópico foi criado para a aprovação de {"**"}{ $characterName }{"**"}.
+    Um Mestre de Jogo revisará a submissão e a aprovará ou recusará.
+    Uma vez aprovada ou recusada, este tópico será bloqueado.
+
+    {"**"}Mestres de Jogo:{"**"} Discutam quaisquer alterações necessárias com
+    seu jogador até que o inventário esteja em um estado aceitável. Use o
+    botão `Recusar` apenas para submissões irreconciliáveis.
+
+    { $playerMention }: Use o botão `Editar` para fazer quaisquer alterações
+    solicitadas aqui por um Mestre de Jogo.
+player-approval-approved-by = Esta submissão foi aprovada por { $approver }.
+player-approval-denied-by = Esta submissão foi recusada por { $denier }.
+player-approval-deny-reason = Motivo: { $reason }
+player-msg-submission-updated = Sua submissão foi atualizada.
+
+
+# Denial modal
+player-modal-title-deny-reason = Recusar submissão
+player-modal-label-deny-reason = Motivo da recusa
+player-modal-placeholder-deny-reason = Opcional: explique o motivo da recusa
+# Approval DM notifications
+player-dm-title-approved = Personagem aprovado
+player-dm-desc-approved =
+    Seu personagem {"**"}{ $characterName }{"**"} foi aprovado
+    por { $approver } em {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Personagem recusado
+player-dm-desc-denied =
+    Seu personagem {"**"}{ $characterName }{"**"} foi recusado
+    por { $denier } em {"**"}{ $guildName }{"**"}.

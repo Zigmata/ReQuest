@@ -146,6 +146,15 @@ player-msg-no-characters = Neturite registruotų veikėjų.
 player-label-active = (Aktyvus)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Kuriamas veikėjas: { $characterName }{"**"}
+    Jūsų veikėjo registracija laukia inventoriaus nustatymo.
+player-btn-resume = Tęsti
+player-btn-discard = Atmesti
+player-modal-title-discard-character = Atmesti veikėją
+player-modal-label-discard-confirm = Atmesti { $characterName }?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Patvirtinti veikėjo pašalinimą
 player-modal-label-confirm-char-delete = Ištrinti { $characterName }?
@@ -285,6 +294,10 @@ player-error-invalid-quantity = Netinkamas kiekis „{ $name }": „{ $quantity 
 player-error-input-errors-header = Inventoriaus įvedimo klaidos:
 player-msg-no-valid-items = Nepateikta tinkamų daiktų. Inicializuojama su tuščiu inventoriumi.
 
+# Validation error view
+player-validation-error-title = Įvesties klaidos
+player-validation-btn-retry = Bandyti dar kartą
+
 # Cart quantity validation
 player-error-enter-valid-number = Įveskite tinkamą teigiamą skaičių.
 
@@ -307,3 +320,46 @@ player-embed-desc-starting-inventory = Žaidėjas: { $playerMention } kaip `{ $c
 player-embed-field-items-received = Gauti daiktai
 player-embed-field-currency-received-label = Gauta valiuta
 player-label-untitled = Be pavadinimo
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Inventoriaus paraiška: { $characterName }{"**"}
+    Pateikė { $userMention }
+player-approval-post-items = Daiktai
+player-approval-post-currency = Valiuta
+player-approval-resolved = Ši paraiška buvo išspręsta.
+player-approval-btn-approve = Patvirtinti
+player-approval-btn-deny = Atmesti
+player-approval-btn-edit = Redaguoti
+player-approval-error-no-permission = Neturite leidimo atlikti šį veiksmą.
+player-approval-error-not-submitter = Tik pradinis pateikėjas gali redaguoti šią paraišką.
+player-approval-thread-instructions =
+    Ši gija buvo sukurta {"**"}{ $characterName }{"**"} patvirtinimui.
+    Žaidimo vedėjas peržiūrės paraišką ir ją patvirtins arba atmes.
+    Patvirtinus arba atmetus, ši gija bus užrakinta.
+
+    {"**"}Žaidimo vedėjai:{"**"} Aptarkite reikiamus pakeitimus su
+    savo žaidėju, kol inventorius bus priimtinos būklės. `Atmesti`
+    mygtuką naudokite tik nesuderinamos paraiškos atveju.
+
+    { $playerMention }: Naudokite `Redaguoti` mygtuką, kad atliktumėte
+    žaidimo vedėjo čia prašomus pakeitimus.
+player-approval-approved-by = Ši paraiška buvo patvirtinta { $approver }.
+player-approval-denied-by = Ši paraiška buvo atmesta { $denier }.
+player-approval-deny-reason = Priežastis: { $reason }
+player-msg-submission-updated = Jūsų paraiška atnaujinta.
+
+
+# Denial modal
+player-modal-title-deny-reason = Atmesti paraišką
+player-modal-label-deny-reason = Atmetimo priežastis
+player-modal-placeholder-deny-reason = Neprivaloma: paaiškinkite atmetimo priežastį
+# Approval DM notifications
+player-dm-title-approved = Veikėjas patvirtintas
+player-dm-desc-approved =
+    Jūsų veikėjas {"**"}{ $characterName }{"**"} buvo patvirtintas
+    { $approver } serveryje {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Veikėjas atmestas
+player-dm-desc-denied =
+    Jūsų veikėjas {"**"}{ $characterName }{"**"} buvo atmestas
+    { $denier } serveryje {"**"}{ $guildName }{"**"}.

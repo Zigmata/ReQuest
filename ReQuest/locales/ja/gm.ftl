@@ -12,9 +12,6 @@ gm-btn-manage-individual-rewards = 個別報酬を管理
 gm-btn-join = 参加
 gm-btn-leave = 離脱
 gm-btn-complete-quest = Quest を完了
-gm-btn-review-submission = 申請を確認
-gm-btn-approve = 承認
-gm-btn-deny = 却下
 
 # GM modals
 gm-modal-title-create-quest = 新しい Quest を作成
@@ -49,9 +46,6 @@ gm-modal-placeholder-inventory-modify =
     アイテム名: 数量
     アイテム名2: 数量
     など
-gm-modal-title-review-submission = 申請の確認
-gm-modal-label-submission-id = 申請 ID
-gm-modal-placeholder-submission-id = 8文字の ID を入力してください
 
 # GM errors
 gm-error-forbidden-role-name = パーティーロールに指定された名前は禁止されています。
@@ -59,7 +53,6 @@ gm-error-role-already-exists = その名前のロールはこのサーバーに�
 gm-error-no-quest-channel = Quest 投稿用のチャンネルがまだ設定されていません。サーバー管理者に Quest チャンネルの設定を依頼してください。
 gm-error-cannot-ping-announce = チャンネル { $channel } で告知ロール { $role } をメンションできませんでした。チャンネルと ReQuest ロールの権限をサーバー管理者に確認してください。
 gm-error-invalid-item-format = 無効なアイテム形式：「{ $item }」。各アイテムは新しい行に「名前: 数量」の形式で入力してください。
-gm-error-submission-not-found = 申請が見つかりません。
 gm-error-already-on-quest = あなたは既に { $characterName } としてこの Quest に参加しています。
 gm-error-no-active-character-long = このサーバーで有効なキャラクターがいません。`/player` を使用してキャラクターを登録または有効化してください。
 gm-error-quest-locked = Quest {"**"}{ $questTitle }{"**"} への参加エラー：Quest は GM によってロックされています。
@@ -116,8 +109,6 @@ gm-menu-quests = Quest
 gm-menu-desc-quests = Quest の作成、編集、管理を行います。
 gm-menu-players = プレイヤー
 gm-menu-desc-players = プレイヤーのインベントリ管理とキャラクター変更を行います。
-gm-menu-approvals = キャラクター承認
-gm-menu-desc-approvals = キャラクター申請の確認と承認/却下を行います。
 
 gm-title-quest-management = GM - Quest 管理
 gm-desc-create-quest = 新しい Quest を作成します。
@@ -156,15 +147,6 @@ gm-label-currency-heading = {"**"}通貨{"**"}
 gm-msg-inventory-empty = インベントリは空です。
 
 # GM approvals
-gm-title-approvals = GM - インベントリ承認
-gm-desc-review-submission = 申請 ID を入力して確認・承認/却下します。
-gm-title-reviewing = 確認中: { $characterName }
-gm-label-items = {"**"}アイテム:{"**"}
-gm-label-currency = {"**"}通貨:{"**"}
-gm-embed-title-approved = インベントリ更新承認済み
-gm-embed-desc-approved = {"**"}{ $characterName }{"**"} のインベントリが { $approver } によって承認されました。
-gm-embed-title-denied = インベントリ更新却下
-gm-embed-desc-denied = {"**"}{ $characterName }{"**"} のインベントリが { $denier } によって却下されました。
 
 gm-modal-label-select-party-role = パーティーロール
 gm-modal-desc-select-party-role = Quest パーティーに割り当てるロールを選択してください。

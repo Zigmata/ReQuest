@@ -12,9 +12,6 @@ gm-btn-manage-individual-rewards = Valdyti individualius atlygius
 gm-btn-join = Prisijungti
 gm-btn-leave = Palikti
 gm-btn-complete-quest = Užbaigti quest'ą
-gm-btn-review-submission = Peržiūrėti pateiktį
-gm-btn-approve = Patvirtinti
-gm-btn-deny = Atmesti
 
 # GM modals
 gm-modal-title-create-quest = Sukurti naują quest'ą
@@ -49,9 +46,6 @@ gm-modal-placeholder-inventory-modify =
     daiktas: kiekis
     daiktas2: kiekis
     ir t.t.
-gm-modal-title-review-submission = Peržiūrėti pateiktį
-gm-modal-label-submission-id = Pateikties ID
-gm-modal-placeholder-submission-id = Įveskite 8 simbolių ID
 
 # GM errors
 gm-error-forbidden-role-name = Nurodytas grupės rolės pavadinimas yra draudžiamas.
@@ -59,7 +53,6 @@ gm-error-role-already-exists = Rolė tokiu pavadinimu jau egzistuoja šiame serv
 gm-error-no-quest-channel = Kanalas quest'ų skelbimams dar nenustatytas. Kreipkitės į serverio administratorių, kad sukonfigūruotų Quest kanalą.
 gm-error-cannot-ping-announce = Nepavyko paminėti pranešimų rolės { $role } kanale { $channel }. Patikrinkite kanalo ir ReQuest rolės leidimus su serverio administratoriais.
 gm-error-invalid-item-format = Neteisingas daikto formatas: „{ $item }". Kiekvienas daiktas turi būti naujoje eilutėje formatu „Pavadinimas: Kiekis".
-gm-error-submission-not-found = Pateiktis nerasta.
 gm-error-already-on-quest = Jūs jau dalyvaujate šiame quest'e kaip { $characterName }.
 gm-error-no-active-character-long = Jūs neturite aktyvaus personažo šiame serveryje. Naudokite `/player`, kad užregistruotumėte arba aktyvuotumėte personažą.
 gm-error-quest-locked = Klaida prisijungiant prie quest'o {"**"}{ $questTitle }{"**"}: Quest'as užrakintas GM.
@@ -116,8 +109,6 @@ gm-menu-quests = Quest'ai
 gm-menu-desc-quests = Kurti, redaguoti ir valdyti quest'us.
 gm-menu-players = Žaidėjai
 gm-menu-desc-players = Valdyti žaidėjų inventorius ir modifikuoti personažus.
-gm-menu-approvals = Personažų patvirtinimai
-gm-menu-desc-approvals = Peržiūrėti ir patvirtinti/atmesti personažų pateiktis.
 
 gm-title-quest-management = GM - Quest'ų valdymas
 gm-desc-create-quest = Sukurti naują quest'ą.
@@ -156,15 +147,6 @@ gm-label-currency-heading = {"**"}Valiuta{"**"}
 gm-msg-inventory-empty = Inventorius tuščias.
 
 # GM approvals
-gm-title-approvals = GM - Inventoriaus patvirtinimai
-gm-desc-review-submission = Įveskite pateikties ID, kad peržiūrėtumėte ir patvirtintumėte/atmestumėte ją.
-gm-title-reviewing = Peržiūrima: { $characterName }
-gm-label-items = {"**"}Daiktai:{"**"}
-gm-label-currency = {"**"}Valiuta:{"**"}
-gm-embed-title-approved = Inventoriaus atnaujinimas patvirtintas
-gm-embed-desc-approved = Personažo {"**"}{ $characterName }{"**"} inventorius buvo patvirtintas { $approver }.
-gm-embed-title-denied = Inventoriaus atnaujinimas atmestas
-gm-embed-desc-denied = Personažo {"**"}{ $characterName }{"**"} inventorius buvo atmestas { $denier }.
 
 gm-modal-label-select-party-role = Grupės rolė
 gm-modal-desc-select-party-role = Pasirinkite rolę, kurią priskirti quest grupei.

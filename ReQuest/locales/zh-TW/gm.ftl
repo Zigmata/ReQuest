@@ -12,9 +12,6 @@ gm-btn-manage-individual-rewards = 管理個人獎勵
 gm-btn-join = 加入
 gm-btn-leave = 離開
 gm-btn-complete-quest = 完成 Quest
-gm-btn-review-submission = 審查提交
-gm-btn-approve = 通過
-gm-btn-deny = 駁回
 
 # GM modals
 gm-modal-title-create-quest = 建立新 Quest
@@ -49,9 +46,6 @@ gm-modal-placeholder-inventory-modify =
     物品名稱：數量
     物品名稱2：數量
     以此類推。
-gm-modal-title-review-submission = 審查提交
-gm-modal-label-submission-id = 提交 ID
-gm-modal-placeholder-submission-id = 輸入 8 個字元的 ID
 
 # GM errors
 gm-error-forbidden-role-name = 所提供的隊伍身分組名稱已被禁用。
@@ -59,7 +53,6 @@ gm-error-role-already-exists = 此伺服器中已存在同名的身分組。
 gm-error-no-quest-channel = 尚未為 Quest 發文指定頻道。請聯繫伺服器管理員設定 Quest 頻道。
 gm-error-cannot-ping-announce = 無法在頻道 { $channel } 中提及公告身分組 { $role }。請與伺服器管理員確認頻道和 ReQuest 身分組的權限。
 gm-error-invalid-item-format = 無效的物品格式：「{ $item }」。每個物品必須獨立一行，格式為「名稱：數量」。
-gm-error-submission-not-found = 找不到提交。
 gm-error-already-on-quest = 您已經以 { $characterName } 身分參加了此 Quest。
 gm-error-no-active-character-long = 您在此伺服器上沒有啟用的角色。請使用 `/player` 來註冊或啟用角色。
 gm-error-quest-locked = 加入 Quest {"**"}{ $questTitle }{"**"} 時發生錯誤：Quest 已被 GM 鎖定。
@@ -114,8 +107,6 @@ gm-menu-quests = Quest
 gm-menu-desc-quests = 建立、編輯和管理 Quest。
 gm-menu-players = 玩家
 gm-menu-desc-players = 管理玩家背包和修改角色。
-gm-menu-approvals = 角色審核
-gm-menu-desc-approvals = 審查並通過/駁回角色提交。
 
 gm-title-quest-management = GM - Quest 管理
 gm-desc-create-quest = 建立新 Quest。
@@ -154,15 +145,6 @@ gm-label-currency-heading = {"**"}貨幣{"**"}
 gm-msg-inventory-empty = 背包是空的。
 
 # GM approvals
-gm-title-approvals = GM - 背包審核
-gm-desc-review-submission = 輸入提交 ID 以審查並通過/駁回。
-gm-title-reviewing = 正在審查：{ $characterName }
-gm-label-items = {"**"}物品：{"**"}
-gm-label-currency = {"**"}貨幣：{"**"}
-gm-embed-title-approved = 背包更新已通過
-gm-embed-desc-approved = {"**"}{ $characterName }{"**"} 的背包已被 { $approver } 通過。
-gm-embed-title-denied = 背包更新已駁回
-gm-embed-desc-denied = {"**"}{ $characterName }{"**"} 的背包已被 { $denier } 駁回。
 
 gm-modal-label-select-party-role = 隊伍身分組
 gm-modal-desc-select-party-role = 選擇要指派給 Quest 隊伍的身分組。

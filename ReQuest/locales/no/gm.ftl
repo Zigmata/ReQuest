@@ -12,9 +12,6 @@ gm-btn-manage-individual-rewards = Administrer individuelle belønninger
 gm-btn-join = Bli med
 gm-btn-leave = Forlat
 gm-btn-complete-quest = Fullfør quest
-gm-btn-review-submission = Gjennomgå innsending
-gm-btn-approve = Godkjenn
-gm-btn-deny = Avslå
 
 # GM modals
 gm-modal-title-create-quest = Opprett ny quest
@@ -49,9 +46,6 @@ gm-modal-placeholder-inventory-modify =
     gjenstand: antall
     gjenstand2: antall
     osv.
-gm-modal-title-review-submission = Gjennomgå innsending
-gm-modal-label-submission-id = Innsendings-ID
-gm-modal-placeholder-submission-id = Skriv inn den 8-tegns IDen
 
 # GM errors
 gm-error-forbidden-role-name = Navnet gitt for grupperollen er forbudt.
@@ -59,7 +53,6 @@ gm-error-role-already-exists = En rolle med det navnet eksisterer allerede på d
 gm-error-no-quest-channel = En kanal er ennå ikke utpekt for quest-innlegg. Kontakt en serveradministrator for å konfigurere quest-kanalen.
 gm-error-cannot-ping-announce = Kunne ikke pinge kunngjøringsrollen { $role } i kanalen { $channel }. Sjekk kanal- og ReQuest-rolletillatelser med serveradministratoren(e).
 gm-error-invalid-item-format = Ugyldig gjenstandsformat: "{ $item }". Hver gjenstand må være på en ny linje, i formatet "Navn: Antall".
-gm-error-submission-not-found = Innsending ikke funnet.
 gm-error-already-on-quest = Du er allerede på denne questen som { $characterName }.
 gm-error-no-active-character-long = Du har ingen aktiv karakter på denne serveren. Bruk `/player` for å registrere eller aktivere en karakter.
 gm-error-quest-locked = Feil ved deltakelse i quest {"**"}{ $questTitle }{"**"}: Questen er låst av GM.
@@ -116,8 +109,6 @@ gm-menu-quests = Quester
 gm-menu-desc-quests = Opprett, rediger og administrer quester.
 gm-menu-players = Spillere
 gm-menu-desc-players = Administrer spillerinventarer og endre karakterer.
-gm-menu-approvals = Karaktergodkjenninger
-gm-menu-desc-approvals = Gjennomgå og godkjenn/avslå karakterinnsendinger.
 
 gm-title-quest-management = Spillleder - Quest-administrasjon
 gm-desc-create-quest = Opprett en ny quest.
@@ -156,15 +147,6 @@ gm-label-currency-heading = {"**"}Valuta{"**"}
 gm-msg-inventory-empty = Inventaret er tomt.
 
 # GM approvals
-gm-title-approvals = Spillleder - Inventargodkjenninger
-gm-desc-review-submission = Skriv inn en innsendings-ID for å gjennomgå og godkjenne/avslå den.
-gm-title-reviewing = Gjennomgår: { $characterName }
-gm-label-items = {"**"}Gjenstander:{"**"}
-gm-label-currency = {"**"}Valuta:{"**"}
-gm-embed-title-approved = Inventaroppdatering godkjent
-gm-embed-desc-approved = Inventaret for {"**"}{ $characterName }{"**"} har blitt godkjent av { $approver }.
-gm-embed-title-denied = Inventaroppdatering avslått
-gm-embed-desc-denied = Inventaret for {"**"}{ $characterName }{"**"} har blitt avslått av { $denier }.
 
 gm-modal-label-select-party-role = Grupperolle
 gm-modal-desc-select-party-role = Velg en rolle å tildele quest-gruppen.

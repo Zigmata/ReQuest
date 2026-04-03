@@ -146,6 +146,15 @@ player-msg-no-characters = Kayıtlı karakteriniz yok.
 player-label-active = (Aktif)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Devam eden karakter: { $characterName }{"**"}
+    Karakter kaydınız envanter ayarını bekliyor.
+player-btn-resume = Devam et
+player-btn-discard = İptal et
+player-modal-title-discard-character = Karakteri iptal et
+player-modal-label-discard-confirm = { $characterName } iptal edilsin mi?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Karakter Kaldırmayı Onayla
 player-modal-label-confirm-char-delete = { $characterName } silinsin mi?
@@ -285,6 +294,10 @@ player-error-invalid-quantity = "{ $name }" için geçersiz miktar: "{ $quantity
 player-error-input-errors-header = Envanter girişinde hatalar:
 player-msg-no-valid-items = Geçerli eşya sağlanmadı. Boş envanter ile başlatılıyor.
 
+# Validation error view
+player-validation-error-title = Giriş hataları
+player-validation-btn-retry = Tekrar dene
+
 # Cart quantity validation
 player-error-enter-valid-number = Lütfen geçerli bir pozitif sayı girin.
 
@@ -307,3 +320,46 @@ player-embed-desc-starting-inventory = Oyuncu: { $playerMention } (`{ $character
 player-embed-field-items-received = Alınan Eşyalar
 player-embed-field-currency-received-label = Alınan Para Birimi
 player-label-untitled = Başlıksız
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Envanter Başvurusu: { $characterName }{"**"}
+    Gönderen: { $userMention }
+player-approval-post-items = Eşyalar
+player-approval-post-currency = Para Birimi
+player-approval-resolved = Bu başvuru işlendi.
+player-approval-btn-approve = Onayla
+player-approval-btn-deny = Reddet
+player-approval-btn-edit = Düzenle
+player-approval-error-no-permission = Bu işlemi gerçekleştirme yetkiniz yok.
+player-approval-error-not-submitter = Yalnızca orijinal gönderen bu başvuruyu düzenleyebilir.
+player-approval-thread-instructions =
+    Bu konu {"**"}{ $characterName }{"**"} adlı karakterin onayı için oluşturuldu.
+    Bir Oyun Yöneticisi başvuruyu inceleyip onaylayacak veya reddedecektir.
+    Onaylandıktan veya reddedildikten sonra bu konu kilitlenecektir.
+
+    {"**"}Oyun Yöneticileri:{"**"} Envanter kabul edilebilir bir duruma
+    gelene kadar gerekli değişiklikleri oyuncunuzla tartışın. `Reddet`
+    düğmesini yalnızca uzlaşılamaz başvurular için kullanın.
+
+    { $playerMention }: Bir Oyun Yöneticisi tarafından burada istenen
+    değişiklikleri yapmak için `Düzenle` düğmesini kullanın.
+player-approval-approved-by = Bu başvuru { $approver } tarafından onaylandı.
+player-approval-denied-by = Bu başvuru { $denier } tarafından reddedildi.
+player-approval-deny-reason = Sebep: { $reason }
+player-msg-submission-updated = Başvurunuz güncellendi.
+
+
+# Denial modal
+player-modal-title-deny-reason = Başvuruyu reddet
+player-modal-label-deny-reason = Red sebebi
+player-modal-placeholder-deny-reason = İsteğe bağlı: red sebebini açıklayın
+# Approval DM notifications
+player-dm-title-approved = Karakter onaylandı
+player-dm-desc-approved =
+    {"**"}{ $characterName }{"**"} adlı karakteriniz {"**"}{ $guildName }{"**"}
+    sunucusunda { $approver } tarafından onaylandı!
+player-dm-title-denied = Karakter reddedildi
+player-dm-desc-denied =
+    {"**"}{ $characterName }{"**"} adlı karakteriniz {"**"}{ $guildName }{"**"}
+    sunucusunda { $denier } tarafından reddedildi.

@@ -146,6 +146,15 @@ player-msg-no-characters = Nie masz zarejestrowanych postaci.
 player-label-active = (Aktywna)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Postać w toku: { $characterName }{"**"}
+    Rejestracja twojej postaci oczekuje na konfigurację ekwipunku.
+player-btn-resume = Wznów
+player-btn-discard = Odrzuć
+player-modal-title-discard-character = Odrzuć postać
+player-modal-label-discard-confirm = Odrzucić { $characterName }?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Potwierdź usunięcie postaci
 player-modal-label-confirm-char-delete = Usunąć { $characterName }?
@@ -285,6 +294,10 @@ player-error-invalid-quantity = Nieprawidłowa ilość dla "{ $name }": "{ $quan
 player-error-input-errors-header = Błędy w danych ekwipunku:
 player-msg-no-valid-items = Nie podano prawidłowych przedmiotów. Inicjalizacja z pustym ekwipunkiem.
 
+# Validation error view
+player-validation-error-title = Błędy wejściowe
+player-validation-btn-retry = Spróbuj ponownie
+
 # Cart quantity validation
 player-error-enter-valid-number = Proszę wpisać prawidłową liczbę dodatnią.
 
@@ -307,3 +320,46 @@ player-embed-desc-starting-inventory = Gracz: { $playerMention } jako `{ $charac
 player-embed-field-items-received = Otrzymane przedmioty
 player-embed-field-currency-received-label = Otrzymana waluta
 player-label-untitled = Bez tytułu
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Zgłoszenie ekwipunku: { $characterName }{"**"}
+    Przesłane przez { $userMention }
+player-approval-post-items = Przedmioty
+player-approval-post-currency = Waluta
+player-approval-resolved = To zgłoszenie zostało rozpatrzone.
+player-approval-btn-approve = Zatwierdź
+player-approval-btn-deny = Odrzuć
+player-approval-btn-edit = Edytuj
+player-approval-error-no-permission = Nie masz uprawnień do tej czynności.
+player-approval-error-not-submitter = Tylko oryginalny nadawca może edytować to zgłoszenie.
+player-approval-thread-instructions =
+    Ten wątek został utworzony w celu zatwierdzenia {"**"}{ $characterName }{"**"}.
+    Mistrz Gry przejrzy zgłoszenie i zatwierdzi je lub odrzuci.
+    Po zatwierdzeniu lub odrzuceniu ten wątek zostanie zablokowany.
+
+    {"**"}Mistrzowie Gry:{"**"} Omówcie wszelkie wymagane zmiany
+    ze swoim graczem, aż ekwipunek będzie w akceptowalnym stanie.
+    Przycisku `Odrzuć` używajcie tylko w przypadku nieuzgadnialnych zgłoszeń.
+
+    { $playerMention }: Użyj przycisku `Edytuj`, aby wprowadzić zmiany
+    wymagane tutaj przez Mistrza Gry.
+player-approval-approved-by = To zgłoszenie zostało zatwierdzone przez { $approver }.
+player-approval-denied-by = To zgłoszenie zostało odrzucone przez { $denier }.
+player-approval-deny-reason = Powód: { $reason }
+player-msg-submission-updated = Twoje zgłoszenie zostało zaktualizowane.
+
+
+# Denial modal
+player-modal-title-deny-reason = Odrzuć zgłoszenie
+player-modal-label-deny-reason = Powód odrzucenia
+player-modal-placeholder-deny-reason = Opcjonalnie: wyjaśnij powód odrzucenia
+# Approval DM notifications
+player-dm-title-approved = Postać zatwierdzona
+player-dm-desc-approved =
+    Twoja postać {"**"}{ $characterName }{"**"} została zatwierdzona
+    przez { $approver } na serwerze {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Postać odrzucona
+player-dm-desc-denied =
+    Twoja postać {"**"}{ $characterName }{"**"} została odrzucona
+    przez { $denier } na serwerze {"**"}{ $guildName }{"**"}.

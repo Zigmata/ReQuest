@@ -12,9 +12,6 @@ gm-btn-manage-individual-rewards = Bireysel Ödülleri Yönet
 gm-btn-join = Katıl
 gm-btn-leave = Ayrıl
 gm-btn-complete-quest = Quest'i Tamamla
-gm-btn-review-submission = Başvuruyu İncele
-gm-btn-approve = Onayla
-gm-btn-deny = Reddet
 
 # GM modals
 gm-modal-title-create-quest = Yeni Quest Oluştur
@@ -49,9 +46,6 @@ gm-modal-placeholder-inventory-modify =
     eşya: miktar
     eşya2: miktar
     vb.
-gm-modal-title-review-submission = Başvuruyu İncele
-gm-modal-label-submission-id = Başvuru ID
-gm-modal-placeholder-submission-id = 8 karakterli ID'yi girin
 
 # GM errors
 gm-error-forbidden-role-name = Grup rolü için girilen ad yasaklanmış.
@@ -59,7 +53,6 @@ gm-error-role-already-exists = Bu sunucuda bu adda bir rol zaten mevcut.
 gm-error-no-quest-channel = Quest gönderileri için henüz bir kanal belirlenemedi. Quest Kanalını yapılandırmak için bir sunucu yöneticisiyle iletişime geçin.
 gm-error-cannot-ping-announce = { $channel } kanalında { $role } duyuru rolü etiketlenemedi. Kanal ve ReQuest rol izinlerini sunucu yöneticiniz/yöneticilerinizle kontrol edin.
 gm-error-invalid-item-format = Geçersiz eşya biçimi: "{ $item }". Her eşya yeni bir satırda ve "Ad: Miktar" biçiminde olmalıdır.
-gm-error-submission-not-found = Başvuru bulunamadı.
 gm-error-already-on-quest = Bu quest'te zaten { $characterName } olarak bulunuyorsunuz.
 gm-error-no-active-character-long = Bu sunucuda aktif bir karakteriniz yok. Bir karakter kaydetmek veya etkinleştirmek için `/player` komutunu kullanın.
 gm-error-quest-locked = {"**"}{ $questTitle }{"**"} quest'ine katılma hatası: Quest GM tarafından kilitlenmiş.
@@ -116,8 +109,6 @@ gm-menu-quests = Quest'ler
 gm-menu-desc-quests = Quest oluşturun, düzenleyin ve yönetin.
 gm-menu-players = Oyuncular
 gm-menu-desc-players = Oyuncu envanterlerini yönetin ve karakterleri değiştirin.
-gm-menu-approvals = Karakter Onayları
-gm-menu-desc-approvals = Karakter başvurularını inceleyin, onaylayın veya reddedin.
 
 gm-title-quest-management = GM - Quest Yönetimi
 gm-desc-create-quest = Yeni bir quest oluşturun.
@@ -156,15 +147,6 @@ gm-label-currency-heading = {"**"}Para Birimi{"**"}
 gm-msg-inventory-empty = Envanter boş.
 
 # GM approvals
-gm-title-approvals = GM - Envanter Onayları
-gm-desc-review-submission = İncelemek ve onaylamak/reddetmek için bir Başvuru ID'si girin.
-gm-title-reviewing = İnceleniyor: { $characterName }
-gm-label-items = {"**"}Eşyalar:{"**"}
-gm-label-currency = {"**"}Para Birimi:{"**"}
-gm-embed-title-approved = Envanter Güncellemesi Onaylandı
-gm-embed-desc-approved = {"**"}{ $characterName }{"**"} için envanter { $approver } tarafından onaylandı.
-gm-embed-title-denied = Envanter Güncellemesi Reddedildi
-gm-embed-desc-denied = {"**"}{ $characterName }{"**"} için envanter { $denier } tarafından reddedildi.
 
 gm-modal-label-select-party-role = Grup Rolü
 gm-modal-desc-select-party-role = Quest grubuna atanacak bir rol seçin.

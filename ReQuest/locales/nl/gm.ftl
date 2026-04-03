@@ -12,9 +12,6 @@ gm-btn-manage-individual-rewards = Individuele beloningen beheren
 gm-btn-join = Deelnemen
 gm-btn-leave = Verlaten
 gm-btn-complete-quest = Quest voltooien
-gm-btn-review-submission = Inzending beoordelen
-gm-btn-approve = Goedkeuren
-gm-btn-deny = Afwijzen
 
 # GM modals
 gm-modal-title-create-quest = Nieuwe quest aanmaken
@@ -49,9 +46,6 @@ gm-modal-placeholder-inventory-modify =
     voorwerp: hoeveelheid
     voorwerp2: hoeveelheid
     enz.
-gm-modal-title-review-submission = Inzending beoordelen
-gm-modal-label-submission-id = Inzending-ID
-gm-modal-placeholder-submission-id = Voer het 8-teken-ID in
 
 # GM errors
 gm-error-forbidden-role-name = De opgegeven naam voor de groepsrol is verboden.
@@ -59,7 +53,6 @@ gm-error-role-already-exists = Een rol met die naam bestaat al op deze server.
 gm-error-no-quest-channel = Er is nog geen kanaal aangewezen voor questberichten. Neem contact op met een serverbeheerder om het quest-kanaal te configureren.
 gm-error-cannot-ping-announce = Kon aankondigingsrol { $role } niet pingen in kanaal { $channel }. Controleer kanaal- en ReQuest-rolmachtigingen bij je serverbeheerder(s).
 gm-error-invalid-item-format = Ongeldig voorwerpformaat: "{ $item }". Elk voorwerp moet op een nieuwe regel staan, in het formaat "Naam: Hoeveelheid".
-gm-error-submission-not-found = Inzending niet gevonden.
 gm-error-already-on-quest = Je doet al mee aan deze quest als { $characterName }.
 gm-error-no-active-character-long = Je hebt geen actief personage op deze server. Gebruik `/player` om een personage te registreren of te activeren.
 gm-error-quest-locked = Fout bij deelname aan quest {"**"}{ $questTitle }{"**"}: De quest is vergrendeld door de GM.
@@ -116,8 +109,6 @@ gm-menu-quests = Quests
 gm-menu-desc-quests = Quests aanmaken, bewerken en beheren.
 gm-menu-players = Spelers
 gm-menu-desc-players = Spelerinventarissen beheren en personages aanpassen.
-gm-menu-approvals = Personagegoedkeuringen
-gm-menu-desc-approvals = Personageinzendingen beoordelen en goedkeuren/afwijzen.
 
 gm-title-quest-management = Game Master - Questbeheer
 gm-desc-create-quest = Maak een nieuwe quest aan.
@@ -156,15 +147,6 @@ gm-label-currency-heading = {"**"}Valuta{"**"}
 gm-msg-inventory-empty = Inventaris is leeg.
 
 # GM approvals
-gm-title-approvals = Game Master - Inventarisgoedkeuringen
-gm-desc-review-submission = Voer een inzending-ID in om deze te beoordelen en goed te keuren/af te wijzen.
-gm-title-reviewing = Beoordelen: { $characterName }
-gm-label-items = {"**"}Voorwerpen:{"**"}
-gm-label-currency = {"**"}Valuta:{"**"}
-gm-embed-title-approved = Inventarisupdate goedgekeurd
-gm-embed-desc-approved = De inventaris voor {"**"}{ $characterName }{"**"} is goedgekeurd door { $approver }.
-gm-embed-title-denied = Inventarisupdate afgewezen
-gm-embed-desc-denied = De inventaris voor {"**"}{ $characterName }{"**"} is afgewezen door { $denier }.
 
 gm-modal-label-select-party-role = Groepsrol
 gm-modal-desc-select-party-role = Selecteer een rol om aan de questgroep toe te wijzen.

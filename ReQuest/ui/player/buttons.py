@@ -34,8 +34,9 @@ logger = logging.getLogger(__name__)
 
 class RegisterCharacterButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'player-btn-register-character'),
+            label=t(locale, 'player-btn-register-character'),
             style=ButtonStyle.success,
             custom_id='register_character_button'
         )
@@ -49,10 +50,145 @@ class RegisterCharacterButton(Button):
             await log_exception(e, interaction)
 
 
+class ResumeWizardButton(Button):
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        super().__init__(
+            label=t(locale, 'player-btn-resume'),
+            style=ButtonStyle.primary,
+            custom_id='resume_wizard_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            pending = self.calling_view.pending_character
+            pending_character = {
+                'character_id': pending['character_id'],
+                'name': pending['name'],
+                'note': pending.get('note', ''),
+                'registered_date': pending['registered_date'],
+                'inventory_type': pending['inventory_type']
+            }
+            from ReQuest.ui.player.views import NewCharacterWizardView
+            locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
+            view = NewCharacterWizardView(pending_character, pending['inventory_type'], locale=locale)
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class DiscardPendingCharacterButton(Button):
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        super().__init__(
+            label=t(locale, 'player-btn-discard'),
+            style=ButtonStyle.danger,
+            custom_id='discard_pending_character_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
+            pending_name = self.calling_view.pending_character.get('name', '')
+
+            async def confirm_discard(confirm_interaction):
+                pending_id = f'{confirm_interaction.user.id}_{confirm_interaction.guild_id}'
+                await delete_cached_data(
+                    bot=confirm_interaction.client,
+                    mongo_database=confirm_interaction.client.gdb,
+                    collection_name=DatabaseCollections.PENDING_CHARACTERS,
+                    search_filter={CommonFields.ID: pending_id},
+                    cache_id=pending_id
+                )
+                from ReQuest.ui.player.views import CharacterBaseView
+                view = CharacterBaseView()
+                await setup_view(view, confirm_interaction)
+                await confirm_interaction.response.edit_message(view=view)
+
+            modal = common_modals.ConfirmModal(
+                title=t(locale, 'player-modal-title-discard-character'),
+                prompt_label=t(locale, 'player-modal-label-discard-confirm', characterName=pending_name),
+                confirm_callback=confirm_discard,
+                locale=locale
+            )
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+# ----- APPROVAL POST BUTTONS -----
+
+class ApprovalApproveButton(Button):
+    def __init__(self, submission_id, locale=DEFAULT_LOCALE):
+        super().__init__(
+            label=t(locale, 'player-approval-btn-approve'),
+            style=ButtonStyle.success,
+            custom_id=f'approve_sub_{submission_id}'
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await self.view.approve(interaction)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ApprovalDenyButton(Button):
+    def __init__(self, submission_id, locale=DEFAULT_LOCALE):
+        super().__init__(
+            label=t(locale, 'player-approval-btn-deny'),
+            style=ButtonStyle.danger,
+            custom_id=f'deny_sub_{submission_id}'
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await self.view.deny(interaction)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ApprovalEditButton(Button):
+    def __init__(self, submission_id, locale=DEFAULT_LOCALE):
+        super().__init__(
+            label=t(locale, 'player-approval-btn-edit'),
+            style=ButtonStyle.secondary,
+            custom_id=f'edit_sub_{submission_id}'
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await self.view.edit(interaction)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ValidationRetryButton(Button):
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        super().__init__(
+            label=t(locale, 'player-validation-btn-retry'),
+            style=ButtonStyle.primary,
+            custom_id='validation_retry_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.send_modal(
+                modals.OpenInventoryInputModal(self.calling_view.calling_view)
+            )
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
 class RemoveCharacterButton(Button):
     def __init__(self, calling_view, character_id, character_name):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-remove'),
+            label=t(locale, 'common-btn-remove'),
             style=ButtonStyle.danger,
             custom_id=f'remove_character_{character_id}'
         )
@@ -117,8 +253,9 @@ class RemoveCharacterButton(Button):
 
 class ActivateCharacterButton(Button):
     def __init__(self, calling_view, character_id, disabled=False):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'player-btn-activate'),
+            label=t(locale, 'player-btn-activate'),
             style=ButtonStyle.primary,
             custom_id=f'activate_character_{character_id}',
             disabled=disabled
@@ -153,8 +290,9 @@ class ActivateCharacterButton(Button):
 
 class CreatePlayerPostButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'player-btn-create-post'),
+            label=t(locale, 'player-btn-create-post'),
             style=ButtonStyle.success,
             custom_id='create_player_post_button'
         )
@@ -170,8 +308,9 @@ class CreatePlayerPostButton(Button):
 
 class RemovePlayerPostButton(Button):
     def __init__(self, calling_view, post):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-remove'),
+            label=t(locale, 'common-btn-remove'),
             style=ButtonStyle.danger,
             custom_id=f'remove_player_post_button_{post.get("postId")}')
         self.calling_view = calling_view
@@ -235,8 +374,9 @@ class RemovePlayerPostButton(Button):
 
 class EditPlayerPostButton(Button):
     def __init__(self, calling_view, post):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-edit'),
+            label=t(locale, 'common-btn-edit'),
             custom_id=f'edit_player_post_button_{post.get("postId")}'
         )
         self.calling_view = calling_view
@@ -252,8 +392,9 @@ class EditPlayerPostButton(Button):
 
 class OpenStartingShopButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'player-btn-open-starting-shop'),
+            label=t(locale, 'player-btn-open-starting-shop'),
             style=ButtonStyle.primary,
             custom_id='open_starting_shop_button'
         )
@@ -263,8 +404,7 @@ class OpenStartingShopButton(Button):
         try:
             from ReQuest.ui.player.views import NewCharacterShopView
             view = NewCharacterShopView(
-                self.calling_view.character_id,
-                self.calling_view.character_name,
+                self.calling_view.pending_character,
                 self.calling_view.inventory_type
             )
             await setup_view(view, interaction)
@@ -275,8 +415,9 @@ class OpenStartingShopButton(Button):
 
 class SelectStaticKitButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'player-btn-select-kit'),
+            label=t(locale, 'player-btn-select-kit'),
             style=ButtonStyle.primary,
             custom_id='select_static_kit_button'
         )
@@ -286,8 +427,7 @@ class SelectStaticKitButton(Button):
         try:
             from ReQuest.ui.player.views import StaticKitSelectView
             view = StaticKitSelectView(
-                self.calling_view.character_id,
-                self.calling_view.character_name
+                self.calling_view.pending_character
             )
             await setup_view(view, interaction)
             await interaction.response.edit_message(view=view)
@@ -297,8 +437,9 @@ class SelectStaticKitButton(Button):
 
 class OpenInventoryInputButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'player-btn-input-inventory'),
+            label=t(locale, 'player-btn-input-inventory'),
             style=ButtonStyle.primary,
             custom_id='open_inv_input_button'
         )
@@ -312,15 +453,15 @@ class OpenInventoryInputButton(Button):
 
 
 class WizardItemButton(Button):
-    def __init__(self, item, inventory_type, cost_string='Free'):
-        label = t(DEFAULT_LOCALE, 'player-btn-add-to-cart')
+    def __init__(self, item, inventory_type, cost_string='Free', locale=DEFAULT_LOCALE):
+        label = t(locale, 'player-btn-add-to-cart')
         costs = item.get(ShopFields.COSTS, [])
 
         if inventory_type == InventoryType.PURCHASE.value:
             if len(costs) > 1:
-                label = t(DEFAULT_LOCALE, 'player-btn-view-purchase-options')
+                label = t(locale, 'player-btn-view-purchase-options')
             else:
-                label = t(DEFAULT_LOCALE, 'player-btn-add-to-cart-cost', costString=cost_string)
+                label = t(locale, 'player-btn-add-to-cart-cost', costString=cost_string)
 
         super().__init__(
             label=label,
@@ -344,8 +485,9 @@ class WizardItemButton(Button):
 
 class WizardSelectCostOptionButton(Button):
     def __init__(self, shop_view, item, index):
+        locale = getattr(shop_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-select'),
+            label=t(locale, 'common-btn-select'),
             style=ButtonStyle.primary,
             custom_id=f'wiz_sel_opt_{item[CommonFields.NAME]}_{index}'
         )
@@ -362,8 +504,9 @@ class WizardSelectCostOptionButton(Button):
 
 class WizardViewCartButton(Button):
     def __init__(self, calling_view, count=0):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'player-btn-review-submit', count=count),
+            label=t(locale, 'player-btn-review-submit', count=count),
             style=ButtonStyle.success,
             custom_id='wiz_view_cart_button'
         )
@@ -381,8 +524,9 @@ class WizardViewCartButton(Button):
 
 class WizardSubmitButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'player-btn-submit-character'),
+            label=t(locale, 'player-btn-submit-character'),
             style=ButtonStyle.success,
             custom_id='wiz_submit_button'
         )
@@ -397,8 +541,9 @@ class WizardSubmitButton(Button):
 
 class WizardKeepShoppingButton(Button):
     def __init__(self, shop_view):
+        locale = getattr(shop_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'player-btn-keep-shopping'),
+            label=t(locale, 'player-btn-keep-shopping'),
             style=ButtonStyle.secondary,
             custom_id='wiz_keep_shopping_button'
         )
@@ -413,9 +558,9 @@ class WizardKeepShoppingButton(Button):
 
 
 class WizardEditCartItemButton(Button):
-    def __init__(self, item_key, quantity):
+    def __init__(self, item_key, quantity, locale=DEFAULT_LOCALE):
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'player-btn-edit-quantity'),
+            label=t(locale, 'player-btn-edit-quantity'),
             style=ButtonStyle.secondary,
             custom_id=f'wiz_edit_cart_{item_key}'
         )
@@ -432,8 +577,9 @@ class WizardEditCartItemButton(Button):
 
 class WizardClearCartButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'player-btn-clear-cart'),
+            label=t(locale, 'player-btn-clear-cart'),
             style=ButtonStyle.danger,
             custom_id='wiz_clear_cart_button'
         )
@@ -453,8 +599,9 @@ class WizardClearCartButton(Button):
 
 class SpendCurrencyButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'player-btn-spend-currency'),
+            label=t(locale, 'player-btn-spend-currency'),
             style=ButtonStyle.primary,
             custom_id='spend_currency_button'
         )
@@ -469,9 +616,9 @@ class SpendCurrencyButton(Button):
 
 
 class SelectKitOptionButton(Button):
-    def __init__(self, kit_id, kit_data):
+    def __init__(self, kit_id, kit_data, locale=DEFAULT_LOCALE):
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-select'),
+            label=t(locale, 'common-btn-select'),
             style=ButtonStyle.primary,
             custom_id=f'sel_kit_{kit_id}'
         )
@@ -483,8 +630,7 @@ class SelectKitOptionButton(Button):
             from ReQuest.ui.player.views import StaticKitConfirmView
 
             view = StaticKitConfirmView(
-                self.view.character_id,
-                self.view.character_name,
+                self.view.pending_character,
                 self.kit_id,
                 self.kit_data,
                 self.view.currency_config
@@ -495,9 +641,9 @@ class SelectKitOptionButton(Button):
 
 
 class KitConfirmButton(Button):
-    def __init__(self):
+    def __init__(self, locale=DEFAULT_LOCALE):
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'player-btn-confirm-selection'),
+            label=t(locale, 'player-btn-confirm-selection'),
             style=ButtonStyle.success,
             custom_id='confirm_kit_btn'
         )
@@ -510,9 +656,9 @@ class KitConfirmButton(Button):
 
 
 class KitBackButton(Button):
-    def __init__(self):
+    def __init__(self, locale=DEFAULT_LOCALE):
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'player-btn-back-to-kits'),
+            label=t(locale, 'player-btn-back-to-kits'),
             style=ButtonStyle.secondary,
             custom_id='kit_back_btn'
         )
@@ -522,8 +668,7 @@ class KitBackButton(Button):
             from ReQuest.ui.player.views import StaticKitSelectView
 
             view = StaticKitSelectView(
-                self.view.character_id,
-                self.view.character_name
+                self.view.pending_character
             )
             await setup_view(view, interaction)
             await interaction.response.edit_message(view=view)
@@ -533,8 +678,9 @@ class KitBackButton(Button):
 
 class PrintInventoryButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'player-btn-print-inventory'),
+            label=t(locale, 'player-btn-print-inventory'),
             style=ButtonStyle.secondary,
             custom_id='print_inventory_button'
         )
@@ -564,8 +710,9 @@ class PrintInventoryButton(Button):
 
 class ManageContainersButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'player-btn-manage-containers'),
+            label=t(locale, 'player-btn-manage-containers'),
             style=ButtonStyle.secondary,
             custom_id='manage_containers_button'
         )
@@ -586,8 +733,9 @@ class ManageContainersButton(Button):
 
 class CreateContainerButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'player-btn-create-new'),
+            label=t(locale, 'player-btn-create-new'),
             style=ButtonStyle.success,
             custom_id='create_container_button'
         )
@@ -603,8 +751,9 @@ class CreateContainerButton(Button):
 
 class RenameContainerButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-rename'),
+            label=t(locale, 'common-btn-rename'),
             style=ButtonStyle.secondary,
             custom_id='rename_container_button',
             disabled=True
@@ -613,10 +762,11 @@ class RenameContainerButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
             container_id = self.calling_view.selected_container_id
             if container_id is None:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'player-error-cannot-rename-loose'),
+                    t(locale, 'player-error-cannot-rename-loose'),
                     message_id='player-error-cannot-rename-loose'
                 )
 
@@ -634,8 +784,9 @@ class RenameContainerButton(Button):
 
 class DeleteContainerButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-delete'),
+            label=t(locale, 'common-btn-delete'),
             style=ButtonStyle.danger,
             custom_id='delete_container_button',
             disabled=True
@@ -695,8 +846,9 @@ class DeleteContainerButton(Button):
 
 class MoveContainerUpButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'player-btn-up'),
+            label=t(locale, 'player-btn-up'),
             style=ButtonStyle.secondary,
             custom_id='move_container_up_button',
             disabled=True
@@ -721,8 +873,9 @@ class MoveContainerUpButton(Button):
 
 class MoveContainerDownButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'player-btn-down'),
+            label=t(locale, 'player-btn-down'),
             style=ButtonStyle.secondary,
             custom_id='move_container_down_button',
             disabled=True
@@ -747,8 +900,9 @@ class MoveContainerDownButton(Button):
 
 class ConsumeFromContainerButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'player-btn-consume-destroy'),
+            label=t(locale, 'player-btn-consume-destroy'),
             style=ButtonStyle.danger,
             custom_id='consume_from_container_button',
             disabled=True
@@ -778,8 +932,9 @@ class ConsumeFromContainerButton(Button):
 
 class MoveItemButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'player-btn-move'),
+            label=t(locale, 'player-btn-move'),
             style=ButtonStyle.primary,
             custom_id='move_item_button',
             disabled=True
@@ -816,8 +971,9 @@ class MoveItemButton(Button):
 
 class MoveAllButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'player-btn-move-all'),
+            label=t(locale, 'player-btn-move-all'),
             style=ButtonStyle.success,
             custom_id='move_all_button',
             disabled=True
@@ -852,8 +1008,9 @@ class MoveAllButton(Button):
 
 class MoveSomeButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'player-btn-move-some'),
+            label=t(locale, 'player-btn-move-some'),
             style=ButtonStyle.secondary,
             custom_id='move_some_button',
             disabled=True
@@ -873,9 +1030,9 @@ class MoveSomeButton(Button):
 
 
 class BackToInventoryOverviewButton(Button):
-    def __init__(self):
+    def __init__(self, locale=DEFAULT_LOCALE):
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'player-btn-back-to-overview'),
+            label=t(locale, 'player-btn-back-to-overview'),
             style=ButtonStyle.secondary,
             custom_id='back_to_inv_overview_button'
         )
@@ -892,8 +1049,9 @@ class BackToInventoryOverviewButton(Button):
 
 class CancelMoveButton(Button):
     def __init__(self, source_view):
+        locale = getattr(source_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'player-btn-cancel-move'),
+            label=t(locale, 'player-btn-cancel-move'),
             style=ButtonStyle.secondary,
             custom_id='cancel_move_button'
         )

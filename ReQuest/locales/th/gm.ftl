@@ -12,9 +12,6 @@ gm-btn-manage-individual-rewards = จัดการรางวัลราย
 gm-btn-join = เข้าร่วม
 gm-btn-leave = ออก
 gm-btn-complete-quest = จบ Quest
-gm-btn-review-submission = ตรวจสอบการส่ง
-gm-btn-approve = อนุมัติ
-gm-btn-deny = ปฏิเสธ
 
 # GM modals
 gm-modal-title-create-quest = สร้าง Quest ใหม่
@@ -49,9 +46,6 @@ gm-modal-placeholder-inventory-modify =
     ไอเทม: จำนวน
     ไอเทม2: จำนวน
     ฯลฯ
-gm-modal-title-review-submission = ตรวจสอบการส่ง
-gm-modal-label-submission-id = ID การส่ง
-gm-modal-placeholder-submission-id = กรอก ID 8 ตัวอักษร
 
 # GM errors
 gm-error-forbidden-role-name = ชื่อที่ใช้สำหรับบทบาทปาร์ตี้ไม่ได้รับอนุญาต
@@ -59,7 +53,6 @@ gm-error-role-already-exists = มีบทบาทที่ใช้ชื่�
 gm-error-no-quest-channel = ยังไม่ได้กำหนดช่องสำหรับโพสต์ quest ติดต่อผู้ดูแลเซิร์ฟเวอร์เพื่อตั้งค่าช่อง Quest
 gm-error-cannot-ping-announce = ไม่สามารถ ping บทบาทประกาศ { $role } ในช่อง { $channel } ได้ ตรวจสอบสิทธิ์ของช่องและบทบาท ReQuest กับผู้ดูแลเซิร์ฟเวอร์
 gm-error-invalid-item-format = รูปแบบไอเทมไม่ถูกต้อง: "{ $item }" แต่ละไอเทมต้องอยู่คนละบรรทัด ในรูปแบบ "ชื่อ: จำนวน"
-gm-error-submission-not-found = ไม่พบการส่ง
 gm-error-already-on-quest = คุณอยู่ใน quest นี้แล้วในฐานะ { $characterName }
 gm-error-no-active-character-long = คุณไม่มีตัวละครที่ใช้งานอยู่บนเซิร์ฟเวอร์นี้ ใช้ `/player` เพื่อลงทะเบียนหรือเปิดใช้งานตัวละคร
 gm-error-quest-locked = เกิดข้อผิดพลาดในการเข้าร่วม quest {"**"}{ $questTitle }{"**"}: Quest ถูกล็อกโดย GM
@@ -116,8 +109,6 @@ gm-menu-quests = Quest
 gm-menu-desc-quests = สร้าง แก้ไข และจัดการ quest
 gm-menu-players = ผู้เล่น
 gm-menu-desc-players = จัดการคลังไอเทมและแก้ไขตัวละครของผู้เล่น
-gm-menu-approvals = การอนุมัติตัวละคร
-gm-menu-desc-approvals = ตรวจสอบและอนุมัติ/ปฏิเสธการส่งตัวละคร
 
 gm-title-quest-management = GM - จัดการ Quest
 gm-desc-create-quest = สร้าง quest ใหม่
@@ -156,15 +147,6 @@ gm-label-currency-heading = {"**"}สกุลเงิน{"**"}
 gm-msg-inventory-empty = คลังไอเทมว่างเปล่า
 
 # GM approvals
-gm-title-approvals = GM - อนุมัติคลังไอเทม
-gm-desc-review-submission = กรอก ID การส่งเพื่อตรวจสอบและอนุมัติ/ปฏิเสธ
-gm-title-reviewing = กำลังตรวจสอบ: { $characterName }
-gm-label-items = {"**"}ไอเทม:{"**"}
-gm-label-currency = {"**"}สกุลเงิน:{"**"}
-gm-embed-title-approved = อนุมัติการอัปเดตคลังไอเทม
-gm-embed-desc-approved = คลังไอเทมของ {"**"}{ $characterName }{"**"} ได้รับการอนุมัติโดย { $approver }
-gm-embed-title-denied = ปฏิเสธการอัปเดตคลังไอเทม
-gm-embed-desc-denied = คลังไอเทมของ {"**"}{ $characterName }{"**"} ถูกปฏิเสธโดย { $denier }
 
 gm-modal-label-select-party-role = บทบาทปาร์ตี้
 gm-modal-desc-select-party-role = เลือกบทบาทที่จะกำหนดให้ปาร์ตี้ของ quest

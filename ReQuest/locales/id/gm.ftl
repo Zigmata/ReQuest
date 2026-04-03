@@ -12,9 +12,6 @@ gm-btn-manage-individual-rewards = Kelola Hadiah Individu
 gm-btn-join = Gabung
 gm-btn-leave = Keluar
 gm-btn-complete-quest = Selesaikan Quest
-gm-btn-review-submission = Tinjau Pengajuan
-gm-btn-approve = Setujui
-gm-btn-deny = Tolak
 
 # GM modals
 gm-modal-title-create-quest = Buat Quest Baru
@@ -49,9 +46,6 @@ gm-modal-placeholder-inventory-modify =
     barang: jumlah
     barang2: jumlah
     dst.
-gm-modal-title-review-submission = Tinjau Pengajuan
-gm-modal-label-submission-id = ID Pengajuan
-gm-modal-placeholder-submission-id = Masukkan ID 8 karakter
 
 # GM errors
 gm-error-forbidden-role-name = Nama yang diberikan untuk peran rombongan dilarang.
@@ -59,7 +53,6 @@ gm-error-role-already-exists = Peran dengan nama tersebut sudah ada di server in
 gm-error-no-quest-channel = Kanal belum ditetapkan untuk posting quest. Hubungi admin server untuk mengonfigurasi Kanal Quest.
 gm-error-cannot-ping-announce = Tidak dapat menyebut peran pengumuman { $role } di kanal { $channel }. Periksa izin kanal dan peran ReQuest dengan admin server Anda.
 gm-error-invalid-item-format = Format barang tidak valid: "{ $item }". Setiap barang harus di baris baru, dengan format "Nama: Jumlah".
-gm-error-submission-not-found = Pengajuan tidak ditemukan.
 gm-error-already-on-quest = Anda sudah bergabung di quest ini sebagai { $characterName }.
 gm-error-no-active-character-long = Anda tidak memiliki karakter aktif di server ini. Gunakan `/player` untuk mendaftar atau mengaktifkan karakter.
 gm-error-quest-locked = Gagal bergabung ke quest {"**"}{ $questTitle }{"**"}: Quest dikunci oleh GM.
@@ -116,8 +109,6 @@ gm-menu-quests = Quest
 gm-menu-desc-quests = Buat, ubah, dan kelola quest.
 gm-menu-players = Pemain
 gm-menu-desc-players = Kelola inventaris pemain dan ubah karakter.
-gm-menu-approvals = Persetujuan Karakter
-gm-menu-desc-approvals = Tinjau dan setujui/tolak pengajuan karakter.
 
 gm-title-quest-management = GM - Manajemen Quest
 gm-desc-create-quest = Buat quest baru.
@@ -156,15 +147,6 @@ gm-label-currency-heading = {"**"}Mata Uang{"**"}
 gm-msg-inventory-empty = Inventaris kosong.
 
 # GM approvals
-gm-title-approvals = GM - Persetujuan Inventaris
-gm-desc-review-submission = Masukkan ID Pengajuan untuk meninjau dan menyetujui/menolaknya.
-gm-title-reviewing = Meninjau: { $characterName }
-gm-label-items = {"**"}Barang:{"**"}
-gm-label-currency = {"**"}Mata Uang:{"**"}
-gm-embed-title-approved = Pembaruan Inventaris Disetujui
-gm-embed-desc-approved = Inventaris untuk {"**"}{ $characterName }{"**"} telah disetujui oleh { $approver }.
-gm-embed-title-denied = Pembaruan Inventaris Ditolak
-gm-embed-desc-denied = Inventaris untuk {"**"}{ $characterName }{"**"} telah ditolak oleh { $denier }.
 
 gm-modal-label-select-party-role = Peran Rombongan
 gm-modal-desc-select-party-role = Pilih peran untuk ditetapkan ke rombongan quest.

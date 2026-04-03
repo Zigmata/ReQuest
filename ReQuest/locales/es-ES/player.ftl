@@ -146,6 +146,15 @@ player-msg-no-characters = No tenéis personajes registrados.
 player-label-active = (Activo)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Personaje en progreso: { $characterName }{"**"}
+    El registro de tu personaje está esperando la configuración del inventario.
+player-btn-resume = Reanudar
+player-btn-discard = Descartar
+player-modal-title-discard-character = Descartar personaje
+player-modal-label-discard-confirm = ¿Descartar { $characterName }?
+
 # Confirmar eliminación de personaje
 player-modal-title-confirm-char-removal = Confirmar eliminación de personaje
 player-modal-label-confirm-char-delete = ¿Eliminar a { $characterName }?
@@ -285,6 +294,10 @@ player-error-invalid-quantity = Cantidad inválida para "{ $name }": "{ $quantit
 player-error-input-errors-header = Errores en la entrada de inventario:
 player-msg-no-valid-items = No se han proporcionado objetos válidos. Inicializando con inventario vacío.
 
+# Validation error view
+player-validation-error-title = Errores de entrada
+player-validation-btn-retry = Intentar de nuevo
+
 # Validación de cantidad del carrito
 player-error-enter-valid-number = Introducid un número positivo válido.
 
@@ -307,3 +320,46 @@ player-embed-desc-starting-inventory = Jugador: { $playerMention } como `{ $char
 player-embed-field-items-received = Objetos recibidos
 player-embed-field-currency-received-label = Moneda recibida
 player-label-untitled = Sin título
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Envío de inventario: { $characterName }{"**"}
+    Enviado por { $userMention }
+player-approval-post-items = Objetos
+player-approval-post-currency = Moneda
+player-approval-resolved = Esta solicitud ha sido resuelta.
+player-approval-btn-approve = Aprobar
+player-approval-btn-deny = Rechazar
+player-approval-btn-edit = Editar
+player-approval-error-no-permission = No tienes permiso para realizar esta acción.
+player-approval-error-not-submitter = Solo el remitente original puede editar esta solicitud.
+player-approval-thread-instructions =
+    Este hilo fue creado para la aprobación de {"**"}{ $characterName }{"**"}.
+    Un Game Master revisará el envío y lo aprobará o rechazará.
+    Una vez aprobado o rechazado, este hilo quedará bloqueado.
+
+    {"**"}Game Masters:{"**"} Discutid los cambios necesarios con vuestro
+    jugador hasta que el inventario esté en un estado aceptable. Usad
+    el botón `Rechazar` solo para envíos irreconciliables.
+
+    { $playerMention }: Usad el botón `Editar` para realizar los cambios
+    solicitados aquí por un Game Master.
+player-approval-approved-by = Esta solicitud fue aprobada por { $approver }.
+player-approval-denied-by = Esta solicitud fue rechazada por { $denier }.
+player-approval-deny-reason = Razón: { $reason }
+player-msg-submission-updated = Tu solicitud ha sido actualizada.
+
+
+# Denial modal
+player-modal-title-deny-reason = Rechazar solicitud
+player-modal-label-deny-reason = Razón del rechazo
+player-modal-placeholder-deny-reason = Opcional: explica por qué fue rechazada
+# Approval DM notifications
+player-dm-title-approved = Personaje aprobado
+player-dm-desc-approved =
+    Vuestro personaje {"**"}{ $characterName }{"**"} ha sido aprobado
+    por { $approver } en {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Personaje rechazado
+player-dm-desc-denied =
+    Vuestro personaje {"**"}{ $characterName }{"**"} ha sido rechazado
+    por { $denier } en {"**"}{ $guildName }{"**"}.
