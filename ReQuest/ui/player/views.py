@@ -592,7 +592,7 @@ class ContainerItemsView(LocaleLayoutView):
         locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
-        header_section = Section(accessory=buttons.BackToInventoryOverviewButton())
+        header_section = Section(accessory=buttons.BackToInventoryOverviewButton(locale=locale))
         header_section.add_item(TextDisplay(f'**{self.container_name}**'))
         container.add_item(header_section)
         container.add_item(Separator())
@@ -889,7 +889,7 @@ class ContainerManagementView(LocaleLayoutView):
         locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
-        header_section = Section(accessory=buttons.BackToInventoryOverviewButton())
+        header_section = Section(accessory=buttons.BackToInventoryOverviewButton(locale=locale))
         header_section.add_item(TextDisplay(t(locale, 'player-title-manage-containers')))
         container.add_item(header_section)
         container.add_item(Separator())
@@ -1346,12 +1346,14 @@ class ValidationErrorView(LocaleLayoutView):
 
 
 class NewCharacterWizardView(LocaleLayoutView):
-    def __init__(self, pending_character, inventory_type):
+    def __init__(self, pending_character, inventory_type, locale=None):
         super().__init__(timeout=None)
         self.pending_character = pending_character
         self.character_id = pending_character['character_id']
         self.character_name = pending_character['name']
         self.inventory_type = inventory_type
+        if locale:
+            self.locale = locale
 
         self.build_view()
 
@@ -1440,7 +1442,7 @@ class StaticKitSelectView(LocaleLayoutView):
             page_items = self.sorted_kits[start:end]
 
             for kit_id, kit_data in page_items:
-                select_button = buttons.SelectKitOptionButton(kit_id, kit_data)
+                select_button = buttons.SelectKitOptionButton(kit_id, kit_data, locale=locale)
                 section = Section(accessory=select_button)
 
                 kit_name = kit_data.get(CommonFields.NAME, 'Unknown Kit')
@@ -1593,8 +1595,8 @@ class StaticKitConfirmView(LocaleLayoutView):
         container.add_item(Separator())
 
         actions = ActionRow()
-        actions.add_item(buttons.KitConfirmButton())
-        actions.add_item(buttons.KitBackButton())
+        actions.add_item(buttons.KitConfirmButton(locale=locale))
+        actions.add_item(buttons.KitBackButton(locale=locale))
         container.add_item(actions)
 
         self.add_item(container)
@@ -1771,7 +1773,9 @@ class NewCharacterShopView(LocaleLayoutView):
                 costs = item.get(ShopFields.COSTS, [])
                 cost_string = format_complex_cost(costs, self.currency_config)
 
-            section = Section(accessory=buttons.WizardItemButton(item, self.inventory_type, cost_string))
+            section = Section(accessory=buttons.WizardItemButton(
+                item, self.inventory_type, cost_string, locale=locale
+            ))
 
             display = f'**{item[CommonFields.NAME]}**'
             if item.get(CommonFields.QUANTITY, 1) > 1:
@@ -1963,7 +1967,7 @@ class NewCharacterCartView(LocaleLayoutView):
                             price_label = format_complex_cost([total_line_cost], self.shop_view.currency_config)
                             display += f' - {price_label}'
 
-                edit_button = buttons.WizardEditCartItemButton(key, quantity)
+                edit_button = buttons.WizardEditCartItemButton(key, quantity, locale=locale)
                 section = Section(accessory=edit_button)
                 section.add_item(TextDisplay(display))
                 container.add_item(section)
@@ -2073,6 +2077,8 @@ class ApprovalPostView(LocaleLayoutView):
             self.resolved = True
         else:
             guild_id = self.submission_data.get('guild_id')
+            if not self.locale or self.locale == DEFAULT_LOCALE:
+                self.locale = await resolve_guild_locale(bot, guild_id)
             self.currency_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -2150,9 +2156,9 @@ class ApprovalPostView(LocaleLayoutView):
         else:
             # Action buttons
             actions = ActionRow()
-            actions.add_item(buttons.ApprovalApproveButton(self.submission_id))
-            actions.add_item(buttons.ApprovalDenyButton(self.submission_id))
-            actions.add_item(buttons.ApprovalEditButton(self.submission_id))
+            actions.add_item(buttons.ApprovalApproveButton(self.submission_id, locale=locale))
+            actions.add_item(buttons.ApprovalDenyButton(self.submission_id, locale=locale))
+            actions.add_item(buttons.ApprovalEditButton(self.submission_id, locale=locale))
             container.add_item(actions)
 
         self.add_item(container)
@@ -2201,9 +2207,9 @@ class ApprovalPostView(LocaleLayoutView):
         # Approve/Deny: require GM or mod
         if custom_id.startswith(('approve_sub_', 'deny_sub_')):
             if not await is_gm_or_mod(interaction.client, interaction.guild, interaction.user):
-                locale = getattr(self, 'locale', DEFAULT_LOCALE)
+                caller_locale = await resolve_locale(interaction)
                 await interaction.response.send_message(
-                    t(locale, 'player-approval-error-no-permission'), ephemeral=True
+                    t(caller_locale, 'player-approval-error-no-permission'), ephemeral=True
                 )
                 return False
             return True
@@ -2212,9 +2218,9 @@ class ApprovalPostView(LocaleLayoutView):
         if custom_id.startswith('edit_sub_'):
             submitter_id = self.submission_data.get('user_id')
             if interaction.user.id != submitter_id:
-                locale = getattr(self, 'locale', DEFAULT_LOCALE)
+                caller_locale = await resolve_locale(interaction)
                 await interaction.response.send_message(
-                    t(locale, 'player-approval-error-not-submitter'), ephemeral=True
+                    t(caller_locale, 'player-approval-error-not-submitter'), ephemeral=True
                 )
                 return False
             return True
@@ -2238,21 +2244,22 @@ class ApprovalPostView(LocaleLayoutView):
         try:
             await interaction.response.send_modal(common_modals.PageJumpModal(self))
         except Exception as e:
-            locale = getattr(self, 'locale', DEFAULT_LOCALE)
+            caller_locale = await resolve_locale(interaction)
             logger.error(f'Failed to send PageJumpModal: {e}')
             await interaction.response.send_message(
-                t(locale, 'common-error-page-selector'), ephemeral=True
+                t(caller_locale, 'common-error-page-selector'), ephemeral=True
             )
 
     async def approve(self, interaction):
+        claimed = False
+        bot = interaction.client
         try:
             await interaction.response.defer()
-            bot = interaction.client
 
             # Atomically claim the submission to prevent concurrent approve/deny
             claimed = await bot.gdb[DatabaseCollections.APPROVALS].find_one_and_update(
                 {'submission_id': self.submission_id, 'status': 'pending'},
-                {'$set': {'status': 'approved'}}
+                {'$set': {'status': 'processing'}}
             )
             if not claimed:
                 self.resolved = True
@@ -2294,7 +2301,7 @@ class ApprovalPostView(LocaleLayoutView):
             for name, quantity in self.submission_data.get('currency', {}).items():
                 await update_character_inventory(interaction, user_id, character_id, name, quantity)
 
-            # Revoke granted forum permissions and lock/archive thread
+            # Revoke granted forum permissions
             thread = interaction.channel
             if isinstance(thread, discord.Thread):
                 await self._revoke_submitter_permissions(thread, bot, guild_id, user_id, self.submission_id)
@@ -2307,6 +2314,9 @@ class ApprovalPostView(LocaleLayoutView):
                 search_filter={'submission_id': self.submission_id},
                 cache_id=f'approval_submission:{self.submission_id}'
             )
+
+            # Mark claim as fully resolved so we don't revert on success
+            claimed = False
 
             # Update view to resolved state
             self.resolved = True
@@ -2338,6 +2348,11 @@ class ApprovalPostView(LocaleLayoutView):
                 await thread.edit(locked=True, archived=True)
 
         except Exception as e:
+            if claimed:
+                await bot.gdb[DatabaseCollections.APPROVALS].update_one(
+                    {'submission_id': self.submission_id, 'status': 'processing'},
+                    {'$set': {'status': 'pending'}}
+                )
             await log_exception(e, interaction)
 
     async def deny(self, interaction):
@@ -2350,14 +2365,15 @@ class ApprovalPostView(LocaleLayoutView):
             await log_exception(e, interaction)
 
     async def _process_denial(self, interaction, reason=''):
+        claimed = False
+        bot = interaction.client
         try:
             await interaction.response.defer()
-            bot = interaction.client
 
             # Atomically claim the submission to prevent concurrent approve/deny
             claimed = await bot.gdb[DatabaseCollections.APPROVALS].find_one_and_update(
                 {'submission_id': self.submission_id, 'status': 'pending'},
-                {'$set': {'status': 'denied'}}
+                {'$set': {'status': 'processing'}}
             )
             if not claimed:
                 self.resolved = True
@@ -2369,7 +2385,7 @@ class ApprovalPostView(LocaleLayoutView):
             guild_id = self.submission_data['guild_id']
             character_name = self.submission_data.get('character_name', '')
 
-            # Revoke granted forum permissions and lock/archive thread
+            # Revoke granted forum permissions
             thread = interaction.channel
             if isinstance(thread, discord.Thread):
                 await self._revoke_submitter_permissions(thread, bot, guild_id, user_id, self.submission_id)
@@ -2382,6 +2398,9 @@ class ApprovalPostView(LocaleLayoutView):
                 search_filter={'submission_id': self.submission_id},
                 cache_id=f'approval_submission:{self.submission_id}'
             )
+
+            # Mark claim as fully resolved so we don't revert on success
+            claimed = False
 
             # Update view to resolved state
             self.resolved = True
@@ -2417,6 +2436,11 @@ class ApprovalPostView(LocaleLayoutView):
                 await thread.edit(locked=True, archived=True)
 
         except Exception as e:
+            if claimed:
+                await bot.gdb[DatabaseCollections.APPROVALS].update_one(
+                    {'submission_id': self.submission_id, 'status': 'processing'},
+                    {'$set': {'status': 'pending'}}
+                )
             await log_exception(e, interaction)
 
     @staticmethod
@@ -2467,7 +2491,8 @@ class ApprovalPostView(LocaleLayoutView):
             # Store the submission_id so _handle_submission can update instead of insert
             pending_character['submission_id'] = self.submission_id
 
-            view = NewCharacterWizardView(pending_character, inventory_type)
+            caller_locale = await resolve_locale(interaction)
+            view = NewCharacterWizardView(pending_character, inventory_type, locale=caller_locale)
             await interaction.response.send_message(view=view, ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)
@@ -2475,7 +2500,7 @@ class ApprovalPostView(LocaleLayoutView):
 
 async def _handle_submission(interaction, pending_character, items, currency):
     try:
-        locale = getattr(interaction, '_locale_override', DEFAULT_LOCALE)
+        locale = await resolve_locale(interaction)
         guild_id = interaction.guild_id
         bot = interaction.client
         member_id = interaction.user.id
@@ -2508,11 +2533,7 @@ async def _handle_submission(interaction, pending_character, items, currency):
             if existing_submission_id:
                 # Edit re-submission: update the existing APPROVALS doc and refresh the forum post
                 submission_id = existing_submission_id
-                confirmation_view = LayoutView()
-                container = Container(accent_colour=discord.Colour.green())
-                container.add_item(TextDisplay(t(locale, 'player-msg-submission-updated')))
-                confirmation_view.add_item(container)
-                await interaction.response.edit_message(view=confirmation_view)
+                await interaction.response.defer()
 
                 result = await bot.gdb[DatabaseCollections.APPROVALS].update_one(
                     {'submission_id': submission_id, 'status': 'pending', 'user_id': member_id},
@@ -2525,10 +2546,18 @@ async def _handle_submission(interaction, pending_character, items, currency):
                 )
 
                 if result.matched_count == 0:
-                    await interaction.followup.send(
-                        t(locale, 'player-approval-resolved'), ephemeral=True
-                    )
+                    resolved_view = LayoutView()
+                    container = Container(accent_colour=discord.Colour.red())
+                    container.add_item(TextDisplay(t(locale, 'player-approval-resolved')))
+                    resolved_view.add_item(container)
+                    await interaction.edit_original_response(view=resolved_view)
                     return
+
+                confirmation_view = LayoutView()
+                container = Container(accent_colour=discord.Colour.green())
+                container.add_item(TextDisplay(t(locale, 'player-msg-submission-updated')))
+                confirmation_view.add_item(container)
+                await interaction.edit_original_response(view=confirmation_view)
 
                 # Refresh the forum post view
                 approval_doc = await bot.gdb[DatabaseCollections.APPROVALS].find_one(
@@ -2590,18 +2619,24 @@ async def _handle_submission(interaction, pending_character, items, currency):
                 # Grant forum channel access to submitter for any missing permissions
                 try:
                     forum_perms = forum_channel.permissions_for(interaction.user)
-                    needed = {
+                    needed_perms = {
                         'view_channel': not forum_perms.view_channel,
                         'send_messages_in_threads': not forum_perms.send_messages_in_threads,
                         'read_message_history': not forum_perms.read_message_history,
                     }
-                    granted = {k: True for k, v in needed.items() if v}
-                    if granted:
-                        await forum_channel.set_permissions(interaction.user, **granted)
-                        await bot.gdb[DatabaseCollections.APPROVALS].update_one(
-                            {'submission_id': submission_id},
-                            {'$set': {'granted_permissions': list(granted.keys())}}
-                        )
+                    if any(needed_perms.values()):
+                        overwrite = forum_channel.overwrites_for(interaction.user)
+                        granted = []
+                        for perm, needed in needed_perms.items():
+                            if needed and getattr(overwrite, perm) is None:
+                                setattr(overwrite, perm, True)
+                                granted.append(perm)
+                        if granted:
+                            await forum_channel.set_permissions(interaction.user, overwrite=overwrite)
+                            await bot.gdb[DatabaseCollections.APPROVALS].update_one(
+                                {'submission_id': submission_id},
+                                {'$set': {'granted_permissions': granted}}
+                            )
                 except Exception as e:
                     logger.warning(f'Could not grant forum access for user {member_id}: {e}')
 
