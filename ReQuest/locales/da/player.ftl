@@ -323,8 +323,8 @@ player-label-untitled = Uden titel
 
 # ApprovalPostView
 player-approval-post-header =
-    {"**"}Inventory Submission: { $characterName }{"**"}
-    Submitted by { $userMention }
+    {"**"}Inventarindsendelse: { $characterName }{"**"}
+    Indsendt af { $userMention }
 player-approval-post-items = Genstande
 player-approval-post-currency = Valuta
 player-approval-resolved = Denne anmodning er blevet behandlet.
@@ -334,16 +334,16 @@ player-approval-btn-edit = Rediger
 player-approval-error-no-permission = Du har ikke tilladelse til denne handling.
 player-approval-error-not-submitter = Kun den originale indsender kan redigere denne anmodning.
 player-approval-thread-instructions =
-    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
-    A Game Master will review the submission and approve or deny it.
-    Once approved or denied, this thread will be locked.
+    Denne tråd blev oprettet til godkendelse af {"**"}{ $characterName }{"**"}.
+    En Game Master vil gennemgå indsendelsen og godkende eller afvise den.
+    Når den er godkendt eller afvist, vil denne tråd blive låst.
 
-    {"**"}Game Masters:{"**"} Discuss any required changes with your
-    player until the inventory is in an acceptable state. Only use
-    the `Deny` button for irreconcilable submissions.
+    {"**"}Game Masters:{"**"} Diskuter eventuelle nødvendige ændringer med
+    jeres spiller, indtil inventaret er i en acceptabel tilstand. Brug kun
+    knappen `Deny` til uforenelige indsendelser.
 
-    { $playerMention }: Use the `Edit` button to make any changes
-    requested here by a Game Master.
+    { $playerMention }: Brug knappen `Edit` til at foretage ændringer,
+    der anmodes om her af en Game Master.
 player-approval-approved-by = Denne anmodning blev godkendt af { $approver }.
 player-approval-denied-by = Denne anmodning blev afvist af { $denier }.
 player-approval-deny-reason = Årsag: { $reason }
@@ -357,9 +357,9 @@ player-modal-placeholder-deny-reason = Valgfrit: forklar hvorfor anmodningen ble
 # Approval DM notifications
 player-dm-title-approved = Karakter godkendt
 player-dm-desc-approved =
-    Your character {"**"}{ $characterName }{"**"} has been approved
-    by { $approver } in {"**"}{ $guildName }{"**"}!
+    Din karakter {"**"}{ $characterName }{"**"} er blevet godkendt
+    af { $approver } i {"**"}{ $guildName }{"**"}!
 player-dm-title-denied = Karakter afvist
 player-dm-desc-denied =
-    Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}.
+    Din karakter {"**"}{ $characterName }{"**"} er blevet afvist
+    af { $denier } i {"**"}{ $guildName }{"**"}.

@@ -323,8 +323,8 @@ player-label-untitled = Névtelen
 
 # ApprovalPostView
 player-approval-post-header =
-    {"**"}Inventory Submission: { $characterName }{"**"}
-    Submitted by { $userMention }
+    {"**"}Leltár beadvány: { $characterName }{"**"}
+    Beküldő: { $userMention }
 player-approval-post-items = Tárgyak
 player-approval-post-currency = Pénznem
 player-approval-resolved = Ez a beadvány feldolgozásra került.
@@ -334,16 +334,17 @@ player-approval-btn-edit = Szerkesztés
 player-approval-error-no-permission = Nincs jogosultságod ehhez a művelethez.
 player-approval-error-not-submitter = Csak az eredeti benyújtó szerkesztheti ezt a beadványt.
 player-approval-thread-instructions =
-    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
-    A Game Master will review the submission and approve or deny it.
-    Once approved or denied, this thread will be locked.
+    Ez a szál a(z) {"**"}{ $characterName }{"**"} jóváhagyásához jött létre.
+    Egy Játékmester felülvizsgálja a beadványt, és jóváhagyja vagy elutasítja.
+    Jóváhagyás vagy elutasítás után ez a szál lezárásra kerül.
 
-    {"**"}Game Masters:{"**"} Discuss any required changes with your
-    player until the inventory is in an acceptable state. Only use
-    the `Deny` button for irreconcilable submissions.
+    {"**"}Játékmesterek:{"**"} Beszéljétek meg a szükséges
+    változtatásokat a játékossal, amíg a leltár elfogadható
+    állapotba nem kerül. Az `Elutasítás` gombot csak
+    összeegyeztethetetlen beadványok esetén használjátok.
 
-    { $playerMention }: Use the `Edit` button to make any changes
-    requested here by a Game Master.
+    { $playerMention }: Használd a `Szerkesztés` gombot a
+    Játékmester által itt kért módosítások elvégzéséhez.
 player-approval-approved-by = Ezt a beadványt { $approver } jóváhagyta.
 player-approval-denied-by = Ezt a beadványt { $denier } elutasította.
 player-approval-deny-reason = Indok: { $reason }
@@ -357,9 +358,9 @@ player-modal-placeholder-deny-reason = Opcionális: magyarázza el az elutasít�
 # Approval DM notifications
 player-dm-title-approved = Karakter jóváhagyva
 player-dm-desc-approved =
-    Your character {"**"}{ $characterName }{"**"} has been approved
-    by { $approver } in {"**"}{ $guildName }{"**"}!
+    A(z) {"**"}{ $characterName }{"**"} karakteredet jóváhagyta
+    { $approver } a(z) {"**"}{ $guildName }{"**"} szerveren!
 player-dm-title-denied = Karakter elutasítva
 player-dm-desc-denied =
-    Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}.
+    A(z) {"**"}{ $characterName }{"**"} karakteredet elutasította
+    { $denier } a(z) {"**"}{ $guildName }{"**"} szerveren.

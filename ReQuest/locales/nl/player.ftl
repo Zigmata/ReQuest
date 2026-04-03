@@ -323,8 +323,8 @@ player-label-untitled = Zonder titel
 
 # ApprovalPostView
 player-approval-post-header =
-    {"**"}Inventory Submission: { $characterName }{"**"}
-    Submitted by { $userMention }
+    {"**"}Inventarisinzending: { $characterName }{"**"}
+    Ingediend door { $userMention }
 player-approval-post-items = Voorwerpen
 player-approval-post-currency = Valuta
 player-approval-resolved = Deze inzending is afgehandeld.
@@ -334,16 +334,16 @@ player-approval-btn-edit = Bewerken
 player-approval-error-no-permission = Je hebt geen toestemming voor deze actie.
 player-approval-error-not-submitter = Alleen de originele indiener kan deze inzending bewerken.
 player-approval-thread-instructions =
-    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
-    A Game Master will review the submission and approve or deny it.
-    Once approved or denied, this thread will be locked.
+    Deze thread is aangemaakt voor de goedkeuring van {"**"}{ $characterName }{"**"}.
+    Een Game Master zal de inzending beoordelen en goedkeuren of afwijzen.
+    Na goedkeuring of afwijzing wordt deze thread vergrendeld.
 
-    {"**"}Game Masters:{"**"} Discuss any required changes with your
-    player until the inventory is in an acceptable state. Only use
-    the `Deny` button for irreconcilable submissions.
+    {"**"}Game Masters:{"**"} Bespreek eventuele vereiste wijzigingen met je
+    speler totdat de inventaris in een acceptabele staat is. Gebruik de
+    `Afwijzen`-knop alleen voor onverenigbare inzendingen.
 
-    { $playerMention }: Use the `Edit` button to make any changes
-    requested here by a Game Master.
+    { $playerMention }: Gebruik de `Bewerken`-knop om wijzigingen aan te
+    brengen die hier door een Game Master zijn gevraagd.
 player-approval-approved-by = Deze inzending is goedgekeurd door { $approver }.
 player-approval-denied-by = Deze inzending is afgewezen door { $denier }.
 player-approval-deny-reason = Reden: { $reason }
@@ -357,9 +357,9 @@ player-modal-placeholder-deny-reason = Optioneel: leg uit waarom de inzending is
 # Approval DM notifications
 player-dm-title-approved = Karakter goedgekeurd
 player-dm-desc-approved =
-    Your character {"**"}{ $characterName }{"**"} has been approved
-    by { $approver } in {"**"}{ $guildName }{"**"}!
+    Je personage {"**"}{ $characterName }{"**"} is goedgekeurd
+    door { $approver } in {"**"}{ $guildName }{"**"}!
 player-dm-title-denied = Karakter afgewezen
 player-dm-desc-denied =
-    Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}.
+    Je personage {"**"}{ $characterName }{"**"} is afgewezen
+    door { $denier } in {"**"}{ $guildName }{"**"}.

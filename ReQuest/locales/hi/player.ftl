@@ -323,8 +323,8 @@ player-label-untitled = बिना शीर्षक
 
 # ApprovalPostView
 player-approval-post-header =
-    {"**"}Inventory Submission: { $characterName }{"**"}
-    Submitted by { $userMention }
+    {"**"}सामान सबमिशन: { $characterName }{"**"}
+    { $userMention } द्वारा सबमिट
 player-approval-post-items = वस्तुएं
 player-approval-post-currency = मुद्रा
 player-approval-resolved = यह अनुरोध हल हो गया है।
@@ -334,16 +334,16 @@ player-approval-btn-edit = संपादित
 player-approval-error-no-permission = आपको यह कार्य करने की अनुमति नहीं है।
 player-approval-error-not-submitter = केवल मूल प्रस्तुतकर्ता ही इस अनुरोध को संपादित कर सकता है।
 player-approval-thread-instructions =
-    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
-    A Game Master will review the submission and approve or deny it.
-    Once approved or denied, this thread will be locked.
+    यह थ्रेड {"**"}{ $characterName }{"**"} की स्वीकृति के लिए बनाया गया था।
+    एक Game Master सबमिशन की समीक्षा करेगा और इसे स्वीकृत या अस्वीकृत करेगा।
+    स्वीकृत या अस्वीकृत होने के बाद, यह थ्रेड लॉक कर दिया जाएगा।
 
-    {"**"}Game Masters:{"**"} Discuss any required changes with your
-    player until the inventory is in an acceptable state. Only use
-    the `Deny` button for irreconcilable submissions.
+    {"**"}Game Masters:{"**"} अपने खिलाड़ी के साथ आवश्यक बदलावों पर
+    चर्चा करें जब तक सामान स्वीकार्य स्थिति में न हो। `अस्वीकृत`
+    बटन का उपयोग केवल असमाधेय सबमिशन के लिए करें।
 
-    { $playerMention }: Use the `Edit` button to make any changes
-    requested here by a Game Master.
+    { $playerMention }: Game Master द्वारा यहाँ अनुरोधित बदलाव करने
+    के लिए `संपादित` बटन का उपयोग करें।
 player-approval-approved-by = यह अनुरोध { $approver } द्वारा स्वीकृत किया गया।
 player-approval-denied-by = यह अनुरोध { $denier } द्वारा अस्वीकृत किया गया।
 player-approval-deny-reason = कारण: { $reason }
@@ -357,9 +357,9 @@ player-modal-placeholder-deny-reason = वैकल्पिक: अस्वी
 # Approval DM notifications
 player-dm-title-approved = चरित्र स्वीकृत
 player-dm-desc-approved =
-    Your character {"**"}{ $characterName }{"**"} has been approved
-    by { $approver } in {"**"}{ $guildName }{"**"}!
+    आपका चरित्र {"**"}{ $characterName }{"**"} को { $approver } द्वारा
+    {"**"}{ $guildName }{"**"} में स्वीकृत किया गया है!
 player-dm-title-denied = चरित्र अस्वीकृत
 player-dm-desc-denied =
-    Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}.
+    आपका चरित्र {"**"}{ $characterName }{"**"} को { $denier } द्वारा
+    {"**"}{ $guildName }{"**"} में अस्वीकृत किया गया है।

@@ -323,8 +323,8 @@ player-label-untitled = Başlıksız
 
 # ApprovalPostView
 player-approval-post-header =
-    {"**"}Inventory Submission: { $characterName }{"**"}
-    Submitted by { $userMention }
+    {"**"}Envanter Başvurusu: { $characterName }{"**"}
+    Gönderen: { $userMention }
 player-approval-post-items = Eşyalar
 player-approval-post-currency = Para Birimi
 player-approval-resolved = Bu başvuru işlendi.
@@ -334,16 +334,16 @@ player-approval-btn-edit = Düzenle
 player-approval-error-no-permission = Bu işlemi gerçekleştirme yetkiniz yok.
 player-approval-error-not-submitter = Yalnızca orijinal gönderen bu başvuruyu düzenleyebilir.
 player-approval-thread-instructions =
-    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
-    A Game Master will review the submission and approve or deny it.
-    Once approved or denied, this thread will be locked.
+    Bu konu {"**"}{ $characterName }{"**"} adlı karakterin onayı için oluşturuldu.
+    Bir Oyun Yöneticisi başvuruyu inceleyip onaylayacak veya reddedecektir.
+    Onaylandıktan veya reddedildikten sonra bu konu kilitlenecektir.
 
-    {"**"}Game Masters:{"**"} Discuss any required changes with your
-    player until the inventory is in an acceptable state. Only use
-    the `Deny` button for irreconcilable submissions.
+    {"**"}Oyun Yöneticileri:{"**"} Envanter kabul edilebilir bir duruma
+    gelene kadar gerekli değişiklikleri oyuncunuzla tartışın. `Reddet`
+    düğmesini yalnızca uzlaşılamaz başvurular için kullanın.
 
-    { $playerMention }: Use the `Edit` button to make any changes
-    requested here by a Game Master.
+    { $playerMention }: Bir Oyun Yöneticisi tarafından burada istenen
+    değişiklikleri yapmak için `Düzenle` düğmesini kullanın.
 player-approval-approved-by = Bu başvuru { $approver } tarafından onaylandı.
 player-approval-denied-by = Bu başvuru { $denier } tarafından reddedildi.
 player-approval-deny-reason = Sebep: { $reason }
@@ -357,9 +357,9 @@ player-modal-placeholder-deny-reason = İsteğe bağlı: red sebebini açıklay�
 # Approval DM notifications
 player-dm-title-approved = Karakter onaylandı
 player-dm-desc-approved =
-    Your character {"**"}{ $characterName }{"**"} has been approved
-    by { $approver } in {"**"}{ $guildName }{"**"}!
+    {"**"}{ $characterName }{"**"} adlı karakteriniz {"**"}{ $guildName }{"**"}
+    sunucusunda { $approver } tarafından onaylandı!
 player-dm-title-denied = Karakter reddedildi
 player-dm-desc-denied =
-    Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}.
+    {"**"}{ $characterName }{"**"} adlı karakteriniz {"**"}{ $guildName }{"**"}
+    sunucusunda { $denier } tarafından reddedildi.

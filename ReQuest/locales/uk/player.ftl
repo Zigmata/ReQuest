@@ -323,8 +323,8 @@ player-label-untitled = Без назви
 
 # ApprovalPostView
 player-approval-post-header =
-    {"**"}Inventory Submission: { $characterName }{"**"}
-    Submitted by { $userMention }
+    {"**"}Подання інвентарю: { $characterName }{"**"}
+    Подано { $userMention }
 player-approval-post-items = Предмети
 player-approval-post-currency = Валюта
 player-approval-resolved = Цю заявку було оброблено.
@@ -334,16 +334,16 @@ player-approval-btn-edit = Редагувати
 player-approval-error-no-permission = У вас немає дозволу на цю дію.
 player-approval-error-not-submitter = Тільки первісний відправник може редагувати цю заявку.
 player-approval-thread-instructions =
-    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
-    A Game Master will review the submission and approve or deny it.
-    Once approved or denied, this thread will be locked.
+    Цю гілку створено для схвалення {"**"}{ $characterName }{"**"}.
+    Майстер гри перегляне подання та схвалить або відхилить його.
+    Після схвалення або відхилення цю гілку буде заблоковано.
 
-    {"**"}Game Masters:{"**"} Discuss any required changes with your
-    player until the inventory is in an acceptable state. Only use
-    the `Deny` button for irreconcilable submissions.
+    {"**"}Майстри гри:{"**"} Обговоріть необхідні зміни з вашим
+    гравцем, доки інвентар не буде в прийнятному стані. Використовуйте
+    кнопку `Відхилити` лише для непримиренних подань.
 
-    { $playerMention }: Use the `Edit` button to make any changes
-    requested here by a Game Master.
+    { $playerMention }: Використовуйте кнопку `Редагувати`, щоб внести
+    зміни, запитані тут Майстром гри.
 player-approval-approved-by = Цю заявку було схвалено { $approver }.
 player-approval-denied-by = Цю заявку було відхилено { $denier }.
 player-approval-deny-reason = Причина: { $reason }
@@ -357,9 +357,9 @@ player-modal-placeholder-deny-reason = Необов'язково: поясніт
 # Approval DM notifications
 player-dm-title-approved = Персонаж схвалений
 player-dm-desc-approved =
-    Your character {"**"}{ $characterName }{"**"} has been approved
-    by { $approver } in {"**"}{ $guildName }{"**"}!
+    Ваш персонаж {"**"}{ $characterName }{"**"} був схвалений
+    { $approver } на сервері {"**"}{ $guildName }{"**"}!
 player-dm-title-denied = Персонаж відхилений
 player-dm-desc-denied =
-    Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}.
+    Ваш персонаж {"**"}{ $characterName }{"**"} був відхилений
+    { $denier } на сервері {"**"}{ $guildName }{"**"}.

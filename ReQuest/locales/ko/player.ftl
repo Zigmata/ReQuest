@@ -323,8 +323,8 @@ player-label-untitled = 제목 없음
 
 # ApprovalPostView
 player-approval-post-header =
-    {"**"}Inventory Submission: { $characterName }{"**"}
-    Submitted by { $userMention }
+    {"**"}인벤토리 제출: { $characterName }{"**"}
+    { $userMention }이(가) 제출함
 player-approval-post-items = 아이템
 player-approval-post-currency = 화폐
 player-approval-resolved = 이 제출물은 처리되었습니다.
@@ -334,16 +334,16 @@ player-approval-btn-edit = 편집
 player-approval-error-no-permission = 이 작업을 수행할 권한이 없습니다.
 player-approval-error-not-submitter = 원래 제출자만 이 제출물을 편집할 수 있습니다.
 player-approval-thread-instructions =
-    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
-    A Game Master will review the submission and approve or deny it.
-    Once approved or denied, this thread will be locked.
+    이 스레드는 {"**"}{ $characterName }{"**"}의 승인을 위해 생성되었습니다.
+    게임 마스터가 제출물을 검토하고 승인 또는 거부합니다.
+    승인 또는 거부되면 이 스레드는 잠깁니다.
 
-    {"**"}Game Masters:{"**"} Discuss any required changes with your
-    player until the inventory is in an acceptable state. Only use
-    the `Deny` button for irreconcilable submissions.
+    {"**"}게임 마스터:{"**"} 인벤토리가 허용 가능한 상태가 될 때까지
+    플레이어와 필요한 변경 사항을 논의하세요. `거부` 버튼은
+    조정 불가능한 제출물에만 사용하세요.
 
-    { $playerMention }: Use the `Edit` button to make any changes
-    requested here by a Game Master.
+    { $playerMention }: 게임 마스터가 여기에서 요청한 변경 사항을
+    적용하려면 `편집` 버튼을 사용하세요.
 player-approval-approved-by = 이 제출물은 { $approver }에 의해 승인되었습니다.
 player-approval-denied-by = 이 제출물은 { $denier }에 의해 거부되었습니다.
 player-approval-deny-reason = 사유: { $reason }
@@ -357,9 +357,9 @@ player-modal-placeholder-deny-reason = 선택사항: 거부 사유를 설명하�
 # Approval DM notifications
 player-dm-title-approved = 캐릭터 승인됨
 player-dm-desc-approved =
-    Your character {"**"}{ $characterName }{"**"} has been approved
-    by { $approver } in {"**"}{ $guildName }{"**"}!
+    당신의 캐릭터 {"**"}{ $characterName }{"**"}이(가)
+    {"**"}{ $guildName }{"**"}에서 { $approver }에 의해 승인되었습니다!
 player-dm-title-denied = 캐릭터 거부됨
 player-dm-desc-denied =
-    Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}.
+    당신의 캐릭터 {"**"}{ $characterName }{"**"}이(가)
+    {"**"}{ $guildName }{"**"}에서 { $denier }에 의해 거부되었습니다.

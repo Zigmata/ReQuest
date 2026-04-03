@@ -323,8 +323,8 @@ player-label-untitled = Tanpa Judul
 
 # ApprovalPostView
 player-approval-post-header =
-    {"**"}Inventory Submission: { $characterName }{"**"}
-    Submitted by { $userMention }
+    {"**"}Pengajuan Inventaris: { $characterName }{"**"}
+    Diajukan oleh { $userMention }
 player-approval-post-items = Item
 player-approval-post-currency = Mata Uang
 player-approval-resolved = Pengajuan ini telah diselesaikan.
@@ -334,16 +334,17 @@ player-approval-btn-edit = Edit
 player-approval-error-no-permission = Anda tidak memiliki izin untuk melakukan tindakan ini.
 player-approval-error-not-submitter = Hanya pengirim asli yang dapat mengedit pengajuan ini.
 player-approval-thread-instructions =
-    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
-    A Game Master will review the submission and approve or deny it.
-    Once approved or denied, this thread will be locked.
+    Thread ini dibuat untuk persetujuan {"**"}{ $characterName }{"**"}.
+    Seorang Game Master akan meninjau pengajuan dan menyetujui atau menolaknya.
+    Setelah disetujui atau ditolak, thread ini akan dikunci.
 
-    {"**"}Game Masters:{"**"} Discuss any required changes with your
-    player until the inventory is in an acceptable state. Only use
-    the `Deny` button for irreconcilable submissions.
+    {"**"}Game Master:{"**"} Diskusikan perubahan yang diperlukan
+    dengan pemain Anda hingga inventaris dalam keadaan yang dapat
+    diterima. Gunakan tombol `Tolak` hanya untuk pengajuan yang
+    tidak dapat direkonsiliasi.
 
-    { $playerMention }: Use the `Edit` button to make any changes
-    requested here by a Game Master.
+    { $playerMention }: Gunakan tombol `Edit` untuk melakukan
+    perubahan yang diminta di sini oleh Game Master.
 player-approval-approved-by = Pengajuan ini disetujui oleh { $approver }.
 player-approval-denied-by = Pengajuan ini ditolak oleh { $denier }.
 player-approval-deny-reason = Alasan: { $reason }
@@ -357,9 +358,9 @@ player-modal-placeholder-deny-reason = Opsional: jelaskan alasan penolakan
 # Approval DM notifications
 player-dm-title-approved = Karakter disetujui
 player-dm-desc-approved =
-    Your character {"**"}{ $characterName }{"**"} has been approved
-    by { $approver } in {"**"}{ $guildName }{"**"}!
+    Karakter Anda {"**"}{ $characterName }{"**"} telah disetujui
+    oleh { $approver } di {"**"}{ $guildName }{"**"}!
 player-dm-title-denied = Karakter ditolak
 player-dm-desc-denied =
-    Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}.
+    Karakter Anda {"**"}{ $characterName }{"**"} telah ditolak
+    oleh { $denier } di {"**"}{ $guildName }{"**"}.

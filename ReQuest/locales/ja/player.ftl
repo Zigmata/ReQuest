@@ -323,8 +323,8 @@ player-label-untitled = 無題
 
 # ApprovalPostView
 player-approval-post-header =
-    {"**"}Inventory Submission: { $characterName }{"**"}
-    Submitted by { $userMention }
+    {"**"}インベントリ申請: { $characterName }{"**"}
+    申請者: { $userMention }
 player-approval-post-items = アイテム
 player-approval-post-currency = 通貨
 player-approval-resolved = この申請は処理済みです。
@@ -334,16 +334,16 @@ player-approval-btn-edit = 編集
 player-approval-error-no-permission = この操作を行う権限がありません。
 player-approval-error-not-submitter = 元の提出者のみがこの申請を編集できます。
 player-approval-thread-instructions =
-    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
-    A Game Master will review the submission and approve or deny it.
-    Once approved or denied, this thread will be locked.
+    このスレッドは {"**"}{ $characterName }{"**"} の承認のために作成されました。
+    ゲームマスターが申請を確認し、承認または拒否します。
+    承認または拒否された後、このスレッドはロックされます。
 
-    {"**"}Game Masters:{"**"} Discuss any required changes with your
-    player until the inventory is in an acceptable state. Only use
-    the `Deny` button for irreconcilable submissions.
+    {"**"}ゲームマスター:{"**"} インベントリが受け入れ可能な状態に
+    なるまで、必要な変更についてプレイヤーと話し合ってください。
+    `拒否` ボタンは、調整不可能な申請にのみ使用してください。
 
-    { $playerMention }: Use the `Edit` button to make any changes
-    requested here by a Game Master.
+    { $playerMention }: ゲームマスターからここで要求された変更を
+    行うには、`編集` ボタンを使用してください。
 player-approval-approved-by = この申請は { $approver } によって承認されました。
 player-approval-denied-by = この申請は { $denier } によって拒否されました。
 player-approval-deny-reason = 理由: { $reason }
@@ -357,9 +357,9 @@ player-modal-placeholder-deny-reason = 任意: 拒否の理由を説明してく
 # Approval DM notifications
 player-dm-title-approved = キャラクター承認
 player-dm-desc-approved =
-    Your character {"**"}{ $characterName }{"**"} has been approved
-    by { $approver } in {"**"}{ $guildName }{"**"}!
+    あなたのキャラクター {"**"}{ $characterName }{"**"} は
+    {"**"}{ $guildName }{"**"} で { $approver } によって承認されました！
 player-dm-title-denied = キャラクター拒否
 player-dm-desc-denied =
-    Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}.
+    あなたのキャラクター {"**"}{ $characterName }{"**"} は
+    {"**"}{ $guildName }{"**"} で { $denier } によって拒否されました。

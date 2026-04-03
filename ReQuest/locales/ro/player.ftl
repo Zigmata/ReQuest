@@ -323,8 +323,8 @@ player-label-untitled = Fără titlu
 
 # ApprovalPostView
 player-approval-post-header =
-    {"**"}Inventory Submission: { $characterName }{"**"}
-    Submitted by { $userMention }
+    {"**"}Cerere de Inventar: { $characterName }{"**"}
+    Trimis de { $userMention }
 player-approval-post-items = Obiecte
 player-approval-post-currency = Monedă
 player-approval-resolved = Această cerere a fost rezolvată.
@@ -334,16 +334,16 @@ player-approval-btn-edit = Editează
 player-approval-error-no-permission = Nu ai permisiunea de a efectua această acțiune.
 player-approval-error-not-submitter = Doar expeditorul original poate edita această cerere.
 player-approval-thread-instructions =
-    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
-    A Game Master will review the submission and approve or deny it.
-    Once approved or denied, this thread will be locked.
+    Acest fir a fost creat pentru aprobarea lui {"**"}{ $characterName }{"**"}.
+    Un Game Master va revizui cererea și o va aproba sau respinge.
+    Odată aprobată sau respinsă, acest fir va fi blocat.
 
-    {"**"}Game Masters:{"**"} Discuss any required changes with your
-    player until the inventory is in an acceptable state. Only use
-    the `Deny` button for irreconcilable submissions.
+    {"**"}Game Masters:{"**"} Discutați orice modificări necesare cu
+    jucătorul dvs. până când inventarul este într-o stare acceptabilă.
+    Folosiți butonul `Respinge` doar pentru cereri ireconciliabile.
 
-    { $playerMention }: Use the `Edit` button to make any changes
-    requested here by a Game Master.
+    { $playerMention }: Folosește butonul `Editează` pentru a face orice
+    modificări solicitate aici de un Game Master.
 player-approval-approved-by = Această cerere a fost aprobată de { $approver }.
 player-approval-denied-by = Această cerere a fost respinsă de { $denier }.
 player-approval-deny-reason = Motiv: { $reason }
@@ -357,9 +357,9 @@ player-modal-placeholder-deny-reason = Opțional: explicați motivul respingerii
 # Approval DM notifications
 player-dm-title-approved = Personaj aprobat
 player-dm-desc-approved =
-    Your character {"**"}{ $characterName }{"**"} has been approved
-    by { $approver } in {"**"}{ $guildName }{"**"}!
+    Personajul tău {"**"}{ $characterName }{"**"} a fost aprobat
+    de { $approver } în {"**"}{ $guildName }{"**"}!
 player-dm-title-denied = Personaj respins
 player-dm-desc-denied =
-    Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}.
+    Personajul tău {"**"}{ $characterName }{"**"} a fost respins
+    de { $denier } în {"**"}{ $guildName }{"**"}.

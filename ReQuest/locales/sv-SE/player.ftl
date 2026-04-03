@@ -323,8 +323,8 @@ player-label-untitled = Utan titel
 
 # ApprovalPostView
 player-approval-post-header =
-    {"**"}Inventory Submission: { $characterName }{"**"}
-    Submitted by { $userMention }
+    {"**"}Inventarieinlämning: { $characterName }{"**"}
+    Inskickad av { $userMention }
 player-approval-post-items = Föremål
 player-approval-post-currency = Valuta
 player-approval-resolved = Denna inlämning har behandlats.
@@ -334,16 +334,16 @@ player-approval-btn-edit = Redigera
 player-approval-error-no-permission = Du har inte behörighet för denna åtgärd.
 player-approval-error-not-submitter = Endast den ursprungliga inlämnaren kan redigera denna inlämning.
 player-approval-thread-instructions =
-    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
-    A Game Master will review the submission and approve or deny it.
-    Once approved or denied, this thread will be locked.
+    Denna tråd skapades för godkännande av {"**"}{ $characterName }{"**"}.
+    En spelledare kommer att granska inlämningen och godkänna eller avslå den.
+    När den har godkänts eller avslagits kommer denna tråd att låsas.
 
-    {"**"}Game Masters:{"**"} Discuss any required changes with your
-    player until the inventory is in an acceptable state. Only use
-    the `Deny` button for irreconcilable submissions.
+    {"**"}Spelledare:{"**"} Diskutera eventuella nödvändiga ändringar med din
+    spelare tills inventariet är i ett acceptabelt skick. Använd bara
+    knappen `Avslå` för oförenliga inlämningar.
 
-    { $playerMention }: Use the `Edit` button to make any changes
-    requested here by a Game Master.
+    { $playerMention }: Använd knappen `Redigera` för att göra eventuella
+    ändringar som begärts här av en spelledare.
 player-approval-approved-by = Denna inlämning godkändes av { $approver }.
 player-approval-denied-by = Denna inlämning avslogs av { $denier }.
 player-approval-deny-reason = Anledning: { $reason }
@@ -357,9 +357,9 @@ player-modal-placeholder-deny-reason = Valfritt: förklara varför inlämningen 
 # Approval DM notifications
 player-dm-title-approved = Karaktär godkänd
 player-dm-desc-approved =
-    Your character {"**"}{ $characterName }{"**"} has been approved
-    by { $approver } in {"**"}{ $guildName }{"**"}!
+    Din karaktär {"**"}{ $characterName }{"**"} har godkänts
+    av { $approver } i {"**"}{ $guildName }{"**"}!
 player-dm-title-denied = Karaktär avslagen
 player-dm-desc-denied =
-    Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}.
+    Din karaktär {"**"}{ $characterName }{"**"} har avslagits
+    av { $denier } i {"**"}{ $guildName }{"**"}.

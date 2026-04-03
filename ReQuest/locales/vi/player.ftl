@@ -323,8 +323,8 @@ player-label-untitled = Không có tiêu đề
 
 # ApprovalPostView
 player-approval-post-header =
-    {"**"}Inventory Submission: { $characterName }{"**"}
-    Submitted by { $userMention }
+    {"**"}Đệ trình Kho đồ: { $characterName }{"**"}
+    Được gửi bởi { $userMention }
 player-approval-post-items = Vật phẩm
 player-approval-post-currency = Tiền tệ
 player-approval-resolved = Yêu cầu này đã được xử lý.
@@ -334,16 +334,16 @@ player-approval-btn-edit = Chỉnh sửa
 player-approval-error-no-permission = Bạn không có quyền thực hiện hành động này.
 player-approval-error-not-submitter = Chỉ người gửi ban đầu mới có thể chỉnh sửa yêu cầu này.
 player-approval-thread-instructions =
-    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
-    A Game Master will review the submission and approve or deny it.
-    Once approved or denied, this thread will be locked.
+    Chủ đề này được tạo để phê duyệt {"**"}{ $characterName }{"**"}.
+    Một Quản trò sẽ xem xét đệ trình và phê duyệt hoặc từ chối nó.
+    Sau khi được phê duyệt hoặc từ chối, chủ đề này sẽ bị khóa.
 
-    {"**"}Game Masters:{"**"} Discuss any required changes with your
-    player until the inventory is in an acceptable state. Only use
-    the `Deny` button for irreconcilable submissions.
+    {"**"}Quản trò:{"**"} Thảo luận về các thay đổi cần thiết với
+    người chơi của bạn cho đến khi kho đồ ở trạng thái chấp nhận được.
+    Chỉ sử dụng nút `Từ chối` cho các đệ trình không thể dung hòa.
 
-    { $playerMention }: Use the `Edit` button to make any changes
-    requested here by a Game Master.
+    { $playerMention }: Sử dụng nút `Chỉnh sửa` để thực hiện bất kỳ
+    thay đổi nào được Quản trò yêu cầu tại đây.
 player-approval-approved-by = Yêu cầu này đã được phê duyệt bởi { $approver }.
 player-approval-denied-by = Yêu cầu này đã bị từ chối bởi { $denier }.
 player-approval-deny-reason = Lý do: { $reason }
@@ -357,9 +357,9 @@ player-modal-placeholder-deny-reason = Tùy chọn: giải thích lý do từ ch
 # Approval DM notifications
 player-dm-title-approved = Nhân vật đã được phê duyệt
 player-dm-desc-approved =
-    Your character {"**"}{ $characterName }{"**"} has been approved
-    by { $approver } in {"**"}{ $guildName }{"**"}!
+    Nhân vật {"**"}{ $characterName }{"**"} của bạn đã được phê duyệt
+    bởi { $approver } trong {"**"}{ $guildName }{"**"}!
 player-dm-title-denied = Nhân vật đã bị từ chối
 player-dm-desc-denied =
-    Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}.
+    Nhân vật {"**"}{ $characterName }{"**"} của bạn đã bị từ chối
+    bởi { $denier } trong {"**"}{ $guildName }{"**"}.

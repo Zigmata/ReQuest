@@ -323,8 +323,8 @@ player-label-untitled = Nimetön
 
 # ApprovalPostView
 player-approval-post-header =
-    {"**"}Inventory Submission: { $characterName }{"**"}
-    Submitted by { $userMention }
+    {"**"}Inventaariohakemus: { $characterName }{"**"}
+    Lähettäjä: { $userMention }
 player-approval-post-items = Esineet
 player-approval-post-currency = Valuutta
 player-approval-resolved = Tämä hakemus on käsitelty.
@@ -334,16 +334,16 @@ player-approval-btn-edit = Muokkaa
 player-approval-error-no-permission = Sinulla ei ole oikeutta tähän toimintoon.
 player-approval-error-not-submitter = Vain alkuperäinen lähettäjä voi muokata tätä hakemusta.
 player-approval-thread-instructions =
-    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
-    A Game Master will review the submission and approve or deny it.
-    Once approved or denied, this thread will be locked.
+    Tämä ketju luotiin hahmon {"**"}{ $characterName }{"**"} hyväksyntää varten.
+    Pelinjohtaja tarkistaa hakemuksen ja hyväksyy tai hylkää sen.
+    Hyväksynnän tai hylkäyksen jälkeen tämä ketju lukitaan.
 
-    {"**"}Game Masters:{"**"} Discuss any required changes with your
-    player until the inventory is in an acceptable state. Only use
-    the `Deny` button for irreconcilable submissions.
+    {"**"}Pelinjohtajat:{"**"} Keskustelkaa tarvittavista muutoksista
+    pelaajan kanssa, kunnes inventaario on hyväksyttävässä tilassa. Käyttäkää
+    `Hylkää`-painiketta vain sovittamattomien hakemusten kohdalla.
 
-    { $playerMention }: Use the `Edit` button to make any changes
-    requested here by a Game Master.
+    { $playerMention }: Käytä `Muokkaa`-painiketta tehdäksesi pelinjohtajan
+    täällä pyytämät muutokset.
 player-approval-approved-by = Tämä hakemus hyväksyttiin käyttäjältä { $approver }.
 player-approval-denied-by = Tämä hakemus hylättiin käyttäjältä { $denier }.
 player-approval-deny-reason = Syy: { $reason }
@@ -357,9 +357,9 @@ player-modal-placeholder-deny-reason = Valinnainen: selitä miksi hakemus hylät
 # Approval DM notifications
 player-dm-title-approved = Hahmo hyväksytty
 player-dm-desc-approved =
-    Your character {"**"}{ $characterName }{"**"} has been approved
-    by { $approver } in {"**"}{ $guildName }{"**"}!
+    Hahmosi {"**"}{ $characterName }{"**"} on hyväksytty
+    käyttäjältä { $approver } palvelimella {"**"}{ $guildName }{"**"}!
 player-dm-title-denied = Hahmo hylätty
 player-dm-desc-denied =
-    Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}.
+    Hahmosi {"**"}{ $characterName }{"**"} on hylätty
+    käyttäjältä { $denier } palvelimella {"**"}{ $guildName }{"**"}.

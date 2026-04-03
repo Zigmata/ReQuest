@@ -323,8 +323,8 @@ player-label-untitled = ไม่มีชื่อ
 
 # ApprovalPostView
 player-approval-post-header =
-    {"**"}Inventory Submission: { $characterName }{"**"}
-    Submitted by { $userMention }
+    {"**"}การส่งรายการไอเทม: { $characterName }{"**"}
+    ส่งโดย { $userMention }
 player-approval-post-items = สิ่งของ
 player-approval-post-currency = สกุลเงิน
 player-approval-resolved = คำขอนี้ได้รับการดำเนินการแล้ว
@@ -334,16 +334,16 @@ player-approval-btn-edit = แก้ไข
 player-approval-error-no-permission = คุณไม่มีสิทธิ์ดำเนินการนี้
 player-approval-error-not-submitter = เฉพาะผู้ส่งดั้งเดิมเท่านั้นที่สามารถแก้ไขคำขอนี้ได้
 player-approval-thread-instructions =
-    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
-    A Game Master will review the submission and approve or deny it.
-    Once approved or denied, this thread will be locked.
+    กระทู้นี้ถูกสร้างขึ้นเพื่อการอนุมัติ {"**"}{ $characterName }{"**"}
+    Game Master จะตรวจสอบคำขอและอนุมัติหรือปฏิเสธ
+    เมื่ออนุมัติหรือปฏิเสธแล้ว กระทู้นี้จะถูกล็อค
 
-    {"**"}Game Masters:{"**"} Discuss any required changes with your
-    player until the inventory is in an acceptable state. Only use
-    the `Deny` button for irreconcilable submissions.
+    {"**"}Game Masters:{"**"} พูดคุยเกี่ยวกับการเปลี่ยนแปลงที่จำเป็นกับ
+    ผู้เล่นของคุณจนกว่ารายการไอเทมจะอยู่ในสถานะที่ยอมรับได้ ใช้ปุ่ม
+    `ปฏิเสธ` สำหรับคำขอที่ไม่สามารถแก้ไขได้เท่านั้น
 
-    { $playerMention }: Use the `Edit` button to make any changes
-    requested here by a Game Master.
+    { $playerMention }: ใช้ปุ่ม `แก้ไข` เพื่อทำการเปลี่ยนแปลง
+    ที่ Game Master ร้องขอที่นี่
 player-approval-approved-by = คำขอนี้ได้รับการอนุมัติจาก { $approver }
 player-approval-denied-by = คำขอนี้ถูกปฏิเสธโดย { $denier }
 player-approval-deny-reason = เหตุผล: { $reason }
@@ -357,9 +357,9 @@ player-modal-placeholder-deny-reason = ไม่บังคับ: อธิบ
 # Approval DM notifications
 player-dm-title-approved = ตัวละครได้รับอนุมัติ
 player-dm-desc-approved =
-    Your character {"**"}{ $characterName }{"**"} has been approved
-    by { $approver } in {"**"}{ $guildName }{"**"}!
+    ตัวละคร {"**"}{ $characterName }{"**"} ของคุณได้รับการอนุมัติ
+    โดย { $approver } ใน {"**"}{ $guildName }{"**"}!
 player-dm-title-denied = ตัวละครถูกปฏิเสธ
 player-dm-desc-denied =
-    Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}.
+    ตัวละคร {"**"}{ $characterName }{"**"} ของคุณถูกปฏิเสธ
+    โดย { $denier } ใน {"**"}{ $guildName }{"**"}

@@ -323,8 +323,8 @@ player-label-untitled = Bez názvu
 
 # ApprovalPostView
 player-approval-post-header =
-    {"**"}Inventory Submission: { $characterName }{"**"}
-    Submitted by { $userMention }
+    {"**"}Podání inventáře: { $characterName }{"**"}
+    Podáno uživatelem { $userMention }
 player-approval-post-items = Předměty
 player-approval-post-currency = Měna
 player-approval-resolved = Tento požadavek byl vyřešen.
@@ -334,16 +334,16 @@ player-approval-btn-edit = Upravit
 player-approval-error-no-permission = Nemáte oprávnění k provedení této akce.
 player-approval-error-not-submitter = Pouze původní odesílatel může tuto žádost upravit.
 player-approval-thread-instructions =
-    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
-    A Game Master will review the submission and approve or deny it.
-    Once approved or denied, this thread will be locked.
+    Toto vlákno bylo vytvořeno pro schválení {"**"}{ $characterName }{"**"}.
+    Game Master podání přezkoumá a schválí nebo zamítne.
+    Po schválení nebo zamítnutí bude toto vlákno uzamčeno.
 
-    {"**"}Game Masters:{"**"} Discuss any required changes with your
-    player until the inventory is in an acceptable state. Only use
-    the `Deny` button for irreconcilable submissions.
+    {"**"}Game Masters:{"**"} Diskutujte s hráčem o všech
+    požadovaných změnách, dokud inventář nebude v přijatelném stavu.
+    Tlačítko `Deny` použijte pouze pro neslučitelná podání.
 
-    { $playerMention }: Use the `Edit` button to make any changes
-    requested here by a Game Master.
+    { $playerMention }: Použijte tlačítko `Edit` k provedení změn
+    požadovaných zde Game Masterem.
 player-approval-approved-by = Tento požadavek byl schválen uživatelem { $approver }.
 player-approval-denied-by = Tento požadavek byl zamítnut uživatelem { $denier }.
 player-approval-deny-reason = Důvod: { $reason }
@@ -357,9 +357,9 @@ player-modal-placeholder-deny-reason = Volitelné: vysvětlete důvod zamítnut�
 # Approval DM notifications
 player-dm-title-approved = Postava schválena
 player-dm-desc-approved =
-    Your character {"**"}{ $characterName }{"**"} has been approved
-    by { $approver } in {"**"}{ $guildName }{"**"}!
+    Vaše postava {"**"}{ $characterName }{"**"} byla schválena
+    uživatelem { $approver } na serveru {"**"}{ $guildName }{"**"}!
 player-dm-title-denied = Postava zamítnuta
 player-dm-desc-denied =
-    Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}.
+    Vaše postava {"**"}{ $characterName }{"**"} byla zamítnuta
+    uživatelem { $denier } na serveru {"**"}{ $guildName }{"**"}.

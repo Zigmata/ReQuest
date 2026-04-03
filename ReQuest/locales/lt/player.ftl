@@ -323,8 +323,8 @@ player-label-untitled = Be pavadinimo
 
 # ApprovalPostView
 player-approval-post-header =
-    {"**"}Inventory Submission: { $characterName }{"**"}
-    Submitted by { $userMention }
+    {"**"}Inventoriaus paraiška: { $characterName }{"**"}
+    Pateikė { $userMention }
 player-approval-post-items = Daiktai
 player-approval-post-currency = Valiuta
 player-approval-resolved = Ši paraiška buvo išspręsta.
@@ -334,16 +334,16 @@ player-approval-btn-edit = Redaguoti
 player-approval-error-no-permission = Neturite leidimo atlikti šį veiksmą.
 player-approval-error-not-submitter = Tik pradinis pateikėjas gali redaguoti šią paraišką.
 player-approval-thread-instructions =
-    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
-    A Game Master will review the submission and approve or deny it.
-    Once approved or denied, this thread will be locked.
+    Ši gija buvo sukurta {"**"}{ $characterName }{"**"} patvirtinimui.
+    Žaidimo vedėjas peržiūrės paraišką ir ją patvirtins arba atmes.
+    Patvirtinus arba atmetus, ši gija bus užrakinta.
 
-    {"**"}Game Masters:{"**"} Discuss any required changes with your
-    player until the inventory is in an acceptable state. Only use
-    the `Deny` button for irreconcilable submissions.
+    {"**"}Žaidimo vedėjai:{"**"} Aptarkite reikiamus pakeitimus su
+    savo žaidėju, kol inventorius bus priimtinos būklės. `Atmesti`
+    mygtuką naudokite tik nesuderinamos paraiškos atveju.
 
-    { $playerMention }: Use the `Edit` button to make any changes
-    requested here by a Game Master.
+    { $playerMention }: Naudokite `Redaguoti` mygtuką, kad atliktumėte
+    žaidimo vedėjo čia prašomus pakeitimus.
 player-approval-approved-by = Ši paraiška buvo patvirtinta { $approver }.
 player-approval-denied-by = Ši paraiška buvo atmesta { $denier }.
 player-approval-deny-reason = Priežastis: { $reason }
@@ -357,9 +357,9 @@ player-modal-placeholder-deny-reason = Neprivaloma: paaiškinkite atmetimo prie�
 # Approval DM notifications
 player-dm-title-approved = Veikėjas patvirtintas
 player-dm-desc-approved =
-    Your character {"**"}{ $characterName }{"**"} has been approved
-    by { $approver } in {"**"}{ $guildName }{"**"}!
+    Jūsų veikėjas {"**"}{ $characterName }{"**"} buvo patvirtintas
+    { $approver } serveryje {"**"}{ $guildName }{"**"}!
 player-dm-title-denied = Veikėjas atmestas
 player-dm-desc-denied =
-    Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}.
+    Jūsų veikėjas {"**"}{ $characterName }{"**"} buvo atmestas
+    { $denier } serveryje {"**"}{ $guildName }{"**"}.

@@ -323,8 +323,8 @@ player-label-untitled = Senza titolo
 
 # ApprovalPostView
 player-approval-post-header =
-    {"**"}Inventory Submission: { $characterName }{"**"}
-    Submitted by { $userMention }
+    {"**"}Richiesta inventario: { $characterName }{"**"}
+    Inviata da { $userMention }
 player-approval-post-items = Oggetti
 player-approval-post-currency = Valuta
 player-approval-resolved = Questa richiesta è stata risolta.
@@ -334,16 +334,17 @@ player-approval-btn-edit = Modifica
 player-approval-error-no-permission = Non hai il permesso per eseguire questa azione.
 player-approval-error-not-submitter = Solo il mittente originale può modificare questa richiesta.
 player-approval-thread-instructions =
-    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
-    A Game Master will review the submission and approve or deny it.
-    Once approved or denied, this thread will be locked.
+    Questo thread è stato creato per l'approvazione di {"**"}{ $characterName }{"**"}.
+    Un Game Master esaminerà la richiesta e la approverà o rifiuterà.
+    Una volta approvata o rifiutata, questo thread verrà bloccato.
 
-    {"**"}Game Masters:{"**"} Discuss any required changes with your
-    player until the inventory is in an acceptable state. Only use
-    the `Deny` button for irreconcilable submissions.
+    {"**"}Game Master:{"**"} Discutete le modifiche necessarie con il
+    vostro giocatore fino a quando l'inventario non sarà in uno stato
+    accettabile. Usate il pulsante `Rifiuta` solo per richieste
+    irreconciliabili.
 
-    { $playerMention }: Use the `Edit` button to make any changes
-    requested here by a Game Master.
+    { $playerMention }: Usa il pulsante `Modifica` per apportare le
+    modifiche richieste qui da un Game Master.
 player-approval-approved-by = Questa richiesta è stata approvata da { $approver }.
 player-approval-denied-by = Questa richiesta è stata rifiutata da { $denier }.
 player-approval-deny-reason = Motivo: { $reason }
@@ -357,9 +358,9 @@ player-modal-placeholder-deny-reason = Opzionale: spiega il motivo del rifiuto
 # Approval DM notifications
 player-dm-title-approved = Personaggio approvato
 player-dm-desc-approved =
-    Your character {"**"}{ $characterName }{"**"} has been approved
-    by { $approver } in {"**"}{ $guildName }{"**"}!
+    Il tuo personaggio {"**"}{ $characterName }{"**"} è stato approvato
+    da { $approver } in {"**"}{ $guildName }{"**"}!
 player-dm-title-denied = Personaggio rifiutato
 player-dm-desc-denied =
-    Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}.
+    Il tuo personaggio {"**"}{ $characterName }{"**"} è stato rifiutato
+    da { $denier } in {"**"}{ $guildName }{"**"}.

@@ -323,8 +323,8 @@ player-label-untitled = Bez tytułu
 
 # ApprovalPostView
 player-approval-post-header =
-    {"**"}Inventory Submission: { $characterName }{"**"}
-    Submitted by { $userMention }
+    {"**"}Zgłoszenie ekwipunku: { $characterName }{"**"}
+    Przesłane przez { $userMention }
 player-approval-post-items = Przedmioty
 player-approval-post-currency = Waluta
 player-approval-resolved = To zgłoszenie zostało rozpatrzone.
@@ -334,16 +334,16 @@ player-approval-btn-edit = Edytuj
 player-approval-error-no-permission = Nie masz uprawnień do tej czynności.
 player-approval-error-not-submitter = Tylko oryginalny nadawca może edytować to zgłoszenie.
 player-approval-thread-instructions =
-    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
-    A Game Master will review the submission and approve or deny it.
-    Once approved or denied, this thread will be locked.
+    Ten wątek został utworzony w celu zatwierdzenia {"**"}{ $characterName }{"**"}.
+    Mistrz Gry przejrzy zgłoszenie i zatwierdzi je lub odrzuci.
+    Po zatwierdzeniu lub odrzuceniu ten wątek zostanie zablokowany.
 
-    {"**"}Game Masters:{"**"} Discuss any required changes with your
-    player until the inventory is in an acceptable state. Only use
-    the `Deny` button for irreconcilable submissions.
+    {"**"}Mistrzowie Gry:{"**"} Omówcie wszelkie wymagane zmiany
+    ze swoim graczem, aż ekwipunek będzie w akceptowalnym stanie.
+    Przycisku `Odrzuć` używajcie tylko w przypadku nieuzgadnialnych zgłoszeń.
 
-    { $playerMention }: Use the `Edit` button to make any changes
-    requested here by a Game Master.
+    { $playerMention }: Użyj przycisku `Edytuj`, aby wprowadzić zmiany
+    wymagane tutaj przez Mistrza Gry.
 player-approval-approved-by = To zgłoszenie zostało zatwierdzone przez { $approver }.
 player-approval-denied-by = To zgłoszenie zostało odrzucone przez { $denier }.
 player-approval-deny-reason = Powód: { $reason }
@@ -357,9 +357,9 @@ player-modal-placeholder-deny-reason = Opcjonalnie: wyjaśnij powód odrzucenia
 # Approval DM notifications
 player-dm-title-approved = Postać zatwierdzona
 player-dm-desc-approved =
-    Your character {"**"}{ $characterName }{"**"} has been approved
-    by { $approver } in {"**"}{ $guildName }{"**"}!
+    Twoja postać {"**"}{ $characterName }{"**"} została zatwierdzona
+    przez { $approver } na serwerze {"**"}{ $guildName }{"**"}!
 player-dm-title-denied = Postać odrzucona
 player-dm-desc-denied =
-    Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}.
+    Twoja postać {"**"}{ $characterName }{"**"} została odrzucona
+    przez { $denier } na serwerze {"**"}{ $guildName }{"**"}.

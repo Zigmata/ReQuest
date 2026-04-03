@@ -323,8 +323,8 @@ player-label-untitled = 無標題
 
 # ApprovalPostView
 player-approval-post-header =
-    {"**"}Inventory Submission: { $characterName }{"**"}
-    Submitted by { $userMention }
+    {"**"}物品清單提交: { $characterName }{"**"}
+    提交者: { $userMention }
 player-approval-post-items = 物品
 player-approval-post-currency = 貨幣
 player-approval-resolved = 此提交已處理。
@@ -334,16 +334,16 @@ player-approval-btn-edit = 編輯
 player-approval-error-no-permission = 您沒有執行此操作的權限。
 player-approval-error-not-submitter = 只有原始提交者才能編輯此提交。
 player-approval-thread-instructions =
-    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
-    A Game Master will review the submission and approve or deny it.
-    Once approved or denied, this thread will be locked.
+    此討論串是為審批 {"**"}{ $characterName }{"**"} 而建立的。
+    遊戲主持人將審核提交並批准或拒絕。
+    一旦批准或拒絕，此討論串將被鎖定。
 
-    {"**"}Game Masters:{"**"} Discuss any required changes with your
-    player until the inventory is in an acceptable state. Only use
-    the `Deny` button for irreconcilable submissions.
+    {"**"}遊戲主持人:{"**"} 與您的玩家討論所需的變更，
+    直到物品清單處於可接受的狀態。僅對無法調和的
+    提交使用 `拒絕` 按鈕。
 
-    { $playerMention }: Use the `Edit` button to make any changes
-    requested here by a Game Master.
+    { $playerMention }: 使用 `編輯` 按鈕進行遊戲主持人
+    在此要求的任何變更。
 player-approval-approved-by = 此提交已被 { $approver } 批准。
 player-approval-denied-by = 此提交已被 { $denier } 拒絕。
 player-approval-deny-reason = 原因: { $reason }
@@ -357,9 +357,9 @@ player-modal-placeholder-deny-reason = 可選: 說明拒絕原因
 # Approval DM notifications
 player-dm-title-approved = 角色已批准
 player-dm-desc-approved =
-    Your character {"**"}{ $characterName }{"**"} has been approved
-    by { $approver } in {"**"}{ $guildName }{"**"}!
+    您的角色 {"**"}{ $characterName }{"**"} 已被 { $approver }
+    在 {"**"}{ $guildName }{"**"} 中批准！
 player-dm-title-denied = 角色已拒絕
 player-dm-desc-denied =
-    Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}.
+    您的角色 {"**"}{ $characterName }{"**"} 已被 { $denier }
+    在 {"**"}{ $guildName }{"**"} 中拒絕。

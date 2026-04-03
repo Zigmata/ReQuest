@@ -323,8 +323,8 @@ player-label-untitled = Без заглавие
 
 # ApprovalPostView
 player-approval-post-header =
-    {"**"}Inventory Submission: { $characterName }{"**"}
-    Submitted by { $userMention }
+    {"**"}Заявка за инвентар: { $characterName }{"**"}
+    Подадена от { $userMention }
 player-approval-post-items = Предмети
 player-approval-post-currency = Валута
 player-approval-resolved = Тази заявка е приключена.
@@ -334,16 +334,16 @@ player-approval-btn-edit = Редактирай
 player-approval-error-no-permission = Нямате разрешение за това действие.
 player-approval-error-not-submitter = Само оригиналният подател може да редактира тази заявка.
 player-approval-thread-instructions =
-    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
-    A Game Master will review the submission and approve or deny it.
-    Once approved or denied, this thread will be locked.
+    Тази тема беше създадена за одобрението на {"**"}{ $characterName }{"**"}.
+    Game Master ще прегледа заявката и ще я одобри или отхвърли.
+    След одобрение или отхвърляне, тази тема ще бъде заключена.
 
-    {"**"}Game Masters:{"**"} Discuss any required changes with your
-    player until the inventory is in an acceptable state. Only use
-    the `Deny` button for irreconcilable submissions.
+    {"**"}Game Masters:{"**"} Обсъдете всички необходими промени с вашия
+    играч, докато инвентарът не бъде в приемливо състояние. Използвайте
+    бутона `Deny` само за несъвместими заявки.
 
-    { $playerMention }: Use the `Edit` button to make any changes
-    requested here by a Game Master.
+    { $playerMention }: Използвайте бутона `Edit`, за да направите
+    промени, поискани тук от Game Master.
 player-approval-approved-by = Тази заявка беше одобрена от { $approver }.
 player-approval-denied-by = Тази заявка беше отхвърлена от { $denier }.
 player-approval-deny-reason = Причина: { $reason }
@@ -357,9 +357,9 @@ player-modal-placeholder-deny-reason = По избор: обяснете защ�
 # Approval DM notifications
 player-dm-title-approved = Персонаж одобрен
 player-dm-desc-approved =
-    Your character {"**"}{ $characterName }{"**"} has been approved
-    by { $approver } in {"**"}{ $guildName }{"**"}!
+    Вашият персонаж {"**"}{ $characterName }{"**"} беше одобрен
+    от { $approver } в {"**"}{ $guildName }{"**"}!
 player-dm-title-denied = Персонаж отхвърлен
 player-dm-desc-denied =
-    Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}.
+    Вашият персонаж {"**"}{ $characterName }{"**"} беше отхвърлен
+    от { $denier } в {"**"}{ $guildName }{"**"}.

@@ -323,8 +323,8 @@ player-label-untitled = Bez naslova
 
 # ApprovalPostView
 player-approval-post-header =
-    {"**"}Inventory Submission: { $characterName }{"**"}
-    Submitted by { $userMention }
+    {"**"}Prijava inventara: { $characterName }{"**"}
+    Poslao/la { $userMention }
 player-approval-post-items = Predmeti
 player-approval-post-currency = Valuta
 player-approval-resolved = Ovaj zahtjev je riješen.
@@ -334,16 +334,17 @@ player-approval-btn-edit = Uredi
 player-approval-error-no-permission = Nemate dozvolu za ovu radnju.
 player-approval-error-not-submitter = Samo izvorni podnositelj može urediti ovaj zahtjev.
 player-approval-thread-instructions =
-    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
-    A Game Master will review the submission and approve or deny it.
-    Once approved or denied, this thread will be locked.
+    Ova nit je stvorena za odobrenje lika {"**"}{ $characterName }{"**"}.
+    Voditelj igre će pregledati prijavu i odobriti je ili odbiti.
+    Nakon odobrenja ili odbijanja, ova nit će biti zaključana.
 
-    {"**"}Game Masters:{"**"} Discuss any required changes with your
-    player until the inventory is in an acceptable state. Only use
-    the `Deny` button for irreconcilable submissions.
+    {"**"}Voditelji igre:{"**"} Razgovarajte o svim potrebnim
+    izmjenama sa svojim igračem dok inventar ne bude u
+    prihvatljivom stanju. Koristite gumb `Odbij` samo za
+    nepomirljive prijave.
 
-    { $playerMention }: Use the `Edit` button to make any changes
-    requested here by a Game Master.
+    { $playerMention }: Koristite gumb `Uredi` za sve izmjene
+    koje ovdje zatraži Voditelj igre.
 player-approval-approved-by = Ovaj zahtjev je odobren od { $approver }.
 player-approval-denied-by = Ovaj zahtjev je odbijen od { $denier }.
 player-approval-deny-reason = Razlog: { $reason }
@@ -357,9 +358,9 @@ player-modal-placeholder-deny-reason = Neobvezno: objasnite razlog odbijanja
 # Approval DM notifications
 player-dm-title-approved = Lik odobren
 player-dm-desc-approved =
-    Your character {"**"}{ $characterName }{"**"} has been approved
-    by { $approver } in {"**"}{ $guildName }{"**"}!
+    Vaš lik {"**"}{ $characterName }{"**"} je odobren
+    od { $approver } na poslužitelju {"**"}{ $guildName }{"**"}!
 player-dm-title-denied = Lik odbijen
 player-dm-desc-denied =
-    Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}.
+    Vaš lik {"**"}{ $characterName }{"**"} je odbijen
+    od { $denier } na poslužitelju {"**"}{ $guildName }{"**"}.

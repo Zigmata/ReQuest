@@ -323,8 +323,8 @@ player-label-untitled = Sin Título
 
 # ApprovalPostView
 player-approval-post-header =
-    {"**"}Inventory Submission: { $characterName }{"**"}
-    Submitted by { $userMention }
+    {"**"}Envío de Inventario: { $characterName }{"**"}
+    Enviado por { $userMention }
 player-approval-post-items = Objetos
 player-approval-post-currency = Moneda
 player-approval-resolved = Esta solicitud ha sido resuelta.
@@ -334,16 +334,16 @@ player-approval-btn-edit = Editar
 player-approval-error-no-permission = No tienes permiso para realizar esta acción.
 player-approval-error-not-submitter = Solo el remitente original puede editar esta solicitud.
 player-approval-thread-instructions =
-    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
-    A Game Master will review the submission and approve or deny it.
-    Once approved or denied, this thread will be locked.
+    Este hilo fue creado para la aprobación de {"**"}{ $characterName }{"**"}.
+    Un Game Master revisará el envío y lo aprobará o rechazará.
+    Una vez aprobado o rechazado, este hilo será bloqueado.
 
-    {"**"}Game Masters:{"**"} Discuss any required changes with your
-    player until the inventory is in an acceptable state. Only use
-    the `Deny` button for irreconcilable submissions.
+    {"**"}Game Masters:{"**"} Discutan los cambios necesarios con su
+    jugador hasta que el inventario esté en un estado aceptable. Solo usen
+    el botón `Rechazar` para envíos irreconciliables.
 
-    { $playerMention }: Use the `Edit` button to make any changes
-    requested here by a Game Master.
+    { $playerMention }: Usa el botón `Editar` para realizar los cambios
+    solicitados aquí por un Game Master.
 player-approval-approved-by = Esta solicitud fue aprobada por { $approver }.
 player-approval-denied-by = Esta solicitud fue rechazada por { $denier }.
 player-approval-deny-reason = Razón: { $reason }
@@ -357,9 +357,9 @@ player-modal-placeholder-deny-reason = Opcional: explica por qué fue rechazada
 # Approval DM notifications
 player-dm-title-approved = Personaje aprobado
 player-dm-desc-approved =
-    Your character {"**"}{ $characterName }{"**"} has been approved
-    by { $approver } in {"**"}{ $guildName }{"**"}!
+    Tu personaje {"**"}{ $characterName }{"**"} ha sido aprobado
+    por { $approver } en {"**"}{ $guildName }{"**"}!
 player-dm-title-denied = Personaje rechazado
 player-dm-desc-denied =
-    Your character {"**"}{ $characterName }{"**"} has been denied
-    by { $denier } in {"**"}{ $guildName }{"**"}.
+    Tu personaje {"**"}{ $characterName }{"**"} ha sido rechazado
+    por { $denier } en {"**"}{ $guildName }{"**"}.
