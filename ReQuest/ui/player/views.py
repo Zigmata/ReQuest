@@ -2275,6 +2275,10 @@ class ApprovalPostView(LocaleLayoutView):
             character_id = pending_character.get('character_id', claimed.get('character_id'))
             character_name = pending_character.get('name', claimed.get('character_name'))
 
+            # Build the full character document with inventory and currency pre-populated
+            inventory = {titlecase(k): int(v) for k, v in claimed.get('items', {}).items()}
+            currency = {titlecase(k): int(v) for k, v in claimed.get('currency', {}).items()}
+
             # Create the character in the CHARACTERS collection
             await update_cached_data(
                 bot=bot,
@@ -2292,22 +2296,12 @@ class ApprovalPostView(LocaleLayoutView):
                         CharacterFields.ATTRIBUTES: {
                             'level': None,
                             CharacterFields.EXPERIENCE: None,
-                            CharacterFields.INVENTORY: {},
-                            CharacterFields.CURRENCY: {}
+                            CharacterFields.INVENTORY: inventory,
+                            CharacterFields.CURRENCY: currency
                         }
                     }
                 }}
             )
-
-            # Apply inventory items and currency
-            for name, quantity in claimed.get('items', {}).items():
-                await update_character_inventory(
-                    interaction, user_id, character_id, name, quantity, raise_on_error=True
-                )
-            for name, quantity in claimed.get('currency', {}).items():
-                await update_character_inventory(
-                    interaction, user_id, character_id, name, quantity, raise_on_error=True
-                )
 
             # Revoke granted forum permissions
             thread = interaction.channel
@@ -2535,7 +2529,7 @@ async def _handle_submission(interaction, pending_character, items, currency):
         forum_channel = bot.get_channel(channel_id) if channel_id else None
 
         # Check if this is a re-submission (edit flow from ApprovalPostView)
-        existing_submission_id = pending_character.pop('submission_id', None)
+        existing_submission_id = pending_character.get('submission_id')
 
         if forum_channel and isinstance(forum_channel, discord.ForumChannel):
             guild_locale = await resolve_guild_locale(bot, guild_id)
@@ -2675,6 +2669,10 @@ async def _handle_submission(interaction, pending_character, items, currency):
             # Direct-apply path: create character and apply inventory immediately
             await interaction.response.defer()
 
+            # Build the full character document with inventory and currency pre-populated
+            starting_inventory = {titlecase(k): int(v) for k, v in items.items()}
+            starting_currency = {titlecase(k): int(v) for k, v in currency.items()}
+
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
@@ -2689,8 +2687,8 @@ async def _handle_submission(interaction, pending_character, items, currency):
                         CharacterFields.ATTRIBUTES: {
                             'level': None,
                             CharacterFields.EXPERIENCE: None,
-                            CharacterFields.INVENTORY: {},
-                            CharacterFields.CURRENCY: {}
+                            CharacterFields.INVENTORY: starting_inventory,
+                            CharacterFields.CURRENCY: starting_currency
                         }
                     }
                 }}
@@ -2705,12 +2703,6 @@ async def _handle_submission(interaction, pending_character, items, currency):
                 search_filter={CommonFields.ID: pending_id},
                 cache_id=pending_id
             )
-
-            for name, quantity in items.items():
-                await update_character_inventory(interaction, member_id, character_id, name, quantity)
-
-            for name, quantity in currency.items():
-                await update_character_inventory(interaction, member_id, character_id, name, quantity)
 
             report_embed = discord.Embed(
                 title=t(locale, 'player-embed-title-starting-inventory'),
