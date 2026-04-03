@@ -340,9 +340,9 @@ player-approval-thread-instructions =
 
     {"**"}Game Masters:{"**"} Diskuter eventuelle nødvendige ændringer med
     jeres spiller, indtil inventaret er i en acceptabel tilstand. Brug kun
-    knappen `Deny` til uforenelige indsendelser.
+    knappen `Afvis` til uforenelige indsendelser.
 
-    { $playerMention }: Brug knappen `Edit` til at foretage ændringer,
+    { $playerMention }: Brug knappen `Rediger` til at foretage ændringer,
     der anmodes om her af en Game Master.
 player-approval-approved-by = Denne anmodning blev godkendt af { $approver }.
 player-approval-denied-by = Denne anmodning blev afvist af { $denier }.

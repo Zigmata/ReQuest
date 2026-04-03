@@ -340,9 +340,9 @@ player-approval-thread-instructions =
 
     {"**"}Game Masters:{"**"} Diskutujte s hráčem o všech
     požadovaných změnách, dokud inventář nebude v přijatelném stavu.
-    Tlačítko `Deny` použijte pouze pro neslučitelná podání.
+    Tlačítko `Zamítnout` použijte pouze pro neslučitelná podání.
 
-    { $playerMention }: Použijte tlačítko `Edit` k provedení změn
+    { $playerMention }: Použijte tlačítko `Upravit` k provedení změn
     požadovaných zde Game Masterem.
 player-approval-approved-by = Tento požadavek byl schválen uživatelem { $approver }.
 player-approval-denied-by = Tento požadavek byl zamítnut uživatelem { $denier }.

@@ -340,9 +340,9 @@ player-approval-thread-instructions =
 
     {"**"}Game Masters:{"**"} Besprecht alle erforderlichen Änderungen mit
     eurem Spieler, bis das Inventar in einem akzeptablen Zustand ist.
-    Verwendet den `Deny`-Button nur für unvereinbare Einreichungen.
+    Verwendet den `Ablehnen`-Button nur für unvereinbare Einreichungen.
 
-    { $playerMention }: Verwende den `Edit`-Button, um hier von einem
+    { $playerMention }: Verwende den `Bearbeiten`-Button, um hier von einem
     Game Master angeforderte Änderungen vorzunehmen.
 player-approval-approved-by = Diese Einreichung wurde von { $approver } genehmigt.
 player-approval-denied-by = Diese Einreichung wurde von { $denier } abgelehnt.
