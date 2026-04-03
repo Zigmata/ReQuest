@@ -120,12 +120,8 @@ class ReQuest(commands.Bot):
             await self.load_allow_list()
 
         # If the bot is restarted with any existing quests, this reloads their views so they can be interacted with.
-        quests = []
         quest_collection = self.gdb[DatabaseCollections.QUESTS]
-        cursor = quest_collection.find()
-        for document in await cursor.to_list(length=None):
-            quests.append(document)
-        for quest in quests:
+        async for quest in quest_collection.find():
             try:
                 self.add_view(view=QuestPostView(quest), message_id=quest[QuestFields.MESSAGE_ID])
             except (KeyError, TypeError) as e:
@@ -150,7 +146,7 @@ class ReQuest(commands.Bot):
             {ApprovalFields.STATUS: ApprovalFields.STATUS_PENDING,
              ApprovalFields.MESSAGE_ID: {'$exists': True}}
         )
-        for doc in await approval_cursor.to_list(length=None):
+        async for doc in approval_cursor:
             try:
                 submission_id = doc[ApprovalFields.SUBMISSION_ID]
                 message_id = doc[ApprovalFields.MESSAGE_ID]
