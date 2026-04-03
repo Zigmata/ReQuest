@@ -2301,9 +2301,13 @@ class ApprovalPostView(LocaleLayoutView):
 
             # Apply inventory items and currency
             for name, quantity in claimed.get('items', {}).items():
-                await update_character_inventory(interaction, user_id, character_id, name, quantity)
+                await update_character_inventory(
+                    interaction, user_id, character_id, name, quantity, raise_on_error=True
+                )
             for name, quantity in claimed.get('currency', {}).items():
-                await update_character_inventory(interaction, user_id, character_id, name, quantity)
+                await update_character_inventory(
+                    interaction, user_id, character_id, name, quantity, raise_on_error=True
+                )
 
             # Revoke granted forum permissions
             thread = interaction.channel
