@@ -2120,6 +2120,8 @@ class ApprovalPostView(LocaleLayoutView):
                 )
 
         if not detail_lines:
+            self.total_pages = 1
+            self.current_page = 0
             container.add_item(TextDisplay(t(locale, 'common-label-none')))
         else:
             self.total_pages = math.ceil(len(detail_lines) / self.items_per_page)
@@ -2512,8 +2514,8 @@ async def _handle_submission(interaction, pending_character, items, currency):
                 confirmation_view.add_item(container)
                 await interaction.response.edit_message(view=confirmation_view)
 
-                await bot.gdb[DatabaseCollections.APPROVALS].update_one(
-                    {'submission_id': submission_id},
+                result = await bot.gdb[DatabaseCollections.APPROVALS].update_one(
+                    {'submission_id': submission_id, 'status': 'pending', 'user_id': member_id},
                     {'$set': {
                         'pending_character': pending_character,
                         'items': items,
@@ -2521,6 +2523,12 @@ async def _handle_submission(interaction, pending_character, items, currency):
                         'timestamp': discord.utils.utcnow()
                     }}
                 )
+
+                if result.matched_count == 0:
+                    await interaction.followup.send(
+                        t(locale, 'player-approval-resolved'), ephemeral=True
+                    )
+                    return
 
                 # Refresh the forum post view
                 approval_doc = await bot.gdb[DatabaseCollections.APPROVALS].find_one(
