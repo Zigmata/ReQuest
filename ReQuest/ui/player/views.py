@@ -1265,6 +1265,7 @@ class ValidationErrorView(LocaleLayoutView):
         super().__init__(timeout=None)
         self.errors = errors
         self.calling_view = calling_view
+        self.locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         self.items_per_page = 15
         self.current_page = 0
         self.total_pages = max(1, math.ceil(len(errors) / self.items_per_page))
@@ -2142,6 +2143,8 @@ class ApprovalPostView(LocaleLayoutView):
                 if self.deny_reason:
                     deny_text += f'\n{t(locale, "player-approval-deny-reason", reason=self.deny_reason)}'
                 container.add_item(TextDisplay(deny_text))
+            else:
+                container.add_item(TextDisplay(t(locale, 'player-approval-resolved')))
         else:
             # Action buttons
             actions = ActionRow()
@@ -2497,17 +2500,6 @@ async def _handle_submission(interaction, pending_character, items, currency):
         # Check if this is a re-submission (edit flow from ApprovalPostView)
         existing_submission_id = pending_character.pop('submission_id', None)
 
-        # Clean up the pending character record (only exists for new submissions)
-        if not existing_submission_id:
-            pending_id = f'{member_id}_{guild_id}'
-            await delete_cached_data(
-                bot=bot,
-                mongo_database=bot.gdb,
-                collection_name=DatabaseCollections.PENDING_CHARACTERS,
-                search_filter={CommonFields.ID: pending_id},
-                cache_id=pending_id
-            )
-
         if forum_channel and isinstance(forum_channel, discord.ForumChannel):
             guild_locale = await resolve_guild_locale(bot, guild_id)
 
@@ -2577,6 +2569,16 @@ async def _handle_submission(interaction, pending_character, items, currency):
 
                 await bot.gdb[DatabaseCollections.APPROVALS].insert_one(submission_data)
 
+                # Clean up the pending character record now that the submission is persisted
+                pending_id = f'{member_id}_{guild_id}'
+                await delete_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.PENDING_CHARACTERS,
+                    search_filter={CommonFields.ID: pending_id},
+                    cache_id=pending_id
+                )
+
                 # Grant forum channel access to submitter for any missing permissions
                 try:
                     forum_perms = forum_channel.permissions_for(interaction.user)
@@ -2639,6 +2641,16 @@ async def _handle_submission(interaction, pending_character, items, currency):
                         }
                     }
                 }}
+            )
+
+            # Clean up the pending character record now that the character is created
+            pending_id = f'{member_id}_{guild_id}'
+            await delete_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.PENDING_CHARACTERS,
+                search_filter={CommonFields.ID: pending_id},
+                cache_id=pending_id
             )
 
             for name, quantity in items.items():
