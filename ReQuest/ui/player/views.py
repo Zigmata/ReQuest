@@ -2310,10 +2310,8 @@ class ApprovalPostView(LocaleLayoutView):
                 }}
             )
 
-            # Revoke granted forum permissions
-            thread = interaction.channel
-            if isinstance(thread, discord.Thread):
-                await self._revoke_submitter_permissions(thread, bot, guild_id, user_id, self.submission_id)
+            # Capture granted permissions before deleting the approval record
+            granted_permissions = claimed.get(ApprovalFields.GRANTED_PERMISSIONS, [])
 
             # Delete the approval record
             await delete_cached_data(
@@ -2326,6 +2324,13 @@ class ApprovalPostView(LocaleLayoutView):
 
             # Mark claim as fully resolved so we don't revert on success
             claimed = False
+
+            # Revoke granted forum permissions (after delete so revert-to-pending keeps access)
+            thread = interaction.channel
+            if isinstance(thread, discord.Thread):
+                await self._revoke_submitter_permissions(
+                    thread, bot, guild_id, user_id, granted_permissions
+                )
 
             # Update view to resolved state
             self.resolved = True
@@ -2397,11 +2402,7 @@ class ApprovalPostView(LocaleLayoutView):
             user_id = claimed[ApprovalFields.USER_ID]
             guild_id = claimed[ApprovalFields.GUILD_ID]
             character_name = claimed.get(ApprovalFields.CHARACTER_NAME, '')
-
-            # Revoke granted forum permissions
-            thread = interaction.channel
-            if isinstance(thread, discord.Thread):
-                await self._revoke_submitter_permissions(thread, bot, guild_id, user_id, self.submission_id)
+            granted_permissions = claimed.get(ApprovalFields.GRANTED_PERMISSIONS, [])
 
             # Delete the approval record (character was never created)
             await delete_cached_data(
@@ -2414,6 +2415,13 @@ class ApprovalPostView(LocaleLayoutView):
 
             # Mark claim as fully resolved so we don't revert on success
             claimed = False
+
+            # Revoke granted forum permissions (after delete so revert-to-pending keeps access)
+            thread = interaction.channel
+            if isinstance(thread, discord.Thread):
+                await self._revoke_submitter_permissions(
+                    thread, bot, guild_id, user_id, granted_permissions
+                )
 
             # Update view to resolved state
             self.resolved = True
@@ -2458,15 +2466,10 @@ class ApprovalPostView(LocaleLayoutView):
             await log_exception(e, interaction)
 
     @staticmethod
-    async def _revoke_submitter_permissions(thread, bot, guild_id, user_id, submission_id):
+    async def _revoke_submitter_permissions(thread, bot, guild_id, user_id, granted_permissions):
         """Revoke only the forum channel permissions that were granted by the bot."""
         try:
-            doc = await bot.gdb[DatabaseCollections.APPROVALS].find_one(
-                {ApprovalFields.SUBMISSION_ID: submission_id},
-                {ApprovalFields.GRANTED_PERMISSIONS: 1}
-            )
-            granted = (doc or {}).get(ApprovalFields.GRANTED_PERMISSIONS, [])
-            if not granted:
+            if not granted_permissions:
                 return
             guild = bot.get_guild(guild_id)
             if not guild:
@@ -2476,7 +2479,7 @@ class ApprovalPostView(LocaleLayoutView):
             if not forum_channel:
                 return
             overwrite = forum_channel.overwrites_for(member)
-            for perm in granted:
+            for perm in granted_permissions:
                 setattr(overwrite, perm, None)
             if overwrite.is_empty():
                 await forum_channel.set_permissions(member, overwrite=None)
