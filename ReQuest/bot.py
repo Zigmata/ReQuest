@@ -139,6 +139,13 @@ class ReQuest(commands.Bot):
         from ReQuest.ui.player.views import ApprovalPostView
         from ReQuest.utilities.localizer import resolve_guild_locale
         approval_collection = self.gdb[DatabaseCollections.APPROVALS]
+
+        # Revert any submissions stuck in 'processing' from a prior interrupted shutdown
+        await approval_collection.update_many(
+            {'status': 'processing'},
+            {'$set': {'status': 'pending'}}
+        )
+
         approval_cursor = approval_collection.find({'status': 'pending', 'message_id': {'$exists': True}})
         for doc in await approval_cursor.to_list(length=None):
             try:

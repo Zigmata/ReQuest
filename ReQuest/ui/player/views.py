@@ -2267,11 +2267,13 @@ class ApprovalPostView(LocaleLayoutView):
                 await interaction.edit_original_response(view=self)
                 return
 
-            guild_id = self.submission_data['guild_id']
-            user_id = self.submission_data['user_id']
-            pending_character = self.submission_data.get('pending_character', {})
-            character_id = pending_character.get('character_id', self.submission_data.get('character_id'))
-            character_name = pending_character.get('name', self.submission_data.get('character_name'))
+            # Use the claimed doc as the authoritative data source (may have been edited since view loaded)
+            self.submission_data = claimed
+            guild_id = claimed['guild_id']
+            user_id = claimed['user_id']
+            pending_character = claimed.get('pending_character', {})
+            character_id = pending_character.get('character_id', claimed.get('character_id'))
+            character_name = pending_character.get('name', claimed.get('character_name'))
 
             # Create the character in the CHARACTERS collection
             await update_cached_data(
@@ -2284,7 +2286,9 @@ class ApprovalPostView(LocaleLayoutView):
                     f'{CharacterFields.CHARACTERS}.{character_id}': {
                         CharacterFields.NAME: character_name,
                         'note': pending_character.get('note', ''),
-                        'registeredDate': pending_character.get('registered_date'),
+                        'registeredDate': (
+                            pending_character.get('registered_date') or claimed.get('timestamp')
+                        ),
                         CharacterFields.ATTRIBUTES: {
                             'level': None,
                             CharacterFields.EXPERIENCE: None,
@@ -2296,9 +2300,9 @@ class ApprovalPostView(LocaleLayoutView):
             )
 
             # Apply inventory items and currency
-            for name, quantity in self.submission_data.get('items', {}).items():
+            for name, quantity in claimed.get('items', {}).items():
                 await update_character_inventory(interaction, user_id, character_id, name, quantity)
-            for name, quantity in self.submission_data.get('currency', {}).items():
+            for name, quantity in claimed.get('currency', {}).items():
                 await update_character_inventory(interaction, user_id, character_id, name, quantity)
 
             # Revoke granted forum permissions
@@ -2381,9 +2385,11 @@ class ApprovalPostView(LocaleLayoutView):
                 await interaction.edit_original_response(view=self)
                 return
 
-            user_id = self.submission_data['user_id']
-            guild_id = self.submission_data['guild_id']
-            character_name = self.submission_data.get('character_name', '')
+            # Use the claimed doc as the authoritative data source
+            self.submission_data = claimed
+            user_id = claimed['user_id']
+            guild_id = claimed['guild_id']
+            character_name = claimed.get('character_name', '')
 
             # Revoke granted forum permissions
             thread = interaction.channel
