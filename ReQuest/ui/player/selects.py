@@ -5,7 +5,9 @@ from discord.ui import Select
 
 from ReQuest.utilities.constants import CharacterFields, CommonFields, DatabaseCollections
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
-from ReQuest.utilities.supportFunctions import log_exception, setup_view, update_cached_data
+from ReQuest.utilities.db_cache import update_cached_data
+from ReQuest.utilities.exceptions import log_exception
+from ReQuest.utilities.discord_utils import setup_view
 from ReQuest.ui.common import modals
 
 logger = logging.getLogger(__name__)

@@ -11,21 +11,13 @@ from ReQuest.utilities.constants import (
     CharacterFields, CommonFields, ContainerFields, ShopFields, DatabaseCollections
 )
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
-from ReQuest.utilities.supportFunctions import (
-    log_exception,
-    setup_view,
-    attempt_delete,
-    build_cache_key,
-    get_cached_data,
-    update_cached_data,
-    delete_cached_data,
-    move_item_between_containers,
-    format_inventory_by_container,
-    UserFeedbackError,
-    get_container_items,
-    delete_container,
+from ReQuest.utilities.containers import (
+    move_item_between_containers, format_inventory_by_container, get_container_items, delete_container,
     reorder_container
 )
+from ReQuest.utilities.db_cache import build_cache_key, get_cached_data, update_cached_data, delete_cached_data
+from ReQuest.utilities.discord_utils import attempt_delete, setup_view
+from ReQuest.utilities.exceptions import UserFeedbackError, log_exception
 
 logger = logging.getLogger(__name__)
 

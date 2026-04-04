@@ -24,32 +24,17 @@ from ReQuest.utilities.constants import (
 )
 from ReQuest.utilities.checks import is_gm_or_mod
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_guild_locale, resolve_locale, resolve_user_locale
-from ReQuest.utilities.supportFunctions import (
-    log_exception,
-    strip_id,
-    format_currency_display,
-    setup_view,
-    find_currency_or_denomination,
-    update_character_inventory,
-    format_price_string,
-    consolidate_currency_totals,
-    check_sufficient_funds,
-    get_denomination_map,
-    format_consolidated_totals,
-    get_xp_config,
-    UserFeedbackError,
-    get_cached_data,
-    update_cached_data,
-    build_cache_key,
-    format_complex_cost,
-    get_containers_sorted,
-    get_container_name,
-    get_container_items,
-    escape_markdown,
-    decode_mongo_key,
-    truncate_text,
-    delete_cached_data
+from ReQuest.utilities.character import update_character_inventory
+from ReQuest.utilities.containers import get_containers_sorted, get_container_name, get_container_items
+from ReQuest.utilities.currency import (
+    find_currency_or_denomination, format_currency_display, format_price_string, consolidate_currency_totals,
+    check_sufficient_funds, get_denomination_map, format_consolidated_totals, format_complex_cost
 )
+from ReQuest.utilities.db_cache import (
+    get_cached_data, update_cached_data, build_cache_key, delete_cached_data, decode_mongo_key, get_xp_config
+)
+from ReQuest.utilities.discord_utils import setup_view, strip_id, escape_markdown, truncate_text
+from ReQuest.utilities.exceptions import UserFeedbackError, log_exception
 
 logger = logging.getLogger(__name__)
 

@@ -13,7 +13,8 @@ import redis.asyncio as redis
 
 from ReQuest.ui.gm.views import QuestPostView
 from ReQuest.utilities.constants import ApprovalFields, QuestFields, DatabaseCollections
-from ReQuest.utilities.supportFunctions import attempt_delete, log_exception
+from ReQuest.utilities.discord_utils import attempt_delete
+from ReQuest.utilities.exceptions import log_exception
 
 log_level = os.getenv('LOG_LEVEL', 'INFO').upper()
 logging.basicConfig(

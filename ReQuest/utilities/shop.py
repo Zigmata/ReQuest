@@ -8,8 +8,10 @@ import shortuuid
 
 from ReQuest.utilities.constants import ShopFields, CartFields, CommonFields, DatabaseCollections, RestockFields
 from ReQuest.utilities.exceptions import UserFeedbackError
-from ReQuest.utilities.db_cache import get_cached_data, update_cached_data, replace_cached_data, delete_cached_data, \
-    build_cache_key
+from ReQuest.utilities.db_cache import (
+    get_cached_data, update_cached_data, replace_cached_data, delete_cached_data,
+    build_cache_key, encode_mongo_key, decode_mongo_key
+)
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +28,6 @@ __all__ = [
     'increment_available_stock',
     'update_last_restock',
     'get_last_restock',
-    'encode_mongo_key',
-    'decode_mongo_key',
     'build_cart_id',
     'get_cart',
     'get_or_create_cart',
@@ -426,43 +426,6 @@ async def get_last_restock(bot, guild_id: int, channel_id: str) -> str | None:
         return None
 
     return stock_data.get(RestockFields.LAST_RESTOCK, {}).get(str(channel_id))
-
-
-def encode_mongo_key(key: str) -> str:
-    """
-    Encodes a string for safe use as a MongoDB field name.
-
-    MongoDB field names cannot contain:
-    - '.' (dot) - interpreted as nested document path
-    - '$' (dollar) - reserved for operators
-    - null characters - not allowed in field names
-
-    Uses URL-encoding style. The '%' character is encoded first to ensure reversibility.
-    """
-    if not key:
-        return key
-    # Order matters: encode '%' first to avoid double-encoding
-    result = key.replace('%', '%25')
-    result = result.replace('.', '%2E')
-    result = result.replace('$', '%24')
-    # Strip null characters (invalid in MongoDB field names and have no display value)
-    result = result.replace('\x00', '')
-    return result
-
-
-def decode_mongo_key(key: str) -> str:
-    """
-    Decodes a MongoDB field name back to its original form.
-
-    Reverses the encoding applied by encode_mongo_key().
-    """
-    if not key:
-        return key
-    # Order matters: decode '%' last to avoid incorrect decoding
-    result = key.replace('%2E', '.')
-    result = result.replace('%24', '$')
-    result = result.replace('%25', '%')
-    return result
 
 
 def build_cart_id(guild_id: int, user_id: int, channel_id: str) -> str:

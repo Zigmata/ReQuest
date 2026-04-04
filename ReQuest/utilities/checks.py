@@ -2,7 +2,7 @@ from discord import app_commands, Interaction
 
 from ReQuest.utilities.constants import ConfigFields, CharacterFields, CommonFields, DatabaseCollections
 from ReQuest.utilities.localizer import resolve_locale, t
-from ReQuest.utilities.supportFunctions import get_cached_data
+from ReQuest.utilities.db_cache import get_cached_data
 
 
 def is_owner():

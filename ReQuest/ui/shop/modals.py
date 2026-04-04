@@ -3,13 +3,8 @@ from ReQuest.ui.common.modals import LocaleModal
 
 from ReQuest.utilities.constants import CartFields
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
-from ReQuest.utilities.supportFunctions import (
-    log_exception,
-    update_cart_item_quantity,
-    get_cart,
-    get_shop_stock,
-    UserFeedbackError
-)
+from ReQuest.utilities.exceptions import UserFeedbackError, log_exception
+from ReQuest.utilities.shop import update_cart_item_quantity, get_cart, get_shop_stock
 
 
 class EditCartItemModal(LocaleModal):

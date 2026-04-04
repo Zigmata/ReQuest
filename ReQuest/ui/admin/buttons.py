@@ -10,7 +10,9 @@ from ReQuest.ui.admin import modals
 from ReQuest.ui.common import modals as common_modals
 from ReQuest.utilities.constants import DatabaseCollections
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
-from ReQuest.utilities.supportFunctions import log_exception, setup_view, update_cached_data
+from ReQuest.utilities.db_cache import update_cached_data
+from ReQuest.utilities.exceptions import log_exception
+from ReQuest.utilities.discord_utils import setup_view
 
 logger = logging.getLogger(__name__)
 

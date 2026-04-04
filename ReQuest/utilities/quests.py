@@ -1,34 +1,16 @@
-import inspect
 import logging
 
 import discord
 
-from ReQuest.utilities.constants import QuestFields, CharacterFields, CommonFields, DatabaseCollections, ConfigFields
-from ReQuest.utilities.exceptions import UserFeedbackError, log_exception
+from ReQuest.utilities.constants import QuestFields, CharacterFields, CommonFields, DatabaseCollections
+from ReQuest.utilities.exceptions import log_exception
 from ReQuest.utilities.db_cache import get_cached_data
 
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    'check_role_hierarchy',
     'update_quest_embed',
-    'find_member_and_character_id_in_lists',
-    'setup_view',
-    'get_xp_config',
 ]
-
-
-def check_role_hierarchy(guild: discord.Guild, role: discord.Role):
-    """Raises UserFeedbackError if the bot cannot manage the given role due to hierarchy."""
-    from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
-    bot_top_role = guild.me.top_role
-    if role >= bot_top_role:
-        raise UserFeedbackError(
-            t(DEFAULT_LOCALE, 'gm-error-role-hierarchy', roleName=role.name, roleId=str(role.id)),
-            message_id='gm-error-role-hierarchy',
-            roleName=role.name,
-            roleId=str(role.id)
-        )
 
 
 async def update_quest_embed(quest: dict, locale: str | None = None) -> discord.Embed | None:
@@ -132,66 +114,3 @@ async def update_quest_embed(quest: dict, locale: str | None = None) -> discord.
         return embed
     except Exception as e:
         await log_exception(e)
-
-
-def find_member_and_character_id_in_lists(lists, selected_member_id):
-    for list_name in lists:
-        for player in list_name:
-            for member_id, character_data in player.items():
-                if str(member_id) == selected_member_id:
-                    for character_id in character_data:
-                        return member_id, character_id
-    return None, None
-
-
-async def setup_view(view, interaction: discord.Interaction):
-    """
-    Dynamically sets up a view by inspecting its setup method for required parameters.
-    Resolves and propagates the user's locale to the view before calling setup().
-    """
-    from ReQuest.utilities.localizer import resolve_locale, set_locale_context
-
-    locale = await resolve_locale(interaction)
-    set_locale_context(locale)
-    view.locale = locale
-
-    setup_function = view.setup
-    sig = inspect.signature(setup_function)
-    params = sig.parameters
-
-    kwargs = {}
-    if 'bot' in params:
-        kwargs['bot'] = interaction.client
-    if 'user' in params:
-        kwargs['user'] = interaction.user
-    if 'guild' in params:
-        kwargs['guild'] = interaction.guild
-    if 'interaction' in params:
-        kwargs['interaction'] = interaction
-
-    await setup_function(**kwargs)
-
-
-async def get_xp_config(bot, guild_id) -> bool:
-    """
-    Retrieves the XP configuration for a guild.
-
-    :param bot: The Discord bot instance
-    :param guild_id: The Discord guild id
-
-    :return: True if XP is enabled, False if XP is disabled
-    """
-    try:
-        query = await get_cached_data(
-            bot=bot,
-            mongo_database=bot.gdb,
-            collection_name=DatabaseCollections.PLAYER_EXPERIENCE,
-            query={CommonFields.ID: guild_id}
-        )
-        if query is None:
-            return True  # Default to XP enabled if no config found
-        return query.get(ConfigFields.PLAYER_EXPERIENCE, True)
-    except Exception as e:
-        logger.error(f"Error retrieving XP config: {e}")
-        await log_exception(e)
-        return True  # Default to XP enabled on error

@@ -4,7 +4,7 @@ from discord.ext.commands import Cog
 
 from ReQuest.ui.info.views import LanguageView
 from ReQuest.utilities.localizer import resolve_locale, t
-from ReQuest.utilities.supportFunctions import setup_view
+from ReQuest.utilities.discord_utils import setup_view
 
 
 class Info(Cog):

@@ -174,7 +174,7 @@ async def resolve_user_locale(bot, user_id, guild_id=None):
     Fallback chain: user DB preference > guild locale > DEFAULT_LOCALE.
     """
     try:
-        from ReQuest.utilities.supportFunctions import get_cached_data
+        from ReQuest.utilities.db_cache import get_cached_data
         locale_data = await get_cached_data(
             bot=bot,
             mongo_database=bot.mdb,
@@ -205,7 +205,7 @@ async def resolve_guild_locale(bot, guild_id):
         return DEFAULT_LOCALE
 
     try:
-        from ReQuest.utilities.supportFunctions import get_cached_data
+        from ReQuest.utilities.db_cache import get_cached_data
         guild_locale_data = await get_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
@@ -230,7 +230,7 @@ async def resolve_locale(interaction):
     bot = interaction.client
 
     try:
-        from ReQuest.utilities.supportFunctions import get_cached_data
+        from ReQuest.utilities.db_cache import get_cached_data
         locale_data = await get_cached_data(
             bot=bot,
             mongo_database=bot.mdb,

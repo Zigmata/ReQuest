@@ -19,7 +19,8 @@ from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.common.buttons import MenuDoneButton, MenuViewButton
 from ReQuest.utilities.constants import DatabaseCollections
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
-from ReQuest.utilities.supportFunctions import log_exception, get_cached_data
+from ReQuest.utilities.db_cache import get_cached_data
+from ReQuest.utilities.exceptions import log_exception
 
 logger = logging.getLogger(__name__)
 

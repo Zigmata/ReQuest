@@ -4,7 +4,7 @@ from discord.ext.commands import Cog
 
 from ReQuest.ui.config import views
 from ReQuest.utilities.localizer import resolve_locale, set_locale_context
-from ReQuest.utilities.supportFunctions import log_exception
+from ReQuest.utilities.exceptions import log_exception
 
 
 class Config(Cog):

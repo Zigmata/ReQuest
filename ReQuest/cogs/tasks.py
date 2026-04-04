@@ -11,16 +11,11 @@ from ReQuest.utilities.constants import (
     FIRST_RESTOCK_GRACE_HOURLY, FIRST_RESTOCK_GRACE_DAILY, FIRST_RESTOCK_GRACE_WEEKLY
 )
 from ReQuest.utilities.localizer import t, resolve_guild_locale
-from ReQuest.utilities.supportFunctions import (
-    cleanup_expired_carts,
-    get_last_restock,
-    get_item_stock,
-    get_shop_channel,
-    set_available_stock,
-    increment_available_stock,
-    update_last_restock,
-    log_exception,
-    escape_markdown
+from ReQuest.utilities.discord_utils import escape_markdown
+from ReQuest.utilities.exceptions import log_exception
+from ReQuest.utilities.shop import (
+    cleanup_expired_carts, get_last_restock, get_item_stock, get_shop_channel,
+    set_available_stock, increment_available_stock, update_last_restock
 )
 
 logger = logging.getLogger(__name__)

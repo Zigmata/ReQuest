@@ -18,6 +18,7 @@ __all__ = [
     'update_character_experience',
     'apply_item_change_local',
     'apply_currency_change_local',
+    'find_member_and_character_id_in_lists',
 ]
 
 
@@ -460,3 +461,13 @@ def apply_currency_change_local(character_data: dict, currency_config: dict, ite
         titlecase(k): v for k, v in final_wallet.items() if v > 0
     }
     return character_data
+
+
+def find_member_and_character_id_in_lists(lists, selected_member_id):
+    for list_name in lists:
+        for player in list_name:
+            for member_id, character_data in player.items():
+                if str(member_id) == selected_member_id:
+                    for character_id in character_data:
+                        return member_id, character_id
+    return None, None

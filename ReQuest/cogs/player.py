@@ -6,7 +6,8 @@ from discord.ext.commands import Cog
 from ReQuest.ui.player import modals, views
 from ReQuest.utilities.checks import has_active_character
 from ReQuest.utilities.localizer import resolve_locale, set_locale_context
-from ReQuest.utilities.supportFunctions import log_exception, setup_view
+from ReQuest.utilities.exceptions import log_exception
+from ReQuest.utilities.discord_utils import setup_view
 
 
 class Player(Cog):

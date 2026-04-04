@@ -5,7 +5,8 @@ from discord import ButtonStyle
 from discord.ui import Button
 
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
-from ReQuest.utilities.supportFunctions import log_exception, setup_view
+from ReQuest.utilities.exceptions import log_exception
+from ReQuest.utilities.discord_utils import setup_view
 
 logger = logging.getLogger(__name__)
 

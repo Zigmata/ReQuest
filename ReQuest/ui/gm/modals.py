@@ -9,20 +9,11 @@ from ReQuest.ui.common.modals import LocaleModal
 from ReQuest.ui.common.enums import RewardType
 from ReQuest.utilities.constants import QuestFields, ConfigFields, CommonFields, DatabaseCollections
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_locale, resolve_user_locale, resolve_guild_locale
-from ReQuest.utilities.supportFunctions import (
-    log_exception,
-    strip_id,
-    update_character_inventory,
-    update_character_experience,
-    find_currency_or_denomination,
-    get_denomination_map,
-    setup_view,
-    UserFeedbackError,
-    update_cached_data,
-    get_cached_data,
-    build_cache_key,
-    escape_markdown
-)
+from ReQuest.utilities.character import update_character_inventory, update_character_experience
+from ReQuest.utilities.currency import find_currency_or_denomination, get_denomination_map
+from ReQuest.utilities.db_cache import update_cached_data, get_cached_data, build_cache_key
+from ReQuest.utilities.discord_utils import setup_view, strip_id, escape_markdown
+from ReQuest.utilities.exceptions import log_exception, UserFeedbackError
 
 logger = logging.getLogger(__name__)
 
