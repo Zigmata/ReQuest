@@ -1,12 +1,7 @@
-import logging
-
 import discord
 
-from ReQuest.utilities.constants import QuestFields, CharacterFields, CommonFields, DatabaseCollections
+from ReQuest.utilities.constants import QuestFields, CharacterFields
 from ReQuest.utilities.exceptions import log_exception
-from ReQuest.utilities.db_cache import get_cached_data
-
-logger = logging.getLogger(__name__)
 
 __all__ = [
     'update_quest_embed',

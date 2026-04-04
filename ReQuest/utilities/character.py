@@ -2,12 +2,12 @@ import logging
 
 from titlecase import titlecase
 
-from ReQuest.utilities.constants import CharacterFields, CommonFields, DatabaseCollections, CurrencyFields
-from ReQuest.utilities.exceptions import UserFeedbackError, log_exception
-from ReQuest.utilities.db_cache import get_cached_data, update_cached_data
+from ReQuest.utilities.constants import CharacterFields, CommonFields, DatabaseCollections
+from ReQuest.utilities.containers import get_total_item_quantity, get_item_locations
 from ReQuest.utilities.currency import find_currency_or_denomination, get_denomination_map, normalize_currency_keys, \
     check_sufficient_funds
-from ReQuest.utilities.containers import get_total_item_quantity, get_item_locations
+from ReQuest.utilities.db_cache import get_cached_data, update_cached_data
+from ReQuest.utilities.exceptions import UserFeedbackError, log_exception
 
 logger = logging.getLogger(__name__)
 
@@ -130,8 +130,8 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
         if remaining_to_remove <= 0:
             break
 
-        container_id = loc[CommonFields.ID]
-        loc_qty = loc[CommonFields.QUANTITY]
+        container_id = loc['id']
+        loc_qty = loc['quantity']
         remove_from_here = min(loc_qty, remaining_to_remove)
 
         if container_id is None:

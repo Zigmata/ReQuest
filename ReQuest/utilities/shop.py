@@ -1,16 +1,12 @@
-import json
 import logging
 from datetime import datetime, timezone, timedelta
 from typing import Tuple
 
 import discord
-import shortuuid
 
 from ReQuest.utilities.constants import ShopFields, CartFields, CommonFields, DatabaseCollections, RestockFields
-from ReQuest.utilities.exceptions import UserFeedbackError
 from ReQuest.utilities.db_cache import (
-    get_cached_data, update_cached_data, replace_cached_data, delete_cached_data,
-    build_cache_key, encode_mongo_key, decode_mongo_key
+    get_cached_data, update_cached_data, delete_cached_data, build_cache_key, encode_mongo_key
 )
 
 logger = logging.getLogger(__name__)
@@ -227,8 +223,7 @@ async def reserve_stock(bot, guild_id: int, channel_id: str, item_name: str, qua
                 f'{ShopFields.SHOPS}.{channel_id}.{encoded_name}.{ShopFields.AVAILABLE}': -quantity,
                 f'{ShopFields.SHOPS}.{channel_id}.{encoded_name}.{ShopFields.RESERVED}': quantity
             }
-        },
-        return_document=True
+        }
     )
 
     # Invalidate cache after update

@@ -6,9 +6,9 @@ import shortuuid
 from titlecase import titlecase
 
 from ReQuest.utilities.constants import CharacterFields, ContainerFields, CommonFields, DatabaseCollections
-from ReQuest.utilities.exceptions import UserFeedbackError
+from ReQuest.utilities.currency import format_currency_display
 from ReQuest.utilities.db_cache import get_cached_data, update_cached_data
-from ReQuest.utilities.currency import format_currency_display, normalize_currency_keys
+from ReQuest.utilities.exceptions import UserFeedbackError
 
 logger = logging.getLogger(__name__)
 

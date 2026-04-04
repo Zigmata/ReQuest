@@ -5,7 +5,6 @@ from typing import Tuple
 from titlecase import titlecase
 
 from ReQuest.utilities.constants import CurrencyFields, CommonFields
-from ReQuest.utilities.exceptions import UserFeedbackError
 
 logger = logging.getLogger(__name__)
 
