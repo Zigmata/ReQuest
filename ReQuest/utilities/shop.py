@@ -79,7 +79,7 @@ async def get_shop_channel(bot, guild_id: int, channel_id: str) -> discord.abc.M
 
     # Fall back to fetch if not found in cache
     try:
-        channel = bot.fetch_channel(int(channel_id))
+        channel = await bot.fetch_channel(int(channel_id))
         return channel
     except discord.NotFound:
         return None
