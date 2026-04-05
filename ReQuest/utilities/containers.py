@@ -1,7 +1,5 @@
 """Container management utilities for character inventory organization."""
 
-import logging
-
 import shortuuid
 from titlecase import titlecase
 
@@ -9,8 +7,6 @@ from ReQuest.utilities.constants import CharacterFields, ContainerFields, Common
 from ReQuest.utilities.currency import format_currency_display
 from ReQuest.utilities.db_cache import get_cached_data, update_cached_data
 from ReQuest.utilities.exceptions import UserFeedbackError
-
-logger = logging.getLogger(__name__)
 
 __all__ = [
     'MAX_CONTAINERS_PER_PLAYER',

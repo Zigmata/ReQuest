@@ -774,7 +774,7 @@ async def clear_cart_and_release_stock(bot, guild_id: int, user_id: int, channel
         cache_id=cart_id
     )
 
-    # Release all reserved stock
+    # Release all reserved stock (cart already deleted — log failures so leaked reservations are visible)
     for cart_key, cart_item in items.items():
         item = cart_item[CartFields.ITEM]
         quantity = cart_item[CartFields.QUANTITY]
@@ -783,7 +783,13 @@ async def clear_cart_and_release_stock(bot, guild_id: int, user_id: int, channel
         max_stock = item.get(ShopFields.MAX_STOCK)
         if max_stock is not None:
             item_quantity = item.get(CommonFields.QUANTITY, 1)
-            await release_stock(bot, guild_id, channel_id, item_name, quantity * item_quantity, max_stock)
+            try:
+                await release_stock(bot, guild_id, channel_id, item_name, quantity * item_quantity, max_stock)
+            except Exception as e:
+                logger.error(
+                    f'Failed to release stock for {item_name} (qty={quantity * item_quantity}) '
+                    f'in guild {guild_id}, channel {channel_id} after cart deletion: {e}'
+                )
 
 
 async def finalize_cart_purchase(bot, guild_id: int, user_id: int, channel_id: str):
@@ -811,7 +817,7 @@ async def finalize_cart_purchase(bot, guild_id: int, user_id: int, channel_id: s
         cache_id=cart_id
     )
 
-    # Finalize stock (remove from reserved counts)
+    # Finalize stock (cart already deleted — log failures so leaked reservations are visible)
     for cart_key, cart_item in items.items():
         item = cart_item[CartFields.ITEM]
         quantity = cart_item[CartFields.QUANTITY]
@@ -820,7 +826,13 @@ async def finalize_cart_purchase(bot, guild_id: int, user_id: int, channel_id: s
         has_stock_limit = item.get(ShopFields.MAX_STOCK) is not None
         if has_stock_limit:
             item_quantity = item.get(CommonFields.QUANTITY, 1)
-            await finalize_stock(bot, guild_id, channel_id, item_name, quantity * item_quantity)
+            try:
+                await finalize_stock(bot, guild_id, channel_id, item_name, quantity * item_quantity)
+            except Exception as e:
+                logger.error(
+                    f'Failed to finalize stock for {item_name} (qty={quantity * item_quantity}) '
+                    f'in guild {guild_id}, channel {channel_id} after cart deletion: {e}'
+                )
 
 
 async def cleanup_expired_carts(bot):

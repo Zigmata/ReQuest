@@ -1,15 +1,12 @@
-import logging
-
 from titlecase import titlecase
 
 from ReQuest.utilities.constants import CharacterFields, CommonFields, DatabaseCollections
 from ReQuest.utilities.containers import get_total_item_quantity, get_item_locations
-from ReQuest.utilities.currency import find_currency_or_denomination, get_denomination_map, normalize_currency_keys, \
-    check_sufficient_funds
+from ReQuest.utilities.currency import (
+    find_currency_or_denomination, get_denomination_map, normalize_currency_keys, check_sufficient_funds
+)
 from ReQuest.utilities.db_cache import get_cached_data, update_cached_data
 from ReQuest.utilities.exceptions import UserFeedbackError, log_exception
-
-logger = logging.getLogger(__name__)
 
 __all__ = [
     'trade_currency',

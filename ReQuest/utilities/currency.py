@@ -65,7 +65,6 @@ def format_currency_display(player_currency: dict, currency_config: dict) -> lis
         return []
 
     output_lines = []
-    processed_denominations = set()
     norm_player_wallet = normalize_currency_keys(player_currency)
 
     for currency in currency_config[CurrencyFields.CURRENCIES]:
@@ -86,7 +85,6 @@ def format_currency_display(player_currency: dict, currency_config: dict) -> lis
                 quantity = norm_player_wallet.get(denom_name_lower, 0)
                 denom_value_in_base = denomination_map[denom_name_lower]
                 total_value += quantity * denom_value_in_base
-                processed_denominations.add(denom_name_lower)
 
             if total_value > 0:
                 output_lines.append(f"{titlecase(base_name)}: **{total_value:.2f}**")
@@ -101,8 +99,7 @@ def format_currency_display(player_currency: dict, currency_config: dict) -> lis
                     denom_display_name, _ = find_currency_or_denomination(currency_config, denom_name_lower)
                     if denom_display_name:
                         output_lines.append(f"{titlecase(denom_display_name)}: **{quantity}**")
-                    processed_denominations.add(denom_name_lower)
-
+    
     return output_lines
 
 
