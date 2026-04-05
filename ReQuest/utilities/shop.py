@@ -619,16 +619,10 @@ async def remove_item_from_cart(bot, guild_id: int, user_id: int, channel_id: st
     current_quantity = cart_item[CartFields.QUANTITY]
     item_name = item.get(CommonFields.NAME)
 
-    # Release stock if item has stock limit
-    max_stock = item.get(ShopFields.MAX_STOCK)
-    if max_stock is not None:
-        item_quantity = item.get(CommonFields.QUANTITY, 1)
-        release_qty = min(quantity, current_quantity) * item_quantity
-        await release_stock(bot, guild_id, channel_id, item_name, release_qty, max_stock)
-
     now = datetime.now(timezone.utc)
     expires_at = now + timedelta(minutes=CART_TTL_MINUTES)
 
+    # Update the cart first to prevent stock release without cart consistency
     if quantity >= current_quantity:
         # Remove item entirely
         await update_cached_data(
@@ -661,6 +655,13 @@ async def remove_item_from_cart(bot, guild_id: int, user_id: int, channel_id: st
             },
             cache_id=cart_id
         )
+
+    # Release stock after successful cart update
+    max_stock = item.get(ShopFields.MAX_STOCK)
+    if max_stock is not None:
+        item_quantity = item.get(CommonFields.QUANTITY, 1)
+        release_qty = min(quantity, current_quantity) * item_quantity
+        await release_stock(bot, guild_id, channel_id, item_name, release_qty, max_stock)
 
 
 async def update_cart_item_quantity(bot, guild_id: int, user_id: int, channel_id: str,
@@ -764,6 +765,15 @@ async def clear_cart_and_release_stock(bot, guild_id: int, user_id: int, channel
         return
     items = cart.get(CartFields.ITEMS, {})
 
+    # Delete the cart first to prevent inconsistency if stock release fails
+    await delete_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name=DatabaseCollections.SHOP_CARTS,
+        search_filter={CommonFields.ID: cart_id},
+        cache_id=cart_id
+    )
+
     # Release all reserved stock
     for cart_key, cart_item in items.items():
         item = cart_item[CartFields.ITEM]
@@ -774,15 +784,6 @@ async def clear_cart_and_release_stock(bot, guild_id: int, user_id: int, channel
         if max_stock is not None:
             item_quantity = item.get(CommonFields.QUANTITY, 1)
             await release_stock(bot, guild_id, channel_id, item_name, quantity * item_quantity, max_stock)
-
-    # Delete the cart
-    await delete_cached_data(
-        bot=bot,
-        mongo_database=bot.gdb,
-        collection_name=DatabaseCollections.SHOP_CARTS,
-        search_filter={CommonFields.ID: cart_id},
-        cache_id=cart_id
-    )
 
 
 async def finalize_cart_purchase(bot, guild_id: int, user_id: int, channel_id: str):
@@ -801,6 +802,15 @@ async def finalize_cart_purchase(bot, guild_id: int, user_id: int, channel_id: s
     cart_id = cart[CommonFields.ID]
     items = cart.get(CartFields.ITEMS, {})
 
+    # Delete the cart first to prevent double-finalization on retry
+    await delete_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name=DatabaseCollections.SHOP_CARTS,
+        search_filter={CommonFields.ID: cart_id},
+        cache_id=cart_id
+    )
+
     # Finalize stock (remove from reserved counts)
     for cart_key, cart_item in items.items():
         item = cart_item[CartFields.ITEM]
@@ -811,15 +821,6 @@ async def finalize_cart_purchase(bot, guild_id: int, user_id: int, channel_id: s
         if has_stock_limit:
             item_quantity = item.get(CommonFields.QUANTITY, 1)
             await finalize_stock(bot, guild_id, channel_id, item_name, quantity * item_quantity)
-
-    # Delete the cart
-    await delete_cached_data(
-        bot=bot,
-        mongo_database=bot.gdb,
-        collection_name=DatabaseCollections.SHOP_CARTS,
-        search_filter={CommonFields.ID: cart_id},
-        cache_id=cart_id
-    )
 
 
 async def cleanup_expired_carts(bot):
