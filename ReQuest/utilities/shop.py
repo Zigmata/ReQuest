@@ -129,7 +129,7 @@ async def get_shop_stock(bot, guild_id: int, channel_id: str) -> dict:
     :param guild_id: The guild ID
     :param channel_id: The shop channel ID
 
-    :return: Dict mapping item names to their stock info, empty dict if no stock limits
+    :return: Dict mapping encoded item names (via encode_mongo_key) to their stock info, empty dict if no stock limits
     """
     stock_data = await get_cached_data(
         bot=bot,
@@ -528,59 +528,66 @@ async def add_item_to_cart(bot, guild_id: int, user_id: int, channel_id: str,
 
     # Check if item has stock limit and reserve if needed
     has_stock_limit = item.get(ShopFields.MAX_STOCK) is not None
+    reserved_quantity = 0
     if has_stock_limit:
         item_quantity = item.get(CommonFields.QUANTITY, 1)
         success = await reserve_stock(bot, guild_id, channel_id, item_name, item_quantity)
         if not success:
             return False
+        reserved_quantity = item_quantity
 
-    # Get or create cart
-    cart = await get_or_create_cart(bot, guild_id, user_id, channel_id)
-    cart_id = cart[CommonFields.ID]
+    # Persist the cart entry; release stock if the write fails
+    try:
+        cart = await get_or_create_cart(bot, guild_id, user_id, channel_id)
+        cart_id = cart[CommonFields.ID]
 
-    now = datetime.now(timezone.utc)
-    expires_at = now + timedelta(minutes=CART_TTL_MINUTES)
+        now = datetime.now(timezone.utc)
+        expires_at = now + timedelta(minutes=CART_TTL_MINUTES)
 
-    # Check if item already in cart
-    existing_items = cart.get(CartFields.ITEMS, {})
-    if cart_key in existing_items:
-        # Increment quantity
-        await update_cached_data(
-            bot=bot,
-            mongo_database=bot.gdb,
-            collection_name=DatabaseCollections.SHOP_CARTS,
-            query={CommonFields.ID: cart_id},
-            update_data={
-                '$inc': {f'{CartFields.ITEMS}.{cart_key}.{CartFields.QUANTITY}': 1},
-                '$set': {
-                    CartFields.UPDATED_AT: now.isoformat(),
-                    CartFields.EXPIRES_AT: expires_at.isoformat()
-                }
-            },
-            cache_id=cart_id
-        )
-    else:
-        # Add new item
-        cart_item = {
-            CartFields.ITEM: item,
-            CartFields.QUANTITY: 1,
-            CartFields.OPTION_INDEX: option_index,
-            CartFields.RESERVED_AT: now.isoformat()
-        }
-        await update_cached_data(
-            bot=bot,
-            mongo_database=bot.gdb,
-            collection_name=DatabaseCollections.SHOP_CARTS,
-            query={CommonFields.ID: cart_id},
-            update_data={
-                '$set': {
-                    f'{CartFields.ITEMS}.{cart_key}': cart_item,
-                    CartFields.UPDATED_AT: now.isoformat(),
-                    CartFields.EXPIRES_AT: expires_at.isoformat()
-                }
-            },
-            cache_id=cart_id
-        )
+        # Check if item already in cart
+        existing_items = cart.get(CartFields.ITEMS, {})
+        if cart_key in existing_items:
+            # Increment quantity
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.SHOP_CARTS,
+                query={CommonFields.ID: cart_id},
+                update_data={
+                    '$inc': {f'{CartFields.ITEMS}.{cart_key}.{CartFields.QUANTITY}': 1},
+                    '$set': {
+                        CartFields.UPDATED_AT: now.isoformat(),
+                        CartFields.EXPIRES_AT: expires_at.isoformat()
+                    }
+                },
+                cache_id=cart_id
+            )
+        else:
+            # Add new item
+            cart_item = {
+                CartFields.ITEM: item,
+                CartFields.QUANTITY: 1,
+                CartFields.OPTION_INDEX: option_index,
+                CartFields.RESERVED_AT: now.isoformat()
+            }
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.SHOP_CARTS,
+                query={CommonFields.ID: cart_id},
+                update_data={
+                    '$set': {
+                        f'{CartFields.ITEMS}.{cart_key}': cart_item,
+                        CartFields.UPDATED_AT: now.isoformat(),
+                        CartFields.EXPIRES_AT: expires_at.isoformat()
+                    }
+                },
+                cache_id=cart_id
+            )
+    except Exception:
+        if reserved_quantity > 0:
+            await release_stock(bot, guild_id, channel_id, item_name, reserved_quantity)
+        raise
 
     return True
 
@@ -695,32 +702,39 @@ async def update_cart_item_quantity(bot, guild_id: int, user_id: int, channel_id
 
     if quantity_diff > 0:
         # Trying to add more
+        reserved_quantity = 0
         if has_stock_limit:
             # Need to reserve additional stock
             item_quantity = item.get(CommonFields.QUANTITY, 1)
-            success = await reserve_stock(bot, guild_id, channel_id, item_name, quantity_diff * item_quantity)
+            reserved_quantity = quantity_diff * item_quantity
+            success = await reserve_stock(bot, guild_id, channel_id, item_name, reserved_quantity)
             if not success:
                 return False, t(DEFAULT_LOCALE, 'error-not-enough-stock')
 
-        # Update quantity
-        now = datetime.now(timezone.utc)
-        expires_at = now + timedelta(minutes=CART_TTL_MINUTES)
+        # Update quantity; release stock if the write fails
+        try:
+            now = datetime.now(timezone.utc)
+            expires_at = now + timedelta(minutes=CART_TTL_MINUTES)
 
-        cart_id = cart[CommonFields.ID]
-        await update_cached_data(
-            bot=bot,
-            mongo_database=bot.gdb,
-            collection_name=DatabaseCollections.SHOP_CARTS,
-            query={CommonFields.ID: cart_id},
-            update_data={
-                '$set': {
-                    f'{CartFields.ITEMS}.{cart_key}.{CartFields.QUANTITY}': new_quantity,
-                    CartFields.UPDATED_AT: now.isoformat(),
-                    CartFields.EXPIRES_AT: expires_at.isoformat()
-                }
-            },
-            cache_id=cart_id
-        )
+            cart_id = cart[CommonFields.ID]
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.SHOP_CARTS,
+                query={CommonFields.ID: cart_id},
+                update_data={
+                    '$set': {
+                        f'{CartFields.ITEMS}.{cart_key}.{CartFields.QUANTITY}': new_quantity,
+                        CartFields.UPDATED_AT: now.isoformat(),
+                        CartFields.EXPIRES_AT: expires_at.isoformat()
+                    }
+                },
+                cache_id=cart_id
+            )
+        except Exception:
+            if reserved_quantity > 0:
+                await release_stock(bot, guild_id, channel_id, item_name, reserved_quantity)
+            raise
     elif quantity_diff < 0:
         # Reducing quantity, release stock
         await remove_item_from_cart(bot, guild_id, user_id, channel_id, cart_key, abs(quantity_diff))

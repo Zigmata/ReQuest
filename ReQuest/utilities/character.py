@@ -347,10 +347,9 @@ async def update_character_experience(interaction, player_id: int, character_id:
         if not character_data:
             raise UserFeedbackError('Character data not found.', message_id='error-character-not-found')
 
-        if character_data[CharacterFields.ATTRIBUTES][CharacterFields.EXPERIENCE]:
-            character_data[CharacterFields.ATTRIBUTES][CharacterFields.EXPERIENCE] += amount
-        else:
-            character_data[CharacterFields.ATTRIBUTES][CharacterFields.EXPERIENCE] = amount
+        attributes = character_data.setdefault(CharacterFields.ATTRIBUTES, {})
+        current_xp = attributes.get(CharacterFields.EXPERIENCE) or 0
+        attributes[CharacterFields.EXPERIENCE] = current_xp + amount
 
         await update_cached_data(
             bot=bot,

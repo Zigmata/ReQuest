@@ -143,7 +143,7 @@ async def update_cached_data(bot, mongo_database, collection_name, query, update
                 upsert=True
             )
     except Exception as e:
-        raise Exception(f'Error updating config in database: {e}') from e
+        raise Exception(f'Error updating {collection_name} in database: {e}') from e
 
     try:
         await bot.rdb.delete(cache_key)
@@ -178,7 +178,7 @@ async def replace_cached_data(bot, mongo_database, collection_name, query, new_d
             upsert=True
         )
     except Exception as e:
-        raise Exception(f'Error replacing config in database: {e}') from e
+        raise Exception(f'Error replacing {collection_name} in database: {e}') from e
 
     try:
         await bot.rdb.delete(cache_key)
@@ -213,7 +213,7 @@ async def delete_cached_data(bot, mongo_database, collection_name, search_filter
         else:
             await mongo_collection.delete_many(search_filter)
     except Exception as e:
-        raise Exception(f'Error deleting config in database: {e}') from e
+        raise Exception(f'Error deleting {collection_name} in database: {e}') from e
 
     try:
         await bot.rdb.delete(cache_key)
