@@ -30,6 +30,7 @@ class QuestFields:
     STATUS = 'status'
     IMAGE_URL = 'imageUrl'
     LARGE_IMAGE_URL = 'largeImageUrl'
+    PARTY_ROLE_NAME = 'partyRoleName'
 
 
 class QuestStatus:

@@ -54,6 +54,7 @@ class CreateQuestModal(LocaleModal):
                 QuestFields.GM: author_id,
                 QuestFields.PARTY: [],
                 QuestFields.PARTY_ROLE_ID: None,
+                QuestFields.PARTY_ROLE_NAME: None,
                 QuestFields.QUEST_ROLE_MODE: 'temporary',
                 QuestFields.WAIT_LIST: [],
                 QuestFields.MAX_WAIT_LIST_SIZE: 0,
@@ -481,31 +482,16 @@ class EditQuestPartyRoleModal(LocaleModal):
         )
         self.calling_view = calling_view
 
+        current_name = calling_view.quest.get(QuestFields.PARTY_ROLE_NAME, '') or ''
         self.party_role_input = discord.ui.TextInput(
             label=t(locale, 'gm-modal-label-party-role'),
             style=discord.TextStyle.short,
             custom_id='edit_quest_party_role_input',
             placeholder=t(locale, 'gm-modal-placeholder-party-role'),
+            default=current_name,
             required=False
         )
         self.add_item(self.party_role_input)
-
-    async def _update_quest_post(self, bot, quest, interaction):
-        quest_channel_query = await get_cached_data(
-            bot=bot,
-            mongo_database=bot.gdb,
-            collection_name=DatabaseCollections.QUEST_CHANNEL,
-            query={CommonFields.ID: quest[QuestFields.GUILD_ID]}
-        )
-        if quest_channel_query:
-            quest_channel_id = strip_id(quest_channel_query[ConfigFields.QUEST_CHANNEL])
-            quest_channel = bot.get_channel(quest_channel_id)
-            if quest_channel and quest.get(QuestFields.MESSAGE_ID):
-                message = quest_channel.get_partial_message(quest[QuestFields.MESSAGE_ID])
-                from ReQuest.ui.gm.views import QuestPostView
-                quest_view = QuestPostView(quest)
-                await quest_view.setup(bot=bot)
-                await message.edit(embed=quest_view.embed, view=quest_view)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -513,67 +499,23 @@ class EditQuestPartyRoleModal(LocaleModal):
             quest = self.calling_view.quest
             guild_id = quest[QuestFields.GUILD_ID]
             quest_id = quest[QuestFields.QUEST_ID]
-            guild = interaction.guild
-            locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
 
             role_name = self.party_role_input.value.strip() if self.party_role_input.value else ''
 
-            if not role_name:
-                # Clear the party role
-                await update_cached_data(
-                    bot=bot,
-                    mongo_database=bot.gdb,
-                    collection_name=DatabaseCollections.QUESTS,
-                    query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
-                    update_data={'$set': {QuestFields.PARTY_ROLE_ID: None}},
-                    cache_id=f'{guild_id}:{quest_id}'
-                )
-                quest[QuestFields.PARTY_ROLE_ID] = None
-            else:
-                # Check against forbidden role names
-                forbidden_query = await get_cached_data(
-                    bot=bot,
-                    mongo_database=bot.gdb,
-                    collection_name=DatabaseCollections.FORBIDDEN_ROLES,
-                    query={CommonFields.ID: guild_id}
-                )
-                if forbidden_query:
-                    forbidden_names = [
-                        name.lower() for name in forbidden_query.get(ConfigFields.FORBIDDEN_ROLES, [])
-                    ]
-                    if role_name.lower() in forbidden_names:
-                        raise UserFeedbackError(
-                            t(locale, 'gm-error-forbidden-role-name'),
-                            message_id='gm-error-forbidden-role-name'
-                        )
-
-                # Check if a role with this name already exists
-                existing_role = discord.utils.get(guild.roles, name=role_name)
-                if existing_role:
-                    raise UserFeedbackError(
-                        t(locale, 'gm-error-role-already-exists'),
-                        message_id='gm-error-role-already-exists'
-                    )
-
-                # Create the Discord role
-                new_role = await guild.create_role(
-                    name=role_name,
-                    reason=f'Party role for quest {quest_id}'
-                )
-
-                await update_cached_data(
-                    bot=bot,
-                    mongo_database=bot.gdb,
-                    collection_name=DatabaseCollections.QUESTS,
-                    query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
-                    update_data={'$set': {QuestFields.PARTY_ROLE_ID: new_role.id}},
-                    cache_id=f'{guild_id}:{quest_id}'
-                )
-                quest[QuestFields.PARTY_ROLE_ID] = new_role.id
-
-            status = quest.get(QuestFields.STATUS, QuestStatus.PUBLISHED)
-            if status in (QuestStatus.PUBLISHED, QuestStatus.LOCKED):
-                await self._update_quest_post(bot, quest, interaction)
+            # Store the role name — actual Discord role creation happens at publish time
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUESTS,
+                query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
+                update_data={'$set': {
+                    QuestFields.PARTY_ROLE_NAME: role_name or None,
+                    QuestFields.PARTY_ROLE_ID: None,
+                }},
+                cache_id=f'{guild_id}:{quest_id}'
+            )
+            quest[QuestFields.PARTY_ROLE_NAME] = role_name or None
+            quest[QuestFields.PARTY_ROLE_ID] = None
 
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)

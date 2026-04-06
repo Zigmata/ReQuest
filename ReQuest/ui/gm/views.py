@@ -4,6 +4,7 @@ import math
 from typing import Any, Dict, Iterator, Tuple
 
 import discord
+from discord import MediaGalleryItem
 from discord.ui import (
     View,
     Container,
@@ -11,7 +12,9 @@ from discord.ui import (
     Separator,
     ActionRow,
     Section,
-    Button
+    Button,
+    Thumbnail,
+    MediaGallery
 )
 from titlecase import titlecase
 
@@ -943,7 +946,7 @@ class EditQuestView(LocaleLayoutView):
         not_set = t(locale, 'gm-label-field-not-set')
         container = Container()
 
-        # Header — Title with back button
+        # Header — Title with back button and edit button
         title = quest.get(QuestFields.TITLE, '')
         header_section = Section(accessory=buttons.BackToManageQuestButton(quest))
         header_section.add_item(TextDisplay(
@@ -951,21 +954,30 @@ class EditQuestView(LocaleLayoutView):
         ))
         container.add_item(header_section)
 
-        # Thumbnail URL
-        image_section = Section(accessory=buttons.EditQuestImageButton(self))
-        image_url = quest.get(QuestFields.IMAGE_URL) or not_set
-        image_section.add_item(TextDisplay(
-            t(locale, 'gm-label-current-image', value=truncate_text(image_url, 60))
+        title_section = Section(accessory=buttons.EditQuestTitleButton(self))
+        title_section.add_item(TextDisplay(
+            t(locale, 'gm-label-current-title', value=title or not_set)
         ))
-        container.add_item(image_section)
+        container.add_item(title_section)
 
-        # Large Image URL
+        # Thumbnail
+        image_url = quest.get(QuestFields.IMAGE_URL)
+        image_section = Section(accessory=buttons.EditQuestImageButton(self))
+        image_section.add_item(TextDisplay(t(locale, 'gm-label-current-image')))
+        container.add_item(image_section)
+        if image_url:
+            thumb_preview = Section(accessory=Thumbnail(media=image_url))
+            thumb_preview.add_item(TextDisplay('\u200b'))
+            container.add_item(thumb_preview)
+
+        # Image
+        large_image_url = quest.get(QuestFields.LARGE_IMAGE_URL)
         large_image_section = Section(accessory=buttons.EditQuestLargeImageButton(self))
-        large_image_url = quest.get(QuestFields.LARGE_IMAGE_URL) or not_set
-        large_image_section.add_item(TextDisplay(
-            t(locale, 'gm-label-current-large-image', value=truncate_text(large_image_url, 60))
-        ))
+        large_image_section.add_item(TextDisplay(t(locale, 'gm-label-current-large-image')))
         container.add_item(large_image_section)
+        if large_image_url:
+            container.add_item(MediaGallery(MediaGalleryItem(media=large_image_url)))
+
         container.add_item(Separator())
 
         # Restrictions
@@ -978,20 +990,23 @@ class EditQuestView(LocaleLayoutView):
 
         # Party Role — only show if mode is temporary or static with assigned roles
         party_role_id = quest.get(QuestFields.PARTY_ROLE_ID)
-        role_display = f'<@&{party_role_id}>' if party_role_id else not_set
+        party_role_name = quest.get(QuestFields.PARTY_ROLE_NAME)
+        if party_role_id:
+            role_display = f'<@&{party_role_id}>'
+        elif party_role_name:
+            role_display = party_role_name
+        else:
+            role_display = not_set
         if self.quest_role_mode == 'static' and self.assigned_roles:
-            # Static mode: show clear button + role select dropdown
-            party_role_section = Section(accessory=buttons.ClearPartyRoleButton(self))
-            party_role_section.add_item(TextDisplay(
+            # Static mode: show label + role select dropdown (select includes "None" option)
+            container.add_item(TextDisplay(
                 t(locale, 'gm-label-current-party-role', value=role_display)
             ))
-            container.add_item(party_role_section)
-
             role_select_row = ActionRow()
             role_select_row.add_item(selects.PartyRoleSelect(self, self.assigned_roles))
             container.add_item(role_select_row)
         elif self.quest_role_mode == 'temporary':
-            # Temporary mode: show edit button to create a new role by name
+            # Temporary mode: show edit button to set role name (created at publish time)
             party_role_section = Section(accessory=buttons.EditQuestPartyRoleButton(self))
             party_role_section.add_item(TextDisplay(
                 t(locale, 'gm-label-current-party-role', value=role_display)

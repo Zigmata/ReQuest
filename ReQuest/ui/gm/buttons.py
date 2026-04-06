@@ -145,41 +145,6 @@ class EditQuestPartyRoleButton(Button):
             await log_exception(e, interaction)
 
 
-class ClearPartyRoleButton(Button):
-    def __init__(self, calling_view):
-        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
-        has_role = calling_view.quest.get(QuestFields.PARTY_ROLE_ID) is not None
-        super().__init__(
-            label=t(locale, 'gm-btn-clear'),
-            style=ButtonStyle.danger,
-            custom_id='clear_party_role_button',
-            disabled=not has_role
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            quest = self.calling_view.quest
-            guild_id = quest[QuestFields.GUILD_ID]
-            quest_id = quest[QuestFields.QUEST_ID]
-            bot = interaction.client
-
-            await update_cached_data(
-                bot=bot,
-                mongo_database=bot.gdb,
-                collection_name=DatabaseCollections.QUESTS,
-                query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
-                update_data={'$set': {QuestFields.PARTY_ROLE_ID: None}},
-                cache_id=f'{guild_id}:{quest_id}'
-            )
-            quest[QuestFields.PARTY_ROLE_ID] = None
-
-            await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-
 class EditQuestImageButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
