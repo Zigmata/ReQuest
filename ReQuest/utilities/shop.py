@@ -656,12 +656,18 @@ async def remove_item_from_cart(bot, guild_id: int, user_id: int, channel_id: st
             cache_id=cart_id
         )
 
-    # Release stock after successful cart update
+    # Release stock after successful cart update (log failure so leaked reservations are visible)
     max_stock = item.get(ShopFields.MAX_STOCK)
     if max_stock is not None:
         item_quantity = item.get(CommonFields.QUANTITY, 1)
         release_qty = min(quantity, current_quantity) * item_quantity
-        await release_stock(bot, guild_id, channel_id, item_name, release_qty, max_stock)
+        try:
+            await release_stock(bot, guild_id, channel_id, item_name, release_qty, max_stock)
+        except Exception as e:
+            logger.error(
+                f'Failed to release stock for {item_name} (qty={release_qty}) '
+                f'in guild {guild_id}, channel {channel_id} after cart update: {e}'
+            )
 
 
 async def update_cart_item_quantity(bot, guild_id: int, user_id: int, channel_id: str,
