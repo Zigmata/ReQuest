@@ -489,6 +489,7 @@ class EditQuestPartyRoleModal(LocaleModal):
             custom_id='edit_quest_party_role_input',
             placeholder=t(locale, 'gm-modal-placeholder-party-role'),
             default=current_name,
+            max_length=100,
             required=False
         )
         self.add_item(self.party_role_input)
