@@ -172,9 +172,11 @@ async def replace_cached_data(bot, mongo_database, collection_name, query, new_d
 
     try:
         mongo_collection = mongo_database[collection_name]
+        # Strip _id to prevent type mismatch when doc was deserialized from Redis cache
+        replacement = {k: v for k, v in new_data.items() if k != '_id'}
         await mongo_collection.replace_one(
             query,
-            new_data,
+            replacement,
             upsert=True
         )
     except Exception as e:
