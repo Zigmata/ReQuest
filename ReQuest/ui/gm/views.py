@@ -875,6 +875,155 @@ class RewardsMenuView(LocaleLayoutView):
         return '\n'.join(lines) if lines else 'None'
 
 
+class EditQuestView(LocaleLayoutView):
+    """View for editing individual quest fields with per-field edit buttons."""
+
+    def __init__(self, quest):
+        super().__init__(timeout=None)
+        self.quest = quest
+        self.quest_role_mode = 'temporary'
+        self.assigned_roles = []
+
+    async def setup(self, bot, interaction=None):
+        try:
+            guild_id = self.quest[QuestFields.GUILD_ID]
+
+            # Refresh quest data from DB
+            query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUESTS,
+                query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: self.quest[QuestFields.QUEST_ID]},
+                cache_id=f"{guild_id}:{self.quest[QuestFields.QUEST_ID]}"
+            )
+            if query:
+                self.quest = query
+
+            # Fetch the server's quest role mode config and assigned roles for the select
+            quest_role_mode_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUEST_ROLE_MODE,
+                query={CommonFields.ID: guild_id}
+            )
+            quest_role_mode = (
+                quest_role_mode_query.get(ConfigFields.QUEST_ROLE_MODE, 'temporary')
+                if quest_role_mode_query else 'temporary'
+            )
+            self.quest_role_mode = quest_role_mode
+            self.assigned_roles = []
+            if quest_role_mode == 'static' and interaction:
+                assignments_query = await get_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.QUEST_ROLE_ASSIGNMENTS,
+                    query={CommonFields.ID: guild_id}
+                )
+                if assignments_query:
+                    all_assignments = assignments_query.get(ConfigFields.QUEST_ROLE_ASSIGNMENTS, [])
+                    guild = interaction.guild
+                    bot_top_role = guild.me.top_role
+                    self.assigned_roles = [
+                        {'userId': a['userId'], 'roleId': a['roleId'], 'roleName': role.name}
+                        for a in all_assignments
+                        if a['userId'] == str(interaction.user.id)
+                        and (role := guild.get_role(a['roleId'])) is not None
+                        and not role.managed
+                        and role < bot_top_role
+                    ]
+
+            self.build_view()
+        except Exception as e:
+            await log_exception(e)
+
+    def build_view(self):
+        self.clear_items()
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
+        quest = self.quest
+        not_set = t(locale, 'gm-label-field-not-set')
+        container = Container()
+
+        # Header — Title with back button
+        title = quest.get(QuestFields.TITLE, '')
+        header_section = Section(accessory=buttons.BackToManageQuestButton(quest))
+        header_section.add_item(TextDisplay(
+            f'**{t(locale, "gm-title-edit-quest", questTitle=truncate_text(title, 60))}**'
+        ))
+        container.add_item(header_section)
+
+        # Thumbnail URL
+        image_section = Section(accessory=buttons.EditQuestImageButton(self))
+        image_url = quest.get(QuestFields.IMAGE_URL) or not_set
+        image_section.add_item(TextDisplay(
+            t(locale, 'gm-label-current-image', value=truncate_text(image_url, 60))
+        ))
+        container.add_item(image_section)
+
+        # Large Image URL
+        large_image_section = Section(accessory=buttons.EditQuestLargeImageButton(self))
+        large_image_url = quest.get(QuestFields.LARGE_IMAGE_URL) or not_set
+        large_image_section.add_item(TextDisplay(
+            t(locale, 'gm-label-current-large-image', value=truncate_text(large_image_url, 60))
+        ))
+        container.add_item(large_image_section)
+        container.add_item(Separator())
+
+        # Restrictions
+        restrictions_section = Section(accessory=buttons.EditQuestRestrictionsButton(self))
+        restrictions = quest.get(QuestFields.RESTRICTIONS, '')
+        restrictions_section.add_item(TextDisplay(
+            t(locale, 'gm-label-current-restrictions', value=restrictions or not_set)
+        ))
+        container.add_item(restrictions_section)
+
+        # Party Role — only show if mode is temporary or static with assigned roles
+        party_role_id = quest.get(QuestFields.PARTY_ROLE_ID)
+        role_display = f'<@&{party_role_id}>' if party_role_id else not_set
+        if self.quest_role_mode == 'static' and self.assigned_roles:
+            # Static mode: show clear button + role select dropdown
+            party_role_section = Section(accessory=buttons.ClearPartyRoleButton(self))
+            party_role_section.add_item(TextDisplay(
+                t(locale, 'gm-label-current-party-role', value=role_display)
+            ))
+            container.add_item(party_role_section)
+
+            role_select_row = ActionRow()
+            role_select_row.add_item(selects.PartyRoleSelect(self, self.assigned_roles))
+            container.add_item(role_select_row)
+        elif self.quest_role_mode == 'temporary':
+            # Temporary mode: show edit button to create a new role by name
+            party_role_section = Section(accessory=buttons.EditQuestPartyRoleButton(self))
+            party_role_section.add_item(TextDisplay(
+                t(locale, 'gm-label-current-party-role', value=role_display)
+            ))
+            container.add_item(party_role_section)
+
+        # Max Party Size
+        party_size_section = Section(accessory=buttons.EditQuestPartySizeButton(self))
+        max_party_size = quest.get(QuestFields.MAX_PARTY_SIZE, 0)
+        party_size_display = str(max_party_size) if max_party_size > 0 else not_set
+        party_size_section.add_item(TextDisplay(
+            t(locale, 'gm-label-current-party-size', value=party_size_display)
+        ))
+        container.add_item(party_size_section)
+        container.add_item(Separator())
+
+        # Description
+        desc_section = Section(accessory=buttons.EditQuestDescriptionButton(self))
+        description = quest.get(QuestFields.DESCRIPTION, '')
+        if description:
+            desc_section.add_item(TextDisplay(
+                f'{t(locale, "gm-label-current-description")}\n{truncate_text(description, 200)}'
+            ))
+        else:
+            desc_section.add_item(TextDisplay(
+                f'{t(locale, "gm-label-current-description")}\n{not_set}'
+            ))
+        container.add_item(desc_section)
+
+        self.add_item(container)
+
+
 class GMPlayerMenuView(LocaleLayoutView):
     def __init__(self):
         super().__init__(timeout=None)

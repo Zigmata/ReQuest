@@ -37,8 +37,9 @@ class CreateQuestButton(Button):
 
 class EditQuestButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'gm-btn-edit-details'),
+            label=t(locale, 'gm-btn-edit-details'),
             style=ButtonStyle.primary,
             custom_id='edit_quest_button'
         )
@@ -46,8 +47,170 @@ class EditQuestButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            quest = self.calling_view.selected_quest
-            modal = modals.EditQuestModal(self.calling_view, quest)
+            from ReQuest.ui.gm.views import EditQuestView
+            view = EditQuestView(self.calling_view.selected_quest)
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditQuestTitleButton(Button):
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        super().__init__(
+            label=t(locale, 'gm-btn-edit-field'),
+            style=ButtonStyle.primary,
+            custom_id='edit_quest_title_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            modal = modals.EditQuestTitleModal(self.calling_view)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditQuestDescriptionButton(Button):
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        super().__init__(
+            label=t(locale, 'gm-btn-edit-field'),
+            style=ButtonStyle.primary,
+            custom_id='edit_quest_description_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            modal = modals.EditQuestDescriptionModal(self.calling_view)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditQuestRestrictionsButton(Button):
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        super().__init__(
+            label=t(locale, 'gm-btn-edit-field'),
+            style=ButtonStyle.primary,
+            custom_id='edit_quest_restrictions_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            modal = modals.EditQuestRestrictionsModal(self.calling_view)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditQuestPartySizeButton(Button):
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        super().__init__(
+            label=t(locale, 'gm-btn-edit-field'),
+            style=ButtonStyle.primary,
+            custom_id='edit_quest_party_size_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            modal = modals.EditQuestMaxPartySizeModal(self.calling_view)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditQuestPartyRoleButton(Button):
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        super().__init__(
+            label=t(locale, 'gm-btn-edit-field'),
+            style=ButtonStyle.primary,
+            custom_id='edit_quest_party_role_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            modal = modals.EditQuestPartyRoleModal(self.calling_view)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class ClearPartyRoleButton(Button):
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        has_role = calling_view.quest.get(QuestFields.PARTY_ROLE_ID) is not None
+        super().__init__(
+            label=t(locale, 'gm-btn-clear'),
+            style=ButtonStyle.danger,
+            custom_id='clear_party_role_button',
+            disabled=not has_role
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            quest = self.calling_view.quest
+            guild_id = quest[QuestFields.GUILD_ID]
+            quest_id = quest[QuestFields.QUEST_ID]
+            bot = interaction.client
+
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUESTS,
+                query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
+                update_data={'$set': {QuestFields.PARTY_ROLE_ID: None}},
+                cache_id=f'{guild_id}:{quest_id}'
+            )
+            quest[QuestFields.PARTY_ROLE_ID] = None
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditQuestImageButton(Button):
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        super().__init__(
+            label=t(locale, 'gm-btn-edit-field'),
+            style=ButtonStyle.primary,
+            custom_id='edit_quest_image_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            modal = modals.EditQuestImageUrlModal(self.calling_view)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditQuestLargeImageButton(Button):
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        super().__init__(
+            label=t(locale, 'gm-btn-edit-field'),
+            style=ButtonStyle.primary,
+            custom_id='edit_quest_large_image_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            modal = modals.EditQuestLargeImageUrlModal(self.calling_view)
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)

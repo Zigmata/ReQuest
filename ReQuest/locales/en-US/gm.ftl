@@ -12,6 +12,11 @@ gm-btn-manage-individual-rewards = Manage Individual Rewards
 gm-btn-join = Join
 gm-btn-leave = Leave
 gm-btn-complete-quest = Complete Quest
+gm-btn-edit-field = Edit
+gm-btn-clear = Clear
+gm-select-placeholder-party-role = Select a party role...
+gm-btn-publish = Publish
+gm-btn-update-post = Update Post
 
 # GM modals
 gm-modal-title-create-quest = Create New Quest
@@ -28,6 +33,16 @@ gm-modal-placeholder-description = Write the details of your quest here
 gm-modal-title-editing-quest = Editing { $questTitle }
 gm-modal-label-title = Title
 gm-modal-label-max-party-size = Max Party Size
+gm-modal-title-edit-title = Edit Quest Title
+gm-modal-title-edit-description = Edit Description
+gm-modal-title-edit-restrictions = Edit Restrictions
+gm-modal-title-edit-party-size = Edit Max Party Size
+gm-modal-title-edit-party-role = Edit Party Role
+gm-modal-title-edit-image = Edit Thumbnail URL
+gm-modal-title-edit-large-image = Edit Image URL
+gm-modal-label-image-url = Image URL
+gm-modal-label-large-image-url = Image URL
+gm-modal-placeholder-image-url = Enter an image URL (or leave blank to remove)
 gm-modal-title-add-reward = Add Reward
 gm-modal-label-experience = Experience Points
 gm-modal-placeholder-experience = Enter a number
@@ -127,6 +142,17 @@ gm-label-quest-locked = (Locked)
 gm-label-quest-draft = (Draft)
 gm-title-manage-quest = Manage Quest - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Edit quest details such as title, description, and party size.
+gm-title-edit-quest = Edit Quest - { $questTitle }
+gm-label-field-not-set = Not set
+gm-label-current-title = {"**"}Title:{"**"} { $value }
+gm-label-current-description = {"**"}Description (REQUIRED){"**"}
+gm-label-current-restrictions = {"**"}Restrictions:{"**"} { $value }
+gm-label-current-party-size = {"**"}Max Party Size (REQUIRED):{"**"} { $value }
+gm-label-current-party-role = {"**"}Party Role:{"**"} { $value }
+gm-label-current-image = {"**"}Thumbnail URL:{"**"} { $value }
+gm-label-current-large-image = {"**"}Image URL:{"**"} { $value }
+gm-error-party-size-positive = Party size must be a positive number.
+gm-error-party-size-too-small = Party size cannot be smaller than the current party ({ $currentSize } members).
 gm-desc-toggle-ready = Toggle ready state (Current: {"**"}{ $status }{"**"})
     - Locks the quest roster and notifies party members that the quest will begin soon. If a role is configured, it will be assigned to party members when locked.
     - Unlocks the roster when set to Open.

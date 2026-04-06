@@ -186,6 +186,537 @@ class EditQuestModal(LocaleModal):
             await log_exception(e, interaction)
 
 
+class EditQuestTitleModal(LocaleModal):
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
+        super().__init__(
+            title=t(locale, 'gm-modal-title-edit-title'),
+            timeout=None
+        )
+        self.calling_view = calling_view
+        quest = calling_view.quest
+
+        self.title_input = discord.ui.TextInput(
+            label=t(locale, 'gm-modal-label-quest-title'),
+            style=discord.TextStyle.short,
+            custom_id='edit_quest_title_input',
+            default=quest[QuestFields.TITLE],
+            required=True
+        )
+        self.add_item(self.title_input)
+
+    async def _update_quest_post(self, bot, quest, interaction):
+        quest_channel_query = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name=DatabaseCollections.QUEST_CHANNEL,
+            query={CommonFields.ID: quest[QuestFields.GUILD_ID]}
+        )
+        if quest_channel_query:
+            quest_channel_id = strip_id(quest_channel_query[ConfigFields.QUEST_CHANNEL])
+            quest_channel = bot.get_channel(quest_channel_id)
+            if quest_channel and quest.get(QuestFields.MESSAGE_ID):
+                message = quest_channel.get_partial_message(quest[QuestFields.MESSAGE_ID])
+                from ReQuest.ui.gm.views import QuestPostView
+                quest_view = QuestPostView(quest)
+                await quest_view.setup(bot=bot)
+                await message.edit(embed=quest_view.embed, view=quest_view)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            quest = self.calling_view.quest
+            guild_id = quest[QuestFields.GUILD_ID]
+            quest_id = quest[QuestFields.QUEST_ID]
+
+            value = self.title_input.value
+
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUESTS,
+                query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
+                update_data={'$set': {QuestFields.TITLE: value}},
+                cache_id=f'{guild_id}:{quest_id}'
+            )
+            quest[QuestFields.TITLE] = value
+
+            status = quest.get(QuestFields.STATUS, QuestStatus.PUBLISHED)
+            if status in (QuestStatus.PUBLISHED, QuestStatus.LOCKED):
+                await self._update_quest_post(bot, quest, interaction)
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditQuestDescriptionModal(LocaleModal):
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
+        super().__init__(
+            title=t(locale, 'gm-modal-title-edit-description'),
+            timeout=None
+        )
+        self.calling_view = calling_view
+        quest = calling_view.quest
+
+        self.description_input = discord.ui.TextInput(
+            label=t(locale, 'gm-modal-label-description'),
+            style=discord.TextStyle.paragraph,
+            custom_id='edit_quest_description_input',
+            default=quest[QuestFields.DESCRIPTION],
+            required=False
+        )
+        self.add_item(self.description_input)
+
+    async def _update_quest_post(self, bot, quest, interaction):
+        quest_channel_query = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name=DatabaseCollections.QUEST_CHANNEL,
+            query={CommonFields.ID: quest[QuestFields.GUILD_ID]}
+        )
+        if quest_channel_query:
+            quest_channel_id = strip_id(quest_channel_query[ConfigFields.QUEST_CHANNEL])
+            quest_channel = bot.get_channel(quest_channel_id)
+            if quest_channel and quest.get(QuestFields.MESSAGE_ID):
+                message = quest_channel.get_partial_message(quest[QuestFields.MESSAGE_ID])
+                from ReQuest.ui.gm.views import QuestPostView
+                quest_view = QuestPostView(quest)
+                await quest_view.setup(bot=bot)
+                await message.edit(embed=quest_view.embed, view=quest_view)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            quest = self.calling_view.quest
+            guild_id = quest[QuestFields.GUILD_ID]
+            quest_id = quest[QuestFields.QUEST_ID]
+
+            value = self.description_input.value or ''
+
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUESTS,
+                query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
+                update_data={'$set': {QuestFields.DESCRIPTION: value}},
+                cache_id=f'{guild_id}:{quest_id}'
+            )
+            quest[QuestFields.DESCRIPTION] = value
+
+            status = quest.get(QuestFields.STATUS, QuestStatus.PUBLISHED)
+            if status in (QuestStatus.PUBLISHED, QuestStatus.LOCKED):
+                await self._update_quest_post(bot, quest, interaction)
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditQuestRestrictionsModal(LocaleModal):
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
+        super().__init__(
+            title=t(locale, 'gm-modal-title-edit-restrictions'),
+            timeout=None
+        )
+        self.calling_view = calling_view
+        quest = calling_view.quest
+
+        self.restrictions_input = discord.ui.TextInput(
+            label=t(locale, 'gm-modal-label-restrictions'),
+            style=discord.TextStyle.short,
+            custom_id='edit_quest_restrictions_input',
+            default=quest[QuestFields.RESTRICTIONS],
+            required=False
+        )
+        self.add_item(self.restrictions_input)
+
+    async def _update_quest_post(self, bot, quest, interaction):
+        quest_channel_query = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name=DatabaseCollections.QUEST_CHANNEL,
+            query={CommonFields.ID: quest[QuestFields.GUILD_ID]}
+        )
+        if quest_channel_query:
+            quest_channel_id = strip_id(quest_channel_query[ConfigFields.QUEST_CHANNEL])
+            quest_channel = bot.get_channel(quest_channel_id)
+            if quest_channel and quest.get(QuestFields.MESSAGE_ID):
+                message = quest_channel.get_partial_message(quest[QuestFields.MESSAGE_ID])
+                from ReQuest.ui.gm.views import QuestPostView
+                quest_view = QuestPostView(quest)
+                await quest_view.setup(bot=bot)
+                await message.edit(embed=quest_view.embed, view=quest_view)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            quest = self.calling_view.quest
+            guild_id = quest[QuestFields.GUILD_ID]
+            quest_id = quest[QuestFields.QUEST_ID]
+
+            value = self.restrictions_input.value or ''
+
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUESTS,
+                query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
+                update_data={'$set': {QuestFields.RESTRICTIONS: value}},
+                cache_id=f'{guild_id}:{quest_id}'
+            )
+            quest[QuestFields.RESTRICTIONS] = value
+
+            status = quest.get(QuestFields.STATUS, QuestStatus.PUBLISHED)
+            if status in (QuestStatus.PUBLISHED, QuestStatus.LOCKED):
+                await self._update_quest_post(bot, quest, interaction)
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditQuestMaxPartySizeModal(LocaleModal):
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
+        super().__init__(
+            title=t(locale, 'gm-modal-title-edit-party-size'),
+            timeout=None
+        )
+        self.calling_view = calling_view
+        quest = calling_view.quest
+
+        self.max_party_size_input = discord.ui.TextInput(
+            label=t(locale, 'gm-modal-label-max-party'),
+            style=discord.TextStyle.short,
+            custom_id='edit_quest_max_party_size_input',
+            default=str(quest[QuestFields.MAX_PARTY_SIZE]),
+            max_length=2,
+            required=True
+        )
+        self.add_item(self.max_party_size_input)
+
+    async def _update_quest_post(self, bot, quest, interaction):
+        quest_channel_query = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name=DatabaseCollections.QUEST_CHANNEL,
+            query={CommonFields.ID: quest[QuestFields.GUILD_ID]}
+        )
+        if quest_channel_query:
+            quest_channel_id = strip_id(quest_channel_query[ConfigFields.QUEST_CHANNEL])
+            quest_channel = bot.get_channel(quest_channel_id)
+            if quest_channel and quest.get(QuestFields.MESSAGE_ID):
+                message = quest_channel.get_partial_message(quest[QuestFields.MESSAGE_ID])
+                from ReQuest.ui.gm.views import QuestPostView
+                quest_view = QuestPostView(quest)
+                await quest_view.setup(bot=bot)
+                await message.edit(embed=quest_view.embed, view=quest_view)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            quest = self.calling_view.quest
+            guild_id = quest[QuestFields.GUILD_ID]
+            quest_id = quest[QuestFields.QUEST_ID]
+            locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
+
+            try:
+                value = int(self.max_party_size_input.value)
+            except ValueError:
+                raise UserFeedbackError(
+                    t(locale, 'gm-error-party-size-positive'),
+                    message_id='gm-error-party-size-positive'
+                )
+
+            if value <= 0:
+                raise UserFeedbackError(
+                    t(locale, 'gm-error-party-size-positive'),
+                    message_id='gm-error-party-size-positive'
+                )
+
+            current_party_size = len(quest.get(QuestFields.PARTY, []))
+            if current_party_size > value:
+                raise UserFeedbackError(
+                    t(locale, 'gm-error-party-size-too-small', currentSize=current_party_size),
+                    message_id='gm-error-party-size-too-small'
+                )
+
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUESTS,
+                query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
+                update_data={'$set': {QuestFields.MAX_PARTY_SIZE: value}},
+                cache_id=f'{guild_id}:{quest_id}'
+            )
+            quest[QuestFields.MAX_PARTY_SIZE] = value
+
+            status = quest.get(QuestFields.STATUS, QuestStatus.PUBLISHED)
+            if status in (QuestStatus.PUBLISHED, QuestStatus.LOCKED):
+                await self._update_quest_post(bot, quest, interaction)
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditQuestPartyRoleModal(LocaleModal):
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
+        super().__init__(
+            title=t(locale, 'gm-modal-title-edit-party-role'),
+            timeout=None
+        )
+        self.calling_view = calling_view
+
+        self.party_role_input = discord.ui.TextInput(
+            label=t(locale, 'gm-modal-label-party-role'),
+            style=discord.TextStyle.short,
+            custom_id='edit_quest_party_role_input',
+            placeholder=t(locale, 'gm-modal-placeholder-party-role'),
+            required=False
+        )
+        self.add_item(self.party_role_input)
+
+    async def _update_quest_post(self, bot, quest, interaction):
+        quest_channel_query = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name=DatabaseCollections.QUEST_CHANNEL,
+            query={CommonFields.ID: quest[QuestFields.GUILD_ID]}
+        )
+        if quest_channel_query:
+            quest_channel_id = strip_id(quest_channel_query[ConfigFields.QUEST_CHANNEL])
+            quest_channel = bot.get_channel(quest_channel_id)
+            if quest_channel and quest.get(QuestFields.MESSAGE_ID):
+                message = quest_channel.get_partial_message(quest[QuestFields.MESSAGE_ID])
+                from ReQuest.ui.gm.views import QuestPostView
+                quest_view = QuestPostView(quest)
+                await quest_view.setup(bot=bot)
+                await message.edit(embed=quest_view.embed, view=quest_view)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            quest = self.calling_view.quest
+            guild_id = quest[QuestFields.GUILD_ID]
+            quest_id = quest[QuestFields.QUEST_ID]
+            guild = interaction.guild
+            locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
+
+            role_name = self.party_role_input.value.strip() if self.party_role_input.value else ''
+
+            if not role_name:
+                # Clear the party role
+                await update_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.QUESTS,
+                    query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
+                    update_data={'$set': {QuestFields.PARTY_ROLE_ID: None}},
+                    cache_id=f'{guild_id}:{quest_id}'
+                )
+                quest[QuestFields.PARTY_ROLE_ID] = None
+            else:
+                # Check against forbidden role names
+                forbidden_query = await get_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.FORBIDDEN_ROLES,
+                    query={CommonFields.ID: guild_id}
+                )
+                if forbidden_query:
+                    forbidden_names = [
+                        name.lower() for name in forbidden_query.get(ConfigFields.FORBIDDEN_ROLES, [])
+                    ]
+                    if role_name.lower() in forbidden_names:
+                        raise UserFeedbackError(
+                            t(locale, 'gm-error-forbidden-role-name'),
+                            message_id='gm-error-forbidden-role-name'
+                        )
+
+                # Check if a role with this name already exists
+                existing_role = discord.utils.get(guild.roles, name=role_name)
+                if existing_role:
+                    raise UserFeedbackError(
+                        t(locale, 'gm-error-role-already-exists'),
+                        message_id='gm-error-role-already-exists'
+                    )
+
+                # Create the Discord role
+                new_role = await guild.create_role(
+                    name=role_name,
+                    reason=f'Party role for quest {quest_id}'
+                )
+
+                await update_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.QUESTS,
+                    query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
+                    update_data={'$set': {QuestFields.PARTY_ROLE_ID: new_role.id}},
+                    cache_id=f'{guild_id}:{quest_id}'
+                )
+                quest[QuestFields.PARTY_ROLE_ID] = new_role.id
+
+            status = quest.get(QuestFields.STATUS, QuestStatus.PUBLISHED)
+            if status in (QuestStatus.PUBLISHED, QuestStatus.LOCKED):
+                await self._update_quest_post(bot, quest, interaction)
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditQuestImageUrlModal(LocaleModal):
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
+        super().__init__(
+            title=t(locale, 'gm-modal-title-edit-image'),
+            timeout=None
+        )
+        self.calling_view = calling_view
+        quest = calling_view.quest
+
+        self.image_url_input = discord.ui.TextInput(
+            label=t(locale, 'gm-modal-label-image-url'),
+            style=discord.TextStyle.short,
+            custom_id='edit_quest_image_url_input',
+            placeholder=t(locale, 'gm-modal-placeholder-image-url'),
+            default=quest.get(QuestFields.IMAGE_URL) or '',
+            required=False
+        )
+        self.add_item(self.image_url_input)
+
+    async def _update_quest_post(self, bot, quest, interaction):
+        quest_channel_query = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name=DatabaseCollections.QUEST_CHANNEL,
+            query={CommonFields.ID: quest[QuestFields.GUILD_ID]}
+        )
+        if quest_channel_query:
+            quest_channel_id = strip_id(quest_channel_query[ConfigFields.QUEST_CHANNEL])
+            quest_channel = bot.get_channel(quest_channel_id)
+            if quest_channel and quest.get(QuestFields.MESSAGE_ID):
+                message = quest_channel.get_partial_message(quest[QuestFields.MESSAGE_ID])
+                from ReQuest.ui.gm.views import QuestPostView
+                quest_view = QuestPostView(quest)
+                await quest_view.setup(bot=bot)
+                await message.edit(embed=quest_view.embed, view=quest_view)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            quest = self.calling_view.quest
+            guild_id = quest[QuestFields.GUILD_ID]
+            quest_id = quest[QuestFields.QUEST_ID]
+
+            value = self.image_url_input.value.strip() if self.image_url_input.value else None
+            value = value or None  # Convert empty string to None
+
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUESTS,
+                query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
+                update_data={'$set': {QuestFields.IMAGE_URL: value}},
+                cache_id=f'{guild_id}:{quest_id}'
+            )
+            quest[QuestFields.IMAGE_URL] = value
+
+            status = quest.get(QuestFields.STATUS, QuestStatus.PUBLISHED)
+            if status in (QuestStatus.PUBLISHED, QuestStatus.LOCKED):
+                await self._update_quest_post(bot, quest, interaction)
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditQuestLargeImageUrlModal(LocaleModal):
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
+        super().__init__(
+            title=t(locale, 'gm-modal-title-edit-large-image'),
+            timeout=None
+        )
+        self.calling_view = calling_view
+        quest = calling_view.quest
+
+        self.large_image_url_input = discord.ui.TextInput(
+            label=t(locale, 'gm-modal-label-large-image-url'),
+            style=discord.TextStyle.short,
+            custom_id='edit_quest_large_image_url_input',
+            placeholder=t(locale, 'gm-modal-placeholder-image-url'),
+            default=quest.get(QuestFields.LARGE_IMAGE_URL) or '',
+            required=False
+        )
+        self.add_item(self.large_image_url_input)
+
+    async def _update_quest_post(self, bot, quest, interaction):
+        quest_channel_query = await get_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name=DatabaseCollections.QUEST_CHANNEL,
+            query={CommonFields.ID: quest[QuestFields.GUILD_ID]}
+        )
+        if quest_channel_query:
+            quest_channel_id = strip_id(quest_channel_query[ConfigFields.QUEST_CHANNEL])
+            quest_channel = bot.get_channel(quest_channel_id)
+            if quest_channel and quest.get(QuestFields.MESSAGE_ID):
+                message = quest_channel.get_partial_message(quest[QuestFields.MESSAGE_ID])
+                from ReQuest.ui.gm.views import QuestPostView
+                quest_view = QuestPostView(quest)
+                await quest_view.setup(bot=bot)
+                await message.edit(embed=quest_view.embed, view=quest_view)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            quest = self.calling_view.quest
+            guild_id = quest[QuestFields.GUILD_ID]
+            quest_id = quest[QuestFields.QUEST_ID]
+
+            value = self.large_image_url_input.value.strip() if self.large_image_url_input.value else None
+            value = value or None  # Convert empty string to None
+
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUESTS,
+                query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
+                update_data={'$set': {QuestFields.LARGE_IMAGE_URL: value}},
+                cache_id=f'{guild_id}:{quest_id}'
+            )
+            quest[QuestFields.LARGE_IMAGE_URL] = value
+
+            status = quest.get(QuestFields.STATUS, QuestStatus.PUBLISHED)
+            if status in (QuestStatus.PUBLISHED, QuestStatus.LOCKED):
+                await self._update_quest_post(bot, quest, interaction)
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
 class RewardsModal(LocaleModal):
     def __init__(self, caller, calling_view, reward_type: RewardType):
         super().__init__(

@@ -3,9 +3,10 @@ import logging
 import discord
 from discord.ui import Select
 
-from ReQuest.utilities.constants import QuestFields
+from ReQuest.utilities.constants import QuestFields, CommonFields, DatabaseCollections
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.character import find_member_and_character_id_in_lists
+from ReQuest.utilities.db_cache import update_cached_data
 from ReQuest.utilities.exceptions import log_exception
 from ReQuest.utilities.discord_utils import setup_view
 from ReQuest.ui.common import modals as common_modals
@@ -70,5 +71,52 @@ class RemovePlayerSelect(Select):
                 locale=locale
             )
             await interaction.response.send_modal(confirm_modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class PartyRoleSelect(Select):
+    """Select menu for choosing a party role from the GM's assigned roles."""
+
+    def __init__(self, calling_view, assigned_roles):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        options = [discord.SelectOption(
+            label=t(locale, 'gm-select-option-no-role'),
+            value='none'
+        )]
+        for role_assignment in assigned_roles:
+            options.append(discord.SelectOption(
+                label=role_assignment['roleName'],
+                value=str(role_assignment['roleId'])
+            ))
+        super().__init__(
+            placeholder=t(locale, 'gm-select-placeholder-party-role'),
+            options=options,
+            custom_id='edit_quest_party_role_select'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            quest = self.calling_view.quest
+            guild_id = quest[QuestFields.GUILD_ID]
+            quest_id = quest[QuestFields.QUEST_ID]
+            bot = interaction.client
+
+            selected_value = self.values[0]
+            party_role_id = int(selected_value) if selected_value != 'none' else None
+
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUESTS,
+                query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
+                update_data={'$set': {QuestFields.PARTY_ROLE_ID: party_role_id}},
+                cache_id=f'{guild_id}:{quest_id}'
+            )
+            quest[QuestFields.PARTY_ROLE_ID] = party_role_id
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
