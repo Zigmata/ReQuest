@@ -242,34 +242,42 @@ class ManageQuestsView(LocaleLayoutView):
         container.add_item(header_section)
         container.add_item(Separator())
 
-        edit_section = Section(accessory=buttons.EditQuestButton(self))
+        status = quest.get(QuestFields.STATUS, QuestStatus.PUBLISHED)
+        is_locked = quest.get(QuestFields.LOCK_STATE, False)
+
+        # Edit Details — disabled if locked
+        edit_button = buttons.EditQuestButton(self)
+        edit_button.disabled = is_locked
+        edit_section = Section(accessory=edit_button)
         edit_section.add_item(TextDisplay(t(locale, 'gm-desc-edit-quest')))
         container.add_item(edit_section)
 
-        ready_status = (
-            t(locale, 'gm-label-ready-locked')
-            if quest.get(QuestFields.LOCK_STATE)
-            else t(locale, 'gm-label-ready-open')
-        )
-        toggle_section = Section(accessory=buttons.ToggleReadyButton(self))
-        toggle_section.add_item(TextDisplay(t(locale, 'gm-desc-toggle-ready', status=ready_status)))
-        container.add_item(toggle_section)
+        # Published/locked quest controls — hidden for drafts
+        if status in (QuestStatus.PUBLISHED, QuestStatus.LOCKED):
+            ready_status = (
+                t(locale, 'gm-label-ready-locked')
+                if is_locked
+                else t(locale, 'gm-label-ready-open')
+            )
+            toggle_section = Section(accessory=buttons.ToggleReadyButton(self))
+            toggle_section.add_item(TextDisplay(t(locale, 'gm-desc-toggle-ready', status=ready_status)))
+            container.add_item(toggle_section)
 
-        rewards_section = Section(accessory=buttons.RewardsMenuButton(self))
-        rewards_section.add_item(TextDisplay(t(locale, 'gm-desc-configure-rewards')))
-        container.add_item(rewards_section)
+            rewards_section = Section(accessory=buttons.RewardsMenuButton(self))
+            rewards_section.add_item(TextDisplay(t(locale, 'gm-desc-configure-rewards')))
+            container.add_item(rewards_section)
 
-        complete_quest_button = buttons.CompleteQuestButton(self)
-        complete_quest_button.disabled = not quest.get(QuestFields.PARTY)
-        complete_section = Section(accessory=complete_quest_button)
-        complete_section.add_item(TextDisplay(t(locale, 'gm-desc-complete-quest')))
-        container.add_item(complete_section)
+            complete_quest_button = buttons.CompleteQuestButton(self)
+            complete_quest_button.disabled = not quest.get(QuestFields.PARTY)
+            complete_section = Section(accessory=complete_quest_button)
+            complete_section.add_item(TextDisplay(t(locale, 'gm-desc-complete-quest')))
+            container.add_item(complete_section)
 
-        remove_player_button = buttons.RemovePlayerButton(self)
-        remove_player_button.disabled = not quest.get(QuestFields.PARTY)
-        remove_player_section = Section(accessory=remove_player_button)
-        remove_player_section.add_item(TextDisplay(t(locale, 'gm-desc-remove-player')))
-        container.add_item(remove_player_section)
+            remove_player_button = buttons.RemovePlayerButton(self)
+            remove_player_button.disabled = not quest.get(QuestFields.PARTY)
+            remove_player_section = Section(accessory=remove_player_button)
+            remove_player_section.add_item(TextDisplay(t(locale, 'gm-desc-remove-player')))
+            container.add_item(remove_player_section)
         container.add_item(Separator())
 
         cancel_section = Section(accessory=buttons.CancelQuestButton(self))
@@ -1035,6 +1043,24 @@ class EditQuestView(LocaleLayoutView):
                 f'{t(locale, "gm-label-current-description")}\n{not_set}'
             ))
         container.add_item(desc_section)
+        container.add_item(Separator())
+
+        # Publish / Update Post button
+        status = quest.get(QuestFields.STATUS, QuestStatus.PUBLISHED)
+        is_locked = quest.get(QuestFields.LOCK_STATE, False)
+        has_required = (
+            bool(quest.get(QuestFields.TITLE))
+            and quest.get(QuestFields.MAX_PARTY_SIZE, 0) > 0
+            and bool(quest.get(QuestFields.DESCRIPTION))
+        )
+        publish_button = buttons.PublishQuestButton(self)
+        publish_button.disabled = not has_required or is_locked
+        publish_section = Section(accessory=publish_button)
+        if status == QuestStatus.DRAFT:
+            publish_section.add_item(TextDisplay(t(locale, 'gm-desc-publish-quest')))
+        else:
+            publish_section.add_item(TextDisplay(t(locale, 'gm-desc-update-quest-post')))
+        container.add_item(publish_section)
 
         self.add_item(container)
 

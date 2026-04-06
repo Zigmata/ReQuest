@@ -162,6 +162,10 @@ gm-desc-configure-rewards = Configure rewards for the selected quest.
 gm-desc-complete-quest = Complete a quest. Issues rewards, if any, to party members.
 gm-desc-remove-player = Remove a player from the quest roster and notify them.
 gm-desc-cancel-quest = Cancel the quest and delete it from the quest board.
+gm-desc-publish-quest = Publish this quest to the quest board.
+gm-desc-update-quest-post = Update the quest post on the quest board.
+gm-error-role-name-forbidden = The role name "{ $roleName }" is forbidden on this server.
+gm-error-role-name-exists = A role named "{ $roleName }" already exists on this server.
 gm-title-player-management = Game Master - Player Management
 gm-desc-player-management =
     These commands have migrated to context menus. Right-click (desktop) or long-press (mobile) a player's profile for the following menu options:

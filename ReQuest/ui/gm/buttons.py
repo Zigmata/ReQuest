@@ -8,7 +8,7 @@ from discord.ui import Button
 from ReQuest.ui.common.modals import ConfirmModal
 from ReQuest.ui.gm import modals
 from ReQuest.ui.common.enums import RewardType
-from ReQuest.utilities.constants import QuestFields, ConfigFields, CommonFields, DatabaseCollections
+from ReQuest.utilities.constants import QuestFields, QuestStatus, ConfigFields, CommonFields, DatabaseCollections
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_user_locale
 from ReQuest.utilities.db_cache import get_cached_data, update_cached_data, delete_cached_data, build_cache_key
 from ReQuest.utilities.discord_utils import setup_view, strip_id, attempt_delete, get_guild_member, check_role_hierarchy
@@ -177,6 +177,194 @@ class EditQuestLargeImageButton(Button):
         try:
             modal = modals.EditQuestLargeImageUrlModal(self.calling_view)
             await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class PublishQuestButton(Button):
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        quest = calling_view.quest
+        status = quest.get(QuestFields.STATUS, QuestStatus.PUBLISHED)
+        if status == QuestStatus.DRAFT:
+            label = t(locale, 'gm-btn-publish')
+        else:
+            label = t(locale, 'gm-btn-update-post')
+        super().__init__(
+            label=label,
+            style=ButtonStyle.success,
+            custom_id='publish_quest_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.defer()
+            bot = interaction.client
+            guild = interaction.guild
+            quest = self.calling_view.quest
+            guild_id = quest[QuestFields.GUILD_ID]
+            quest_id = quest[QuestFields.QUEST_ID]
+            locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
+            status = quest.get(QuestFields.STATUS, QuestStatus.PUBLISHED)
+
+            # Get quest channel
+            quest_channel_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUEST_CHANNEL,
+                query={CommonFields.ID: guild_id}
+            )
+            if not quest_channel_query:
+                raise UserFeedbackError(
+                    t(locale, 'gm-error-no-quest-channel'),
+                    message_id='gm-error-no-quest-channel'
+                )
+            quest_channel = bot.get_channel(strip_id(quest_channel_query[ConfigFields.QUEST_CHANNEL]))
+
+            # Get quest role mode from server config
+            quest_role_mode_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUEST_ROLE_MODE,
+                query={CommonFields.ID: guild_id}
+            )
+            quest_role_mode = (
+                quest_role_mode_query.get(ConfigFields.QUEST_ROLE_MODE, 'temporary')
+                if quest_role_mode_query else 'temporary'
+            )
+
+            # Handle party role for temporary mode
+            new_role_id = quest.get(QuestFields.PARTY_ROLE_ID)
+            role_name = quest.get(QuestFields.PARTY_ROLE_NAME)
+            old_role_id = quest.get(QuestFields.PARTY_ROLE_ID)
+
+            if quest_role_mode == 'temporary' and role_name:
+                # Check forbidden role names
+                forbidden_query = await get_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.FORBIDDEN_ROLES,
+                    query={CommonFields.ID: guild_id}
+                )
+                default_forbidden = ['everyone', 'administrator', 'game master', 'gm']
+                custom_forbidden = []
+                if forbidden_query:
+                    custom_forbidden = [
+                        n.lower() for n in forbidden_query.get(ConfigFields.FORBIDDEN_ROLES, [])
+                    ]
+                if role_name.lower() in default_forbidden or role_name.lower() in custom_forbidden:
+                    raise UserFeedbackError(
+                        t(locale, 'gm-error-role-name-forbidden', roleName=role_name),
+                        message_id='gm-error-role-name-forbidden'
+                    )
+
+                # Check if role name already exists in guild
+                existing_role = discord.utils.find(
+                    lambda r: r.name.lower() == role_name.lower(), guild.roles
+                )
+
+                # If the existing role is the quest's own role, that's fine (no name change)
+                if existing_role and existing_role.id != old_role_id:
+                    raise UserFeedbackError(
+                        t(locale, 'gm-error-role-name-exists', roleName=role_name),
+                        message_id='gm-error-role-name-exists'
+                    )
+
+                # Determine if we need to create/replace the role
+                if old_role_id:
+                    old_role = guild.get_role(old_role_id)
+                    if old_role and old_role.name.lower() != role_name.lower():
+                        # Name changed — delete old role, create new one
+                        await old_role.delete(reason=f'Quest {quest_id}: party role name changed')
+                        new_role = await guild.create_role(
+                            name=role_name,
+                            reason=f'Party role for quest {quest_id}'
+                        )
+                        new_role_id = new_role.id
+                    elif old_role:
+                        # Same name, keep existing role
+                        new_role_id = old_role_id
+                    else:
+                        # Old role was deleted externally, create fresh
+                        new_role = await guild.create_role(
+                            name=role_name,
+                            reason=f'Party role for quest {quest_id}'
+                        )
+                        new_role_id = new_role.id
+                else:
+                    # No existing role, create new
+                    new_role = await guild.create_role(
+                        name=role_name,
+                        reason=f'Party role for quest {quest_id}'
+                    )
+                    new_role_id = new_role.id
+            elif quest_role_mode == 'temporary' and not role_name and old_role_id:
+                # Role name was cleared — delete old role
+                old_role = guild.get_role(old_role_id)
+                if old_role:
+                    await old_role.delete(reason=f'Quest {quest_id}: party role removed')
+                new_role_id = None
+
+            # Get wait list config
+            wait_list_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUEST_WAIT_LIST,
+                query={CommonFields.ID: guild_id}
+            )
+            max_wait_list_size = (
+                wait_list_query[ConfigFields.QUEST_WAIT_LIST]
+                if wait_list_query else 0
+            )
+
+            # Update quest document
+            updates = {
+                QuestFields.PARTY_ROLE_ID: new_role_id,
+                QuestFields.QUEST_ROLE_MODE: quest_role_mode,
+                QuestFields.MAX_WAIT_LIST_SIZE: max_wait_list_size,
+            }
+
+            if status == QuestStatus.DRAFT:
+                updates[QuestFields.STATUS] = QuestStatus.PUBLISHED
+
+            # Build and send/update the quest post
+            from ReQuest.ui.gm.views import QuestPostView
+            quest_view = QuestPostView(quest)
+            await quest_view.setup(bot=bot)
+
+            if status == QuestStatus.DRAFT:
+                # New publish — send to channel
+                msg = await quest_channel.send(embed=quest_view.embed, view=quest_view)
+                updates[QuestFields.MESSAGE_ID] = msg.id
+            else:
+                # Update existing post
+                message_id = quest.get(QuestFields.MESSAGE_ID)
+                if message_id and quest_channel:
+                    message = quest_channel.get_partial_message(message_id)
+                    await message.edit(embed=quest_view.embed, view=quest_view)
+
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUESTS,
+                query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
+                update_data={'$set': updates},
+                cache_id=f'{guild_id}:{quest_id}'
+            )
+            quest.update(updates)
+
+            # Clear cached quest lists
+            admin_key = build_cache_key(bot.gdb.name, f'guild_quests:{guild_id}', 'quests')
+            await bot.rdb.delete(admin_key)
+            gm_key = build_cache_key(
+                bot.gdb.name, f'gm_quests:{guild_id}:{interaction.user.id}', 'quests'
+            )
+            await bot.rdb.delete(gm_key)
+
+            # Refresh the edit view
+            await setup_view(self.calling_view, interaction)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -357,18 +545,23 @@ class CancelQuestButton(Button):
             gm_list_key = build_cache_key(bot.gdb.name, f'gm_quests:{guild_id}:{quest[QuestFields.GM]}', 'quests')
             await bot.rdb.delete(gm_list_key)
 
-            # Delete the quest from the quest channel
-            channel_query = await get_cached_data(
-                bot=bot,
-                mongo_database=bot.gdb,
-                collection_name=DatabaseCollections.QUEST_CHANNEL,
-                query={CommonFields.ID: guild_id}
-            )
-            channel_id = strip_id(channel_query[ConfigFields.QUEST_CHANNEL])
-            quest_channel = guild.get_channel(channel_id)
-            message_id = quest[QuestFields.MESSAGE_ID]
-            message = quest_channel.get_partial_message(message_id)
-            await attempt_delete(message)
+            # Delete the quest from the quest channel (skip for drafts — no message exists)
+            status = quest.get(QuestFields.STATUS, QuestStatus.PUBLISHED)
+            if status != QuestStatus.DRAFT:
+                channel_query = await get_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.QUEST_CHANNEL,
+                    query={CommonFields.ID: guild_id}
+                )
+                if channel_query:
+                    channel_id = strip_id(channel_query[ConfigFields.QUEST_CHANNEL])
+                    quest_channel = guild.get_channel(channel_id)
+                    if quest_channel:
+                        message_id = quest.get(QuestFields.MESSAGE_ID)
+                        if message_id:
+                            message = quest_channel.get_partial_message(message_id)
+                            await attempt_delete(message)
 
             from ReQuest.ui.gm.views import GMQuestMenuView
             view = GMQuestMenuView()
