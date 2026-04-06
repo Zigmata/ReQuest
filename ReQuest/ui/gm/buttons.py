@@ -19,8 +19,9 @@ logger = logging.getLogger(__name__)
 
 class CreateQuestButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'gm-btn-create'),
+            label=t(locale, 'gm-btn-create'),
             style=ButtonStyle.success,
             custom_id='create_quest_button'
         )
@@ -28,42 +29,7 @@ class CreateQuestButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            bot = interaction.client
-            guild_id = interaction.guild_id
-
-            quest_role_mode_query = await get_cached_data(
-                bot=bot,
-                mongo_database=bot.gdb,
-                collection_name=DatabaseCollections.QUEST_ROLE_MODE,
-                query={CommonFields.ID: guild_id}
-            )
-            quest_role_mode = (
-                quest_role_mode_query.get(ConfigFields.QUEST_ROLE_MODE, 'temporary')
-                if quest_role_mode_query else 'temporary'
-            )
-
-            assigned_roles = None
-            if quest_role_mode == 'static':
-                assignments_query = await get_cached_data(
-                    bot=bot,
-                    mongo_database=bot.gdb,
-                    collection_name=DatabaseCollections.QUEST_ROLE_ASSIGNMENTS,
-                    query={CommonFields.ID: guild_id}
-                )
-                if assignments_query:
-                    all_assignments = assignments_query.get(ConfigFields.QUEST_ROLE_ASSIGNMENTS, [])
-                    guild = interaction.guild
-                    bot_top_role = guild.me.top_role
-                    assigned_roles = [
-                        {'userId': a['userId'], 'roleId': a['roleId'], 'roleName': role.name}
-                        for a in all_assignments
-                        if a['userId'] == str(interaction.user.id)
-                        and (role := guild.get_role(a['roleId'])) is not None
-                        and not role.managed
-                        and role < bot_top_role
-                    ]
-
-            modal = modals.CreateQuestModal(self.calling_view, quest_role_mode, assigned_roles)
+            modal = modals.CreateQuestModal(self.calling_view)
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)

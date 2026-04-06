@@ -20,7 +20,9 @@ from ReQuest.ui.common.modals import PageJumpModal
 from ReQuest.ui.common.views import MenuBaseView, LocaleLayoutView
 from ReQuest.ui.gm import buttons, selects
 from ReQuest.utilities.character import update_character_inventory, update_character_experience
-from ReQuest.utilities.constants import CharacterFields, QuestFields, ConfigFields, CommonFields, DatabaseCollections
+from ReQuest.utilities.constants import (
+    CharacterFields, QuestFields, QuestStatus, ConfigFields, CommonFields, DatabaseCollections
+)
 from ReQuest.utilities.containers import format_inventory_by_container
 from ReQuest.utilities.db_cache import (
     get_cached_data, delete_cached_data, update_cached_data, replace_cached_data, build_cache_key, get_xp_config
@@ -126,9 +128,15 @@ class GMQuestMenuView(LocaleLayoutView):
             for quest in page_items:
                 title = quest.get(QuestFields.TITLE, 'Untitled')
                 quest_id = quest.get(QuestFields.QUEST_ID, 'Unknown')
-                lock_state = f" {t(locale, 'gm-label-quest-locked')}" if quest.get(QuestFields.LOCK_STATE) else ""
+                status = quest.get(QuestFields.STATUS, QuestStatus.PUBLISHED)
+                if status == QuestStatus.DRAFT:
+                    status_label = f" {t(locale, 'gm-label-quest-draft')}"
+                elif quest.get(QuestFields.LOCK_STATE):
+                    status_label = f" {t(locale, 'gm-label-quest-locked')}"
+                else:
+                    status_label = ""
 
-                info_text = f"**{truncate_text(title, 80)}**{lock_state}\nID: `{quest_id}`"
+                info_text = f"**{truncate_text(title, 80)}**{status_label}\nID: `{quest_id}`"
 
                 section = Section(accessory=buttons.ManageQuestRowButton(quest))
                 section.add_item(TextDisplay(info_text))

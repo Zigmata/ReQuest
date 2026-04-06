@@ -124,6 +124,7 @@ gm-title-quest-management = Game Master - Quest Management
 gm-desc-create-quest = Create a new quest.
 gm-msg-no-quests = No quests found.
 gm-label-quest-locked = (Locked)
+gm-label-quest-draft = (Draft)
 gm-title-manage-quest = Manage Quest - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Edit quest details such as title, description, and party size.
 gm-desc-toggle-ready = Toggle ready state (Current: {"**"}{ $status }{"**"})
