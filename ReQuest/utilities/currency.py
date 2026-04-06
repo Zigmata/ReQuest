@@ -214,7 +214,7 @@ def get_base_currency_info(currency_config: dict, currency_name: str):
     multiplier = denomination_map.get(normalized_name, 0)
 
     is_double = False
-    for currency in currency_config.get(CurrencyFields.CURRENCIES):
+    for currency in currency_config.get(CurrencyFields.CURRENCIES, []):
         if currency[CommonFields.NAME].lower() == base_name.lower():
             is_double = currency.get(CurrencyFields.IS_DOUBLE, False)
             break

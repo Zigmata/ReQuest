@@ -254,7 +254,10 @@ async def release_stock(bot, guild_id: int, channel_id: str, item_name: str,
     encoded_name = encode_mongo_key(item_name)
     path = f'{ShopFields.SHOPS}.{channel_id}.{encoded_name}'
 
-    new_available = {'$add': [f'${path}.{ShopFields.AVAILABLE}', quantity]}
+    # Compute actual release as min(quantity, reserved) to prevent inflating available
+    actual_release = {'$min': [quantity, {'$ifNull': [f'${path}.{ShopFields.RESERVED}', 0]}]}
+
+    new_available = {'$add': [f'${path}.{ShopFields.AVAILABLE}', actual_release]}
     if max_stock is not None:
         new_available = {'$min': [max_stock, new_available]}
 
@@ -265,7 +268,7 @@ async def release_stock(bot, guild_id: int, channel_id: str, item_name: str,
                 '$set': {
                     f'{path}.{ShopFields.AVAILABLE}': new_available,
                     f'{path}.{ShopFields.RESERVED}': {
-                        '$max': [0, {'$subtract': [f'${path}.{ShopFields.RESERVED}', quantity]}]
+                        '$max': [0, {'$subtract': [f'${path}.{ShopFields.RESERVED}', actual_release]}]
                     }
                 }
             }
@@ -586,7 +589,8 @@ async def add_item_to_cart(bot, guild_id: int, user_id: int, channel_id: str,
             )
     except Exception:
         if reserved_quantity > 0:
-            await release_stock(bot, guild_id, channel_id, item_name, reserved_quantity)
+            max_stock = item.get(ShopFields.MAX_STOCK)
+            await release_stock(bot, guild_id, channel_id, item_name, reserved_quantity, max_stock)
         raise
 
     return True
@@ -740,7 +744,8 @@ async def update_cart_item_quantity(bot, guild_id: int, user_id: int, channel_id
             )
         except Exception:
             if reserved_quantity > 0:
-                await release_stock(bot, guild_id, channel_id, item_name, reserved_quantity)
+                max_stock = item.get(ShopFields.MAX_STOCK)
+                await release_stock(bot, guild_id, channel_id, item_name, reserved_quantity, max_stock)
             raise
     elif quantity_diff < 0:
         # Reducing quantity, release stock
