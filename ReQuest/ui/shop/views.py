@@ -22,26 +22,15 @@ from ReQuest.utilities.constants import (
     CharacterFields, ConfigFields, ShopFields, CommonFields, CartFields, DatabaseCollections, DisplayLimits
 )
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_guild_locale
-from ReQuest.utilities.supportFunctions import (
-    check_sufficient_funds,
-    apply_currency_change_local,
-    apply_item_change_local,
-    strip_id,
-    format_consolidated_totals,
-    consolidate_currency_totals,
-    get_cached_data,
-    update_cached_data,
-    format_complex_cost,
-    get_shop_stock,
-    get_cart,
-    add_item_to_cart,
-    clear_cart_and_release_stock,
-    finalize_cart_purchase,
-    log_exception,
-    UserFeedbackError,
-    escape_markdown,
-    encode_mongo_key,
-    truncate_text
+from ReQuest.utilities.character import apply_currency_change_local, apply_item_change_local
+from ReQuest.utilities.currency import (
+    check_sufficient_funds, format_consolidated_totals, consolidate_currency_totals, format_complex_cost
+)
+from ReQuest.utilities.db_cache import get_cached_data, update_cached_data, encode_mongo_key
+from ReQuest.utilities.discord_utils import strip_id, escape_markdown, truncate_text
+from ReQuest.utilities.exceptions import UserFeedbackError, log_exception
+from ReQuest.utilities.shop import (
+    get_shop_stock, get_cart, add_item_to_cart, clear_cart_and_release_stock, finalize_cart_purchase
 )
 
 logger = logging.getLogger(__name__)

@@ -28,21 +28,13 @@ from ReQuest.utilities.constants import (
     DatabaseCollections, DisplayLimits, MAX_QUEST_ROLES_PER_GM
 )
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
-from ReQuest.utilities.supportFunctions import (
-    log_exception,
-    strip_id,
-    format_complex_cost,
-    format_price_string,
-    format_consolidated_totals,
-    get_xp_config,
-    get_cached_data,
-    consolidate_currency_totals,
-    get_shop_stock,
-    escape_markdown,
-    encode_mongo_key,
-    decode_mongo_key,
-    truncate_text
+from ReQuest.utilities.currency import (
+    format_complex_cost, format_price_string, format_consolidated_totals, consolidate_currency_totals
 )
+from ReQuest.utilities.db_cache import get_cached_data, encode_mongo_key, decode_mongo_key, get_xp_config
+from ReQuest.utilities.discord_utils import strip_id, escape_markdown, truncate_text
+from ReQuest.utilities.exceptions import log_exception
+from ReQuest.utilities.shop import get_shop_stock
 
 logger = logging.getLogger(__name__)
 

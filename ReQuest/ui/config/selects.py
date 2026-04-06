@@ -9,13 +9,9 @@ from ReQuest.ui.info.selects import (LOCALE_LABELS, LOCALE_DESCRIPTIONS, LOCALE_
 from ReQuest.utilities.constants import (ConfigFields, CommonFields, RoleplayFields,
                                          DatabaseCollections, MAX_QUEST_ROLES_PER_GM)
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, SUPPORTED_LOCALES
-from ReQuest.utilities.supportFunctions import (
-    log_exception,
-    setup_view,
-    get_cached_data,
-    update_cached_data,
-    delete_cached_data
-)
+from ReQuest.utilities.db_cache import get_cached_data, update_cached_data, delete_cached_data
+from ReQuest.utilities.exceptions import log_exception
+from ReQuest.utilities.discord_utils import setup_view
 
 logger = logging.getLogger(__name__)
 

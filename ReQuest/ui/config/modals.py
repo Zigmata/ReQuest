@@ -25,21 +25,11 @@ from ReQuest.utilities.constants import (
     DatabaseCollections, DisplayLimits
 )
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
-from ReQuest.utilities.supportFunctions import (
-    log_exception,
-    setup_view,
-    find_currency_or_denomination,
-    get_cached_data,
-    get_denomination_map,
-    update_cached_data,
-    UserFeedbackError,
-    delete_cached_data,
-    strip_id,
-    initialize_item_stock,
-    get_item_stock,
-    encode_mongo_key,
-    format_currency_amount
-)
+from ReQuest.utilities.currency import find_currency_or_denomination, get_denomination_map, format_currency_amount
+from ReQuest.utilities.db_cache import get_cached_data, update_cached_data, delete_cached_data, encode_mongo_key
+from ReQuest.utilities.discord_utils import setup_view, strip_id
+from ReQuest.utilities.exceptions import log_exception, UserFeedbackError
+from ReQuest.utilities.shop import initialize_item_stock, get_item_stock
 
 logger = logging.getLogger(__name__)
 
@@ -304,7 +294,7 @@ class RenameDenominationModal(LocaleModal):
             )
 
             # Invalidate cache
-            from ReQuest.utilities.supportFunctions import build_cache_key
+            from ReQuest.utilities.db_cache import build_cache_key
             cache_key = build_cache_key(bot.gdb.name, guild_id, DatabaseCollections.CURRENCY)
             await bot.rdb.delete(cache_key)
 

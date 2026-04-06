@@ -1,0 +1,95 @@
+import logging
+import traceback
+
+import discord
+from discord import app_commands
+
+logger = logging.getLogger(__name__)
+
+__all__ = ['UserFeedbackError', 'log_exception']
+
+
+class UserFeedbackError(Exception):
+    """
+    This is used for errors that should be reported to the user directly but do not need to log a stack trace.
+
+    Supports optional lazy localization via message_id and variables.
+    Existing usage (raw string) continues to work unchanged.
+    """
+
+    def __init__(self, message, *, message_id=None, **variables):
+        self.message_id = message_id
+        self.variables = variables
+        super().__init__(message)
+
+    def resolve(self, locale):
+        if self.message_id:
+            from ReQuest.utilities.localizer import t
+            return t(locale, self.message_id, **self.variables)
+        return str(self)
+
+
+async def log_exception(exception, interaction=None):
+    """
+    Logs an exception and sends a user-friendly message if interaction is provided.
+    """
+    from ReQuest.utilities.localizer import resolve_locale, t, DEFAULT_LOCALE
+
+    locale = DEFAULT_LOCALE
+    if interaction:
+        try:
+            locale = await resolve_locale(interaction)
+        except Exception:
+            pass
+
+    if isinstance(exception, app_commands.CommandInvokeError):
+        exception = exception.original
+
+    # Resolve the display message for UserFeedbackError
+    exception_text = str(exception)
+    if isinstance(exception, UserFeedbackError):
+        exception_text = exception.resolve(locale)
+
+    report_string = t(locale, 'error-report-description', exception=exception_text)
+    error_embed = discord.Embed(
+        title=t(locale, 'error-oops-title'),
+        description=report_string,
+        color=discord.Color.red(),
+        type='rich'
+    )
+
+    if isinstance(exception, (UserFeedbackError, app_commands.CheckFailure)):
+        logger.debug(f'User feedback triggered: {exception}\nUser: {interaction.user.id if interaction else "Unknown"}')
+
+        if interaction:
+            try:
+                if not interaction.response.is_done():
+                    await interaction.response.send_message(embed=error_embed, ephemeral=True)
+                else:
+                    await interaction.followup.send(embed=error_embed, ephemeral=True)
+            except discord.errors.InteractionResponded:
+                try:
+                    await interaction.followup.send(embed=error_embed, ephemeral=True)
+                except Exception as e:
+                    logger.error(f'Failed to send followup user feedback message: {e}')
+            except Exception as e:
+                logger.error(f'Failed to handle user feedback in log_exception: {e}')
+        return
+
+    logger.error(f'{type(exception).__name__}: {exception}')
+    logger.error(traceback.format_exc())
+    if interaction:
+        logger.error(f'Logged from guild ID: {interaction.guild_id}, user ID: {interaction.user.id}')
+        try:
+            if not interaction.response.is_done():
+                await interaction.response.defer(ephemeral=True)
+                await interaction.followup.send(embed=error_embed, ephemeral=True)
+            else:
+                await interaction.followup.send(embed=error_embed, ephemeral=True)
+        except discord.errors.InteractionResponded:
+            try:
+                await interaction.followup.send(embed=error_embed, ephemeral=True)
+            except Exception as e:
+                logger.error(f'Failed to send followup error message: {e}')
+        except Exception as e:
+            logger.error(f'Failed to handle exception in log_exception: {e}')

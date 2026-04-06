@@ -11,27 +11,17 @@ from ReQuest.ui.common.modals import LocaleModal
 from ReQuest.ui.common.enums import InventoryType
 from ReQuest.utilities.constants import CharacterFields, ConfigFields, CommonFields, DatabaseCollections, DisplayLimits
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_user_locale, resolve_guild_locale
-from ReQuest.utilities.supportFunctions import (
-    find_currency_or_denomination,
-    log_exception,
-    trade_currency,
-    trade_item,
-    check_sufficient_funds,
-    update_character_inventory,
-    format_currency_display,
-    format_price_string,
-    setup_view,
-    strip_id,
-    UserFeedbackError,
-    get_cached_data,
-    update_cached_data,
-    create_container,
-    rename_container,
-    get_container_name,
-    consume_item_from_container,
-    move_item_between_containers,
-    escape_markdown
+from ReQuest.utilities.character import trade_currency, trade_item, update_character_inventory
+from ReQuest.utilities.containers import (
+    create_container, rename_container, get_container_name, consume_item_from_container,
+    move_item_between_containers
 )
+from ReQuest.utilities.currency import (
+    find_currency_or_denomination, check_sufficient_funds, format_currency_display, format_price_string
+)
+from ReQuest.utilities.db_cache import get_cached_data, update_cached_data
+from ReQuest.utilities.discord_utils import setup_view, strip_id, escape_markdown
+from ReQuest.utilities.exceptions import UserFeedbackError, log_exception
 
 logger = logging.getLogger(__name__)
 

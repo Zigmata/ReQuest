@@ -5,7 +5,7 @@ import discord.ui
 from discord.ui import Modal
 
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, set_locale_context
-from ReQuest.utilities.supportFunctions import log_exception, UserFeedbackError
+from ReQuest.utilities.exceptions import log_exception, UserFeedbackError
 
 logger = logging.getLogger(__name__)
 

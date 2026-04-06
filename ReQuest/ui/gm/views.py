@@ -19,30 +19,18 @@ from ReQuest.ui.common.buttons import MenuDoneButton, BackButton
 from ReQuest.ui.common.modals import PageJumpModal
 from ReQuest.ui.common.views import MenuBaseView, LocaleLayoutView
 from ReQuest.ui.gm import buttons, selects
+from ReQuest.utilities.character import update_character_inventory, update_character_experience
 from ReQuest.utilities.constants import CharacterFields, QuestFields, ConfigFields, CommonFields, DatabaseCollections
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_guild_locale, resolve_user_locale
-from ReQuest.utilities.supportFunctions import (
-    log_exception,
-    strip_id,
-    update_character_inventory,
-    update_character_experience,
-    attempt_delete,
-    update_quest_embed,
-    setup_view,
-    format_consolidated_totals,
-    get_xp_config,
-    UserFeedbackError,
-    get_cached_data,
-    delete_cached_data,
-    update_cached_data,
-    format_inventory_by_container,
-    replace_cached_data,
-    escape_markdown,
-    get_guild_member,
-    build_cache_key,
-    check_role_hierarchy,
-    truncate_text
+from ReQuest.utilities.containers import format_inventory_by_container
+from ReQuest.utilities.db_cache import (
+    get_cached_data, delete_cached_data, update_cached_data, replace_cached_data, build_cache_key, get_xp_config
 )
+from ReQuest.utilities.discord_utils import (
+    setup_view, strip_id, attempt_delete, escape_markdown, get_guild_member, truncate_text, check_role_hierarchy
+)
+from ReQuest.utilities.exceptions import log_exception, UserFeedbackError
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_guild_locale, resolve_user_locale
+from ReQuest.utilities.quests import update_quest_embed
 
 logger = logging.getLogger(__name__)
 

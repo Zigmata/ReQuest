@@ -7,12 +7,8 @@ from ReQuest.ui.gm import views, modals
 from ReQuest.utilities.checks import has_gm_or_mod
 from ReQuest.utilities.constants import CharacterFields, CommonFields, DatabaseCollections
 from ReQuest.utilities.localizer import resolve_locale, set_locale_context, t
-from ReQuest.utilities.supportFunctions import (
-    log_exception,
-    get_cached_data,
-    get_xp_config,
-    UserFeedbackError
-)
+from ReQuest.utilities.db_cache import get_cached_data, get_xp_config
+from ReQuest.utilities.exceptions import UserFeedbackError, log_exception
 
 
 class GameMaster(Cog):
