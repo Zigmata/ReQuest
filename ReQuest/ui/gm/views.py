@@ -35,7 +35,6 @@ from ReQuest.utilities.discord_utils import (
 )
 from ReQuest.utilities.exceptions import log_exception, UserFeedbackError
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_guild_locale, resolve_user_locale
-from ReQuest.utilities.quests import update_quest_embed
 
 logger = logging.getLogger(__name__)
 
@@ -397,7 +396,7 @@ class ManageQuestsView(LocaleLayoutView):
             # Create a fresh quest view, and update the original post message
             quest_view = QuestPostView(quest)
             await quest_view.setup(bot=interaction.client)
-            await message.edit(embed=quest_view.embed, view=quest_view)
+            await message.edit(view=quest_view)
 
             await setup_view(self, interaction)
             await interaction.followup.edit_message(message_id=interaction.message.id, view=self)
@@ -1287,7 +1286,7 @@ class RemovePlayerView(LocaleLayoutView):
             await setup_view(quest_view, interaction)
 
             # Update the menu view and the quest post
-            await message.edit(embed=quest_view.embed, view=quest_view)
+            await message.edit(view=quest_view)
             await setup_view(self, interaction)
             await interaction.response.edit_message(view=self)
 
@@ -1308,30 +1307,138 @@ class RemovePlayerView(LocaleLayoutView):
             await log_exception(e, interaction)
 
 
-class QuestPostView(View):
+class QuestPostView(LocaleLayoutView):
     def __init__(self, quest):
         super().__init__(timeout=None)
-        self.embed = discord.Embed(
-            title='',
-            description='',
-            type='rich'
-        )
         self.quest = quest
-        self.join_button = buttons.JoinQuestButton(self)
-        self.leave_button = buttons.LeaveQuestButton(self)
-        self.add_item(self.join_button)
-        self.add_item(self.leave_button)
+        self.announce_role = None
 
     async def setup(self, bot=None):
         try:
-            guild_locale = DEFAULT_LOCALE
             if bot:
                 guild_id = self.quest.get(QuestFields.GUILD_ID)
                 if guild_id:
-                    guild_locale = await resolve_guild_locale(bot, guild_id)
-            self.embed = await update_quest_embed(self.quest, locale=guild_locale)
+                    self.locale = await resolve_guild_locale(bot, guild_id)
+                    # Fetch announce role for the guild
+                    announce_query = await get_cached_data(
+                        bot=bot,
+                        mongo_database=bot.gdb,
+                        collection_name=DatabaseCollections.ANNOUNCE_ROLE,
+                        query={CommonFields.ID: guild_id}
+                    )
+                    if announce_query:
+                        self.announce_role = announce_query.get(ConfigFields.ANNOUNCE_ROLE)
+            self.build_view()
         except Exception as e:
             await log_exception(e)
+
+    def build_view(self):
+        self.clear_items()
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
+        quest = self.quest
+        container = Container()
+
+        # Title (with thumbnail if set)
+        title = quest.get(QuestFields.TITLE, '')
+        lock_state = quest.get(QuestFields.LOCK_STATE, False)
+        if lock_state:
+            title = f'# {title} {t(locale, "common-label-locked")}'
+
+        image_url = quest.get(QuestFields.IMAGE_URL)
+        if image_url:
+            title_section = Section(accessory=Thumbnail(media=image_url))
+            title_section.add_item(TextDisplay(f'# {title}'))
+            container.add_item(title_section)
+        else:
+            container.add_item(TextDisplay(f'# {title}'))
+
+        container.add_item(Separator())
+
+        # Large image (if set)
+        large_image_url = quest.get(QuestFields.LARGE_IMAGE_URL)
+        if large_image_url:
+            container.add_item(MediaGallery(MediaGalleryItem(media=large_image_url)))
+            container.add_item(Separator())
+
+        # GM mention
+        gm = quest.get(QuestFields.GM)
+        gm_label = t(locale, 'common-embed-label-gm')
+        container.add_item(TextDisplay(f'{gm_label} <@!{gm}>'))
+
+        # Restrictions
+        restrictions = quest.get(QuestFields.RESTRICTIONS, '')
+        if restrictions:
+            restrictions_label = t(locale, 'common-embed-label-party-restrictions')
+            container.add_item(TextDisplay(f'{restrictions_label} {restrictions}'))
+
+        # Description
+        description = quest.get(QuestFields.DESCRIPTION, '')
+        if description:
+            container.add_item(TextDisplay(description))
+
+        container.add_item(Separator())
+
+        # Party list
+        party = quest.get(QuestFields.PARTY, [])
+        max_party_size = quest.get(QuestFields.MAX_PARTY_SIZE, 0)
+        formatted_party = self._format_player_list(party)
+        party_label = t(locale, 'common-embed-field-party')
+        party_text = f'**{party_label} ({len(party)}/{max_party_size})**\n'
+        party_text += formatted_party or t(locale, 'common-label-none')
+        container.add_item(TextDisplay(party_text))
+
+        # Wait list (if enabled)
+        wait_list = quest.get(QuestFields.WAIT_LIST, [])
+        max_wait_list_size = quest.get(QuestFields.MAX_WAIT_LIST_SIZE, 0)
+        if max_wait_list_size > 0:
+            formatted_wait_list = self._format_player_list(wait_list)
+            wait_label = t(locale, 'common-embed-field-wait-list')
+            wait_text = f'**{wait_label} ({len(wait_list)}/{max_wait_list_size})**\n'
+            wait_text += formatted_wait_list or t(locale, 'common-label-none')
+            container.add_item(TextDisplay(wait_text))
+
+        container.add_item(Separator())
+
+        # Join/Leave buttons
+        actions = ActionRow()
+        join_button = Button(
+            label=t(locale, 'gm-btn-join'),
+            style=discord.ButtonStyle.success,
+            custom_id='join_quest_button'
+        )
+        join_button.callback = self.join_callback
+        leave_button = Button(
+            label=t(locale, 'gm-btn-leave'),
+            style=discord.ButtonStyle.danger,
+            custom_id='leave_quest_button'
+        )
+        leave_button.callback = self.leave_callback
+        actions.add_item(join_button)
+        actions.add_item(leave_button)
+        container.add_item(actions)
+
+        container.add_item(Separator())
+
+        # Footer — Announce role + Quest ID
+        if self.announce_role and self.announce_role != 0:
+            container.add_item(TextDisplay(f'{self.announce_role}'))
+
+        quest_id = quest.get(QuestFields.QUEST_ID, '')
+        container.add_item(TextDisplay(t(locale, 'common-embed-footer-quest-id', questId=quest_id)))
+
+        self.add_item(container)
+
+    @staticmethod
+    def _format_player_list(player_list):
+        """Format a party or wait list into a string of member mentions with character names."""
+        lines = []
+        if player_list:
+            for player in player_list:
+                for member_id in player:
+                    for character_id in player[str(member_id)]:
+                        character = player[str(member_id)][str(character_id)]
+                        lines.append(f'- <@!{member_id}> as {character[CharacterFields.NAME]}')
+        return '\n'.join(lines)
 
     async def join_callback(self, interaction: discord.Interaction):
         try:
@@ -1437,8 +1544,8 @@ class QuestPostView(View):
                             message_id='gm-error-quest-full'
                         )
 
-                await setup_view(self, interaction)
-                await interaction.edit_original_response(embed=self.embed, view=self)
+                await self.setup(bot=bot)
+                await interaction.edit_original_response(view=self)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -1547,9 +1654,9 @@ class QuestPostView(View):
                 cache_id=f'{guild_id}:{quest_id}'
             )
 
-            # Refresh the query with the new document and edit the post
+            # Refresh the view and edit the post
             await self.setup(bot=bot)
-            await interaction.edit_original_response(embed=self.embed, view=self)
+            await interaction.edit_original_response(view=self)
         except Exception as e:
             await log_exception(e, interaction)
 

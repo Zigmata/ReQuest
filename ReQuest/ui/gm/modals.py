@@ -177,7 +177,7 @@ class EditQuestModal(LocaleModal):
             from ReQuest.ui.gm.views import QuestPostView
             quest_view = QuestPostView(self.quest)
             await setup_view(quest_view, interaction)
-            await message.edit(embed=quest_view.embed, view=quest_view)
+            await message.edit(view=quest_view)
 
             # Reload the UI view
             view = self.calling_view
@@ -207,23 +207,6 @@ class EditQuestTitleModal(LocaleModal):
         )
         self.add_item(self.title_input)
 
-    async def _update_quest_post(self, bot, quest, interaction):
-        quest_channel_query = await get_cached_data(
-            bot=bot,
-            mongo_database=bot.gdb,
-            collection_name=DatabaseCollections.QUEST_CHANNEL,
-            query={CommonFields.ID: quest[QuestFields.GUILD_ID]}
-        )
-        if quest_channel_query:
-            quest_channel_id = strip_id(quest_channel_query[ConfigFields.QUEST_CHANNEL])
-            quest_channel = bot.get_channel(quest_channel_id)
-            if quest_channel and quest.get(QuestFields.MESSAGE_ID):
-                message = quest_channel.get_partial_message(quest[QuestFields.MESSAGE_ID])
-                from ReQuest.ui.gm.views import QuestPostView
-                quest_view = QuestPostView(quest)
-                await quest_view.setup(bot=bot)
-                await message.edit(embed=quest_view.embed, view=quest_view)
-
     async def on_submit(self, interaction: discord.Interaction):
         try:
             bot = interaction.client
@@ -242,10 +225,6 @@ class EditQuestTitleModal(LocaleModal):
                 cache_id=f'{guild_id}:{quest_id}'
             )
             quest[QuestFields.TITLE] = value
-
-            status = quest.get(QuestFields.STATUS, QuestStatus.PUBLISHED)
-            if status in (QuestStatus.PUBLISHED, QuestStatus.LOCKED):
-                await self._update_quest_post(bot, quest, interaction)
 
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
@@ -273,23 +252,6 @@ class EditQuestDescriptionModal(LocaleModal):
         )
         self.add_item(self.description_input)
 
-    async def _update_quest_post(self, bot, quest, interaction):
-        quest_channel_query = await get_cached_data(
-            bot=bot,
-            mongo_database=bot.gdb,
-            collection_name=DatabaseCollections.QUEST_CHANNEL,
-            query={CommonFields.ID: quest[QuestFields.GUILD_ID]}
-        )
-        if quest_channel_query:
-            quest_channel_id = strip_id(quest_channel_query[ConfigFields.QUEST_CHANNEL])
-            quest_channel = bot.get_channel(quest_channel_id)
-            if quest_channel and quest.get(QuestFields.MESSAGE_ID):
-                message = quest_channel.get_partial_message(quest[QuestFields.MESSAGE_ID])
-                from ReQuest.ui.gm.views import QuestPostView
-                quest_view = QuestPostView(quest)
-                await quest_view.setup(bot=bot)
-                await message.edit(embed=quest_view.embed, view=quest_view)
-
     async def on_submit(self, interaction: discord.Interaction):
         try:
             bot = interaction.client
@@ -308,10 +270,6 @@ class EditQuestDescriptionModal(LocaleModal):
                 cache_id=f'{guild_id}:{quest_id}'
             )
             quest[QuestFields.DESCRIPTION] = value
-
-            status = quest.get(QuestFields.STATUS, QuestStatus.PUBLISHED)
-            if status in (QuestStatus.PUBLISHED, QuestStatus.LOCKED):
-                await self._update_quest_post(bot, quest, interaction)
 
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
@@ -339,23 +297,6 @@ class EditQuestRestrictionsModal(LocaleModal):
         )
         self.add_item(self.restrictions_input)
 
-    async def _update_quest_post(self, bot, quest, interaction):
-        quest_channel_query = await get_cached_data(
-            bot=bot,
-            mongo_database=bot.gdb,
-            collection_name=DatabaseCollections.QUEST_CHANNEL,
-            query={CommonFields.ID: quest[QuestFields.GUILD_ID]}
-        )
-        if quest_channel_query:
-            quest_channel_id = strip_id(quest_channel_query[ConfigFields.QUEST_CHANNEL])
-            quest_channel = bot.get_channel(quest_channel_id)
-            if quest_channel and quest.get(QuestFields.MESSAGE_ID):
-                message = quest_channel.get_partial_message(quest[QuestFields.MESSAGE_ID])
-                from ReQuest.ui.gm.views import QuestPostView
-                quest_view = QuestPostView(quest)
-                await quest_view.setup(bot=bot)
-                await message.edit(embed=quest_view.embed, view=quest_view)
-
     async def on_submit(self, interaction: discord.Interaction):
         try:
             bot = interaction.client
@@ -374,10 +315,6 @@ class EditQuestRestrictionsModal(LocaleModal):
                 cache_id=f'{guild_id}:{quest_id}'
             )
             quest[QuestFields.RESTRICTIONS] = value
-
-            status = quest.get(QuestFields.STATUS, QuestStatus.PUBLISHED)
-            if status in (QuestStatus.PUBLISHED, QuestStatus.LOCKED):
-                await self._update_quest_post(bot, quest, interaction)
 
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
@@ -405,23 +342,6 @@ class EditQuestMaxPartySizeModal(LocaleModal):
             required=True
         )
         self.add_item(self.max_party_size_input)
-
-    async def _update_quest_post(self, bot, quest, interaction):
-        quest_channel_query = await get_cached_data(
-            bot=bot,
-            mongo_database=bot.gdb,
-            collection_name=DatabaseCollections.QUEST_CHANNEL,
-            query={CommonFields.ID: quest[QuestFields.GUILD_ID]}
-        )
-        if quest_channel_query:
-            quest_channel_id = strip_id(quest_channel_query[ConfigFields.QUEST_CHANNEL])
-            quest_channel = bot.get_channel(quest_channel_id)
-            if quest_channel and quest.get(QuestFields.MESSAGE_ID):
-                message = quest_channel.get_partial_message(quest[QuestFields.MESSAGE_ID])
-                from ReQuest.ui.gm.views import QuestPostView
-                quest_view = QuestPostView(quest)
-                await quest_view.setup(bot=bot)
-                await message.edit(embed=quest_view.embed, view=quest_view)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -461,10 +381,6 @@ class EditQuestMaxPartySizeModal(LocaleModal):
                 cache_id=f'{guild_id}:{quest_id}'
             )
             quest[QuestFields.MAX_PARTY_SIZE] = value
-
-            status = quest.get(QuestFields.STATUS, QuestStatus.PUBLISHED)
-            if status in (QuestStatus.PUBLISHED, QuestStatus.LOCKED):
-                await self._update_quest_post(bot, quest, interaction)
 
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
@@ -545,23 +461,6 @@ class EditQuestImageUrlModal(LocaleModal):
         )
         self.add_item(self.image_url_input)
 
-    async def _update_quest_post(self, bot, quest, interaction):
-        quest_channel_query = await get_cached_data(
-            bot=bot,
-            mongo_database=bot.gdb,
-            collection_name=DatabaseCollections.QUEST_CHANNEL,
-            query={CommonFields.ID: quest[QuestFields.GUILD_ID]}
-        )
-        if quest_channel_query:
-            quest_channel_id = strip_id(quest_channel_query[ConfigFields.QUEST_CHANNEL])
-            quest_channel = bot.get_channel(quest_channel_id)
-            if quest_channel and quest.get(QuestFields.MESSAGE_ID):
-                message = quest_channel.get_partial_message(quest[QuestFields.MESSAGE_ID])
-                from ReQuest.ui.gm.views import QuestPostView
-                quest_view = QuestPostView(quest)
-                await quest_view.setup(bot=bot)
-                await message.edit(embed=quest_view.embed, view=quest_view)
-
     async def on_submit(self, interaction: discord.Interaction):
         try:
             bot = interaction.client
@@ -581,10 +480,6 @@ class EditQuestImageUrlModal(LocaleModal):
                 cache_id=f'{guild_id}:{quest_id}'
             )
             quest[QuestFields.IMAGE_URL] = value
-
-            status = quest.get(QuestFields.STATUS, QuestStatus.PUBLISHED)
-            if status in (QuestStatus.PUBLISHED, QuestStatus.LOCKED):
-                await self._update_quest_post(bot, quest, interaction)
 
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
@@ -613,23 +508,6 @@ class EditQuestLargeImageUrlModal(LocaleModal):
         )
         self.add_item(self.large_image_url_input)
 
-    async def _update_quest_post(self, bot, quest, interaction):
-        quest_channel_query = await get_cached_data(
-            bot=bot,
-            mongo_database=bot.gdb,
-            collection_name=DatabaseCollections.QUEST_CHANNEL,
-            query={CommonFields.ID: quest[QuestFields.GUILD_ID]}
-        )
-        if quest_channel_query:
-            quest_channel_id = strip_id(quest_channel_query[ConfigFields.QUEST_CHANNEL])
-            quest_channel = bot.get_channel(quest_channel_id)
-            if quest_channel and quest.get(QuestFields.MESSAGE_ID):
-                message = quest_channel.get_partial_message(quest[QuestFields.MESSAGE_ID])
-                from ReQuest.ui.gm.views import QuestPostView
-                quest_view = QuestPostView(quest)
-                await quest_view.setup(bot=bot)
-                await message.edit(embed=quest_view.embed, view=quest_view)
-
     async def on_submit(self, interaction: discord.Interaction):
         try:
             bot = interaction.client
@@ -649,10 +527,6 @@ class EditQuestLargeImageUrlModal(LocaleModal):
                 cache_id=f'{guild_id}:{quest_id}'
             )
             quest[QuestFields.LARGE_IMAGE_URL] = value
-
-            status = quest.get(QuestFields.STATUS, QuestStatus.PUBLISHED)
-            if status in (QuestStatus.PUBLISHED, QuestStatus.LOCKED):
-                await self._update_quest_post(bot, quest, interaction)
 
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)

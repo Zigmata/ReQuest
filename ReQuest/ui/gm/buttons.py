@@ -335,14 +335,20 @@ class PublishQuestButton(Button):
 
             if status == QuestStatus.DRAFT:
                 # New publish — send to channel
-                msg = await quest_channel.send(embed=quest_view.embed, view=quest_view)
+                msg = await quest_channel.send(view=quest_view)
                 updates[QuestFields.MESSAGE_ID] = msg.id
             else:
-                # Update existing post
+                # Update existing post — try edit, fall back to delete+resend
+                # (old embed messages can't be edited into V2 component messages)
                 message_id = quest.get(QuestFields.MESSAGE_ID)
                 if message_id and quest_channel:
                     message = quest_channel.get_partial_message(message_id)
-                    await message.edit(embed=quest_view.embed, view=quest_view)
+                    try:
+                        await message.edit(view=quest_view)
+                    except discord.HTTPException:
+                        await attempt_delete(message)
+                        msg = await quest_channel.send(view=quest_view)
+                        updates[QuestFields.MESSAGE_ID] = msg.id
 
             await update_cached_data(
                 bot=bot,
@@ -701,38 +707,6 @@ class IndividualRewardsButton(Button):
 
             await setup_view(view, interaction)
             await interaction.response.edit_message(view=view)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-
-class JoinQuestButton(Button):
-    def __init__(self, calling_view):
-        super().__init__(
-            label=t(DEFAULT_LOCALE, 'gm-btn-join'),
-            style=ButtonStyle.success,
-            custom_id='join_quest_button'
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            await self.calling_view.join_callback(interaction)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-
-class LeaveQuestButton(Button):
-    def __init__(self, calling_view):
-        super().__init__(
-            label=t(DEFAULT_LOCALE, 'gm-btn-leave'),
-            style=ButtonStyle.danger,
-            custom_id='leave_quest_button'
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            await self.calling_view.leave_callback(interaction)
         except Exception as e:
             await log_exception(e, interaction)
 
