@@ -1399,25 +1399,25 @@ class QuestPostView(LocaleLayoutView):
 
         container.add_item(Separator())
 
-        # Join/Leave buttons
-        actions = ActionRow()
-        join_button = Button(
-            label=t(locale, 'gm-btn-join'),
-            style=discord.ButtonStyle.success,
-            custom_id='join_quest_button'
-        )
-        join_button.callback = self.join_callback
-        leave_button = Button(
-            label=t(locale, 'gm-btn-leave'),
-            style=discord.ButtonStyle.danger,
-            custom_id='leave_quest_button'
-        )
-        leave_button.callback = self.leave_callback
-        actions.add_item(join_button)
-        actions.add_item(leave_button)
-        container.add_item(actions)
-
-        container.add_item(Separator())
+        # Join/Leave buttons (hidden when locked)
+        if not lock_state:
+            actions = ActionRow()
+            join_button = Button(
+                label=t(locale, 'gm-btn-join'),
+                style=discord.ButtonStyle.success,
+                custom_id='join_quest_button'
+            )
+            join_button.callback = self.join_callback
+            leave_button = Button(
+                label=t(locale, 'gm-btn-leave'),
+                style=discord.ButtonStyle.danger,
+                custom_id='leave_quest_button'
+            )
+            leave_button.callback = self.leave_callback
+            actions.add_item(join_button)
+            actions.add_item(leave_button)
+            container.add_item(actions)
+            container.add_item(Separator())
 
         # Footer — Announce role + Quest ID
         if self.announce_role and self.announce_role != 0:
