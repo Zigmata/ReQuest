@@ -49,7 +49,7 @@ class CreateQuestModal(LocaleModal):
                 QuestFields.MESSAGE_ID: 0,
                 QuestFields.TITLE: title,
                 QuestFields.DESCRIPTION: '',
-                QuestFields.MAX_PARTY_SIZE: 0,
+                QuestFields.MAX_PARTY_SIZE: 1,
                 QuestFields.RESTRICTIONS: '',
                 QuestFields.GM: author_id,
                 QuestFields.PARTY: [],
@@ -440,6 +440,65 @@ class EditQuestPartyRoleModal(LocaleModal):
             await log_exception(e, interaction)
 
 
+class EditQuestPartyRoleStaticModal(LocaleModal):
+    """Modal with a Label+Select for choosing a party role in static mode."""
+
+    def __init__(self, calling_view, assigned_roles):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
+        super().__init__(
+            title=t(locale, 'gm-modal-title-edit-party-role'),
+            timeout=None
+        )
+        self.calling_view = calling_view
+
+        options = [discord.SelectOption(
+            label=t(locale, 'gm-select-option-no-role'),
+            value='none'
+        )]
+        for role_assignment in assigned_roles:
+            options.append(discord.SelectOption(
+                label=role_assignment['roleName'],
+                value=str(role_assignment['roleId'])
+            ))
+
+        role_select = discord.ui.Select(
+            placeholder=t(locale, 'gm-select-placeholder-party-role'),
+            options=options,
+            custom_id='edit_quest_party_role_static_select'
+        )
+        self.role_label = discord.ui.Label(
+            text=t(locale, 'gm-modal-label-party-role'),
+            component=role_select
+        )
+        self.add_item(self.role_label)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            quest = self.calling_view.quest
+            guild_id = quest[QuestFields.GUILD_ID]
+            quest_id = quest[QuestFields.QUEST_ID]
+
+            selected_value = self.role_label.component.values[0]
+            party_role_id = int(selected_value) if selected_value != 'none' else None
+
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUESTS,
+                query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
+                update_data={'$set': {QuestFields.PARTY_ROLE_ID: party_role_id}},
+                cache_id=f'{guild_id}:{quest_id}'
+            )
+            quest[QuestFields.PARTY_ROLE_ID] = party_role_id
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
 class EditQuestImageUrlModal(LocaleModal):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
@@ -527,6 +586,169 @@ class EditQuestLargeImageUrlModal(LocaleModal):
                 cache_id=f'{guild_id}:{quest_id}'
             )
             quest[QuestFields.LARGE_IMAGE_URL] = value
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditQuestDetailsComboModal(LocaleModal):
+    """Combined modal for editing title, restrictions, party size, and description."""
+
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
+        quest = calling_view.quest
+        super().__init__(
+            title=t(locale, 'gm-modal-title-edit-details'),
+            timeout=None
+        )
+        self.calling_view = calling_view
+
+        self.title_input = discord.ui.TextInput(
+            label=t(locale, 'gm-modal-label-quest-title'),
+            custom_id='edit_combo_title',
+            default=quest.get(QuestFields.TITLE, ''),
+            required=True
+        )
+        self.restrictions_input = discord.ui.TextInput(
+            label=t(locale, 'gm-modal-label-restrictions'),
+            custom_id='edit_combo_restrictions',
+            placeholder=t(locale, 'gm-modal-placeholder-restrictions'),
+            default=quest.get(QuestFields.RESTRICTIONS, ''),
+            required=False
+        )
+        self.party_size_input = discord.ui.TextInput(
+            label=t(locale, 'gm-modal-label-max-party'),
+            custom_id='edit_combo_party_size',
+            placeholder=t(locale, 'gm-modal-placeholder-max-party'),
+            default=str(quest.get(QuestFields.MAX_PARTY_SIZE, 0) or ''),
+            max_length=2,
+            required=False
+        )
+        self.description_input = discord.ui.TextInput(
+            label=t(locale, 'gm-modal-label-description'),
+            style=discord.TextStyle.paragraph,
+            custom_id='edit_combo_description',
+            placeholder=t(locale, 'gm-modal-placeholder-description'),
+            default=quest.get(QuestFields.DESCRIPTION, ''),
+            required=False
+        )
+        self.add_item(self.title_input)
+        self.add_item(self.restrictions_input)
+        self.add_item(self.party_size_input)
+        self.add_item(self.description_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            quest = self.calling_view.quest
+            guild_id = quest[QuestFields.GUILD_ID]
+            quest_id = quest[QuestFields.QUEST_ID]
+            locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
+
+            # Validate party size if provided
+            party_size_value = self.party_size_input.value.strip()
+            if party_size_value:
+                try:
+                    max_party_size = int(party_size_value)
+                except ValueError:
+                    raise UserFeedbackError(
+                        t(locale, 'gm-error-party-size-positive'),
+                        message_id='gm-error-party-size-positive'
+                    )
+                if max_party_size <= 0:
+                    raise UserFeedbackError(
+                        t(locale, 'gm-error-party-size-positive'),
+                        message_id='gm-error-party-size-positive'
+                    )
+                current_party_size = len(quest.get(QuestFields.PARTY, []))
+                if max_party_size < current_party_size:
+                    raise UserFeedbackError(
+                        t(locale, 'gm-error-party-size-too-small', currentSize=current_party_size),
+                        message_id='gm-error-party-size-too-small'
+                    )
+            else:
+                max_party_size = quest.get(QuestFields.MAX_PARTY_SIZE, 1)
+
+            updates = {
+                QuestFields.TITLE: self.title_input.value,
+                QuestFields.RESTRICTIONS: self.restrictions_input.value,
+                QuestFields.MAX_PARTY_SIZE: max_party_size,
+                QuestFields.DESCRIPTION: self.description_input.value,
+            }
+
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUESTS,
+                query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
+                update_data={'$set': updates},
+                cache_id=f'{guild_id}:{quest_id}'
+            )
+            quest.update(updates)
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditQuestImagesComboModal(LocaleModal):
+    """Combined modal for editing thumbnail and large image URLs."""
+
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
+        quest = calling_view.quest
+        super().__init__(
+            title=t(locale, 'gm-modal-title-edit-images'),
+            timeout=None
+        )
+        self.calling_view = calling_view
+
+        self.thumbnail_input = discord.ui.TextInput(
+            label=t(locale, 'gm-modal-label-image-url'),
+            custom_id='edit_combo_thumbnail',
+            placeholder=t(locale, 'gm-modal-placeholder-image-url'),
+            default=quest.get(QuestFields.IMAGE_URL) or '',
+            required=False
+        )
+        self.image_input = discord.ui.TextInput(
+            label=t(locale, 'gm-modal-label-large-image-url'),
+            custom_id='edit_combo_large_image',
+            placeholder=t(locale, 'gm-modal-placeholder-image-url'),
+            default=quest.get(QuestFields.LARGE_IMAGE_URL) or '',
+            required=False
+        )
+        self.add_item(self.thumbnail_input)
+        self.add_item(self.image_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            bot = interaction.client
+            quest = self.calling_view.quest
+            guild_id = quest[QuestFields.GUILD_ID]
+            quest_id = quest[QuestFields.QUEST_ID]
+
+            thumbnail = self.thumbnail_input.value.strip() or None
+            large_image = self.image_input.value.strip() or None
+
+            updates = {
+                QuestFields.IMAGE_URL: thumbnail,
+                QuestFields.LARGE_IMAGE_URL: large_image,
+            }
+
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUESTS,
+                query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
+                update_data={'$set': updates},
+                cache_id=f'{guild_id}:{quest_id}'
+            )
+            quest.update(updates)
 
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)

@@ -12,9 +12,12 @@ gm-btn-manage-individual-rewards = Manage Individual Rewards
 gm-btn-join = Join
 gm-btn-leave = Leave
 gm-btn-complete-quest = Complete Quest
-gm-btn-edit-field = Edit
-gm-btn-clear = Clear
+gm-btn-edit-details-modal = Edit Title/Restrictions/Description/Party Size
+gm-btn-edit-images = Edit Images
+gm-btn-edit-party-role = Edit Party Role
 gm-select-placeholder-party-role = Select a party role...
+gm-modal-title-edit-details = Edit Quest Details
+gm-modal-title-edit-images = Edit Quest Images
 gm-btn-publish = Publish
 gm-btn-update-post = Update Post
 
@@ -84,16 +87,29 @@ gm-modal-label-cancel-quest = Type CONFIRM to cancel the quest.
 gm-modal-title-remove-from-quest = Remove character from quest
 gm-modal-label-remove-from-quest = Confirm character removal?
 
-# GM DM messages
-gm-dm-quest-cancelled = Quest {"**"}{ $questTitle }{"**"} was cancelled by the GM.
-gm-dm-quest-ready = Quest {"**"}{ $questTitle }{"**"} is now ready!
-gm-dm-quest-unlocked = Quest {"**"}{ $questTitle }{"**"} is no longer locked.
-gm-dm-quest-locked = Quest {"**"}{ $questTitle }{"**"} is now locked by the GM.
-gm-dm-player-removed = You were removed from quest {"**"}{ $questTitle }{"**"}.
-gm-dm-player-removed-waitlist = You were removed from the wait list for {"**"}{ $questTitle }{"**"}.
-gm-dm-party-promotion = You have been added to the party for {"**"}{ $questTitle }{"**"}, due to a player dropping!
-gm-dm-roster-locked = Quest roster locked and party notified!
-gm-dm-roster-unlocked = Quest roster has been unlocked.
+# GM DM embeds
+gm-dm-title-quest-cancelled = Quest Cancelled
+gm-dm-desc-quest-cancelled = Quest {"**"}{ $questTitle }{"**"} was cancelled by the GM.
+gm-dm-title-quest-ready = Quest Ready
+gm-dm-desc-quest-ready = Quest {"**"}{ $questTitle }{"**"} is now ready! Your GM will begin the quest soon.
+gm-dm-title-player-removed = Removed from Quest
+gm-dm-desc-player-removed = You were removed from quest {"**"}{ $questTitle }{"**"} by the GM.
+gm-dm-desc-player-removed-waitlist = You were removed from the wait list for quest {"**"}{ $questTitle }{"**"}.
+gm-dm-title-party-promotion = Party Promotion
+gm-dm-desc-party-promotion =
+    You have been promoted to the main party for {"**"}{ $questTitle }{"**"}
+    because a player left the quest.
+gm-dm-title-roster-locked = Roster Locked
+gm-dm-desc-roster-locked =
+    The roster for {"**"}{ $questTitle }{"**"} has been locked
+    and all party members have been notified.
+gm-dm-title-roster-unlocked = Roster Unlocked
+gm-dm-desc-roster-unlocked = The roster for {"**"}{ $questTitle }{"**"} has been unlocked.
+gm-dm-title-player-removed-confirm = Player Removed
+gm-dm-desc-player-removed-confirm =
+    The player has been removed from {"**"}{ $questTitle }{"**"}
+    and the quest roster has been updated.
+gm-dm-footer-quest = Quest ID: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     Your server admin has configured rewards for Game Masters when they complete
     quests. However, since you have no registered characters, your rewards could
@@ -145,9 +161,9 @@ gm-desc-edit-quest = Edit quest details such as title, description, and party si
 gm-title-edit-quest = Edit Quest - { $questTitle }
 gm-label-field-not-set = Not set
 gm-label-current-title = {"**"}Title:{"**"} { $value }
-gm-label-current-description = {"**"}Description (REQUIRED){"**"}
+gm-label-current-description = {"**"}Description{"**"}
 gm-label-current-restrictions = {"**"}Restrictions:{"**"} { $value }
-gm-label-current-party-size = {"**"}Max Party Size (REQUIRED):{"**"} { $value }
+gm-label-current-party-size = {"**"}Max Party Size:{"**"} { $value }
 gm-label-current-party-role = {"**"}Party Role:{"**"} { $value }
 gm-label-current-image = {"**"}Thumbnail{"**"}
 gm-label-current-large-image = {"**"}Image{"**"}

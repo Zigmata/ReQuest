@@ -12,7 +12,7 @@ from ReQuest.utilities.constants import QuestFields, QuestStatus, ConfigFields, 
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_user_locale
 from ReQuest.utilities.db_cache import get_cached_data, update_cached_data, delete_cached_data, build_cache_key
 from ReQuest.utilities.discord_utils import setup_view, strip_id, attempt_delete, get_guild_member, check_role_hierarchy
-from ReQuest.utilities.exceptions import log_exception
+from ReQuest.utilities.exceptions import log_exception, UserFeedbackError
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +51,67 @@ class EditQuestButton(Button):
             view = EditQuestView(self.calling_view.selected_quest)
             await setup_view(view, interaction)
             await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditQuestDetailsComboButton(Button):
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        super().__init__(
+            label=t(locale, 'gm-btn-edit-details-modal'),
+            style=ButtonStyle.primary,
+            custom_id='edit_quest_details_combo_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            modal = modals.EditQuestDetailsComboModal(self.calling_view)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditQuestImagesComboButton(Button):
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        super().__init__(
+            label=t(locale, 'gm-btn-edit-images'),
+            style=ButtonStyle.primary,
+            custom_id='edit_quest_images_combo_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            modal = modals.EditQuestImagesComboModal(self.calling_view)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditQuestPartyRoleCombinedButton(Button):
+    """Opens a modal for party role editing — TextInput for temporary, Label+Select for static."""
+
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        super().__init__(
+            label=t(locale, 'gm-btn-edit-party-role'),
+            style=ButtonStyle.primary,
+            custom_id='edit_quest_party_role_combined_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            quest_role_mode = getattr(self.calling_view, 'quest_role_mode', 'temporary')
+            if quest_role_mode == 'static':
+                assigned_roles = getattr(self.calling_view, 'assigned_roles', [])
+                modal = modals.EditQuestPartyRoleStaticModal(self.calling_view, assigned_roles)
+            else:
+                modal = modals.EditQuestPartyRoleModal(self.calling_view)
+            await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -465,6 +526,7 @@ class CancelQuestButton(Button):
             title = quest[QuestFields.TITLE]
             if party:
                 # Get party members and message them with results
+                guild_name = guild.name
                 for player in party:
                     for member_id in player:
                         # Message the player that the quest was canceled.
@@ -472,7 +534,12 @@ class CancelQuestButton(Button):
                         if member:
                             try:
                                 member_locale = await resolve_user_locale(bot, int(member_id), guild_id)
-                                await member.send(t(member_locale, 'gm-dm-quest-cancelled', questTitle=title))
+                                from ReQuest.ui.gm.views import _build_quest_dm_embed
+                                cancel_embed = _build_quest_dm_embed(
+                                    member_locale, 'gm-dm-title-quest-cancelled', 'gm-dm-desc-quest-cancelled',
+                                    quest, guild_name, color=discord.Color.red(), questTitle=title
+                                )
+                                await member.send(embed=cancel_embed)
                             except discord.errors.Forbidden as e:
                                 logger.warning(f'Could not DM {member_id} about quest cancellation: {e}')
                             except Exception as e:

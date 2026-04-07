@@ -149,8 +149,8 @@ class ReQuest(commands.Bot):
                 )
                 try:
                     await self.rdb.delete(cache_key)
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning(f'[Migration] Quest {quest_id}: Redis cache invalidation failed: {e}')
                 logger.info(f'[Migration] Quest {quest_id}: status set to published')
 
                 # Re-post as V2 if message exists
@@ -199,8 +199,8 @@ class ReQuest(commands.Bot):
                         self.gdb.name, f'guild_quests:{guild_id}', 'quests'
                     )
                     await self.rdb.delete(admin_key)
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning(f'[Migration] Quest {quest_id}: Redis cache invalidation failed: {e}')
                 await attempt_delete(old_msg)
                 logger.info(
                     f'[Migration] Quest {quest_id}: migrated successfully, new messageId={new_msg.id}'
