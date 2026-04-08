@@ -991,15 +991,31 @@ class EditQuestView(LocaleLayoutView):
 
         # === Post preview (mirrors QuestPostView layout) ===
 
+        # GM mention
+        gm = quest.get(QuestFields.GM)
+        gm_label = t(locale, 'common-embed-label-gm')
+
+        # Restrictions
+        restrictions = quest.get(QuestFields.RESTRICTIONS, '')
+        restrictions_label = ''
+        if restrictions:
+            restrictions_label = t(locale, 'common-embed-label-party-restrictions')
+
         # Title (with thumbnail if set)
         title = quest.get(QuestFields.TITLE, '') or not_set
         image_url = quest.get(QuestFields.IMAGE_URL)
         if image_url:
             title_section = Section(accessory=Thumbnail(media=image_url))
             title_section.add_item(TextDisplay(f'# {title}'))
+            title_section.add_item(TextDisplay(f'{gm_label} <@!{gm}>'))
+            if restrictions:
+                title_section.add_item(TextDisplay(f'{restrictions_label} {restrictions}'))
             container.add_item(title_section)
         else:
             container.add_item(TextDisplay(f'# {title}'))
+            container.add_item(TextDisplay(f'{gm_label} <@!{gm}>'))
+            if restrictions:
+                container.add_item(TextDisplay(f'{restrictions_label} {restrictions}'))
 
         container.add_item(Separator())
 
@@ -1009,36 +1025,20 @@ class EditQuestView(LocaleLayoutView):
             container.add_item(MediaGallery(MediaGalleryItem(media=large_image_url)))
             container.add_item(Separator())
 
-        # GM mention
-        gm = quest.get(QuestFields.GM)
-        gm_label = t(locale, 'common-embed-label-gm')
-        container.add_item(TextDisplay(f'{gm_label} <@!{gm}>'))
-
-        # Restrictions
-        restrictions = quest.get(QuestFields.RESTRICTIONS, '')
-        if restrictions:
-            restrictions_label = t(locale, 'common-embed-label-party-restrictions')
-            container.add_item(TextDisplay(f'{restrictions_label} {restrictions}'))
-
         # Description (truncated for preview)
         description = quest.get(QuestFields.DESCRIPTION, '')
         if description:
             container.add_item(TextDisplay(truncate_text(description, 2000)))
         else:
-            container.add_item(TextDisplay(f'*{not_set}*'))
+            container.add_item(TextDisplay(f'*{t(locale, "gm-label-description-not-set")}*'))
 
         container.add_item(Separator())
 
         # Party size
-        max_party_size = quest.get(QuestFields.MAX_PARTY_SIZE, 0)
-        if max_party_size > 0:
-            container.add_item(TextDisplay(
-                t(locale, 'gm-label-current-party-size', value=str(max_party_size))
-            ))
-        else:
-            container.add_item(TextDisplay(
-                t(locale, 'gm-label-current-party-size', value=not_set)
-            ))
+        max_party_size = quest.get(QuestFields.MAX_PARTY_SIZE, 1)
+        container.add_item(TextDisplay(
+            t(locale, 'gm-label-current-party-size', value=str(max_party_size))
+        ))
 
         # Party role (only if mode is temporary or static)
         if self.quest_role_mode in ('temporary', 'static'):
@@ -1060,14 +1060,6 @@ class EditQuestView(LocaleLayoutView):
         action_row = ActionRow()
         action_row.add_item(buttons.EditQuestDetailsComboButton(self))
         action_row.add_item(buttons.EditQuestImagesComboButton(self))
-
-        # Party role button — only if enabled on server
-        if self.quest_role_mode in ('temporary', 'static'):
-            if self.quest_role_mode == 'static' and not self.assigned_roles:
-                pass  # Static mode but no roles assigned — don't show
-            else:
-                action_row.add_item(buttons.EditQuestPartyRoleCombinedButton(self))
-
         container.add_item(action_row)
 
         # Back + Publish row
@@ -1367,19 +1359,36 @@ class QuestPostView(LocaleLayoutView):
         quest = self.quest
         container = Container()
 
-        # Title (with thumbnail if set)
+        # Title
         title = quest.get(QuestFields.TITLE, '')
         lock_state = quest.get(QuestFields.LOCK_STATE, False)
         if lock_state:
             title = f'# {title} {t(locale, "common-label-locked")}'
 
+        # GM mention
+        gm = quest.get(QuestFields.GM)
+        gm_label = t(locale, 'common-embed-label-gm')
+
+        # Restrictions
+        restrictions_label = ''
+        restrictions = quest.get(QuestFields.RESTRICTIONS, '')
+        if restrictions:
+            restrictions_label = t(locale, 'common-embed-label-party-restrictions')
+
+        # Construct header
         image_url = quest.get(QuestFields.IMAGE_URL)
         if image_url:
             title_section = Section(accessory=Thumbnail(media=image_url))
             title_section.add_item(TextDisplay(f'# {title}'))
+            title_section.add_item(TextDisplay(f'{gm_label} <@!{gm}>'))
+            if restrictions:
+                title_section.add_item(TextDisplay(f'{restrictions_label} {restrictions}'))
             container.add_item(title_section)
         else:
             container.add_item(TextDisplay(f'# {title}'))
+            container.add_item(TextDisplay(f'{gm_label} <@!{gm}>'))
+            if restrictions:
+                container.add_item(TextDisplay(f'{restrictions_label} {restrictions}'))
 
         container.add_item(Separator())
 
@@ -1388,17 +1397,6 @@ class QuestPostView(LocaleLayoutView):
         if large_image_url:
             container.add_item(MediaGallery(MediaGalleryItem(media=large_image_url)))
             container.add_item(Separator())
-
-        # GM mention
-        gm = quest.get(QuestFields.GM)
-        gm_label = t(locale, 'common-embed-label-gm')
-        container.add_item(TextDisplay(f'{gm_label} <@!{gm}>'))
-
-        # Restrictions
-        restrictions = quest.get(QuestFields.RESTRICTIONS, '')
-        if restrictions:
-            restrictions_label = t(locale, 'common-embed-label-party-restrictions')
-            container.add_item(TextDisplay(f'{restrictions_label} {restrictions}'))
 
         # Description (truncated to stay within 4000 char total text limit)
         description = quest.get(QuestFields.DESCRIPTION, '')
@@ -1644,37 +1642,6 @@ class QuestPostView(LocaleLayoutView):
                             logger.warning(f'Unhandled exception when attempting to DM {new_member.id}: {e}')
                     else:
                         logger.warning(f'Could not find member ID {key} in guild {guild.id}.')
-
-                # If the quest list is locked and a party role exists, fetch the role.
-                party_role_id = quest[QuestFields.PARTY_ROLE_ID]
-                if lock_state and party_role_id:
-                    role = guild.get_role(party_role_id)
-                    if role:
-                        check_role_hierarchy(guild, role)
-
-                        # Get the member object and remove the role
-                        member = await get_guild_member(guild, user_id)
-                        if member:
-                            await member.remove_roles(role)
-                        if new_member:
-                            await new_member.add_roles(role)
-                    else:
-                        logger.warning(f'Quest role {party_role_id} no longer exists in guild {guild.id}. '
-                                       f'Skipping role update for quest {quest[QuestFields.QUEST_ID]}.')
-                        try:
-                            gm_id = quest[QuestFields.GM]
-                            gm_member = await get_guild_member(guild, gm_id)
-                            if gm_member:
-                                gm_locale = await resolve_user_locale(bot, gm_id, guild_id)
-                                await gm_member.send(
-                                    t(
-                                        gm_locale, 'gm-dm-role-not-found',
-                                        roleId=str(party_role_id),
-                                        questTitle=quest[QuestFields.TITLE]
-                                    )
-                                )
-                        except discord.errors.Forbidden:
-                            logger.warning(f'Could not DM GM {quest[QuestFields.GM]} about missing quest role.')
 
             # Update the database
             await replace_cached_data(
