@@ -130,7 +130,16 @@ class PublishQuestButton(Button):
                     t(locale, 'gm-error-no-quest-channel'),
                     message_id='gm-error-no-quest-channel'
                 )
-            quest_channel = bot.get_channel(strip_id(quest_channel_query[ConfigFields.QUEST_CHANNEL]))
+            channel_id = strip_id(quest_channel_query[ConfigFields.QUEST_CHANNEL])
+            quest_channel = bot.get_channel(channel_id)
+            if not quest_channel:
+                try:
+                    quest_channel = await bot.fetch_channel(channel_id)
+                except Exception:
+                    raise UserFeedbackError(
+                        t(locale, 'gm-error-no-quest-channel'),
+                        message_id='gm-error-no-quest-channel'
+                    )
 
             # Get quest role mode from server config
             quest_role_mode_query = await get_cached_data(

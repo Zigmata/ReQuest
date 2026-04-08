@@ -1363,7 +1363,7 @@ class QuestPostView(LocaleLayoutView):
         title = quest.get(QuestFields.TITLE, '')
         lock_state = quest.get(QuestFields.LOCK_STATE, False)
         if lock_state:
-            title = f'# {title} {t(locale, "common-label-locked")}'
+            title = f'{title} {t(locale, "common-label-locked")}'
 
         # GM mention
         gm = quest.get(QuestFields.GM)
@@ -1411,7 +1411,7 @@ class QuestPostView(LocaleLayoutView):
         formatted_party = self._format_player_list(party)
         party_label = t(locale, 'common-embed-field-party')
         party_text = f'**{party_label} ({len(party)}/{max_party_size})**\n'
-        party_text += formatted_party or t(locale, 'common-label-none')
+        party_text += truncate_text(formatted_party, 500) or t(locale, 'common-label-none')
         container.add_item(TextDisplay(party_text))
 
         # Wait list (if enabled)
@@ -1421,7 +1421,7 @@ class QuestPostView(LocaleLayoutView):
             formatted_wait_list = self._format_player_list(wait_list)
             wait_label = t(locale, 'common-embed-field-wait-list')
             wait_text = f'**{wait_label} ({len(wait_list)}/{max_wait_list_size})**\n'
-            wait_text += formatted_wait_list or t(locale, 'common-label-none')
+            wait_text += truncate_text(formatted_wait_list, 500) or t(locale, 'common-label-none')
             container.add_item(TextDisplay(wait_text))
 
         container.add_item(Separator())
