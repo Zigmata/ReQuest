@@ -596,7 +596,8 @@ class ContainerItemsView(LocaleLayoutView):
 
             items_display = []
             for item_name, quantity in page_items:
-                items_display.append(f'• {escape_markdown(truncate_text(item_name, DisplayLimits.ITEM_NAME))}: **{quantity}**')
+                item_text = escape_markdown(truncate_text(item_name, DisplayLimits.ITEM_NAME))
+                items_display.append(f'• {item_text}: **{quantity}**')
 
             container.add_item(TextDisplay('\n'.join(items_display)))
             container.add_item(Separator())

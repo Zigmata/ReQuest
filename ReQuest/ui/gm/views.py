@@ -802,7 +802,10 @@ class RewardsMenuView(LocaleLayoutView):
     def build_view(self):
         container = Container()
 
-        header_section = Section(accessory=buttons.BackToManageQuestButton(self.quest, locale=getattr(self, 'locale', DEFAULT_LOCALE)))
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
+        header_section = Section(
+            accessory=buttons.BackToManageQuestButton(self.quest, locale=locale)
+        )
         header_section.add_item(TextDisplay(f'**Quest Rewards - {self.quest[QuestFields.TITLE]}**'))
         container.add_item(header_section)
         container.add_item(Separator())
@@ -1117,7 +1120,9 @@ class RemovePlayerView(LocaleLayoutView):
         locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
-        header_section = Section(accessory=buttons.BackToManageQuestButton(self.quest, locale=getattr(self, 'locale', DEFAULT_LOCALE)))
+        header_section = Section(
+            accessory=buttons.BackToManageQuestButton(self.quest, locale=locale)
+        )
         header_section.add_item(TextDisplay(
             f'**{t(locale, "gm-title-remove-player", questTitle=self.quest[QuestFields.TITLE])}**'
         ))
@@ -1245,7 +1250,9 @@ class RemovePlayerView(LocaleLayoutView):
             if not player_found:
                 for player in party:
                     if removed_member_id in player:
-                        removed_locale = await resolve_locale(bot=bot, user_id=int(removed_member_id), guild_id=guild_id)
+                        removed_locale = await resolve_locale(
+                            bot=bot, user_id=int(removed_member_id), guild_id=guild_id
+                        )
                         removal_embed = _build_quest_dm_embed(
                             removed_locale, 'gm-dm-title-player-removed', 'gm-dm-desc-player-removed',
                             quest, guild_name, color=discord.Color.red(), questTitle=quest[QuestFields.TITLE]
@@ -1261,7 +1268,9 @@ class RemovePlayerView(LocaleLayoutView):
                                 new_member = await get_guild_member(guild, int(key))
                                 if new_member:
                                     try:
-                                        promoted_locale = await resolve_locale(bot=bot, user_id=int(key), guild_id=guild_id)
+                                        promoted_locale = await resolve_locale(
+                                            bot=bot, user_id=int(key), guild_id=guild_id
+                                        )
                                         promo_embed = _build_quest_dm_embed(
                                             promoted_locale, 'gm-dm-title-party-promotion',
                                             'gm-dm-desc-party-promotion', quest, guild_name,

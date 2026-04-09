@@ -12,9 +12,6 @@ __all__ = ['UserFeedbackError', 'log_exception', 'log_task_exception']
 class UserFeedbackError(Exception):
     """
     This is used for errors that should be reported to the user directly but do not need to log a stack trace.
-
-    Supports optional lazy localization via message_id and variables.
-    Existing usage (raw string) continues to work unchanged.
     """
 
     def __init__(self, message, *, message_id=None, **variables):
@@ -96,7 +93,8 @@ async def log_exception(exception, interaction=None):
 
 
 def log_task_exception(exception, context=''):
-    """Categorized logging for background task errors.
+    """
+    Categorized logging for background task errors.
 
     Classifies exceptions into transient (warning), expected (debug),
     or unexpected (error with traceback) to reduce log noise from

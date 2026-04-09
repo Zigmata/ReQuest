@@ -553,5 +553,3 @@ class ModPlayerModal(LocaleModal):
                 logger.warning(f'Could not send DM to {self.member} regarding GM modification: {e}')
         except Exception as e:
             await log_exception(e, interaction)
-
-

@@ -675,7 +675,7 @@ async def consume_item_from_container(
 
 
 def format_inventory_by_container(character_data: dict, currency_config: dict | None = None,
-                                   locale: str | None = None) -> str:
+                                  locale: str | None = None) -> str:
     """
     Formats the full inventory grouped by container for display/printing.
     Returns a formatted string.

@@ -442,7 +442,9 @@ class CancelQuestButton(Button):
                                     )
                                     failed_members.append(member)
                             if failed_members:
-                                gm_locale = await resolve_locale(bot=bot, user_id=interaction.user.id, guild_id=guild_id)
+                                gm_locale = await resolve_locale(
+                                    bot=bot, user_id=interaction.user.id, guild_id=guild_id
+                                )
                                 failed_list = ', '.join(m.mention for m in failed_members)
                                 await interaction.user.send(
                                     t(

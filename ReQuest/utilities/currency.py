@@ -99,7 +99,7 @@ def format_currency_display(player_currency: dict, currency_config: dict) -> lis
                     denom_display_name, _ = find_currency_or_denomination(currency_config, denom_name_lower)
                     if denom_display_name:
                         output_lines.append(f"{titlecase(denom_display_name)}: **{quantity}**")
-    
+
     return output_lines
 
 
