@@ -49,7 +49,8 @@ async def trade_currency(interaction, currency_name, amount, sending_member_id, 
         bot=bot,
         mongo_database=bot.gdb,
         collection_name=DatabaseCollections.CURRENCY,
-        query={CommonFields.ID: guild_id}
+        query={CommonFields.ID: guild_id},
+        session=session
     )
 
     if not currency_config:

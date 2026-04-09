@@ -7,13 +7,13 @@ from ReQuest.utilities.exceptions import log_exception
 
 logger = logging.getLogger(__name__)
 
-# Collects cache keys to invalidate after a transaction commits.
-# Set by run_in_transaction(); read by write helpers.
-_pending_cache_invalidations: ContextVar[list | None] = ContextVar('_pending_cache_invalidations', default=None)
+# Collects cache key strings to invalidate after a transaction commits.
+# Set by run_in_transaction(); appended to by invalidate_cache_key().
+_pending_cache_invalidations: ContextVar[set[str] | None] = ContextVar('_pending_cache_invalidations', default=None)
 
 __all__ = [
     'build_cache_key', 'get_cached_data', 'update_cached_data', 'replace_cached_data', 'delete_cached_data',
-    'encode_mongo_key', 'decode_mongo_key', 'get_xp_config', 'run_in_transaction',
+    'encode_mongo_key', 'decode_mongo_key', 'get_xp_config', 'run_in_transaction', 'invalidate_cache_key',
 ]
 
 
@@ -159,7 +159,7 @@ async def update_cached_data(bot, mongo_database, collection_name, query, update
     except Exception as e:
         raise Exception(f'Error updating {collection_name} in database: {e}') from e
 
-    await _invalidate_cache_key(bot, cache_key, session)
+    await invalidate_cache_key(bot, cache_key, session)
 
 
 async def replace_cached_data(bot, mongo_database, collection_name, query, new_data, cache_id=None,
@@ -196,7 +196,7 @@ async def replace_cached_data(bot, mongo_database, collection_name, query, new_d
     except Exception as e:
         raise Exception(f'Error replacing {collection_name} in database: {e}') from e
 
-    await _invalidate_cache_key(bot, cache_key, session)
+    await invalidate_cache_key(bot, cache_key, session)
 
 
 async def delete_cached_data(bot, mongo_database, collection_name, search_filter,
@@ -229,10 +229,10 @@ async def delete_cached_data(bot, mongo_database, collection_name, search_filter
     except Exception as e:
         raise Exception(f'Error deleting {collection_name} in database: {e}') from e
 
-    await _invalidate_cache_key(bot, cache_key, session)
+    await invalidate_cache_key(bot, cache_key, session)
 
 
-async def _invalidate_cache_key(bot, cache_key, session):
+async def invalidate_cache_key(bot, cache_key, session):
     """Invalidates a Redis cache key, or defers it if inside a transaction.
 
     When session is None (no transaction), deletes the key immediately.
@@ -240,7 +240,7 @@ async def _invalidate_cache_key(bot, cache_key, session):
     """
     pending = _pending_cache_invalidations.get() if session is not None else None
     if pending is not None:
-        pending.append((bot, cache_key))
+        pending.add(cache_key)
     else:
         try:
             await bot.rdb.delete(cache_key)
@@ -267,7 +267,7 @@ async def run_in_transaction(bot, callback, *args, **kwargs):
     :param callback: an async callable with signature (session, *args, **kwargs)
     :return: the return value of callback
     """
-    pending = []
+    pending: set[str] = set()
     token = _pending_cache_invalidations.set(pending)
     try:
         async with await bot.mongo_client.start_session() as session:
@@ -275,9 +275,9 @@ async def run_in_transaction(bot, callback, *args, **kwargs):
                 lambda s: callback(s, *args, **kwargs)
             )
         # Transaction committed — flush deferred cache invalidations
-        for cache_bot, cache_key in pending:
+        for cache_key in pending:
             try:
-                await cache_bot.rdb.delete(cache_key)
+                await bot.rdb.delete(cache_key)
             except Exception as e:
                 logger.error(f"Redis delete failed (post-commit): {e}")
         return result
