@@ -233,19 +233,24 @@ async def delete_cached_data(bot, mongo_database, collection_name, search_filter
 
 
 async def invalidate_cache_key(bot, cache_key, session):
-    """Invalidates a Redis cache key, or defers it if inside a transaction.
+    """Invalidates a Redis cache key, or defers it if inside run_in_transaction().
 
     When session is None (no transaction), deletes the key immediately.
-    When session is set, appends the key to the pending list for post-commit flush.
+    When session is set AND run_in_transaction() is active, defers the delete
+    until after the transaction commits. If session is set but run_in_transaction()
+    was not used, the key is deleted immediately with a warning.
     """
-    pending = _pending_cache_invalidations.get() if session is not None else None
-    if pending is not None:
-        pending.add(cache_key)
-    else:
-        try:
-            await bot.rdb.delete(cache_key)
-        except Exception as e:
-            logger.error(f"Redis delete failed: {e}")
+    if session is not None:
+        pending = _pending_cache_invalidations.get()
+        if pending is not None:
+            pending.add(cache_key)
+            return
+        logger.warning(f'invalidate_cache_key called with session outside run_in_transaction for key: {cache_key}')
+
+    try:
+        await bot.rdb.delete(cache_key)
+    except Exception as e:
+        logger.error(f"Redis delete failed: {e}")
 
 
 async def run_in_transaction(bot, callback, *args, **kwargs):

@@ -553,7 +553,7 @@ class ShopCartView(LocaleLayoutView):
 
             receipt_embed = discord.Embed(title=t(locale, 'shop-embed-title-report'), color=discord.Color.gold())
             receipt_embed.description = (
-                f'Player: {interaction.user.mention} as `{character_data[CharacterFields.NAME]}`\n'
+                f'Player: {interaction.user.mention} as `{character_name}`\n'
                 f'Shop: {self.prev_view.shop_data.get(ShopFields.SHOP_NAME, t(locale, "common-label-unknown"))}'
             )
             receipt_embed.add_field(
