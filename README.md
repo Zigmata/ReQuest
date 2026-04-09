@@ -73,7 +73,7 @@ the GNU GPL v3 and will always be shared freely, forever.
 ## Installation
 
 ### Dependencies
-- MongoDB version 7 or later.
+- MongoDB version 7 or later, configured as a replica set (even single-node).
 - Python version 3.13 or later.
 - A Discord bot application, using the process outlined [here](https://discord.com/developers/docs/getting-started).
 
@@ -96,6 +96,7 @@ the GNU GPL v3 and will always be shared freely, forever.
    > for any publicly-accessible deployment. If you are running the bot locally and have not set up authentication, you can ignore these.
    - MONGO_HOST: The hostname/IP of your mongoDB server.
    - MONGO_PORT: The port your mongoDB service is hosted on.
+   - REPLICA_SET: The name of your MongoDB replica set (e.g. `rs0`).
    - REDIS_HOST: The hostname/IP of your Redis server.
    - REDIS_PORT: The port your Redis service is hosted on.
    - BOT_TOKEN: The token for your Discord bot application. NEVER SHARE THIS!
@@ -139,12 +140,14 @@ services:
   mongodb:
     image: mongodb/mongodb-community-server:latest
     container_name: mongodb
+    command: ["--auth", "--bind_ip_all", "--replSet", "rs0", "--keyFile", "/data/mongo-keyfile"]
     user: 999:999 # Run mongoDB as the mongodb user
     environment:
       MONGO_INITDB_ROOT_USERNAME: # Give MongoDB an initial root username
       MONGO_INITDB_ROOT_PASSWORD: # Give MongoDB an initial root password
     volumes:
       - /path/to/your/db/files:/data/db # Persist database, replace with your desired host path
+      - /path/to/your/mongo-keyfile:/data/mongo-keyfile:ro # Keyfile for replica set auth
     stop_grace_period: 30s
     restart: unless-stopped
     networks:
@@ -173,6 +176,7 @@ services:
       AUTH_DB: # name of the database your mongo user lives in
       MONGO_HOST: mongodb
       MONGO_PORT: 27017
+      REPLICA_SET: rs0
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: # your redis password, if needed
@@ -207,8 +211,25 @@ networks:
 
 ### Docker Installation Notes
 
-- The above example launches mongoDB and Redis with authentication. You can skip Redis customization and mongoDB auth 
-  if you are developing locally or somewhere that security is not a concern.
+> These are the best efforts to summarize deploying your own ReQuest instance on Docker, but the truth is such a deployment
+can be quite complex. The following notes are not exhaustive, and you should be prepared to do some research and 
+troubleshooting on your own if you choose to go this route. I'll keep the examples and notes updated as much as my free
+time affords, but there are a lot of moving parts here and I can't guarantee everything will work perfectly for your specific use case right out of the box.
+
+- **MongoDB must run as a replica set** (even single-node) for transaction support. The compose example includes
+  `--replSet rs0` and a keyfile for replica set authentication.
+  - If you are launching mongoDB with authentication, you need to generate a key file before your first launch.
+    ```sh
+    openssl rand -base64 756 > /path/to/your/mongo-keyfile
+    chmod 400 /path/to/your/mongo-keyfile
+    chown 999:999 /path/to/your/mongo-keyfile
+    ```
+  - After your first launch, exec into mongoDB's container and initialize the replica set:
+    ```sh
+    docker exec -it mongodb mongosh -u <root_user> -p <root_password> --authenticationDatabase admin --eval "rs.initiate()"
+    ```
+- The above example launches mongoDB and Redis with authentication. You can skip auth if you are
+  developing locally or somewhere that security is not a concern.
     - Make note of the mongoDB instantiation in the `setup_hook()` function of `bot.py`. There are two methods provided,
       one for a default unauthenticated connection, and one using an authenticated connection URI. Comment/un-comment 
       the appropriate lines as needed.
