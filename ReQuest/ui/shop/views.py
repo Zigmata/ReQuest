@@ -503,8 +503,9 @@ class ShopCartView(LocaleLayoutView):
                     if not is_ok:
                         raise UserFeedbackError(
                             t(locale, 'shop-error-checkout-insufficient',
-                              **{'currency': titlecase(base_currency)}),
-                            message_id='shop-error-checkout-insufficient'
+                              currency=titlecase(base_currency)),
+                            message_id='shop-error-checkout-insufficient',
+                            currency=titlecase(base_currency)
                         )
 
                 for base_currency, amount in self.base_totals.items():
@@ -535,9 +536,9 @@ class ShopCartView(LocaleLayoutView):
                     session=session
                 )
                 await finalize_cart_purchase(bot, guild_id, user_id, channel_id, session=session)
-                return items_summary
+                return items_summary, character_data[CharacterFields.NAME]
 
-            added_items_summary = await run_in_transaction(bot, _do_checkout)
+            added_items_summary, character_name = await run_in_transaction(bot, _do_checkout)
 
             log_channel = None
             log_channel_query = await get_cached_data(
@@ -583,7 +584,7 @@ class ShopCartView(LocaleLayoutView):
                     )
                     log_embed.description = (
                         f'Player: {interaction.user.mention} '
-                        f'as `{character_data[CharacterFields.NAME]}`\n'
+                        f'as `{character_name}`\n'
                         f'Shop: {self.prev_view.shop_data.get(
                             ShopFields.SHOP_NAME,
                             t(guild_locale, "common-label-unknown")

@@ -6,7 +6,8 @@ import discord
 
 from ReQuest.utilities.constants import ShopFields, CartFields, CommonFields, DatabaseCollections, RestockFields
 from ReQuest.utilities.db_cache import (
-    get_cached_data, update_cached_data, delete_cached_data, build_cache_key, encode_mongo_key
+    get_cached_data, update_cached_data, delete_cached_data, build_cache_key, encode_mongo_key,
+    _invalidate_cache_key
 )
 
 logger = logging.getLogger(__name__)
@@ -228,13 +229,9 @@ async def reserve_stock(bot, guild_id: int, channel_id: str, item_name: str, qua
         session=session
     )
 
-    # Invalidate cache after update
     if result:
         cache_key = build_cache_key(bot.gdb.name, guild_id, DatabaseCollections.SHOP_STOCK)
-        try:
-            await bot.rdb.delete(cache_key)
-        except Exception as e:
-            logger.error(f"Redis delete failed: {e}")
+        await _invalidate_cache_key(bot, cache_key, session)
         return True
 
     return False
@@ -278,13 +275,9 @@ async def release_stock(bot, guild_id: int, channel_id: str, item_name: str,
         session=session
     )
 
-    # Invalidate cache after update
     if result.modified_count > 0:
         cache_key = build_cache_key(bot.gdb.name, guild_id, DatabaseCollections.SHOP_STOCK)
-        try:
-            await bot.rdb.delete(cache_key)
-        except Exception as e:
-            logger.error(f"Redis delete failed: {e}")
+        await _invalidate_cache_key(bot, cache_key, session)
 
 
 async def finalize_stock(bot, guild_id: int, channel_id: str, item_name: str, quantity: int = 1,
@@ -316,13 +309,9 @@ async def finalize_stock(bot, guild_id: int, channel_id: str, item_name: str, qu
         session=session
     )
 
-    # Invalidate cache after update
     if result.modified_count > 0:
         cache_key = build_cache_key(bot.gdb.name, guild_id, DatabaseCollections.SHOP_STOCK)
-        try:
-            await bot.rdb.delete(cache_key)
-        except Exception as e:
-            logger.error(f"Redis delete failed: {e}")
+        await _invalidate_cache_key(bot, cache_key, session)
 
 
 async def set_available_stock(bot, guild_id: int, channel_id: str, item_name: str, amount: int):
@@ -377,13 +366,9 @@ async def increment_available_stock(bot, guild_id: int, channel_id: str, item_na
         ]
     )
 
-    # Invalidate cache after update
     if result.modified_count > 0:
         cache_key = build_cache_key(bot.gdb.name, guild_id, DatabaseCollections.SHOP_STOCK)
-        try:
-            await bot.rdb.delete(cache_key)
-        except Exception as e:
-            logger.error(f"Redis delete failed: {e}")
+        await _invalidate_cache_key(bot, cache_key, None)
 
 
 async def update_last_restock(bot, guild_id: int, channel_id: str, timestamp: str):
