@@ -4,6 +4,7 @@ from ReQuest.ui.common.modals import LocaleModal
 from ReQuest.utilities.constants import CartFields
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.exceptions import UserFeedbackError, log_exception
+from ReQuest.utilities.db_cache import run_in_transaction
 from ReQuest.utilities.shop import update_cart_item_quantity, get_cart, get_shop_stock
 
 
@@ -44,10 +45,12 @@ class EditCartItemModal(LocaleModal):
             user_id = interaction.user.id
             channel_id = prev_view.channel_id
 
-            # Use database-backed cart update with stock handling
-            success, message = await update_cart_item_quantity(
-                bot, guild_id, user_id, channel_id, self.item_key, new_quantity,
-                locale=self._locale
+            # Use database-backed cart update with stock handling (transactional)
+            success, message = await run_in_transaction(
+                bot, lambda s: update_cart_item_quantity(
+                    bot, guild_id, user_id, channel_id, self.item_key, new_quantity,
+                    session=s, locale=self._locale
+                )
             )
 
             if not success:

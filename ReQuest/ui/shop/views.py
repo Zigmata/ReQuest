@@ -26,7 +26,7 @@ from ReQuest.utilities.character import apply_currency_change_local, apply_item_
 from ReQuest.utilities.currency import (
     check_sufficient_funds, format_consolidated_totals, consolidate_currency_totals, format_complex_cost
 )
-from ReQuest.utilities.db_cache import get_cached_data, update_cached_data, encode_mongo_key
+from ReQuest.utilities.db_cache import get_cached_data, update_cached_data, encode_mongo_key, run_in_transaction
 from ReQuest.utilities.discord_utils import strip_id, escape_markdown, truncate_text
 from ReQuest.utilities.exceptions import UserFeedbackError, log_exception
 from ReQuest.utilities.shop import (
@@ -227,9 +227,11 @@ class ShopBaseView(LocaleLayoutView):
 
             item_name = item.get(CommonFields.NAME)
 
-            # Use database-backed cart with reservation
-            success = await add_item_to_cart(
-                self.bot, self.guild_id, self.user_id, self.channel_id, item, option_index
+            # Use database-backed cart with reservation (transactional)
+            success = await run_in_transaction(
+                self.bot, lambda s: add_item_to_cart(
+                    self.bot, self.guild_id, self.user_id, self.channel_id, item, option_index, session=s
+                )
             )
 
             if not success:
@@ -521,16 +523,18 @@ class ShopCartView(LocaleLayoutView):
                 )
                 added_items_summary.append(summary_string)
 
-            await update_cached_data(
-                bot=bot,
-                mongo_database=bot.mdb,
-                collection_name=DatabaseCollections.CHARACTERS,
-                query={'_id': user_id},
-                update_data={'$set': {f'characters.{active_char_id}': character_data}}
-            )
+            async def _do_checkout(session):
+                await update_cached_data(
+                    bot=bot,
+                    mongo_database=bot.mdb,
+                    collection_name=DatabaseCollections.CHARACTERS,
+                    query={'_id': user_id},
+                    update_data={'$set': {f'characters.{active_char_id}': character_data}},
+                    session=session
+                )
+                await finalize_cart_purchase(bot, guild_id, user_id, channel_id, session=session)
 
-            # Finalize stock (remove from reserved counts) and clear cart from database
-            await finalize_cart_purchase(bot, guild_id, user_id, channel_id)
+            await run_in_transaction(bot, _do_checkout)
 
             log_channel = None
             log_channel_query = await get_cached_data(
