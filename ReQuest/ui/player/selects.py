@@ -209,7 +209,7 @@ class ManageContainerSelect(Select):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         options = []
         for container in containers:
-            if container['name'].lower() != 'loose items':
+            if container['id'] is not None:
                 value = container['id'] if container['id'] else 'loose'
                 label = f"{container['name']} ({container['count']} items)"
                 if len(label) > 100:
