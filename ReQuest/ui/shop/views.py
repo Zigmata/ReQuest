@@ -475,55 +475,57 @@ class ShopCartView(LocaleLayoutView):
 
             channel_id = self.prev_view.channel_id
 
-            character_query = await get_cached_data(
-                bot=bot,
-                mongo_database=bot.mdb,
-                collection_name=DatabaseCollections.CHARACTERS,
-                query={'_id': user_id}
-            )
-
-            if not character_query or str(guild_id) not in character_query[CharacterFields.ACTIVE_CHARACTERS]:
-                await interaction.response.send_message(
-                    t(locale, 'shop-error-no-active-character'), ephemeral=True
-                )
-                return
-
-            active_char_id = character_query[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
-            character_data = character_query[CharacterFields.CHARACTERS][active_char_id]
-
-            for base_currency, amount in self.base_totals.items():
-                wallet = character_data[CharacterFields.ATTRIBUTES].get(
-                    CharacterFields.CURRENCY, {}
-                )
-                is_ok, msg = check_sufficient_funds(
-                    wallet, self.currency_config, base_currency, amount, locale=locale
-                )
-                if not is_ok:
-                    await interaction.response.send_message(
-                        t(locale, 'shop-error-checkout-insufficient', **{'currency': titlecase(base_currency)}),
-                        ephemeral=True
-                    )
-                    return
-
-            for base_currency, amount in self.base_totals.items():
-                character_data = apply_currency_change_local(character_data, self.currency_config,
-                                                             base_currency, -amount)
-
-            added_items_summary = []
-            for item_key, data in self.prev_view.cart.items():
-                item = data.get(CartFields.ITEM, data)  # Handle both DB and local formats
-                quantity = data.get(CartFields.QUANTITY, 0)
-                qty_per_item = item.get(CommonFields.QUANTITY, 1)
-                total_qty = quantity * qty_per_item
-
-                character_data = apply_item_change_local(character_data, item[CommonFields.NAME], total_qty)
-                summary_string = (
-                    (f'{total_qty}x ' if total_qty > 1 else '')
-                    + escape_markdown(titlecase(item[CommonFields.NAME]))
-                )
-                added_items_summary.append(summary_string)
-
             async def _do_checkout(session):
+                character_query = await get_cached_data(
+                    bot=bot,
+                    mongo_database=bot.mdb,
+                    collection_name=DatabaseCollections.CHARACTERS,
+                    query={'_id': user_id},
+                    session=session
+                )
+
+                if not character_query or str(guild_id) not in character_query[CharacterFields.ACTIVE_CHARACTERS]:
+                    raise UserFeedbackError(
+                        t(locale, 'shop-error-no-active-character'),
+                        message_id='shop-error-no-active-character'
+                    )
+
+                active_char_id = character_query[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
+                character_data = character_query[CharacterFields.CHARACTERS][active_char_id]
+
+                for base_currency, amount in self.base_totals.items():
+                    wallet = character_data[CharacterFields.ATTRIBUTES].get(
+                        CharacterFields.CURRENCY, {}
+                    )
+                    is_ok, msg = check_sufficient_funds(
+                        wallet, self.currency_config, base_currency, amount, locale=locale
+                    )
+                    if not is_ok:
+                        raise UserFeedbackError(
+                            t(locale, 'shop-error-checkout-insufficient',
+                              **{'currency': titlecase(base_currency)}),
+                            message_id='shop-error-checkout-insufficient'
+                        )
+
+                for base_currency, amount in self.base_totals.items():
+                    character_data = apply_currency_change_local(
+                        character_data, self.currency_config, base_currency, -amount
+                    )
+
+                items_summary = []
+                for item_key, data in self.prev_view.cart.items():
+                    item = data.get(CartFields.ITEM, data)
+                    quantity = data.get(CartFields.QUANTITY, 0)
+                    qty_per_item = item.get(CommonFields.QUANTITY, 1)
+                    total_qty = quantity * qty_per_item
+
+                    character_data = apply_item_change_local(character_data, item[CommonFields.NAME], total_qty)
+                    summary_string = (
+                        (f'{total_qty}x ' if total_qty > 1 else '')
+                        + escape_markdown(titlecase(item[CommonFields.NAME]))
+                    )
+                    items_summary.append(summary_string)
+
                 await update_cached_data(
                     bot=bot,
                     mongo_database=bot.mdb,
@@ -533,8 +535,9 @@ class ShopCartView(LocaleLayoutView):
                     session=session
                 )
                 await finalize_cart_purchase(bot, guild_id, user_id, channel_id, session=session)
+                return items_summary
 
-            await run_in_transaction(bot, _do_checkout)
+            added_items_summary = await run_in_transaction(bot, _do_checkout)
 
             log_channel = None
             log_channel_query = await get_cached_data(

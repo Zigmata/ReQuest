@@ -416,7 +416,9 @@ async def batch_update_character(bot, player_id: int, character_id: str, items: 
         for item_name, quantity in items.items():
             character_data = apply_item_change_local(character_data, item_name, quantity)
 
-    if currency and currency_config:
+    if currency:
+        if not currency_config:
+            raise ValueError('currency_config is required when currency changes are provided')
         for currency_name, amount in currency.items():
             character_data = apply_currency_change_local(character_data, currency_config, currency_name, amount)
 
