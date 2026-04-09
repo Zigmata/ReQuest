@@ -144,12 +144,20 @@ class ReQuest(commands.Bot):
 
                 # No message to migrate — set as draft so GM can publish fresh
                 if not message_id:
+                    gm_id = quest.get(QuestFields.GM)
                     await quest_collection.update_one(
                         {QuestFields.QUEST_ID: quest_id, QuestFields.GUILD_ID: guild_id},
-                        {'$set': {QuestFields.STATUS: QuestStatus.DRAFT}}
+                        {'$set': {QuestFields.STATUS: QuestStatus.DRAFT, QuestFields.MESSAGE_ID: 0}}
                     )
                     try:
                         await self.rdb.delete(cache_key)
+                        await self.rdb.delete(
+                            build_cache_key(self.gdb.name, f'guild_quests:{guild_id}', 'quests')
+                        )
+                        if gm_id:
+                            await self.rdb.delete(
+                                build_cache_key(self.gdb.name, f'gm_quests:{guild_id}:{gm_id}', 'quests')
+                            )
                     except Exception as e:
                         logger.warning(f'[Migration] Quest {quest_id}: cache invalidation failed: {e}')
                     logger.info(f'[Migration] Quest {quest_id}: no messageId, status set to draft')
@@ -170,6 +178,12 @@ class ReQuest(commands.Bot):
                     continue
 
                 channel_id_str = channel_query.get(ConfigFields.QUEST_CHANNEL)
+                if not channel_id_str:
+                    logger.info(
+                        f'[Migration] Quest {quest_id}: quest channel config is empty for guild {guild_id}, '
+                        f'skipping (will retry next startup)'
+                    )
+                    continue
                 logger.info(f'[Migration] Quest {quest_id}: quest channel config = {channel_id_str}')
                 channel = self.get_channel(strip_id(channel_id_str))
                 if not channel:
@@ -200,12 +214,16 @@ class ReQuest(commands.Bot):
                 )
                 quest[QuestFields.STATUS] = QuestStatus.PUBLISHED
                 quest[QuestFields.MESSAGE_ID] = new_msg.id
+                gm_id = quest.get(QuestFields.GM)
                 try:
                     await self.rdb.delete(cache_key)
-                    admin_key = build_cache_key(
-                        self.gdb.name, f'guild_quests:{guild_id}', 'quests'
+                    await self.rdb.delete(
+                        build_cache_key(self.gdb.name, f'guild_quests:{guild_id}', 'quests')
                     )
-                    await self.rdb.delete(admin_key)
+                    if gm_id:
+                        await self.rdb.delete(
+                            build_cache_key(self.gdb.name, f'gm_quests:{guild_id}:{gm_id}', 'quests')
+                        )
                 except Exception as e:
                     logger.warning(f'[Migration] Quest {quest_id}: cache invalidation failed: {e}')
                 await attempt_delete(old_msg)
@@ -236,9 +254,10 @@ class ReQuest(commands.Bot):
 
         async for quest in quest_collection.find():
             try:
-                status = quest.get(QuestFields.STATUS, QuestStatus.PUBLISHED)
+                status = quest.get(QuestFields.STATUS)
                 message_id = quest.get(QuestFields.MESSAGE_ID)
-                if status == QuestStatus.DRAFT or not message_id:
+                # Skip drafts, quests without a message, and unmigrated quests (no status field)
+                if not status or status == QuestStatus.DRAFT or not message_id:
                     continue
 
                 guild_id = quest.get(QuestFields.GUILD_ID)
