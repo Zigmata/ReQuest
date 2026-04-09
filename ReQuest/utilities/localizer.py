@@ -168,11 +168,8 @@ class FluentTranslator(app_commands.Translator):
         return result
 
 
-async def resolve_user_locale(bot, user_id, guild_id=None):
-    """
-    Resolve a user's preferred locale for DMs and other non-interaction contexts.
-    Fallback chain: user DB preference > guild locale > DEFAULT_LOCALE.
-    """
+async def _lookup_user_locale(bot, user_id):
+    """Return the user's DB locale preference, or None."""
     try:
         from ReQuest.utilities.db_cache import get_cached_data
         locale_data = await get_cached_data(
@@ -187,23 +184,13 @@ async def resolve_user_locale(bot, user_id, guild_id=None):
                 return user_locale
     except Exception as e:
         logger.debug(f'Could not resolve user locale preference: {e}')
-
-    if guild_id:
-        guild_locale = await resolve_guild_locale(bot, guild_id)
-        if guild_locale != DEFAULT_LOCALE:
-            return guild_locale
-
-    return DEFAULT_LOCALE
+    return None
 
 
-async def resolve_guild_locale(bot, guild_id):
-    """
-    Resolve the guild's configured locale.
-    Returns the guild locale if set and supported, otherwise DEFAULT_LOCALE.
-    """
+async def _lookup_guild_locale(bot, guild_id):
+    """Return the guild's DB locale preference, or None."""
     if not guild_id:
-        return DEFAULT_LOCALE
-
+        return None
     try:
         from ReQuest.utilities.db_cache import get_cached_data
         guild_locale_data = await get_cached_data(
@@ -218,34 +205,63 @@ async def resolve_guild_locale(bot, guild_id):
                 return guild_locale
     except Exception as e:
         logger.debug(f'Could not resolve guild locale preference: {e}')
+    return None
 
-    return DEFAULT_LOCALE
 
+async def resolve_locale(interaction=None, *, bot=None, guild_id=None, user_id=None):
+    """Resolve a locale using one of three fallback chains.
 
-async def resolve_locale(interaction):
+    Mode is inferred from the arguments provided:
+
+    CALLER mode — resolve_locale(interaction):
+        user DB pref > interaction.locale > DEFAULT_LOCALE
+        Used for ephemeral responses to the interaction caller.
+
+    GUILD mode — resolve_locale(bot=bot, guild_id=gid):
+        guild DB pref > DEFAULT_LOCALE
+        Used for public embeds and posts.
+
+    TARGET_USER mode — resolve_locale(bot=bot, user_id=uid, guild_id=gid):
+        user DB pref > guild DB pref > DEFAULT_LOCALE
+        Used for DMs to a specific (non-interacting) user.
     """
-    Resolve the user's preferred locale via the fallback chain:
-    user DB preference > guild DB preference > interaction.locale > DEFAULT_LOCALE.
-    """
-    bot = interaction.client
+    # ── CALLER mode ──
+    if interaction is not None:
+        _bot = bot or interaction.client
+        result = await _lookup_user_locale(_bot, interaction.user.id)
+        if result:
+            return result
 
-    try:
-        from ReQuest.utilities.db_cache import get_cached_data
-        locale_data = await get_cached_data(
-            bot=bot,
-            mongo_database=bot.mdb,
-            collection_name=DatabaseCollections.USER_LOCALE,
-            query={CommonFields.ID: interaction.user.id}
-        )
-        if locale_data and 'locale' in locale_data:
-            user_locale = locale_data['locale']
-            if user_locale in SUPPORTED_LOCALES:
-                return user_locale
-    except Exception as e:
-        logger.debug(f'Could not resolve user locale preference: {e}')
+        discord_locale = str(interaction.locale) if interaction.locale else None
+        if discord_locale and discord_locale in SUPPORTED_LOCALES:
+            return discord_locale
 
-    discord_locale = str(interaction.locale) if interaction.locale else None
-    if discord_locale and discord_locale in SUPPORTED_LOCALES:
-        return discord_locale
+        return DEFAULT_LOCALE
 
-    return DEFAULT_LOCALE
+    # ── keyword-only modes require bot ──
+    if bot is None:
+        raise TypeError('resolve_locale() requires either interaction or bot=')
+
+    # ── TARGET_USER mode ──
+    if user_id is not None:
+        result = await _lookup_user_locale(bot, user_id)
+        if result:
+            return result
+
+        if guild_id:
+            guild_result = await _lookup_guild_locale(bot, guild_id)
+            if guild_result:
+                return guild_result
+
+        return DEFAULT_LOCALE
+
+    # ── GUILD mode ──
+    if guild_id is not None:
+        result = await _lookup_guild_locale(bot, guild_id)
+        if result:
+            return result
+        return DEFAULT_LOCALE
+
+    raise TypeError(
+        'resolve_locale() requires interaction, or bot= with guild_id= and/or user_id='
+    )

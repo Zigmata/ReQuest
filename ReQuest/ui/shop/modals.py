@@ -46,7 +46,8 @@ class EditCartItemModal(LocaleModal):
 
             # Use database-backed cart update with stock handling
             success, message = await update_cart_item_quantity(
-                bot, guild_id, user_id, channel_id, self.item_key, new_quantity
+                bot, guild_id, user_id, channel_id, self.item_key, new_quantity,
+                locale=self._locale
             )
 
             if not success:

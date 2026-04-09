@@ -32,7 +32,7 @@ MAX_CONTAINERS_PER_PLAYER = 50
 MAX_CONTAINER_NAME_LENGTH = 50
 
 
-def get_containers_sorted(character_data: dict) -> list[dict]:
+def get_containers_sorted(character_data: dict, locale: str | None = None) -> list[dict]:
     """
     Returns list of container dicts sorted by order.
     First entry is always Loose Items.
@@ -41,13 +41,16 @@ def get_containers_sorted(character_data: dict) -> list[dict]:
     """
     from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 
+    if locale is None:
+        locale = DEFAULT_LOCALE
+
     result = []
 
     # Loose items (root inventory) is always first
     loose_items = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
     result.append({
         'id': None,
-        'name': t(DEFAULT_LOCALE, 'common-label-loose-items'),
+        'name': t(locale, 'common-label-loose-items'),
         'items': loose_items,
         'count': len(loose_items)
     })
@@ -63,7 +66,7 @@ def get_containers_sorted(character_data: dict) -> list[dict]:
         items = container_data.get(ContainerFields.ITEMS, {})
         result.append({
             'id': container_id,
-            'name': container_data.get(ContainerFields.NAME, t(DEFAULT_LOCALE, 'common-label-unknown')),
+            'name': container_data.get(ContainerFields.NAME, t(locale, 'common-label-unknown')),
             'items': items,
             'count': len(items)
         })
@@ -84,16 +87,19 @@ def get_container_items(character_data: dict, container_id: str | None) -> dict:
     return container.get(ContainerFields.ITEMS, {})
 
 
-def get_container_name(character_data: dict, container_id: str | None) -> str:
+def get_container_name(character_data: dict, container_id: str | None, locale: str | None = None) -> str:
     """Returns the name of a container. None returns 'Loose Items'."""
     from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 
+    if locale is None:
+        locale = DEFAULT_LOCALE
+
     if container_id is None:
-        return t(DEFAULT_LOCALE, 'common-label-loose-items')
+        return t(locale, 'common-label-loose-items')
 
     containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
     container = containers.get(container_id, {})
-    return container.get(ContainerFields.NAME, t(DEFAULT_LOCALE, 'common-label-unknown'))
+    return container.get(ContainerFields.NAME, t(locale, 'common-label-unknown'))
 
 
 def get_total_item_quantity(character_data: dict, item_name: str) -> int:
@@ -121,12 +127,15 @@ def get_total_item_quantity(character_data: dict, item_name: str) -> int:
     return total
 
 
-def get_item_locations(character_data: dict, item_name: str) -> list[dict]:
+def get_item_locations(character_data: dict, item_name: str, locale: str | None = None) -> list[dict]:
     """
     Returns list of dicts for everywhere this item exists.
     Each dict: {'id': str|None, 'name': str, 'quantity': int}
     """
     from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
+
+    if locale is None:
+        locale = DEFAULT_LOCALE
 
     item_name_lower = item_name.lower()
     locations = []
@@ -135,7 +144,7 @@ def get_item_locations(character_data: dict, item_name: str) -> list[dict]:
     inventory = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
     for name, qty in inventory.items():
         if name.lower() == item_name_lower and qty > 0:
-            locations.append({'id': None, 'name': t(DEFAULT_LOCALE, 'common-label-loose-items'), 'quantity': qty})
+            locations.append({'id': None, 'name': t(locale, 'common-label-loose-items'), 'quantity': qty})
 
     # Check all containers
     containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
@@ -145,7 +154,7 @@ def get_item_locations(character_data: dict, item_name: str) -> list[dict]:
             if name.lower() == item_name_lower and qty > 0:
                 locations.append({
                     'id': container_id,
-                    'name': container_data.get(ContainerFields.NAME, t(DEFAULT_LOCALE, 'common-label-unknown')),
+                    'name': container_data.get(ContainerFields.NAME, t(locale, 'common-label-unknown')),
                     'quantity': qty
                 })
 
@@ -166,14 +175,18 @@ def get_next_container_order(character_data: dict) -> int:
     return max_order + 1
 
 
-def container_name_exists(character_data: dict, name: str, exclude_id: str | None = None) -> bool:
+def container_name_exists(character_data: dict, name: str, exclude_id: str | None = None,
+                          locale: str | None = None) -> bool:
     """Check if a container name already exists (case-insensitive)."""
     from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
+
+    if locale is None:
+        locale = DEFAULT_LOCALE
 
     name_lower = name.lower()
 
     # Check against "Loose Items"
-    if name_lower == t(DEFAULT_LOCALE, 'common-label-loose-items').lower():
+    if name_lower == t(locale, 'common-label-loose-items').lower():
         return True
 
     containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
@@ -661,15 +674,19 @@ async def consume_item_from_container(
     )
 
 
-def format_inventory_by_container(character_data: dict, currency_config: dict | None = None) -> str:
+def format_inventory_by_container(character_data: dict, currency_config: dict | None = None,
+                                  locale: str | None = None) -> str:
     """
     Formats the full inventory grouped by container for display/printing.
     Returns a formatted string.
     """
     from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 
+    if locale is None:
+        locale = DEFAULT_LOCALE
+
     lines = []
-    containers = get_containers_sorted(character_data)
+    containers = get_containers_sorted(character_data, locale=locale)
 
     for container in containers:
         items = container['items']
@@ -686,8 +703,8 @@ def format_inventory_by_container(character_data: dict, currency_config: dict | 
     if player_currency and currency_config:
         currency_lines = format_currency_display(player_currency, currency_config)
         if currency_lines:
-            lines.append(f'**{t(DEFAULT_LOCALE, "common-label-currency")}**')
+            lines.append(f'**{t(locale, "common-label-currency")}**')
             for currency_line in currency_lines:
                 lines.append(currency_line)
 
-    return '\n'.join(lines) if lines else t(DEFAULT_LOCALE, 'common-label-inventory-empty')
+    return '\n'.join(lines) if lines else t(locale, 'common-label-inventory-empty')

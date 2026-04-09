@@ -8,7 +8,7 @@ from ReQuest.ui.common.modals import LocaleModal
 
 from ReQuest.ui.common.enums import RewardType
 from ReQuest.utilities.constants import QuestFields, QuestStatus, ConfigFields, CommonFields, DatabaseCollections
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_locale, resolve_user_locale, resolve_guild_locale
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_locale
 from ReQuest.utilities.character import update_character_inventory, update_character_experience
 from ReQuest.utilities.currency import find_currency_or_denomination, get_denomination_map
 from ReQuest.utilities.db_cache import update_cached_data, get_cached_data, build_cache_key
@@ -297,10 +297,12 @@ class EditQuestImagesComboModal(LocaleModal):
 
 class RewardsModal(LocaleModal):
     def __init__(self, caller, calling_view, reward_type: RewardType):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'gm-modal-title-add-reward'),
+            title=t(locale, 'gm-modal-title-add-reward'),
             timeout=600
         )
+        self._locale = locale
         self.caller = caller
         self.calling_view = calling_view
         self.reward_type = reward_type
@@ -315,10 +317,10 @@ class RewardsModal(LocaleModal):
             xp_value = rewards.get(QuestFields.XP)
             xp_default = str(xp_value) if xp_value is not None else '0'
             self.xp_input = discord.ui.TextInput(
-                label=t(DEFAULT_LOCALE, 'gm-modal-label-experience'),
+                label=t(locale, 'gm-modal-label-experience'),
                 style=discord.TextStyle.short,
                 custom_id='experience_text_input',
-                placeholder=t(DEFAULT_LOCALE, 'gm-modal-placeholder-experience'),
+                placeholder=t(locale, 'gm-modal-placeholder-experience'),
                 default=xp_default,
                 required=False
             )
@@ -330,10 +332,10 @@ class RewardsModal(LocaleModal):
             items_default = '\n'.join(lines)
 
         self.item_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'gm-modal-label-items'),
+            label=t(locale, 'gm-modal-label-items'),
             style=discord.TextStyle.paragraph,
             custom_id='items_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'gm-modal-placeholder-items'),
+            placeholder=t(locale, 'gm-modal-placeholder-items'),
             default=items_default,
             required=False
         )
@@ -341,6 +343,7 @@ class RewardsModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = self._locale
             xp = 0
             items = None
             if self.xp_enabled and hasattr(self, 'xp_input') and self.xp_input.value:
@@ -348,7 +351,7 @@ class RewardsModal(LocaleModal):
                     xp = int(self.xp_input.value)
                 except ValueError:
                     raise UserFeedbackError(
-                        t(DEFAULT_LOCALE, 'gm-error-invalid-xp-value'),
+                        t(locale, 'gm-error-invalid-xp-value'),
                         message_id='gm-error-invalid-xp-value'
                     )
             if self.item_input.value:
@@ -362,7 +365,7 @@ class RewardsModal(LocaleModal):
                             items[titlecase(item_name.strip())] = int(quantity.strip())
                         except ValueError:
                             raise UserFeedbackError(
-                                t(DEFAULT_LOCALE, 'gm-error-invalid-item-format', item=item),
+                                t(locale, 'gm-error-invalid-item-format', item=item),
                                 message_id='gm-error-invalid-item-format'
                             )
 
@@ -373,16 +376,18 @@ class RewardsModal(LocaleModal):
 
 class QuestSummaryModal(LocaleModal):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'gm-modal-title-add-summary'),
+            title=t(locale, 'gm-modal-title-add-summary'),
             timeout=None
         )
+        self._locale = locale
         self.calling_view = calling_view
         self.summary_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'gm-modal-label-summary'),
+            label=t(locale, 'gm-modal-label-summary'),
             style=discord.TextStyle.paragraph,
             custom_id='summary_input',
-            placeholder=t(DEFAULT_LOCALE, 'gm-modal-placeholder-summary')
+            placeholder=t(locale, 'gm-modal-placeholder-summary')
         )
         self.add_item(self.summary_input)
 
@@ -394,11 +399,13 @@ class QuestSummaryModal(LocaleModal):
 
 
 class ModPlayerModal(LocaleModal):
-    def __init__(self, member: discord.Member, character_id, character_data, xp_enabled=True):
+    def __init__(self, member: discord.Member, character_id, character_data, xp_enabled=True,
+                 locale=DEFAULT_LOCALE):
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'gm-modal-title-modifying-player', playerName=member.name),
+            title=t(locale, 'gm-modal-title-modifying-player', playerName=member.name),
             timeout=600
         )
+        self._locale = locale
         self.member = member
         self.character_id = character_id
         self.character_data = character_data
@@ -406,17 +413,17 @@ class ModPlayerModal(LocaleModal):
 
         if self.xp_enabled:
             self.experience_text_input = discord.ui.TextInput(
-                label=t(DEFAULT_LOCALE, 'gm-modal-label-experience'),
-                placeholder=t(DEFAULT_LOCALE, 'gm-modal-placeholder-xp-add-remove'),
+                label=t(locale, 'gm-modal-label-experience'),
+                placeholder=t(locale, 'gm-modal-placeholder-xp-add-remove'),
                 custom_id='experience_text_input',
                 required=False
             )
             self.add_item(self.experience_text_input)
 
         self.inventory_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'gm-modal-label-inventory'),
+            label=t(locale, 'gm-modal-label-inventory'),
             style=discord.TextStyle.paragraph,
-            placeholder=t(DEFAULT_LOCALE, 'gm-modal-placeholder-inventory-modify'),
+            placeholder=t(locale, 'gm-modal-placeholder-inventory-modify'),
             custom_id='inventory_text_input',
             required=False
         )
@@ -523,7 +530,7 @@ class ModPlayerModal(LocaleModal):
 
             # Ephemeral response to GM in their locale
             caller_locale = await resolve_locale(interaction)
-            guild_locale = await resolve_guild_locale(bot, guild_id)
+            guild_locale = await resolve_locale(bot=bot, guild_id=guild_id)
 
             caller_embed = build_mod_embed(caller_locale)
             await interaction.response.send_message(embed=caller_embed, ephemeral=True)
@@ -537,7 +544,7 @@ class ModPlayerModal(LocaleModal):
 
             # DM to target member in their locale
             try:
-                member_locale = await resolve_user_locale(bot, self.member.id, guild_id)
+                member_locale = await resolve_locale(bot=bot, user_id=self.member.id, guild_id=guild_id)
                 if member_locale != caller_locale:
                     await self.member.send(embed=build_mod_embed(member_locale))
                 else:
@@ -546,5 +553,3 @@ class ModPlayerModal(LocaleModal):
                 logger.warning(f'Could not send DM to {self.member} regarding GM modification: {e}')
         except Exception as e:
             await log_exception(e, interaction)
-
-

@@ -15,8 +15,9 @@ logger = logging.getLogger(__name__)
 
 class ActiveCharacterSelect(Select):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            placeholder=t(DEFAULT_LOCALE, 'player-select-placeholder-no-characters'),
+            placeholder=t(locale, 'player-select-placeholder-no-characters'),
             options=[],
             custom_id='active_character_select',
             disabled=True
@@ -48,8 +49,9 @@ class ActiveCharacterSelect(Select):
 
 class RemoveCharacterSelect(Select):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            placeholder=t(DEFAULT_LOCALE, 'player-select-placeholder-remove-character'),
+            placeholder=t(locale, 'player-select-placeholder-remove-character'),
             options=[],
             custom_id='remove_character_select'
         )
@@ -73,8 +75,9 @@ class RemoveCharacterSelect(Select):
 
 class ManageablePostSelect(Select):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            placeholder=t(DEFAULT_LOCALE, 'player-select-placeholder-post'),
+            placeholder=t(locale, 'player-select-placeholder-post'),
             options=[],
             custom_id='manageable_post_select'
         )
@@ -89,6 +92,7 @@ class ManageablePostSelect(Select):
 
 class ContainerOverviewSelect(Select):
     def __init__(self, calling_view, containers: list[dict], current_page: int = 0):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         options = []
         for container in containers:
             value = container['id'] if container['id'] else 'loose'
@@ -98,9 +102,9 @@ class ContainerOverviewSelect(Select):
             options.append(discord.SelectOption(label=label, value=value))
 
         super().__init__(
-            placeholder=t(DEFAULT_LOCALE, 'player-select-placeholder-container-view'),
+            placeholder=t(locale, 'player-select-placeholder-container-view'),
             options=options if options else [discord.SelectOption(
-                label=t(DEFAULT_LOCALE, 'player-select-option-no-containers'), value='none'
+                label=t(locale, 'player-select-option-no-containers'), value='none'
             )],
             custom_id=f'container_overview_select_{current_page}',
             disabled=not options
@@ -129,6 +133,7 @@ class ContainerOverviewSelect(Select):
 
 class ContainerItemSelect(Select):
     def __init__(self, calling_view, items: list[tuple[str, int]], current_page: int = 0):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         options = []
         for item_name, quantity in items:
             label = f'{item_name}: {quantity}'
@@ -137,9 +142,9 @@ class ContainerItemSelect(Select):
             options.append(discord.SelectOption(label=label, value=item_name))
 
         super().__init__(
-            placeholder=t(DEFAULT_LOCALE, 'player-select-placeholder-item'),
+            placeholder=t(locale, 'player-select-placeholder-item'),
             options=options if options else [discord.SelectOption(
-                label=t(DEFAULT_LOCALE, 'player-select-option-no-items'), value='none'
+                label=t(locale, 'player-select-option-no-items'), value='none'
             )],
             custom_id=f'container_item_select_{current_page}',
             disabled=not options
@@ -161,6 +166,7 @@ class ContainerItemSelect(Select):
 
 class DestinationContainerSelect(Select):
     def __init__(self, calling_view, containers: list[dict], current_page: int = 0):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         options = []
         for container in containers:
             value = container['id'] if container['id'] else 'loose'
@@ -170,9 +176,9 @@ class DestinationContainerSelect(Select):
             options.append(discord.SelectOption(label=label, value=value))
 
         super().__init__(
-            placeholder=t(DEFAULT_LOCALE, 'player-select-placeholder-destination'),
+            placeholder=t(locale, 'player-select-placeholder-destination'),
             options=options if options else [discord.SelectOption(
-                label=t(DEFAULT_LOCALE, 'player-select-option-no-destinations'), value='none'
+                label=t(locale, 'player-select-option-no-destinations'), value='none'
             )],
             custom_id=f'dest_container_select_{current_page}',
             disabled=not options
@@ -187,10 +193,10 @@ class DestinationContainerSelect(Select):
 
             if selected == 'loose':
                 self.calling_view.selected_destination = None
-                self.calling_view._loose_items_selected = True
+                self.calling_view.loose_items_selected = True
             else:
                 self.calling_view.selected_destination = selected
-                self.calling_view._loose_items_selected = False
+                self.calling_view.loose_items_selected = False
 
             self.calling_view.build_view()
             await interaction.response.edit_message(view=self.calling_view)
@@ -200,19 +206,20 @@ class DestinationContainerSelect(Select):
 
 class ManageContainerSelect(Select):
     def __init__(self, calling_view, containers: list[dict], current_page: int = 0):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         options = []
         for container in containers:
-            if container['name'].lower() != 'loose items':
-                value = container['id'] if container['id'] else 'loose'
+            if container['id'] is not None:
+                value = container['id']
                 label = f"{container['name']} ({container['count']} items)"
                 if len(label) > 100:
                     label = label[:97] + '...'
                 options.append(discord.SelectOption(label=label, value=value))
 
         super().__init__(
-            placeholder=t(DEFAULT_LOCALE, 'player-select-placeholder-container'),
+            placeholder=t(locale, 'player-select-placeholder-container'),
             options=options if options else [discord.SelectOption(
-                label=t(DEFAULT_LOCALE, 'player-select-option-no-containers'), value='none'
+                label=t(locale, 'player-select-option-no-containers'), value='none'
             )],
             custom_id=f'manage_container_select_{current_page}',
             disabled=not options

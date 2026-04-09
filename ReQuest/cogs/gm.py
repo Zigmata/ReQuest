@@ -75,7 +75,7 @@ class GameMaster(Cog):
             active_character_id = player_query[CharacterFields.ACTIVE_CHARACTERS][guild_id]
             character_data = player_query[CharacterFields.CHARACTERS][active_character_id]
             xp_enabled = await get_xp_config(interaction.client, interaction.guild_id)
-            modal = modals.ModPlayerModal(member, active_character_id, character_data, xp_enabled)
+            modal = modals.ModPlayerModal(member, active_character_id, character_data, xp_enabled, locale=locale)
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)

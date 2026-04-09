@@ -23,7 +23,7 @@ from ReQuest.utilities.constants import (
     ApprovalFields, CharacterFields, ConfigFields, CommonFields, ShopFields, DatabaseCollections, DisplayLimits
 )
 from ReQuest.utilities.checks import is_gm_or_mod
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_guild_locale, resolve_locale, resolve_user_locale
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_locale
 from ReQuest.utilities.character import update_character_inventory
 from ReQuest.utilities.containers import get_containers_sorted, get_container_name, get_container_items
 from ReQuest.utilities.currency import (
@@ -386,7 +386,9 @@ class InventoryOverviewView(LocaleLayoutView):
                     self.active_character = query[CharacterFields.CHARACTERS][self.active_character_id]
 
             # Get containers
-            self.containers = get_containers_sorted(self.active_character)
+            self.containers = get_containers_sorted(
+                self.active_character, locale=getattr(self, 'locale', DEFAULT_LOCALE)
+            )
 
             # Calculate pagination
             self.total_pages = math.ceil(len(self.containers) / self.items_per_page)
@@ -552,7 +554,9 @@ class ContainerItemsView(LocaleLayoutView):
 
         self.character_data = player_data[CharacterFields.CHARACTERS][self.character_id]
 
-        self.container_name = get_container_name(self.character_data, self.container_id)
+        self.container_name = get_container_name(
+            self.character_data, self.container_id, locale=getattr(self, 'locale', DEFAULT_LOCALE)
+        )
         items_dict = get_container_items(self.character_data, self.container_id)
 
         # Convert to sorted list of tuples
@@ -592,7 +596,8 @@ class ContainerItemsView(LocaleLayoutView):
 
             items_display = []
             for item_name, quantity in page_items:
-                items_display.append(f'• {escape_markdown(truncate_text(item_name, DisplayLimits.ITEM_NAME))}: **{quantity}**')
+                item_text = escape_markdown(truncate_text(item_name, DisplayLimits.ITEM_NAME))
+                items_display.append(f'• {item_text}: **{quantity}**')
 
             container.add_item(TextDisplay('\n'.join(items_display)))
             container.add_item(Separator())
@@ -685,7 +690,7 @@ class MoveDestinationView(LocaleLayoutView):
         self.available_quantity = available_quantity
 
         self.selected_destination = None
-        self._loose_items_selected = False
+        self.loose_items_selected = False
         self.containers = []
 
         self.items_per_page = 25
@@ -704,7 +709,9 @@ class MoveDestinationView(LocaleLayoutView):
 
         self.source_view.character_data = player_data[CharacterFields.CHARACTERS][self.source_view.character_id]
 
-        all_containers = get_containers_sorted(self.source_view.character_data)
+        all_containers = get_containers_sorted(
+            self.source_view.character_data, locale=getattr(self, 'locale', DEFAULT_LOCALE)
+        )
 
         # Exclude source container
         self.containers = [c for c in all_containers if c['id'] != self.source_container_id]
@@ -745,7 +752,7 @@ class MoveDestinationView(LocaleLayoutView):
             destination_select_row.add_item(destination_select)
             container.add_item(destination_select_row)
 
-            if self.selected_destination is not None or self._loose_selected():
+            if self.selected_destination is not None or self.loose_items_selected:
                 destination_name = None
                 # Find destination name
                 if self.selected_destination is None:
@@ -767,8 +774,7 @@ class MoveDestinationView(LocaleLayoutView):
         action_row = ActionRow()
 
         # Check if we have a valid destination
-        loose_selected = self._loose_selected()
-        has_destination = loose_selected or self.selected_destination is not None
+        has_destination = self.loose_items_selected or self.selected_destination is not None
 
         move_all_button = buttons.MoveAllButton(self)
         move_all_button.disabled = not has_destination
@@ -811,9 +817,6 @@ class MoveDestinationView(LocaleLayoutView):
             nav_row.add_item(next_button)
 
             self.add_item(nav_row)
-
-    def _loose_selected(self) -> bool:
-        return self._loose_items_selected
 
     async def prev_page(self, interaction):
         if self.current_page > 0:
@@ -859,7 +862,9 @@ class ContainerManagementView(LocaleLayoutView):
         )
         self.character_data = player_data[CharacterFields.CHARACTERS][self.character_id]
 
-        self.containers = get_containers_sorted(self.character_data)
+        self.containers = get_containers_sorted(
+            self.character_data, locale=getattr(self, 'locale', DEFAULT_LOCALE)
+        )
 
         self.total_pages = math.ceil(len(self.containers) / self.items_per_page)
         if self.total_pages == 0:
@@ -1147,7 +1152,7 @@ class PlayerBoardView(LocaleLayoutView):
     async def create_post(self, title, content, interaction):
         try:
             bot = interaction.client
-            guild_locale = await resolve_guild_locale(bot, interaction.guild_id)
+            guild_locale = await resolve_locale(bot=bot, guild_id=interaction.guild_id)
             user_locale = await resolve_locale(interaction)
             post_collection = bot.gdb[DatabaseCollections.PLAYER_BOARD]
             post_id = str(shortuuid.uuid()[:8])
@@ -1197,7 +1202,7 @@ class PlayerBoardView(LocaleLayoutView):
     async def edit_post(self, post, new_title, new_content, interaction):
         try:
             bot = interaction.client
-            guild_locale = await resolve_guild_locale(bot, interaction.guild_id)
+            guild_locale = await resolve_locale(bot=bot, guild_id=interaction.guild_id)
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -1670,7 +1675,7 @@ class NewCharacterComplexItemPurchaseView(LocaleLayoutView):
             container.add_item(TextDisplay(t(locale, 'player-msg-no-cost-options')))
         else:
             for index, cost_option in enumerate(costs):
-                cost_str = format_complex_cost([cost_option], currency_config)
+                cost_str = format_complex_cost([cost_option], currency_config, locale=locale)
 
                 select_button = buttons.WizardSelectCostOptionButton(self.parent_view, self.item, index)
                 section = Section(accessory=select_button)
@@ -1756,7 +1761,7 @@ class NewCharacterShopView(LocaleLayoutView):
             cost_string = t(locale, 'common-label-free')
             if self.inventory_type == InventoryType.PURCHASE.value:
                 costs = item.get(ShopFields.COSTS, [])
-                cost_string = format_complex_cost(costs, self.currency_config)
+                cost_string = format_complex_cost(costs, self.currency_config, locale=locale)
 
             section = Section(accessory=buttons.WizardItemButton(
                 item, self.inventory_type, cost_string, locale=locale
@@ -1894,7 +1899,9 @@ class NewCharacterCartView(LocaleLayoutView):
                 wallet[starting_wealth.get(CharacterFields.CURRENCY)] = starting_wealth.get(CommonFields.AMOUNT, 0)
 
             for base_currency, amount in consolidated_costs.items():
-                is_ok, _ = check_sufficient_funds(wallet, self.shop_view.currency_config, base_currency, amount)
+                is_ok, _ = check_sufficient_funds(
+                    wallet, self.shop_view.currency_config, base_currency, amount, locale=locale
+                )
                 if not is_ok:
                     self.can_afford = False
                     warnings.append(
@@ -1949,7 +1956,9 @@ class NewCharacterCartView(LocaleLayoutView):
                         selected_cost = costs[option_index]
                         if selected_cost:
                             total_line_cost = {k: v * quantity for k, v in selected_cost.items()}
-                            price_label = format_complex_cost([total_line_cost], self.shop_view.currency_config)
+                            price_label = format_complex_cost(
+                                [total_line_cost], self.shop_view.currency_config, locale=locale
+                            )
                             display += f' - {price_label}'
 
                 edit_button = buttons.WizardEditCartItemButton(key, quantity, locale=locale)
@@ -2064,7 +2073,7 @@ class ApprovalPostView(LocaleLayoutView):
         else:
             guild_id = self.submission_data.get(ApprovalFields.GUILD_ID)
             if not self.locale or self.locale == DEFAULT_LOCALE:
-                self.locale = await resolve_guild_locale(bot, guild_id)
+                self.locale = await resolve_locale(bot=bot, guild_id=guild_id)
             self.currency_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -2327,7 +2336,7 @@ class ApprovalPostView(LocaleLayoutView):
             # DM the player
             try:
                 user = await bot.fetch_user(user_id)
-                user_locale = await resolve_user_locale(bot, user_id, guild_id)
+                user_locale = await resolve_locale(bot=bot, user_id=user_id, guild_id=guild_id)
                 guild = bot.get_guild(guild_id)
                 guild_name = guild.name if guild else 'Unknown'
                 dm_embed = discord.Embed(
@@ -2364,7 +2373,7 @@ class ApprovalPostView(LocaleLayoutView):
         except Exception as e:
             await log_exception(e, interaction)
 
-    async def _process_denial(self, interaction, reason=''):
+    async def process_denial(self, interaction, reason=''):
         claimed = False
         bot = interaction.client
         try:
@@ -2419,7 +2428,7 @@ class ApprovalPostView(LocaleLayoutView):
             # DM the player
             try:
                 user = await bot.fetch_user(user_id)
-                user_locale = await resolve_user_locale(bot, user_id, guild_id)
+                user_locale = await resolve_locale(bot=bot, user_id=user_id, guild_id=guild_id)
                 guild = bot.get_guild(guild_id)
                 guild_name = guild.name if guild else 'Unknown'
                 description = t(user_locale, 'player-dm-desc-denied',
@@ -2531,7 +2540,7 @@ async def _handle_submission(interaction, pending_character, items, currency):
         existing_submission_id = pending_character.get('submission_id')
 
         if forum_channel and isinstance(forum_channel, discord.ForumChannel):
-            guild_locale = await resolve_guild_locale(bot, guild_id)
+            guild_locale = await resolve_locale(bot=bot, guild_id=guild_id)
 
             if existing_submission_id:
                 # Edit re-submission: update the existing APPROVALS doc and refresh the forum post

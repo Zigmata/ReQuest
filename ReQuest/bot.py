@@ -248,7 +248,7 @@ class ReQuest(commands.Bot):
 
     async def _load_quest_views(self):
         """Reload persistent views for published/locked quests."""
-        from ReQuest.utilities.localizer import resolve_guild_locale
+        from ReQuest.utilities.localizer import resolve_locale
         quest_collection = self.gdb[DatabaseCollections.QUESTS]
         guild_config_cache = {}  # {guild_id: (locale, announce_role)}
 
@@ -264,7 +264,7 @@ class ReQuest(commands.Bot):
 
                 # Cache per-guild config to avoid repeated DB lookups
                 if guild_id not in guild_config_cache:
-                    locale = await resolve_guild_locale(self, guild_id)
+                    locale = await resolve_locale(bot=self, guild_id=guild_id)
                     announce_query = await get_cached_data(
                         bot=self,
                         mongo_database=self.gdb,
@@ -279,7 +279,7 @@ class ReQuest(commands.Bot):
                 view = QuestPostView(quest)
                 view.locale = locale
                 view.announce_role = announce_role
-                view._setup_done = True
+                view.setup_done = True
                 view.build_view()
                 self.add_view(view=view, message_id=message_id)
             except (KeyError, TypeError) as e:
@@ -292,7 +292,7 @@ class ReQuest(commands.Bot):
     async def _load_approval_views(self):
         """Reload persistent views for pending approval submissions."""
         from ReQuest.ui.player.views import ApprovalPostView
-        from ReQuest.utilities.localizer import resolve_guild_locale
+        from ReQuest.utilities.localizer import resolve_locale
         approval_collection = self.gdb[DatabaseCollections.APPROVALS]
 
         # Revert any submissions stuck in 'processing' from a prior interrupted shutdown
@@ -310,7 +310,7 @@ class ReQuest(commands.Bot):
                 submission_id = doc[ApprovalFields.SUBMISSION_ID]
                 message_id = doc[ApprovalFields.MESSAGE_ID]
                 view = ApprovalPostView(submission_id)
-                view.locale = await resolve_guild_locale(self, doc[ApprovalFields.GUILD_ID])
+                view.locale = await resolve_locale(bot=self, guild_id=doc[ApprovalFields.GUILD_ID])
                 await view.setup(self)
                 self.add_view(view=view, message_id=message_id)
             except (KeyError, TypeError) as e:

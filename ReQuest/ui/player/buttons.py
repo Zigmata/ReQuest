@@ -684,7 +684,8 @@ class PrintInventoryButton(Button):
             character_name = self.calling_view.active_character[CommonFields.NAME]
             formatted = format_inventory_by_container(
                 self.calling_view.active_character,
-                self.calling_view.currency_config
+                self.calling_view.currency_config,
+                locale=locale
             )
 
             inventory_embed = discord.Embed(

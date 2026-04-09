@@ -15,8 +15,9 @@ logger = logging.getLogger(__name__)
 
 class PartyMemberSelect(Select):
     def __init__(self, calling_view, disabled_components=None):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            placeholder=t(DEFAULT_LOCALE, 'gm-select-placeholder-party-member'),
+            placeholder=t(locale, 'gm-select-placeholder-party-member'),
             options=[],
             custom_id='party_member_select',
             disabled=True
@@ -47,8 +48,9 @@ class PartyMemberSelect(Select):
 
 class RemovePlayerSelect(Select):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            placeholder=t(DEFAULT_LOCALE, 'gm-select-placeholder-party-member'),
+            placeholder=t(locale, 'gm-select-placeholder-party-member'),
             options=[],
             custom_id='remove_player_select'
         )
@@ -72,5 +74,3 @@ class RemovePlayerSelect(Select):
             await interaction.response.send_modal(confirm_modal)
         except Exception as e:
             await log_exception(e, interaction)
-
-

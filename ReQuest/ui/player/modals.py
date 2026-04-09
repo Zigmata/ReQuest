@@ -10,7 +10,7 @@ from ReQuest.ui.common.modals import LocaleModal
 
 from ReQuest.ui.common.enums import InventoryType
 from ReQuest.utilities.constants import CharacterFields, ConfigFields, CommonFields, DatabaseCollections, DisplayLimits
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_user_locale, resolve_guild_locale
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_locale
 from ReQuest.utilities.character import trade_currency, trade_item, update_character_inventory
 from ReQuest.utilities.containers import (
     create_container, rename_container, get_container_name, consume_item_from_container,
@@ -163,7 +163,7 @@ class TradeModal(LocaleModal):
 
             await interaction.response.send_message(embed=trade_embed, ephemeral=True)
             try:
-                target_locale = await resolve_user_locale(bot, target_id, guild_id)
+                target_locale = await resolve_locale(bot=bot, user_id=target_id, guild_id=guild_id)
                 if target_locale != locale:
                     dm_embed = discord.Embed(
                         title=t(target_locale, 'player-embed-title-trade'),
@@ -228,7 +228,7 @@ class TradeModal(LocaleModal):
                     f'They might have DMs disabled. {e}'
                 )
             if log_channel:
-                guild_locale = await resolve_guild_locale(bot, guild_id)
+                guild_locale = await resolve_locale(bot=bot, guild_id=guild_id)
                 if guild_locale != locale:
                     log_embed = discord.Embed(
                         title=t(guild_locale, 'player-embed-title-trade'),
@@ -467,7 +467,7 @@ class DenyReasonModal(LocaleModal):
     async def on_submit(self, interaction: discord.Interaction):
         try:
             reason = self.reason_input.value.strip() if self.reason_input.value else ''
-            await self.approval_view._process_denial(interaction, reason)
+            await self.approval_view.process_denial(interaction, reason)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -556,7 +556,9 @@ class SpendCurrencyModal(LocaleModal):
                     message_id='player-error-no-currency-config'
                 )
 
-            can_afford, message = check_sufficient_funds(current_wallet, currency_config, currency_name, amount)
+            can_afford, message = check_sufficient_funds(
+                current_wallet, currency_config, currency_name, amount, locale=locale
+            )
             if not can_afford:
                 raise UserFeedbackError(message)
 
@@ -620,7 +622,7 @@ class SpendCurrencyModal(LocaleModal):
                 log_channel_id = strip_id(log_channel_query[ConfigFields.PLAYER_TRANSACTION_LOG_CHANNEL])
                 log_channel = interaction.guild.get_channel(log_channel_id)
                 if log_channel:
-                    guild_locale = await resolve_guild_locale(bot, guild_id)
+                    guild_locale = await resolve_locale(bot=bot, guild_id=guild_id)
                     if guild_locale != locale:
                         log_embed = discord.Embed(
                             title=t(guild_locale, 'player-embed-title-spend'),
@@ -903,7 +905,8 @@ class ConsumeFromContainerModal(LocaleModal):
 
             container_name = get_container_name(
                 self.calling_view.character_data,
-                self.calling_view.container_id
+                self.calling_view.container_id,
+                locale=locale
             )
 
             await consume_item_from_container(
@@ -961,7 +964,7 @@ class ConsumeFromContainerModal(LocaleModal):
                 log_channel_id = strip_id(log_channel_query[ConfigFields.PLAYER_TRANSACTION_LOG_CHANNEL])
                 log_channel = interaction.guild.get_channel(log_channel_id)
                 if log_channel:
-                    guild_locale = await resolve_guild_locale(bot, guild_id)
+                    guild_locale = await resolve_locale(bot=bot, guild_id=guild_id)
                     if guild_locale != locale:
                         log_embed = discord.Embed(
                             title=t(guild_locale, 'player-embed-title-consume'),
