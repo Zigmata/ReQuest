@@ -9,7 +9,7 @@ from ReQuest.ui.common.modals import ConfirmModal
 from ReQuest.ui.gm import modals
 from ReQuest.ui.common.enums import RewardType
 from ReQuest.utilities.constants import QuestFields, QuestStatus, ConfigFields, CommonFields, DatabaseCollections
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_user_locale
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_locale
 from ReQuest.utilities.db_cache import get_cached_data, update_cached_data, delete_cached_data, build_cache_key
 from ReQuest.utilities.discord_utils import setup_view, strip_id, attempt_delete, get_guild_member, check_role_hierarchy
 from ReQuest.utilities.exceptions import log_exception, UserFeedbackError
@@ -393,7 +393,7 @@ class CancelQuestButton(Button):
                         member = await get_guild_member(guild, int(member_id))
                         if member:
                             try:
-                                member_locale = await resolve_user_locale(bot, int(member_id), guild_id)
+                                member_locale = await resolve_locale(bot=bot, user_id=int(member_id), guild_id=guild_id)
                                 from ReQuest.ui.gm.views import _build_quest_dm_embed
                                 cancel_embed = _build_quest_dm_embed(
                                     member_locale, 'gm-dm-title-quest-cancelled', 'gm-dm-desc-quest-cancelled',
@@ -436,7 +436,7 @@ class CancelQuestButton(Button):
                                     )
                                     failed_members.append(member)
                             if failed_members:
-                                gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                                gm_locale = await resolve_locale(bot=bot, user_id=interaction.user.id, guild_id=guild_id)
                                 failed_list = ', '.join(m.mention for m in failed_members)
                                 await interaction.user.send(
                                     t(
@@ -455,7 +455,7 @@ class CancelQuestButton(Button):
                     logger.warning(f'Quest role {party_role_id} no longer exists in guild {guild_id}. '
                                    f'Skipping role cleanup for cancelled quest {quest[QuestFields.QUEST_ID]}.')
                     try:
-                        gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                        gm_locale = await resolve_locale(bot=bot, user_id=interaction.user.id, guild_id=guild_id)
                         await interaction.user.send(
                             t(gm_locale, 'gm-dm-role-not-found', roleId=str(party_role_id), questTitle=title)
                         )

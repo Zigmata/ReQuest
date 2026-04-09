@@ -34,7 +34,7 @@ from ReQuest.utilities.discord_utils import (
     setup_view, strip_id, attempt_delete, escape_markdown, get_guild_member, truncate_text, check_role_hierarchy
 )
 from ReQuest.utilities.exceptions import log_exception, UserFeedbackError
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_guild_locale, resolve_user_locale
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_locale
 
 logger = logging.getLogger(__name__)
 
@@ -357,7 +357,7 @@ class ManageQuestsView(LocaleLayoutView):
                         if member:
                             if role:
                                 tasks.append(member.add_roles(role))
-                            member_locale = await resolve_user_locale(bot, int(key), guild_id)
+                            member_locale = await resolve_locale(bot=bot, user_id=int(key), guild_id=guild_id)
                             embed = _build_quest_dm_embed(
                                 member_locale, 'gm-dm-title-quest-ready', 'gm-dm-desc-quest-ready',
                                 quest, guild_name, color=discord.Color.green(), questTitle=title
@@ -368,7 +368,7 @@ class ManageQuestsView(LocaleLayoutView):
                                 f'Could not find member {key} in guild '
                                 f'{guild_id} to notify about quest ready state.'
                             )
-                gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                gm_locale = await resolve_locale(bot=bot, user_id=interaction.user.id, guild_id=guild_id)
                 gm_embed = _build_quest_dm_embed(
                     gm_locale, 'gm-dm-title-roster-locked', 'gm-dm-desc-roster-locked',
                     quest, guild_name, color=discord.Color.green(), questTitle=title
@@ -400,7 +400,7 @@ class ManageQuestsView(LocaleLayoutView):
                 )
                 quest[QuestFields.LOCK_STATE] = False
 
-                gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                gm_locale = await resolve_locale(bot=bot, user_id=interaction.user.id, guild_id=guild_id)
                 gm_embed = _build_quest_dm_embed(
                     gm_locale, 'gm-dm-title-roster-unlocked', 'gm-dm-desc-roster-unlocked',
                     quest, guild.name, color=discord.Color.orange(), questTitle=title
@@ -517,7 +517,7 @@ class ManageQuestsView(LocaleLayoutView):
                     logger.warning(f'Quest role {party_role_id} no longer exists in guild {guild_id}. '
                                    f'Skipping role cleanup for completed quest {quest[QuestFields.QUEST_ID]}.')
                     try:
-                        gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                        gm_locale = await resolve_locale(bot=bot, user_id=interaction.user.id, guild_id=guild_id)
                         await interaction.user.send(
                             t(
                                 gm_locale, 'gm-dm-role-not-found',
@@ -579,7 +579,7 @@ class ManageQuestsView(LocaleLayoutView):
 
                     # Send reward summary to player
                     reward_strings = self.build_reward_summary(total_xp, combined_items, xp_enabled)
-                    member_locale = await resolve_user_locale(bot, int(player_id), guild_id)
+                    member_locale = await resolve_locale(bot=bot, user_id=int(player_id), guild_id=guild_id)
                     dm_embed = discord.Embed(
                         title=truncate_text(
                             t(member_locale, 'gm-embed-title-quest-complete', questTitle=title), 256
@@ -597,7 +597,7 @@ class ManageQuestsView(LocaleLayoutView):
                         logger.warning(f'Could not DM {member.id} about quest completion rewards: {e}')
 
             # Build an embed for feedback
-            guild_locale = await resolve_guild_locale(bot, guild_id)
+            guild_locale = await resolve_locale(bot=bot, guild_id=guild_id)
 
             quest_embed = discord.Embed(
                 title=truncate_text(
@@ -676,7 +676,7 @@ class ManageQuestsView(LocaleLayoutView):
 
             # Warn GM about any failed role removals
             if failed_members:
-                gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                gm_locale = await resolve_locale(bot=bot, user_id=interaction.user.id, guild_id=guild_id)
                 failed_list = ', '.join(f'{m.mention}' for m in failed_members)
                 await interaction.user.send(
                     t(gm_locale, 'gm-dm-role-removal-failed', roleName=role.name, members=failed_list)
@@ -692,7 +692,7 @@ class ManageQuestsView(LocaleLayoutView):
             if gm_rewards_query:
                 experience = gm_rewards_query.get(CharacterFields.EXPERIENCE)
                 items = gm_rewards_query.get(CommonFields.ITEMS)
-                gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                gm_locale = await resolve_locale(bot=bot, user_id=interaction.user.id, guild_id=guild_id)
 
                 character_query = await get_cached_data(
                     bot=bot,
@@ -1205,7 +1205,7 @@ class RemovePlayerView(LocaleLayoutView):
                     logger.warning(f'Quest role {party_role_id} no longer exists in guild {guild_id}. '
                                    f'Skipping role removal for member {removed_member_id}.')
                     try:
-                        gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                        gm_locale = await resolve_locale(bot=bot, user_id=interaction.user.id, guild_id=guild_id)
                         await interaction.user.send(
                             t(
                                 gm_locale, 'gm-dm-role-not-found',
@@ -1227,7 +1227,7 @@ class RemovePlayerView(LocaleLayoutView):
                 if removed_member_id in waiting_player:
                     wait_list.remove(waiting_player)
                     player_found = True
-                    removed_locale = await resolve_user_locale(bot, int(removed_member_id), guild_id)
+                    removed_locale = await resolve_locale(bot=bot, user_id=int(removed_member_id), guild_id=guild_id)
                     removal_embed = _build_quest_dm_embed(
                         removed_locale, 'gm-dm-title-player-removed', 'gm-dm-desc-player-removed-waitlist',
                         quest, guild_name, color=discord.Color.red(), questTitle=quest[QuestFields.TITLE]
@@ -1238,7 +1238,7 @@ class RemovePlayerView(LocaleLayoutView):
             if not player_found:
                 for player in party:
                     if removed_member_id in player:
-                        removed_locale = await resolve_user_locale(bot, int(removed_member_id), guild_id)
+                        removed_locale = await resolve_locale(bot=bot, user_id=int(removed_member_id), guild_id=guild_id)
                         removal_embed = _build_quest_dm_embed(
                             removed_locale, 'gm-dm-title-player-removed', 'gm-dm-desc-player-removed',
                             quest, guild_name, color=discord.Color.red(), questTitle=quest[QuestFields.TITLE]
@@ -1254,7 +1254,7 @@ class RemovePlayerView(LocaleLayoutView):
                                 new_member = await get_guild_member(guild, int(key))
                                 if new_member:
                                     try:
-                                        promoted_locale = await resolve_user_locale(bot, int(key), guild_id)
+                                        promoted_locale = await resolve_locale(bot=bot, user_id=int(key), guild_id=guild_id)
                                         promo_embed = _build_quest_dm_embed(
                                             promoted_locale, 'gm-dm-title-party-promotion',
                                             'gm-dm-desc-party-promotion', quest, guild_name,
@@ -1291,7 +1291,7 @@ class RemovePlayerView(LocaleLayoutView):
             # Give the GM some feedback that the changes applied
             gm_member = await get_guild_member(guild, interaction.user.id)
             if gm_member:
-                gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                gm_locale = await resolve_locale(bot=bot, user_id=interaction.user.id, guild_id=guild_id)
                 gm_embed = _build_quest_dm_embed(
                     gm_locale, 'gm-dm-title-player-removed-confirm', 'gm-dm-desc-player-removed-confirm',
                     quest, guild_name, color=discord.Color.orange(), questTitle=quest[QuestFields.TITLE]
@@ -1339,7 +1339,7 @@ class QuestPostView(LocaleLayoutView):
             if bot and not self._setup_done:
                 guild_id = self.quest.get(QuestFields.GUILD_ID)
                 if guild_id:
-                    self.locale = await resolve_guild_locale(bot, guild_id)
+                    self.locale = await resolve_locale(bot=bot, guild_id=guild_id)
                     announce_query = await get_cached_data(
                         bot=bot,
                         mongo_database=bot.gdb,
@@ -1628,7 +1628,7 @@ class QuestPostView(LocaleLayoutView):
                     # Notify the member they have been moved into the main party
                     if new_member:
                         try:
-                            promoted_locale = await resolve_user_locale(bot, int(key), guild_id)
+                            promoted_locale = await resolve_locale(bot=bot, user_id=int(key), guild_id=guild_id)
                             promo_embed = _build_quest_dm_embed(
                                 promoted_locale, 'gm-dm-title-party-promotion',
                                 'gm-dm-desc-party-promotion', quest, guild.name,

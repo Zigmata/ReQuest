@@ -8,7 +8,7 @@ from ReQuest.ui.common.modals import LocaleModal
 
 from ReQuest.ui.common.enums import RewardType
 from ReQuest.utilities.constants import QuestFields, QuestStatus, ConfigFields, CommonFields, DatabaseCollections
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_locale, resolve_user_locale, resolve_guild_locale
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_locale
 from ReQuest.utilities.character import update_character_inventory, update_character_experience
 from ReQuest.utilities.currency import find_currency_or_denomination, get_denomination_map
 from ReQuest.utilities.db_cache import update_cached_data, get_cached_data, build_cache_key
@@ -523,7 +523,7 @@ class ModPlayerModal(LocaleModal):
 
             # Ephemeral response to GM in their locale
             caller_locale = await resolve_locale(interaction)
-            guild_locale = await resolve_guild_locale(bot, guild_id)
+            guild_locale = await resolve_locale(bot=bot, guild_id=guild_id)
 
             caller_embed = build_mod_embed(caller_locale)
             await interaction.response.send_message(embed=caller_embed, ephemeral=True)
@@ -537,7 +537,7 @@ class ModPlayerModal(LocaleModal):
 
             # DM to target member in their locale
             try:
-                member_locale = await resolve_user_locale(bot, self.member.id, guild_id)
+                member_locale = await resolve_locale(bot=bot, user_id=self.member.id, guild_id=guild_id)
                 if member_locale != caller_locale:
                     await self.member.send(embed=build_mod_embed(member_locale))
                 else:

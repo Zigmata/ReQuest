@@ -10,7 +10,7 @@ from ReQuest.utilities.constants import (
     CommonFields, ShopFields, RestockFields, DatabaseCollections,
     FIRST_RESTOCK_GRACE_HOURLY, FIRST_RESTOCK_GRACE_DAILY, FIRST_RESTOCK_GRACE_WEEKLY
 )
-from ReQuest.utilities.localizer import t, resolve_guild_locale
+from ReQuest.utilities.localizer import t, resolve_locale
 from ReQuest.utilities.discord_utils import escape_markdown
 from ReQuest.utilities.exceptions import log_exception
 from ReQuest.utilities.shop import (
@@ -239,7 +239,7 @@ class Tasks(Cog):
             if not channel:
                 return
 
-            locale = await resolve_guild_locale(self.bot, guild_id)
+            locale = await resolve_locale(bot=self.bot, guild_id=guild_id)
 
             # Build the item list (cap at 20 items)
             max_display = 20

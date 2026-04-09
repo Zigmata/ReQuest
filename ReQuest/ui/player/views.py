@@ -23,7 +23,7 @@ from ReQuest.utilities.constants import (
     ApprovalFields, CharacterFields, ConfigFields, CommonFields, ShopFields, DatabaseCollections, DisplayLimits
 )
 from ReQuest.utilities.checks import is_gm_or_mod
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_guild_locale, resolve_locale, resolve_user_locale
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_locale
 from ReQuest.utilities.character import update_character_inventory
 from ReQuest.utilities.containers import get_containers_sorted, get_container_name, get_container_items
 from ReQuest.utilities.currency import (
@@ -1147,7 +1147,7 @@ class PlayerBoardView(LocaleLayoutView):
     async def create_post(self, title, content, interaction):
         try:
             bot = interaction.client
-            guild_locale = await resolve_guild_locale(bot, interaction.guild_id)
+            guild_locale = await resolve_locale(bot=bot, guild_id=interaction.guild_id)
             user_locale = await resolve_locale(interaction)
             post_collection = bot.gdb[DatabaseCollections.PLAYER_BOARD]
             post_id = str(shortuuid.uuid()[:8])
@@ -1197,7 +1197,7 @@ class PlayerBoardView(LocaleLayoutView):
     async def edit_post(self, post, new_title, new_content, interaction):
         try:
             bot = interaction.client
-            guild_locale = await resolve_guild_locale(bot, interaction.guild_id)
+            guild_locale = await resolve_locale(bot=bot, guild_id=interaction.guild_id)
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -2064,7 +2064,7 @@ class ApprovalPostView(LocaleLayoutView):
         else:
             guild_id = self.submission_data.get(ApprovalFields.GUILD_ID)
             if not self.locale or self.locale == DEFAULT_LOCALE:
-                self.locale = await resolve_guild_locale(bot, guild_id)
+                self.locale = await resolve_locale(bot=bot, guild_id=guild_id)
             self.currency_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -2327,7 +2327,7 @@ class ApprovalPostView(LocaleLayoutView):
             # DM the player
             try:
                 user = await bot.fetch_user(user_id)
-                user_locale = await resolve_user_locale(bot, user_id, guild_id)
+                user_locale = await resolve_locale(bot=bot, user_id=user_id, guild_id=guild_id)
                 guild = bot.get_guild(guild_id)
                 guild_name = guild.name if guild else 'Unknown'
                 dm_embed = discord.Embed(
@@ -2419,7 +2419,7 @@ class ApprovalPostView(LocaleLayoutView):
             # DM the player
             try:
                 user = await bot.fetch_user(user_id)
-                user_locale = await resolve_user_locale(bot, user_id, guild_id)
+                user_locale = await resolve_locale(bot=bot, user_id=user_id, guild_id=guild_id)
                 guild = bot.get_guild(guild_id)
                 guild_name = guild.name if guild else 'Unknown'
                 description = t(user_locale, 'player-dm-desc-denied',
@@ -2531,7 +2531,7 @@ async def _handle_submission(interaction, pending_character, items, currency):
         existing_submission_id = pending_character.get('submission_id')
 
         if forum_channel and isinstance(forum_channel, discord.ForumChannel):
-            guild_locale = await resolve_guild_locale(bot, guild_id)
+            guild_locale = await resolve_locale(bot=bot, guild_id=guild_id)
 
             if existing_submission_id:
                 # Edit re-submission: update the existing APPROVALS doc and refresh the forum post

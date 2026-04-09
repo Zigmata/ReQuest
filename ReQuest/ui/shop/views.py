@@ -21,7 +21,7 @@ from ReQuest.ui.shop import buttons
 from ReQuest.utilities.constants import (
     CharacterFields, ConfigFields, ShopFields, CommonFields, CartFields, DatabaseCollections, DisplayLimits
 )
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_guild_locale
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_locale
 from ReQuest.utilities.character import apply_currency_change_local, apply_item_change_local
 from ReQuest.utilities.currency import (
     check_sufficient_funds, format_consolidated_totals, consolidate_currency_totals, format_complex_cost
@@ -566,7 +566,7 @@ class ShopCartView(LocaleLayoutView):
             ))
 
             if log_channel:
-                guild_locale = await resolve_guild_locale(bot, guild_id)
+                guild_locale = await resolve_locale(bot=bot, guild_id=guild_id)
                 if guild_locale != locale:
                     log_embed = discord.Embed(
                         title=t(guild_locale, 'shop-embed-title-report'),
