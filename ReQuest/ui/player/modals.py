@@ -467,7 +467,7 @@ class DenyReasonModal(LocaleModal):
     async def on_submit(self, interaction: discord.Interaction):
         try:
             reason = self.reason_input.value.strip() if self.reason_input.value else ''
-            await self.approval_view._process_denial(interaction, reason)
+            await self.approval_view.process_denial(interaction, reason)
         except Exception as e:
             await log_exception(e, interaction)
 

@@ -193,10 +193,10 @@ class DestinationContainerSelect(Select):
 
             if selected == 'loose':
                 self.calling_view.selected_destination = None
-                self.calling_view._loose_items_selected = True
+                self.calling_view.loose_items_selected = True
             else:
                 self.calling_view.selected_destination = selected
-                self.calling_view._loose_items_selected = False
+                self.calling_view.loose_items_selected = False
 
             self.calling_view.build_view()
             await interaction.response.edit_message(view=self.calling_view)

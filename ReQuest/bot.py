@@ -279,7 +279,7 @@ class ReQuest(commands.Bot):
                 view = QuestPostView(quest)
                 view.locale = locale
                 view.announce_role = announce_role
-                view._setup_done = True
+                view.setup_done = True
                 view.build_view()
                 self.add_view(view=view, message_id=message_id)
             except (KeyError, TypeError) as e:

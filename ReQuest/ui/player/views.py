@@ -690,7 +690,7 @@ class MoveDestinationView(LocaleLayoutView):
         self.available_quantity = available_quantity
 
         self.selected_destination = None
-        self._loose_items_selected = False
+        self.loose_items_selected = False
         self.containers = []
 
         self.items_per_page = 25
@@ -820,7 +820,7 @@ class MoveDestinationView(LocaleLayoutView):
             self.add_item(nav_row)
 
     def _loose_selected(self) -> bool:
-        return self._loose_items_selected
+        return self.loose_items_selected
 
     async def prev_page(self, interaction):
         if self.current_page > 0:
@@ -2377,7 +2377,7 @@ class ApprovalPostView(LocaleLayoutView):
         except Exception as e:
             await log_exception(e, interaction)
 
-    async def _process_denial(self, interaction, reason=''):
+    async def process_denial(self, interaction, reason=''):
         claimed = False
         bot = interaction.client
         try:

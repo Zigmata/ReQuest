@@ -1348,11 +1348,11 @@ class QuestPostView(LocaleLayoutView):
         super().__init__(timeout=None)
         self.quest = quest
         self.announce_role = None
-        self._setup_done = False
+        self.setup_done = False
 
     async def setup(self, bot=None):
         try:
-            if bot and not self._setup_done:
+            if bot and not self.setup_done:
                 guild_id = self.quest.get(QuestFields.GUILD_ID)
                 if guild_id:
                     self.locale = await resolve_locale(bot=bot, guild_id=guild_id)
@@ -1364,7 +1364,7 @@ class QuestPostView(LocaleLayoutView):
                     )
                     if announce_query:
                         self.announce_role = announce_query.get(ConfigFields.ANNOUNCE_ROLE)
-                    self._setup_done = True
+                    self.setup_done = True
             self.build_view()
         except Exception as e:
             await log_exception(e)
