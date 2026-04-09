@@ -752,7 +752,7 @@ class MoveDestinationView(LocaleLayoutView):
             destination_select_row.add_item(destination_select)
             container.add_item(destination_select_row)
 
-            if self.selected_destination is not None or self._loose_selected():
+            if self.selected_destination is not None or self.loose_items_selected:
                 destination_name = None
                 # Find destination name
                 if self.selected_destination is None:
@@ -774,8 +774,7 @@ class MoveDestinationView(LocaleLayoutView):
         action_row = ActionRow()
 
         # Check if we have a valid destination
-        loose_selected = self._loose_selected()
-        has_destination = loose_selected or self.selected_destination is not None
+        has_destination = self.loose_items_selected or self.selected_destination is not None
 
         move_all_button = buttons.MoveAllButton(self)
         move_all_button.disabled = not has_destination
@@ -818,9 +817,6 @@ class MoveDestinationView(LocaleLayoutView):
             nav_row.add_item(next_button)
 
             self.add_item(nav_row)
-
-    def _loose_selected(self) -> bool:
-        return self.loose_items_selected
 
     async def prev_page(self, interaction):
         if self.current_page > 0:

@@ -210,7 +210,7 @@ class ManageContainerSelect(Select):
         options = []
         for container in containers:
             if container['id'] is not None:
-                value = container['id'] if container['id'] else 'loose'
+                value = container['id']
                 label = f"{container['name']} ({container['count']} items)"
                 if len(label) > 100:
                     label = label[:97] + '...'
