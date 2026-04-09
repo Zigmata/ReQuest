@@ -2,7 +2,7 @@
 
 # Boutons GM
 gm-btn-create = Créer
-gm-btn-edit-details = Modifier les détails
+gm-btn-edit-details = Modifier la quête
 gm-btn-toggle-ready = Basculer prêt
 gm-btn-configure-rewards = Configurer les récompenses
 gm-btn-remove-player = Retirer un joueur
@@ -12,6 +12,13 @@ gm-btn-manage-individual-rewards = Gérer les récompenses individuelles
 gm-btn-join = Rejoindre
 gm-btn-leave = Quitter
 gm-btn-complete-quest = Terminer la quête
+gm-btn-edit-details-modal = Modifier les détails
+gm-btn-edit-images = Modifier les images
+gm-btn-publish = Publier
+gm-btn-update-post = Mettre à jour la publication
+gm-select-placeholder-party-role = Sélectionnez un rôle de groupe...
+gm-modal-title-edit-details = Modifier les détails de la quête
+gm-modal-title-edit-images = Modifier les images de la quête
 
 # Fenêtres modales GM
 gm-modal-title-create-quest = Créer une nouvelle quête
@@ -25,9 +32,9 @@ gm-modal-label-party-role = Rôle du groupe
 gm-modal-placeholder-party-role = Créer un rôle pour cette quête (facultatif)
 gm-modal-label-description = Description
 gm-modal-placeholder-description = Rédigez les détails de votre quête ici
-gm-modal-title-editing-quest = Modification de { $questTitle }
-gm-modal-label-title = Titre
-gm-modal-label-max-party-size = Taille max. du groupe
+gm-modal-label-image-url = URL de la miniature
+gm-modal-label-large-image-url = URL de la grande image
+gm-modal-placeholder-image-url = Entrez une URL d'image (ou laissez vide pour supprimer)
 gm-modal-title-add-reward = Ajouter une récompense
 gm-modal-label-experience = Points d'expérience
 gm-modal-placeholder-experience = Entrez un nombre
@@ -61,6 +68,10 @@ gm-error-not-signed-up = Vous n'êtes pas inscrit à cette quête.
 gm-error-quest-channel-not-set = Le canal de quêtes n'a pas été défini !
 gm-error-empty-roster = Vous ne pouvez pas terminer une quête avec un groupe vide. Essayez plutôt d'annuler.
 gm-error-invalid-xp-value = La valeur de XP doit être un entier positif !
+gm-error-party-size-positive = La taille du groupe doit être un nombre positif.
+gm-error-party-size-too-small = La taille du groupe ne peut pas être inférieure au groupe actuel ({ $currentSize } membres).
+gm-error-role-name-forbidden = Le nom de rôle « { $roleName } » est interdit sur ce serveur.
+gm-error-role-name-exists = Un rôle nommé « { $roleName } » existe déjà sur ce serveur.
 
 # Fenêtres de confirmation GM
 gm-modal-title-cancel-quest = Annuler la quête
@@ -68,16 +79,29 @@ gm-modal-label-cancel-quest = Tapez CONFIRMER pour annuler la quête.
 gm-modal-title-remove-from-quest = Retirer un personnage de la quête
 gm-modal-label-remove-from-quest = Confirmer le retrait du personnage ?
 
-# Messages privés GM
-gm-dm-quest-cancelled = La quête {"**"}{ $questTitle }{"**"} a été annulée par le GM.
-gm-dm-quest-ready = La quête {"**"}{ $questTitle }{"**"} est maintenant prête !
-gm-dm-quest-unlocked = La quête {"**"}{ $questTitle }{"**"} n'est plus verrouillée.
-gm-dm-quest-locked = La quête {"**"}{ $questTitle }{"**"} est maintenant verrouillée par le GM.
-gm-dm-player-removed = Vous avez été retiré de la quête {"**"}{ $questTitle }{"**"}.
-gm-dm-player-removed-waitlist = Vous avez été retiré de la liste d'attente pour {"**"}{ $questTitle }{"**"}.
-gm-dm-party-promotion = Vous avez été ajouté au groupe pour {"**"}{ $questTitle }{"**"}, suite au départ d'un joueur !
-gm-dm-roster-locked = Groupe verrouillé et membres notifiés !
-gm-dm-roster-unlocked = Le groupe a été déverrouillé.
+# GM DM embeds
+gm-dm-title-quest-cancelled = Quête annulée
+gm-dm-desc-quest-cancelled = La quête {"**"}{ $questTitle }{"**"} a été annulée par le GM.
+gm-dm-title-quest-ready = Quête prête
+gm-dm-desc-quest-ready = La quête {"**"}{ $questTitle }{"**"} est maintenant prête ! Votre GM commencera la quête bientôt.
+gm-dm-title-player-removed = Retiré de la quête
+gm-dm-desc-player-removed = Vous avez été retiré de la quête {"**"}{ $questTitle }{"**"} par le GM.
+gm-dm-desc-player-removed-waitlist = Vous avez été retiré de la liste d'attente pour {"**"}{ $questTitle }{"**"}.
+gm-dm-title-party-promotion = Promotion dans le groupe
+gm-dm-desc-party-promotion =
+    Vous avez été promu dans le groupe principal de {"**"}{ $questTitle }{"**"}
+    car un joueur a quitté la quête.
+gm-dm-title-roster-locked = Liste verrouillée
+gm-dm-desc-roster-locked =
+    La liste du groupe de {"**"}{ $questTitle }{"**"} a été verrouillée
+    et tous les membres du groupe ont été notifiés.
+gm-dm-title-roster-unlocked = Liste déverrouillée
+gm-dm-desc-roster-unlocked = La liste du groupe de {"**"}{ $questTitle }{"**"} a été déverrouillée.
+gm-dm-title-player-removed-confirm = Joueur retiré
+gm-dm-desc-player-removed-confirm =
+    Le joueur a été retiré de {"**"}{ $questTitle }{"**"}
+    et la liste de la quête a été mise à jour.
+gm-dm-footer-quest = ID de la quête : { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     L'administrateur de votre serveur a configuré des récompenses pour les Game Masters lorsqu'ils
     terminent des quêtes. Cependant, comme vous n'avez aucun personnage enregistré, vos récompenses
@@ -87,9 +111,18 @@ gm-dm-rewards-no-active-character =
     terminent des quêtes. Cependant, comme vous n'avez pas de personnage actif sur ce serveur, vos
     récompenses n'ont pas pu être attribuées automatiquement pour le moment.
 gm-dm-rewards-issued = Les éléments suivants ont été attribués à votre personnage actif, { $characterName }
+gm-dm-role-removal-failed =
+    ⚠️ Impossible de retirer le rôle {"**"}{ $roleName }{"**"} des membres suivants : { $members }.
+    Veuillez prévenir un administrateur du serveur pour retirer le rôle manuellement.
+gm-dm-role-not-found =
+    ⚠️ Le rôle de quête (ID : { $roleId }) pour la quête {"**"}{ $questTitle }{"**"} n'existe plus sur le serveur.
+    Les opérations de rôle ont été ignorées. Veuillez prévenir un administrateur du serveur si cela est inattendu.
 
 # Menus de sélection GM
 gm-select-placeholder-party-member = Sélectionnez un membre du groupe
+gm-modal-label-select-party-role = Rôle du groupe
+gm-modal-desc-select-party-role = Sélectionnez un rôle à attribuer au groupe de la quête.
+gm-select-option-no-role = Aucun (Pas de rôle de groupe)
 
 # Embeds GM
 gm-embed-title-mod-report = Rapport de modification de joueur par le GM
@@ -101,7 +134,6 @@ gm-embed-field-party = __Groupe__
 gm-embed-field-summary = Résumé
 gm-embed-title-gm-rewards = Récompenses GM attribuées
 gm-embed-field-items = Objets
-gm-msg-player-removed = Joueur retiré et groupe de la quête mis à jour !
 
 # Vues GM
 gm-title-main-menu = Game Master - Menu principal
@@ -114,8 +146,21 @@ gm-title-quest-management = Game Master - Gestion des quêtes
 gm-desc-create-quest = Créer une nouvelle quête.
 gm-msg-no-quests = Aucune quête trouvée.
 gm-label-quest-locked = (Verrouillée)
+gm-label-quest-draft = (Brouillon)
 gm-title-manage-quest = Gérer la quête - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Modifier les détails de la quête tels que le titre, la description et la taille du groupe.
+gm-title-edit-quest = Modifier la quête - { $questTitle }
+gm-label-field-not-set = Non défini
+gm-label-description-not-set = Description non définie
+gm-label-current-title = {"**"}Titre :{"**"} { $value }
+gm-label-current-description = {"**"}Description{"**"}
+gm-label-current-restrictions = {"**"}Restrictions :{"**"} { $value }
+gm-label-current-party-size = {"**"}Taille max. du groupe :{"**"} { $value }
+gm-label-current-party-role = {"**"}Rôle du groupe :{"**"} { $value }
+gm-label-current-image = {"**"}Miniature{"**"}
+gm-label-current-large-image = {"**"}Image{"**"}
+gm-desc-publish-quest = Publier cette quête sur le tableau des quêtes.
+gm-desc-update-quest-post = Mettre à jour la publication de la quête sur le tableau des quêtes.
 gm-desc-toggle-ready = Basculer l'état de préparation (Actuel : {"**"}{ $status }{"**"})
     - Verrouille le groupe de la quête et notifie les membres que la quête va bientôt commencer. Si un rôle est configuré, il sera attribué aux membres du groupe une fois verrouillé.
     - Déverrouille le groupe lorsque défini sur Ouvert.
@@ -148,15 +193,4 @@ gm-msg-inventory-empty = L'inventaire est vide.
 
 # Approbations GM
 
-gm-modal-label-select-party-role = Rôle du groupe
-gm-modal-desc-select-party-role = Sélectionnez un rôle à attribuer au groupe de la quête.
-gm-select-option-no-role = Aucun (Pas de rôle de groupe)
-
 gm-error-role-hierarchy = ReQuest ne peut pas gérer le rôle « { $roleName } » (ID : { $roleId }) car il est positionné plus haut que le rôle le plus élevé de ReQuest dans la hiérarchie du serveur. Veuillez contacter un administrateur du serveur pour déplacer le rôle en dessous du rôle de ReQuest, ou attribuer un rôle plus élevé à ReQuest, puis réessayez l'opération.
-gm-dm-role-removal-failed =
-    ⚠️ Impossible de retirer le rôle {"**"}{ $roleName }{"**"} des membres suivants : { $members }.
-    Veuillez prévenir un administrateur du serveur pour retirer le rôle manuellement.
-
-gm-dm-role-not-found =
-    ⚠️ Le rôle de quête (ID : { $roleId }) pour la quête {"**"}{ $questTitle }{"**"} n'existe plus sur le serveur.
-    Les opérations de rôle ont été ignorées. Veuillez prévenir un administrateur du serveur si cela est inattendu.

@@ -2,7 +2,7 @@
 
 # Кнопки GM
 gm-btn-create = Створити
-gm-btn-edit-details = Редагувати деталі
+gm-btn-edit-details = Редагувати квест
 gm-btn-toggle-ready = Перемкнути готовність
 gm-btn-configure-rewards = Налаштувати нагороди
 gm-btn-remove-player = Видалити гравця
@@ -12,6 +12,13 @@ gm-btn-manage-individual-rewards = Керувати індивідуальним
 gm-btn-join = Приєднатися
 gm-btn-leave = Покинути
 gm-btn-complete-quest = Завершити квест
+gm-btn-edit-details-modal = Редагувати деталі
+gm-btn-edit-images = Редагувати зображення
+gm-select-placeholder-party-role = Оберіть роль групи...
+gm-modal-title-edit-details = Редагування деталей квесту
+gm-modal-title-edit-images = Редагування зображень квесту
+gm-btn-publish = Опублікувати
+gm-btn-update-post = Оновити публікацію
 
 # Модальні вікна GM
 gm-modal-title-create-quest = Створити новий квест
@@ -25,9 +32,9 @@ gm-modal-label-party-role = Роль групи
 gm-modal-placeholder-party-role = Створити роль для цього квесту (Необов'язково)
 gm-modal-label-description = Опис
 gm-modal-placeholder-description = Напишіть деталі вашого квесту тут
-gm-modal-title-editing-quest = Редагування { $questTitle }
-gm-modal-label-title = Назва
-gm-modal-label-max-party-size = Максимальний розмір групи
+gm-modal-label-image-url = URL мініатюри
+gm-modal-label-large-image-url = URL великого зображення
+gm-modal-placeholder-image-url = Введіть URL зображення (або залиште порожнім для видалення)
 gm-modal-title-add-reward = Додати нагороду
 gm-modal-label-experience = Очки досвіду
 gm-modal-placeholder-experience = Введіть число
@@ -61,6 +68,11 @@ gm-error-not-signed-up = Ви не зареєстровані на цей кве
 gm-error-quest-channel-not-set = Канал квестів не встановлено!
 gm-error-empty-roster = Ви не можете завершити квест з порожнім списком учасників. Спробуйте скасувати натомість.
 gm-error-invalid-xp-value = Значення XP має бути додатнім цілим числом!
+gm-error-role-hierarchy = ReQuest не може керувати роллю "{ $roleName }" (ID: { $roleId }), оскільки вона розташована вище найвищої ролі ReQuest в ієрархії сервера. Будь ласка, зверніться до адміністратора сервера, щоб перемістити роль нижче ролі ReQuest або призначити ReQuest вищу роль, а потім повторіть операцію.
+gm-error-party-size-positive = Розмір групи має бути додатнім числом.
+gm-error-party-size-too-small = Розмір групи не може бути меншим за поточну групу ({ $currentSize } учасників).
+gm-error-role-name-forbidden = Назва ролі "{ $roleName }" заборонена на цьому сервері.
+gm-error-role-name-exists = Роль з назвою "{ $roleName }" вже існує на цьому сервері.
 
 # Модальні вікна підтвердження GM
 gm-modal-title-cancel-quest = Скасувати квест
@@ -68,16 +80,29 @@ gm-modal-label-cancel-quest = Введіть ПІДТВЕРДИТИ для ск�
 gm-modal-title-remove-from-quest = Видалити персонажа з квесту
 gm-modal-label-remove-from-quest = Підтвердити видалення персонажа?
 
-# Особисті повідомлення GM
-gm-dm-quest-cancelled = Квест {"**"}{ $questTitle }{"**"} було скасовано GM.
-gm-dm-quest-ready = Квест {"**"}{ $questTitle }{"**"} тепер готовий!
-gm-dm-quest-unlocked = Квест {"**"}{ $questTitle }{"**"} більше не заблокований.
-gm-dm-quest-locked = Квест {"**"}{ $questTitle }{"**"} тепер заблоковано GM.
-gm-dm-player-removed = Вас було видалено з квесту {"**"}{ $questTitle }{"**"}.
-gm-dm-player-removed-waitlist = Вас було видалено зі списку очікування на {"**"}{ $questTitle }{"**"}.
-gm-dm-party-promotion = Вас додано до групи квесту {"**"}{ $questTitle }{"**"}, оскільки один з гравців покинув!
-gm-dm-roster-locked = Список учасників квесту заблоковано та групу повідомлено!
-gm-dm-roster-unlocked = Список учасників квесту розблоковано.
+# GM DM embeds
+gm-dm-title-quest-cancelled = Квест скасовано
+gm-dm-desc-quest-cancelled = Квест {"**"}{ $questTitle }{"**"} було скасовано GM.
+gm-dm-title-quest-ready = Квест готовий
+gm-dm-desc-quest-ready = Квест {"**"}{ $questTitle }{"**"} тепер готовий! Ваш GM розпочне квест незабаром.
+gm-dm-title-player-removed = Видалено з квесту
+gm-dm-desc-player-removed = Вас було видалено з квесту {"**"}{ $questTitle }{"**"} GM.
+gm-dm-desc-player-removed-waitlist = Вас було видалено зі списку очікування квесту {"**"}{ $questTitle }{"**"}.
+gm-dm-title-party-promotion = Підвищення до групи
+gm-dm-desc-party-promotion =
+    Вас підвищено до основної групи квесту {"**"}{ $questTitle }{"**"},
+    оскільки один з гравців покинув квест.
+gm-dm-title-roster-locked = Список заблоковано
+gm-dm-desc-roster-locked =
+    Список учасників квесту {"**"}{ $questTitle }{"**"} було заблоковано,
+    і всіх членів групи було повідомлено.
+gm-dm-title-roster-unlocked = Список розблоковано
+gm-dm-desc-roster-unlocked = Список учасників квесту {"**"}{ $questTitle }{"**"} було розблоковано.
+gm-dm-title-player-removed-confirm = Гравця видалено
+gm-dm-desc-player-removed-confirm =
+    Гравця було видалено з квесту {"**"}{ $questTitle }{"**"},
+    і список учасників квесту було оновлено.
+gm-dm-footer-quest = ID квесту: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     Адміністратор вашого сервера налаштував нагороди для Ведучих Гри за завершення
     квестів. Однак, оскільки у вас немає зареєстрованих персонажів, ваші нагороди
@@ -87,9 +112,18 @@ gm-dm-rewards-no-active-character =
     квестів. Однак, оскільки у вас немає активного персонажа на цьому сервері, ваші
     нагороди не могли бути автоматично видані на цей момент.
 gm-dm-rewards-issued = Наступне було нараховано вашому активному персонажу, { $characterName }
+gm-dm-role-removal-failed =
+    ⚠️ Не вдалося видалити роль {"**"}{ $roleName }{"**"} у наступних учасників: { $members }.
+    Будь ласка, повідомте адміністратора сервера для ручного видалення ролі.
+gm-dm-role-not-found =
+    ⚠️ Роль квесту (ID: { $roleId }) для квесту {"**"}{ $questTitle }{"**"} більше не існує на сервері.
+    Операції з ролями були пропущені. Будь ласка, повідомте адміністратора сервера, якщо це несподівано.
 
 # Меню вибору GM
 gm-select-placeholder-party-member = Оберіть учасника групи
+gm-modal-label-select-party-role = Роль групи
+gm-modal-desc-select-party-role = Оберіть роль для призначення групі квесту.
+gm-select-option-no-role = Немає (без ролі групи)
 
 # Вбудовані повідомлення GM
 gm-embed-title-mod-report = Звіт про зміну гравця GM
@@ -101,7 +135,6 @@ gm-embed-field-party = __Група__
 gm-embed-field-summary = Підсумок
 gm-embed-title-gm-rewards = Нагороди GM видано
 gm-embed-field-items = Предмети
-gm-msg-player-removed = Гравця видалено та список учасників квесту оновлено!
 
 # Подання GM
 gm-title-main-menu = Ведучий Гри - Головне меню
@@ -114,8 +147,21 @@ gm-title-quest-management = Ведучий Гри - Керування квес�
 gm-desc-create-quest = Створити новий квест.
 gm-msg-no-quests = Квестів не знайдено.
 gm-label-quest-locked = (Заблоковано)
+gm-label-quest-draft = (Чернетка)
 gm-title-manage-quest = Керування квестом - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Редагувати деталі квесту, такі як назва, опис та розмір групи.
+gm-title-edit-quest = Редагування квесту - { $questTitle }
+gm-label-field-not-set = Не задано
+gm-label-description-not-set = Опис не задано
+gm-label-current-title = {"**"}Назва:{"**"} { $value }
+gm-label-current-description = {"**"}Опис{"**"}
+gm-label-current-restrictions = {"**"}Обмеження:{"**"} { $value }
+gm-label-current-party-size = {"**"}Максимальний розмір групи:{"**"} { $value }
+gm-label-current-party-role = {"**"}Роль групи:{"**"} { $value }
+gm-label-current-image = {"**"}Мініатюра{"**"}
+gm-label-current-large-image = {"**"}Зображення{"**"}
+gm-desc-publish-quest = Опублікувати цей квест на дошці квестів.
+gm-desc-update-quest-post = Оновити публікацію квесту на дошці квестів.
 gm-desc-toggle-ready = Перемкнути стан готовності (Поточний: {"**"}{ $status }{"**"})
     - Блокує список учасників квесту та повідомляє членів групи про швидкий початок квесту. Якщо налаштовано роль, вона буде призначена членам групи при блокуванні.
     - Розблоковує список учасників при встановленні на Відкрито.
@@ -147,16 +193,3 @@ gm-label-currency-heading = {"**"}Валюта{"**"}
 gm-msg-inventory-empty = Інвентар порожній.
 
 # Схвалення GM
-
-gm-modal-label-select-party-role = Роль групи
-gm-modal-desc-select-party-role = Оберіть роль для призначення групі квесту.
-gm-select-option-no-role = Немає (без ролі групи)
-
-gm-error-role-hierarchy = ReQuest не може керувати роллю "{ $roleName }" (ID: { $roleId }), оскільки вона розташована вище найвищої ролі ReQuest в ієрархії сервера. Будь ласка, зверніться до адміністратора сервера, щоб перемістити роль нижче ролі ReQuest або призначити ReQuest вищу роль, а потім повторіть операцію.
-gm-dm-role-removal-failed =
-    ⚠️ Не вдалося видалити роль {"**"}{ $roleName }{"**"} у наступних учасників: { $members }.
-    Будь ласка, повідомте адміністратора сервера для ручного видалення ролі.
-
-gm-dm-role-not-found =
-    ⚠️ Роль квесту (ID: { $roleId }) для квесту {"**"}{ $questTitle }{"**"} більше не існує на сервері.
-    Операції з ролями були пропущені. Будь ласка, повідомте адміністратора сервера, якщо це несподівано.

@@ -131,7 +131,6 @@ gm-embed-field-party = __Party__
 gm-embed-field-summary = Summary
 gm-embed-title-gm-rewards = GM Rewards Issued
 gm-embed-field-items = Items
-gm-msg-player-removed = Player removed and quest roster updated!
 
 # GM views
 gm-title-main-menu = Game Master - Main Menu

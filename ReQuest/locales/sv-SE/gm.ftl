@@ -2,7 +2,7 @@
 
 # GM buttons
 gm-btn-create = Skapa
-gm-btn-edit-details = Redigera detaljer
+gm-btn-edit-details = Redigera quest
 gm-btn-toggle-ready = Växla redo
 gm-btn-configure-rewards = Konfigurera belöningar
 gm-btn-remove-player = Ta bort spelare
@@ -12,6 +12,13 @@ gm-btn-manage-individual-rewards = Hantera individuella belöningar
 gm-btn-join = Gå med
 gm-btn-leave = Lämna
 gm-btn-complete-quest = Avsluta quest
+gm-btn-edit-details-modal = Redigera detaljer
+gm-btn-edit-images = Redigera bilder
+gm-select-placeholder-party-role = Välj en grupproll...
+gm-modal-title-edit-details = Redigera quest-detaljer
+gm-modal-title-edit-images = Redigera quest-bilder
+gm-btn-publish = Publicera
+gm-btn-update-post = Uppdatera inlägg
 
 # GM modals
 gm-modal-title-create-quest = Skapa ny quest
@@ -25,9 +32,9 @@ gm-modal-label-party-role = Grupproll
 gm-modal-placeholder-party-role = Skapa en roll för denna quest (valfritt)
 gm-modal-label-description = Beskrivning
 gm-modal-placeholder-description = Skriv detaljerna för din quest här
-gm-modal-title-editing-quest = Redigerar { $questTitle }
-gm-modal-label-title = Titel
-gm-modal-label-max-party-size = Max gruppstorlek
+gm-modal-label-image-url = Miniatyr-URL
+gm-modal-label-large-image-url = Stor bild-URL
+gm-modal-placeholder-image-url = Ange en bild-URL (eller lämna tomt för att ta bort)
 gm-modal-title-add-reward = Lägg till belöning
 gm-modal-label-experience = Erfarenhetspoäng
 gm-modal-placeholder-experience = Ange ett nummer
@@ -61,6 +68,11 @@ gm-error-not-signed-up = Du är inte anmäld till denna quest.
 gm-error-quest-channel-not-set = Quest-kanalen har inte ställts in!
 gm-error-empty-roster = Du kan inte avsluta en quest med en tom lista. Prova att avbryta istället.
 gm-error-invalid-xp-value = XP-värdet måste vara ett positivt heltal!
+gm-error-role-hierarchy = ReQuest kan inte hantera rollen "{ $roleName }" (ID: { $roleId }) eftersom den är placerad högre än ReQuests högsta roll i serverhierarkin. Kontakta en serveradministratör för att flytta rollen under ReQuests roll, eller tilldela ReQuest en högre roll, och försök sedan igen.
+gm-error-party-size-positive = Gruppstorleken måste vara ett positivt tal.
+gm-error-party-size-too-small = Gruppstorleken kan inte vara mindre än den nuvarande gruppen ({ $currentSize } medlemmar).
+gm-error-role-name-forbidden = Rollnamnet "{ $roleName }" är förbjudet på denna server.
+gm-error-role-name-exists = En roll med namnet "{ $roleName }" finns redan på denna server.
 
 # GM confirm modals
 gm-modal-title-cancel-quest = Avbryt quest
@@ -68,16 +80,29 @@ gm-modal-label-cancel-quest = Skriv BEKRÄFTA för att avbryta questen.
 gm-modal-title-remove-from-quest = Ta bort karaktär från quest
 gm-modal-label-remove-from-quest = Bekräfta borttagning av karaktär?
 
-# GM DM messages
-gm-dm-quest-cancelled = Quest {"**"}{ $questTitle }{"**"} avbröts av GM.
-gm-dm-quest-ready = Quest {"**"}{ $questTitle }{"**"} är nu redo!
-gm-dm-quest-unlocked = Quest {"**"}{ $questTitle }{"**"} är inte längre låst.
-gm-dm-quest-locked = Quest {"**"}{ $questTitle }{"**"} är nu låst av GM.
-gm-dm-player-removed = Du togs bort från quest {"**"}{ $questTitle }{"**"}.
-gm-dm-player-removed-waitlist = Du togs bort från väntelistan för {"**"}{ $questTitle }{"**"}.
-gm-dm-party-promotion = Du har lagts till i gruppen för {"**"}{ $questTitle }{"**"}, på grund av att en spelare hoppade av!
-gm-dm-roster-locked = Quest-lista låst och gruppen meddelad!
-gm-dm-roster-unlocked = Quest-listan har låsts upp.
+# GM DM embeds
+gm-dm-title-quest-cancelled = Quest avbruten
+gm-dm-desc-quest-cancelled = Quest {"**"}{ $questTitle }{"**"} avbröts av GM.
+gm-dm-title-quest-ready = Quest redo
+gm-dm-desc-quest-ready = Quest {"**"}{ $questTitle }{"**"} är nu redo! Din GM kommer att starta questen snart.
+gm-dm-title-player-removed = Borttagen från quest
+gm-dm-desc-player-removed = Du togs bort från quest {"**"}{ $questTitle }{"**"} av GM.
+gm-dm-desc-player-removed-waitlist = Du togs bort från väntelistan för quest {"**"}{ $questTitle }{"**"}.
+gm-dm-title-party-promotion = Befordran till grupp
+gm-dm-desc-party-promotion =
+    Du har befordrats till huvudgruppen för {"**"}{ $questTitle }{"**"}
+    eftersom en spelare lämnade questen.
+gm-dm-title-roster-locked = Lista låst
+gm-dm-desc-roster-locked =
+    Listan för {"**"}{ $questTitle }{"**"} har låsts
+    och alla gruppmedlemmar har meddelats.
+gm-dm-title-roster-unlocked = Lista upplåst
+gm-dm-desc-roster-unlocked = Listan för {"**"}{ $questTitle }{"**"} har låsts upp.
+gm-dm-title-player-removed-confirm = Spelare borttagen
+gm-dm-desc-player-removed-confirm =
+    Spelaren har tagits bort från {"**"}{ $questTitle }{"**"}
+    och quest-listan har uppdaterats.
+gm-dm-footer-quest = Quest-ID: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     Din serveradministratör har konfigurerat belöningar för GM:ar när de avslutar
     quests. Eftersom du inte har några registrerade karaktärer kunde dock dina belöningar
@@ -87,9 +112,18 @@ gm-dm-rewards-no-active-character =
     quests. Eftersom du inte har någon aktiv karaktär på denna server kunde dock dina belöningar
     inte delas ut automatiskt vid denna tidpunkt.
 gm-dm-rewards-issued = Följande har tilldelats din aktiva karaktär, { $characterName }
+gm-dm-role-removal-failed =
+    ⚠️ Det gick inte att ta bort rollen {"**"}{ $roleName }{"**"} från följande medlemmar: { $members }.
+    Meddela en serveradministratör för att ta bort rollen manuellt.
+gm-dm-role-not-found =
+    ⚠️ Quest-rollen (ID: { $roleId }) för quest {"**"}{ $questTitle }{"**"} finns inte längre på servern.
+    Rolloperationer hoppades över. Meddela en serveradministratör om detta är oväntat.
 
 # GM select menus
 gm-select-placeholder-party-member = Välj en gruppmedlem
+gm-modal-label-select-party-role = Grupproll
+gm-modal-desc-select-party-role = Välj en roll att tilldela quest-gruppen.
+gm-select-option-no-role = Ingen (Ingen grupproll)
 
 # GM embeds
 gm-embed-title-mod-report = GM-spelarändringsrapport
@@ -101,7 +135,6 @@ gm-embed-field-party = __Grupp__
 gm-embed-field-summary = Sammanfattning
 gm-embed-title-gm-rewards = GM-belöningar utdelade
 gm-embed-field-items = Föremål
-gm-msg-player-removed = Spelare borttagen och quest-lista uppdaterad!
 
 # GM views
 gm-title-main-menu = GM - Huvudmeny
@@ -114,8 +147,21 @@ gm-title-quest-management = GM - Quest-hantering
 gm-desc-create-quest = Skapa en ny quest.
 gm-msg-no-quests = Inga quests hittades.
 gm-label-quest-locked = (Låst)
+gm-label-quest-draft = (Utkast)
 gm-title-manage-quest = Hantera quest - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Redigera quest-detaljer som titel, beskrivning och gruppstorlek.
+gm-title-edit-quest = Redigera quest - { $questTitle }
+gm-label-field-not-set = Inte angiven
+gm-label-description-not-set = Beskrivning ej angiven
+gm-label-current-title = {"**"}Titel:{"**"} { $value }
+gm-label-current-description = {"**"}Beskrivning{"**"}
+gm-label-current-restrictions = {"**"}Begränsningar:{"**"} { $value }
+gm-label-current-party-size = {"**"}Max gruppstorlek:{"**"} { $value }
+gm-label-current-party-role = {"**"}Grupproll:{"**"} { $value }
+gm-label-current-image = {"**"}Miniatyr{"**"}
+gm-label-current-large-image = {"**"}Bild{"**"}
+gm-desc-publish-quest = Publicera denna quest till quest-tavlan.
+gm-desc-update-quest-post = Uppdatera quest-inlägget på quest-tavlan.
 gm-desc-toggle-ready = Växla redo-status (Nuvarande: {"**"}{ $status }{"**"})
     - Låser quest-listan och meddelar gruppmedlemmar att questen börjar snart. Om en roll är konfigurerad tilldelas den till gruppmedlemmar vid låsning.
     - Låser upp listan när den sätts till Öppen.
@@ -147,16 +193,3 @@ gm-label-currency-heading = {"**"}Valuta{"**"}
 gm-msg-inventory-empty = Inventariet är tomt.
 
 # GM approvals
-
-gm-modal-label-select-party-role = Grupproll
-gm-modal-desc-select-party-role = Välj en roll att tilldela quest-gruppen.
-gm-select-option-no-role = Ingen (Ingen grupproll)
-
-gm-error-role-hierarchy = ReQuest kan inte hantera rollen "{ $roleName }" (ID: { $roleId }) eftersom den är placerad högre än ReQuests högsta roll i serverhierarkin. Kontakta en serveradministratör för att flytta rollen under ReQuests roll, eller tilldela ReQuest en högre roll, och försök sedan igen.
-gm-dm-role-removal-failed =
-    ⚠️ Det gick inte att ta bort rollen {"**"}{ $roleName }{"**"} från följande medlemmar: { $members }.
-    Meddela en serveradministratör för att ta bort rollen manuellt.
-
-gm-dm-role-not-found =
-    ⚠️ Quest-rollen (ID: { $roleId }) för quest {"**"}{ $questTitle }{"**"} finns inte längre på servern.
-    Rolloperationer hoppades över. Meddela en serveradministratör om detta är oväntat.

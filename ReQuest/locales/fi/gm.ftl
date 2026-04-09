@@ -2,7 +2,7 @@
 
 # GM buttons
 gm-btn-create = Luo
-gm-btn-edit-details = Muokkaa tietoja
+gm-btn-edit-details = Muokkaa questiä
 gm-btn-toggle-ready = Vaihda valmiustila
 gm-btn-configure-rewards = Määritä palkinnot
 gm-btn-remove-player = Poista pelaaja
@@ -12,6 +12,13 @@ gm-btn-manage-individual-rewards = Hallinnoi yksilöpalkintoja
 gm-btn-join = Liity
 gm-btn-leave = Poistu
 gm-btn-complete-quest = Suorita quest
+gm-btn-edit-details-modal = Muokkaa tietoja
+gm-btn-edit-images = Muokkaa kuvia
+gm-btn-publish = Julkaise
+gm-btn-update-post = Päivitä julkaisu
+gm-select-placeholder-party-role = Valitse ryhmärooli...
+gm-modal-title-edit-details = Muokkaa questin tietoja
+gm-modal-title-edit-images = Muokkaa questin kuvia
 
 # GM modals
 gm-modal-title-create-quest = Luo uusi quest
@@ -25,9 +32,9 @@ gm-modal-label-party-role = Ryhmärooli
 gm-modal-placeholder-party-role = Luo rooli tälle questille (valinnainen)
 gm-modal-label-description = Kuvaus
 gm-modal-placeholder-description = Kirjoita questisi yksityiskohdat tähän
-gm-modal-title-editing-quest = Muokataan: { $questTitle }
-gm-modal-label-title = Otsikko
-gm-modal-label-max-party-size = Ryhmän enimmäiskoko
+gm-modal-label-image-url = Pikkukuvan URL
+gm-modal-label-large-image-url = Suuren kuvan URL
+gm-modal-placeholder-image-url = Syötä kuvan URL (tai jätä tyhjäksi poistaaksesi)
 gm-modal-title-add-reward = Lisää palkinto
 gm-modal-label-experience = Kokemuspisteet
 gm-modal-placeholder-experience = Syötä numero
@@ -61,6 +68,10 @@ gm-error-not-signed-up = Et ole ilmoittautunut tähän questiin.
 gm-error-quest-channel-not-set = Quest-kanavaa ei ole asetettu!
 gm-error-empty-roster = Questia ei voi suorittaa tyhjällä ryhmällä. Kokeile peruuttamista sen sijaan.
 gm-error-invalid-xp-value = XP-arvon on oltava positiivinen kokonaisluku!
+gm-error-party-size-positive = Ryhmän koon on oltava positiivinen luku.
+gm-error-party-size-too-small = Ryhmän koko ei voi olla pienempi kuin nykyinen ryhmä ({ $currentSize } jäsentä).
+gm-error-role-name-forbidden = Roolin nimi "{ $roleName }" on kielletty tällä palvelimella.
+gm-error-role-name-exists = Rooli nimeltä "{ $roleName }" on jo olemassa tällä palvelimella.
 
 # GM confirm modals
 gm-modal-title-cancel-quest = Peruuta quest
@@ -68,16 +79,29 @@ gm-modal-label-cancel-quest = Kirjoita VAHVISTA peruuttaaksesi questin.
 gm-modal-title-remove-from-quest = Poista hahmo questistä
 gm-modal-label-remove-from-quest = Vahvista hahmon poisto?
 
-# GM DM messages
-gm-dm-quest-cancelled = Quest {"**"}{ $questTitle }{"**"} peruutettiin GM:n toimesta.
-gm-dm-quest-ready = Quest {"**"}{ $questTitle }{"**"} on nyt valmis!
-gm-dm-quest-unlocked = Quest {"**"}{ $questTitle }{"**"} ei ole enää lukittu.
-gm-dm-quest-locked = Quest {"**"}{ $questTitle }{"**"} on nyt GM:n lukitsema.
-gm-dm-player-removed = Sinut poistettiin questistä {"**"}{ $questTitle }{"**"}.
-gm-dm-player-removed-waitlist = Sinut poistettiin questin {"**"}{ $questTitle }{"**"} jonotuslistalta.
-gm-dm-party-promotion = Sinut on lisätty questin {"**"}{ $questTitle }{"**"} ryhmään, koska toinen pelaaja poistui!
-gm-dm-roster-locked = Questin ryhmä lukittu ja jäsenille ilmoitettu!
-gm-dm-roster-unlocked = Questin ryhmän lukitus on avattu.
+# GM DM embeds
+gm-dm-title-quest-cancelled = Quest peruutettu
+gm-dm-desc-quest-cancelled = Quest {"**"}{ $questTitle }{"**"} peruutettiin GM:n toimesta.
+gm-dm-title-quest-ready = Quest valmis
+gm-dm-desc-quest-ready = Quest {"**"}{ $questTitle }{"**"} on nyt valmis! GM aloittaa questin pian.
+gm-dm-title-player-removed = Poistettu questistä
+gm-dm-desc-player-removed = Sinut poistettiin questistä {"**"}{ $questTitle }{"**"} GM:n toimesta.
+gm-dm-desc-player-removed-waitlist = Sinut poistettiin questin {"**"}{ $questTitle }{"**"} jonotuslistalta.
+gm-dm-title-party-promotion = Ylennys ryhmään
+gm-dm-desc-party-promotion =
+    Sinut on ylennetty pääryhmään questissa {"**"}{ $questTitle }{"**"}
+    koska pelaaja poistui questistä.
+gm-dm-title-roster-locked = Ryhmä lukittu
+gm-dm-desc-roster-locked =
+    Questin {"**"}{ $questTitle }{"**"} ryhmä on lukittu
+    ja kaikille ryhmän jäsenille on ilmoitettu.
+gm-dm-title-roster-unlocked = Ryhmä avattu
+gm-dm-desc-roster-unlocked = Questin {"**"}{ $questTitle }{"**"} ryhmän lukitus on avattu.
+gm-dm-title-player-removed-confirm = Pelaaja poistettu
+gm-dm-desc-player-removed-confirm =
+    Pelaaja on poistettu questistä {"**"}{ $questTitle }{"**"}
+    ja questin ryhmä on päivitetty.
+gm-dm-footer-quest = Quest-ID: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     Palvelimesi ylläpitäjä on määrittänyt palkintoja pelinjohtajille questien suorittamisesta.
     Koska sinulla ei kuitenkaan ole rekisteröityjä hahmoja, palkkioitasi ei voitu
@@ -87,9 +111,18 @@ gm-dm-rewards-no-active-character =
     Koska sinulla ei kuitenkaan ole aktiivista hahmoa tällä palvelimella, palkkioitasi
     ei voitu myöntää automaattisesti tällä hetkellä.
 gm-dm-rewards-issued = Seuraavat on myönnetty aktiiviselle hahmollesi, { $characterName }
+gm-dm-role-removal-failed =
+    ⚠️ Roolia {"**"}{ $roleName }{"**"} ei voitu poistaa seuraavilta jäseniltä: { $members }.
+    Ilmoita palvelimen ylläpitäjälle roolin manuaalista poistoa varten.
+gm-dm-role-not-found =
+    ⚠️ Questin {"**"}{ $questTitle }{"**"} quest-roolia (ID: { $roleId }) ei enää löydy palvelimelta.
+    Roolitoiminnot ohitettiin. Ilmoita palvelimen ylläpitäjälle, jos tämä on odottamatonta.
 
 # GM select menus
 gm-select-placeholder-party-member = Valitse ryhmän jäsen
+gm-modal-label-select-party-role = Ryhmärooli
+gm-modal-desc-select-party-role = Valitse rooli, joka annetaan questin ryhmälle.
+gm-select-option-no-role = Ei mitään (Ei ryhmäroolia)
 
 # GM embeds
 gm-embed-title-mod-report = GM:n pelaajan muokkausraportti
@@ -101,7 +134,6 @@ gm-embed-field-party = __Ryhmä__
 gm-embed-field-summary = Yhteenveto
 gm-embed-title-gm-rewards = GM-palkinnot myönnetty
 gm-embed-field-items = Esineet
-gm-msg-player-removed = Pelaaja poistettu ja questin ryhmä päivitetty!
 
 # GM views
 gm-title-main-menu = Pelinjohtaja - Päävalikko
@@ -114,8 +146,21 @@ gm-title-quest-management = Pelinjohtaja - Questien hallinta
 gm-desc-create-quest = Luo uusi quest.
 gm-msg-no-quests = Questejä ei löytynyt.
 gm-label-quest-locked = (Lukittu)
+gm-label-quest-draft = (Luonnos)
 gm-title-manage-quest = Hallinnoi questiä - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Muokkaa questin tietoja, kuten otsikkoa, kuvausta ja ryhmän kokoa.
+gm-title-edit-quest = Muokkaa questiä - { $questTitle }
+gm-label-field-not-set = Ei asetettu
+gm-label-description-not-set = Kuvausta ei ole asetettu
+gm-label-current-title = {"**"}Otsikko:{"**"} { $value }
+gm-label-current-description = {"**"}Kuvaus{"**"}
+gm-label-current-restrictions = {"**"}Rajoitukset:{"**"} { $value }
+gm-label-current-party-size = {"**"}Ryhmän enimmäiskoko:{"**"} { $value }
+gm-label-current-party-role = {"**"}Ryhmärooli:{"**"} { $value }
+gm-label-current-image = {"**"}Pikkukuva{"**"}
+gm-label-current-large-image = {"**"}Kuva{"**"}
+gm-desc-publish-quest = Julkaise tämä quest quest-taululle.
+gm-desc-update-quest-post = Päivitä questin julkaisu quest-taululla.
 gm-desc-toggle-ready = Vaihda valmiustila (Nykyinen: {"**"}{ $status }{"**"})
     - Lukitsee questin ryhmän ja ilmoittaa jäsenille, että quest alkaa pian. Jos rooli on määritetty, se annetaan ryhmän jäsenille lukittaessa.
     - Avaa ryhmän lukituksen, kun asetetaan Avoimeksi.
@@ -148,15 +193,4 @@ gm-msg-inventory-empty = Inventaario on tyhjä.
 
 # GM approvals
 
-gm-modal-label-select-party-role = Ryhmärooli
-gm-modal-desc-select-party-role = Valitse rooli, joka annetaan questin ryhmälle.
-gm-select-option-no-role = Ei mitään (Ei ryhmäroolia)
-
 gm-error-role-hierarchy = ReQuest ei voi hallita roolia "{ $roleName }" (ID: { $roleId }), koska se on palvelinhierarkiassa ReQuestin korkeimman roolin yläpuolella. Ota yhteyttä palvelimen ylläpitäjään siirtääksesi roolin ReQuestin roolin alapuolelle tai antaaksesi ReQuestille korkeamman roolin, ja yritä sitten uudelleen.
-gm-dm-role-removal-failed =
-    ⚠️ Roolia {"**"}{ $roleName }{"**"} ei voitu poistaa seuraavilta jäseniltä: { $members }.
-    Ilmoita palvelimen ylläpitäjälle roolin manuaalista poistoa varten.
-
-gm-dm-role-not-found =
-    ⚠️ Questin {"**"}{ $questTitle }{"**"} quest-roolia (ID: { $roleId }) ei enää löydy palvelimelta.
-    Roolitoiminnot ohitettiin. Ilmoita palvelimen ylläpitäjälle, jos tämä on odottamatonta.
