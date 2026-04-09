@@ -2176,7 +2176,10 @@ class ConfigNewCharacterShopView(LocaleLayoutView):
                 item_quantity = item.get(CommonFields.QUANTITY, 1)
 
                 costs = item.get(ShopFields.COSTS, [])
-                cost_string = format_complex_cost(costs, getattr(self, 'currency_config', {}))
+                cost_string = format_complex_cost(
+                    costs, getattr(self, 'currency_config', {}),
+                    locale=getattr(self, 'locale', DEFAULT_LOCALE)
+                )
 
                 display_string = f'**{item_name}** (x{item_quantity})'
                 if cost_string:
@@ -3289,7 +3292,9 @@ class EditShopView(LocaleLayoutView):
             item_quantity = item.get(CommonFields.QUANTITY, 1)
 
             costs = item.get(ShopFields.COSTS, [])
-            cost_string = format_complex_cost(costs, getattr(self, 'currency_config', {}))
+            cost_string = format_complex_cost(
+                costs, getattr(self, 'currency_config', {}), locale=getattr(self, 'locale', DEFAULT_LOCALE)
+            )
 
             if item_quantity > 1:
                 item_text = f'{item_name} x{item_quantity}'

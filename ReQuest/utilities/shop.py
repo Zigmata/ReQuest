@@ -675,7 +675,8 @@ async def remove_item_from_cart(bot, guild_id: int, user_id: int, channel_id: st
 
 
 async def update_cart_item_quantity(bot, guild_id: int, user_id: int, channel_id: str,
-                                    cart_key: str, new_quantity: int) -> Tuple[bool, str]:
+                                    cart_key: str, new_quantity: int,
+                                    locale: str | None = None) -> Tuple[bool, str]:
     """
     Updates the quantity of an item in the cart, handling stock reservations.
 
@@ -686,17 +687,21 @@ async def update_cart_item_quantity(bot, guild_id: int, user_id: int, channel_id
     :param cart_key: The cart item key (item_name::option_index)
     :param new_quantity: The new quantity
 
+    :param locale: Locale for user-facing messages
     :return: Tuple of (success, message)
     """
     from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 
+    if locale is None:
+        locale = DEFAULT_LOCALE
+
     cart = await get_cart(bot, guild_id, user_id, channel_id)
     if not cart:
-        return False, t(DEFAULT_LOCALE, 'error-cart-not-found')
+        return False, t(locale, 'error-cart-not-found')
 
     items = cart.get(CartFields.ITEMS, {})
     if cart_key not in items:
-        return False, t(DEFAULT_LOCALE, 'error-item-not-in-cart')
+        return False, t(locale, 'error-item-not-in-cart')
 
     cart_item = items[cart_key]
     item = cart_item[CartFields.ITEM]
@@ -706,7 +711,7 @@ async def update_cart_item_quantity(bot, guild_id: int, user_id: int, channel_id
     if new_quantity <= 0:
         # Remove item entirely
         await remove_item_from_cart(bot, guild_id, user_id, channel_id, cart_key, current_quantity)
-        return True, t(DEFAULT_LOCALE, 'shop-msg-item-removed')
+        return True, t(locale, 'shop-msg-item-removed')
 
     quantity_diff = new_quantity - current_quantity
     has_stock_limit = item.get(ShopFields.MAX_STOCK) is not None
@@ -720,7 +725,7 @@ async def update_cart_item_quantity(bot, guild_id: int, user_id: int, channel_id
             reserved_quantity = quantity_diff * item_quantity
             success = await reserve_stock(bot, guild_id, channel_id, item_name, reserved_quantity)
             if not success:
-                return False, t(DEFAULT_LOCALE, 'error-not-enough-stock')
+                return False, t(locale, 'error-not-enough-stock')
 
         # Update quantity; release stock if the write fails
         try:
@@ -751,7 +756,7 @@ async def update_cart_item_quantity(bot, guild_id: int, user_id: int, channel_id
         # Reducing quantity, release stock
         await remove_item_from_cart(bot, guild_id, user_id, channel_id, cart_key, abs(quantity_diff))
 
-    return True, t(DEFAULT_LOCALE, 'shop-msg-cart-updated')
+    return True, t(locale, 'shop-msg-cart-updated')
 
 
 async def clear_cart_and_release_stock(bot, guild_id: int, user_id: int, channel_id: str):

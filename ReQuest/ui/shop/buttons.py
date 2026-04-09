@@ -11,14 +11,16 @@ from ReQuest.utilities.shop import clear_cart_and_release_stock, get_shop_stock,
 
 
 class ShopItemButton(Button):
-    def __init__(self, item, cost_string='Free', stock_info=None):
+    def __init__(self, item, cost_string='Free', stock_info=None, locale=None):
         """
         Button to add item to cart or view purchase options.
 
         :param item: The item dictionary
         :param cost_string: Formatted cost string for display
         :param stock_info: Dict with ShopFields.AVAILABLE and ShopFields.RESERVED counts, or None if unlimited
+        :param locale: Locale for translation
         """
+        locale = locale or DEFAULT_LOCALE
         costs = item.get(ShopFields.COSTS, [])
 
         # Check if out of stock (only if stock data is valid)
@@ -29,15 +31,15 @@ class ShopItemButton(Button):
                 is_out_of_stock = True
 
         if is_out_of_stock:
-            label = t(DEFAULT_LOCALE, 'shop-btn-out-of-stock')
+            label = t(locale, 'shop-btn-out-of-stock')
             style = ButtonStyle.secondary
             disabled = True
         elif len(costs) > 1:
-            label = t(DEFAULT_LOCALE, 'shop-btn-view-options')
+            label = t(locale, 'shop-btn-view-options')
             style = ButtonStyle.success
             disabled = False
         else:
-            label = t(DEFAULT_LOCALE, 'shop-btn-add-to-cart', **{'cost': cost_string})
+            label = t(locale, 'shop-btn-add-to-cart', **{'cost': cost_string})
             style = ButtonStyle.success
             disabled = False
 
@@ -80,8 +82,9 @@ class ShopItemButton(Button):
 
 class SelectCostOptionButton(Button):
     def __init__(self, shop_view, item, index):
+        locale = getattr(shop_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-select'),
+            label=t(locale, 'common-btn-select'),
             style=ButtonStyle.primary,
             custom_id=f'sel_opt_{item["name"]}_{index}'
         )
@@ -98,8 +101,9 @@ class SelectCostOptionButton(Button):
 
 class ViewCartButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'shop-btn-view-cart'),
+            label=t(locale, 'shop-btn-view-cart'),
             style=ButtonStyle.success,
             custom_id='view_cart_button'
         )
@@ -149,8 +153,9 @@ class ViewCartButton(Button):
 
 class CartBackButton(Button):
     def __init__(self, target_view):
+        locale = getattr(target_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'shop-btn-back-to-shop'),
+            label=t(locale, 'shop-btn-back-to-shop'),
             style=ButtonStyle.secondary,
             custom_id='cart_back_button'
         )
@@ -166,8 +171,9 @@ class CartBackButton(Button):
 
 class CartClearButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'shop-btn-clear-cart'),
+            label=t(locale, 'shop-btn-clear-cart'),
             style=ButtonStyle.danger,
             custom_id='cart_clear_button'
         )
@@ -198,8 +204,9 @@ class CartClearButton(Button):
 
 class CartCheckoutButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'shop-btn-checkout'),
+            label=t(locale, 'shop-btn-checkout'),
             style=ButtonStyle.success,
             custom_id='cart_checkout_button'
         )
@@ -213,9 +220,10 @@ class CartCheckoutButton(Button):
 
 
 class EditCartItemButton(Button):
-    def __init__(self, item_key, quantity):
+    def __init__(self, item_key, quantity, locale=None):
+        locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'shop-btn-edit-quantity'),
+            label=t(locale, 'shop-btn-edit-quantity'),
             style=ButtonStyle.secondary,
             custom_id=f'edit_cart_item_button_{item_key}'
         )

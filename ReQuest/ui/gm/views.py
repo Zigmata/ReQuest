@@ -152,7 +152,9 @@ class GMQuestMenuView(LocaleLayoutView):
 
                 info_text = f"**{truncate_text(title, 80)}**{status_label}\nID: `{quest_id}`"
 
-                section = Section(accessory=buttons.ManageQuestRowButton(quest))
+                section = Section(accessory=buttons.ManageQuestRowButton(
+                    quest, locale=getattr(self, 'locale', DEFAULT_LOCALE)
+                ))
                 section.add_item(TextDisplay(info_text))
                 container.add_item(section)
 
@@ -314,7 +316,7 @@ class ManageQuestsView(LocaleLayoutView):
             )
             if not channel_id_query:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'gm-error-quest-channel-not-set'),
+                    t(getattr(self, 'locale', DEFAULT_LOCALE), 'gm-error-quest-channel-not-set'),
                     message_id='gm-error-quest-channel-not-set'
                 )
             channel_id = strip_id(channel_id_query[ConfigFields.QUEST_CHANNEL])
@@ -330,7 +332,7 @@ class ManageQuestsView(LocaleLayoutView):
                 role_id = quest[QuestFields.PARTY_ROLE_ID]
                 role = guild.get_role(role_id)
                 if role:
-                    check_role_hierarchy(guild, role)
+                    check_role_hierarchy(guild, role, locale=getattr(self, 'locale', DEFAULT_LOCALE))
 
             party = quest[QuestFields.PARTY]
             title = quest[QuestFields.TITLE]
@@ -465,7 +467,10 @@ class ManageQuestsView(LocaleLayoutView):
             rewards = quest[QuestFields.REWARDS]
 
             if not party:
-                raise UserFeedbackError(t(DEFAULT_LOCALE, 'gm-error-empty-roster'), message_id='gm-error-empty-roster')
+                raise UserFeedbackError(
+                    t(getattr(self, 'locale', DEFAULT_LOCALE), 'gm-error-empty-roster'),
+                    message_id='gm-error-empty-roster'
+                )
 
             archive_channel = None
             archive_query = await get_cached_data(
@@ -483,7 +488,7 @@ class ManageQuestsView(LocaleLayoutView):
             if party_role_id:
                 role = guild.get_role(party_role_id)
                 if role:
-                    check_role_hierarchy(guild, role)
+                    check_role_hierarchy(guild, role, locale=getattr(self, 'locale', DEFAULT_LOCALE))
                     role_mode = quest.get(QuestFields.QUEST_ROLE_MODE, 'temporary')
                     if role_mode == 'static':
                         if not guild.chunked:
@@ -797,7 +802,7 @@ class RewardsMenuView(LocaleLayoutView):
     def build_view(self):
         container = Container()
 
-        header_section = Section(accessory=buttons.BackToManageQuestButton(self.quest))
+        header_section = Section(accessory=buttons.BackToManageQuestButton(self.quest, locale=getattr(self, 'locale', DEFAULT_LOCALE)))
         header_section.add_item(TextDisplay(f'**Quest Rewards - {self.quest[QuestFields.TITLE]}**'))
         container.add_item(header_section)
         container.add_item(Separator())
@@ -823,7 +828,9 @@ class RewardsMenuView(LocaleLayoutView):
 
             options = self._build_party_member_options(self.quest)
             if options:
-                self.party_member_select.placeholder = t(DEFAULT_LOCALE, 'gm-select-placeholder-party-member')
+                self.party_member_select.placeholder = t(
+                    getattr(self, 'locale', DEFAULT_LOCALE), 'gm-select-placeholder-party-member'
+                )
                 self.party_member_select.disabled = False
                 self.party_member_select.options = options
             else:
@@ -1064,7 +1071,7 @@ class EditQuestView(LocaleLayoutView):
 
         # Back + Publish row
         nav_row = ActionRow()
-        nav_row.add_item(buttons.BackToManageQuestButton(quest))
+        nav_row.add_item(buttons.BackToManageQuestButton(quest, locale=getattr(self, 'locale', DEFAULT_LOCALE)))
 
         is_locked = quest.get(QuestFields.LOCK_STATE, False)
         publish_button = buttons.PublishQuestButton(self)
@@ -1110,7 +1117,7 @@ class RemovePlayerView(LocaleLayoutView):
         locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
-        header_section = Section(accessory=buttons.BackToManageQuestButton(self.quest))
+        header_section = Section(accessory=buttons.BackToManageQuestButton(self.quest, locale=getattr(self, 'locale', DEFAULT_LOCALE)))
         header_section.add_item(TextDisplay(
             f'**{t(locale, "gm-title-remove-player", questTitle=self.quest[QuestFields.TITLE])}**'
         ))
@@ -1196,7 +1203,7 @@ class RemovePlayerView(LocaleLayoutView):
             if lock_state and party_role_id:
                 role = guild.get_role(party_role_id)
                 if role:
-                    check_role_hierarchy(guild, role)
+                    check_role_hierarchy(guild, role, locale=getattr(self, 'locale', DEFAULT_LOCALE))
 
                 # Remove the role from the member
                 if role and member:
@@ -1490,7 +1497,7 @@ class QuestPostView(LocaleLayoutView):
                     for character_id, character_data in player[str(user_id)].items():
                         raise UserFeedbackError(
                             t(
-                                DEFAULT_LOCALE, 'gm-error-already-on-quest',
+                                getattr(self, 'locale', DEFAULT_LOCALE), 'gm-error-already-on-quest',
                                 characterName=character_data[CommonFields.NAME]
                             ),
                             message_id='gm-error-already-on-quest'
@@ -1508,7 +1515,7 @@ class QuestPostView(LocaleLayoutView):
                     CharacterFields.ACTIVE_CHARACTERS not in player_characters or
                     str(guild_id) not in player_characters[CharacterFields.ACTIVE_CHARACTERS]):
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'gm-error-no-active-character-long'),
+                    t(getattr(self, 'locale', DEFAULT_LOCALE), 'gm-error-no-active-character-long'),
                     message_id='gm-error-no-active-character-long'
                 )
             active_character_id = player_characters[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
@@ -1516,7 +1523,8 @@ class QuestPostView(LocaleLayoutView):
 
             if quest[QuestFields.LOCK_STATE]:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'gm-error-quest-locked', questTitle=quest[QuestFields.TITLE]),
+                    t(getattr(self, 'locale', DEFAULT_LOCALE), 'gm-error-quest-locked',
+                      questTitle=quest[QuestFields.TITLE]),
                     message_id='gm-error-quest-locked'
                 )
             else:
@@ -1549,7 +1557,8 @@ class QuestPostView(LocaleLayoutView):
                     # Otherwise, inform the user that the party/wait list is full
                     else:
                         raise UserFeedbackError(
-                            t(DEFAULT_LOCALE, 'gm-error-quest-full', questTitle=quest[QuestFields.TITLE]),
+                            t(getattr(self, 'locale', DEFAULT_LOCALE), 'gm-error-quest-full',
+                              questTitle=quest[QuestFields.TITLE]),
                             message_id='gm-error-quest-full'
                         )
                 # If there is no wait list, this section formats the embed without it
@@ -1567,7 +1576,8 @@ class QuestPostView(LocaleLayoutView):
                         self.quest[QuestFields.PARTY].append(new_player_entry)
                     else:
                         raise UserFeedbackError(
-                            t(DEFAULT_LOCALE, 'gm-error-quest-full', questTitle=quest[QuestFields.TITLE]),
+                            t(getattr(self, 'locale', DEFAULT_LOCALE), 'gm-error-quest-full',
+                              questTitle=quest[QuestFields.TITLE]),
                             message_id='gm-error-quest-full'
                         )
 
@@ -1602,7 +1612,7 @@ class QuestPostView(LocaleLayoutView):
                         in_wait_list = True
             if not in_party and not in_wait_list:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'gm-error-not-signed-up'),
+                    t(getattr(self, 'locale', DEFAULT_LOCALE), 'gm-error-not-signed-up'),
                     message_id='gm-error-not-signed-up'
                 )
 
@@ -1681,7 +1691,7 @@ class ViewCharacterView(LocaleLayoutView):
             container.add_item(Separator())
 
         # Display inventory grouped by container
-        inventory_display = format_inventory_by_container(character_data, currency_config)
+        inventory_display = format_inventory_by_container(character_data, currency_config, locale=locale)
         container.add_item(TextDisplay(f'{t(locale, "gm-label-possessions")}\n\n{inventory_display}'))
 
         self.add_item(container)

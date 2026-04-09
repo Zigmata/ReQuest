@@ -129,7 +129,7 @@ class ShopBaseView(LocaleLayoutView):
 
             for item in current_stock:
                 costs = item.get(ShopFields.COSTS, [])
-                cost_string = format_complex_cost(costs, getattr(self, 'currency_config', {}))
+                cost_string = format_complex_cost(costs, getattr(self, 'currency_config', {}), locale=locale)
 
                 item_name = item.get(CommonFields.NAME, t(locale, 'shop-label-unknown-item'))
                 item_name_display = escape_markdown(item_name)
@@ -137,7 +137,7 @@ class ShopBaseView(LocaleLayoutView):
                 # Get stock info for this item
                 item_stock_info = self.stock_info.get(encode_mongo_key(item_name)) if self.stock_info else None
 
-                buy_button = buttons.ShopItemButton(item, cost_string, item_stock_info)
+                buy_button = buttons.ShopItemButton(item, cost_string, item_stock_info, locale=locale)
                 section = Section(accessory=buy_button)
 
                 item_description = item.get('description', None)
@@ -339,7 +339,9 @@ class ShopCartView(LocaleLayoutView):
                 else:
                     player_wallet = self.character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {})
                     for base_currency, amount in self.base_totals.items():
-                        is_ok, _ = check_sufficient_funds(player_wallet, self.currency_config, base_currency, amount)
+                        is_ok, _ = check_sufficient_funds(
+                            player_wallet, self.currency_config, base_currency, amount, locale=locale
+                        )
                         if not is_ok:
                             can_afford_all = False
                             warnings.append(t(
@@ -370,9 +372,9 @@ class ShopCartView(LocaleLayoutView):
                             price_string = t(locale, 'common-label-free')
                         else:
                             total_cost = {k: v * quantity for k, v in selected_cost.items()}
-                            price_string = format_complex_cost([total_cost], self.currency_config)
+                            price_string = format_complex_cost([total_cost], self.currency_config, locale=locale)
 
-                    edit_button = buttons.EditCartItemButton(item_key, quantity)
+                    edit_button = buttons.EditCartItemButton(item_key, quantity, locale=locale)
                     section = Section(accessory=edit_button)
 
                     item_name = escape_markdown(truncate_text(item[CommonFields.NAME], DisplayLimits.ITEM_NAME))
@@ -492,7 +494,7 @@ class ShopCartView(LocaleLayoutView):
                     CharacterFields.CURRENCY, {}
                 )
                 is_ok, msg = check_sufficient_funds(
-                    wallet, self.currency_config, base_currency, amount
+                    wallet, self.currency_config, base_currency, amount, locale=locale
                 )
                 if not is_ok:
                     await interaction.response.send_message(
@@ -637,7 +639,7 @@ class ComplexItemPurchaseView(LocaleLayoutView):
             container.add_item(TextDisplay(t(locale, 'shop-msg-no-options')))
         else:
             for index, cost_option in enumerate(costs):
-                cost_str = format_complex_cost([cost_option], currency_config)
+                cost_str = format_complex_cost([cost_option], currency_config, locale=locale)
 
                 select_button = buttons.SelectCostOptionButton(self.parent_view, self.item, index)
                 section = Section(accessory=select_button)

@@ -139,7 +139,7 @@ def get_denomination_map(currency_config: dict, currency_name: str) -> Tuple[dic
 
 
 def check_sufficient_funds(player_currency: dict, currency_config: dict, cost_currency_name: str,
-                           cost_amount: float) -> Tuple[bool, str]:
+                           cost_amount: float, locale: str | None = None) -> Tuple[bool, str]:
     """
     Verifies that a player has funds to cover the attempted transaction.
 
@@ -147,12 +147,16 @@ def check_sufficient_funds(player_currency: dict, currency_config: dict, cost_cu
     :param currency_config: The server's currency config dict
     :param cost_currency_name: The name of the currency or denomination that is being used
     :param cost_amount: The amount of the currency or denomination that is being used
+    :param locale: Locale for user-facing messages
 
     :return: A tuple containing:
              - A boolean indicating if the player has sufficient funds
              - A message string indicating success or the reason for failure
     """
     from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
+
+    if locale is None:
+        locale = DEFAULT_LOCALE
 
     try:
         if cost_amount <= 0:
@@ -161,15 +165,15 @@ def check_sufficient_funds(player_currency: dict, currency_config: dict, cost_cu
         denomination_map, _ = get_denomination_map(currency_config, cost_currency_name.lower())
 
         if not denomination_map:
-            return False, t(DEFAULT_LOCALE, 'error-currency-not-configured', currencyName=cost_currency_name)
+            return False, t(locale, 'error-currency-not-configured', currencyName=cost_currency_name)
 
         cost_name_lower = cost_currency_name.lower()
         if cost_name_lower not in denomination_map:
-            return False, t(DEFAULT_LOCALE, 'error-cost-currency-system-mismatch', currencyName=cost_currency_name)
+            return False, t(locale, 'error-cost-currency-system-mismatch', currencyName=cost_currency_name)
 
         min_value = min(denomination_map.values())
         if min_value <= 0:
-            return False, t(DEFAULT_LOCALE, 'error-currency-config-error')
+            return False, t(locale, 'error-currency-config-error')
 
         norm_player_currency = normalize_currency_keys(player_currency)
         player_total_value = 0.0
@@ -183,13 +187,13 @@ def check_sufficient_funds(player_currency: dict, currency_config: dict, cost_cu
 
         tolerance = 1e-9
         if player_total_value + tolerance < cost_total_value:
-            return False, t(DEFAULT_LOCALE, 'error-insufficient-funds')
+            return False, t(locale, 'error-insufficient-funds')
 
         return True, "OK"
     except Exception as e:
         logger.error(f"Error in check_sufficient_funds: {e}")
         logger.error(traceback.format_exc())
-        return False, t(DEFAULT_LOCALE, 'error-currency-validation', error=str(e))
+        return False, t(locale, 'error-currency-validation', error=str(e))
 
 
 def get_base_currency_info(currency_config: dict, currency_name: str):
@@ -342,19 +346,23 @@ def format_price_string(amount, currency_name, currency_config) -> str:
     return f'{formatted_amount} {display_name}'
 
 
-def format_complex_cost(costs: list, currency_config: dict) -> str:
+def format_complex_cost(costs: list, currency_config: dict, locale: str | None = None) -> str:
     """
     Formats a list of complex costs into a readable string.
 
     :param costs: A list of cost dictionaries, e.g. [{'gold': 10}, {'reputation': 50}]
     :param currency_config: The server's currency config dict
+    :param locale: Locale for user-facing labels
 
     :return: A formatted cost string
     """
     from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 
+    if locale is None:
+        locale = DEFAULT_LOCALE
+
     if not costs:
-        return t(DEFAULT_LOCALE, 'common-label-free')
+        return t(locale, 'common-label-free')
 
     option_strings = []
     for option in costs:
@@ -365,6 +373,6 @@ def format_complex_cost(costs: list, currency_config: dict) -> str:
             option_strings.append(' + '.join(component_strings))
 
     if not option_strings:
-        return t(DEFAULT_LOCALE, 'common-label-free')
+        return t(locale, 'common-label-free')
 
     return ' OR\n'.join(option_strings)

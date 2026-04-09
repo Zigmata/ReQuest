@@ -556,7 +556,9 @@ class SpendCurrencyModal(LocaleModal):
                     message_id='player-error-no-currency-config'
                 )
 
-            can_afford, message = check_sufficient_funds(current_wallet, currency_config, currency_name, amount)
+            can_afford, message = check_sufficient_funds(
+                current_wallet, currency_config, currency_name, amount, locale=locale
+            )
             if not can_afford:
                 raise UserFeedbackError(message)
 
@@ -903,7 +905,8 @@ class ConsumeFromContainerModal(LocaleModal):
 
             container_name = get_container_name(
                 self.calling_view.character_data,
-                self.calling_view.container_id
+                self.calling_view.container_id,
+                locale=locale
             )
 
             await consume_item_from_container(

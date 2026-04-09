@@ -386,7 +386,9 @@ class InventoryOverviewView(LocaleLayoutView):
                     self.active_character = query[CharacterFields.CHARACTERS][self.active_character_id]
 
             # Get containers
-            self.containers = get_containers_sorted(self.active_character)
+            self.containers = get_containers_sorted(
+                self.active_character, locale=getattr(self, 'locale', DEFAULT_LOCALE)
+            )
 
             # Calculate pagination
             self.total_pages = math.ceil(len(self.containers) / self.items_per_page)
@@ -552,7 +554,9 @@ class ContainerItemsView(LocaleLayoutView):
 
         self.character_data = player_data[CharacterFields.CHARACTERS][self.character_id]
 
-        self.container_name = get_container_name(self.character_data, self.container_id)
+        self.container_name = get_container_name(
+            self.character_data, self.container_id, locale=getattr(self, 'locale', DEFAULT_LOCALE)
+        )
         items_dict = get_container_items(self.character_data, self.container_id)
 
         # Convert to sorted list of tuples
@@ -704,7 +708,9 @@ class MoveDestinationView(LocaleLayoutView):
 
         self.source_view.character_data = player_data[CharacterFields.CHARACTERS][self.source_view.character_id]
 
-        all_containers = get_containers_sorted(self.source_view.character_data)
+        all_containers = get_containers_sorted(
+            self.source_view.character_data, locale=getattr(self, 'locale', DEFAULT_LOCALE)
+        )
 
         # Exclude source container
         self.containers = [c for c in all_containers if c['id'] != self.source_container_id]
@@ -859,7 +865,9 @@ class ContainerManagementView(LocaleLayoutView):
         )
         self.character_data = player_data[CharacterFields.CHARACTERS][self.character_id]
 
-        self.containers = get_containers_sorted(self.character_data)
+        self.containers = get_containers_sorted(
+            self.character_data, locale=getattr(self, 'locale', DEFAULT_LOCALE)
+        )
 
         self.total_pages = math.ceil(len(self.containers) / self.items_per_page)
         if self.total_pages == 0:
@@ -1670,7 +1678,7 @@ class NewCharacterComplexItemPurchaseView(LocaleLayoutView):
             container.add_item(TextDisplay(t(locale, 'player-msg-no-cost-options')))
         else:
             for index, cost_option in enumerate(costs):
-                cost_str = format_complex_cost([cost_option], currency_config)
+                cost_str = format_complex_cost([cost_option], currency_config, locale=locale)
 
                 select_button = buttons.WizardSelectCostOptionButton(self.parent_view, self.item, index)
                 section = Section(accessory=select_button)
@@ -1756,7 +1764,7 @@ class NewCharacterShopView(LocaleLayoutView):
             cost_string = t(locale, 'common-label-free')
             if self.inventory_type == InventoryType.PURCHASE.value:
                 costs = item.get(ShopFields.COSTS, [])
-                cost_string = format_complex_cost(costs, self.currency_config)
+                cost_string = format_complex_cost(costs, self.currency_config, locale=locale)
 
             section = Section(accessory=buttons.WizardItemButton(
                 item, self.inventory_type, cost_string, locale=locale
@@ -1894,7 +1902,9 @@ class NewCharacterCartView(LocaleLayoutView):
                 wallet[starting_wealth.get(CharacterFields.CURRENCY)] = starting_wealth.get(CommonFields.AMOUNT, 0)
 
             for base_currency, amount in consolidated_costs.items():
-                is_ok, _ = check_sufficient_funds(wallet, self.shop_view.currency_config, base_currency, amount)
+                is_ok, _ = check_sufficient_funds(
+                    wallet, self.shop_view.currency_config, base_currency, amount, locale=locale
+                )
                 if not is_ok:
                     self.can_afford = False
                     warnings.append(
@@ -1949,7 +1959,9 @@ class NewCharacterCartView(LocaleLayoutView):
                         selected_cost = costs[option_index]
                         if selected_cost:
                             total_line_cost = {k: v * quantity for k, v in selected_cost.items()}
-                            price_label = format_complex_cost([total_line_cost], self.shop_view.currency_config)
+                            price_label = format_complex_cost(
+                                [total_line_cost], self.shop_view.currency_config, locale=locale
+                            )
                             display += f' - {price_label}'
 
                 edit_button = buttons.WizardEditCartItemButton(key, quantity, locale=locale)

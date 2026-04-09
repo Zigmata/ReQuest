@@ -298,8 +298,9 @@ class PublishQuestButton(Button):
 
 class ToggleReadyButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'gm-btn-toggle-ready'),
+            label=t(locale, 'gm-btn-toggle-ready'),
             style=ButtonStyle.primary,
             custom_id='toggle_ready_button'
         )
@@ -314,8 +315,9 @@ class ToggleReadyButton(Button):
 
 class RewardsMenuButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'gm-btn-configure-rewards'),
+            label=t(locale, 'gm-btn-configure-rewards'),
             style=ButtonStyle.primary,
             custom_id='rewards_menu_button'
         )
@@ -333,8 +335,9 @@ class RewardsMenuButton(Button):
 
 class RemovePlayerButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'gm-btn-remove-player'),
+            label=t(locale, 'gm-btn-remove-player'),
             style=ButtonStyle.danger,
             custom_id='remove_player_button'
         )
@@ -353,8 +356,9 @@ class RemovePlayerButton(Button):
 
 class CancelQuestButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'gm-btn-cancel-quest'),
+            label=t(locale, 'gm-btn-cancel-quest'),
             style=ButtonStyle.danger,
             custom_id='cancel_quest_button'
         )
@@ -412,7 +416,9 @@ class CancelQuestButton(Button):
             if party_role_id:
                 party_role = guild.get_role(party_role_id)
                 if party_role:
-                    check_role_hierarchy(guild, party_role)
+                    check_role_hierarchy(
+                        guild, party_role, locale=getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
+                    )
                     role_mode = quest.get(QuestFields.QUEST_ROLE_MODE, 'temporary')
                     if role_mode == 'static':
                         if not guild.chunked:
@@ -506,8 +512,9 @@ class CancelQuestButton(Button):
 
 class PartyRewardsButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'gm-btn-manage-party-rewards'),
+            label=t(locale, 'gm-btn-manage-party-rewards'),
             style=ButtonStyle.secondary,
             custom_id='party_rewards_button'
         )
@@ -572,8 +579,9 @@ class PartyRewardsButton(Button):
 
 class IndividualRewardsButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'gm-btn-manage-individual-rewards'),
+            label=t(locale, 'gm-btn-manage-individual-rewards'),
             style=ButtonStyle.secondary,
             custom_id='individual_rewards_button',
             disabled=True
@@ -640,8 +648,9 @@ class IndividualRewardsButton(Button):
 
 class CompleteQuestButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'gm-btn-complete-quest'),
+            label=t(locale, 'gm-btn-complete-quest'),
             style=ButtonStyle.success,
             custom_id='complete_quest_button'
         )
@@ -668,9 +677,9 @@ class CompleteQuestButton(Button):
 
 
 class ManageQuestRowButton(Button):
-    def __init__(self, quest):
+    def __init__(self, quest, locale=DEFAULT_LOCALE):
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-manage'),
+            label=t(locale, 'common-btn-manage'),
             style=ButtonStyle.secondary,
             custom_id=f'manage_quest_{quest[QuestFields.QUEST_ID]}'
         )
@@ -687,9 +696,9 @@ class ManageQuestRowButton(Button):
 
 
 class BackToManageQuestButton(Button):
-    def __init__(self, quest):
+    def __init__(self, quest, locale=DEFAULT_LOCALE):
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-back'),
+            label=t(locale, 'common-btn-back'),
             style=ButtonStyle.secondary,
             custom_id='back_to_manage_quest'
         )
