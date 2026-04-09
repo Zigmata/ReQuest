@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 __all__ = [
     'build_cache_key', 'get_cached_data', 'update_cached_data', 'replace_cached_data', 'delete_cached_data',
-    'encode_mongo_key', 'decode_mongo_key', 'get_xp_config',
+    'encode_mongo_key', 'decode_mongo_key', 'get_xp_config', 'run_in_transaction',
 ]
 
 
@@ -53,9 +53,13 @@ def decode_mongo_key(key: str) -> str:
     return result
 
 
-async def get_cached_data(bot, mongo_database, collection_name, query, is_single=True, cache_id=None):
+async def get_cached_data(bot, mongo_database, collection_name, query, is_single=True, cache_id=None,
+                          session=None):
     """
     Fetches a document from mongodb using redis caching.
+
+    When a session is provided (i.e. inside a transaction), Redis cache is bypassed
+    so that reads see the transaction's snapshot rather than stale cached data.
 
     :param bot: the discord bot instance
     :param mongo_database: the mongodb database instance
@@ -63,6 +67,7 @@ async def get_cached_data(bot, mongo_database, collection_name, query, is_single
     :param query: mongodb dict query
     :param is_single: whether to fetch a single document or return a list of documents
     :param cache_id: optional identifier for redis caching; if not provided, uses the '_id' from the query
+    :param session: optional MongoDB client session for transaction support
 
     :return: the fetched document(s) or None if not found
     """
@@ -74,28 +79,29 @@ async def get_cached_data(bot, mongo_database, collection_name, query, is_single
 
     cache_key = build_cache_key(mongo_database.name, cache_id, collection_name)
 
-    try:
-        cached = await bot.rdb.get(cache_key)
-        if cached:
-            return json.loads(cached)
-    except Exception as e:
-        logger.error(f"Redis read failed: {e}")
-        await log_exception(e)
+    if session is None:
+        try:
+            cached = await bot.rdb.get(cache_key)
+            if cached:
+                return json.loads(cached)
+        except Exception as e:
+            logger.error(f"Redis read failed: {e}")
+            await log_exception(e)
 
     try:
         if is_single:
-            data = await mongo_database[collection_name].find_one(query)
+            data = await mongo_database[collection_name].find_one(query, session=session)
 
-            if data:
+            if data and session is None:
                 try:
                     await bot.rdb.set(cache_key, json.dumps(data, default=str), ex=3600)
                 except Exception as e:
                     logger.error(f"Redis write failed: {e}")
         else:
-            cursor = mongo_database[collection_name].find(query)
+            cursor = mongo_database[collection_name].find(query, session=session)
             data = await cursor.to_list(length=None)
 
-            if data:
+            if data and session is None:
                 try:
                     await bot.rdb.set(cache_key, json.dumps(data, default=str), ex=3600)
                 except Exception as e:
@@ -108,9 +114,9 @@ async def get_cached_data(bot, mongo_database, collection_name, query, is_single
 
 
 async def update_cached_data(bot, mongo_database, collection_name, query, update_data,
-                             is_single: bool = True, cache_id=None):
+                             is_single: bool = True, cache_id=None, session=None):
     """
-    Updates mongodb and deletes the corresponding key from redis
+    Updates mongodb and deletes the corresponding key from redis.
 
     :param bot: the discord bot instance
     :param mongo_database: the mongodb database instance
@@ -119,6 +125,7 @@ async def update_cached_data(bot, mongo_database, collection_name, query, update
     :param update_data: the update dict for mongo
     :param is_single: whether to update a single document or multiple
     :param cache_id: identifier for redis; if not provided, uses the '_id' from the query
+    :param session: optional MongoDB client session for transaction support
     """
     if cache_id is None:
         if CommonFields.ID in query:
@@ -134,13 +141,15 @@ async def update_cached_data(bot, mongo_database, collection_name, query, update
             await mongo_collection.update_one(
                 query,
                 update_data,
-                upsert=True
+                upsert=True,
+                session=session
             )
         else:
             await mongo_collection.update_many(
                 query,
                 update_data,
-                upsert=True
+                upsert=True,
+                session=session
             )
     except Exception as e:
         raise Exception(f'Error updating {collection_name} in database: {e}') from e
@@ -151,9 +160,10 @@ async def update_cached_data(bot, mongo_database, collection_name, query, update
         logger.error(f"Redis delete failed: {e}")
 
 
-async def replace_cached_data(bot, mongo_database, collection_name, query, new_data, cache_id=None):
+async def replace_cached_data(bot, mongo_database, collection_name, query, new_data, cache_id=None,
+                              session=None):
     """
-    Replaces a document in mongodb and deletes the corresponding key from redis
+    Replaces a document in mongodb and deletes the corresponding key from redis.
 
     :param bot: the discord bot instance
     :param mongo_database: the mongodb database instance
@@ -161,6 +171,7 @@ async def replace_cached_data(bot, mongo_database, collection_name, query, new_d
     :param query: mongodb dict query
     :param new_data: the new document data to replace with
     :param cache_id: identifier for redis; if not provided, uses the '_id' from the query
+    :param session: optional MongoDB client session for transaction support
     """
     if cache_id is None:
         if CommonFields.ID in query:
@@ -177,7 +188,8 @@ async def replace_cached_data(bot, mongo_database, collection_name, query, new_d
         await mongo_collection.replace_one(
             query,
             replacement,
-            upsert=True
+            upsert=True,
+            session=session
         )
     except Exception as e:
         raise Exception(f'Error replacing {collection_name} in database: {e}') from e
@@ -189,9 +201,9 @@ async def replace_cached_data(bot, mongo_database, collection_name, query, new_d
 
 
 async def delete_cached_data(bot, mongo_database, collection_name, search_filter,
-                             is_single: bool = True, cache_id=None):
+                             is_single: bool = True, cache_id=None, session=None):
     """
-    Deletes documents from mongodb and deletes the corresponding keys from redis
+    Deletes documents from mongodb and deletes the corresponding keys from redis.
 
     :param bot: the discord bot instance
     :param mongo_database: the mongodb database instance
@@ -199,6 +211,7 @@ async def delete_cached_data(bot, mongo_database, collection_name, search_filter
     :param search_filter: dict for the delete filter
     :param is_single: whether to delete a single document or multiple
     :param cache_id: identifier for redis; if not provided, uses the '_id' from the query
+    :param session: optional MongoDB client session for transaction support
     """
     if cache_id is None:
         if CommonFields.ID in search_filter:
@@ -211,9 +224,9 @@ async def delete_cached_data(bot, mongo_database, collection_name, search_filter
     try:
         mongo_collection = mongo_database[collection_name]
         if is_single:
-            await mongo_collection.delete_one(search_filter)
+            await mongo_collection.delete_one(search_filter, session=session)
         else:
-            await mongo_collection.delete_many(search_filter)
+            await mongo_collection.delete_many(search_filter, session=session)
     except Exception as e:
         raise Exception(f'Error deleting {collection_name} in database: {e}') from e
 
@@ -221,6 +234,28 @@ async def delete_cached_data(bot, mongo_database, collection_name, search_filter
         await bot.rdb.delete(cache_key)
     except Exception as e:
         logger.error(f"Redis delete failed: {e}")
+
+
+async def run_in_transaction(bot, callback, *args, **kwargs):
+    """
+    Runs an async callback inside a MongoDB transaction with automatic retry.
+
+    Uses session.with_transaction() which handles:
+    - Automatic retry on TransientTransactionError
+    - Automatic retry on UnknownTransactionCommitResult
+    - Automatic abort on unhandled exception
+
+    The callback receives the session as its first argument and must pass it
+    through to all DB operations (db_cache helpers and direct collection calls).
+
+    :param bot: the discord bot instance (provides bot.mongo_client)
+    :param callback: an async callable with signature (session, *args, **kwargs)
+    :return: the return value of callback
+    """
+    async with await bot.mongo_client.start_session() as session:
+        return await session.with_transaction(
+            lambda s: callback(s, *args, **kwargs)
+        )
 
 
 async def get_xp_config(bot, guild_id) -> bool:
