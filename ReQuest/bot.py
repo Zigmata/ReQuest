@@ -138,26 +138,24 @@ class ReQuest(commands.Bot):
                 logger.info(f'[Migration] Found legacy quest {quest_id} in guild {guild_id}, '
                             f'messageId={message_id}')
 
-                # Set status to published and invalidate any stale Redis cache
-                await quest_collection.update_one(
-                    {QuestFields.QUEST_ID: quest_id, QuestFields.GUILD_ID: guild_id},
-                    {'$set': {QuestFields.STATUS: QuestStatus.PUBLISHED}}
-                )
-                quest[QuestFields.STATUS] = QuestStatus.PUBLISHED
                 cache_key = build_cache_key(
                     self.gdb.name, f'{guild_id}:{quest_id}', DatabaseCollections.QUESTS
                 )
-                try:
-                    await self.rdb.delete(cache_key)
-                except Exception as e:
-                    logger.warning(f'[Migration] Quest {quest_id}: Redis cache invalidation failed: {e}')
-                logger.info(f'[Migration] Quest {quest_id}: status set to published')
 
-                # Re-post as V2 if message exists
+                # No message to migrate — just set status and move on
                 if not message_id:
-                    logger.info(f'[Migration] Quest {quest_id}: no messageId, skipping re-post')
+                    await quest_collection.update_one(
+                        {QuestFields.QUEST_ID: quest_id, QuestFields.GUILD_ID: guild_id},
+                        {'$set': {QuestFields.STATUS: QuestStatus.PUBLISHED}}
+                    )
+                    try:
+                        await self.rdb.delete(cache_key)
+                    except Exception as e:
+                        logger.warning(f'[Migration] Quest {quest_id}: cache invalidation failed: {e}')
+                    logger.info(f'[Migration] Quest {quest_id}: no messageId, status set to published')
                     continue
 
+                # Re-post as V2
                 channel_query = await get_cached_data(
                     bot=self,
                     mongo_database=self.gdb,
@@ -166,7 +164,8 @@ class ReQuest(commands.Bot):
                 )
                 if not channel_query:
                     logger.info(
-                        f'[Migration] Quest {quest_id}: no quest channel configured for guild {guild_id}'
+                        f'[Migration] Quest {quest_id}: no quest channel configured for guild {guild_id}, '
+                        f'skipping (will retry next startup)'
                     )
                     continue
 
@@ -179,7 +178,8 @@ class ReQuest(commands.Bot):
                     try:
                         channel = await self.fetch_channel(strip_id(channel_id_str))
                     except Exception as e:
-                        logger.error(f'[Migration] Quest {quest_id}: failed to fetch channel: {e}')
+                        logger.error(f'[Migration] Quest {quest_id}: failed to fetch channel: {e}, '
+                                     f'skipping (will retry next startup)')
                         continue
 
                 old_msg = channel.get_partial_message(message_id)
@@ -187,12 +187,17 @@ class ReQuest(commands.Bot):
                 await view.setup(bot=self)
                 logger.info(f'[Migration] Quest {quest_id}: sending new V2 post to channel {channel.id}')
                 new_msg = await channel.send(view=view)
+
+                # Only set status after successful re-post
                 await quest_collection.update_one(
                     {QuestFields.QUEST_ID: quest_id, QuestFields.GUILD_ID: guild_id},
-                    {'$set': {QuestFields.MESSAGE_ID: new_msg.id}}
+                    {'$set': {
+                        QuestFields.STATUS: QuestStatus.PUBLISHED,
+                        QuestFields.MESSAGE_ID: new_msg.id
+                    }}
                 )
+                quest[QuestFields.STATUS] = QuestStatus.PUBLISHED
                 quest[QuestFields.MESSAGE_ID] = new_msg.id
-                # Invalidate all related caches after messageId update
                 try:
                     await self.rdb.delete(cache_key)
                     admin_key = build_cache_key(
@@ -200,7 +205,7 @@ class ReQuest(commands.Bot):
                     )
                     await self.rdb.delete(admin_key)
                 except Exception as e:
-                    logger.warning(f'[Migration] Quest {quest_id}: Redis cache invalidation failed: {e}')
+                    logger.warning(f'[Migration] Quest {quest_id}: cache invalidation failed: {e}')
                 await attempt_delete(old_msg)
                 logger.info(
                     f'[Migration] Quest {quest_id}: migrated successfully, new messageId={new_msg.id}'
@@ -215,15 +220,38 @@ class ReQuest(commands.Bot):
 
     async def _load_quest_views(self):
         """Reload persistent views for published/locked quests."""
+        from ReQuest.utilities.localizer import resolve_guild_locale
         quest_collection = self.gdb[DatabaseCollections.QUESTS]
+        guild_config_cache = {}  # {guild_id: (locale, announce_role)}
+
         async for quest in quest_collection.find():
             try:
                 status = quest.get(QuestFields.STATUS, QuestStatus.PUBLISHED)
                 message_id = quest.get(QuestFields.MESSAGE_ID)
                 if status == QuestStatus.DRAFT or not message_id:
                     continue
+
+                guild_id = quest.get(QuestFields.GUILD_ID)
+
+                # Cache per-guild config to avoid repeated DB lookups
+                if guild_id not in guild_config_cache:
+                    locale = await resolve_guild_locale(self, guild_id)
+                    announce_query = await get_cached_data(
+                        bot=self,
+                        mongo_database=self.gdb,
+                        collection_name=DatabaseCollections.ANNOUNCE_ROLE,
+                        query={CommonFields.ID: guild_id}
+                    )
+                    announce_role = announce_query.get(ConfigFields.ANNOUNCE_ROLE) if announce_query else None
+                    guild_config_cache[guild_id] = (locale, announce_role)
+
+                locale, announce_role = guild_config_cache[guild_id]
+
                 view = QuestPostView(quest)
-                await view.setup(bot=self)
+                view.locale = locale
+                view.announce_role = announce_role
+                view._setup_done = True
+                view.build_view()
                 self.add_view(view=view, message_id=message_id)
             except (KeyError, TypeError) as e:
                 quest_id = quest.get(QuestFields.QUEST_ID, 'unknown')
