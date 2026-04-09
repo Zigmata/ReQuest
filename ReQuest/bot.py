@@ -142,17 +142,17 @@ class ReQuest(commands.Bot):
                     self.gdb.name, f'{guild_id}:{quest_id}', DatabaseCollections.QUESTS
                 )
 
-                # No message to migrate — just set status and move on
+                # No message to migrate — set as draft so GM can publish fresh
                 if not message_id:
                     await quest_collection.update_one(
                         {QuestFields.QUEST_ID: quest_id, QuestFields.GUILD_ID: guild_id},
-                        {'$set': {QuestFields.STATUS: QuestStatus.PUBLISHED}}
+                        {'$set': {QuestFields.STATUS: QuestStatus.DRAFT}}
                     )
                     try:
                         await self.rdb.delete(cache_key)
                     except Exception as e:
                         logger.warning(f'[Migration] Quest {quest_id}: cache invalidation failed: {e}')
-                    logger.info(f'[Migration] Quest {quest_id}: no messageId, status set to published')
+                    logger.info(f'[Migration] Quest {quest_id}: no messageId, status set to draft')
                     continue
 
                 # Re-post as V2
@@ -186,7 +186,9 @@ class ReQuest(commands.Bot):
                 view = QuestPostView(quest)
                 await view.setup(bot=self)
                 logger.info(f'[Migration] Quest {quest_id}: sending new V2 post to channel {channel.id}')
-                new_msg = await channel.send(view=view)
+                new_msg = await channel.send(
+                    view=view, allowed_mentions=discord.AllowedMentions.none()
+                )
 
                 # Only set status after successful re-post
                 await quest_collection.update_one(
@@ -211,9 +213,17 @@ class ReQuest(commands.Bot):
                     f'[Migration] Quest {quest_id}: migrated successfully, new messageId={new_msg.id}'
                 )
 
-                # Rate limit protection — pause between migrations
-                await asyncio.sleep(2)
+                # Brief pause between migrations to avoid rate limits
+                await asyncio.sleep(0.5)
 
+            except discord.HTTPException as e:
+                if e.status == 429:
+                    retry_after = getattr(e, 'retry_after', 5)
+                    logger.warning(f'[Migration] Rate limited, waiting {retry_after}s')
+                    await asyncio.sleep(retry_after)
+                else:
+                    logger.error(f'[Migration] Failed to migrate quest '
+                                 f'{quest.get(QuestFields.QUEST_ID, "unknown")}: {e}')
             except Exception as e:
                 logger.error(f'[Migration] Failed to migrate quest '
                              f'{quest.get(QuestFields.QUEST_ID, "unknown")}: {e}')
