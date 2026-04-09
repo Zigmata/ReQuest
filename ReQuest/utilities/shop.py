@@ -737,8 +737,9 @@ async def update_cart_item_quantity(bot, guild_id: int, user_id: int, channel_id
             # Need to reserve additional stock
             item_quantity = item.get(CommonFields.QUANTITY, 1)
             reserved_quantity = quantity_diff * item_quantity
-            success = await reserve_stock(bot, guild_id, channel_id, item_name, reserved_quantity,
-                                         session=session)
+            success = await reserve_stock(
+                bot, guild_id, channel_id, item_name, reserved_quantity, session=session
+            )
             if not success:
                 return False, t(locale, 'error-not-enough-stock')
 
