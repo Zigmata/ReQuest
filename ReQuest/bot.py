@@ -75,13 +75,15 @@ class ReQuest(commands.Bot):
         mongo_password = os.getenv('MONGO_PASSWORD')
         mongo_host = os.getenv('MONGO_HOST')
         mongo_port = os.getenv('MONGO_PORT')
-        auth_db = os.getenv('AUTH_DB')
+        mongo_auth_db = os.getenv('AUTH_DB')
+        mongo_replica_set = os.getenv('REPLICA_SET')
 
         # Properly escape any special characters in the username/password
         username = quote_plus(mongo_user)
         password = quote_plus(mongo_password)
 
-        db_uri = f'mongodb://{username}:{password}@{mongo_host}:{mongo_port}/?authSource={auth_db}'
+        db_uri = (f'mongodb://{username}:{password}@{mongo_host}:{mongo_port}/'
+                  f'?authSource={mongo_auth_db}&replicaSet={mongo_replica_set}')
         self.mongo_client = MongoClient(db_uri)
         # ------------------------------------------------------
 
