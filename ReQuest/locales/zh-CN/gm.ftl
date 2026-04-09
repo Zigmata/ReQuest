@@ -2,7 +2,7 @@
 
 # GM buttons
 gm-btn-create = 创建
-gm-btn-edit-details = 编辑详情
+gm-btn-edit-details = 编辑 Quest
 gm-btn-toggle-ready = 切换就绪状态
 gm-btn-configure-rewards = 配置奖励
 gm-btn-remove-player = 移除玩家
@@ -12,6 +12,13 @@ gm-btn-manage-individual-rewards = 管理个人奖励
 gm-btn-join = 加入
 gm-btn-leave = 离开
 gm-btn-complete-quest = 完成 Quest
+gm-btn-edit-details-modal = 编辑详情
+gm-btn-edit-images = 编辑图片
+gm-select-placeholder-party-role = 选择队伍角色...
+gm-modal-title-edit-details = 编辑 Quest 详情
+gm-modal-title-edit-images = 编辑 Quest 图片
+gm-btn-publish = 发布
+gm-btn-update-post = 更新帖子
 
 # GM modals
 gm-modal-title-create-quest = 创建新 Quest
@@ -25,9 +32,9 @@ gm-modal-label-party-role = 队伍角色
 gm-modal-placeholder-party-role = 为此 Quest 创建一个角色（可选）
 gm-modal-label-description = 描述
 gm-modal-placeholder-description = 在此撰写您的 Quest 详情
-gm-modal-title-editing-quest = 编辑 { $questTitle }
-gm-modal-label-title = 标题
-gm-modal-label-max-party-size = 最大队伍人数
+gm-modal-label-image-url = 缩略图 URL
+gm-modal-label-large-image-url = 大图 URL
+gm-modal-placeholder-image-url = 输入图片 URL（或留空以移除）
 gm-modal-title-add-reward = 添加奖励
 gm-modal-label-experience = 经验值
 gm-modal-placeholder-experience = 输入一个数字
@@ -61,6 +68,11 @@ gm-error-not-signed-up = 您未报名参加此 Quest。
 gm-error-quest-channel-not-set = Quest 频道尚未设置！
 gm-error-empty-roster = 不能在名单为空的情况下完成 Quest。请尝试取消。
 gm-error-invalid-xp-value = 经验值必须是正整数！
+gm-error-role-hierarchy = ReQuest 无法管理角色"{ $roleName }"（ID：{ $roleId }），因为该角色在服务器层级中高于 ReQuest 的最高角色。请联系服务器管理员将该角色移至 ReQuest 角色下方，或为 ReQuest 分配更高的角色，然后重试操作。
+gm-error-party-size-positive = 队伍人数必须为正数。
+gm-error-party-size-too-small = 队伍人数不能小于当前队伍（{ $currentSize } 名成员）。
+gm-error-role-name-forbidden = 角色名称"{ $roleName }"在此服务器中被禁止使用。
+gm-error-role-name-exists = 名为"{ $roleName }"的角色在此服务器中已存在。
 
 # GM confirm modals
 gm-modal-title-cancel-quest = 取消 Quest
@@ -68,16 +80,29 @@ gm-modal-label-cancel-quest = 输入 确认 以取消 Quest。
 gm-modal-title-remove-from-quest = 从 Quest 中移除角色
 gm-modal-label-remove-from-quest = 确认移除角色？
 
-# GM DM messages
-gm-dm-quest-cancelled = Quest {"**"}{ $questTitle }{"**"} 已被 GM 取消。
-gm-dm-quest-ready = Quest {"**"}{ $questTitle }{"**"} 现已就绪！
-gm-dm-quest-unlocked = Quest {"**"}{ $questTitle }{"**"} 已解除锁定。
-gm-dm-quest-locked = Quest {"**"}{ $questTitle }{"**"} 已被 GM 锁定。
-gm-dm-player-removed = 您已被从 Quest {"**"}{ $questTitle }{"**"} 中移除。
-gm-dm-player-removed-waitlist = 您已被从 {"**"}{ $questTitle }{"**"} 的等待列表中移除。
-gm-dm-party-promotion = 由于有玩家退出，您已被加入 {"**"}{ $questTitle }{"**"} 的队伍！
-gm-dm-roster-locked = Quest 名单已锁定并已通知队伍成员！
-gm-dm-roster-unlocked = Quest 名单已解除锁定。
+# GM DM embeds
+gm-dm-title-quest-cancelled = Quest 已取消
+gm-dm-desc-quest-cancelled = Quest {"**"}{ $questTitle }{"**"} 已被 GM 取消。
+gm-dm-title-quest-ready = Quest 已就绪
+gm-dm-desc-quest-ready = Quest {"**"}{ $questTitle }{"**"} 现已就绪！您的 GM 将很快开始 Quest。
+gm-dm-title-player-removed = 已从 Quest 移除
+gm-dm-desc-player-removed = 您已被 GM 从 Quest {"**"}{ $questTitle }{"**"} 中移除。
+gm-dm-desc-player-removed-waitlist = 您已被从 {"**"}{ $questTitle }{"**"} 的等待列表中移除。
+gm-dm-title-party-promotion = 队伍晋升
+gm-dm-desc-party-promotion =
+    由于有玩家退出 Quest，
+    您已被晋升至 {"**"}{ $questTitle }{"**"} 的主队伍。
+gm-dm-title-roster-locked = 名单已锁定
+gm-dm-desc-roster-locked =
+    {"**"}{ $questTitle }{"**"} 的名单已锁定，
+    所有队伍成员已收到通知。
+gm-dm-title-roster-unlocked = 名单已解锁
+gm-dm-desc-roster-unlocked = {"**"}{ $questTitle }{"**"} 的名单已解除锁定。
+gm-dm-title-player-removed-confirm = 玩家已移除
+gm-dm-desc-player-removed-confirm =
+    该玩家已从 {"**"}{ $questTitle }{"**"} 中移除，
+    Quest 名单已更新。
+gm-dm-footer-quest = Quest ID：{ $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     您的服务器管理员已为 GM 完成 Quest 配置了奖励。但由于您没有已注册的角色，
     您的奖励目前无法自动发放。
@@ -85,9 +110,18 @@ gm-dm-rewards-no-active-character =
     您的服务器管理员已为 GM 完成 Quest 配置了奖励。但由于您在此服务器上没有活跃角色，
     您的奖励目前无法自动发放。
 gm-dm-rewards-issued = 以下奖励已发放到您的活跃角色 { $characterName }
+gm-dm-role-removal-failed =
+    ⚠️ 无法从以下成员移除角色 {"**"}{ $roleName }{"**"}：{ $members }。
+    请通知服务器管理员手动移除该角色。
+gm-dm-role-not-found =
+    ⚠️ Quest {"**"}{ $questTitle }{"**"} 的 Quest 角色（ID：{ $roleId }）在服务器上已不存在。
+    角色操作已跳过。如果这不在预期之内，请通知服务器管理员。
 
 # GM select menus
 gm-select-placeholder-party-member = 选择一名队伍成员
+gm-modal-label-select-party-role = 队伍角色
+gm-modal-desc-select-party-role = 选择要分配给 Quest 队伍的角色。
+gm-select-option-no-role = 无（不设队伍角色）
 
 # GM embeds
 gm-embed-title-mod-report = GM 玩家修改报告
@@ -99,7 +133,6 @@ gm-embed-field-party = __队伍__
 gm-embed-field-summary = 摘要
 gm-embed-title-gm-rewards = GM 奖励已发放
 gm-embed-field-items = 物品
-gm-msg-player-removed = 玩家已移除，Quest 名单已更新！
 
 # GM views
 gm-title-main-menu = GM - 主菜单
@@ -112,8 +145,21 @@ gm-title-quest-management = GM - Quest 管理
 gm-desc-create-quest = 创建新的 Quest。
 gm-msg-no-quests = 未找到 Quest。
 gm-label-quest-locked = （已锁定）
+gm-label-quest-draft = （草稿）
 gm-title-manage-quest = 管理 Quest - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = 编辑 Quest 详情，如标题、描述和队伍人数。
+gm-title-edit-quest = 编辑 Quest - { $questTitle }
+gm-label-field-not-set = 未设置
+gm-label-description-not-set = 未设置描述
+gm-label-current-title = {"**"}标题：{"**"} { $value }
+gm-label-current-description = {"**"}描述{"**"}
+gm-label-current-restrictions = {"**"}限制条件：{"**"} { $value }
+gm-label-current-party-size = {"**"}最大队伍人数：{"**"} { $value }
+gm-label-current-party-role = {"**"}队伍角色：{"**"} { $value }
+gm-label-current-image = {"**"}缩略图{"**"}
+gm-label-current-large-image = {"**"}图片{"**"}
+gm-desc-publish-quest = 将此 Quest 发布到 Quest 公告板。
+gm-desc-update-quest-post = 更新 Quest 公告板上的 Quest 帖子。
 gm-desc-toggle-ready = 切换就绪状态（当前：{"**"}{ $status }{"**"}）
     - 锁定 Quest 名单并通知队伍成员 Quest 即将开始。如果配置了角色，将在锁定时分配给队伍成员。
     - 设为开放时解锁名单。
@@ -145,16 +191,3 @@ gm-label-currency-heading = {"**"}货币{"**"}
 gm-msg-inventory-empty = 物品栏为空。
 
 # GM approvals
-
-gm-modal-label-select-party-role = 队伍角色
-gm-modal-desc-select-party-role = 选择要分配给 Quest 队伍的角色。
-gm-select-option-no-role = 无（不设队伍角色）
-
-gm-error-role-hierarchy = ReQuest 无法管理角色"{ $roleName }"（ID：{ $roleId }），因为该角色在服务器层级中高于 ReQuest 的最高角色。请联系服务器管理员将该角色移至 ReQuest 角色下方，或为 ReQuest 分配更高的角色，然后重试操作。
-gm-dm-role-removal-failed =
-    ⚠️ 无法从以下成员移除角色 {"**"}{ $roleName }{"**"}：{ $members }。
-    请通知服务器管理员手动移除该角色。
-
-gm-dm-role-not-found =
-    ⚠️ Quest {"**"}{ $questTitle }{"**"} 的 Quest 角色（ID：{ $roleId }）在服务器上已不存在。
-    角色操作已跳过。如果这不在预期之内，请通知服务器管理员。

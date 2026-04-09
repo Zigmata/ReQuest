@@ -7,7 +7,7 @@ import shortuuid
 from ReQuest.ui.common.modals import LocaleModal
 
 from ReQuest.ui.common.enums import RewardType
-from ReQuest.utilities.constants import QuestFields, ConfigFields, CommonFields, DatabaseCollections
+from ReQuest.utilities.constants import QuestFields, QuestStatus, ConfigFields, CommonFields, DatabaseCollections
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_locale, resolve_user_locale, resolve_guild_locale
 from ReQuest.utilities.character import update_character_inventory, update_character_experience
 from ReQuest.utilities.currency import find_currency_or_denomination, get_denomination_map
@@ -19,55 +19,129 @@ logger = logging.getLogger(__name__)
 
 
 class CreateQuestModal(LocaleModal):
-    def __init__(self, calling_view, quest_role_mode='temporary', assigned_roles=None):
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'gm-modal-title-create-quest'),
+            title=t(locale, 'gm-modal-title-create-quest'),
+            timeout=None
+        )
+        self.calling_view = calling_view
+
+        self.quest_title_text_input = discord.ui.TextInput(
+            label=t(locale, 'gm-modal-label-quest-title'),
+            custom_id='quest_title_text_input',
+            placeholder=t(locale, 'gm-modal-placeholder-quest-title')
+        )
+        self.add_item(self.quest_title_text_input)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            title = self.quest_title_text_input.value
+            guild_id = interaction.guild_id
+            quest_id = str(shortuuid.uuid()[:8])
+            bot = interaction.client
+            author_id = interaction.user.id
+
+            quest = {
+                QuestFields.GUILD_ID: guild_id,
+                QuestFields.QUEST_ID: quest_id,
+                QuestFields.MESSAGE_ID: 0,
+                QuestFields.TITLE: title,
+                QuestFields.DESCRIPTION: '',
+                QuestFields.MAX_PARTY_SIZE: 1,
+                QuestFields.RESTRICTIONS: '',
+                QuestFields.GM: author_id,
+                QuestFields.PARTY: [],
+                QuestFields.PARTY_ROLE_ID: None,
+                QuestFields.PARTY_ROLE_NAME: None,
+                QuestFields.QUEST_ROLE_MODE: 'temporary',
+                QuestFields.WAIT_LIST: [],
+                QuestFields.MAX_WAIT_LIST_SIZE: 0,
+                QuestFields.LOCK_STATE: False,
+                QuestFields.REWARDS: {},
+                QuestFields.STATUS: QuestStatus.DRAFT,
+                QuestFields.IMAGE_URL: None,
+                QuestFields.LARGE_IMAGE_URL: None,
+            }
+
+            quest_collection = bot.gdb[DatabaseCollections.QUESTS]
+            await quest_collection.insert_one(quest)
+
+            # Clear the cached quest lists
+            admin_key = build_cache_key(bot.gdb.name, f'guild_quests:{guild_id}', 'quests')
+            await bot.rdb.delete(admin_key)
+            gm_key = build_cache_key(bot.gdb.name, f'gm_quests:{guild_id}:{author_id}', 'quests')
+            await bot.rdb.delete(gm_key)
+
+            # Navigate to the Manage Quest view for the new draft
+            from ReQuest.ui.gm.views import ManageQuestsView
+            view = ManageQuestsView(quest)
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditQuestDetailsComboModal(LocaleModal):
+    """Combined modal for editing title, restrictions, party size, description, and party role."""
+
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
+        quest = calling_view.quest
+        quest_role_mode = getattr(calling_view, 'quest_role_mode', 'disabled')
+        assigned_roles = getattr(calling_view, 'assigned_roles', [])
+        super().__init__(
+            title=t(locale, 'gm-modal-title-edit-details'),
             timeout=None
         )
         self.calling_view = calling_view
         self.quest_role_mode = quest_role_mode
-        self.quest_party_role_text_input = None
-        self.quest_party_role_label = None
+        self.role_label = None
+        self.party_role_input = None
 
-        self.quest_title_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'gm-modal-label-quest-title'),
-            custom_id='quest_title_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'gm-modal-placeholder-quest-title')
+        self.title_input = discord.ui.TextInput(
+            label=t(locale, 'gm-modal-label-quest-title'),
+            custom_id='edit_combo_title',
+            default=quest.get(QuestFields.TITLE, ''),
+            required=True
         )
-        self.quest_restrictions_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'gm-modal-label-restrictions'),
-            custom_id='quest_restrictions_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'gm-modal-placeholder-restrictions'),
+        self.restrictions_input = discord.ui.TextInput(
+            label=t(locale, 'gm-modal-label-restrictions'),
+            custom_id='edit_combo_restrictions',
+            placeholder=t(locale, 'gm-modal-placeholder-restrictions'),
+            default=quest.get(QuestFields.RESTRICTIONS, ''),
             required=False
         )
-        self.quest_party_size_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'gm-modal-label-max-party'),
-            custom_id='quest_party_size_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'gm-modal-placeholder-max-party'),
-            max_length=2
-        )
-        self.quest_description_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'gm-modal-label-description'),
-            style=discord.TextStyle.paragraph,
-            custom_id='quest_description_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'gm-modal-placeholder-description')
+        self.party_size_input = discord.ui.TextInput(
+            label=t(locale, 'gm-modal-label-max-party'),
+            custom_id='edit_combo_party_size',
+            placeholder=t(locale, 'gm-modal-placeholder-max-party'),
+            default=str(quest.get(QuestFields.MAX_PARTY_SIZE, 0) or ''),
+            max_length=2,
+            required=False
         )
 
-        self.add_item(self.quest_title_text_input)
-        self.add_item(self.quest_restrictions_text_input)
-        self.add_item(self.quest_party_size_text_input)
+        self.add_item(self.title_input)
+        self.add_item(self.restrictions_input)
+        self.add_item(self.party_size_input)
 
+        # Party role — 4th field, mode-dependent
         if quest_role_mode == 'temporary':
-            self.quest_party_role_text_input = discord.ui.TextInput(
-                label=t(DEFAULT_LOCALE, 'gm-modal-label-party-role'),
-                custom_id='quest_party_role',
-                placeholder=t(DEFAULT_LOCALE, 'gm-modal-placeholder-party-role'),
+            current_name = quest.get(QuestFields.PARTY_ROLE_NAME, '') or ''
+            self.party_role_input = discord.ui.TextInput(
+                label=t(locale, 'gm-modal-label-party-role'),
+                custom_id='edit_combo_party_role',
+                placeholder=t(locale, 'gm-modal-placeholder-party-role'),
+                default=current_name,
+                max_length=100,
                 required=False
             )
-            self.add_item(self.quest_party_role_text_input)
+            self.add_item(self.party_role_input)
         elif quest_role_mode == 'static' and assigned_roles:
             options = [discord.SelectOption(
-                label=t(DEFAULT_LOCALE, 'gm-select-option-no-role'),
+                label=t(locale, 'gm-select-option-no-role'),
                 value='none'
             )]
             for role_assignment in assigned_roles:
@@ -76,174 +150,83 @@ class CreateQuestModal(LocaleModal):
                     value=str(role_assignment['roleId'])
                 ))
             role_select = discord.ui.Select(
-                placeholder=t(DEFAULT_LOCALE, 'gm-modal-desc-select-party-role'),
+                placeholder=t(locale, 'gm-select-placeholder-party-role'),
                 options=options,
-                custom_id='quest_party_role_select'
+                custom_id='edit_combo_party_role_select'
             )
-            self.quest_party_role_label = discord.ui.Label(
-                text=t(DEFAULT_LOCALE, 'gm-modal-label-select-party-role'),
+            self.role_label = discord.ui.Label(
+                text=t(locale, 'gm-modal-label-party-role'),
                 component=role_select
             )
-            self.add_item(self.quest_party_role_label)
+            self.add_item(self.role_label)
 
-        self.add_item(self.quest_description_text_input)
+        self.description_input = discord.ui.TextInput(
+            label=t(locale, 'gm-modal-label-description'),
+            style=discord.TextStyle.paragraph,
+            custom_id='edit_combo_description',
+            placeholder=t(locale, 'gm-modal-placeholder-description'),
+            default=quest.get(QuestFields.DESCRIPTION, ''),
+            required=False
+        )
+        self.add_item(self.description_input)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            title = self.quest_title_text_input.value
-            restrictions = self.quest_restrictions_text_input.value
-            max_party_size = int(self.quest_party_size_text_input.value)
-            description = self.quest_description_text_input.value
-
-            guild = interaction.guild
-            guild_id = interaction.guild_id
-            quest_id = str(shortuuid.uuid()[:8])
             bot = interaction.client
-            max_wait_list_size = 0
+            quest = self.calling_view.quest
+            guild_id = quest[QuestFields.GUILD_ID]
+            quest_id = quest[QuestFields.QUEST_ID]
+            locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
 
-            party_role_id = None
-
-            if self.quest_role_mode == 'temporary' and self.quest_party_role_text_input:
-                party_role_name = self.quest_party_role_text_input.value
-                if party_role_name:
-                    default_forbidden_names = [
-                        'everyone',
-                        'administrator',
-                        'game master',
-                        'gm',
-                    ]
-                    custom_forbidden_names = []
-                    config_query = await get_cached_data(
-                        bot=bot,
-                        mongo_database=bot.gdb,
-                        collection_name=DatabaseCollections.FORBIDDEN_ROLES,
-                        query={CommonFields.ID: guild_id}
-                    )
-                    if config_query and config_query[ConfigFields.FORBIDDEN_ROLES]:
-                        for name in config_query[ConfigFields.FORBIDDEN_ROLES]:
-                            custom_forbidden_names.append(name)
-
-                    if (party_role_name.lower() in default_forbidden_names or
-                            party_role_name.lower() in custom_forbidden_names):
-                        raise UserFeedbackError(
-                            t(DEFAULT_LOCALE, 'gm-error-forbidden-role-name'),
-                            message_id='gm-error-forbidden-role-name'
-                        )
-
-                    for role in guild.roles:
-                        if role.name.lower() == party_role_name.lower():
-                            raise UserFeedbackError(
-                                t(DEFAULT_LOCALE, 'gm-error-role-already-exists'),
-                                message_id='gm-error-role-already-exists'
-                            )
-
-                    party_role = await guild.create_role(
-                        name=party_role_name,
-                        reason=f'Automated party role creation from ReQuest for quest ID {quest_id}. Requested by '
-                               f'game master: {interaction.user.mention}.'
-                    )
-                    party_role_id = party_role.id
-            elif self.quest_role_mode == 'static' and self.quest_party_role_label:
-                selected_value = self.quest_party_role_label.component.values[0]
-                if selected_value != 'none':
-                    party_role_id = int(selected_value)
-
-            # Get the server's wait list configuration
-            wait_list_query = await get_cached_data(
-                bot=bot,
-                mongo_database=bot.gdb,
-                collection_name=DatabaseCollections.QUEST_WAIT_LIST,
-                query={CommonFields.ID: guild_id}
-            )
-            if wait_list_query:
-                max_wait_list_size = wait_list_query[ConfigFields.QUEST_WAIT_LIST]
-
-            # Query the collection to see if a channel is set
-            quest_channel_query = await get_cached_data(
-                bot=bot,
-                mongo_database=bot.gdb,
-                collection_name=DatabaseCollections.QUEST_CHANNEL,
-                query={CommonFields.ID: guild_id}
-            )
-
-            # Inform user if quest channel is not set. Otherwise, get the channel string
-            if not quest_channel_query:
-                raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'gm-error-no-quest-channel'),
-                    message_id='gm-error-no-quest-channel'
-                )
-            else:
-                quest_channel_mention = quest_channel_query[ConfigFields.QUEST_CHANNEL]
-
-            # Query the collection to see if a role is set
-            announce_role_query = await get_cached_data(
-                bot=bot,
-                mongo_database=bot.gdb,
-                collection_name=DatabaseCollections.ANNOUNCE_ROLE,
-                query={CommonFields.ID: guild_id}
-            )
-
-            # Grab the announcement role, if configured.
-            announce_role = None
-            if announce_role_query:
-                announce_role = announce_role_query[ConfigFields.ANNOUNCE_ROLE]
-
-            # Get the channel object.
-            quest_channel = bot.get_channel(strip_id(quest_channel_mention))
-
-            # Log the author, then post the new quest with an emoji reaction.
-            author_id = interaction.user.id
-            party = []
-            wait_list = []
-            lock_state = False
-
-            # If an announcement role is set, ping it and then delete the message.
-            if announce_role != 0:
+            # Validate party size if provided
+            party_size_value = self.party_size_input.value.strip()
+            if party_size_value:
                 try:
-                    ping_msg = await quest_channel.send(f'{announce_role} **NEW QUEST!**')
-                    await ping_msg.delete()
-                except discord.errors.Forbidden:
+                    max_party_size = int(party_size_value)
+                except ValueError:
                     raise UserFeedbackError(
-                        t(
-                            DEFAULT_LOCALE, 'gm-error-cannot-ping-announce',
-                            role=str(announce_role), channel=quest_channel.mention
-                        ),
-                        message_id='gm-error-cannot-ping-announce'
+                        t(locale, 'gm-error-party-size-positive'),
+                        message_id='gm-error-party-size-positive'
                     )
+                if max_party_size <= 0:
+                    raise UserFeedbackError(
+                        t(locale, 'gm-error-party-size-positive'),
+                        message_id='gm-error-party-size-positive'
+                    )
+                current_party_size = len(quest.get(QuestFields.PARTY, []))
+                if max_party_size < current_party_size:
+                    raise UserFeedbackError(
+                        t(locale, 'gm-error-party-size-too-small', currentSize=current_party_size),
+                        message_id='gm-error-party-size-too-small'
+                    )
+            else:
+                max_party_size = quest.get(QuestFields.MAX_PARTY_SIZE, 1)
 
-            quest = {
-                QuestFields.GUILD_ID: guild_id,
-                QuestFields.QUEST_ID: quest_id,
-                QuestFields.MESSAGE_ID: 0,
-                QuestFields.TITLE: title,
-                QuestFields.DESCRIPTION: description,
+            updates = {
+                QuestFields.TITLE: self.title_input.value,
+                QuestFields.RESTRICTIONS: self.restrictions_input.value,
                 QuestFields.MAX_PARTY_SIZE: max_party_size,
-                QuestFields.RESTRICTIONS: restrictions,
-                QuestFields.GM: author_id,
-                QuestFields.PARTY: party,
-                QuestFields.PARTY_ROLE_ID: party_role_id,
-                QuestFields.QUEST_ROLE_MODE: self.quest_role_mode,
-                QuestFields.WAIT_LIST: wait_list,
-                QuestFields.MAX_WAIT_LIST_SIZE: max_wait_list_size,
-                QuestFields.LOCK_STATE: lock_state,
-                QuestFields.REWARDS: {}
+                QuestFields.DESCRIPTION: self.description_input.value,
             }
 
-            from ReQuest.ui.gm.views import QuestPostView
-            view = QuestPostView(quest)
-            await view.setup(bot=bot)
-            msg = await quest_channel.send(embed=view.embed, view=view)
-            quest[QuestFields.MESSAGE_ID] = msg.id
+            # Handle party role based on mode
+            if self.quest_role_mode == 'temporary' and self.party_role_input:
+                role_name = self.party_role_input.value.strip() if self.party_role_input.value else ''
+                updates[QuestFields.PARTY_ROLE_NAME] = role_name or None
+                updates[QuestFields.PARTY_ROLE_ID] = None
+            elif self.quest_role_mode == 'static' and self.role_label:
+                selected_value = self.role_label.component.values[0]
+                updates[QuestFields.PARTY_ROLE_ID] = int(selected_value) if selected_value != 'none' else None
 
-            quest_collection = bot.gdb[DatabaseCollections.QUESTS]
-            await quest_collection.insert_one(quest)
-
-            # Clear the cached guild quests for the GM
-            admin_key = build_cache_key(bot.gdb.name, f'guild_quests:{guild_id}', 'quests')
-            await bot.rdb.delete(admin_key)
-
-            gm_key = build_cache_key(bot.gdb.name, f'gm_quests:{guild_id}:{author_id}', 'quests')
-            await bot.rdb.delete(gm_key)
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUESTS,
+                query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
+                update_data={'$set': updates},
+                cache_id=f'{guild_id}:{quest_id}'
+            )
+            quest.update(updates)
 
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
@@ -251,106 +234,63 @@ class CreateQuestModal(LocaleModal):
             await log_exception(e, interaction)
 
 
-class EditQuestModal(LocaleModal):
-    def __init__(self, calling_view, quest):
-        header = t(DEFAULT_LOCALE, 'gm-modal-title-editing-quest', questTitle=quest[QuestFields.TITLE])
-        if len(header) > 45:
-            header = header[:42] + '...'
+class EditQuestImagesComboModal(LocaleModal):
+    """Combined modal for editing thumbnail and large image URLs."""
+
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
+        quest = calling_view.quest
         super().__init__(
-            title=header,
-            timeout=600
+            title=t(locale, 'gm-modal-title-edit-images'),
+            timeout=None
         )
-
-        # Get the current quest's values
         self.calling_view = calling_view
-        self.quest = quest
-        title = quest[QuestFields.TITLE]
-        restrictions = quest[QuestFields.RESTRICTIONS]
-        max_party_size = quest[QuestFields.MAX_PARTY_SIZE]
-        description = quest[QuestFields.DESCRIPTION]
 
-        # Build the text inputs w/ the existing values
-        self.title_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'gm-modal-label-title'),
-            style=discord.TextStyle.short,
-            default=title,
-            custom_id='title_text_input',
+        self.thumbnail_input = discord.ui.TextInput(
+            label=t(locale, 'gm-modal-label-image-url'),
+            custom_id='edit_combo_thumbnail',
+            placeholder=t(locale, 'gm-modal-placeholder-image-url'),
+            default=quest.get(QuestFields.IMAGE_URL) or '',
             required=False
         )
-        self.restrictions_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'gm-modal-label-restrictions'),
-            style=discord.TextStyle.short,
-            default=restrictions,
-            custom_id='restrictions_text_input',
+        self.image_input = discord.ui.TextInput(
+            label=t(locale, 'gm-modal-label-large-image-url'),
+            custom_id='edit_combo_large_image',
+            placeholder=t(locale, 'gm-modal-placeholder-image-url'),
+            default=quest.get(QuestFields.LARGE_IMAGE_URL) or '',
             required=False
         )
-        self.max_party_size_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'gm-modal-label-max-party-size'),
-            style=discord.TextStyle.short,
-            default=max_party_size,
-            custom_id='max_party_size_text_input',
-            required=False
-        )
-        self.description_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'gm-modal-label-description'),
-            style=discord.TextStyle.paragraph,
-            default=description,
-            custom_id='description_text_input',
-            required=False
-        )
-        self.add_item(self.title_text_input)
-        self.add_item(self.restrictions_text_input)
-        self.add_item(self.max_party_size_text_input)
-        self.add_item(self.description_text_input)
+        self.add_item(self.thumbnail_input)
+        self.add_item(self.image_input)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            # Push the updates
             bot = interaction.client
-            guild_id = interaction.guild_id
+            quest = self.calling_view.quest
+            guild_id = quest[QuestFields.GUILD_ID]
+            quest_id = quest[QuestFields.QUEST_ID]
+
+            thumbnail = self.thumbnail_input.value.strip() or None
+            large_image = self.image_input.value.strip() or None
+
             updates = {
-                QuestFields.TITLE: self.title_text_input.value,
-                QuestFields.RESTRICTIONS: self.restrictions_text_input.value,
-                QuestFields.MAX_PARTY_SIZE: int(self.max_party_size_text_input.value),
-                QuestFields.DESCRIPTION: self.description_text_input.value
+                QuestFields.IMAGE_URL: thumbnail,
+                QuestFields.LARGE_IMAGE_URL: large_image,
             }
 
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
                 collection_name=DatabaseCollections.QUESTS,
-                query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: self.quest[QuestFields.QUEST_ID]},
+                query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
                 update_data={'$set': updates},
-                cache_id=f'{guild_id}:{self.quest[QuestFields.QUEST_ID]}'
+                cache_id=f'{guild_id}:{quest_id}'
             )
+            quest.update(updates)
 
-            # Get the updated quest
-            self.quest.update(updates)
-
-            # Get the quest board channel
-            quest_channel_query = await get_cached_data(
-                bot=bot,
-                mongo_database=bot.gdb,
-                collection_name=DatabaseCollections.QUEST_CHANNEL,
-                query={CommonFields.ID: guild_id}
-            )
-            quest_channel_id = strip_id(quest_channel_query[ConfigFields.QUEST_CHANNEL])
-            guild = interaction.client.get_guild(guild_id)
-            quest_channel = guild.get_channel(quest_channel_id)
-
-            # Get the original quest post message object and create a new embed
-            message = quest_channel.get_partial_message(self.quest[QuestFields.MESSAGE_ID])
-
-            # Create a fresh quest view, and update the original post message
-            from ReQuest.ui.gm.views import QuestPostView
-            quest_view = QuestPostView(self.quest)
-            await setup_view(quest_view, interaction)
-            await message.edit(embed=quest_view.embed, view=quest_view)
-
-            # Reload the UI view
-            view = self.calling_view
-            await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await setup_view(self.calling_view, interaction)
+            await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 

@@ -72,3 +72,5 @@ class RemovePlayerSelect(Select):
             await interaction.response.send_modal(confirm_modal)
         except Exception as e:
             await log_exception(e, interaction)
+
+

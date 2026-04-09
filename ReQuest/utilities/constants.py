@@ -27,6 +27,17 @@ class QuestFields:
     PARTY_ROLE_ID = 'partyRoleId'
     QUEST_ROLE_MODE = 'questRoleMode'
     XP = 'xp'
+    STATUS = 'status'
+    IMAGE_URL = 'imageUrl'
+    LARGE_IMAGE_URL = 'largeImageUrl'
+    PARTY_ROLE_NAME = 'partyRoleName'
+
+
+class QuestStatus:
+    DRAFT = 'draft'
+    PUBLISHED = 'published'
+    LOCKED = 'locked'
+    COMPLETED = 'completed'
 
 
 class ShopFields:

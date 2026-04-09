@@ -2,7 +2,7 @@
 
 # GM buttons
 gm-btn-create = 作成
-gm-btn-edit-details = 詳細を編集
+gm-btn-edit-details = Quest を編集
 gm-btn-toggle-ready = 準備状態の切替
 gm-btn-configure-rewards = 報酬を設定
 gm-btn-remove-player = プレイヤーを削除
@@ -12,6 +12,13 @@ gm-btn-manage-individual-rewards = 個別報酬を管理
 gm-btn-join = 参加
 gm-btn-leave = 離脱
 gm-btn-complete-quest = Quest を完了
+gm-btn-edit-details-modal = 詳細を編集
+gm-btn-edit-images = 画像を編集
+gm-btn-publish = 公開
+gm-btn-update-post = 投稿を更新
+gm-select-placeholder-party-role = パーティーロールを選択...
+gm-modal-title-edit-details = Quest 詳細を編集
+gm-modal-title-edit-images = Quest 画像を編集
 
 # GM modals
 gm-modal-title-create-quest = 新しい Quest を作成
@@ -25,9 +32,9 @@ gm-modal-label-party-role = パーティーロール
 gm-modal-placeholder-party-role = この Quest 用のロールを作成（任意）
 gm-modal-label-description = 説明
 gm-modal-placeholder-description = Quest の詳細をここに記入してください
-gm-modal-title-editing-quest = { $questTitle } を編集中
-gm-modal-label-title = タイトル
-gm-modal-label-max-party-size = 最大パーティーサイズ
+gm-modal-label-image-url = サムネイル URL
+gm-modal-label-large-image-url = 大きな画像 URL
+gm-modal-placeholder-image-url = 画像 URL を入力してください（削除するには空欄のままにしてください）
 gm-modal-title-add-reward = 報酬を追加
 gm-modal-label-experience = 経験値
 gm-modal-placeholder-experience = 数値を入力してください
@@ -61,6 +68,11 @@ gm-error-not-signed-up = あなたはこの Quest に登録されていません
 gm-error-quest-channel-not-set = Quest チャンネルが設定されていません！
 gm-error-empty-roster = 空の名簿で Quest を完了することはできません。代わりにキャンセルしてください。
 gm-error-invalid-xp-value = 経験値は正の整数でなければなりません！
+gm-error-party-size-positive = パーティーサイズは正の数でなければなりません。
+gm-error-party-size-too-small = パーティーサイズは現在のパーティー（{ $currentSize } 人）より小さくできません。
+gm-error-role-name-forbidden = ロール名「{ $roleName }」はこのサーバーでは禁止されています。
+gm-error-role-name-exists = 「{ $roleName }」という名前のロールはこのサーバーに既に存在します。
+gm-error-role-hierarchy = ReQuest はロール "{ $roleName }"（ID: { $roleId }）を管理できません。サーバー階層で ReQuest の最上位ロールより上位に位置しているためです。サーバー管理者に連絡して、ロールを ReQuest のロールより下に移動するか、ReQuest により高いロールを割り当ててから、操作を再試行してください。
 
 # GM confirm modals
 gm-modal-title-cancel-quest = Quest のキャンセル
@@ -68,16 +80,29 @@ gm-modal-label-cancel-quest = Quest をキャンセルするには 確認 と入
 gm-modal-title-remove-from-quest = Quest からキャラクターを削除
 gm-modal-label-remove-from-quest = キャラクターの削除を確認しますか？
 
-# GM DM messages
-gm-dm-quest-cancelled = Quest {"**"}{ $questTitle }{"**"} が GM によってキャンセルされました。
-gm-dm-quest-ready = Quest {"**"}{ $questTitle }{"**"} の準備が整いました！
-gm-dm-quest-unlocked = Quest {"**"}{ $questTitle }{"**"} のロックが解除されました。
-gm-dm-quest-locked = Quest {"**"}{ $questTitle }{"**"} が GM によってロックされました。
-gm-dm-player-removed = あなたは Quest {"**"}{ $questTitle }{"**"} から削除されました。
-gm-dm-player-removed-waitlist = あなたは {"**"}{ $questTitle }{"**"} のウェイトリストから削除されました。
-gm-dm-party-promotion = プレイヤーの離脱により、Quest {"**"}{ $questTitle }{"**"} のパーティーに追加されました！
-gm-dm-roster-locked = Quest の名簿がロックされ、パーティーに通知されました！
-gm-dm-roster-unlocked = Quest の名簿のロックが解除されました。
+# GM DM embeds
+gm-dm-title-quest-cancelled = Quest キャンセル
+gm-dm-desc-quest-cancelled = Quest {"**"}{ $questTitle }{"**"} が GM によってキャンセルされました。
+gm-dm-title-quest-ready = Quest 準備完了
+gm-dm-desc-quest-ready = Quest {"**"}{ $questTitle }{"**"} の準備が整いました！GM がまもなく Quest を開始します。
+gm-dm-title-player-removed = Quest から削除されました
+gm-dm-desc-player-removed = あなたは Quest {"**"}{ $questTitle }{"**"} から GM によって削除されました。
+gm-dm-desc-player-removed-waitlist = あなたは Quest {"**"}{ $questTitle }{"**"} のウェイトリストから削除されました。
+gm-dm-title-party-promotion = パーティー昇格
+gm-dm-desc-party-promotion =
+    プレイヤーの離脱により、{"**"}{ $questTitle }{"**"}
+    のメインパーティーに昇格しました。
+gm-dm-title-roster-locked = 名簿ロック済み
+gm-dm-desc-roster-locked =
+    {"**"}{ $questTitle }{"**"} の名簿がロックされ、
+    すべてのパーティーメンバーに通知されました。
+gm-dm-title-roster-unlocked = 名簿ロック解除
+gm-dm-desc-roster-unlocked = {"**"}{ $questTitle }{"**"} の名簿のロックが解除されました。
+gm-dm-title-player-removed-confirm = プレイヤー削除済み
+gm-dm-desc-player-removed-confirm =
+    プレイヤーが {"**"}{ $questTitle }{"**"} から削除され、
+    Quest の名簿が更新されました。
+gm-dm-footer-quest = Quest ID: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     サーバー管理者が Quest 完了時の GM 報酬を設定しています。
     ただし、登録されたキャラクターがいないため、報酬を
@@ -87,9 +112,18 @@ gm-dm-rewards-no-active-character =
     ただし、このサーバーで有効なキャラクターがいないため、報酬を
     自動的に付与することができませんでした。
 gm-dm-rewards-issued = 有効なキャラクター { $characterName } に以下が付与されました
+gm-dm-role-removal-failed =
+    ⚠️ 以下のメンバーからロール {"**"}{ $roleName }{"**"} を削除できませんでした: { $members }。
+    サーバー管理者に連絡してロールを手動で削除してください。
+gm-dm-role-not-found =
+    ⚠️ Quest {"**"}{ $questTitle }{"**"} の Quest ロール（ID: { $roleId }）がサーバー上に存在しなくなりました。
+    ロール操作はスキップされました。これが予期しない場合はサーバー管理者に連絡してください。
 
 # GM select menus
 gm-select-placeholder-party-member = パーティーメンバーを選択
+gm-modal-label-select-party-role = パーティーロール
+gm-modal-desc-select-party-role = Quest パーティーに割り当てるロールを選択してください。
+gm-select-option-no-role = なし（パーティーロールなし）
 
 # GM embeds
 gm-embed-title-mod-report = GM プレイヤー変更レポート
@@ -101,7 +135,6 @@ gm-embed-field-party = __パーティー__
 gm-embed-field-summary = サマリー
 gm-embed-title-gm-rewards = GM 報酬付与
 gm-embed-field-items = アイテム
-gm-msg-player-removed = プレイヤーが削除され、Quest の名簿が更新されました！
 
 # GM views
 gm-title-main-menu = GM - メインメニュー
@@ -114,8 +147,21 @@ gm-title-quest-management = GM - Quest 管理
 gm-desc-create-quest = 新しい Quest を作成します。
 gm-msg-no-quests = Quest が見つかりません。
 gm-label-quest-locked = （ロック中）
+gm-label-quest-draft = （下書き）
 gm-title-manage-quest = Quest 管理 - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = タイトル、説明、パーティーサイズなどの Quest 詳細を編集します。
+gm-title-edit-quest = Quest を編集 - { $questTitle }
+gm-label-field-not-set = 未設定
+gm-label-description-not-set = 説明が設定されていません
+gm-label-current-title = {"**"}タイトル:{"**"} { $value }
+gm-label-current-description = {"**"}説明{"**"}
+gm-label-current-restrictions = {"**"}制限:{"**"} { $value }
+gm-label-current-party-size = {"**"}最大パーティーサイズ:{"**"} { $value }
+gm-label-current-party-role = {"**"}パーティーロール:{"**"} { $value }
+gm-label-current-image = {"**"}サムネイル{"**"}
+gm-label-current-large-image = {"**"}画像{"**"}
+gm-desc-publish-quest = この Quest を Quest ボードに公開します。
+gm-desc-update-quest-post = Quest ボードの Quest 投稿を更新します。
 gm-desc-toggle-ready = 準備状態を切り替えます（現在: {"**"}{ $status }{"**"}）
     - Quest の名簿をロックし、パーティーメンバーに Quest がまもなく開始されることを通知します。ロールが設定されている場合、ロック時にパーティーメンバーに割り当てられます。
     - オープンに設定すると名簿のロックが解除されます。
@@ -147,16 +193,3 @@ gm-label-currency-heading = {"**"}通貨{"**"}
 gm-msg-inventory-empty = インベントリは空です。
 
 # GM approvals
-
-gm-modal-label-select-party-role = パーティーロール
-gm-modal-desc-select-party-role = Quest パーティーに割り当てるロールを選択してください。
-gm-select-option-no-role = なし（パーティーロールなし）
-
-gm-error-role-hierarchy = ReQuest はロール "{ $roleName }"（ID: { $roleId }）を管理できません。サーバー階層で ReQuest の最上位ロールより上位に位置しているためです。サーバー管理者に連絡して、ロールを ReQuest のロールより下に移動するか、ReQuest により高いロールを割り当ててから、操作を再試行してください。
-gm-dm-role-removal-failed =
-    ⚠️ 以下のメンバーからロール {"**"}{ $roleName }{"**"} を削除できませんでした: { $members }。
-    サーバー管理者に連絡してロールを手動で削除してください。
-
-gm-dm-role-not-found =
-    ⚠️ Quest {"**"}{ $questTitle }{"**"} の Quest ロール（ID: { $roleId }）がサーバー上に存在しなくなりました。
-    ロール操作はスキップされました。これが予期しない場合はサーバー管理者に連絡してください。

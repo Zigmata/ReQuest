@@ -2,7 +2,7 @@
 
 # GM buttons
 gm-btn-create = Creează
-gm-btn-edit-details = Editează detalii
+gm-btn-edit-details = Editează quest
 gm-btn-toggle-ready = Comută pregătirea
 gm-btn-configure-rewards = Configurează recompense
 gm-btn-remove-player = Elimină jucător
@@ -12,6 +12,13 @@ gm-btn-manage-individual-rewards = Gestionează recompense individuale
 gm-btn-join = Alătură-te
 gm-btn-leave = Părăsește
 gm-btn-complete-quest = Finalizează quest
+gm-btn-edit-details-modal = Editează detalii
+gm-btn-edit-images = Editează imagini
+gm-btn-publish = Publică
+gm-btn-update-post = Actualizează postarea
+gm-select-placeholder-party-role = Selectați un rol de echipă...
+gm-modal-title-edit-details = Editează detaliile quest-ului
+gm-modal-title-edit-images = Editează imaginile quest-ului
 
 # GM modals
 gm-modal-title-create-quest = Creează quest nou
@@ -25,9 +32,9 @@ gm-modal-label-party-role = Rol echipă
 gm-modal-placeholder-party-role = Creați un rol pentru acest quest (Opțional)
 gm-modal-label-description = Descriere
 gm-modal-placeholder-description = Scrieți detaliile quest-ului aici
-gm-modal-title-editing-quest = Editare { $questTitle }
-gm-modal-label-title = Titlu
-gm-modal-label-max-party-size = Dimensiune maximă echipă
+gm-modal-label-image-url = URL miniatură
+gm-modal-label-large-image-url = URL imagine mare
+gm-modal-placeholder-image-url = Introduceți un URL de imagine (sau lăsați gol pentru a elimina)
 gm-modal-title-add-reward = Adaugă recompensă
 gm-modal-label-experience = Puncte de experiență
 gm-modal-placeholder-experience = Introduceți un număr
@@ -61,6 +68,11 @@ gm-error-not-signed-up = Nu sunteți înscris pe acest quest.
 gm-error-quest-channel-not-set = Canalul de quest-uri nu a fost setat!
 gm-error-empty-roster = Nu puteți finaliza un quest cu o listă goală. Încercați să anulați în schimb.
 gm-error-invalid-xp-value = Valoarea XP trebuie să fie un număr întreg pozitiv!
+gm-error-party-size-positive = Dimensiunea echipei trebuie să fie un număr pozitiv.
+gm-error-party-size-too-small = Dimensiunea echipei nu poate fi mai mică decât echipa actuală ({ $currentSize } membri).
+gm-error-role-name-forbidden = Numele rolului "{ $roleName }" este interzis pe acest server.
+gm-error-role-name-exists = Un rol cu numele "{ $roleName }" există deja pe acest server.
+gm-error-role-hierarchy = ReQuest nu poate gestiona rolul "{ $roleName }" (ID: { $roleId }) deoarece este poziționat mai sus decât cel mai înalt rol al ReQuest în ierarhia serverului. Contactați un administrator de server pentru a muta rolul sub rolul ReQuest sau pentru a atribui ReQuest un rol mai înalt, apoi reîncercați operațiunea.
 
 # GM confirm modals
 gm-modal-title-cancel-quest = Anulează quest
@@ -68,16 +80,29 @@ gm-modal-label-cancel-quest = Tastați CONFIRMĂ pentru a anula quest-ul.
 gm-modal-title-remove-from-quest = Elimină personajul din quest
 gm-modal-label-remove-from-quest = Confirmați eliminarea personajului?
 
-# GM DM messages
-gm-dm-quest-cancelled = Quest-ul {"**"}{ $questTitle }{"**"} a fost anulat de GM.
-gm-dm-quest-ready = Quest-ul {"**"}{ $questTitle }{"**"} este acum pregătit!
-gm-dm-quest-unlocked = Quest-ul {"**"}{ $questTitle }{"**"} nu mai este blocat.
-gm-dm-quest-locked = Quest-ul {"**"}{ $questTitle }{"**"} este acum blocat de GM.
-gm-dm-player-removed = Ați fost eliminat din quest-ul {"**"}{ $questTitle }{"**"}.
-gm-dm-player-removed-waitlist = Ați fost eliminat de pe lista de așteptare pentru {"**"}{ $questTitle }{"**"}.
-gm-dm-party-promotion = Ați fost adăugat în echipa pentru {"**"}{ $questTitle }{"**"}, datorită retragerii unui jucător!
-gm-dm-roster-locked = Lista quest-ului a fost blocată și echipa a fost notificată!
-gm-dm-roster-unlocked = Lista quest-ului a fost deblocată.
+# GM DM embeds
+gm-dm-title-quest-cancelled = Quest anulat
+gm-dm-desc-quest-cancelled = Quest-ul {"**"}{ $questTitle }{"**"} a fost anulat de GM.
+gm-dm-title-quest-ready = Quest pregătit
+gm-dm-desc-quest-ready = Quest-ul {"**"}{ $questTitle }{"**"} este acum pregătit! GM-ul tău va începe quest-ul în curând.
+gm-dm-title-player-removed = Eliminat din quest
+gm-dm-desc-player-removed = Ați fost eliminat din quest-ul {"**"}{ $questTitle }{"**"} de către GM.
+gm-dm-desc-player-removed-waitlist = Ați fost eliminat de pe lista de așteptare pentru quest-ul {"**"}{ $questTitle }{"**"}.
+gm-dm-title-party-promotion = Promovare în echipă
+gm-dm-desc-party-promotion =
+    Ați fost promovat în echipa principală pentru {"**"}{ $questTitle }{"**"}
+    deoarece un jucător a părăsit quest-ul.
+gm-dm-title-roster-locked = Listă blocată
+gm-dm-desc-roster-locked =
+    Lista pentru {"**"}{ $questTitle }{"**"} a fost blocată
+    și toți membrii echipei au fost notificați.
+gm-dm-title-roster-unlocked = Listă deblocată
+gm-dm-desc-roster-unlocked = Lista pentru {"**"}{ $questTitle }{"**"} a fost deblocată.
+gm-dm-title-player-removed-confirm = Jucător eliminat
+gm-dm-desc-player-removed-confirm =
+    Jucătorul a fost eliminat din {"**"}{ $questTitle }{"**"}
+    și lista quest-ului a fost actualizată.
+gm-dm-footer-quest = Quest ID: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     Administratorul serverului a configurat recompense pentru Game Masteri la finalizarea
     quest-urilor. Cu toate acestea, deoarece nu aveți personaje înregistrate, recompensele
@@ -87,9 +112,18 @@ gm-dm-rewards-no-active-character =
     quest-urilor. Cu toate acestea, deoarece nu aveți un personaj activ pe acest server,
     recompensele nu au putut fi acordate automat de data aceasta.
 gm-dm-rewards-issued = Următoarele au fost acordate personajului dumneavoastră activ, { $characterName }
+gm-dm-role-removal-failed =
+    ⚠️ Nu s-a putut elimina rolul {"**"}{ $roleName }{"**"} de la următorii membri: { $members }.
+    Notificați un administrator de server pentru a elimina rolul manual.
+gm-dm-role-not-found =
+    ⚠️ Rolul de quest (ID: { $roleId }) pentru quest-ul {"**"}{ $questTitle }{"**"} nu mai există pe server.
+    Operațiunile de rol au fost omise. Notificați un administrator de server dacă acest lucru este neașteptat.
 
 # GM select menus
 gm-select-placeholder-party-member = Selectați un membru al echipei
+gm-modal-label-select-party-role = Rol echipă
+gm-modal-desc-select-party-role = Selectați un rol de atribuit echipei quest-ului.
+gm-select-option-no-role = Niciunul (Fără rol de echipă)
 
 # GM embeds
 gm-embed-title-mod-report = Raport modificare jucător de către GM
@@ -101,7 +135,6 @@ gm-embed-field-party = __Echipă__
 gm-embed-field-summary = Rezumat
 gm-embed-title-gm-rewards = Recompense GM acordate
 gm-embed-field-items = Obiecte
-gm-msg-player-removed = Jucătorul a fost eliminat și lista quest-ului a fost actualizată!
 
 # GM views
 gm-title-main-menu = Game Master - Meniu principal
@@ -114,8 +147,21 @@ gm-title-quest-management = Game Master - Gestionare quest-uri
 gm-desc-create-quest = Creați un quest nou.
 gm-msg-no-quests = Nu s-au găsit quest-uri.
 gm-label-quest-locked = (Blocat)
+gm-label-quest-draft = (Ciornă)
 gm-title-manage-quest = Gestionare quest - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Editați detaliile quest-ului, cum ar fi titlul, descrierea și dimensiunea echipei.
+gm-title-edit-quest = Editare quest - { $questTitle }
+gm-label-field-not-set = Nesetat
+gm-label-description-not-set = Descriere nesetată
+gm-label-current-title = {"**"}Titlu:{"**"} { $value }
+gm-label-current-description = {"**"}Descriere{"**"}
+gm-label-current-restrictions = {"**"}Restricții:{"**"} { $value }
+gm-label-current-party-size = {"**"}Dimensiune maximă echipă:{"**"} { $value }
+gm-label-current-party-role = {"**"}Rol echipă:{"**"} { $value }
+gm-label-current-image = {"**"}Miniatură{"**"}
+gm-label-current-large-image = {"**"}Imagine{"**"}
+gm-desc-publish-quest = Publicați acest quest pe panoul de quest-uri.
+gm-desc-update-quest-post = Actualizați postarea quest-ului pe panoul de quest-uri.
 gm-desc-toggle-ready = Comutați starea de pregătire (Curent: {"**"}{ $status }{"**"})
     - Blochează lista quest-ului și notifică membrii echipei că quest-ul va începe curând. Dacă un rol este configurat, acesta va fi atribuit membrilor echipei la blocare.
     - Deblochează lista când este setat pe Deschis.
@@ -147,16 +193,3 @@ gm-label-currency-heading = {"**"}Monedă{"**"}
 gm-msg-inventory-empty = Inventarul este gol.
 
 # GM approvals
-
-gm-modal-label-select-party-role = Rol echipă
-gm-modal-desc-select-party-role = Selectați un rol de atribuit echipei quest-ului.
-gm-select-option-no-role = Niciunul (Fără rol de echipă)
-
-gm-error-role-hierarchy = ReQuest nu poate gestiona rolul "{ $roleName }" (ID: { $roleId }) deoarece este poziționat mai sus decât cel mai înalt rol al ReQuest în ierarhia serverului. Contactați un administrator de server pentru a muta rolul sub rolul ReQuest sau pentru a atribui ReQuest un rol mai înalt, apoi reîncercați operațiunea.
-gm-dm-role-removal-failed =
-    ⚠️ Nu s-a putut elimina rolul {"**"}{ $roleName }{"**"} de la următorii membri: { $members }.
-    Notificați un administrator de server pentru a elimina rolul manual.
-
-gm-dm-role-not-found =
-    ⚠️ Rolul de quest (ID: { $roleId }) pentru quest-ul {"**"}{ $questTitle }{"**"} nu mai există pe server.
-    Operațiunile de rol au fost omise. Notificați un administrator de server dacă acest lucru este neașteptat.
