@@ -289,10 +289,10 @@ async def run_in_transaction(bot, callback, *args, **kwargs):
             result = await session.with_transaction(
                 lambda s: callback(s, *args, **kwargs)
             )
-        # Transaction committed — flush deferred cache invalidations
-        for cache_key in pending:
+        # Transaction committed — flush deferred cache invalidations in a single round-trip
+        if pending:
             try:
-                await bot.rdb.delete(cache_key)
+                await bot.rdb.delete(*pending)
             except Exception as e:
                 logger.error(f"Redis delete failed (post-commit): {e}")
         return result
