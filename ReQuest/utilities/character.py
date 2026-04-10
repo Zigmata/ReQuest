@@ -350,7 +350,7 @@ async def update_character_inventory(interaction, player_id: int, character_id: 
 
 
 async def update_character_experience(interaction, player_id: int, character_id: str,
-                                      amount: int, session=None):
+                                      amount: int, raise_on_error: bool = False, session=None):
     bot = interaction.client
     try:
         player_data = await get_cached_data(
@@ -380,6 +380,8 @@ async def update_character_experience(interaction, player_id: int, character_id:
             session=session
         )
     except Exception as e:
+        if raise_on_error:
+            raise
         await log_exception(e, interaction)
 
 

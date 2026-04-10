@@ -582,10 +582,11 @@ async def add_item_to_cart(bot, guild_id: int, user_id: int, channel_id: str,
                 session=session
             )
     except Exception:
-        if reserved_quantity > 0:
+        # Inside a transaction the abort will roll back the reserve_stock automatically.
+        # Outside, we manually release to avoid leaking the reservation.
+        if session is None and reserved_quantity > 0:
             max_stock = item.get(ShopFields.MAX_STOCK)
-            await release_stock(bot, guild_id, channel_id, item_name, reserved_quantity, max_stock,
-                                session=session)
+            await release_stock(bot, guild_id, channel_id, item_name, reserved_quantity, max_stock)
         raise
 
     return True
@@ -657,7 +658,9 @@ async def remove_item_from_cart(bot, guild_id: int, user_id: int, channel_id: st
             session=session
         )
 
-    # Release stock after successful cart update (log failure so leaked reservations are visible)
+    # Release stock after successful cart update.
+    # In a transaction: re-raise on failure so the cart update aborts.
+    # Outside a transaction: log and continue (best-effort to surface leaked reservations).
     max_stock = item.get(ShopFields.MAX_STOCK)
     if max_stock is not None:
         item_quantity = item.get(CommonFields.QUANTITY, 1)
@@ -666,6 +669,8 @@ async def remove_item_from_cart(bot, guild_id: int, user_id: int, channel_id: st
             await release_stock(bot, guild_id, channel_id, item_name, release_qty, max_stock,
                                 session=session)
         except Exception as e:
+            if session is not None:
+                raise
             logger.error(
                 f'Failed to release stock for {item_name} (qty={release_qty}) '
                 f'in guild {guild_id}, channel {channel_id} after cart update: {e}'
@@ -750,10 +755,11 @@ async def update_cart_item_quantity(bot, guild_id: int, user_id: int, channel_id
                 session=session
             )
         except Exception:
-            if reserved_quantity > 0:
+            # Inside a transaction the abort will roll back the reserve_stock automatically.
+            # Outside, we manually release to avoid leaking the reservation.
+            if session is None and reserved_quantity > 0:
                 max_stock = item.get(ShopFields.MAX_STOCK)
-                await release_stock(bot, guild_id, channel_id, item_name, reserved_quantity, max_stock,
-                                    session=session)
+                await release_stock(bot, guild_id, channel_id, item_name, reserved_quantity, max_stock)
             raise
     elif quantity_diff < 0:
         # Reducing quantity, release stock
@@ -796,7 +802,9 @@ async def clear_cart_and_release_stock(bot, guild_id: int, user_id: int, channel
         session=session
     )
 
-    # Release all reserved stock (cart already deleted — log failures so leaked reservations are visible)
+    # Release all reserved stock.
+    # In a transaction: re-raise on failure so the cart deletion aborts.
+    # Outside a transaction: log and continue (leaked reservations stay visible in logs).
     for cart_key, cart_item in items.items():
         item = cart_item[CartFields.ITEM]
         quantity = cart_item[CartFields.QUANTITY]
@@ -809,6 +817,8 @@ async def clear_cart_and_release_stock(bot, guild_id: int, user_id: int, channel
                 await release_stock(bot, guild_id, channel_id, item_name, quantity * item_quantity, max_stock,
                                     session=session)
             except Exception as e:
+                if session is not None:
+                    raise
                 logger.error(
                     f'Failed to release stock for {item_name} (qty={quantity * item_quantity}) '
                     f'in guild {guild_id}, channel {channel_id} after cart deletion: {e}'
@@ -841,7 +851,9 @@ async def finalize_cart_purchase(bot, guild_id: int, user_id: int, channel_id: s
         session=session
     )
 
-    # Finalize stock (cart already deleted — log failures so leaked reservations are visible)
+    # Finalize stock.
+    # In a transaction: re-raise on failure so the cart deletion aborts.
+    # Outside a transaction: log and continue (leaked reservations stay visible in logs).
     for cart_key, cart_item in items.items():
         item = cart_item[CartFields.ITEM]
         quantity = cart_item[CartFields.QUANTITY]
@@ -854,6 +866,8 @@ async def finalize_cart_purchase(bot, guild_id: int, user_id: int, channel_id: s
                 await finalize_stock(bot, guild_id, channel_id, item_name, quantity * item_quantity,
                                      session=session)
             except Exception as e:
+                if session is not None:
+                    raise
                 logger.error(
                     f'Failed to finalize stock for {item_name} (qty={quantity * item_quantity}) '
                     f'in guild {guild_id}, channel {channel_id} after cart deletion: {e}'

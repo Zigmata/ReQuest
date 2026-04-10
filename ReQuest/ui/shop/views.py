@@ -103,7 +103,7 @@ class ShopBaseView(LocaleLayoutView):
                 header_items.append(TextDisplay(f'**{truncate_text(shop_name, DisplayLimits.SHOP_NAME)}**'))
             if shop_keeper := self.shop_data.get(ShopFields.SHOP_KEEPER):
                 keeper = truncate_text(shop_keeper, DisplayLimits.SHOPKEEPER_NAME)
-                header_items.append(TextDisplay(t(locale, 'shop-label-shopkeeper', **{'name': keeper})))
+                header_items.append(TextDisplay(t(locale, 'shop-label-shopkeeper', name=keeper)))
             if shop_description := self.shop_data.get(ShopFields.SHOP_DESCRIPTION):
                 header_items.append(
                     TextDisplay(f'*{truncate_text(shop_description, DisplayLimits.SHOP_DESCRIPTION)}*')
@@ -152,7 +152,7 @@ class ShopBaseView(LocaleLayoutView):
 
                 content = item_display_name
                 if cart_quantity > 0:
-                    content += f' {t(locale, "shop-label-in-cart", **{"quantity": cart_quantity})}'
+                    content += f' {t(locale, "shop-label-in-cart", quantity=cart_quantity)}'
 
                 # Show stock info if item has limits (and data is valid)
                 if item_stock_info is not None and ShopFields.AVAILABLE in item_stock_info:
@@ -160,7 +160,7 @@ class ShopBaseView(LocaleLayoutView):
                     if available == 0:
                         content += f'\n**{t(locale, "shop-label-out-of-stock")}**'
                     else:
-                        content += f'\n*{t(locale, "shop-label-stock-available", **{"available": available})}*'
+                        content += f'\n*{t(locale, "shop-label-stock-available", available=available)}*'
 
                 if item_description:
                     content += f'\n*{escape_markdown(truncate_text(item_description, DisplayLimits.ITEM_DESCRIPTION))}*'
@@ -184,7 +184,7 @@ class ShopBaseView(LocaleLayoutView):
                 page_display = Button(
                     label=t(
                         locale, 'common-page-display',
-                        **{'current': self.current_page + 1, 'total': self.total_pages}
+                        current=self.current_page + 1, total=self.total_pages
                     ),
                     style=discord.ButtonStyle.secondary,
                     custom_id='shop_page_display'
@@ -208,7 +208,7 @@ class ShopBaseView(LocaleLayoutView):
             )
             view_cart_button = buttons.ViewCartButton(self)
             view_cart_button.label = (
-                t(locale, 'shop-btn-view-cart-count', **{'count': cart_item_count})
+                t(locale, 'shop-btn-view-cart-count', count=cart_item_count)
                 if cart_item_count > 0
                 else t(locale, 'shop-btn-view-cart')
             )
@@ -237,7 +237,7 @@ class ShopBaseView(LocaleLayoutView):
             if not success:
                 locale = getattr(self, 'locale', DEFAULT_LOCALE)
                 raise UserFeedbackError(
-                    t(locale, 'shop-error-item-out-of-stock', **{'itemName': item_name}),
+                    t(locale, 'shop-error-item-out-of-stock', itemName=item_name),
                     message_id='shop-error-item-out-of-stock'
                 )
 
@@ -348,7 +348,7 @@ class ShopCartView(LocaleLayoutView):
                             can_afford_all = False
                             warnings.append(t(
                                 locale, 'shop-warning-insufficient-funds',
-                                **{'currency': titlecase(base_currency)}
+                                currency=titlecase(base_currency)
                             ))
 
                 start_index = self.current_page * self.items_per_page
@@ -414,7 +414,7 @@ class ShopCartView(LocaleLayoutView):
                 page_display = Button(
                     label=t(
                         locale, 'common-page-display',
-                        **{'current': self.current_page + 1, 'total': self.total_pages}
+                        current=self.current_page + 1, total=self.total_pages
                     ),
                     style=discord.ButtonStyle.secondary,
                     custom_id='shop_page_display'
@@ -634,7 +634,7 @@ class ComplexItemPurchaseView(LocaleLayoutView):
         header = Section(accessory=buttons.CartBackButton(self.parent_view))
         title_text = t(
             locale, 'shop-title-purchase-options',
-            **{'itemName': escape_markdown(self.item[CommonFields.NAME])}
+            itemName=escape_markdown(self.item[CommonFields.NAME])
         )
         header.add_item(TextDisplay(f"**{title_text}**"))
         container.add_item(header)

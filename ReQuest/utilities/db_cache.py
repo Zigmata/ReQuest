@@ -114,6 +114,10 @@ async def get_cached_data(bot, mongo_database, collection_name, query, is_single
 
         return data
     except Exception as e:
+        # Inside a transaction, swallowing errors would let the caller proceed with
+        # missing data and commit incorrect state. Re-raise so the transaction aborts.
+        if session is not None:
+            raise
         await log_exception(e)
         return None
 

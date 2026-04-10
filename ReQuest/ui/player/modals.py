@@ -525,7 +525,7 @@ class SpendCurrencyModal(LocaleModal):
             if amount > DisplayLimits.MAX_CURRENCY_AMOUNT:
                 raise UserFeedbackError(
                     t(locale, 'player-error-amount-exceeds-maximum',
-                      **{'max': str(DisplayLimits.MAX_CURRENCY_AMOUNT)}),
+                      max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)),
                     message_id='player-error-amount-exceeds-maximum',
                     max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)
                 )
