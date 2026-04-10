@@ -649,12 +649,11 @@ class ManageQuestsView(LocaleLayoutView):
 
             await run_in_transaction(bot, _do_quest_completion)
 
-            # Transaction committed — invalidate quest list caches
+            # Transaction committed — invalidate quest list caches in a single round-trip
+            admin_list_key = build_cache_key(bot.gdb.name, f'guild_quests:{guild_id}', 'quests')
+            gm_list_key = build_cache_key(bot.gdb.name, f'gm_quests:{guild_id}:{gm}', 'quests')
             try:
-                admin_list_key = build_cache_key(bot.gdb.name, f'guild_quests:{guild_id}', 'quests')
-                await bot.rdb.delete(admin_list_key)
-                gm_list_key = build_cache_key(bot.gdb.name, f'gm_quests:{guild_id}:{gm}', 'quests')
-                await bot.rdb.delete(gm_list_key)
+                await bot.rdb.delete(admin_list_key, gm_list_key)
             except Exception as e:
                 logger.error(f"Redis delete failed (post-commit quest cache): {e}")
 

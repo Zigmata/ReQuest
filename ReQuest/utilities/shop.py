@@ -215,7 +215,7 @@ async def reserve_stock(bot, guild_id: int, channel_id: str, item_name: str, qua
     collection = bot.gdb[DatabaseCollections.SHOP_STOCK]
 
     encoded_name = encode_mongo_key(item_name)
-    result = await collection.find_one_and_update(
+    result = await collection.update_one(
         {
             CommonFields.ID: guild_id,
             f'{ShopFields.SHOPS}.{channel_id}.{encoded_name}.{ShopFields.AVAILABLE}': {'$gte': quantity}
@@ -229,7 +229,7 @@ async def reserve_stock(bot, guild_id: int, channel_id: str, item_name: str, qua
         session=session
     )
 
-    if result:
+    if result.modified_count > 0:
         cache_key = build_cache_key(bot.gdb.name, guild_id, DatabaseCollections.SHOP_STOCK)
         await invalidate_cache_key(bot, cache_key, session)
         return True
