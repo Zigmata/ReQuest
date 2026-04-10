@@ -237,15 +237,21 @@ async def invalidate_cache_key(bot, cache_key, session):
 
     When session is None (no transaction), deletes the key immediately.
     When session is set AND run_in_transaction() is active, defers the delete
-    until after the transaction commits. If session is set but run_in_transaction()
-    was not used, the key is deleted immediately with a warning.
+    until after the transaction commits.
+
+    Raises RuntimeError if session is provided but run_in_transaction() is not
+    active — this prevents callers from creating a stale-cache race window.
     """
     if session is not None:
         pending = _pending_cache_invalidations.get()
-        if pending is not None:
-            pending.add(cache_key)
-            return
-        logger.warning(f'invalidate_cache_key called with session outside run_in_transaction for key: {cache_key}')
+        if pending is None:
+            raise RuntimeError(
+                'invalidate_cache_key called with a session outside run_in_transaction(). '
+                'Transactional cache invalidation requires run_in_transaction() to defer '
+                'the Redis delete until after commit.'
+            )
+        pending.add(cache_key)
+        return
 
     try:
         await bot.rdb.delete(cache_key)
