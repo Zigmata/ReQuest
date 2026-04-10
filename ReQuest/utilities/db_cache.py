@@ -283,6 +283,9 @@ async def run_in_transaction(bot, callback, *args, **kwargs):
     :return: the return value of callback
     """
     pending: set[str] = set()
+    # The ContextVar is reset in the finally block below, so even if with_transaction()
+    # raises (final retry exhausted, unhandled callback exception), the next call to
+    # run_in_transaction() starts with a fresh, empty pending set.
     token = _pending_cache_invalidations.set(pending)
     try:
         async with await bot.mongo_client.start_session() as session:
@@ -294,7 +297,9 @@ async def run_in_transaction(bot, callback, *args, **kwargs):
             try:
                 await bot.rdb.delete(*pending)
             except Exception as e:
-                logger.error(f"Redis delete failed (post-commit): {e}")
+                logger.error(
+                    f"Redis delete failed (post-commit, {len(pending)} keys): {e}"
+                )
         return result
     finally:
         _pending_cache_invalidations.reset(token)

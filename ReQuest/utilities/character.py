@@ -61,36 +61,13 @@ async def trade_currency(interaction, currency_name, amount, sending_member_id, 
         raise UserFeedbackError(f'The transaction cannot be completed:\n{message}',
                                 message_id='error-transaction-cannot-complete', reason=message)
 
-    await update_character_inventory(
+    updated_sender_currency = await update_character_inventory(
         interaction, sending_member_id, sender_character_id, currency_name, -amount,
         raise_on_error=True, session=session
     )
-    await update_character_inventory(
+    updated_receiver_currency = await update_character_inventory(
         interaction, receiving_member_id, receiver_character_id, currency_name, amount,
         raise_on_error=True, session=session
-    )
-
-    updated_sender_data = await get_cached_data(
-        bot=bot,
-        mongo_database=bot.mdb,
-        collection_name=DatabaseCollections.CHARACTERS,
-        query={CommonFields.ID: sending_member_id},
-        session=session
-    )
-    updated_receiver_data = await get_cached_data(
-        bot=bot,
-        mongo_database=bot.mdb,
-        collection_name=DatabaseCollections.CHARACTERS,
-        query={CommonFields.ID: receiving_member_id},
-        session=session
-    )
-    updated_sender_currency = (
-        updated_sender_data[CharacterFields.CHARACTERS][sender_character_id][CharacterFields.ATTRIBUTES]
-        .get(CharacterFields.CURRENCY)
-    )
-    updated_receiver_currency = (
-        updated_receiver_data[CharacterFields.CHARACTERS][receiver_character_id][CharacterFields.ATTRIBUTES]
-        .get(CharacterFields.CURRENCY)
     )
 
     return updated_sender_currency, updated_receiver_currency
@@ -314,6 +291,7 @@ async def update_character_inventory(interaction, player_id: int, character_id: 
                 }},
                 session=session
             )
+            return character_currency_db
         else:
             character_inventory = normalize_currency_keys(
                 character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
@@ -343,10 +321,12 @@ async def update_character_inventory(interaction, player_id: int, character_id: 
                 }},
                 session=session
             )
+            return inventory_for_db
     except Exception as e:
         if raise_on_error:
             raise
         await log_exception(e, interaction)
+    return None
 
 
 async def update_character_experience(interaction, player_id: int, character_id: str,

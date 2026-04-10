@@ -485,6 +485,21 @@ class ShopCartView(LocaleLayoutView):
                         message_id='shop-msg-cart-empty'
                     )
 
+                # Re-read currency config inside the transaction so denomination math
+                # matches what's actually committed (not stale view-render state).
+                tx_currency_config = await get_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.CURRENCY,
+                    query={'_id': guild_id},
+                    session=session
+                )
+                if not tx_currency_config:
+                    raise UserFeedbackError(
+                        t(locale, 'shop-error-no-active-character'),
+                        message_id='shop-error-no-active-character'
+                    )
+
                 character_query = await get_cached_data(
                     bot=bot,
                     mongo_database=bot.mdb,
@@ -514,14 +529,14 @@ class ShopCartView(LocaleLayoutView):
                         selected_cost = costs[option_index]
                         for currency_name, amount in selected_cost.items():
                             raw_totals[currency_name] = raw_totals.get(currency_name, 0.0) + (amount * quantity)
-                base_totals = consolidate_currency_totals(raw_totals, self.currency_config)
+                base_totals = consolidate_currency_totals(raw_totals, tx_currency_config)
 
                 for base_currency, amount in base_totals.items():
                     wallet = character_data[CharacterFields.ATTRIBUTES].get(
                         CharacterFields.CURRENCY, {}
                     )
                     is_ok, msg = check_sufficient_funds(
-                        wallet, self.currency_config, base_currency, amount, locale=locale
+                        wallet, tx_currency_config, base_currency, amount, locale=locale
                     )
                     if not is_ok:
                         raise UserFeedbackError(
@@ -533,7 +548,7 @@ class ShopCartView(LocaleLayoutView):
 
                 for base_currency, amount in base_totals.items():
                     character_data = apply_currency_change_local(
-                        character_data, self.currency_config, base_currency, -amount
+                        character_data, tx_currency_config, base_currency, -amount
                     )
 
                 items_summary = []
