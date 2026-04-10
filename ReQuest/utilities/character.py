@@ -62,10 +62,12 @@ async def trade_currency(interaction, currency_name, amount, sending_member_id, 
                                 message_id='error-transaction-cannot-complete', reason=message)
 
     await update_character_inventory(
-        interaction, sending_member_id, sender_character_id, currency_name, -amount, session=session
+        interaction, sending_member_id, sender_character_id, currency_name, -amount,
+        raise_on_error=True, session=session
     )
     await update_character_inventory(
-        interaction, receiving_member_id, receiver_character_id, currency_name, amount, session=session
+        interaction, receiving_member_id, receiver_character_id, currency_name, amount,
+        raise_on_error=True, session=session
     )
 
     updated_sender_data = await get_cached_data(
