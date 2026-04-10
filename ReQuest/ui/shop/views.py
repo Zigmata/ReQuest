@@ -616,7 +616,7 @@ class ShopCartView(LocaleLayoutView):
             await interaction.response.edit_message(view=self.prev_view)
             await interaction.followup.send(embed=receipt_embed, ephemeral=True)
         except Exception as e:
-            logging.error(f'Error during checkout: {e}')
+            await log_exception(e, interaction)
 
 
 class ComplexItemPurchaseView(LocaleLayoutView):
