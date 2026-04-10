@@ -452,8 +452,11 @@ async def get_cart(bot, guild_id: int, user_id: int, channel_id: str, session=No
         if isinstance(expires_at, str):
             expires_at = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
         if datetime.now(timezone.utc) > expires_at:
-            # Cart expired, clean it up
-            await clear_cart_and_release_stock(bot, guild_id, user_id, channel_id, session=session)
+            # Cart expired. Outside a transaction we clean it up now; inside a transaction
+            # we skip the cleanup so it can't be rolled back if the caller later aborts.
+            # The background cleanup_expired_carts task will eventually handle it.
+            if session is None:
+                await clear_cart_and_release_stock(bot, guild_id, user_id, channel_id)
             return None
 
     return cart
