@@ -226,7 +226,7 @@ time affords, but there are a lot of moving parts here and I can't guarantee eve
     ```
   - After your first launch, exec into mongoDB's container and initialize the replica set:
     ```sh
-    docker exec -it mongodb mongosh -u <root_user> -p <root_password> --authenticationDatabase admin --eval "rs.initiate()"
+    docker exec -it mongodb mongosh -u <root_user> -p <root_password> --authenticationDatabase admin --eval "rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongodb:27017' }] })"
     ```
 - The above example launches mongoDB and Redis with authentication. You can skip auth if you are
   developing locally or somewhere that security is not a concern.
