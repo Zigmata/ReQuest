@@ -476,6 +476,15 @@ class ShopCartView(LocaleLayoutView):
             channel_id = self.prev_view.channel_id
 
             async def _do_checkout(session):
+                # Read the DB cart as the single source of truth for both
+                # character updates and stock finalization.
+                db_cart = await get_cart(bot, guild_id, user_id, channel_id, session=session)
+                if not db_cart or not db_cart.get(CartFields.ITEMS):
+                    raise UserFeedbackError(
+                        t(locale, 'shop-msg-cart-empty'),
+                        message_id='shop-msg-cart-empty'
+                    )
+
                 character_query = await get_cached_data(
                     bot=bot,
                     mongo_database=bot.mdb,
@@ -493,7 +502,21 @@ class ShopCartView(LocaleLayoutView):
                 active_char_id = character_query[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
                 character_data = character_query[CharacterFields.CHARACTERS][active_char_id]
 
-                for base_currency, amount in self.base_totals.items():
+                # Recompute base_totals from the DB cart so funds validation matches
+                # what stock finalization will actually consume.
+                raw_totals = {}
+                for item_key, data in db_cart[CartFields.ITEMS].items():
+                    item = data[CartFields.ITEM]
+                    quantity = data[CartFields.QUANTITY]
+                    option_index = data.get(CartFields.OPTION_INDEX, 0)
+                    costs = item.get(ShopFields.COSTS, [])
+                    if 0 <= option_index < len(costs):
+                        selected_cost = costs[option_index]
+                        for currency_name, amount in selected_cost.items():
+                            raw_totals[currency_name] = raw_totals.get(currency_name, 0.0) + (amount * quantity)
+                base_totals = consolidate_currency_totals(raw_totals, self.currency_config)
+
+                for base_currency, amount in base_totals.items():
                     wallet = character_data[CharacterFields.ATTRIBUTES].get(
                         CharacterFields.CURRENCY, {}
                     )
@@ -508,15 +531,15 @@ class ShopCartView(LocaleLayoutView):
                             currency=titlecase(base_currency)
                         )
 
-                for base_currency, amount in self.base_totals.items():
+                for base_currency, amount in base_totals.items():
                     character_data = apply_currency_change_local(
                         character_data, self.currency_config, base_currency, -amount
                     )
 
                 items_summary = []
-                for item_key, data in self.prev_view.cart.items():
-                    item = data.get(CartFields.ITEM, data)
-                    quantity = data.get(CartFields.QUANTITY, 0)
+                for item_key, data in db_cart[CartFields.ITEMS].items():
+                    item = data[CartFields.ITEM]
+                    quantity = data[CartFields.QUANTITY]
                     qty_per_item = item.get(CommonFields.QUANTITY, 1)
                     total_qty = quantity * qty_per_item
 
@@ -535,10 +558,12 @@ class ShopCartView(LocaleLayoutView):
                     update_data={'$set': {f'characters.{active_char_id}': character_data}},
                     session=session
                 )
-                await finalize_cart_purchase(bot, guild_id, user_id, channel_id, session=session)
-                return items_summary, character_data[CharacterFields.NAME]
+                await finalize_cart_purchase(
+                    bot, guild_id, user_id, channel_id, session=session, cart=db_cart
+                )
+                return items_summary, character_data[CharacterFields.NAME], base_totals
 
-            added_items_summary, character_name = await run_in_transaction(bot, _do_checkout)
+            added_items_summary, character_name, committed_totals = await run_in_transaction(bot, _do_checkout)
 
             log_channel = None
             log_channel_query = await get_cached_data(
@@ -562,7 +587,7 @@ class ShopCartView(LocaleLayoutView):
                 inline=False
             )
 
-            total_strs = format_consolidated_totals(self.base_totals, self.currency_config)
+            total_strs = format_consolidated_totals(committed_totals, self.currency_config)
             receipt_embed.add_field(
                 name=t(locale, 'shop-embed-field-total-paid'),
                 value="\n".join(total_strs) or '0',

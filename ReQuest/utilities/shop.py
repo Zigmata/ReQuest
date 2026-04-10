@@ -825,7 +825,8 @@ async def clear_cart_and_release_stock(bot, guild_id: int, user_id: int, channel
                 )
 
 
-async def finalize_cart_purchase(bot, guild_id: int, user_id: int, channel_id: str, session=None):
+async def finalize_cart_purchase(bot, guild_id: int, user_id: int, channel_id: str, session=None,
+                                 cart=None):
     """
     Finalizes a cart purchase by removing reserved stock counts and deleting the cart.
 
@@ -833,8 +834,13 @@ async def finalize_cart_purchase(bot, guild_id: int, user_id: int, channel_id: s
     :param guild_id: The guild ID
     :param user_id: The user ID
     :param channel_id: The shop channel ID
+    :param session: Optional MongoDB client session for transaction support
+    :param cart: Optional pre-fetched cart document. When provided, skips the DB re-read so
+                 the caller can use a single consistent cart snapshot for both character
+                 updates and stock finalization.
     """
-    cart = await get_cart(bot, guild_id, user_id, channel_id, session=session)
+    if cart is None:
+        cart = await get_cart(bot, guild_id, user_id, channel_id, session=session)
     if not cart:
         return
 
