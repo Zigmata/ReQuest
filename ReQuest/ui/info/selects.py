@@ -177,7 +177,7 @@ class LanguageSelect(Select):
         for supported_locale in page_locales:
             self.options.append(discord.SelectOption(
                 label=t(locale, LOCALE_LABELS[supported_locale]),
-                description=t(locale, LOCALE_DESCRIPTIONS[supported_locale]),
+                description=t(locale, LOCALE_DESCRIPTIONS[supported_locale])[:100],
                 emoji=LOCALE_EMOJI.get(supported_locale),
                 value=supported_locale,
                 default=(supported_locale == locale)

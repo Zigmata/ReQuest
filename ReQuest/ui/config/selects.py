@@ -169,19 +169,19 @@ class InventoryTypeSelect(Select):
             options=[
                 discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-disabled-label'),
                                      value=InventoryType.DISABLED.value,
-                                     description=t(DEFAULT_LOCALE, 'config-select-desc-disabled')),
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-disabled')[:100]),
                 discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-selection'),
                                      value=InventoryType.SELECTION.value,
-                                     description=t(DEFAULT_LOCALE, 'config-select-desc-selection')),
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-selection')[:100]),
                 discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-purchase'),
                                      value=InventoryType.PURCHASE.value,
-                                     description=t(DEFAULT_LOCALE, 'config-select-desc-purchase')),
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-purchase')[:100]),
                 discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-open'),
                                      value=InventoryType.OPEN.value,
-                                     description=t(DEFAULT_LOCALE, 'config-select-desc-open')),
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-open')[:100]),
                 discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-static'),
                                      value=InventoryType.STATIC.value,
-                                     description=t(DEFAULT_LOCALE, 'config-select-desc-static')),
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-static')[:100]),
             ],
             custom_id='inventory_type_select'
         )
@@ -250,12 +250,12 @@ class RoleplayModeSelect(Select):
                 discord.SelectOption(
                     label=t(DEFAULT_LOCALE, 'config-select-option-scheduled'),
                     value=RoleplayMode.SCHEDULED.value,
-                    description=t(DEFAULT_LOCALE, 'config-select-desc-scheduled')
+                    description=t(DEFAULT_LOCALE, 'config-select-desc-scheduled')[:100]
                 ),
                 discord.SelectOption(
                     label=t(DEFAULT_LOCALE, 'config-select-option-accrued'),
                     value=RoleplayMode.ACCRUED.value,
-                    description=t(DEFAULT_LOCALE, 'config-select-desc-accrued')
+                    description=t(DEFAULT_LOCALE, 'config-select-desc-accrued')[:100]
                 )
             ],
             custom_id='rp_mode_select'
@@ -285,13 +285,13 @@ class RoleplayResetSelect(Select):
             options=[
                 discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-hourly'),
                                      value=ScheduleType.HOURLY.value,
-                                     description=t(DEFAULT_LOCALE, 'config-select-desc-hourly')),
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-hourly')[:100]),
                 discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-daily'),
                                      value=ScheduleType.DAILY.value,
-                                     description=t(DEFAULT_LOCALE, 'config-select-desc-daily')),
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-daily')[:100]),
                 discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-weekly'),
                                      value=ScheduleType.WEEKLY.value,
-                                     description=t(DEFAULT_LOCALE, 'config-select-desc-weekly'))
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-weekly')[:100])
             ],
             custom_id='rp_reset_select'
         )
@@ -415,21 +415,22 @@ class ForumThreadSelect(Select):
                     options.append(discord.SelectOption(
                         label=thread.name[:100],  # Discord label limit
                         value=str(thread.id),
-                        description=t(DEFAULT_LOCALE, 'config-select-desc-thread-id', threadId=str(thread.id))
+                        description=t(DEFAULT_LOCALE, 'config-select-desc-thread-id',
+                                      threadId=str(thread.id))[:100]
                     ))
             else:
                 # Provide a placeholder option if no threads found
                 options.append(discord.SelectOption(
                     label=t(DEFAULT_LOCALE, 'config-select-option-no-threads'),
                     value='none',
-                    description=t(DEFAULT_LOCALE, 'config-select-desc-no-threads')
+                    description=t(DEFAULT_LOCALE, 'config-select-desc-no-threads')[:100]
                 ))
 
         if not options:
             options.append(discord.SelectOption(
                 label=t(DEFAULT_LOCALE, 'config-select-option-select-forum-first'),
                 value='none',
-                description=t(DEFAULT_LOCALE, 'config-select-desc-select-forum-first')
+                description=t(DEFAULT_LOCALE, 'config-select-desc-select-forum-first')[:100]
             ))
 
         super().__init__(
@@ -489,7 +490,7 @@ class ConfigLanguageSelect(Select):
         if page == 0:
             self.options.append(discord.SelectOption(
                 label=t(locale, 'config-select-option-default'),
-                description=t(locale, 'config-select-desc-default'),
+                description=t(locale, 'config-select-desc-default')[:100],
                 value='default',
                 default=(current_guild_locale is None)
             ))
@@ -509,7 +510,7 @@ class ConfigLanguageSelect(Select):
         for supported_locale in page_locales:
             self.options.append(discord.SelectOption(
                 label=t(locale, LOCALE_LABELS[supported_locale]),
-                description=t(locale, LOCALE_DESCRIPTIONS[supported_locale]),
+                description=t(locale, LOCALE_DESCRIPTIONS[supported_locale])[:100],
                 emoji=LOCALE_EMOJI.get(supported_locale),
                 value=supported_locale,
                 default=(supported_locale == current_guild_locale)
@@ -550,17 +551,17 @@ class QuestRoleModeSelect(Select):
                 discord.SelectOption(
                     label=t(DEFAULT_LOCALE, 'config-select-option-quest-role-disabled'),
                     value=QuestRoleMode.DISABLED.value,
-                    description=t(DEFAULT_LOCALE, 'config-select-desc-quest-role-disabled')
+                    description=t(DEFAULT_LOCALE, 'config-select-desc-quest-role-disabled')[:100]
                 ),
                 discord.SelectOption(
                     label=t(DEFAULT_LOCALE, 'config-select-option-quest-role-temporary'),
                     value=QuestRoleMode.TEMPORARY.value,
-                    description=t(DEFAULT_LOCALE, 'config-select-desc-quest-role-temporary')
+                    description=t(DEFAULT_LOCALE, 'config-select-desc-quest-role-temporary')[:100]
                 ),
                 discord.SelectOption(
                     label=t(DEFAULT_LOCALE, 'config-select-option-quest-role-static'),
                     value=QuestRoleMode.STATIC.value,
-                    description=t(DEFAULT_LOCALE, 'config-select-desc-quest-role-static')
+                    description=t(DEFAULT_LOCALE, 'config-select-desc-quest-role-static')[:100]
                 ),
             ],
             custom_id='quest_role_mode_select'
