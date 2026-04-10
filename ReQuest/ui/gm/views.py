@@ -591,6 +591,7 @@ class ManageQuestsView(LocaleLayoutView):
             gm_character_name = None
             gm_experience = None
             gm_items = None
+            gm_has_any_character = False
             if gm_rewards_query:
                 gm_experience = gm_rewards_query.get(CharacterFields.EXPERIENCE)
                 gm_items = gm_rewards_query.get(CommonFields.ITEMS)
@@ -600,6 +601,7 @@ class ManageQuestsView(LocaleLayoutView):
                     collection_name=DatabaseCollections.CHARACTERS,
                     query={CommonFields.ID: interaction.user.id}
                 )
+                gm_has_any_character = bool(character_query)
                 if character_query and str(guild_id) in character_query.get(CharacterFields.ACTIVE_CHARACTERS, {}):
                     gm_character_id = character_query[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
                     gm_character_name = character_query[CharacterFields.CHARACTERS][gm_character_id][
@@ -753,24 +755,15 @@ class ManageQuestsView(LocaleLayoutView):
             if gm_rewards_query:
                 gm_locale = await resolve_locale(bot=bot, user_id=interaction.user.id, guild_id=guild_id)
 
-                if not gm_character_id:
-                    character_query = await get_cached_data(
-                        bot=bot,
-                        mongo_database=bot.mdb,
-                        collection_name=DatabaseCollections.CHARACTERS,
-                        query={CommonFields.ID: interaction.user.id}
-                    )
-                    if not character_query:
-                        character_string = t(gm_locale, 'gm-dm-rewards-no-characters')
-                    elif str(guild_id) not in character_query.get(CharacterFields.ACTIVE_CHARACTERS, {}):
-                        character_string = t(gm_locale, 'gm-dm-rewards-no-active-character')
-                    else:
-                        character_string = t(gm_locale, 'gm-dm-rewards-no-active-character')
-                else:
+                if gm_character_id:
                     character_string = t(
                         gm_locale, 'gm-dm-rewards-issued',
                         characterName=gm_character_name
                     )
+                elif not gm_has_any_character:
+                    character_string = t(gm_locale, 'gm-dm-rewards-no-characters')
+                else:
+                    character_string = t(gm_locale, 'gm-dm-rewards-no-active-character')
 
                 gm_rewards_embed = discord.Embed(
                     title=t(gm_locale, 'gm-embed-title-gm-rewards'),
