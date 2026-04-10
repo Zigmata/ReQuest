@@ -65,6 +65,7 @@ gm-error-no-active-character-long = Nu aveți un personaj activ pe acest server.
 gm-error-quest-locked = Eroare la alăturarea la quest-ul {"**"}{ $questTitle }{"**"}: Quest-ul este blocat de GM.
 gm-error-quest-full = Eroare la alăturarea la quest-ul {"**"}{ $questTitle }{"**"}: Lista echipei este plină!
 gm-error-not-signed-up = Nu sunteți înscris pe acest quest.
+gm-error-quest-not-found = Misiunea nu mai există.
 gm-error-quest-channel-not-set = Canalul de quest-uri nu a fost setat!
 gm-error-empty-roster = Nu puteți finaliza un quest cu o listă goală. Încercați să anulați în schimb.
 gm-error-invalid-xp-value = Valoarea XP trebuie să fie un număr întreg pozitiv!

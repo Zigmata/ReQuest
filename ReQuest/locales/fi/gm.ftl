@@ -65,6 +65,7 @@ gm-error-no-active-character-long = Sinulla ei ole aktiivista hahmoa tällä pal
 gm-error-quest-locked = Virhe liittyessä questiin {"**"}{ $questTitle }{"**"}: Quest on GM:n lukitsema.
 gm-error-quest-full = Virhe liittyessä questiin {"**"}{ $questTitle }{"**"}: Questin ryhmä on täynnä!
 gm-error-not-signed-up = Et ole ilmoittautunut tähän questiin.
+gm-error-quest-not-found = Tehtävää ei enää ole olemassa.
 gm-error-quest-channel-not-set = Quest-kanavaa ei ole asetettu!
 gm-error-empty-roster = Questia ei voi suorittaa tyhjällä ryhmällä. Kokeile peruuttamista sen sijaan.
 gm-error-invalid-xp-value = XP-arvon on oltava positiivinen kokonaisluku!

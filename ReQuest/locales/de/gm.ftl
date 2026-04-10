@@ -65,6 +65,7 @@ gm-error-no-active-character-long = Sie haben keinen aktiven Charakter auf diese
 gm-error-quest-locked = Fehler beim Beitreten zum Quest {"**"}{ $questTitle }{"**"}: Der Quest ist vom GM gesperrt.
 gm-error-quest-full = Fehler beim Beitreten zum Quest {"**"}{ $questTitle }{"**"}: Die Quest-Liste ist voll!
 gm-error-not-signed-up = Sie sind nicht für diesen Quest angemeldet.
+gm-error-quest-not-found = Quest existiert nicht mehr.
 gm-error-quest-channel-not-set = Quest-Kanal wurde nicht festgelegt!
 gm-error-empty-roster = Sie können einen Quest mit leerer Teilnehmerliste nicht abschließen. Versuchen Sie stattdessen, ihn abzubrechen.
 gm-error-invalid-xp-value = XP-Wert muss eine positive Ganzzahl sein!

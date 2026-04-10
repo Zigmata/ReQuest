@@ -65,6 +65,7 @@ gm-error-no-active-character-long = У вас нет активного перс
 gm-error-quest-locked = Ошибка при вступлении в квест {"**"}{ $questTitle }{"**"}: Квест заблокирован GM.
 gm-error-quest-full = Ошибка при вступлении в квест {"**"}{ $questTitle }{"**"}: Отряд укомплектован!
 gm-error-not-signed-up = Вы не записаны на этот квест.
+gm-error-quest-not-found = Квест больше не существует.
 gm-error-quest-channel-not-set = Канал квестов не установлен!
 gm-error-empty-roster = Нельзя завершить квест с пустым составом. Попробуйте отменить вместо этого.
 gm-error-invalid-xp-value = Значение XP должно быть положительным целым числом!

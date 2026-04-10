@@ -65,6 +65,7 @@ gm-error-no-active-character-long = คุณไม่มีตัวละค�
 gm-error-quest-locked = เกิดข้อผิดพลาดในการเข้าร่วม quest {"**"}{ $questTitle }{"**"}: Quest ถูกล็อกโดย GM
 gm-error-quest-full = เกิดข้อผิดพลาดในการเข้าร่วม quest {"**"}{ $questTitle }{"**"}: รายชื่อ quest เต็มแล้ว!
 gm-error-not-signed-up = คุณไม่ได้ลงชื่อเข้าร่วม quest นี้
+gm-error-quest-not-found = เควสไม่มีอยู่อีกต่อไป
 gm-error-quest-channel-not-set = ยังไม่ได้ตั้งค่าช่อง quest!
 gm-error-empty-roster = คุณไม่สามารถจบ quest ที่ไม่มีผู้เล่นได้ ลองยกเลิกแทน
 gm-error-invalid-xp-value = ค่า XP ต้องเป็นจำนวนเต็มบวก!

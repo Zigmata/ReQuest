@@ -65,6 +65,7 @@ gm-error-no-active-character-long = Vous n'avez pas de personnage actif sur ce s
 gm-error-quest-locked = Erreur lors de l'inscription à la quête {"**"}{ $questTitle }{"**"} : La quête est verrouillée par le GM.
 gm-error-quest-full = Erreur lors de l'inscription à la quête {"**"}{ $questTitle }{"**"} : Le groupe est complet !
 gm-error-not-signed-up = Vous n'êtes pas inscrit à cette quête.
+gm-error-quest-not-found = La quête n'existe plus.
 gm-error-quest-channel-not-set = Le canal de quêtes n'a pas été défini !
 gm-error-empty-roster = Vous ne pouvez pas terminer une quête avec un groupe vide. Essayez plutôt d'annuler.
 gm-error-invalid-xp-value = La valeur de XP doit être un entier positif !

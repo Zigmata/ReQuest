@@ -65,6 +65,7 @@ gm-error-no-active-character-long = Anda tidak memiliki karakter aktif di server
 gm-error-quest-locked = Gagal bergabung ke quest {"**"}{ $questTitle }{"**"}: Quest dikunci oleh GM.
 gm-error-quest-full = Gagal bergabung ke quest {"**"}{ $questTitle }{"**"}: Daftar rombongan quest sudah penuh!
 gm-error-not-signed-up = Anda tidak terdaftar di quest ini.
+gm-error-quest-not-found = Quest tidak lagi ada.
 gm-error-quest-channel-not-set = Kanal quest belum diatur!
 gm-error-empty-roster = Anda tidak dapat menyelesaikan quest dengan daftar rombongan kosong. Coba batalkan saja.
 gm-error-invalid-xp-value = Nilai XP harus berupa bilangan bulat positif!

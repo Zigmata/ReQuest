@@ -65,6 +65,7 @@ gm-error-no-active-character-long = इस सर्वर पर आपका �
 gm-error-quest-locked = Quest {"**"}{ $questTitle }{"**"} में शामिल होने में त्रुटि: Quest GM द्वारा लॉक है।
 gm-error-quest-full = Quest {"**"}{ $questTitle }{"**"} में शामिल होने में त्रुटि: Quest की सूची भरी हुई है!
 gm-error-not-signed-up = आप इस quest के लिए पंजीकृत नहीं हैं।
+gm-error-quest-not-found = क्वेस्ट अब मौजूद नहीं है।
 gm-error-quest-channel-not-set = Quest चैनल सेट नहीं किया गया है!
 gm-error-empty-roster = खाली सूची के साथ quest पूर्ण नहीं की जा सकती। इसके बजाय रद्द करने का प्रयास करें।
 gm-error-invalid-xp-value = XP मान एक धनात्मक पूर्णांक होना चाहिए!

@@ -65,6 +65,7 @@ gm-error-no-active-character-long = Nincs aktív karaktered ezen a szerveren. Ha
 gm-error-quest-locked = Hiba a(z) {"**"}{ $questTitle }{"**"} questhez való csatlakozásnál: A quest zárolva van a GM által.
 gm-error-quest-full = Hiba a(z) {"**"}{ $questTitle }{"**"} questhez való csatlakozásnál: A quest létszáma betelt!
 gm-error-not-signed-up = Nem vagy feliratkozva erre a questre.
+gm-error-quest-not-found = A küldetés már nem létezik.
 gm-error-quest-channel-not-set = A quest csatorna nincs beállítva!
 gm-error-empty-roster = Nem fejezhetsz be egy questet üres névsorral. Próbáld meg inkább törölni.
 gm-error-invalid-xp-value = A tapasztalatpont értéknek pozitív egész számnak kell lennie!

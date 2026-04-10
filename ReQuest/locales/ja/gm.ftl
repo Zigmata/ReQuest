@@ -65,6 +65,7 @@ gm-error-no-active-character-long = このサーバーで有効なキャラク�
 gm-error-quest-locked = Quest {"**"}{ $questTitle }{"**"} への参加エラー：Quest は GM によってロックされています。
 gm-error-quest-full = Quest {"**"}{ $questTitle }{"**"} への参加エラー：Quest の定員が満員です！
 gm-error-not-signed-up = あなたはこの Quest に登録されていません。
+gm-error-quest-not-found = クエストは存在しません。
 gm-error-quest-channel-not-set = Quest チャンネルが設定されていません！
 gm-error-empty-roster = 空の名簿で Quest を完了することはできません。代わりにキャンセルしてください。
 gm-error-invalid-xp-value = 経験値は正の整数でなければなりません！

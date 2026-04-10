@@ -65,6 +65,7 @@ gm-error-no-active-character-long = Du har ingen aktiv karaktär på denna serve
 gm-error-quest-locked = Fel vid anslutning till quest {"**"}{ $questTitle }{"**"}: Questen är låst av GM.
 gm-error-quest-full = Fel vid anslutning till quest {"**"}{ $questTitle }{"**"}: Quest-gruppen är full!
 gm-error-not-signed-up = Du är inte anmäld till denna quest.
+gm-error-quest-not-found = Uppdraget finns inte längre.
 gm-error-quest-channel-not-set = Quest-kanalen har inte ställts in!
 gm-error-empty-roster = Du kan inte avsluta en quest med en tom lista. Prova att avbryta istället.
 gm-error-invalid-xp-value = XP-värdet måste vara ett positivt heltal!

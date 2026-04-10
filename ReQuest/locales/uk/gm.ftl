@@ -65,6 +65,7 @@ gm-error-no-active-character-long = У вас немає активного пе
 gm-error-quest-locked = Помилка приєднання до квесту {"**"}{ $questTitle }{"**"}: Квест заблоковано GM.
 gm-error-quest-full = Помилка приєднання до квесту {"**"}{ $questTitle }{"**"}: Список учасників квесту заповнений!
 gm-error-not-signed-up = Ви не зареєстровані на цей квест.
+gm-error-quest-not-found = Завдання більше не існує.
 gm-error-quest-channel-not-set = Канал квестів не встановлено!
 gm-error-empty-roster = Ви не можете завершити квест з порожнім списком учасників. Спробуйте скасувати натомість.
 gm-error-invalid-xp-value = Значення XP має бути додатнім цілим числом!

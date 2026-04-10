@@ -65,6 +65,7 @@ gm-error-no-active-character-long = Bạn không có nhân vật đang hoạt đ
 gm-error-quest-locked = Lỗi tham gia quest {"**"}{ $questTitle }{"**"}: Quest đã bị GM khóa.
 gm-error-quest-full = Lỗi tham gia quest {"**"}{ $questTitle }{"**"}: Đội hình quest đã đầy!
 gm-error-not-signed-up = Bạn chưa đăng ký cho quest này.
+gm-error-quest-not-found = Nhiệm vụ không còn tồn tại.
 gm-error-quest-channel-not-set = Chưa đặt kênh quest!
 gm-error-empty-roster = Bạn không thể hoàn thành quest với đội hình trống. Hãy thử hủy thay thế.
 gm-error-invalid-xp-value = Giá trị XP phải là số nguyên dương!

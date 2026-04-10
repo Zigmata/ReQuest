@@ -496,8 +496,8 @@ class ShopCartView(LocaleLayoutView):
                 )
                 if not tx_currency_config:
                     raise UserFeedbackError(
-                        t(locale, 'shop-error-no-active-character'),
-                        message_id='shop-error-no-active-character'
+                        t(locale, 'player-error-no-currency-config'),
+                        message_id='player-error-no-currency-config'
                     )
 
                 character_query = await get_cached_data(
@@ -576,9 +576,10 @@ class ShopCartView(LocaleLayoutView):
                 await finalize_cart_purchase(
                     bot, guild_id, user_id, channel_id, session=session, cart=db_cart
                 )
-                return items_summary, character_data[CharacterFields.NAME], base_totals
+                return items_summary, character_data[CharacterFields.NAME], base_totals, tx_currency_config
 
-            added_items_summary, character_name, committed_totals = await run_in_transaction(bot, _do_checkout)
+            (added_items_summary, character_name, committed_totals,
+             committed_currency_config) = await run_in_transaction(bot, _do_checkout)
 
             log_channel = None
             log_channel_query = await get_cached_data(
@@ -602,7 +603,7 @@ class ShopCartView(LocaleLayoutView):
                 inline=False
             )
 
-            total_strs = format_consolidated_totals(committed_totals, self.currency_config)
+            total_strs = format_consolidated_totals(committed_totals, committed_currency_config)
             receipt_embed.add_field(
                 name=t(locale, 'shop-embed-field-total-paid'),
                 value="\n".join(total_strs) or '0',

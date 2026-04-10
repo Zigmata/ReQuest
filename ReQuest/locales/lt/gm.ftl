@@ -65,6 +65,7 @@ gm-error-no-active-character-long = Jūs neturite aktyvaus personažo šiame ser
 gm-error-quest-locked = Klaida prisijungiant prie quest'o {"**"}{ $questTitle }{"**"}: Quest'as užrakintas GM.
 gm-error-quest-full = Klaida prisijungiant prie quest'o {"**"}{ $questTitle }{"**"}: Quest'o sąrašas pilnas!
 gm-error-not-signed-up = Jūs nesate užsiregistravę šiam quest'ui.
+gm-error-quest-not-found = Užduoties nebėra.
 gm-error-quest-channel-not-set = Quest kanalas nenustatytas!
 gm-error-empty-roster = Negalite užbaigti quest'o su tuščiu sąrašu. Pabandykite atšaukti.
 gm-error-invalid-xp-value = XP reikšmė turi būti teigiamas sveikasis skaičius!
