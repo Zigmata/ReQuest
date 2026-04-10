@@ -465,7 +465,7 @@ class QuestSummaryModal(LocaleModal):
 class ModPlayerModal(LocaleModal):
     def __init__(self, member: discord.Member, character_id, character_data, xp_enabled=True):
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'gm-modal-title-modifying-player', playerName=member.name),
+            title=t(DEFAULT_LOCALE, 'gm-modal-title-modifying-player', playerName=member.name)[:45],
             timeout=600
         )
         self.member = member

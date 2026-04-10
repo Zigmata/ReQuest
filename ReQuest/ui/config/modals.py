@@ -317,7 +317,8 @@ class RenameDenominationModal(LocaleModal):
 class AddCurrencyDenominationModal(LocaleModal):
     def __init__(self, calling_view, base_currency_name):
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-add-denomination', **{'currencyName': base_currency_name}),
+            title=t(DEFAULT_LOCALE, 'config-modal-title-add-denomination',
+                    **{'currencyName': base_currency_name})[:45],
             timeout=300
         )
         self.calling_view = calling_view
@@ -2038,7 +2039,7 @@ class SetItemStockModal(LocaleModal):
     def __init__(self, calling_view, item_name: str, current_max: int | None = None,
                  current_stock: int | None = None, current_increment: int | None = None):
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-stock-limit', **{'itemName': item_name[:40]}),
+            title=t(DEFAULT_LOCALE, 'config-modal-title-stock-limit', **{'itemName': item_name})[:45],
             timeout=600
         )
         self.calling_view = calling_view
