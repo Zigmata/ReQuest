@@ -138,7 +138,7 @@ gm-embed-field-items = Αντικείμενα
 
 # GM views
 gm-title-main-menu = Game Master - Κύριο Μενού
-gm-menu-quests = Quest
+gm-menu-quests = Αποστολές
 gm-menu-desc-quests = Δημιουργία, επεξεργασία και διαχείριση quest.
 gm-menu-players = Παίκτες
 gm-menu-desc-players = Διαχείριση εξοπλισμού παικτών και τροποποίηση χαρακτήρων.

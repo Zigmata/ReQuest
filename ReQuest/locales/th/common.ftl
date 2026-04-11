@@ -46,9 +46,9 @@ common-label-inventory-empty = คลังไอเทมว่างเปล�
 # Shared embed fields
 common-embed-field-party = __ปาร์ตี้__
 common-embed-field-wait-list = __รายชื่อรอ__
-common-embed-footer-quest-id = Quest ID: { $questId }
+common-embed-footer-quest-id = รหัสเควส: { $questId }
 common-embed-footer-transaction-id = รหัสธุรกรรม: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}ผู้ดำเนินเกม:{"**"}
 common-embed-label-party-restrictions = {"**"}ข้อจำกัดปาร์ตี้:{"**"}
 
 # Translation notice

@@ -103,7 +103,7 @@ gm-dm-title-player-removed-confirm = プレイヤー削除済み
 gm-dm-desc-player-removed-confirm =
     プレイヤーが {"**"}{ $questTitle }{"**"} から削除され、
     Quest の名簿が更新されました。
-gm-dm-footer-quest = Quest ID: { $questId } • { $guildName }
+gm-dm-footer-quest = クエストID: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     サーバー管理者が Quest 完了時の GM 報酬を設定しています。
     ただし、登録されたキャラクターがいないため、報酬を

@@ -46,9 +46,9 @@ common-label-inventory-empty = A leltár üres.
 # Shared embed fields
 common-embed-field-party = __Csapat__
 common-embed-field-wait-list = __Várólistás__
-common-embed-footer-quest-id = Quest ID: { $questId }
+common-embed-footer-quest-id = Küldetés azon: { $questId }
 common-embed-footer-transaction-id = Tranzakció ID: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}Játékmester:{"**"}
 common-embed-label-party-restrictions = {"**"}Csapatkorlátozások:{"**"}
 
 # Translation notice

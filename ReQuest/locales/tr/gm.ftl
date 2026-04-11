@@ -103,7 +103,7 @@ gm-dm-title-player-removed-confirm = Oyuncu Kaldırıldı
 gm-dm-desc-player-removed-confirm =
     Oyuncu {"**"}{ $questTitle }{"**"} quest'inden kaldırıldı
     ve quest kadrosu güncellendi.
-gm-dm-footer-quest = Quest ID: { $questId } • { $guildName }
+gm-dm-footer-quest = Görev Kimliği: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     Sunucu yöneticiniz, GM'lerin quest tamamladığında ödül alacağı şekilde
     yapılandırmış. Ancak, kayıtlı hiç karakteriniz olmadığı için ödülleriniz

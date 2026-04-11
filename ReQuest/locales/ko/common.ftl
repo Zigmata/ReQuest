@@ -46,7 +46,7 @@ common-label-inventory-empty = 인벤토리가 비어 있습니다.
 # 공유 임베드 필드
 common-embed-field-party = __파티__
 common-embed-field-wait-list = __대기 목록__
-common-embed-footer-quest-id = Quest ID: { $questId }
+common-embed-footer-quest-id = 퀘스트 ID: { $questId }
 common-embed-footer-transaction-id = 거래 ID: { $transactionId }
 common-embed-label-gm = {"**"}GM:{"**"}
 common-embed-label-party-restrictions = {"**"}파티 제한:{"**"}

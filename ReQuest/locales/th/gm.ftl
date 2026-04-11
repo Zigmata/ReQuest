@@ -103,7 +103,7 @@ gm-dm-title-player-removed-confirm = ลบผู้เล่นแล้ว
 gm-dm-desc-player-removed-confirm =
     ผู้เล่นถูกลบออกจาก {"**"}{ $questTitle }{"**"}
     และรายชื่อ quest ได้รับการอัปเดตแล้ว
-gm-dm-footer-quest = Quest ID: { $questId } • { $guildName }
+gm-dm-footer-quest = รหัสเควส: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     ผู้ดูแลเซิร์ฟเวอร์ของคุณได้ตั้งค่ารางวัลสำหรับ GM เมื่อจบ quest
     อย่างไรก็ตาม เนื่องจากคุณไม่มีตัวละครที่ลงทะเบียนไว้ จึงไม่สามารถ

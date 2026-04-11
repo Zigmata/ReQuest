@@ -46,9 +46,9 @@ common-label-inventory-empty = Inventar je prazan.
 # Shared embed fields
 common-embed-field-party = __Družina__
 common-embed-field-wait-list = __Lista čekanja__
-common-embed-footer-quest-id = Quest ID: { $questId }
+common-embed-footer-quest-id = ID zadatka: { $questId }
 common-embed-footer-transaction-id = ID transakcije: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}Voditelj:{"**"}
 common-embed-label-party-restrictions = {"**"}Ograničenja družine:{"**"}
 
 # Translation notice

@@ -102,7 +102,7 @@ gm-dm-title-player-removed-confirm = Играч премахнат
 gm-dm-desc-player-removed-confirm =
     Играчът беше премахнат от {"**"}{ $questTitle }{"**"}
     и списъкът на quest беше обновен.
-gm-dm-footer-quest = Quest ID: { $questId } • { $guildName }
+gm-dm-footer-quest = Идент. куест: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     Администраторът на вашия сървър е конфигурирал награди за GM при завършване
     на куестове. Тъй като обаче нямате регистрирани персонажи, наградите ви не могат

@@ -102,7 +102,7 @@ gm-dm-title-player-removed-confirm = Spieler entfernt
 gm-dm-desc-player-removed-confirm =
     Der Spieler wurde aus {"**"}{ $questTitle }{"**"} entfernt
     und die Quest-Liste wurde aktualisiert.
-gm-dm-footer-quest = Quest ID: { $questId } • { $guildName }
+gm-dm-footer-quest = Quest-ID: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     Ihr Serveradministrator hat Belohnungen für Spielleiter konfiguriert, die beim Abschluss von
     Quests vergeben werden. Da Sie jedoch keine registrierten Charaktere haben, konnten Ihre Belohnungen

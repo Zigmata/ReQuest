@@ -61,7 +61,7 @@ player-modal-placeholder-trade-quantity = Indtast det antal du handler
 player-modal-title-register = Registrer ny karakter
 player-modal-label-char-name = Navn
 player-modal-placeholder-char-name = Indtast din karakters navn.
-player-modal-label-char-note = Note
+player-modal-label-char-note = Notat
 player-modal-placeholder-char-note = Indtast en note til at identificere din karakter
 
 # Open inventory input modal

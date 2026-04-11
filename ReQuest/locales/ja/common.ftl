@@ -46,7 +46,7 @@ common-label-inventory-empty = インベントリは空です。
 # Shared embed fields
 common-embed-field-party = __パーティー__
 common-embed-field-wait-list = __ウェイトリスト__
-common-embed-footer-quest-id = Quest ID: { $questId }
+common-embed-footer-quest-id = クエストID: { $questId }
 common-embed-footer-transaction-id = 取引 ID: { $transactionId }
 common-embed-label-gm = {"**"}GM:{"**"}
 common-embed-label-party-restrictions = {"**"}パーティー制限:{"**"}

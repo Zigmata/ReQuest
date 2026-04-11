@@ -103,7 +103,7 @@ gm-dm-title-player-removed-confirm = Jucător eliminat
 gm-dm-desc-player-removed-confirm =
     Jucătorul a fost eliminat din {"**"}{ $questTitle }{"**"}
     și lista quest-ului a fost actualizată.
-gm-dm-footer-quest = Quest ID: { $questId } • { $guildName }
+gm-dm-footer-quest = ID misiune: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     Administratorul serverului a configurat recompense pentru Game Masteri la finalizarea
     quest-urilor. Cu toate acestea, deoarece nu aveți personaje înregistrate, recompensele

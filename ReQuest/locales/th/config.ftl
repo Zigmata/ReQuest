@@ -375,7 +375,7 @@ config-select-option-no-threads = ไม่พบกระทู้ที่ใ�
 config-select-desc-no-threads = สร้างกระทู้ใหม่หรือตรวจสอบกระทู้ที่เก็บถาวร
 config-select-option-select-forum-first = เลือก Forum ก่อน
 config-select-desc-select-forum-first = กรุณาเลือกช่อง Forum ด้านบน
-config-select-desc-thread-id = Thread ID: { $threadId }
+config-select-desc-thread-id = รหัสเธรด: { $threadId }
 config-error-select-valid-thread = กรุณาเลือกกระทู้ที่ถูกต้องหรือสร้างกระทู้ใหม่
 config-error-thread-not-found = ไม่พบกระทู้ที่เลือก อาจถูกลบหรือเก็บถาวรไปแล้ว
 
@@ -708,7 +708,7 @@ config-desc-example-json =
     ดาวน์โหลดไฟล์ JSON ตัวอย่างที่แสดงรูปแบบที่คาดหวัง
 config-msg-example-json = นี่คือไฟล์ JSON ตัวอย่างที่แสดงรูปแบบที่คาดหวัง
 config-msg-no-shops = ไม่มีร้านค้าที่ตั้งค่า
-config-label-shop-type-forum = (Forum)
+config-label-shop-type-forum = (ฟอรัม)
 config-label-shop-channel = ช่อง: <#{ $channelId }>
 
 ## Shop Channel Type Selection View

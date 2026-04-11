@@ -102,7 +102,7 @@ gm-dm-title-player-removed-confirm = खिलाड़ी हटाया ग�
 gm-dm-desc-player-removed-confirm =
     खिलाड़ी को {"**"}{ $questTitle }{"**"} से हटा दिया गया है
     और quest सूची अपडेट कर दी गई है।
-gm-dm-footer-quest = Quest ID: { $questId } • { $guildName }
+gm-dm-footer-quest = क्वेस्ट आईडी: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     आपके सर्वर एडमिन ने GM के लिए quest पूर्ण करने पर पुरस्कार कॉन्फ़िगर किए हैं।
     हालाँकि, चूँकि आपका कोई पंजीकृत चरित्र नहीं है, इसलिए आपके पुरस्कार

@@ -375,7 +375,7 @@ config-select-option-no-threads = Nema aktivnih tema
 config-select-desc-no-threads = Stvorite novu temu ili provjerite arhivirane teme
 config-select-option-select-forum-first = Najprije odaberite forum
 config-select-desc-select-forum-first = Molimo najprije odaberite forum kanal iznad
-config-select-desc-thread-id = Thread ID: { $threadId }
+config-select-desc-thread-id = ID niti: { $threadId }
 config-error-select-valid-thread = Odaberite valjanu temu ili stvorite novu.
 config-error-thread-not-found = Odabrana tema nije pronađena. Možda je obrisana ili arhivirana.
 

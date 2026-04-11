@@ -103,7 +103,7 @@ gm-dm-title-player-removed-confirm = 플레이어 제거됨
 gm-dm-desc-player-removed-confirm =
     플레이어가 {"**"}{ $questTitle }{"**"}에서 제거되고
     Quest 명단이 업데이트되었습니다.
-gm-dm-footer-quest = Quest ID: { $questId } • { $guildName }
+gm-dm-footer-quest = 퀘스트 ID: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     서버 관리자가 GM의 Quest 완료 시 보상을 설정했습니다.
     그러나 등록된 캐릭터가 없어 현재 보상을

@@ -102,7 +102,7 @@ gm-dm-title-player-removed-confirm = Spiller fjernet
 gm-dm-desc-player-removed-confirm =
     Spilleren er blevet fjernet fra {"**"}{ $questTitle }{"**"}
     og quest-listen er blevet opdateret.
-gm-dm-footer-quest = Quest ID: { $questId } • { $guildName }
+gm-dm-footer-quest = Quest-ID: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     Din serveradministrator har konfigureret belønninger til GM'er, når de afslutter
     quests. Da du dog ikke har nogen registrerede karakterer, kunne dine belønninger
@@ -139,7 +139,7 @@ gm-embed-field-items = Genstande
 
 # GM views
 gm-title-main-menu = GM - Hovedmenu
-gm-menu-quests = Quests
+gm-menu-quests = Opgaver
 gm-menu-desc-quests = Opret, rediger og administrer quests.
 gm-menu-players = Spillere
 gm-menu-desc-players = Administrer spillerinventarer og rediger karakterer.

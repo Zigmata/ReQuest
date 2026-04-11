@@ -48,7 +48,7 @@ common-embed-field-party = __Đội hình__
 common-embed-field-wait-list = __Danh sách chờ__
 common-embed-footer-quest-id = ID Quest: { $questId }
 common-embed-footer-transaction-id = ID giao dịch: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}Quản Trò:{"**"}
 common-embed-label-party-restrictions = {"**"}Giới hạn đội hình:{"**"}
 
 # Translation notice

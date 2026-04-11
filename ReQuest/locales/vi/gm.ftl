@@ -103,7 +103,7 @@ gm-dm-title-player-removed-confirm = Đã xóa người chơi
 gm-dm-desc-player-removed-confirm =
     Người chơi đã bị xóa khỏi {"**"}{ $questTitle }{"**"}
     và đội hình quest đã được cập nhật.
-gm-dm-footer-quest = Quest ID: { $questId } • { $guildName }
+gm-dm-footer-quest = ID nhiệm vụ: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     Quản trị viên máy chủ đã cấu hình phần thưởng cho GM khi hoàn thành
     quest. Tuy nhiên, vì bạn không có nhân vật đã đăng ký, phần thưởng không thể

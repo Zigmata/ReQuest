@@ -139,7 +139,7 @@ gm-embed-field-items = Föremål
 
 # GM views
 gm-title-main-menu = GM - Huvudmeny
-gm-menu-quests = Quests
+gm-menu-quests = Uppdrag
 gm-menu-desc-quests = Skapa, redigera och hantera quests.
 gm-menu-players = Spelare
 gm-menu-desc-players = Hantera spelarinventarier och ändra karaktärer.

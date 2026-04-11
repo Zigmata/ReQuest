@@ -103,7 +103,7 @@ gm-dm-title-player-removed-confirm = Žaidėjas pašalintas
 gm-dm-desc-player-removed-confirm =
     Žaidėjas buvo pašalintas iš {"**"}{ $questTitle }{"**"}
     ir quest'o sąrašas buvo atnaujintas.
-gm-dm-footer-quest = Quest ID: { $questId } • { $guildName }
+gm-dm-footer-quest = Užduoties ID: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     Jūsų serverio administratorius sukonfigūravo atlygius GM, kai jie užbaigia
     quest'us. Tačiau, kadangi neturite užregistruotų personažų, jūsų atlygiai

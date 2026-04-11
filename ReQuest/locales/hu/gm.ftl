@@ -102,7 +102,7 @@ gm-dm-title-player-removed-confirm = Játékos eltávolítva
 gm-dm-desc-player-removed-confirm =
     A játékos eltávolításra került a(z) {"**"}{ $questTitle }{"**"} questből
     és a quest névsor frissítve lett.
-gm-dm-footer-quest = Quest ID: { $questId } • { $guildName }
+gm-dm-footer-quest = Küldetés azon: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     A szerver adminisztrátora jutalmakat állított be a GM-eknek questek befejezésekor.
     Azonban mivel nincsenek regisztrált karaktereid, a jutalmaid jelenleg

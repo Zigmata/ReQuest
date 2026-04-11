@@ -48,7 +48,7 @@ common-embed-field-party = __Rombongan__
 common-embed-field-wait-list = __Daftar Tunggu__
 common-embed-footer-quest-id = ID Quest: { $questId }
 common-embed-footer-transaction-id = ID Transaksi: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}Pemimpin:{"**"}
 common-embed-label-party-restrictions = {"**"}Batasan Rombongan:{"**"}
 
 # Translation notice

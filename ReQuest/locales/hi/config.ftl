@@ -375,7 +375,7 @@ config-select-option-no-threads = कोई सक्रिय Thread नही�
 config-select-desc-no-threads = नया Thread बनाएँ या संग्रहीत Thread जाँचें
 config-select-option-select-forum-first = पहले Forum चुनें
 config-select-desc-select-forum-first = कृपया ऊपर एक Forum चैनल चुनें
-config-select-desc-thread-id = Thread ID: { $threadId }
+config-select-desc-thread-id = थ्रेड आईडी: { $threadId }
 config-error-select-valid-thread = कृपया एक वैध Thread चुनें या नया बनाएँ।
 config-error-thread-not-found = चयनित Thread नहीं मिला। यह हटाया या संग्रहीत किया जा चुका हो सकता है।
 
@@ -708,7 +708,7 @@ config-desc-example-json =
     अपेक्षित प्रारूप दिखाने वाली एक उदाहरण JSON फ़ाइल डाउनलोड करें।
 config-msg-example-json = यहाँ एक उदाहरण JSON फ़ाइल है जो अपेक्षित प्रारूप दिखाती है।
 config-msg-no-shops = कोई दुकान कॉन्फ़िगर नहीं।
-config-label-shop-type-forum = (Forum)
+config-label-shop-type-forum = (फ़ोरम)
 config-label-shop-channel = चैनल: <#{ $channelId }>
 
 ## Shop Channel Type Selection View

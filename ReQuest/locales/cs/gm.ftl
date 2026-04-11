@@ -102,7 +102,7 @@ gm-dm-title-player-removed-confirm = Hráč odebrán
 gm-dm-desc-player-removed-confirm =
     Hráč byl odebrán z {"**"}{ $questTitle }{"**"}
     a seznam questu byl aktualizován.
-gm-dm-footer-quest = Quest ID: { $questId } • { $guildName }
+gm-dm-footer-quest = ID úkolu: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     Administrátor vašeho serveru nakonfiguroval odměny pro Game Mastery po dokončení
     questů. Jelikož však nemáte žádné zaregistrované postavy, vaše odměny nemohly

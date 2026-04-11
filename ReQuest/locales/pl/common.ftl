@@ -48,7 +48,7 @@ common-embed-field-party = __Drużyna__
 common-embed-field-wait-list = __Lista oczekujących__
 common-embed-footer-quest-id = ID Questu: { $questId }
 common-embed-footer-transaction-id = ID transakcji: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}Mistrz Gry:{"**"}
 common-embed-label-party-restrictions = {"**"}Ograniczenia drużyny:{"**"}
 
 # Translation notice

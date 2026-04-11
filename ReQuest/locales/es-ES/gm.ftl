@@ -138,7 +138,7 @@ gm-embed-field-items = Objetos
 
 # Vistas de GM
 gm-title-main-menu = Game Master - Menú principal
-gm-menu-quests = Quests
+gm-menu-quests = Misiones
 gm-menu-desc-quests = Crear, editar y gestionar quests.
 gm-menu-players = Jugadores
 gm-menu-desc-players = Gestionar inventarios de jugadores y modificar personajes.

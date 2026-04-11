@@ -46,9 +46,9 @@ common-label-inventory-empty = इन्वेंट्री खाली ह�
 # Shared embed fields
 common-embed-field-party = __दल__
 common-embed-field-wait-list = __प्रतीक्षा सूची__
-common-embed-footer-quest-id = Quest ID: { $questId }
+common-embed-footer-quest-id = क्वेस्ट आईडी: { $questId }
 common-embed-footer-transaction-id = लेन-देन ID: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}गेम मास्टर:{"**"}
 common-embed-label-party-restrictions = {"**"}दल प्रतिबंध:{"**"}
 
 # Translation notice

@@ -1,7 +1,7 @@
 ## Error and check failure strings
 
 # Error embed wrapper
-error-oops-title = ⚠️ Oops!
+error-oops-title = ⚠️ Ups!
 error-report-description =
     Det oppstod en feil:
 

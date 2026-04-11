@@ -2,7 +2,7 @@
 
 # GM buttons
 gm-btn-create = Buat
-gm-btn-edit-details = Edit Quest
+gm-btn-edit-details = Ubah Misi
 gm-btn-toggle-ready = Alihkan Kesiapan
 gm-btn-configure-rewards = Konfigurasi Hadiah
 gm-btn-remove-player = Keluarkan Pemain
@@ -150,7 +150,7 @@ gm-label-quest-locked = (Terkunci)
 gm-label-quest-draft = (Draf)
 gm-title-manage-quest = Kelola Quest - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Ubah detail quest seperti judul, deskripsi, dan ukuran rombongan.
-gm-title-edit-quest = Edit Quest - { $questTitle }
+gm-title-edit-quest = Ubah Misi - { $questTitle }
 gm-label-field-not-set = Belum diatur
 gm-label-description-not-set = Deskripsi belum diatur
 gm-label-current-title = {"**"}Judul:{"**"} { $value }

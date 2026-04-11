@@ -103,7 +103,7 @@ gm-dm-title-player-removed-confirm = Speler verwijderd
 gm-dm-desc-player-removed-confirm =
     De speler is verwijderd uit {"**"}{ $questTitle }{"**"}
     en de questgroep is bijgewerkt.
-gm-dm-footer-quest = Quest ID: { $questId } • { $guildName }
+gm-dm-footer-quest = Quest-ID: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     Je serverbeheerder heeft beloningen geconfigureerd voor Game Masters wanneer zij
     quests voltooien. Omdat je echter geen geregistreerde personages hebt, konden je
