@@ -61,7 +61,7 @@ class AdminCogTextModal(LocaleModal):
     def __init__(self, function, on_submit, locale=None):
         self._locale = locale or DEFAULT_LOCALE
         super().__init__(
-            title=t(self._locale, 'admin-modal-title-cog-action', action=function.capitalize()),
+            title=t(self._locale, 'admin-modal-title-cog-action', action=function.capitalize())[:45],
             timeout=180
         )
         self.text_input = discord.ui.TextInput(

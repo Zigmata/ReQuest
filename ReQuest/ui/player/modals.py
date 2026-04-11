@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 class TradeModal(LocaleModal):
     def __init__(self, target: discord.Member, locale: str = DEFAULT_LOCALE):
         super().__init__(
-            title=t(locale, 'player-modal-title-trade', targetName=target.name),
+            title=t(locale, 'player-modal-title-trade', targetName=target.name)[:45],
             timeout=180
         )
         self.target = target
