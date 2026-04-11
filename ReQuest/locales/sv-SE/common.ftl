@@ -48,7 +48,7 @@ common-embed-field-party = __Grupp__
 common-embed-field-wait-list = __Väntelista__
 common-embed-footer-quest-id = Quest-ID: { $questId }
 common-embed-footer-transaction-id = Transaktions-ID: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}Spelledare:{"**"}
 common-embed-label-party-restrictions = {"**"}Gruppbegränsningar:{"**"}
 
 # Translation notice

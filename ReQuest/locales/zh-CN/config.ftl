@@ -375,7 +375,7 @@ config-select-option-no-threads = 没有找到活跃的 Thread
 config-select-desc-no-threads = 创建新 Thread 或检查已归档的 Thread
 config-select-option-select-forum-first = 请先选择一个 Forum
 config-select-desc-select-forum-first = 请先选择上方的 Forum 频道
-config-select-desc-thread-id = Thread ID: { $threadId }
+config-select-desc-thread-id = 话题ID: { $threadId }
 config-error-select-valid-thread = 请选择有效的 Thread 或创建新的。
 config-error-thread-not-found = 找不到所选的 Thread。它可能已被删除或归档。
 

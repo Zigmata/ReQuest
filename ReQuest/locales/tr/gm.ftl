@@ -65,6 +65,7 @@ gm-error-no-active-character-long = Bu sunucuda aktif bir karakteriniz yok. Bir 
 gm-error-quest-locked = {"**"}{ $questTitle }{"**"} quest'ine katılma hatası: Quest GM tarafından kilitlenmiş.
 gm-error-quest-full = {"**"}{ $questTitle }{"**"} quest'ine katılma hatası: Quest kadrosu dolu!
 gm-error-not-signed-up = Bu quest'e kayıtlı değilsiniz.
+gm-error-quest-not-found = Görev artık mevcut değil.
 gm-error-quest-channel-not-set = Quest kanalı ayarlanmamış!
 gm-error-empty-roster = Boş bir kadroyla quest tamamlayamazsınız. Bunun yerine iptal etmeyi deneyin.
 gm-error-invalid-xp-value = XP değeri pozitif bir tam sayı olmalıdır!
@@ -102,7 +103,7 @@ gm-dm-title-player-removed-confirm = Oyuncu Kaldırıldı
 gm-dm-desc-player-removed-confirm =
     Oyuncu {"**"}{ $questTitle }{"**"} quest'inden kaldırıldı
     ve quest kadrosu güncellendi.
-gm-dm-footer-quest = Quest ID: { $questId } • { $guildName }
+gm-dm-footer-quest = Görev Kimliği: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     Sunucu yöneticiniz, GM'lerin quest tamamladığında ödül alacağı şekilde
     yapılandırmış. Ancak, kayıtlı hiç karakteriniz olmadığı için ödülleriniz

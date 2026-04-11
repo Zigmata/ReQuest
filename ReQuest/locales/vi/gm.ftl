@@ -65,6 +65,7 @@ gm-error-no-active-character-long = Bạn không có nhân vật đang hoạt đ
 gm-error-quest-locked = Lỗi tham gia quest {"**"}{ $questTitle }{"**"}: Quest đã bị GM khóa.
 gm-error-quest-full = Lỗi tham gia quest {"**"}{ $questTitle }{"**"}: Đội hình quest đã đầy!
 gm-error-not-signed-up = Bạn chưa đăng ký cho quest này.
+gm-error-quest-not-found = Nhiệm vụ không còn tồn tại.
 gm-error-quest-channel-not-set = Chưa đặt kênh quest!
 gm-error-empty-roster = Bạn không thể hoàn thành quest với đội hình trống. Hãy thử hủy thay thế.
 gm-error-invalid-xp-value = Giá trị XP phải là số nguyên dương!
@@ -102,7 +103,7 @@ gm-dm-title-player-removed-confirm = Đã xóa người chơi
 gm-dm-desc-player-removed-confirm =
     Người chơi đã bị xóa khỏi {"**"}{ $questTitle }{"**"}
     và đội hình quest đã được cập nhật.
-gm-dm-footer-quest = Quest ID: { $questId } • { $guildName }
+gm-dm-footer-quest = ID nhiệm vụ: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     Quản trị viên máy chủ đã cấu hình phần thưởng cho GM khi hoàn thành
     quest. Tuy nhiên, vì bạn không có nhân vật đã đăng ký, phần thưởng không thể

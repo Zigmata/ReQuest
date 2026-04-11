@@ -65,6 +65,7 @@ gm-error-no-active-character-long = 이 서버에서 활성화된 캐릭터가 �
 gm-error-quest-locked = Quest {"**"}{ $questTitle }{"**"} 참가 오류: Quest가 GM에 의해 잠겨 있습니다.
 gm-error-quest-full = Quest {"**"}{ $questTitle }{"**"} 참가 오류: Quest 인원이 가득 찼습니다!
 gm-error-not-signed-up = 이 Quest에 등록되어 있지 않습니다.
+gm-error-quest-not-found = 퀘스트가 더 이상 존재하지 않습니다.
 gm-error-quest-channel-not-set = Quest 채널이 설정되지 않았습니다!
 gm-error-empty-roster = 빈 명단으로는 Quest를 완료할 수 없습니다. 대신 취소를 시도해 보세요.
 gm-error-invalid-xp-value = XP 값은 양의 정수여야 합니다!
@@ -102,7 +103,7 @@ gm-dm-title-player-removed-confirm = 플레이어 제거됨
 gm-dm-desc-player-removed-confirm =
     플레이어가 {"**"}{ $questTitle }{"**"}에서 제거되고
     Quest 명단이 업데이트되었습니다.
-gm-dm-footer-quest = Quest ID: { $questId } • { $guildName }
+gm-dm-footer-quest = 퀘스트 ID: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     서버 관리자가 GM의 Quest 완료 시 보상을 설정했습니다.
     그러나 등록된 캐릭터가 없어 현재 보상을

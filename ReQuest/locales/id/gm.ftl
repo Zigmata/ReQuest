@@ -2,7 +2,7 @@
 
 # GM buttons
 gm-btn-create = Buat
-gm-btn-edit-details = Edit Quest
+gm-btn-edit-details = Ubah Misi
 gm-btn-toggle-ready = Alihkan Kesiapan
 gm-btn-configure-rewards = Konfigurasi Hadiah
 gm-btn-remove-player = Keluarkan Pemain
@@ -65,6 +65,7 @@ gm-error-no-active-character-long = Anda tidak memiliki karakter aktif di server
 gm-error-quest-locked = Gagal bergabung ke quest {"**"}{ $questTitle }{"**"}: Quest dikunci oleh GM.
 gm-error-quest-full = Gagal bergabung ke quest {"**"}{ $questTitle }{"**"}: Daftar rombongan quest sudah penuh!
 gm-error-not-signed-up = Anda tidak terdaftar di quest ini.
+gm-error-quest-not-found = Quest tidak lagi ada.
 gm-error-quest-channel-not-set = Kanal quest belum diatur!
 gm-error-empty-roster = Anda tidak dapat menyelesaikan quest dengan daftar rombongan kosong. Coba batalkan saja.
 gm-error-invalid-xp-value = Nilai XP harus berupa bilangan bulat positif!
@@ -149,7 +150,7 @@ gm-label-quest-locked = (Terkunci)
 gm-label-quest-draft = (Draf)
 gm-title-manage-quest = Kelola Quest - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Ubah detail quest seperti judul, deskripsi, dan ukuran rombongan.
-gm-title-edit-quest = Edit Quest - { $questTitle }
+gm-title-edit-quest = Ubah Misi - { $questTitle }
 gm-label-field-not-set = Belum diatur
 gm-label-description-not-set = Deskripsi belum diatur
 gm-label-current-title = {"**"}Judul:{"**"} { $value }

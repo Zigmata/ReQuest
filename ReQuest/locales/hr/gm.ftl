@@ -65,6 +65,7 @@ gm-error-no-active-character-long = Nemate aktivnog lika na ovom poslužitelju. 
 gm-error-quest-locked = Greška pri pridruživanju questu {"**"}{ $questTitle }{"**"}: Quest je zaključan od strane GM-a.
 gm-error-quest-full = Greška pri pridruživanju questu {"**"}{ $questTitle }{"**"}: Sastav questa je pun!
 gm-error-not-signed-up = Niste prijavljeni za ovaj quest.
+gm-error-quest-not-found = Zadatak više ne postoji.
 gm-error-quest-channel-not-set = Kanal za questove nije postavljen!
 gm-error-empty-roster = Ne možete dovršiti quest s praznim sastavom. Pokušajte otkazati umjesto toga.
 gm-error-invalid-xp-value = Vrijednost XP-a mora biti pozitivan cijeli broj!

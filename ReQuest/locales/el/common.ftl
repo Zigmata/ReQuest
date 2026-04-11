@@ -46,9 +46,9 @@ common-label-inventory-empty = Το αντικειμενοθήκη είναι κ
 # Shared embed fields
 common-embed-field-party = __Ομάδα__
 common-embed-field-wait-list = __Λίστα Αναμονής__
-common-embed-footer-quest-id = Quest ID: { $questId }
+common-embed-footer-quest-id = Αναγνωριστικό αποστολής: { $questId }
 common-embed-footer-transaction-id = ID Συναλλαγής: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}Αφηγητής:{"**"}
 common-embed-label-party-restrictions = {"**"}Περιορισμοί Ομάδας:{"**"}
 
 # Translation notice

@@ -26,7 +26,7 @@ from ReQuest.utilities.character import apply_currency_change_local, apply_item_
 from ReQuest.utilities.currency import (
     check_sufficient_funds, format_consolidated_totals, consolidate_currency_totals, format_complex_cost
 )
-from ReQuest.utilities.db_cache import get_cached_data, update_cached_data, encode_mongo_key
+from ReQuest.utilities.db_cache import get_cached_data, update_cached_data, encode_mongo_key, run_in_transaction
 from ReQuest.utilities.discord_utils import strip_id, escape_markdown, truncate_text
 from ReQuest.utilities.exceptions import UserFeedbackError, log_exception
 from ReQuest.utilities.shop import (
@@ -103,7 +103,7 @@ class ShopBaseView(LocaleLayoutView):
                 header_items.append(TextDisplay(f'**{truncate_text(shop_name, DisplayLimits.SHOP_NAME)}**'))
             if shop_keeper := self.shop_data.get(ShopFields.SHOP_KEEPER):
                 keeper = truncate_text(shop_keeper, DisplayLimits.SHOPKEEPER_NAME)
-                header_items.append(TextDisplay(t(locale, 'shop-label-shopkeeper', **{'name': keeper})))
+                header_items.append(TextDisplay(t(locale, 'shop-label-shopkeeper', name=keeper)))
             if shop_description := self.shop_data.get(ShopFields.SHOP_DESCRIPTION):
                 header_items.append(
                     TextDisplay(f'*{truncate_text(shop_description, DisplayLimits.SHOP_DESCRIPTION)}*')
@@ -152,7 +152,7 @@ class ShopBaseView(LocaleLayoutView):
 
                 content = item_display_name
                 if cart_quantity > 0:
-                    content += f' {t(locale, "shop-label-in-cart", **{"quantity": cart_quantity})}'
+                    content += f' {t(locale, "shop-label-in-cart", quantity=cart_quantity)}'
 
                 # Show stock info if item has limits (and data is valid)
                 if item_stock_info is not None and ShopFields.AVAILABLE in item_stock_info:
@@ -160,7 +160,7 @@ class ShopBaseView(LocaleLayoutView):
                     if available == 0:
                         content += f'\n**{t(locale, "shop-label-out-of-stock")}**'
                     else:
-                        content += f'\n*{t(locale, "shop-label-stock-available", **{"available": available})}*'
+                        content += f'\n*{t(locale, "shop-label-stock-available", available=available)}*'
 
                 if item_description:
                     content += f'\n*{escape_markdown(truncate_text(item_description, DisplayLimits.ITEM_DESCRIPTION))}*'
@@ -184,7 +184,7 @@ class ShopBaseView(LocaleLayoutView):
                 page_display = Button(
                     label=t(
                         locale, 'common-page-display',
-                        **{'current': self.current_page + 1, 'total': self.total_pages}
+                        current=self.current_page + 1, total=self.total_pages
                     ),
                     style=discord.ButtonStyle.secondary,
                     custom_id='shop_page_display'
@@ -208,7 +208,7 @@ class ShopBaseView(LocaleLayoutView):
             )
             view_cart_button = buttons.ViewCartButton(self)
             view_cart_button.label = (
-                t(locale, 'shop-btn-view-cart-count', **{'count': cart_item_count})
+                t(locale, 'shop-btn-view-cart-count', count=cart_item_count)
                 if cart_item_count > 0
                 else t(locale, 'shop-btn-view-cart')
             )
@@ -227,15 +227,17 @@ class ShopBaseView(LocaleLayoutView):
 
             item_name = item.get(CommonFields.NAME)
 
-            # Use database-backed cart with reservation
-            success = await add_item_to_cart(
-                self.bot, self.guild_id, self.user_id, self.channel_id, item, option_index
+            # Use database-backed cart with reservation (transactional)
+            success = await run_in_transaction(
+                self.bot, lambda s: add_item_to_cart(
+                    self.bot, self.guild_id, self.user_id, self.channel_id, item, option_index, session=s
+                )
             )
 
             if not success:
                 locale = getattr(self, 'locale', DEFAULT_LOCALE)
                 raise UserFeedbackError(
-                    t(locale, 'shop-error-item-out-of-stock', **{'itemName': item_name}),
+                    t(locale, 'shop-error-item-out-of-stock', itemName=item_name),
                     message_id='shop-error-item-out-of-stock'
                 )
 
@@ -346,7 +348,7 @@ class ShopCartView(LocaleLayoutView):
                             can_afford_all = False
                             warnings.append(t(
                                 locale, 'shop-warning-insufficient-funds',
-                                **{'currency': titlecase(base_currency)}
+                                currency=titlecase(base_currency)
                             ))
 
                 start_index = self.current_page * self.items_per_page
@@ -412,7 +414,7 @@ class ShopCartView(LocaleLayoutView):
                 page_display = Button(
                     label=t(
                         locale, 'common-page-display',
-                        **{'current': self.current_page + 1, 'total': self.total_pages}
+                        current=self.current_page + 1, total=self.total_pages
                     ),
                     style=discord.ButtonStyle.secondary,
                     custom_id='shop_page_display'
@@ -473,64 +475,111 @@ class ShopCartView(LocaleLayoutView):
 
             channel_id = self.prev_view.channel_id
 
-            character_query = await get_cached_data(
-                bot=bot,
-                mongo_database=bot.mdb,
-                collection_name=DatabaseCollections.CHARACTERS,
-                query={'_id': user_id}
-            )
-
-            if not character_query or str(guild_id) not in character_query[CharacterFields.ACTIVE_CHARACTERS]:
-                await interaction.response.send_message(
-                    t(locale, 'shop-error-no-active-character'), ephemeral=True
-                )
-                return
-
-            active_char_id = character_query[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
-            character_data = character_query[CharacterFields.CHARACTERS][active_char_id]
-
-            for base_currency, amount in self.base_totals.items():
-                wallet = character_data[CharacterFields.ATTRIBUTES].get(
-                    CharacterFields.CURRENCY, {}
-                )
-                is_ok, msg = check_sufficient_funds(
-                    wallet, self.currency_config, base_currency, amount, locale=locale
-                )
-                if not is_ok:
-                    await interaction.response.send_message(
-                        t(locale, 'shop-error-checkout-insufficient', **{'currency': titlecase(base_currency)}),
-                        ephemeral=True
+            async def _do_checkout(session):
+                # Read the DB cart as the single source of truth for both
+                # character updates and stock finalization.
+                db_cart = await get_cart(bot, guild_id, user_id, channel_id, session=session)
+                if not db_cart or not db_cart.get(CartFields.ITEMS):
+                    raise UserFeedbackError(
+                        t(locale, 'shop-msg-cart-empty'),
+                        message_id='shop-msg-cart-empty'
                     )
-                    return
 
-            for base_currency, amount in self.base_totals.items():
-                character_data = apply_currency_change_local(character_data, self.currency_config,
-                                                             base_currency, -amount)
-
-            added_items_summary = []
-            for item_key, data in self.prev_view.cart.items():
-                item = data.get(CartFields.ITEM, data)  # Handle both DB and local formats
-                quantity = data.get(CartFields.QUANTITY, 0)
-                qty_per_item = item.get(CommonFields.QUANTITY, 1)
-                total_qty = quantity * qty_per_item
-
-                character_data = apply_item_change_local(character_data, item[CommonFields.NAME], total_qty)
-                summary_string = (
-                    (f'{total_qty}x ' if total_qty > 1 else '')
-                    + escape_markdown(titlecase(item[CommonFields.NAME]))
+                # Re-read currency config inside the transaction so denomination math
+                # matches what's actually committed (not stale view-render state).
+                tx_currency_config = await get_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.CURRENCY,
+                    query={'_id': guild_id},
+                    session=session
                 )
-                added_items_summary.append(summary_string)
+                if not tx_currency_config:
+                    raise UserFeedbackError(
+                        t(locale, 'player-error-no-currency-config'),
+                        message_id='player-error-no-currency-config'
+                    )
 
-            await update_cached_data(
-                bot=bot,
-                mongo_database=bot.mdb,
-                collection_name=DatabaseCollections.CHARACTERS,
-                query={'_id': user_id},
-                update_data={'$set': {f'characters.{active_char_id}': character_data}}
-            )
+                character_query = await get_cached_data(
+                    bot=bot,
+                    mongo_database=bot.mdb,
+                    collection_name=DatabaseCollections.CHARACTERS,
+                    query={'_id': user_id},
+                    session=session
+                )
 
-            # Finalize stock (remove from reserved counts) and clear cart from database
-            await finalize_cart_purchase(bot, guild_id, user_id, channel_id)
+                if not character_query or str(guild_id) not in character_query[CharacterFields.ACTIVE_CHARACTERS]:
+                    raise UserFeedbackError(
+                        t(locale, 'shop-error-no-active-character'),
+                        message_id='shop-error-no-active-character'
+                    )
+
+                active_char_id = character_query[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
+                character_data = character_query[CharacterFields.CHARACTERS][active_char_id]
+
+                # Recompute base_totals from the DB cart so funds validation matches
+                # what stock finalization will actually consume.
+                raw_totals = {}
+                for item_key, data in db_cart[CartFields.ITEMS].items():
+                    item = data[CartFields.ITEM]
+                    quantity = data[CartFields.QUANTITY]
+                    option_index = data.get(CartFields.OPTION_INDEX, 0)
+                    costs = item.get(ShopFields.COSTS, [])
+                    if 0 <= option_index < len(costs):
+                        selected_cost = costs[option_index]
+                        for currency_name, amount in selected_cost.items():
+                            raw_totals[currency_name] = raw_totals.get(currency_name, 0.0) + (amount * quantity)
+                base_totals = consolidate_currency_totals(raw_totals, tx_currency_config)
+
+                for base_currency, amount in base_totals.items():
+                    wallet = character_data[CharacterFields.ATTRIBUTES].get(
+                        CharacterFields.CURRENCY, {}
+                    )
+                    is_ok, msg = check_sufficient_funds(
+                        wallet, tx_currency_config, base_currency, amount, locale=locale
+                    )
+                    if not is_ok:
+                        raise UserFeedbackError(
+                            t(locale, 'shop-error-checkout-insufficient',
+                              currency=titlecase(base_currency)),
+                            message_id='shop-error-checkout-insufficient',
+                            currency=titlecase(base_currency)
+                        )
+
+                for base_currency, amount in base_totals.items():
+                    character_data = apply_currency_change_local(
+                        character_data, tx_currency_config, base_currency, -amount
+                    )
+
+                items_summary = []
+                for item_key, data in db_cart[CartFields.ITEMS].items():
+                    item = data[CartFields.ITEM]
+                    quantity = data[CartFields.QUANTITY]
+                    qty_per_item = item.get(CommonFields.QUANTITY, 1)
+                    total_qty = quantity * qty_per_item
+
+                    character_data = apply_item_change_local(character_data, item[CommonFields.NAME], total_qty)
+                    summary_string = (
+                        (f'{total_qty}x ' if total_qty > 1 else '')
+                        + escape_markdown(titlecase(item[CommonFields.NAME]))
+                    )
+                    items_summary.append(summary_string)
+
+                await update_cached_data(
+                    bot=bot,
+                    mongo_database=bot.mdb,
+                    collection_name=DatabaseCollections.CHARACTERS,
+                    query={'_id': user_id},
+                    update_data={'$set': {f'characters.{active_char_id}': character_data}},
+                    session=session
+                )
+                await finalize_cart_purchase(
+                    bot, guild_id, user_id, channel_id, session=session, cart=db_cart
+                )
+                return items_summary, character_data[CharacterFields.NAME], base_totals, tx_currency_config
+
+            (added_items_summary, character_name, committed_totals,
+             committed_currency_config) = await run_in_transaction(bot, _do_checkout)
 
             log_channel = None
             log_channel_query = await get_cached_data(
@@ -545,7 +594,7 @@ class ShopCartView(LocaleLayoutView):
 
             receipt_embed = discord.Embed(title=t(locale, 'shop-embed-title-report'), color=discord.Color.gold())
             receipt_embed.description = (
-                f'Player: {interaction.user.mention} as `{character_data[CharacterFields.NAME]}`\n'
+                f'Player: {interaction.user.mention} as `{character_name}`\n'
                 f'Shop: {self.prev_view.shop_data.get(ShopFields.SHOP_NAME, t(locale, "common-label-unknown"))}'
             )
             receipt_embed.add_field(
@@ -554,7 +603,7 @@ class ShopCartView(LocaleLayoutView):
                 inline=False
             )
 
-            total_strs = format_consolidated_totals(self.base_totals, self.currency_config)
+            total_strs = format_consolidated_totals(committed_totals, committed_currency_config)
             receipt_embed.add_field(
                 name=t(locale, 'shop-embed-field-total-paid'),
                 value="\n".join(total_strs) or '0',
@@ -576,7 +625,7 @@ class ShopCartView(LocaleLayoutView):
                     )
                     log_embed.description = (
                         f'Player: {interaction.user.mention} '
-                        f'as `{character_data[CharacterFields.NAME]}`\n'
+                        f'as `{character_name}`\n'
                         f'Shop: {self.prev_view.shop_data.get(
                             ShopFields.SHOP_NAME,
                             t(guild_locale, "common-label-unknown")
@@ -608,7 +657,7 @@ class ShopCartView(LocaleLayoutView):
             await interaction.response.edit_message(view=self.prev_view)
             await interaction.followup.send(embed=receipt_embed, ephemeral=True)
         except Exception as e:
-            logging.error(f'Error during checkout: {e}')
+            await log_exception(e, interaction)
 
 
 class ComplexItemPurchaseView(LocaleLayoutView):
@@ -626,7 +675,7 @@ class ComplexItemPurchaseView(LocaleLayoutView):
         header = Section(accessory=buttons.CartBackButton(self.parent_view))
         title_text = t(
             locale, 'shop-title-purchase-options',
-            **{'itemName': escape_markdown(self.item[CommonFields.NAME])}
+            itemName=escape_markdown(self.item[CommonFields.NAME])
         )
         header.add_item(TextDisplay(f"**{title_text}**"))
         container.add_item(header)

@@ -46,9 +46,9 @@ common-label-inventory-empty = Inventaris is leeg.
 # Shared embed fields
 common-embed-field-party = __Groep__
 common-embed-field-wait-list = __Wachtlijst__
-common-embed-footer-quest-id = Quest ID: { $questId }
+common-embed-footer-quest-id = Quest-ID: { $questId }
 common-embed-footer-transaction-id = Transactie-ID: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}Spelleider:{"**"}
 common-embed-label-party-restrictions = {"**"}Groepsbeperkingen:{"**"}
 
 # Translation notice

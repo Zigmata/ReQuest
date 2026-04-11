@@ -65,6 +65,7 @@ gm-error-no-active-character-long = 您在此服务器上没有活跃角色。�
 gm-error-quest-locked = 加入 Quest {"**"}{ $questTitle }{"**"} 时出错：Quest 已被 GM 锁定。
 gm-error-quest-full = 加入 Quest {"**"}{ $questTitle }{"**"} 时出错：Quest 名额已满！
 gm-error-not-signed-up = 您未报名参加此 Quest。
+gm-error-quest-not-found = 任务不再存在。
 gm-error-quest-channel-not-set = Quest 频道尚未设置！
 gm-error-empty-roster = 不能在名单为空的情况下完成 Quest。请尝试取消。
 gm-error-invalid-xp-value = 经验值必须是正整数！

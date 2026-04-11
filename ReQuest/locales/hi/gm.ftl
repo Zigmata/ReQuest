@@ -65,6 +65,7 @@ gm-error-no-active-character-long = इस सर्वर पर आपका �
 gm-error-quest-locked = Quest {"**"}{ $questTitle }{"**"} में शामिल होने में त्रुटि: Quest GM द्वारा लॉक है।
 gm-error-quest-full = Quest {"**"}{ $questTitle }{"**"} में शामिल होने में त्रुटि: Quest की सूची भरी हुई है!
 gm-error-not-signed-up = आप इस quest के लिए पंजीकृत नहीं हैं।
+gm-error-quest-not-found = क्वेस्ट अब मौजूद नहीं है।
 gm-error-quest-channel-not-set = Quest चैनल सेट नहीं किया गया है!
 gm-error-empty-roster = खाली सूची के साथ quest पूर्ण नहीं की जा सकती। इसके बजाय रद्द करने का प्रयास करें।
 gm-error-invalid-xp-value = XP मान एक धनात्मक पूर्णांक होना चाहिए!
@@ -101,7 +102,7 @@ gm-dm-title-player-removed-confirm = खिलाड़ी हटाया ग�
 gm-dm-desc-player-removed-confirm =
     खिलाड़ी को {"**"}{ $questTitle }{"**"} से हटा दिया गया है
     और quest सूची अपडेट कर दी गई है।
-gm-dm-footer-quest = Quest ID: { $questId } • { $guildName }
+gm-dm-footer-quest = क्वेस्ट आईडी: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     आपके सर्वर एडमिन ने GM के लिए quest पूर्ण करने पर पुरस्कार कॉन्फ़िगर किए हैं।
     हालाँकि, चूँकि आपका कोई पंजीकृत चरित्र नहीं है, इसलिए आपके पुरस्कार

@@ -65,6 +65,7 @@ gm-error-no-active-character-long = Δεν έχετε ενεργό χαρακτ�
 gm-error-quest-locked = Σφάλμα συμμετοχής στο quest {"**"}{ $questTitle }{"**"}: Το quest είναι κλειδωμένο από τον GM.
 gm-error-quest-full = Σφάλμα συμμετοχής στο quest {"**"}{ $questTitle }{"**"}: Η λίστα ομάδας είναι γεμάτη!
 gm-error-not-signed-up = Δεν είστε εγγεγραμμένος σε αυτό το quest.
+gm-error-quest-not-found = Η αποστολή δεν υπάρχει πλέον.
 gm-error-quest-channel-not-set = Το κανάλι quest δεν έχει οριστεί!
 gm-error-empty-roster = Δεν μπορείτε να ολοκληρώσετε ένα quest με άδεια λίστα ομάδας. Δοκιμάστε να το ακυρώσετε.
 gm-error-invalid-xp-value = Η τιμή XP πρέπει να είναι θετικός ακέραιος!
@@ -137,7 +138,7 @@ gm-embed-field-items = Αντικείμενα
 
 # GM views
 gm-title-main-menu = Game Master - Κύριο Μενού
-gm-menu-quests = Quest
+gm-menu-quests = Αποστολές
 gm-menu-desc-quests = Δημιουργία, επεξεργασία και διαχείριση quest.
 gm-menu-players = Παίκτες
 gm-menu-desc-players = Διαχείριση εξοπλισμού παικτών και τροποποίηση χαρακτήρων.

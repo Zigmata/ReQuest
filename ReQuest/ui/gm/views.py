@@ -22,13 +22,14 @@ from ReQuest.ui.common.buttons import MenuDoneButton, BackButton
 from ReQuest.ui.common.modals import PageJumpModal
 from ReQuest.ui.common.views import MenuBaseView, LocaleLayoutView
 from ReQuest.ui.gm import buttons, selects
-from ReQuest.utilities.character import update_character_inventory, update_character_experience
+from ReQuest.utilities.character import update_character_inventory, update_character_experience, batch_update_character
 from ReQuest.utilities.constants import (
     CharacterFields, QuestFields, QuestStatus, ConfigFields, CommonFields, DatabaseCollections
 )
 from ReQuest.utilities.containers import format_inventory_by_container
 from ReQuest.utilities.db_cache import (
-    get_cached_data, delete_cached_data, update_cached_data, replace_cached_data, build_cache_key, get_xp_config
+    get_cached_data, delete_cached_data, update_cached_data, replace_cached_data, build_cache_key, get_xp_config,
+    run_in_transaction
 )
 from ReQuest.utilities.discord_utils import (
     setup_view, strip_id, attempt_delete, escape_markdown, get_guild_member, truncate_text, check_role_hierarchy
@@ -533,75 +534,222 @@ class ManageQuestsView(LocaleLayoutView):
                     except discord.errors.Forbidden:
                         logger.warning(f'Could not DM {interaction.user.id} about missing quest role.')
 
-            # Get party members and message them with results
-            reward_summary = []
-            party_xp = rewards.get(QuestFields.PARTY, {}).get(QuestFields.XP, 0)
-            xp_per_member = party_xp // len(party) if party else 0
-            party_items = rewards.get(QuestFields.PARTY, {}).get(CommonFields.ITEMS, {})
-
+            # Pre-fetch Discord members outside the transaction (Discord API calls are slow
+            # and can't be retried inside a transaction). The quest is locked at this point,
+            # so the party shouldn't change between this fetch and the transaction.
+            discord_members = {}
             for entry in party:
-                for player_id, character_info in entry.items():
-                    # If the player left the server, this will return None
+                for player_id in entry:
                     member = await get_guild_member(guild, int(player_id))
-                    if not member:
-                        continue  # Skip the player if they left.
+                    if member:
+                        discord_members[str(player_id)] = member
 
-                    # Get character data
-                    character_id = next(iter(character_info))
-                    character = character_info[character_id]
-                    # Prep reward data
-                    total_xp = xp_per_member
-                    if not xp_enabled:
-                        total_xp = 0
-                    combined_items = party_items.copy()
-
-                    # Check if character has individual rewards
-                    if character_id in rewards:
-                        individual_rewards = rewards[character_id]
-                        if xp_enabled:
-                            total_xp += individual_rewards.get(QuestFields.XP, 0)
-
-                        # Merge individual items with party items
-                        for item, quantity in (individual_rewards.get(CommonFields.ITEMS) or {}).items():
-                            combined_items[item] = combined_items.get(item, 0) + quantity
-
-                    # Update the character's XP and inventory
-                    member_reward_lines = []
-                    if xp_enabled and total_xp > 0:
-                        member_reward_lines.append(f'Experience: {total_xp}')
-                        await update_character_experience(interaction, int(player_id), character_id, total_xp)
-                    for item_name, quantity in combined_items.items():
-                        member_reward_lines.append(f'{item_name}: {quantity}')
-                        await update_character_inventory(
-                            interaction, int(player_id), character_id,
-                            item_name, quantity
-                        )
-
-                    # Only include this member in the reward summary if they received something
-                    if member_reward_lines:
-                        reward_summary.append(f'<@!{player_id}> as {character[CommonFields.NAME]}:')
-                        reward_summary.extend(member_reward_lines)
-
-                    # Send reward summary to player
-                    reward_strings = self.build_reward_summary(total_xp, combined_items, xp_enabled)
-                    member_locale = await resolve_locale(bot=bot, user_id=int(player_id), guild_id=guild_id)
-                    dm_embed = discord.Embed(
-                        title=truncate_text(
-                            t(member_locale, 'gm-embed-title-quest-complete', questTitle=title), 256
-                        ),
-                        type='rich'
+            # Transaction: re-read quest from snapshot, compute rewards, update characters, delete quest
+            async def _do_quest_completion(session):
+                # Re-read inside the transaction so all reads/writes see a consistent snapshot
+                tx_quest = await get_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.QUESTS,
+                    query={
+                        QuestFields.GUILD_ID: guild_id,
+                        QuestFields.QUEST_ID: quest_id
+                    },
+                    cache_id=f'{guild_id}:{quest_id}',
+                    session=session
+                )
+                if not tx_quest:
+                    raise UserFeedbackError(
+                        'Quest no longer exists.', message_id='gm-error-quest-not-found'
                     )
-                    if reward_strings:
-                        dm_embed.add_field(
-                            name=t(member_locale, 'gm-embed-field-rewards'),
-                            value=truncate_text('\n'.join(reward_strings), 1024)
-                        )
-                    try:
-                        await member.send(embed=dm_embed)
-                    except discord.errors.Forbidden as e:
-                        logger.warning(f'Could not DM {member.id} about quest completion rewards: {e}')
 
-            # Build an embed for feedback
+                tx_party = tx_quest[QuestFields.PARTY]
+                tx_rewards = tx_quest[QuestFields.REWARDS]
+
+                if not tx_party:
+                    raise UserFeedbackError(
+                        t(getattr(self, 'locale', DEFAULT_LOCALE), 'gm-error-empty-roster'),
+                        message_id='gm-error-empty-roster'
+                    )
+
+                tx_party_xp = tx_rewards.get(QuestFields.PARTY, {}).get(QuestFields.XP, 0)
+                tx_xp_per_member = tx_party_xp // len(tx_party) if tx_party else 0
+                tx_party_items = tx_rewards.get(QuestFields.PARTY, {}).get(CommonFields.ITEMS, {})
+
+                # Read currency config inside the transaction so denomination math is consistent
+                tx_currency_config = await get_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.CURRENCY,
+                    query={CommonFields.ID: guild_id},
+                    session=session
+                )
+
+                # Build reward data from the transactional snapshot. Skip any party members
+                # we couldn't pre-fetch (rare edge case if the party changed despite the lock).
+                tx_member_rewards = []
+                for entry in tx_party:
+                    for player_id, character_info in entry.items():
+                        if str(player_id) not in discord_members:
+                            logger.warning(
+                                f'Skipping reward for member {player_id}: not in pre-fetched set '
+                                f'(quest {quest_id} party may have changed during completion).'
+                            )
+                            continue
+
+                        character_id = next(iter(character_info))
+                        character = character_info[character_id]
+
+                        total_xp = tx_xp_per_member if xp_enabled else 0
+                        combined_items = tx_party_items.copy()
+
+                        if character_id in tx_rewards:
+                            individual_rewards = tx_rewards[character_id]
+                            if xp_enabled:
+                                total_xp += individual_rewards.get(QuestFields.XP, 0)
+                            for item, quantity in (individual_rewards.get(CommonFields.ITEMS) or {}).items():
+                                combined_items[item] = combined_items.get(item, 0) + quantity
+
+                        tx_member_rewards.append({
+                            'player_id': int(player_id),
+                            'character_id': character_id,
+                            'character': character,
+                            'xp': total_xp,
+                            'items': combined_items
+                        })
+
+                # Apply rewards inside the transaction
+                for reward_data in tx_member_rewards:
+                    await batch_update_character(
+                        bot, reward_data['player_id'], reward_data['character_id'],
+                        items=reward_data['items'] or None,
+                        xp=reward_data['xp'] if reward_data['xp'] > 0 else None,
+                        currency_config=tx_currency_config,
+                        session=session
+                    )
+
+                # GM rewards: read config and GM character inside the transaction so the
+                # snapshot of "active character" matches what we're awarding rewards to.
+                tx_gm_rewards_query = await get_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.GM_REWARDS,
+                    query={CommonFields.ID: guild_id},
+                    session=session
+                )
+                tx_gm_character_id = None
+                tx_gm_character_name = None
+                tx_gm_experience = None
+                tx_gm_items = None
+                tx_gm_has_any_character = False
+                if tx_gm_rewards_query:
+                    tx_gm_experience = tx_gm_rewards_query.get(CharacterFields.EXPERIENCE)
+                    tx_gm_items = tx_gm_rewards_query.get(CommonFields.ITEMS)
+                    tx_gm_character_query = await get_cached_data(
+                        bot=bot,
+                        mongo_database=bot.mdb,
+                        collection_name=DatabaseCollections.CHARACTERS,
+                        query={CommonFields.ID: interaction.user.id},
+                        session=session
+                    )
+                    tx_gm_has_any_character = bool(tx_gm_character_query)
+                    if (tx_gm_character_query
+                            and str(guild_id) in tx_gm_character_query.get(CharacterFields.ACTIVE_CHARACTERS, {})):
+                        tx_gm_character_id = tx_gm_character_query[
+                            CharacterFields.ACTIVE_CHARACTERS
+                        ][str(guild_id)]
+                        tx_gm_character_name = tx_gm_character_query[
+                            CharacterFields.CHARACTERS
+                        ][tx_gm_character_id][CharacterFields.NAME]
+
+                if tx_gm_character_id and (tx_gm_experience or tx_gm_items):
+                    await batch_update_character(
+                        bot, interaction.user.id, tx_gm_character_id,
+                        items=tx_gm_items or None,
+                        xp=tx_gm_experience if tx_gm_experience and xp_enabled else None,
+                        currency_config=tx_currency_config,
+                        session=session
+                    )
+
+                # Delete the quest
+                await delete_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.QUESTS,
+                    search_filter={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
+                    cache_id=f'{guild_id}:{quest_id}',
+                    session=session
+                )
+
+                return {
+                    'member_rewards': tx_member_rewards,
+                    'gm_rewards_query': tx_gm_rewards_query,
+                    'gm_character_id': tx_gm_character_id,
+                    'gm_character_name': tx_gm_character_name,
+                    'gm_experience': tx_gm_experience,
+                    'gm_items': tx_gm_items,
+                    'gm_has_any_character': tx_gm_has_any_character,
+                }
+
+            tx_result = await run_in_transaction(bot, _do_quest_completion)
+            member_rewards = tx_result['member_rewards']
+            gm_rewards_query = tx_result['gm_rewards_query']
+            gm_character_id = tx_result['gm_character_id']
+            gm_character_name = tx_result['gm_character_name']
+            gm_experience = tx_result['gm_experience']
+            gm_items = tx_result['gm_items']
+            gm_has_any_character = tx_result['gm_has_any_character']
+
+            # Build reward summary from the committed snapshot
+            reward_summary = []
+            for reward_data in member_rewards:
+                member_reward_lines = []
+                if xp_enabled and reward_data['xp'] > 0:
+                    member_reward_lines.append(f'Experience: {reward_data["xp"]}')
+                for item_name, quantity in reward_data['items'].items():
+                    member_reward_lines.append(f'{item_name}: {quantity}')
+                if member_reward_lines:
+                    reward_summary.append(
+                        f'<@!{reward_data["player_id"]}> as {reward_data["character"][CommonFields.NAME]}:'
+                    )
+                    reward_summary.extend(member_reward_lines)
+
+            # Transaction committed — invalidate quest list caches in a single round-trip
+            admin_list_key = build_cache_key(bot.gdb.name, f'guild_quests:{guild_id}', 'quests')
+            gm_list_key = build_cache_key(bot.gdb.name, f'gm_quests:{guild_id}:{gm}', 'quests')
+            try:
+                await bot.rdb.delete(admin_list_key, gm_list_key)
+            except Exception as e:
+                logger.error(f"Redis delete failed (post-commit quest cache): {e}")
+
+            # Discord side effects — DM each member
+            for reward_data in member_rewards:
+                reward_strings = self.build_reward_summary(
+                    reward_data['xp'], reward_data['items'], xp_enabled
+                )
+                member_locale = await resolve_locale(
+                    bot=bot, user_id=reward_data['player_id'], guild_id=guild_id
+                )
+                dm_embed = discord.Embed(
+                    title=truncate_text(
+                        t(member_locale, 'gm-embed-title-quest-complete', questTitle=title), 256
+                    ),
+                    type='rich'
+                )
+                if reward_strings:
+                    dm_embed.add_field(
+                        name=t(member_locale, 'gm-embed-field-rewards'),
+                        value=truncate_text('\n'.join(reward_strings), 1024)
+                    )
+                member = discord_members.get(str(reward_data['player_id']))
+                if member is None:
+                    continue
+                try:
+                    await member.send(embed=dm_embed)
+                except discord.errors.Forbidden as e:
+                    logger.warning(f'Could not DM {reward_data["player_id"]} about quest completion rewards: {e}')
+
+            # Build feedback embed
             guild_locale = await resolve_locale(bot=bot, guild_id=guild_id)
 
             quest_embed = discord.Embed(
@@ -643,11 +791,10 @@ class ManageQuestsView(LocaleLayoutView):
                     inline=True
                 )
 
-            # If an archive channel is configured, post the archived post
+            # Archive, delete original post, and notify GM
             if archive_channel:
                 await archive_channel.send(embed=quest_embed)
 
-            # Delete the original quest post
             quest_channel_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -661,22 +808,6 @@ class ManageQuestsView(LocaleLayoutView):
                 quest_message = quest_channel.get_partial_message(message_id)
                 await attempt_delete(quest_message)
 
-            # Remove the quest from the db
-            await delete_cached_data(
-                bot=bot,
-                mongo_database=bot.gdb,
-                collection_name=DatabaseCollections.QUESTS,
-                search_filter={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
-                cache_id=f'{guild_id}:{quest_id}'
-            )
-
-            admin_list_key = build_cache_key(bot.gdb.name, f'guild_quests:{guild_id}', 'quests')
-            await bot.rdb.delete(admin_list_key)
-
-            gm_list_key = build_cache_key(bot.gdb.name, f'gm_quests:{guild_id}:{gm}', 'quests')
-            await bot.rdb.delete(gm_list_key)
-
-            # Message feedback to the GM
             await interaction.user.send(embed=quest_embed)
 
             # Warn GM about any failed role removals
@@ -687,49 +818,19 @@ class ManageQuestsView(LocaleLayoutView):
                     t(gm_locale, 'gm-dm-role-removal-failed', roleName=role.name, members=failed_list)
                 )
 
-            # Check if GM rewards are enabled, and reward the GM accordingly
-            gm_rewards_query = await get_cached_data(
-                bot=bot,
-                mongo_database=bot.gdb,
-                collection_name=DatabaseCollections.GM_REWARDS,
-                query={CommonFields.ID: guild_id}
-            )
+            # GM rewards DM
             if gm_rewards_query:
-                experience = gm_rewards_query.get(CharacterFields.EXPERIENCE)
-                items = gm_rewards_query.get(CommonFields.ITEMS)
                 gm_locale = await resolve_locale(bot=bot, user_id=interaction.user.id, guild_id=guild_id)
 
-                character_query = await get_cached_data(
-                    bot=bot,
-                    mongo_database=bot.mdb,
-                    collection_name=DatabaseCollections.CHARACTERS,
-                    query={CommonFields.ID: interaction.user.id}
-                )
-
-                if not character_query:
+                if gm_character_id:
+                    character_string = t(
+                        gm_locale, 'gm-dm-rewards-issued',
+                        characterName=gm_character_name
+                    )
+                elif not gm_has_any_character:
                     character_string = t(gm_locale, 'gm-dm-rewards-no-characters')
                 else:
-                    if str(guild_id) not in character_query.get(CharacterFields.ACTIVE_CHARACTERS, {}):
-                        character_string = t(gm_locale, 'gm-dm-rewards-no-active-character')
-                    else:
-                        active_character_id = character_query[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
-                        characters = character_query[CharacterFields.CHARACTERS]
-                        character_name = characters[active_character_id][CharacterFields.NAME]
-                        character_string = t(
-                            gm_locale, 'gm-dm-rewards-issued',
-                            characterName=character_name
-                        )
-                        if experience and xp_enabled:
-                            await update_character_experience(
-                                interaction, interaction.user.id,
-                                active_character_id, experience
-                            )
-                        if items:
-                            for item_name, quantity in items.items():
-                                await update_character_inventory(
-                                    interaction, interaction.user.id,
-                                    active_character_id, item_name, quantity
-                                )
+                    character_string = t(gm_locale, 'gm-dm-rewards-no-active-character')
 
                 gm_rewards_embed = discord.Embed(
                     title=t(gm_locale, 'gm-embed-title-gm-rewards'),
@@ -737,11 +838,13 @@ class ManageQuestsView(LocaleLayoutView):
                     color=discord.Color.gold(),
                     type='rich'
                 )
-                if experience and xp_enabled:
-                    gm_rewards_embed.add_field(name=t(gm_locale, 'gm-embed-field-experience'), value=experience)
-                if items:
+                if gm_experience and xp_enabled:
+                    gm_rewards_embed.add_field(
+                        name=t(gm_locale, 'gm-embed-field-experience'), value=gm_experience
+                    )
+                if gm_items:
                     item_strings = []
-                    for item_name, quantity in items.items():
+                    for item_name, quantity in gm_items.items():
                         item_strings.append(f'{escape_markdown(titlecase(item_name))}: {quantity}')
                     gm_rewards_embed.add_field(
                         name=t(gm_locale, 'gm-embed-field-items'),

@@ -13,6 +13,7 @@ __all__ = [
     'trade_item',
     'update_character_inventory',
     'update_character_experience',
+    'batch_update_character',
     'apply_item_change_local',
     'apply_currency_change_local',
     'find_member_and_character_id_in_lists',
@@ -20,20 +21,22 @@ __all__ = [
 
 
 async def trade_currency(interaction, currency_name, amount, sending_member_id, receiving_member_id,
-                         guild_id):
+                         guild_id, session=None):
     bot = interaction.client
     currency_name = currency_name.lower()
     sender_data = await get_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
         collection_name=DatabaseCollections.CHARACTERS,
-        query={CommonFields.ID: sending_member_id}
+        query={CommonFields.ID: sending_member_id},
+        session=session
     )
     receiver_data = await get_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
         collection_name=DatabaseCollections.CHARACTERS,
-        query={CommonFields.ID: receiving_member_id}
+        query={CommonFields.ID: receiving_member_id},
+        session=session
     )
     sender_character_id = sender_data[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
     sender_currency = (
@@ -46,7 +49,8 @@ async def trade_currency(interaction, currency_name, amount, sending_member_id, 
         bot=bot,
         mongo_database=bot.gdb,
         collection_name=DatabaseCollections.CURRENCY,
-        query={CommonFields.ID: guild_id}
+        query={CommonFields.ID: guild_id},
+        session=session
     )
 
     if not currency_config:
@@ -57,34 +61,20 @@ async def trade_currency(interaction, currency_name, amount, sending_member_id, 
         raise UserFeedbackError(f'The transaction cannot be completed:\n{message}',
                                 message_id='error-transaction-cannot-complete', reason=message)
 
-    await update_character_inventory(interaction, sending_member_id, sender_character_id, currency_name, -amount)
-    await update_character_inventory(interaction, receiving_member_id, receiver_character_id, currency_name, amount)
-
-    updated_sender_data = await get_cached_data(
-        bot=bot,
-        mongo_database=bot.mdb,
-        collection_name=DatabaseCollections.CHARACTERS,
-        query={CommonFields.ID: sending_member_id}
+    updated_sender_currency = await update_character_inventory(
+        interaction, sending_member_id, sender_character_id, currency_name, -amount,
+        raise_on_error=True, session=session
     )
-    updated_receiver_data = await get_cached_data(
-        bot=bot,
-        mongo_database=bot.mdb,
-        collection_name=DatabaseCollections.CHARACTERS,
-        query={CommonFields.ID: receiving_member_id}
-    )
-    updated_sender_currency = (
-        updated_sender_data[CharacterFields.CHARACTERS][sender_character_id][CharacterFields.ATTRIBUTES]
-        .get(CharacterFields.CURRENCY)
-    )
-    updated_receiver_currency = (
-        updated_receiver_data[CharacterFields.CHARACTERS][receiver_character_id][CharacterFields.ATTRIBUTES]
-        .get(CharacterFields.CURRENCY)
+    updated_receiver_currency = await update_character_inventory(
+        interaction, receiving_member_id, receiver_character_id, currency_name, amount,
+        raise_on_error=True, session=session
     )
 
     return updated_sender_currency, updated_receiver_currency
 
 
-async def trade_item(bot, item_name, quantity, sending_member_id, receiving_member_id, guild_id):
+async def trade_item(bot, item_name, quantity, sending_member_id, receiving_member_id, guild_id,
+                     session=None):
     # Normalize the item name for consistent storage and comparison
     normalized_item_name = item_name.lower()
 
@@ -93,7 +83,8 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
         bot=bot,
         mongo_database=bot.mdb,
         collection_name=DatabaseCollections.CHARACTERS,
-        query={CommonFields.ID: sending_member_id}
+        query={CommonFields.ID: sending_member_id},
+        session=session
     )
     sender_character_id = sender_data[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
     sender_character = sender_data[CharacterFields.CHARACTERS][sender_character_id]
@@ -103,7 +94,8 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
         bot=bot,
         mongo_database=bot.mdb,
         collection_name=DatabaseCollections.CHARACTERS,
-        query={CommonFields.ID: receiving_member_id}
+        query={CommonFields.ID: receiving_member_id},
+        session=session
     )
     receiver_character_id = receiver_data[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
     receiver_character = receiver_data[CharacterFields.CHARACTERS][receiver_character_id]
@@ -187,7 +179,8 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
         mongo_database=bot.mdb,
         collection_name=DatabaseCollections.CHARACTERS,
         query={CommonFields.ID: sending_member_id},
-        update_data={'$set': sender_update}
+        update_data={'$set': sender_update},
+        session=session
     )
 
     # Update receiver's inventory
@@ -199,12 +192,14 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
         update_data={'$set': {
             f'{CharacterFields.CHARACTERS}.{receiver_character_id}'
             f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}': receiver_inventory
-        }}
+        }},
+        session=session
     )
 
 
 async def update_character_inventory(interaction, player_id: int, character_id: str,
-                                     item_name: str, quantity: float, raise_on_error: bool = False):
+                                     item_name: str, quantity: float, raise_on_error: bool = False,
+                                     session=None):
     try:
         bot = interaction.client
         normalized_item_name = item_name.lower()
@@ -213,7 +208,8 @@ async def update_character_inventory(interaction, player_id: int, character_id: 
             bot=bot,
             mongo_database=bot.mdb,
             collection_name=DatabaseCollections.CHARACTERS,
-            query={CommonFields.ID: player_id}
+            query={CommonFields.ID: player_id},
+            session=session
         )
         if not player_data:
             raise UserFeedbackError('Player data not found.', message_id='error-player-not-found')
@@ -226,7 +222,8 @@ async def update_character_inventory(interaction, player_id: int, character_id: 
             bot=bot,
             mongo_database=bot.gdb,
             collection_name=DatabaseCollections.CURRENCY,
-            query={CommonFields.ID: interaction.guild_id}
+            query={CommonFields.ID: interaction.guild_id},
+            session=session
         )
 
         is_currency, currency_parent_name = None, None
@@ -291,8 +288,10 @@ async def update_character_inventory(interaction, player_id: int, character_id: 
                 update_data={'$set': {
                     f'{CharacterFields.CHARACTERS}.{character_id}'
                     f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.CURRENCY}': character_currency_db
-                }}
+                }},
+                session=session
             )
+            return character_currency_db
         else:
             character_inventory = normalize_currency_keys(
                 character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
@@ -319,23 +318,27 @@ async def update_character_inventory(interaction, player_id: int, character_id: 
                 update_data={'$set': {
                     f'{CharacterFields.CHARACTERS}.{character_id}'
                     f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}': inventory_for_db
-                }}
+                }},
+                session=session
             )
+            return inventory_for_db
     except Exception as e:
         if raise_on_error:
             raise
         await log_exception(e, interaction)
+    return None
 
 
 async def update_character_experience(interaction, player_id: int, character_id: str,
-                                      amount: int):
+                                      amount: int, raise_on_error: bool = False, session=None):
     bot = interaction.client
     try:
         player_data = await get_cached_data(
             bot=bot,
             mongo_database=bot.mdb,
             collection_name=DatabaseCollections.CHARACTERS,
-            query={CommonFields.ID: player_id}
+            query={CommonFields.ID: player_id},
+            session=session
         )
         if not player_data:
             raise UserFeedbackError('Player data not found.', message_id='error-player-not-found')
@@ -353,10 +356,70 @@ async def update_character_experience(interaction, player_id: int, character_id:
             mongo_database=bot.mdb,
             collection_name=DatabaseCollections.CHARACTERS,
             query={CommonFields.ID: player_id},
-            update_data={'$set': {f'{CharacterFields.CHARACTERS}.{character_id}': character_data}}
+            update_data={'$set': {f'{CharacterFields.CHARACTERS}.{character_id}': character_data}},
+            session=session
         )
     except Exception as e:
+        if raise_on_error:
+            raise
         await log_exception(e, interaction)
+
+
+async def batch_update_character(bot, player_id: int, character_id: str, items: dict | None = None,
+                                 currency: dict | None = None, xp: int | None = None,
+                                 currency_config: dict | None = None, session=None):
+    """
+    Applies multiple inventory, currency, and XP changes to a character in a single DB round-trip.
+
+    Reads the character once, applies all changes in memory, writes once.
+    This replaces the pattern of calling update_character_inventory in a loop.
+
+    :param bot: the discord bot instance
+    :param player_id: the player's Discord user ID
+    :param character_id: the character ID string
+    :param items: dict of {item_name: quantity} to add (positive) or remove (negative)
+    :param currency: dict of {currency_name: amount} to add (positive) or remove (negative)
+    :param xp: XP amount to add (can be negative)
+    :param currency_config: the guild's currency config (required if currency is provided)
+    :param session: optional MongoDB client session for transaction support
+    """
+    player_data = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name=DatabaseCollections.CHARACTERS,
+        query={CommonFields.ID: player_id},
+        session=session
+    )
+    if not player_data:
+        raise UserFeedbackError('Player data not found.', message_id='error-player-not-found')
+
+    character_data = player_data[CharacterFields.CHARACTERS].get(character_id)
+    if not character_data:
+        raise UserFeedbackError('Character data not found.', message_id='error-character-not-found')
+
+    if items:
+        for item_name, quantity in items.items():
+            character_data = apply_item_change_local(character_data, item_name, quantity)
+
+    if currency:
+        if not currency_config:
+            raise ValueError('currency_config is required when currency changes are provided')
+        for currency_name, amount in currency.items():
+            character_data = apply_currency_change_local(character_data, currency_config, currency_name, amount)
+
+    if xp is not None and xp != 0:
+        attributes = character_data.setdefault(CharacterFields.ATTRIBUTES, {})
+        current_xp = attributes.get(CharacterFields.EXPERIENCE) or 0
+        attributes[CharacterFields.EXPERIENCE] = current_xp + xp
+
+    await update_cached_data(
+        bot=bot,
+        mongo_database=bot.mdb,
+        collection_name=DatabaseCollections.CHARACTERS,
+        query={CommonFields.ID: player_id},
+        update_data={'$set': {f'{CharacterFields.CHARACTERS}.{character_id}': character_data}},
+        session=session
+    )
 
 
 def apply_item_change_local(character_data: dict, item_name: str, quantity: int) -> dict:

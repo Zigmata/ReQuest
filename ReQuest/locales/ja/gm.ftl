@@ -65,6 +65,7 @@ gm-error-no-active-character-long = このサーバーで有効なキャラク�
 gm-error-quest-locked = Quest {"**"}{ $questTitle }{"**"} への参加エラー：Quest は GM によってロックされています。
 gm-error-quest-full = Quest {"**"}{ $questTitle }{"**"} への参加エラー：Quest の定員が満員です！
 gm-error-not-signed-up = あなたはこの Quest に登録されていません。
+gm-error-quest-not-found = クエストは存在しません。
 gm-error-quest-channel-not-set = Quest チャンネルが設定されていません！
 gm-error-empty-roster = 空の名簿で Quest を完了することはできません。代わりにキャンセルしてください。
 gm-error-invalid-xp-value = 経験値は正の整数でなければなりません！
@@ -102,7 +103,7 @@ gm-dm-title-player-removed-confirm = プレイヤー削除済み
 gm-dm-desc-player-removed-confirm =
     プレイヤーが {"**"}{ $questTitle }{"**"} から削除され、
     Quest の名簿が更新されました。
-gm-dm-footer-quest = Quest ID: { $questId } • { $guildName }
+gm-dm-footer-quest = クエストID: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     サーバー管理者が Quest 完了時の GM 報酬を設定しています。
     ただし、登録されたキャラクターがいないため、報酬を

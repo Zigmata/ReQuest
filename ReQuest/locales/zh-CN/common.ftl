@@ -46,9 +46,9 @@ common-label-inventory-empty = 物品栏为空。
 # Shared embed fields
 common-embed-field-party = __队伍__
 common-embed-field-wait-list = __等待列表__
-common-embed-footer-quest-id = Quest ID: { $questId }
+common-embed-footer-quest-id = 任务ID: { $questId }
 common-embed-footer-transaction-id = 交易 ID: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}主持人:{"**"}
 common-embed-label-party-restrictions = {"**"}队伍限制:{"**"}
 
 # Translation notice

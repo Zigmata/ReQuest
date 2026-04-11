@@ -48,7 +48,7 @@ common-embed-field-party = __Echipă__
 common-embed-field-wait-list = __Listă de așteptare__
 common-embed-footer-quest-id = ID Quest: { $questId }
 common-embed-footer-transaction-id = ID Tranzacție: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}Maestru:{"**"}
 common-embed-label-party-restrictions = {"**"}Restricții echipă:{"**"}
 
 # Translation notice

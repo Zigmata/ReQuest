@@ -65,6 +65,7 @@ gm-error-no-active-character-long = Je hebt geen actief personage op deze server
 gm-error-quest-locked = Fout bij deelname aan quest {"**"}{ $questTitle }{"**"}: De quest is vergrendeld door de GM.
 gm-error-quest-full = Fout bij deelname aan quest {"**"}{ $questTitle }{"**"}: De questgroep is vol!
 gm-error-not-signed-up = Je bent niet aangemeld voor deze quest.
+gm-error-quest-not-found = De quest bestaat niet meer.
 gm-error-quest-channel-not-set = Quest-kanaal is niet ingesteld!
 gm-error-empty-roster = Je kunt een quest niet voltooien met een lege groep. Probeer in plaats daarvan te annuleren.
 gm-error-invalid-xp-value = XP-waarde moet een positief geheel getal zijn!
@@ -102,7 +103,7 @@ gm-dm-title-player-removed-confirm = Speler verwijderd
 gm-dm-desc-player-removed-confirm =
     De speler is verwijderd uit {"**"}{ $questTitle }{"**"}
     en de questgroep is bijgewerkt.
-gm-dm-footer-quest = Quest ID: { $questId } • { $guildName }
+gm-dm-footer-quest = Quest-ID: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     Je serverbeheerder heeft beloningen geconfigureerd voor Game Masters wanneer zij
     quests voltooien. Omdat je echter geen geregistreerde personages hebt, konden je

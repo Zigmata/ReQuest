@@ -708,7 +708,7 @@ config-desc-example-json =
     Изтеглете примерен JSON файл, показващ очаквания формат.
 config-msg-example-json = Ето примерен JSON файл, показващ очаквания формат.
 config-msg-no-shops = Няма конфигурирани магазини.
-config-label-shop-type-forum = (Forum)
+config-label-shop-type-forum = (Форум)
 config-label-shop-channel = Канал: <#{ $channelId }>
 
 ## Shop Channel Type Selection View

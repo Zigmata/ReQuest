@@ -65,6 +65,7 @@ gm-error-no-active-character-long = Du har ingen aktiv karakter på denne server
 gm-error-quest-locked = Feil ved deltakelse i quest {"**"}{ $questTitle }{"**"}: Questen er låst av GM.
 gm-error-quest-full = Feil ved deltakelse i quest {"**"}{ $questTitle }{"**"}: Quest-oppsettet er fullt!
 gm-error-not-signed-up = Du er ikke påmeldt denne questen.
+gm-error-quest-not-found = Oppdraget eksisterer ikke lenger.
 gm-error-quest-channel-not-set = Quest-kanal er ikke angitt!
 gm-error-empty-roster = Du kan ikke fullføre en quest med en tom deltagerliste. Prøv å avbryte i stedet.
 gm-error-invalid-xp-value = XP-verdi må være et positivt heltall!
@@ -102,7 +103,7 @@ gm-dm-title-player-removed-confirm = Spiller fjernet
 gm-dm-desc-player-removed-confirm =
     Spilleren er fjernet fra {"**"}{ $questTitle }{"**"}
     og quest-oppsettet er oppdatert.
-gm-dm-footer-quest = Quest ID: { $questId } • { $guildName }
+gm-dm-footer-quest = Oppdrags-ID: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     Serveradministratoren din har konfigurert belønninger for spillledere når de fullfører
     quester. Siden du ikke har noen registrerte karakterer, kunne belønningene dine

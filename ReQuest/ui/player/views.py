@@ -31,7 +31,8 @@ from ReQuest.utilities.currency import (
     check_sufficient_funds, get_denomination_map, format_consolidated_totals, format_complex_cost
 )
 from ReQuest.utilities.db_cache import (
-    get_cached_data, update_cached_data, build_cache_key, delete_cached_data, decode_mongo_key, get_xp_config
+    get_cached_data, update_cached_data, build_cache_key, delete_cached_data, decode_mongo_key, get_xp_config,
+    run_in_transaction
 )
 from ReQuest.utilities.discord_utils import setup_view, strip_id, escape_markdown, truncate_text
 from ReQuest.utilities.exceptions import UserFeedbackError, log_exception
@@ -2246,80 +2247,90 @@ class ApprovalPostView(LocaleLayoutView):
             )
 
     async def approve(self, interaction):
-        claimed = False
         bot = interaction.client
         try:
             await interaction.response.defer()
 
-            # Atomically claim the submission to prevent concurrent approve/deny
-            claimed = await bot.gdb[DatabaseCollections.APPROVALS].find_one_and_update(
-                {ApprovalFields.SUBMISSION_ID: self.submission_id,
-                 ApprovalFields.STATUS: ApprovalFields.STATUS_PENDING},
-                {'$set': {ApprovalFields.STATUS: ApprovalFields.STATUS_PROCESSING}}
-            )
-            if not claimed:
+            async def _do_approve(session):
+                # Atomically claim the submission to prevent concurrent approve/deny
+                claimed = await bot.gdb[DatabaseCollections.APPROVALS].find_one_and_update(
+                    {ApprovalFields.SUBMISSION_ID: self.submission_id,
+                     ApprovalFields.STATUS: ApprovalFields.STATUS_PENDING},
+                    {'$set': {ApprovalFields.STATUS: ApprovalFields.STATUS_PROCESSING}},
+                    session=session
+                )
+                if not claimed:
+                    return None
+
+                # Use the claimed doc as the authoritative data source
+                pending_character = claimed.get(ApprovalFields.PENDING_CHARACTER, {})
+                character_id = pending_character.get(
+                    ApprovalFields.CHARACTER_ID, claimed.get(ApprovalFields.CHARACTER_ID)
+                )
+                character_name = pending_character.get(
+                    CommonFields.NAME, claimed.get(ApprovalFields.CHARACTER_NAME)
+                )
+
+                # Build the full character document with inventory and currency pre-populated
+                inventory = {titlecase(k): int(v) for k, v in claimed.get(ApprovalFields.ITEMS, {}).items()}
+                currency = {titlecase(k): int(v) for k, v in claimed.get(ApprovalFields.CURRENCY, {}).items()}
+
+                # Create the character in the CHARACTERS collection
+                await update_cached_data(
+                    bot=bot,
+                    mongo_database=bot.mdb,
+                    collection_name=DatabaseCollections.CHARACTERS,
+                    query={CommonFields.ID: claimed[ApprovalFields.USER_ID]},
+                    update_data={'$set': {
+                        f'{CharacterFields.ACTIVE_CHARACTERS}.{claimed[ApprovalFields.GUILD_ID]}': character_id,
+                        f'{CharacterFields.CHARACTERS}.{character_id}': {
+                            CharacterFields.NAME: character_name,
+                            'note': pending_character.get('note', ''),
+                            'registeredDate': (
+                                pending_character.get('registered_date')
+                                or claimed.get(ApprovalFields.TIMESTAMP)
+                            ),
+                            CharacterFields.ATTRIBUTES: {
+                                'level': None,
+                                CharacterFields.EXPERIENCE: None,
+                                CharacterFields.INVENTORY: inventory,
+                                CharacterFields.CURRENCY: currency
+                            }
+                        }
+                    }},
+                    session=session
+                )
+
+                # Delete the approval record
+                await delete_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.APPROVALS,
+                    search_filter={ApprovalFields.SUBMISSION_ID: self.submission_id},
+                    cache_id=f'approval_submission:{self.submission_id}',
+                    session=session
+                )
+
+                return claimed
+
+            result = await run_in_transaction(bot, _do_approve)
+
+            if result is None:
                 self.resolved = True
                 self.build_view()
                 await interaction.edit_original_response(view=self)
                 return
 
-            # Use the claimed doc as the authoritative data source (may have been edited since view loaded)
-            self.submission_data = claimed
-            guild_id = claimed[ApprovalFields.GUILD_ID]
-            user_id = claimed[ApprovalFields.USER_ID]
-            pending_character = claimed.get(ApprovalFields.PENDING_CHARACTER, {})
-            character_id = pending_character.get(
-                ApprovalFields.CHARACTER_ID, claimed.get(ApprovalFields.CHARACTER_ID)
+            # Transaction committed — handle Discord side effects
+            self.submission_data = result
+            guild_id = result[ApprovalFields.GUILD_ID]
+            user_id = result[ApprovalFields.USER_ID]
+            character_name = result.get(ApprovalFields.PENDING_CHARACTER, {}).get(
+                CommonFields.NAME, result.get(ApprovalFields.CHARACTER_NAME)
             )
-            character_name = pending_character.get(
-                CommonFields.NAME, claimed.get(ApprovalFields.CHARACTER_NAME)
-            )
+            granted_permissions = result.get(ApprovalFields.GRANTED_PERMISSIONS, [])
 
-            # Build the full character document with inventory and currency pre-populated
-            inventory = {titlecase(k): int(v) for k, v in claimed.get(ApprovalFields.ITEMS, {}).items()}
-            currency = {titlecase(k): int(v) for k, v in claimed.get(ApprovalFields.CURRENCY, {}).items()}
-
-            # Create the character in the CHARACTERS collection
-            await update_cached_data(
-                bot=bot,
-                mongo_database=bot.mdb,
-                collection_name=DatabaseCollections.CHARACTERS,
-                query={CommonFields.ID: user_id},
-                update_data={'$set': {
-                    f'{CharacterFields.ACTIVE_CHARACTERS}.{guild_id}': character_id,
-                    f'{CharacterFields.CHARACTERS}.{character_id}': {
-                        CharacterFields.NAME: character_name,
-                        'note': pending_character.get('note', ''),
-                        'registeredDate': (
-                            pending_character.get('registered_date')
-                            or claimed.get(ApprovalFields.TIMESTAMP)
-                        ),
-                        CharacterFields.ATTRIBUTES: {
-                            'level': None,
-                            CharacterFields.EXPERIENCE: None,
-                            CharacterFields.INVENTORY: inventory,
-                            CharacterFields.CURRENCY: currency
-                        }
-                    }
-                }}
-            )
-
-            # Capture granted permissions before deleting the approval record
-            granted_permissions = claimed.get(ApprovalFields.GRANTED_PERMISSIONS, [])
-
-            # Delete the approval record
-            await delete_cached_data(
-                bot=bot,
-                mongo_database=bot.gdb,
-                collection_name=DatabaseCollections.APPROVALS,
-                search_filter={ApprovalFields.SUBMISSION_ID: self.submission_id},
-                cache_id=f'approval_submission:{self.submission_id}'
-            )
-
-            # Mark claim as fully resolved so we don't revert on success
-            claimed = False
-
-            # Revoke granted forum permissions (after delete so revert-to-pending keeps access)
+            # Revoke granted forum permissions
             thread = interaction.channel
             if isinstance(thread, discord.Thread):
                 await self._revoke_submitter_permissions(
@@ -2356,12 +2367,6 @@ class ApprovalPostView(LocaleLayoutView):
                 await thread.edit(locked=True, archived=True)
 
         except Exception as e:
-            if claimed:
-                await bot.gdb[DatabaseCollections.APPROVALS].update_one(
-                    {ApprovalFields.SUBMISSION_ID: self.submission_id,
-                     ApprovalFields.STATUS: ApprovalFields.STATUS_PROCESSING},
-                    {'$set': {ApprovalFields.STATUS: ApprovalFields.STATUS_PENDING}}
-                )
             await log_exception(e, interaction)
 
     async def deny(self, interaction):
@@ -2374,43 +2379,49 @@ class ApprovalPostView(LocaleLayoutView):
             await log_exception(e, interaction)
 
     async def process_denial(self, interaction, reason=''):
-        claimed = False
         bot = interaction.client
         try:
             await interaction.response.defer()
 
-            # Atomically claim the submission to prevent concurrent approve/deny
-            claimed = await bot.gdb[DatabaseCollections.APPROVALS].find_one_and_update(
-                {ApprovalFields.SUBMISSION_ID: self.submission_id,
-                 ApprovalFields.STATUS: ApprovalFields.STATUS_PENDING},
-                {'$set': {ApprovalFields.STATUS: ApprovalFields.STATUS_PROCESSING}}
-            )
-            if not claimed:
+            async def _do_denial(session):
+                # Atomically claim the submission to prevent concurrent approve/deny
+                claimed = await bot.gdb[DatabaseCollections.APPROVALS].find_one_and_update(
+                    {ApprovalFields.SUBMISSION_ID: self.submission_id,
+                     ApprovalFields.STATUS: ApprovalFields.STATUS_PENDING},
+                    {'$set': {ApprovalFields.STATUS: ApprovalFields.STATUS_PROCESSING}},
+                    session=session
+                )
+                if not claimed:
+                    return None
+
+                # Delete the approval record (character was never created)
+                await delete_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.APPROVALS,
+                    search_filter={ApprovalFields.SUBMISSION_ID: self.submission_id},
+                    cache_id=f'approval_submission:{self.submission_id}',
+                    session=session
+                )
+
+                return claimed
+
+            result = await run_in_transaction(bot, _do_denial)
+
+            if result is None:
                 self.resolved = True
                 self.build_view()
                 await interaction.edit_original_response(view=self)
                 return
 
-            # Use the claimed doc as the authoritative data source
-            self.submission_data = claimed
-            user_id = claimed[ApprovalFields.USER_ID]
-            guild_id = claimed[ApprovalFields.GUILD_ID]
-            character_name = claimed.get(ApprovalFields.CHARACTER_NAME, '')
-            granted_permissions = claimed.get(ApprovalFields.GRANTED_PERMISSIONS, [])
+            # Transaction committed — handle Discord side effects
+            self.submission_data = result
+            user_id = result[ApprovalFields.USER_ID]
+            guild_id = result[ApprovalFields.GUILD_ID]
+            character_name = result.get(ApprovalFields.CHARACTER_NAME, '')
+            granted_permissions = result.get(ApprovalFields.GRANTED_PERMISSIONS, [])
 
-            # Delete the approval record (character was never created)
-            await delete_cached_data(
-                bot=bot,
-                mongo_database=bot.gdb,
-                collection_name=DatabaseCollections.APPROVALS,
-                search_filter={ApprovalFields.SUBMISSION_ID: self.submission_id},
-                cache_id=f'approval_submission:{self.submission_id}'
-            )
-
-            # Mark claim as fully resolved so we don't revert on success
-            claimed = False
-
-            # Revoke granted forum permissions (after delete so revert-to-pending keeps access)
+            # Revoke granted forum permissions
             thread = interaction.channel
             if isinstance(thread, discord.Thread):
                 await self._revoke_submitter_permissions(
@@ -2451,12 +2462,6 @@ class ApprovalPostView(LocaleLayoutView):
                 await thread.edit(locked=True, archived=True)
 
         except Exception as e:
-            if claimed:
-                await bot.gdb[DatabaseCollections.APPROVALS].update_one(
-                    {ApprovalFields.SUBMISSION_ID: self.submission_id,
-                     ApprovalFields.STATUS: ApprovalFields.STATUS_PROCESSING},
-                    {'$set': {ApprovalFields.STATUS: ApprovalFields.STATUS_PENDING}}
-                )
             await log_exception(e, interaction)
 
     @staticmethod

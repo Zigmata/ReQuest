@@ -48,7 +48,7 @@ common-embed-field-party = __Отряд__
 common-embed-field-wait-list = __Лист ожидания__
 common-embed-footer-quest-id = ID квеста: { $questId }
 common-embed-footer-transaction-id = ID транзакции: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}Ведущий:{"**"}
 common-embed-label-party-restrictions = {"**"}Ограничения отряда:{"**"}
 
 # Уведомление о переводе

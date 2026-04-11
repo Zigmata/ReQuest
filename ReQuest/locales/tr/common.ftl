@@ -46,9 +46,9 @@ common-label-inventory-empty = Envanter boş.
 # Shared embed fields
 common-embed-field-party = __Grup__
 common-embed-field-wait-list = __Bekleme Listesi__
-common-embed-footer-quest-id = Quest ID: { $questId }
+common-embed-footer-quest-id = Görev Kimliği: { $questId }
 common-embed-footer-transaction-id = İşlem ID: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}Oyun Yöneticisi:{"**"}
 common-embed-label-party-restrictions = {"**"}Grup Kısıtlamaları:{"**"}
 
 # Translation notice

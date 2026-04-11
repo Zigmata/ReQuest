@@ -65,6 +65,7 @@ gm-error-no-active-character-long = Na tomto serveru nemáte aktivní postavu. P
 gm-error-quest-locked = Chyba při připojování ke questu {"**"}{ $questTitle }{"**"}: Quest je zamčen GM.
 gm-error-quest-full = Chyba při připojování ke questu {"**"}{ $questTitle }{"**"}: Soupiska questu je plná!
 gm-error-not-signed-up = Nejste přihlášeni k tomuto questu.
+gm-error-quest-not-found = Úkol již neexistuje.
 gm-error-quest-channel-not-set = Kanál questů nebyl nastaven!
 gm-error-empty-roster = Nelze dokončit quest s prázdnou soupiskou. Zkuste quest místo toho zrušit.
 gm-error-invalid-xp-value = Hodnota XP musí být kladné celé číslo!
@@ -101,7 +102,7 @@ gm-dm-title-player-removed-confirm = Hráč odebrán
 gm-dm-desc-player-removed-confirm =
     Hráč byl odebrán z {"**"}{ $questTitle }{"**"}
     a seznam questu byl aktualizován.
-gm-dm-footer-quest = Quest ID: { $questId } • { $guildName }
+gm-dm-footer-quest = ID úkolu: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     Administrátor vašeho serveru nakonfiguroval odměny pro Game Mastery po dokončení
     questů. Jelikož však nemáte žádné zaregistrované postavy, vaše odměny nemohly

@@ -12,6 +12,7 @@ from ReQuest.ui.common.enums import InventoryType
 from ReQuest.utilities.constants import CharacterFields, ConfigFields, CommonFields, DatabaseCollections, DisplayLimits
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_locale
 from ReQuest.utilities.character import trade_currency, trade_item, update_character_inventory
+from ReQuest.utilities.db_cache import run_in_transaction
 from ReQuest.utilities.containers import (
     create_container, rename_container, get_container_name, consume_item_from_container,
     move_item_between_containers
@@ -123,8 +124,11 @@ class TradeModal(LocaleModal):
             )
 
             if is_currency:
-                sender_currency, receiver_currency = await trade_currency(interaction, item_name, quantity,
-                                                                          member_id, target_id, guild_id)
+                sender_currency, receiver_currency = await run_in_transaction(
+                    bot, lambda s: trade_currency(
+                        interaction, item_name, quantity, member_id, target_id, guild_id, session=s
+                    )
+                )
                 sender_balance_str = '\n'.join(format_currency_display(sender_currency, currency_query)) or "None"
                 receiver_currency_str = '\n'.join(format_currency_display(receiver_currency, currency_query)) or "None"
                 trade_embed.add_field(
@@ -149,7 +153,9 @@ class TradeModal(LocaleModal):
                 )
             else:
                 quantity = int(quantity)
-                await trade_item(interaction.client, item_name, quantity, member_id, target_id, guild_id)
+                await run_in_transaction(
+                    bot, lambda s: trade_item(bot, item_name, quantity, member_id, target_id, guild_id, session=s)
+                )
                 trade_embed.add_field(
                     name=t(locale, 'player-embed-field-item'),
                     value=escape_markdown(titlecase(item_name))
@@ -519,7 +525,7 @@ class SpendCurrencyModal(LocaleModal):
             if amount > DisplayLimits.MAX_CURRENCY_AMOUNT:
                 raise UserFeedbackError(
                     t(locale, 'player-error-amount-exceeds-maximum',
-                      **{'max': str(DisplayLimits.MAX_CURRENCY_AMOUNT)}),
+                      max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)),
                     message_id='player-error-amount-exceeds-maximum',
                     max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)
                 )

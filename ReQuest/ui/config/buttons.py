@@ -73,7 +73,7 @@ class RemoveGMRoleButton(Button):
             locale = await resolve_locale(interaction)
             confirm_modal = common_modals.ConfirmModal(
                 title=t(locale, 'config-modal-title-confirm-role-removal'),
-                prompt_label=t(locale, 'config-modal-label-remove-role', **{'roleName': self.role_name}),
+                prompt_label=t(locale, 'config-modal-label-remove-role', roleName=self.role_name),
                 confirm_callback=self._confirm_delete,
                 locale=locale
             )
@@ -261,7 +261,7 @@ class RemoveDenominationButton(Button):
             confirm_modal = common_modals.ConfirmModal(
                 title=t(locale, 'config-modal-title-confirm-removal'),
                 prompt_label=t(locale, 'config-modal-label-remove-denomination',
-                               **{'denominationName': self.denomination_name}),
+                               denominationName=self.denomination_name),
                 confirm_callback=self._confirm_delete,
                 locale=locale
             )
@@ -364,7 +364,7 @@ class RemoveCurrencyButton(Button):
             locale = await resolve_locale(interaction)
             modal = common_modals.ConfirmModal(
                 title=t(locale, 'config-modal-title-confirm-currency-removal'),
-                prompt_label=t(locale, 'config-modal-label-remove-currency', **{'currencyName': self.currency_name}),
+                prompt_label=t(locale, 'config-modal-label-remove-currency', currencyName=self.currency_name),
                 confirm_callback=self._confirm_delete,
                 locale=locale
             )
@@ -952,7 +952,7 @@ class DownloadShopJSONButton(Button):
             shop_file = discord.File(json_bytes, filename=file_name)
 
             await interaction.response.send_message(
-                t(DEFAULT_LOCALE, 'config-msg-shop-json-download', **{'shopName': shop_name}),
+                t(DEFAULT_LOCALE, 'config-msg-shop-json-download', shopName=shop_name),
                 file=shop_file,
                 ephemeral=True
             )

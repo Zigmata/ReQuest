@@ -65,6 +65,7 @@ gm-error-no-active-character-long = Нямате активен персонаж
 gm-error-quest-locked = Грешка при присъединяване към quest {"**"}{ $questTitle }{"**"}: Куестът е заключен от GM.
 gm-error-quest-full = Грешка при присъединяване към quest {"**"}{ $questTitle }{"**"}: Групата е пълна!
 gm-error-not-signed-up = Не сте записани за този quest.
+gm-error-quest-not-found = Куестът вече не съществува.
 gm-error-quest-channel-not-set = Каналът за куестове не е зададен!
 gm-error-empty-roster = Не можете да завършите quest с празен списък. Опитайте да отмените вместо това.
 gm-error-invalid-xp-value = Стойността на XP трябва да е положително цяло число!
@@ -101,7 +102,7 @@ gm-dm-title-player-removed-confirm = Играч премахнат
 gm-dm-desc-player-removed-confirm =
     Играчът беше премахнат от {"**"}{ $questTitle }{"**"}
     и списъкът на quest беше обновен.
-gm-dm-footer-quest = Quest ID: { $questId } • { $guildName }
+gm-dm-footer-quest = Идент. куест: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     Администраторът на вашия сървър е конфигурирал награди за GM при завършване
     на куестове. Тъй като обаче нямате регистрирани персонажи, наградите ви не могат

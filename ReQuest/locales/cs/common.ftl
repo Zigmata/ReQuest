@@ -46,9 +46,9 @@ common-label-inventory-empty = Inventář je prázdný.
 # Shared embed fields
 common-embed-field-party = __Skupina__
 common-embed-field-wait-list = __Čekací listina__
-common-embed-footer-quest-id = Quest ID: { $questId }
+common-embed-footer-quest-id = ID úkolu: { $questId }
 common-embed-footer-transaction-id = ID transakce: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}Vypravěč:{"**"}
 common-embed-label-party-restrictions = {"**"}Omezení skupiny:{"**"}
 
 # Translation notice

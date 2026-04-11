@@ -65,6 +65,7 @@ gm-error-no-active-character-long = Du har ikke en aktiv karakter på denne serv
 gm-error-quest-locked = Fejl ved tilmelding til quest {"**"}{ $questTitle }{"**"}: Questen er låst af GM'en.
 gm-error-quest-full = Fejl ved tilmelding til quest {"**"}{ $questTitle }{"**"}: Quest-holdet er fuldt!
 gm-error-not-signed-up = Du er ikke tilmeldt denne quest.
+gm-error-quest-not-found = Questen findes ikke længere.
 gm-error-quest-channel-not-set = Quest-kanal er ikke indstillet!
 gm-error-empty-roster = Du kan ikke afslutte en quest med en tom deltagerliste. Prøv at annullere i stedet.
 gm-error-invalid-xp-value = XP-værdi skal være et positivt heltal!
@@ -101,7 +102,7 @@ gm-dm-title-player-removed-confirm = Spiller fjernet
 gm-dm-desc-player-removed-confirm =
     Spilleren er blevet fjernet fra {"**"}{ $questTitle }{"**"}
     og quest-listen er blevet opdateret.
-gm-dm-footer-quest = Quest ID: { $questId } • { $guildName }
+gm-dm-footer-quest = Quest-ID: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     Din serveradministrator har konfigureret belønninger til GM'er, når de afslutter
     quests. Da du dog ikke har nogen registrerede karakterer, kunne dine belønninger
@@ -138,7 +139,7 @@ gm-embed-field-items = Genstande
 
 # GM views
 gm-title-main-menu = GM - Hovedmenu
-gm-menu-quests = Quests
+gm-menu-quests = Opgaver
 gm-menu-desc-quests = Opret, rediger og administrer quests.
 gm-menu-players = Spillere
 gm-menu-desc-players = Administrer spillerinventarer og rediger karakterer.

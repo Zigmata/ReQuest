@@ -46,9 +46,9 @@ common-label-inventory-empty = Inventorius tuščias.
 # Shared embed fields
 common-embed-field-party = __Grupė__
 common-embed-field-wait-list = __Laukimo sąrašas__
-common-embed-footer-quest-id = Quest ID: { $questId }
+common-embed-footer-quest-id = Užduoties ID: { $questId }
 common-embed-footer-transaction-id = Sandorio ID: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}Vadovas:{"**"}
 common-embed-label-party-restrictions = {"**"}Grupės apribojimai:{"**"}
 
 # Translation notice

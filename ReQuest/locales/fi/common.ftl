@@ -48,7 +48,7 @@ common-embed-field-party = __Ryhmä__
 common-embed-field-wait-list = __Jonotuslista__
 common-embed-footer-quest-id = Quest-ID: { $questId }
 common-embed-footer-transaction-id = Tapahtumatunnus: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}Pelinjohtaja:{"**"}
 common-embed-label-party-restrictions = {"**"}Ryhmärajoitukset:{"**"}
 
 # Translation notice

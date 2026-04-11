@@ -65,6 +65,7 @@ gm-error-no-active-character-long = Jūs neturite aktyvaus personažo šiame ser
 gm-error-quest-locked = Klaida prisijungiant prie quest'o {"**"}{ $questTitle }{"**"}: Quest'as užrakintas GM.
 gm-error-quest-full = Klaida prisijungiant prie quest'o {"**"}{ $questTitle }{"**"}: Quest'o sąrašas pilnas!
 gm-error-not-signed-up = Jūs nesate užsiregistravę šiam quest'ui.
+gm-error-quest-not-found = Užduoties nebėra.
 gm-error-quest-channel-not-set = Quest kanalas nenustatytas!
 gm-error-empty-roster = Negalite užbaigti quest'o su tuščiu sąrašu. Pabandykite atšaukti.
 gm-error-invalid-xp-value = XP reikšmė turi būti teigiamas sveikasis skaičius!
@@ -102,7 +103,7 @@ gm-dm-title-player-removed-confirm = Žaidėjas pašalintas
 gm-dm-desc-player-removed-confirm =
     Žaidėjas buvo pašalintas iš {"**"}{ $questTitle }{"**"}
     ir quest'o sąrašas buvo atnaujintas.
-gm-dm-footer-quest = Quest ID: { $questId } • { $guildName }
+gm-dm-footer-quest = Užduoties ID: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     Jūsų serverio administratorius sukonfigūravo atlygius GM, kai jie užbaigia
     quest'us. Tačiau, kadangi neturite užregistruotų personažų, jūsų atlygiai

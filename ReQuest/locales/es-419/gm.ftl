@@ -65,6 +65,7 @@ gm-error-no-active-character-long = No tienes un personaje activo en este servid
 gm-error-quest-locked = Error al unirse al quest {"**"}{ $questTitle }{"**"}: El quest está bloqueado por el GM.
 gm-error-quest-full = Error al unirse al quest {"**"}{ $questTitle }{"**"}: ¡La lista del grupo está llena!
 gm-error-not-signed-up = No estás inscrito en este quest.
+gm-error-quest-not-found = La misión ya no existe.
 gm-error-quest-channel-not-set = ¡El canal de quests no ha sido configurado!
 gm-error-empty-roster = No puedes completar un quest con una lista vacía. Intenta cancelarlo en su lugar.
 gm-error-invalid-xp-value = ¡El valor de XP debe ser un número entero positivo!
@@ -137,7 +138,7 @@ gm-embed-field-items = Objetos
 
 # Vistas de GM
 gm-title-main-menu = Game Master - Menú Principal
-gm-menu-quests = Quests
+gm-menu-quests = Misiones
 gm-menu-desc-quests = Crear, editar y administrar quests.
 gm-menu-players = Jugadores
 gm-menu-desc-players = Administrar inventarios de jugadores y modificar personajes.

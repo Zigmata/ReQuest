@@ -375,7 +375,7 @@ config-select-option-no-threads = Δεν βρέθηκαν ενεργά threads
 config-select-desc-no-threads = Δημιουργήστε νέο thread ή ελέγξτε τα αρχειοθετημένα threads
 config-select-option-select-forum-first = Επιλέξτε πρώτα ένα Forum
 config-select-desc-select-forum-first = Επιλέξτε ένα κανάλι Forum παραπάνω
-config-select-desc-thread-id = Thread ID: { $threadId }
+config-select-desc-thread-id = Αναγνωριστικό νήματος: { $threadId }
 config-error-select-valid-thread = Επιλέξτε ένα έγκυρο thread ή δημιουργήστε νέο.
 config-error-thread-not-found = Δεν ήταν δυνατή η εύρεση του επιλεγμένου thread. Μπορεί να έχει διαγραφεί ή αρχειοθετηθεί.
 
@@ -393,7 +393,7 @@ config-menu-currency = Νόμισμα
 config-menu-desc-currency = Καθολικές ρυθμίσεις νομίσματος.
 config-menu-players = Παίκτες
 config-menu-desc-players = Καθολικές ρυθμίσεις παικτών, όπως παρακολούθηση πόντων εμπειρίας.
-config-menu-quests = Quests
+config-menu-quests = Αποστολές
 config-menu-desc-quests = Καθολικές ρυθμίσεις quest, όπως λίστες αναμονής.
 config-menu-rp-rewards = Ανταμοιβές RP
 config-menu-desc-rp-rewards = Ρυθμίστε ανταμοιβές roleplay.
@@ -708,7 +708,7 @@ config-desc-example-json =
     Κατεβάστε ένα παράδειγμα αρχείου JSON που δείχνει την αναμενόμενη μορφή.
 config-msg-example-json = Εδώ είναι ένα παράδειγμα αρχείου JSON που δείχνει την αναμενόμενη μορφή.
 config-msg-no-shops = Δεν έχουν ρυθμιστεί καταστήματα.
-config-label-shop-type-forum = (Forum)
+config-label-shop-type-forum = (Φόρουμ)
 config-label-shop-channel = Κανάλι: <#{ $channelId }>
 
 ## Shop Channel Type Selection View

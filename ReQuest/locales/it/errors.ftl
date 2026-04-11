@@ -1,7 +1,7 @@
 ## Stringhe di errore e fallimenti dei controlli
 
 # Wrapper embed errore
-error-oops-title = ⚠️ Oops!
+error-oops-title = ⚠️ Ops!
 error-report-description =
     Si è verificata un'eccezione:
 
