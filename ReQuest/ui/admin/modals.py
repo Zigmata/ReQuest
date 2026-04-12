@@ -17,13 +17,13 @@ class AllowServerModal(LocaleModal):
     def __init__(self, calling_view, locale=None):
         self._locale = locale or DEFAULT_LOCALE
         super().__init__(
-            title=t(self._locale, 'admin-modal-title-add-server'),
+            title=t(self._locale, 'admin-modal-title-add-server')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=180
         )
         self.calling_view = calling_view
         self.allow_server_name_input = discord.ui.TextInput(
             custom_id='allow_server_name_input',
-            placeholder=t(self._locale, 'admin-modal-placeholder-server-name')
+            placeholder=t(self._locale, 'admin-modal-placeholder-server-name')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER]
         )
         self.allow_server_name_label = discord.ui.Label(
             text=t(self._locale, 'admin-modal-label-server-name')[:DiscordCharacterLimits.LABEL_LABEL],
@@ -31,7 +31,7 @@ class AllowServerModal(LocaleModal):
         )
         self.allow_server_id_input = discord.ui.TextInput(
             custom_id='allow_server_text_input',
-            placeholder=t(self._locale, 'admin-modal-placeholder-server-id')
+            placeholder=t(self._locale, 'admin-modal-placeholder-server-id')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER]
         )
         self.allow_server_id_label = discord.ui.Label(
             text=t(self._locale, 'admin-modal-label-server-id')[:DiscordCharacterLimits.LABEL_LABEL],
@@ -67,11 +67,11 @@ class AdminCogTextModal(LocaleModal):
     def __init__(self, function, on_submit, locale=None):
         self._locale = locale or DEFAULT_LOCALE
         super().__init__(
-            title=t(self._locale, 'admin-modal-title-cog-action', action=function.capitalize())[:45],
+            title=t(self._locale, 'admin-modal-title-cog-action', action=function.capitalize())[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=180
         )
         self.text_input = discord.ui.TextInput(
-            placeholder=t(self._locale, 'admin-modal-placeholder-cog-name', action=function),
+            placeholder=t(self._locale, 'admin-modal-placeholder-cog-name', action=function)[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             custom_id='cog_name_text_input'
         )
         self.text_label = discord.ui.Label(

@@ -32,13 +32,13 @@ logger = logging.getLogger(__name__)
 class TradeModal(LocaleModal):
     def __init__(self, target: discord.Member, locale: str = DEFAULT_LOCALE):
         super().__init__(
-            title=t(locale, 'player-modal-title-trade', targetName=target.name)[:45],
+            title=t(locale, 'player-modal-title-trade', targetName=target.name)[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=180
         )
         self.target = target
         self.locale = locale
         self.item_name_text_input = discord.ui.TextInput(
-            placeholder=t(locale, 'player-modal-placeholder-trade-name'),
+            placeholder=t(locale, 'player-modal-placeholder-trade-name')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             custom_id='item_name_text_input'
         )
         self.item_name_label = discord.ui.Label(
@@ -46,7 +46,7 @@ class TradeModal(LocaleModal):
             component=self.item_name_text_input
         )
         self.item_quantity_text_input = discord.ui.TextInput(
-            placeholder=t(locale, 'player-modal-placeholder-trade-quantity'),
+            placeholder=t(locale, 'player-modal-placeholder-trade-quantity')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             custom_id='item_quantity_text_input'
         )
         self.item_quantity_label = discord.ui.Label(
@@ -301,12 +301,12 @@ class CharacterRegisterModal(LocaleModal):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         self._locale = locale
         super().__init__(
-            title=t(locale, 'player-modal-title-register'),
+            title=t(locale, 'player-modal-title-register')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=180
         )
         self.name_text_input = discord.ui.TextInput(
             custom_id='character_name_text_input',
-            placeholder=t(locale, 'player-modal-placeholder-char-name'),
+            placeholder=t(locale, 'player-modal-placeholder-char-name')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             max_length=40
         )
         self.name_label = discord.ui.Label(
@@ -315,7 +315,7 @@ class CharacterRegisterModal(LocaleModal):
         )
         self.note_text_input = discord.ui.TextInput(
             custom_id='character_note_text_input',
-            placeholder=t(locale, 'player-modal-placeholder-char-note'),
+            placeholder=t(locale, 'player-modal-placeholder-char-note')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             max_length=80
         )
         self.note_label = discord.ui.Label(
@@ -412,12 +412,12 @@ class OpenInventoryInputModal(LocaleModal):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         self._locale = locale
         super().__init__(
-            title=t(locale, 'player-modal-title-starting-inventory'),
+            title=t(locale, 'player-modal-title-starting-inventory')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
         self.items_input = discord.ui.TextInput(
-            placeholder=t(locale, 'player-modal-placeholder-inventory-input'),
+            placeholder=t(locale, 'player-modal-placeholder-inventory-input')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             style=discord.TextStyle.paragraph,
             required=False
         )
@@ -473,14 +473,14 @@ class DenyReasonModal(LocaleModal):
     def __init__(self, approval_view):
         locale = getattr(approval_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            title=t(locale, 'player-modal-title-deny-reason'),
+            title=t(locale, 'player-modal-title-deny-reason')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=180
         )
         self.approval_view = approval_view
         self.reason_input = discord.ui.TextInput(
             style=discord.TextStyle.paragraph,
             custom_id='deny_reason_input',
-            placeholder=t(locale, 'player-modal-placeholder-deny-reason'),
+            placeholder=t(locale, 'player-modal-placeholder-deny-reason')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             required=False,
             max_length=500
         )
@@ -503,12 +503,12 @@ class SpendCurrencyModal(LocaleModal):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         self._locale = locale
         super().__init__(
-            title=t(locale, 'player-modal-title-spend-currency'),
+            title=t(locale, 'player-modal-title-spend-currency')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=180
         )
         self.calling_view = calling_view
         self.currency_name_text_input = discord.ui.TextInput(
-            placeholder=t(locale, 'player-modal-placeholder-currency-name'),
+            placeholder=t(locale, 'player-modal-placeholder-currency-name')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             custom_id='currency_name_text_input',
             required=True
         )
@@ -517,7 +517,7 @@ class SpendCurrencyModal(LocaleModal):
             component=self.currency_name_text_input
         )
         self.currency_amount_text_input = discord.ui.TextInput(
-            placeholder=t(locale, 'player-modal-placeholder-currency-amount'),
+            placeholder=t(locale, 'player-modal-placeholder-currency-amount')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             custom_id='currency_amount_text_input',
             required=True,
             max_length=13
@@ -709,12 +709,12 @@ class CreatePlayerPostModal(LocaleModal):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         self._locale = locale
         super().__init__(
-            title=t(locale, 'player-modal-title-create-post'),
+            title=t(locale, 'player-modal-title-create-post')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=600
         )
         self.title_text_input = discord.ui.TextInput(
             custom_id='title_text_input',
-            placeholder=t(locale, 'player-modal-placeholder-post-title'),
+            placeholder=t(locale, 'player-modal-placeholder-post-title')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             max_length=80
         )
         self.title_label = discord.ui.Label(
@@ -724,7 +724,7 @@ class CreatePlayerPostModal(LocaleModal):
         self.content_text_input = discord.ui.TextInput(
             style=discord.TextStyle.paragraph,
             custom_id='content_text_input',
-            placeholder=t(locale, 'player-modal-placeholder-post-content')
+            placeholder=t(locale, 'player-modal-placeholder-post-content')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER]
         )
         self.content_label = discord.ui.Label(
             text=t(locale, 'player-modal-label-post-content')[:DiscordCharacterLimits.LABEL_LABEL],
@@ -748,14 +748,14 @@ class EditPlayerPostModal(LocaleModal):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         self._locale = locale
         super().__init__(
-            title=t(locale, 'player-modal-title-edit-post'),
+            title=t(locale, 'player-modal-title-edit-post')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
         self.post = post
         self.title_text_input = discord.ui.TextInput(
             custom_id='title_text_input',
-            placeholder=t(locale, 'player-modal-placeholder-post-title'),
+            placeholder=t(locale, 'player-modal-placeholder-post-title')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=post['title'],
             max_length=80,
             required=False
@@ -767,7 +767,7 @@ class EditPlayerPostModal(LocaleModal):
         self.content_text_input = discord.ui.TextInput(
             style=discord.TextStyle.paragraph,
             custom_id='content_text_input',
-            placeholder=t(locale, 'player-modal-placeholder-post-content'),
+            placeholder=t(locale, 'player-modal-placeholder-post-content')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=post['content'],
             required=False
         )
@@ -792,7 +792,7 @@ class WizardEditCartItemModal(LocaleModal):
         locale = getattr(cart_view, 'locale', DEFAULT_LOCALE)
         self._locale = locale
         super().__init__(
-            title=t(locale, 'player-modal-title-edit-cart-qty'),
+            title=t(locale, 'player-modal-title-edit-cart-qty')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=600
         )
         self.cart_view = cart_view
@@ -802,7 +802,7 @@ class WizardEditCartItemModal(LocaleModal):
             default=str(current_quantity),
             min_length=1,
             max_length=5,
-            placeholder=t(locale, 'player-modal-placeholder-cart-qty'),
+            placeholder=t(locale, 'player-modal-placeholder-cart-qty')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             custom_id='wiz_cart_qty_input'
         )
         self.quantity_label = discord.ui.Label(
@@ -842,12 +842,12 @@ class CreateContainerModal(LocaleModal):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         self._locale = locale
         super().__init__(
-            title=t(locale, 'player-modal-title-create-container'),
+            title=t(locale, 'player-modal-title-create-container')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=180
         )
         self.calling_view = calling_view
         self.name_input = discord.ui.TextInput(
-            placeholder=t(locale, 'player-modal-placeholder-container-name'),
+            placeholder=t(locale, 'player-modal-placeholder-container-name')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             custom_id='container_name_input',
             max_length=50,
             required=True
@@ -879,13 +879,13 @@ class RenameContainerModal(LocaleModal):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         self._locale = locale
         super().__init__(
-            title=t(locale, 'player-modal-title-rename-container'),
+            title=t(locale, 'player-modal-title-rename-container')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=180
         )
         self.calling_view = calling_view
         self.container_id = container_id
         self.name_input = discord.ui.TextInput(
-            placeholder=t(locale, 'player-modal-placeholder-new-container-name'),
+            placeholder=t(locale, 'player-modal-placeholder-new-container-name')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             custom_id='container_rename_input',
             default=current_name,
             max_length=50,
@@ -919,7 +919,7 @@ class ConsumeFromContainerModal(LocaleModal):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         self._locale = locale
         super().__init__(
-            title=t(locale, 'player-modal-title-consume'),
+            title=t(locale, 'player-modal-title-consume')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=180
         )
         self.calling_view = calling_view
@@ -927,7 +927,7 @@ class ConsumeFromContainerModal(LocaleModal):
         self.max_quantity = max_quantity
 
         self.quantity_input = discord.ui.TextInput(
-            placeholder=t(locale, 'player-modal-placeholder-consume-qty'),
+            placeholder=t(locale, 'player-modal-placeholder-consume-qty')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             custom_id='consume_quantity_input',
             default='1',
             required=True
@@ -1072,7 +1072,7 @@ class MoveItemQuantityModal(LocaleModal):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         self._locale = locale
         super().__init__(
-            title=t(locale, 'player-modal-title-move-item'),
+            title=t(locale, 'player-modal-title-move-item')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=180
         )
         self.calling_view = calling_view
@@ -1080,7 +1080,7 @@ class MoveItemQuantityModal(LocaleModal):
         self.max_quantity = max_quantity
 
         self.quantity_input = discord.ui.TextInput(
-            placeholder=t(locale, 'player-modal-placeholder-move-qty'),
+            placeholder=t(locale, 'player-modal-placeholder-move-qty')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             custom_id='move_quantity_input',
             default=str(max_quantity),
             required=True

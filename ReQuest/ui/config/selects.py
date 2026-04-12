@@ -7,7 +7,8 @@ from ReQuest.ui.common.enums import InventoryType, QuestRoleMode, RoleplayMode, 
 from ReQuest.ui.info.selects import (LOCALE_LABELS, LOCALE_DESCRIPTIONS, LOCALE_EMOJI,
                                      LOCALES_PER_PAGE, get_config_locale_total_pages)
 from ReQuest.utilities.constants import (ConfigFields, CommonFields, RoleplayFields,
-                                         DatabaseCollections, MAX_QUEST_ROLES_PER_GM)
+                                         DatabaseCollections, DiscordCharacterLimits,
+                                         MAX_QUEST_ROLES_PER_GM)
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, SUPPORTED_LOCALES
 from ReQuest.utilities.db_cache import get_cached_data, update_cached_data, delete_cached_data
 from ReQuest.utilities.exceptions import log_exception
@@ -24,7 +25,8 @@ class SingleChannelConfigSelect(ChannelSelect):
 
         super().__init__(
             channel_types=channel_types,
-            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-channel', configName=config_name),
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-channel',
+                         configName=config_name)[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
             custom_id=f'config_{config_type}_channel_select'
         )
         self.calling_view = calling_view
@@ -50,7 +52,7 @@ class SingleChannelConfigSelect(ChannelSelect):
 class QuestAnnounceRoleSelect(RoleSelect):
     def __init__(self, calling_view):
         super().__init__(
-            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-announce-role'),
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-announce-role')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
             custom_id='quest_announce_role_select'
         )
         self.calling_view = calling_view
@@ -75,7 +77,7 @@ class QuestAnnounceRoleSelect(RoleSelect):
 class AddGMRoleSelect(RoleSelect):
     def __init__(self, calling_view):
         super().__init__(
-            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-gm-roles'),
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-gm-roles')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
             custom_id='add_gm_role_select',
             max_values=25
         )
@@ -133,14 +135,16 @@ class ConfigWaitListSelect(Select):
     def __init__(self, calling_view):
         super().__init__(
             options=[
-                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-disabled'), value='0'),
+                discord.SelectOption(
+                    label=t(DEFAULT_LOCALE, 'config-select-option-disabled')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
+                    value='0'),
                 discord.SelectOption(label='1', value='1'),
                 discord.SelectOption(label='2', value='2'),
                 discord.SelectOption(label='3', value='3'),
                 discord.SelectOption(label='4', value='4'),
                 discord.SelectOption(label='5', value='5')
             ],
-            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-wait-list'),
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-wait-list')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
             custom_id='config_wait_list_select'
         )
         self.calling_view = calling_view
@@ -165,23 +169,23 @@ class ConfigWaitListSelect(Select):
 class InventoryTypeSelect(Select):
     def __init__(self, calling_view):
         super().__init__(
-            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-inventory-mode'),
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-inventory-mode')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
             options=[
-                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-disabled-label'),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-disabled-label')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
                                      value=InventoryType.DISABLED.value,
-                                     description=t(DEFAULT_LOCALE, 'config-select-desc-disabled')[:100]),
-                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-selection'),
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-disabled')[:DiscordCharacterLimits.STRING_SELECT_OPTION_DESCRIPTION]),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-selection')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
                                      value=InventoryType.SELECTION.value,
-                                     description=t(DEFAULT_LOCALE, 'config-select-desc-selection')[:100]),
-                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-purchase'),
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-selection')[:DiscordCharacterLimits.STRING_SELECT_OPTION_DESCRIPTION]),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-purchase')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
                                      value=InventoryType.PURCHASE.value,
-                                     description=t(DEFAULT_LOCALE, 'config-select-desc-purchase')[:100]),
-                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-open'),
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-purchase')[:DiscordCharacterLimits.STRING_SELECT_OPTION_DESCRIPTION]),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-open')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
                                      value=InventoryType.OPEN.value,
-                                     description=t(DEFAULT_LOCALE, 'config-select-desc-open')[:100]),
-                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-static'),
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-open')[:DiscordCharacterLimits.STRING_SELECT_OPTION_DESCRIPTION]),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-static')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
                                      value=InventoryType.STATIC.value,
-                                     description=t(DEFAULT_LOCALE, 'config-select-desc-static')[:100]),
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-static')[:DiscordCharacterLimits.STRING_SELECT_OPTION_DESCRIPTION]),
             ],
             custom_id='inventory_type_select'
         )
@@ -207,7 +211,7 @@ class RoleplayChannelSelect(ChannelSelect):
     def __init__(self, calling_view):
         super().__init__(
             channel_types=[discord.ChannelType.text, discord.ChannelType.forum, discord.ChannelType.category],
-            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-rp-channels'),
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-rp-channels')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
             min_values=0,
             max_values=25,
             custom_id='rp_channel_select'
@@ -245,17 +249,17 @@ class RoleplayChannelSelect(ChannelSelect):
 class RoleplayModeSelect(Select):
     def __init__(self, calling_view):
         super().__init__(
-            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-rp-mode'),
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-rp-mode')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
             options=[
                 discord.SelectOption(
-                    label=t(DEFAULT_LOCALE, 'config-select-option-scheduled'),
+                    label=t(DEFAULT_LOCALE, 'config-select-option-scheduled')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
                     value=RoleplayMode.SCHEDULED.value,
-                    description=t(DEFAULT_LOCALE, 'config-select-desc-scheduled')[:100]
+                    description=t(DEFAULT_LOCALE, 'config-select-desc-scheduled')[:DiscordCharacterLimits.STRING_SELECT_OPTION_DESCRIPTION]
                 ),
                 discord.SelectOption(
-                    label=t(DEFAULT_LOCALE, 'config-select-option-accrued'),
+                    label=t(DEFAULT_LOCALE, 'config-select-option-accrued')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
                     value=RoleplayMode.ACCRUED.value,
-                    description=t(DEFAULT_LOCALE, 'config-select-desc-accrued')[:100]
+                    description=t(DEFAULT_LOCALE, 'config-select-desc-accrued')[:DiscordCharacterLimits.STRING_SELECT_OPTION_DESCRIPTION]
                 )
             ],
             custom_id='rp_mode_select'
@@ -281,17 +285,17 @@ class RoleplayModeSelect(Select):
 class RoleplayResetSelect(Select):
     def __init__(self, calling_view):
         super().__init__(
-            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-reset-period'),
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-reset-period')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
             options=[
-                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-hourly'),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-hourly')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
                                      value=ScheduleType.HOURLY.value,
-                                     description=t(DEFAULT_LOCALE, 'config-select-desc-hourly')[:100]),
-                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-daily'),
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-hourly')[:DiscordCharacterLimits.STRING_SELECT_OPTION_DESCRIPTION]),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-daily')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
                                      value=ScheduleType.DAILY.value,
-                                     description=t(DEFAULT_LOCALE, 'config-select-desc-daily')[:100]),
-                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-weekly'),
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-daily')[:DiscordCharacterLimits.STRING_SELECT_OPTION_DESCRIPTION]),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'config-select-option-weekly')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
                                      value=ScheduleType.WEEKLY.value,
-                                     description=t(DEFAULT_LOCALE, 'config-select-desc-weekly')[:100])
+                                     description=t(DEFAULT_LOCALE, 'config-select-desc-weekly')[:DiscordCharacterLimits.STRING_SELECT_OPTION_DESCRIPTION])
             ],
             custom_id='rp_reset_select'
         )
@@ -316,15 +320,15 @@ class RoleplayResetSelect(Select):
 class RoleplayResetDaySelect(Select):
     def __init__(self, calling_view):
         super().__init__(
-            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-reset-day'),
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-reset-day')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
             options=[
-                discord.SelectOption(label=t(DEFAULT_LOCALE, 'common-day-monday'), value=DayOfWeek.MONDAY.value),
-                discord.SelectOption(label=t(DEFAULT_LOCALE, 'common-day-tuesday'), value=DayOfWeek.TUESDAY.value),
-                discord.SelectOption(label=t(DEFAULT_LOCALE, 'common-day-wednesday'), value=DayOfWeek.WEDNESDAY.value),
-                discord.SelectOption(label=t(DEFAULT_LOCALE, 'common-day-thursday'), value=DayOfWeek.THURSDAY.value),
-                discord.SelectOption(label=t(DEFAULT_LOCALE, 'common-day-friday'), value=DayOfWeek.FRIDAY.value),
-                discord.SelectOption(label=t(DEFAULT_LOCALE, 'common-day-saturday'), value=DayOfWeek.SATURDAY.value),
-                discord.SelectOption(label=t(DEFAULT_LOCALE, 'common-day-sunday'), value=DayOfWeek.SUNDAY.value)
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'common-day-monday')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL], value=DayOfWeek.MONDAY.value),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'common-day-tuesday')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL], value=DayOfWeek.TUESDAY.value),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'common-day-wednesday')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL], value=DayOfWeek.WEDNESDAY.value),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'common-day-thursday')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL], value=DayOfWeek.THURSDAY.value),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'common-day-friday')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL], value=DayOfWeek.FRIDAY.value),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'common-day-saturday')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL], value=DayOfWeek.SATURDAY.value),
+                discord.SelectOption(label=t(DEFAULT_LOCALE, 'common-day-sunday')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL], value=DayOfWeek.SUNDAY.value)
             ],
             custom_id='rp_reset_day_select'
         )
@@ -351,12 +355,12 @@ class RoleplayResetTimeSelect(Select):
         options = []
         for hour in range(0, 24):
             options.append(discord.SelectOption(
-                label=t(DEFAULT_LOCALE, 'config-select-option-utc-time', hour=f'{hour:02}'),
+                label=t(DEFAULT_LOCALE, 'config-select-option-utc-time', hour=f'{hour:02}')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
                 value=f'{hour}'
             ))
 
         super().__init__(
-            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-reset-time'),
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-reset-time')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
             options=options,
             custom_id='rp_reset_time_select'
         )
@@ -383,7 +387,7 @@ class ForumChannelSelect(ChannelSelect):
     def __init__(self, calling_view):
         super().__init__(
             channel_types=[discord.ChannelType.forum],
-            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-forum-channel'),
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-forum-channel')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
             custom_id='forum_channel_select'
         )
         self.calling_view = calling_view
@@ -413,28 +417,28 @@ class ForumThreadSelect(Select):
             if threads:
                 for thread in threads:
                     options.append(discord.SelectOption(
-                        label=thread.name[:100],  # Discord label limit
+                        label=thread.name[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
                         value=str(thread.id),
                         description=t(DEFAULT_LOCALE, 'config-select-desc-thread-id',
-                                      threadId=str(thread.id))[:100]
+                                      threadId=str(thread.id))[:DiscordCharacterLimits.STRING_SELECT_OPTION_DESCRIPTION]
                     ))
             else:
                 # Provide a placeholder option if no threads found
                 options.append(discord.SelectOption(
-                    label=t(DEFAULT_LOCALE, 'config-select-option-no-threads'),
+                    label=t(DEFAULT_LOCALE, 'config-select-option-no-threads')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
                     value='none',
-                    description=t(DEFAULT_LOCALE, 'config-select-desc-no-threads')[:100]
+                    description=t(DEFAULT_LOCALE, 'config-select-desc-no-threads')[:DiscordCharacterLimits.STRING_SELECT_OPTION_DESCRIPTION]
                 ))
 
         if not options:
             options.append(discord.SelectOption(
-                label=t(DEFAULT_LOCALE, 'config-select-option-select-forum-first'),
+                label=t(DEFAULT_LOCALE, 'config-select-option-select-forum-first')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
                 value='none',
-                description=t(DEFAULT_LOCALE, 'config-select-desc-select-forum-first')[:100]
+                description=t(DEFAULT_LOCALE, 'config-select-desc-select-forum-first')[:DiscordCharacterLimits.STRING_SELECT_OPTION_DESCRIPTION]
             ))
 
         super().__init__(
-            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-thread'),
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-thread')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
             options=options,
             custom_id='forum_thread_select'
         )
@@ -477,7 +481,7 @@ class ForumThreadSelect(Select):
 class ConfigLanguageSelect(Select):
     def __init__(self, calling_view):
         super().__init__(
-            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-server-language'),
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-server-language')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
             options=[],
             custom_id='config_language_select'
         )
@@ -489,8 +493,8 @@ class ConfigLanguageSelect(Select):
         per_page_0 = LOCALES_PER_PAGE - 1
         if page == 0:
             self.options.append(discord.SelectOption(
-                label=t(locale, 'config-select-option-default'),
-                description=t(locale, 'config-select-desc-default')[:100],
+                label=t(locale, 'config-select-option-default')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
+                description=t(locale, 'config-select-desc-default')[:DiscordCharacterLimits.STRING_SELECT_OPTION_DESCRIPTION],
                 value='default',
                 default=(current_guild_locale is None)
             ))
@@ -503,14 +507,14 @@ class ConfigLanguageSelect(Select):
         total_pages = get_config_locale_total_pages()
         if total_pages > 1:
             self.placeholder = t(locale, 'info-language-select-placeholder-paged',
-                                 current=page + 1, total=total_pages)
+                                 current=page + 1, total=total_pages)[:DiscordCharacterLimits.SELECT_PLACEHOLDER]
         else:
-            self.placeholder = t(locale, 'config-select-placeholder-server-language')
+            self.placeholder = t(locale, 'config-select-placeholder-server-language')[:DiscordCharacterLimits.SELECT_PLACEHOLDER]
 
         for supported_locale in page_locales:
             self.options.append(discord.SelectOption(
-                label=t(locale, LOCALE_LABELS[supported_locale]),
-                description=t(locale, LOCALE_DESCRIPTIONS[supported_locale])[:100],
+                label=t(locale, LOCALE_LABELS[supported_locale])[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
+                description=t(locale, LOCALE_DESCRIPTIONS[supported_locale])[:DiscordCharacterLimits.STRING_SELECT_OPTION_DESCRIPTION],
                 emoji=LOCALE_EMOJI.get(supported_locale),
                 value=supported_locale,
                 default=(supported_locale == current_guild_locale)
@@ -546,22 +550,22 @@ class ConfigLanguageSelect(Select):
 class QuestRoleModeSelect(Select):
     def __init__(self, calling_view):
         super().__init__(
-            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-quest-role-mode'),
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-quest-role-mode')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
             options=[
                 discord.SelectOption(
-                    label=t(DEFAULT_LOCALE, 'config-select-option-quest-role-disabled'),
+                    label=t(DEFAULT_LOCALE, 'config-select-option-quest-role-disabled')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
                     value=QuestRoleMode.DISABLED.value,
-                    description=t(DEFAULT_LOCALE, 'config-select-desc-quest-role-disabled')[:100]
+                    description=t(DEFAULT_LOCALE, 'config-select-desc-quest-role-disabled')[:DiscordCharacterLimits.STRING_SELECT_OPTION_DESCRIPTION]
                 ),
                 discord.SelectOption(
-                    label=t(DEFAULT_LOCALE, 'config-select-option-quest-role-temporary'),
+                    label=t(DEFAULT_LOCALE, 'config-select-option-quest-role-temporary')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
                     value=QuestRoleMode.TEMPORARY.value,
-                    description=t(DEFAULT_LOCALE, 'config-select-desc-quest-role-temporary')[:100]
+                    description=t(DEFAULT_LOCALE, 'config-select-desc-quest-role-temporary')[:DiscordCharacterLimits.STRING_SELECT_OPTION_DESCRIPTION]
                 ),
                 discord.SelectOption(
-                    label=t(DEFAULT_LOCALE, 'config-select-option-quest-role-static'),
+                    label=t(DEFAULT_LOCALE, 'config-select-option-quest-role-static')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
                     value=QuestRoleMode.STATIC.value,
-                    description=t(DEFAULT_LOCALE, 'config-select-desc-quest-role-static')[:100]
+                    description=t(DEFAULT_LOCALE, 'config-select-desc-quest-role-static')[:DiscordCharacterLimits.STRING_SELECT_OPTION_DESCRIPTION]
                 ),
             ],
             custom_id='quest_role_mode_select'
@@ -588,7 +592,7 @@ class AddGMQuestRoleSelect(RoleSelect):
     def __init__(self, calling_view, member_id):
         import uuid
         super().__init__(
-            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-add-quest-role'),
+            placeholder=t(DEFAULT_LOCALE, 'config-select-placeholder-add-quest-role')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
             custom_id=f'add_gm_quest_role_select:{uuid.uuid4().hex[:8]}',
             max_values=MAX_QUEST_ROLES_PER_GM
         )

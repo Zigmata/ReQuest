@@ -13,7 +13,7 @@ class EditCartItemModal(LocaleModal):
         locale = getattr(cart_view, 'locale', DEFAULT_LOCALE)
         self._locale = locale
         super().__init__(
-            title=t(locale, 'shop-modal-title-edit-cart-qty'),
+            title=t(locale, 'shop-modal-title-edit-cart-qty')[:DiscordCharacterLimits.MODAL_TITLE],
         )
         self.cart_view = cart_view
         self.item_key = item_key
@@ -23,7 +23,7 @@ class EditCartItemModal(LocaleModal):
             default=str(current_quantity),
             min_length=1,
             max_length=5,
-            placeholder=t(locale, 'shop-modal-placeholder-quantity'),
+            placeholder=t(locale, 'shop-modal-placeholder-quantity')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             custom_id='cart_quantity_text_input'
         )
         self.quantity_label = discord.ui.Label(

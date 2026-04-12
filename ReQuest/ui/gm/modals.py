@@ -24,14 +24,14 @@ class CreateQuestModal(LocaleModal):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         self._locale = locale
         super().__init__(
-            title=t(locale, 'gm-modal-title-create-quest'),
+            title=t(locale, 'gm-modal-title-create-quest')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=None
         )
         self.calling_view = calling_view
 
         self.quest_title_text_input = discord.ui.TextInput(
             custom_id='quest_title_text_input',
-            placeholder=t(locale, 'gm-modal-placeholder-quest-title')
+            placeholder=t(locale, 'gm-modal-placeholder-quest-title')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER]
         )
         self.quest_title_label = discord.ui.Label(
             text=t(locale, 'gm-modal-label-quest-title')[:DiscordCharacterLimits.LABEL_LABEL],
@@ -97,7 +97,7 @@ class EditQuestDetailsComboModal(LocaleModal):
         quest_role_mode = getattr(calling_view, 'quest_role_mode', 'disabled')
         assigned_roles = getattr(calling_view, 'assigned_roles', [])
         super().__init__(
-            title=t(locale, 'gm-modal-title-edit-details'),
+            title=t(locale, 'gm-modal-title-edit-details')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=None
         )
         self.calling_view = calling_view
@@ -116,7 +116,7 @@ class EditQuestDetailsComboModal(LocaleModal):
         )
         self.restrictions_input = discord.ui.TextInput(
             custom_id='edit_combo_restrictions',
-            placeholder=t(locale, 'gm-modal-placeholder-restrictions'),
+            placeholder=t(locale, 'gm-modal-placeholder-restrictions')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=quest.get(QuestFields.RESTRICTIONS, ''),
             required=False
         )
@@ -126,7 +126,7 @@ class EditQuestDetailsComboModal(LocaleModal):
         )
         self.party_size_input = discord.ui.TextInput(
             custom_id='edit_combo_party_size',
-            placeholder=t(locale, 'gm-modal-placeholder-max-party'),
+            placeholder=t(locale, 'gm-modal-placeholder-max-party')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=str(quest.get(QuestFields.MAX_PARTY_SIZE, 0) or ''),
             max_length=2,
             required=False
@@ -145,7 +145,7 @@ class EditQuestDetailsComboModal(LocaleModal):
             current_name = quest.get(QuestFields.PARTY_ROLE_NAME, '') or ''
             self.party_role_input = discord.ui.TextInput(
                 custom_id='edit_combo_party_role',
-                placeholder=t(locale, 'gm-modal-placeholder-party-role'),
+                placeholder=t(locale, 'gm-modal-placeholder-party-role')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
                 default=current_name,
                 max_length=100,
                 required=False
@@ -157,16 +157,16 @@ class EditQuestDetailsComboModal(LocaleModal):
             self.add_item(self.party_role_label)
         elif quest_role_mode == 'static' and assigned_roles:
             options = [discord.SelectOption(
-                label=t(locale, 'gm-select-option-no-role'),
+                label=t(locale, 'gm-select-option-no-role')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
                 value='none'
             )]
             for role_assignment in assigned_roles:
                 options.append(discord.SelectOption(
-                    label=role_assignment['roleName'],
-                    value=str(role_assignment['roleId'])
+                    label=role_assignment['roleName'][:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
+                    value=str(role_assignment['roleId'])[:DiscordCharacterLimits.STRING_SELECT_OPTION_VALUE]
                 ))
             role_select = discord.ui.Select(
-                placeholder=t(locale, 'gm-select-placeholder-party-role'),
+                placeholder=t(locale, 'gm-select-placeholder-party-role')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
                 options=options,
                 custom_id='edit_combo_party_role_select'
             )
@@ -179,7 +179,7 @@ class EditQuestDetailsComboModal(LocaleModal):
         self.description_input = discord.ui.TextInput(
             style=discord.TextStyle.paragraph,
             custom_id='edit_combo_description',
-            placeholder=t(locale, 'gm-modal-placeholder-description'),
+            placeholder=t(locale, 'gm-modal-placeholder-description')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=quest.get(QuestFields.DESCRIPTION, ''),
             required=False
         )
@@ -261,14 +261,14 @@ class EditQuestImagesComboModal(LocaleModal):
         self._locale = locale
         quest = calling_view.quest
         super().__init__(
-            title=t(locale, 'gm-modal-title-edit-images'),
+            title=t(locale, 'gm-modal-title-edit-images')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=None
         )
         self.calling_view = calling_view
 
         self.thumbnail_input = discord.ui.TextInput(
             custom_id='edit_combo_thumbnail',
-            placeholder=t(locale, 'gm-modal-placeholder-image-url'),
+            placeholder=t(locale, 'gm-modal-placeholder-image-url')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=quest.get(QuestFields.IMAGE_URL) or '',
             required=False
         )
@@ -278,7 +278,7 @@ class EditQuestImagesComboModal(LocaleModal):
         )
         self.image_input = discord.ui.TextInput(
             custom_id='edit_combo_large_image',
-            placeholder=t(locale, 'gm-modal-placeholder-image-url'),
+            placeholder=t(locale, 'gm-modal-placeholder-image-url')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=quest.get(QuestFields.LARGE_IMAGE_URL) or '',
             required=False
         )
@@ -324,7 +324,7 @@ class RewardsModal(LocaleModal):
     def __init__(self, caller, calling_view, reward_type: RewardType):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            title=t(locale, 'gm-modal-title-add-reward'),
+            title=t(locale, 'gm-modal-title-add-reward')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=600
         )
         self._locale = locale
@@ -344,7 +344,7 @@ class RewardsModal(LocaleModal):
             self.xp_input = discord.ui.TextInput(
                 style=discord.TextStyle.short,
                 custom_id='experience_text_input',
-                placeholder=t(locale, 'gm-modal-placeholder-experience'),
+                placeholder=t(locale, 'gm-modal-placeholder-experience')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
                 default=xp_default,
                 required=False
             )
@@ -362,7 +362,7 @@ class RewardsModal(LocaleModal):
         self.item_input = discord.ui.TextInput(
             style=discord.TextStyle.paragraph,
             custom_id='items_text_input',
-            placeholder=t(locale, 'gm-modal-placeholder-items'),
+            placeholder=t(locale, 'gm-modal-placeholder-items')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=items_default,
             required=False
         )
@@ -409,7 +409,7 @@ class QuestSummaryModal(LocaleModal):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            title=t(locale, 'gm-modal-title-add-summary'),
+            title=t(locale, 'gm-modal-title-add-summary')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=None
         )
         self._locale = locale
@@ -417,7 +417,7 @@ class QuestSummaryModal(LocaleModal):
         self.summary_input = discord.ui.TextInput(
             style=discord.TextStyle.paragraph,
             custom_id='summary_input',
-            placeholder=t(locale, 'gm-modal-placeholder-summary')
+            placeholder=t(locale, 'gm-modal-placeholder-summary')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER]
         )
         self.summary_label = discord.ui.Label(
             text=t(locale, 'gm-modal-label-summary')[:DiscordCharacterLimits.LABEL_LABEL],
@@ -436,7 +436,7 @@ class ModPlayerModal(LocaleModal):
     def __init__(self, member: discord.Member, character_id, character_data, xp_enabled=True,
                  locale=DEFAULT_LOCALE):
         super().__init__(
-            title=t(locale, 'gm-modal-title-modifying-player', playerName=member.name),
+            title=t(locale, 'gm-modal-title-modifying-player', playerName=member.name)[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=600
         )
         self._locale = locale
@@ -447,7 +447,7 @@ class ModPlayerModal(LocaleModal):
 
         if self.xp_enabled:
             self.experience_text_input = discord.ui.TextInput(
-                placeholder=t(locale, 'gm-modal-placeholder-xp-add-remove'),
+                placeholder=t(locale, 'gm-modal-placeholder-xp-add-remove')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
                 custom_id='experience_text_input',
                 required=False
             )
@@ -459,7 +459,7 @@ class ModPlayerModal(LocaleModal):
 
         self.inventory_text_input = discord.ui.TextInput(
             style=discord.TextStyle.paragraph,
-            placeholder=t(locale, 'gm-modal-placeholder-inventory-modify'),
+            placeholder=t(locale, 'gm-modal-placeholder-inventory-modify')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             custom_id='inventory_text_input',
             required=False
         )

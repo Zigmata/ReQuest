@@ -17,7 +17,7 @@ from ReQuest.ui.admin import buttons
 from ReQuest.ui.common import buttons as common_buttons
 from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.common.buttons import MenuDoneButton, MenuViewButton
-from ReQuest.utilities.constants import DatabaseCollections
+from ReQuest.utilities.constants import DatabaseCollections, DiscordCharacterLimits
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.db_cache import get_cached_data
 from ReQuest.utilities.exceptions import log_exception
@@ -127,7 +127,7 @@ class AdminAllowlistView(LocaleLayoutView):
             nav_row = ActionRow()
 
             prev_button = Button(
-                label=t(locale, 'common-btn-previous'),
+                label=t(locale, 'common-btn-previous')[:DiscordCharacterLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='allow_prev',
                 disabled=(self.current_page == 0)
@@ -136,7 +136,7 @@ class AdminAllowlistView(LocaleLayoutView):
             nav_row.add_item(prev_button)
 
             page_display = Button(
-                label=t(locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages),
+                label=t(locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages)[:DiscordCharacterLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='allow_page_disp'
             )
@@ -144,7 +144,7 @@ class AdminAllowlistView(LocaleLayoutView):
             nav_row.add_item(page_display)
 
             next_button = Button(
-                label=t(locale, 'common-btn-next'),
+                label=t(locale, 'common-btn-next')[:DiscordCharacterLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='allow_next',
                 disabled=(self.current_page >= self.total_pages - 1)

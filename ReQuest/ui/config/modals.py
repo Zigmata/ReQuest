@@ -110,7 +110,7 @@ NEW_CHARACTER_SHOP_SCHEMA = {
 class AddCurrencyTextModal(LocaleModal):
     def __init__(self, calling_view):
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-add-currency'),
+            title=t(DEFAULT_LOCALE, 'config-modal-title-add-currency')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=180
         )
         self.calling_view = calling_view
@@ -169,7 +169,7 @@ class AddCurrencyTextModal(LocaleModal):
 class RenameCurrencyModal(LocaleModal):
     def __init__(self, calling_view, old_currency_name):
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-rename-currency'),
+            title=t(DEFAULT_LOCALE, 'config-modal-title-rename-currency')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=180
         )
         self.calling_view = calling_view
@@ -240,7 +240,7 @@ class RenameCurrencyModal(LocaleModal):
 class RenameDenominationModal(LocaleModal):
     def __init__(self, calling_view, currency_name, old_denomination_name):
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-rename-denomination'),
+            title=t(DEFAULT_LOCALE, 'config-modal-title-rename-denomination')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=180
         )
         self.calling_view = calling_view
@@ -316,14 +316,14 @@ class RenameDenominationModal(LocaleModal):
 class AddCurrencyDenominationModal(LocaleModal):
     def __init__(self, calling_view, base_currency_name):
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-add-denomination', currencyName=base_currency_name),
+            title=t(DEFAULT_LOCALE, 'config-modal-title-add-denomination', currencyName=base_currency_name)[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=300
         )
         self.calling_view = calling_view
         self.base_currency_name = base_currency_name
 
         self.denomination_name_text_input = discord.ui.TextInput(
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-denomination-name'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-denomination-name')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             custom_id='denomination_name_text_input'
         )
         self.denomination_name_label = discord.ui.Label(
@@ -331,7 +331,7 @@ class AddCurrencyDenominationModal(LocaleModal):
             component=self.denomination_name_text_input
         )
         self.denomination_value_text_input = discord.ui.TextInput(
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-denomination-value'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-denomination-value')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             custom_id='denomination_value_text_input'
         )
         self.denomination_value_label = discord.ui.Label(
@@ -404,12 +404,12 @@ class AddCurrencyDenominationModal(LocaleModal):
 class ForbiddenRolesModal(LocaleModal):
     def __init__(self, current_list):
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-forbidden-roles'),
+            title=t(DEFAULT_LOCALE, 'config-modal-title-forbidden-roles')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=600
         )
         self.names_text_input = discord.ui.TextInput(
             style=discord.TextStyle.paragraph,
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-names'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-names')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=', '.join(current_list),
             custom_id='names_text_input',
             required=False
@@ -445,13 +445,13 @@ class ForbiddenRolesModal(LocaleModal):
 class PlayerBoardPurgeModal(LocaleModal):
     def __init__(self, calling_view):
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-purge-player-board'),
+            title=t(DEFAULT_LOCALE, 'config-modal-title-purge-player-board')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
         self.age_text_input = discord.ui.TextInput(
             custom_id='age_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-age')
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-age')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER]
         )
         self.age_label = discord.ui.Label(
             text=t(DEFAULT_LOCALE, 'config-modal-label-age')[:DiscordCharacterLimits.LABEL_LABEL],
@@ -502,7 +502,7 @@ class PlayerBoardPurgeModal(LocaleModal):
 class GMRewardsModal(LocaleModal):
     def __init__(self, calling_view):
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-gm-rewards'),
+            title=t(DEFAULT_LOCALE, 'config-modal-title-gm-rewards')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
@@ -512,7 +512,7 @@ class GMRewardsModal(LocaleModal):
         if self.xp_enabled:
             self.experience_text_input = discord.ui.TextInput(
                 custom_id='experience_text_input',
-                placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-enter-number'),
+                placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-enter-number')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
                 default=(current_rewards[CharacterFields.EXPERIENCE]
                          if current_rewards and current_rewards[CharacterFields.EXPERIENCE]
                          else None),
@@ -527,7 +527,7 @@ class GMRewardsModal(LocaleModal):
         self.items_text_input = discord.ui.TextInput(
             style=discord.TextStyle.paragraph,
             custom_id='items_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-items'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-items')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=(self.parse_items_to_string(current_rewards[CommonFields.ITEMS])
                      if current_rewards and current_rewards[CommonFields.ITEMS]
                      else None),
@@ -591,7 +591,7 @@ class ConfigShopDetailsModal(LocaleModal):
     def __init__(self, calling_view, existing_shop_data=None, existing_channel_id=None,
                  channel_type='text', parent_forum_id=None, preselected_channel=None):
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-shop-details'),
+            title=t(DEFAULT_LOCALE, 'config-modal-title-shop-details')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
@@ -611,7 +611,7 @@ class ConfigShopDetailsModal(LocaleModal):
         if not self.existing_channel_id and not self.preselected_channel:
             self.shop_channel_select = discord.ui.ChannelSelect(
                 channel_types=[discord.ChannelType.text],
-                placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-channel'),
+                placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-channel')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
                 custom_id='shop_channel_select',
                 required=True
             )
@@ -622,7 +622,7 @@ class ConfigShopDetailsModal(LocaleModal):
             self.add_item(self.channel_label)
         self.shop_name_text_input = discord.ui.TextInput(
             custom_id='shop_name_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-name'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-name')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=name_default,
             required=True,
             max_length=DisplayLimits.SHOP_NAME
@@ -633,7 +633,7 @@ class ConfigShopDetailsModal(LocaleModal):
         )
         self.shop_keeper_text_input = discord.ui.TextInput(
             custom_id='shop_keeper_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shopkeeper-name'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shopkeeper-name')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=keeper_default,
             required=False,
             max_length=DisplayLimits.SHOPKEEPER_NAME
@@ -645,7 +645,7 @@ class ConfigShopDetailsModal(LocaleModal):
         self.shop_description_text_input = discord.ui.TextInput(
             style=discord.TextStyle.paragraph,
             custom_id='shop_description_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-description'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-description')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=description_default,
             required=False
         )
@@ -655,7 +655,7 @@ class ConfigShopDetailsModal(LocaleModal):
         )
         self.shop_image_text_input = discord.ui.TextInput(
             custom_id='shop_image_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-image-url'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-image-url')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=image_default,
             required=False
         )
@@ -782,7 +782,7 @@ class ForumThreadShopModal(LocaleModal):
     """Modal for creating a shop in a new forum thread."""
     def __init__(self, calling_view, forum_channel):
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-forum-thread-shop'),
+            title=t(DEFAULT_LOCALE, 'config-modal-title-forum-thread-shop')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
@@ -790,7 +790,7 @@ class ForumThreadShopModal(LocaleModal):
 
         self.thread_name_input = discord.ui.TextInput(
             custom_id='thread_name_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-thread-name'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-thread-name')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             required=True
         )
         self.thread_name_label = discord.ui.Label(
@@ -799,7 +799,7 @@ class ForumThreadShopModal(LocaleModal):
         )
         self.shop_name_input = discord.ui.TextInput(
             custom_id='shop_name_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-name'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-name')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             required=True,
             max_length=DisplayLimits.SHOP_NAME
         )
@@ -809,7 +809,7 @@ class ForumThreadShopModal(LocaleModal):
         )
         self.shop_keeper_input = discord.ui.TextInput(
             custom_id='shop_keeper_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shopkeeper-name'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shopkeeper-name')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             required=False,
             max_length=DisplayLimits.SHOPKEEPER_NAME
         )
@@ -820,7 +820,7 @@ class ForumThreadShopModal(LocaleModal):
         self.shop_description_input = discord.ui.TextInput(
             style=discord.TextStyle.paragraph,
             custom_id='shop_description_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-description'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-description')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             required=False
         )
         self.shop_description_label = discord.ui.Label(
@@ -829,7 +829,7 @@ class ForumThreadShopModal(LocaleModal):
         )
         self.shop_image_input = discord.ui.TextInput(
             custom_id='shop_image_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-image-url'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-image-url')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             required=False
         )
         self.shop_image_label = discord.ui.Label(
@@ -915,14 +915,14 @@ class ForumThreadShopModal(LocaleModal):
 class ConfigShopJSONModal(LocaleModal):
     def __init__(self, calling_view):
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-add-shop-json'),
+            title=t(DEFAULT_LOCALE, 'config-modal-title-add-shop-json')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
 
         self.shop_channel_select = discord.ui.ChannelSelect(
             channel_types=[discord.ChannelType.text],
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-channel'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-channel')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
             custom_id='shop_channel_select'
         )
         self.shop_json_file_upload = discord.ui.FileUpload(
@@ -1016,7 +1016,7 @@ class ConfigShopJSONModal(LocaleModal):
 class ShopItemModal(LocaleModal):
     def __init__(self, calling_view, existing_item=None):
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-shop-item'),
+            title=t(DEFAULT_LOCALE, 'config-modal-title-shop-item')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
@@ -1036,7 +1036,7 @@ class ShopItemModal(LocaleModal):
 
         self.item_name_text_input = discord.ui.TextInput(
             custom_id='item_name_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-name'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-name')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=name_default,
             max_length=DisplayLimits.ITEM_NAME
         )
@@ -1047,7 +1047,7 @@ class ShopItemModal(LocaleModal):
         self.item_description_text_input = discord.ui.TextInput(
             style=discord.TextStyle.paragraph,
             custom_id='item_description_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-description'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-description')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=description_default,
             required=False
         )
@@ -1057,7 +1057,7 @@ class ShopItemModal(LocaleModal):
         )
         self.item_quantity_text_input = discord.ui.TextInput(
             custom_id='item_quantity_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-quantity'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-quantity')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=quantity_default,
             required=False
         )
@@ -1068,7 +1068,7 @@ class ShopItemModal(LocaleModal):
         self.item_cost_text_input = discord.ui.TextInput(
             style=discord.TextStyle.paragraph,
             custom_id='item_cost_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-costs'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-costs')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=costs_default,
             required=False
         )
@@ -1214,7 +1214,7 @@ class ShopItemModal(LocaleModal):
 class ConfigUpdateShopJSONModal(LocaleModal):
     def __init__(self, calling_view):
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-update-shop-json'),
+            title=t(DEFAULT_LOCALE, 'config-modal-title-update-shop-json')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
@@ -1299,7 +1299,7 @@ class ConfigUpdateShopJSONModal(LocaleModal):
 class NewCharacterShopItemModal(LocaleModal):
     def __init__(self, calling_view, inventory_type, existing_item=None):
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-new-char-item'),
+            title=t(DEFAULT_LOCALE, 'config-modal-title-new-char-item')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
@@ -1320,7 +1320,7 @@ class NewCharacterShopItemModal(LocaleModal):
 
         self.item_name_text_input = discord.ui.TextInput(
             custom_id='item_name_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-name'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-name')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=name_default,
             max_length=DisplayLimits.ITEM_NAME
         )
@@ -1333,7 +1333,7 @@ class NewCharacterShopItemModal(LocaleModal):
         self.item_description_text_input = discord.ui.TextInput(
             style=discord.TextStyle.paragraph,
             custom_id='item_description_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-description'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-description')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=description_default,
             required=False
         )
@@ -1345,7 +1345,7 @@ class NewCharacterShopItemModal(LocaleModal):
 
         self.item_quantity_text_input = discord.ui.TextInput(
             custom_id='item_quantity_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-quantity-selection'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-quantity-selection')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=quantity_default,
             required=False
         )
@@ -1358,7 +1358,7 @@ class NewCharacterShopItemModal(LocaleModal):
         if inventory_type == 'purchase':
             self.item_cost_text_input = discord.ui.TextInput(
                 custom_id='item_cost_text_input',
-                placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-costs'),
+                placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-costs')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
                 style=discord.TextStyle.paragraph,
                 default=costs_default,
                 required=False
@@ -1497,7 +1497,7 @@ class NewCharacterShopItemModal(LocaleModal):
 class NewCharacterShopJSONModal(LocaleModal):
     def __init__(self, calling_view):
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-upload-new-char-json'),
+            title=t(DEFAULT_LOCALE, 'config-modal-title-upload-new-char-json')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
@@ -1566,12 +1566,12 @@ class NewCharacterShopJSONModal(LocaleModal):
 class ConfigNewCharacterWealthModal(LocaleModal):
     def __init__(self, calling_view, current_amount=None, current_currency=None):
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-set-wealth'),
+            title=t(DEFAULT_LOCALE, 'config-modal-title-set-wealth')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=600
         )
         self.amount_text_input = discord.ui.TextInput(
             custom_id='amount_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-amount'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-amount')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=current_amount if current_amount is not None else '',
             max_length=13
         )
@@ -1581,7 +1581,7 @@ class ConfigNewCharacterWealthModal(LocaleModal):
         )
         self.currency_name_text_input = discord.ui.TextInput(
             custom_id='currency_name_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-currency-name'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-currency-name')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=current_currency or ''
         )
         self.currency_name_label = discord.ui.Label(
@@ -1657,14 +1657,14 @@ class ConfigNewCharacterWealthModal(LocaleModal):
 class CreateStaticKitModal(LocaleModal):
     def __init__(self, calling_view):
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-create-kit'),
+            title=t(DEFAULT_LOCALE, 'config-modal-title-create-kit')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
 
         self.kit_name_text_input = discord.ui.TextInput(
             custom_id='kit_name_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-kit-name'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-kit-name')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             max_length=50
         )
         self.kit_name_label = discord.ui.Label(
@@ -1674,7 +1674,7 @@ class CreateStaticKitModal(LocaleModal):
         self.kit_description_text_input = discord.ui.TextInput(
             style=discord.TextStyle.paragraph,
             custom_id='kit_description_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-kit-description'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-kit-description')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             required=False,
             max_length=200
         )
@@ -1731,7 +1731,7 @@ class CreateStaticKitModal(LocaleModal):
 class StaticKitItemModal(LocaleModal):
     def __init__(self, calling_view, existing_item=None, index=None):
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-kit-item'),
+            title=t(DEFAULT_LOCALE, 'config-modal-title-kit-item')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
@@ -1743,7 +1743,7 @@ class StaticKitItemModal(LocaleModal):
 
         self.item_name_text_input = discord.ui.TextInput(
             custom_id='item_name_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-name'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-name')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=name_default,
             max_length=DisplayLimits.ITEM_NAME
         )
@@ -1754,7 +1754,7 @@ class StaticKitItemModal(LocaleModal):
         self.description_text_input = discord.ui.TextInput(
             style=discord.TextStyle.paragraph,
             custom_id='item_description_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-description'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-description')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=description_default,
             required=False
         )
@@ -1764,7 +1764,7 @@ class StaticKitItemModal(LocaleModal):
         )
         self.item_quantity_text_input = discord.ui.TextInput(
             custom_id='item_quantity_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-kit-item-quantity'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-kit-item-quantity')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=quantity_default
         )
         self.item_quantity_label = discord.ui.Label(
@@ -1827,13 +1827,13 @@ class StaticKitItemModal(LocaleModal):
 class StaticKitCurrencyModal(LocaleModal):
     def __init__(self, calling_view):
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-kit-currency'),
+            title=t(DEFAULT_LOCALE, 'config-modal-title-kit-currency')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
         self.currency_name_text_input = discord.ui.TextInput(
             custom_id='currency_name_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-currency-eg')
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-currency-eg')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER]
         )
         self.currency_name_label = discord.ui.Label(
             text=t(DEFAULT_LOCALE, 'config-modal-label-currency-name')[:DiscordCharacterLimits.LABEL_LABEL],
@@ -1841,7 +1841,7 @@ class StaticKitCurrencyModal(LocaleModal):
         )
         self.amount_text_input = discord.ui.TextInput(
             custom_id='amount_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-amount-eg'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-amount-eg')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             max_length=13
         )
         self.amount_label = discord.ui.Label(
@@ -1930,7 +1930,7 @@ class StaticKitCurrencyModal(LocaleModal):
 class RoleplaySettingsModal(LocaleModal):
     def __init__(self, calling_view):
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-rp-settings')
+            title=t(DEFAULT_LOCALE, 'config-modal-title-rp-settings')[:DiscordCharacterLimits.MODAL_TITLE]
         )
         self.calling_view = calling_view
         config = calling_view.config
@@ -1938,7 +1938,7 @@ class RoleplaySettingsModal(LocaleModal):
         self.mode = config.get(RoleplayFields.MODE, 'accrued')
 
         self.minimum_length_text_input = discord.ui.TextInput(
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-min-message-length'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-min-message-length')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=str(mode_config.get(RoleplayFields.MIN_LENGTH, 0)),
             max_length=4
         )
@@ -1949,7 +1949,7 @@ class RoleplaySettingsModal(LocaleModal):
         self.add_item(self.minimum_length_label)
 
         self.cooldown_text_input = discord.ui.TextInput(
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-cooldown'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-cooldown')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=str(mode_config.get(RoleplayFields.COOLDOWN, 30)),
             max_length=4
         )
@@ -1961,7 +1961,7 @@ class RoleplaySettingsModal(LocaleModal):
 
         if self.mode == 'scheduled':
             self.threshold_text_input = discord.ui.TextInput(
-                placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-message-threshold'),
+                placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-message-threshold')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
                 default=str(mode_config.get(RoleplayFields.THRESHOLD, 20)),
                 max_length=4
             )
@@ -1973,7 +1973,7 @@ class RoleplaySettingsModal(LocaleModal):
 
         elif self.mode == 'accrued':
             self.frequency_text_input = discord.ui.TextInput(
-                placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-frequency'),
+                placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-frequency')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
                 default=str(mode_config.get(RoleplayFields.FREQUENCY, 20)),
                 max_length=4
             )
@@ -2059,7 +2059,7 @@ class RoleplaySettingsModal(LocaleModal):
 
 class RoleplayRewardsModal(LocaleModal):
     def __init__(self, calling_view, xp_enabled):
-        super().__init__(title=t(DEFAULT_LOCALE, 'config-modal-title-rp-rewards'))
+        super().__init__(title=t(DEFAULT_LOCALE, 'config-modal-title-rp-rewards')[:DiscordCharacterLimits.MODAL_TITLE])
         self.calling_view = calling_view
         rewards = calling_view.config.get(RoleplayFields.REWARDS, {})
 
@@ -2183,7 +2183,7 @@ class SetItemStockModal(LocaleModal):
     def __init__(self, calling_view, item_name: str, current_max: int | None = None,
                  current_stock: int | None = None, current_increment: int | None = None):
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-stock-limit', itemName=item_name[:40]),
+            title=t(DEFAULT_LOCALE, 'config-modal-title-stock-limit', itemName=item_name[:40])[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
@@ -2191,7 +2191,7 @@ class SetItemStockModal(LocaleModal):
 
         self.max_stock_text_input = discord.ui.TextInput(
             custom_id='max_stock_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-max-stock'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-max-stock')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=str(current_max) if current_max is not None else '',
             required=True
         )
@@ -2209,7 +2209,7 @@ class SetItemStockModal(LocaleModal):
 
         self.current_stock_text_input = discord.ui.TextInput(
             custom_id='current_stock_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-current-stock'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-current-stock')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=default_current,
             required=True
         )
@@ -2220,7 +2220,7 @@ class SetItemStockModal(LocaleModal):
 
         self.increment_text_input = discord.ui.TextInput(
             custom_id='increment_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-restock-increment'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-restock-increment')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=str(current_increment) if current_increment is not None else '1',
             required=False
         )
@@ -2330,7 +2330,7 @@ class SetItemStockModal(LocaleModal):
 class RestockScheduleModal(LocaleModal):
     def __init__(self, calling_view, current_config: dict | None = None):
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-restock-schedule'),
+            title=t(DEFAULT_LOCALE, 'config-modal-title-restock-schedule')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
@@ -2351,16 +2351,16 @@ class RestockScheduleModal(LocaleModal):
             custom_id='schedule_radio_group',
             options=[
                 discord.RadioGroupOption(
-                    label=t(DEFAULT_LOCALE, 'config-modal-restock-schedule-none'), value='none',
+                    label=t(DEFAULT_LOCALE, 'config-modal-restock-schedule-none')[:DiscordCharacterLimits.RADIO_GROUP_OPTION_LABEL], value='none',
                     default=current_schedule == 'none'),
                 discord.RadioGroupOption(
-                    label=t(DEFAULT_LOCALE, 'config-modal-restock-schedule-hourly'), value=ScheduleType.HOURLY.value,
+                    label=t(DEFAULT_LOCALE, 'config-modal-restock-schedule-hourly')[:DiscordCharacterLimits.RADIO_GROUP_OPTION_LABEL], value=ScheduleType.HOURLY.value,
                     default=current_schedule == ScheduleType.HOURLY.value),
                 discord.RadioGroupOption(
-                    label=t(DEFAULT_LOCALE, 'config-modal-restock-schedule-daily'), value=ScheduleType.DAILY.value,
+                    label=t(DEFAULT_LOCALE, 'config-modal-restock-schedule-daily')[:DiscordCharacterLimits.RADIO_GROUP_OPTION_LABEL], value=ScheduleType.DAILY.value,
                     default=current_schedule == ScheduleType.DAILY.value),
                 discord.RadioGroupOption(
-                    label=t(DEFAULT_LOCALE, 'config-modal-restock-schedule-weekly'), value=ScheduleType.WEEKLY.value,
+                    label=t(DEFAULT_LOCALE, 'config-modal-restock-schedule-weekly')[:DiscordCharacterLimits.RADIO_GROUP_OPTION_LABEL], value=ScheduleType.WEEKLY.value,
                     default=current_schedule == ScheduleType.WEEKLY.value),
             ]
         )
@@ -2371,13 +2371,13 @@ class RestockScheduleModal(LocaleModal):
 
         self.time_text_input = discord.ui.TextInput(
             custom_id='time_text_input',
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-time'),
+            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-time')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=f'{hour:02d}:{minute:02d}',
             required=False
         )
         self.time_label = Label(
             text=t(DEFAULT_LOCALE, 'config-modal-label-time')[:DiscordCharacterLimits.LABEL_LABEL],
-            description=t(DEFAULT_LOCALE, 'config-modal-desc-current-time', utcTime=utc_time_str),
+            description=t(DEFAULT_LOCALE, 'config-modal-desc-current-time', utcTime=utc_time_str)[:DiscordCharacterLimits.LABEL_DESCRIPTION],
             component=self.time_text_input
         )
 
@@ -2386,19 +2386,19 @@ class RestockScheduleModal(LocaleModal):
             custom_id='day_radio_group',
             options=[
                 discord.RadioGroupOption(
-                    label=t(DEFAULT_LOCALE, 'common-day-monday'), value='0', default=current_day == '0'),
+                    label=t(DEFAULT_LOCALE, 'common-day-monday')[:DiscordCharacterLimits.RADIO_GROUP_OPTION_LABEL], value='0', default=current_day == '0'),
                 discord.RadioGroupOption(
-                    label=t(DEFAULT_LOCALE, 'common-day-tuesday'), value='1', default=current_day == '1'),
+                    label=t(DEFAULT_LOCALE, 'common-day-tuesday')[:DiscordCharacterLimits.RADIO_GROUP_OPTION_LABEL], value='1', default=current_day == '1'),
                 discord.RadioGroupOption(
-                    label=t(DEFAULT_LOCALE, 'common-day-wednesday'), value='2', default=current_day == '2'),
+                    label=t(DEFAULT_LOCALE, 'common-day-wednesday')[:DiscordCharacterLimits.RADIO_GROUP_OPTION_LABEL], value='2', default=current_day == '2'),
                 discord.RadioGroupOption(
-                    label=t(DEFAULT_LOCALE, 'common-day-thursday'), value='3', default=current_day == '3'),
+                    label=t(DEFAULT_LOCALE, 'common-day-thursday')[:DiscordCharacterLimits.RADIO_GROUP_OPTION_LABEL], value='3', default=current_day == '3'),
                 discord.RadioGroupOption(
-                    label=t(DEFAULT_LOCALE, 'common-day-friday'), value='4', default=current_day == '4'),
+                    label=t(DEFAULT_LOCALE, 'common-day-friday')[:DiscordCharacterLimits.RADIO_GROUP_OPTION_LABEL], value='4', default=current_day == '4'),
                 discord.RadioGroupOption(
-                    label=t(DEFAULT_LOCALE, 'common-day-saturday'), value='5', default=current_day == '5'),
+                    label=t(DEFAULT_LOCALE, 'common-day-saturday')[:DiscordCharacterLimits.RADIO_GROUP_OPTION_LABEL], value='5', default=current_day == '5'),
                 discord.RadioGroupOption(
-                    label=t(DEFAULT_LOCALE, 'common-day-sunday'), value='6', default=current_day == '6'),
+                    label=t(DEFAULT_LOCALE, 'common-day-sunday')[:DiscordCharacterLimits.RADIO_GROUP_OPTION_LABEL], value='6', default=current_day == '6'),
             ]
         )
         self.day_label = Label(
@@ -2410,10 +2410,10 @@ class RestockScheduleModal(LocaleModal):
             custom_id='mode_radio_group',
             options=[
                 discord.RadioGroupOption(
-                    label=t(DEFAULT_LOCALE, 'config-modal-restock-mode-full'), value=RestockMode.FULL.value,
+                    label=t(DEFAULT_LOCALE, 'config-modal-restock-mode-full')[:DiscordCharacterLimits.RADIO_GROUP_OPTION_LABEL], value=RestockMode.FULL.value,
                     default=mode == RestockMode.FULL.value),
                 discord.RadioGroupOption(
-                    label=t(DEFAULT_LOCALE, 'config-modal-restock-mode-incremental'),
+                    label=t(DEFAULT_LOCALE, 'config-modal-restock-mode-incremental')[:DiscordCharacterLimits.RADIO_GROUP_OPTION_LABEL],
                     value=RestockMode.INCREMENTAL.value,
                     default=mode == RestockMode.INCREMENTAL.value),
             ]

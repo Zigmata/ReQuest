@@ -8,7 +8,7 @@ from discord.ui import Button
 
 from ReQuest.ui.admin import modals
 from ReQuest.ui.common import modals as common_modals
-from ReQuest.utilities.constants import DatabaseCollections
+from ReQuest.utilities.constants import DatabaseCollections, DiscordCharacterLimits
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.db_cache import update_cached_data
 from ReQuest.utilities.exceptions import log_exception
@@ -21,7 +21,7 @@ class AdminShutdownButton(Button):
     def __init__(self, calling_view, locale=None):
         self._locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label=t(self._locale, 'admin-btn-shutdown'),
+            label=t(self._locale, 'admin-btn-shutdown')[:DiscordCharacterLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id='shutdown_bot_button'
         )
@@ -31,8 +31,8 @@ class AdminShutdownButton(Button):
         try:
             locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
             confirm_modal = common_modals.ConfirmModal(
-                title=t(locale, 'admin-modal-title-confirm-shutdown'),
-                prompt_label=t(locale, 'admin-modal-label-shutdown-warning'),
+                title=t(locale, 'admin-modal-title-confirm-shutdown')[:DiscordCharacterLimits.MODAL_TITLE],
+                prompt_label=t(locale, 'admin-modal-label-shutdown-warning')[:DiscordCharacterLimits.LABEL_LABEL],
                 confirm_callback=self._confirm_shutdown,
                 locale=locale
             )
@@ -53,7 +53,7 @@ class AllowlistAddServerButton(Button):
     def __init__(self, calling_view, locale=None):
         self._locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label=t(self._locale, 'admin-btn-add-server'),
+            label=t(self._locale, 'admin-btn-add-server')[:DiscordCharacterLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='allowlist_add_server_button'
         )
@@ -72,7 +72,7 @@ class AdminLoadCogButton(Button):
     def __init__(self, locale=None):
         self._locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label=t(self._locale, 'admin-btn-load-cog'),
+            label=t(self._locale, 'admin-btn-load-cog')[:DiscordCharacterLimits.BUTTON_LABEL],
             custom_id='admin_load_cog_button'
         )
 
@@ -97,7 +97,7 @@ class AdminReloadCogButton(Button):
     def __init__(self, locale=None):
         self._locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label=t(self._locale, 'admin-btn-reload-cog'),
+            label=t(self._locale, 'admin-btn-reload-cog')[:DiscordCharacterLimits.BUTTON_LABEL],
             custom_id='admin_reload_cog_button'
         )
 
@@ -122,7 +122,7 @@ class PrintGuildsButton(Button):
     def __init__(self, locale=None):
         self._locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label=t(self._locale, 'admin-btn-output-guilds'),
+            label=t(self._locale, 'admin-btn-output-guilds')[:DiscordCharacterLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id='print_guilds_button'
         )
@@ -149,7 +149,7 @@ class RemoveServerButton(Button):
     def __init__(self, calling_view, guild_id, server_name, locale=None):
         self._locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label=t(self._locale, 'common-btn-remove'),
+            label=t(self._locale, 'common-btn-remove')[:DiscordCharacterLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id=f'remove_server_{guild_id}'
         )
@@ -161,8 +161,8 @@ class RemoveServerButton(Button):
         try:
             locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
             confirm_modal = common_modals.ConfirmModal(
-                title=t(locale, 'admin-modal-title-confirm-server-removal'),
-                prompt_label=t(locale, 'admin-modal-label-server-removal'),
+                title=t(locale, 'admin-modal-title-confirm-server-removal')[:DiscordCharacterLimits.MODAL_TITLE],
+                prompt_label=t(locale, 'admin-modal-label-server-removal')[:DiscordCharacterLimits.LABEL_LABEL],
                 confirm_callback=self._confirm_delete,
                 locale=locale
             )

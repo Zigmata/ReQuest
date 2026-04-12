@@ -25,16 +25,10 @@ class ConfirmModal(LocaleModal):
         self._locale = locale or DEFAULT_LOCALE
         self.confirm_word = t(self._locale, 'common-confirm-word')
         prompt_placeholder = t(self._locale, 'common-confirm-placeholder', confirmWord=self.confirm_word)
-        if len(title) > 45:
-            title = title[:42] + '...'
-        if len(prompt_label) > 45:
-            prompt_label = prompt_label[:42] + '...'
-        if len(prompt_placeholder) > 100:
-            prompt_placeholder = prompt_placeholder[:97] + '...'
-        super().__init__(title=title)
+        super().__init__(title=title[:DiscordCharacterLimits.MODAL_TITLE])
         self.confirm_callback = confirm_callback
         self.prompt = discord.ui.TextInput(
-            placeholder=prompt_placeholder,
+            placeholder=prompt_placeholder[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             required=True,
             max_length=len(self.confirm_word)
         )
@@ -62,13 +56,14 @@ class PageJumpModal(LocaleModal):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         self._locale = locale
         super().__init__(
-            title=t(self._locale, 'common-page-jump-title'),
+            title=t(self._locale, 'common-page-jump-title')[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=180
         )
         self.calling_view = calling_view
         self.page_number_input = discord.ui.TextInput(
             custom_id='page_number_input',
-            placeholder=t(self._locale, 'common-page-jump-placeholder', totalPages=str(self.calling_view.total_pages)),
+            placeholder=t(self._locale, 'common-page-jump-placeholder',
+                         totalPages=str(self.calling_view.total_pages))[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             required=True,
             max_length=len(str(self.calling_view.total_pages))
         )

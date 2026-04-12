@@ -3,7 +3,7 @@ import logging
 import discord
 from discord.ui import Select
 
-from ReQuest.utilities.constants import CharacterFields, CommonFields, DatabaseCollections
+from ReQuest.utilities.constants import CharacterFields, CommonFields, DatabaseCollections, DiscordCharacterLimits
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.db_cache import update_cached_data
 from ReQuest.utilities.exceptions import log_exception
@@ -17,7 +17,7 @@ class ActiveCharacterSelect(Select):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            placeholder=t(locale, 'player-select-placeholder-no-characters'),
+            placeholder=t(locale, 'player-select-placeholder-no-characters')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
             options=[],
             custom_id='active_character_select',
             disabled=True
@@ -51,7 +51,7 @@ class RemoveCharacterSelect(Select):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            placeholder=t(locale, 'player-select-placeholder-remove-character'),
+            placeholder=t(locale, 'player-select-placeholder-remove-character')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
             options=[],
             custom_id='remove_character_select'
         )
@@ -77,7 +77,7 @@ class ManageablePostSelect(Select):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            placeholder=t(locale, 'player-select-placeholder-post'),
+            placeholder=t(locale, 'player-select-placeholder-post')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
             options=[],
             custom_id='manageable_post_select'
         )
@@ -97,14 +97,18 @@ class ContainerOverviewSelect(Select):
         for container in containers:
             value = container['id'] if container['id'] else 'loose'
             label = f"{container['name']} ({container['count']} items)"
-            if len(label) > 100:
-                label = label[:97] + '...'
-            options.append(discord.SelectOption(label=label, value=value))
+            if len(label) > DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL:
+                label = label[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL - 3] + '...'
+            options.append(discord.SelectOption(
+                label=label,
+                value=value[:DiscordCharacterLimits.STRING_SELECT_OPTION_VALUE]
+            ))
 
         super().__init__(
-            placeholder=t(locale, 'player-select-placeholder-container-view'),
+            placeholder=t(locale, 'player-select-placeholder-container-view')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
             options=options if options else [discord.SelectOption(
-                label=t(locale, 'player-select-option-no-containers'), value='none'
+                label=t(locale, 'player-select-option-no-containers')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
+                value='none'
             )],
             custom_id=f'container_overview_select_{current_page}',
             disabled=not options
@@ -137,14 +141,18 @@ class ContainerItemSelect(Select):
         options = []
         for item_name, quantity in items:
             label = f'{item_name}: {quantity}'
-            if len(label) > 100:
-                label = label[:97] + '...'
-            options.append(discord.SelectOption(label=label, value=item_name))
+            if len(label) > DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL:
+                label = label[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL - 3] + '...'
+            options.append(discord.SelectOption(
+                label=label,
+                value=item_name[:DiscordCharacterLimits.STRING_SELECT_OPTION_VALUE]
+            ))
 
         super().__init__(
-            placeholder=t(locale, 'player-select-placeholder-item'),
+            placeholder=t(locale, 'player-select-placeholder-item')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
             options=options if options else [discord.SelectOption(
-                label=t(locale, 'player-select-option-no-items'), value='none'
+                label=t(locale, 'player-select-option-no-items')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
+                value='none'
             )],
             custom_id=f'container_item_select_{current_page}',
             disabled=not options
@@ -171,14 +179,18 @@ class DestinationContainerSelect(Select):
         for container in containers:
             value = container['id'] if container['id'] else 'loose'
             label = container['name']
-            if len(label) > 100:
-                label = label[:97] + '...'
-            options.append(discord.SelectOption(label=label, value=value))
+            if len(label) > DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL:
+                label = label[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL - 3] + '...'
+            options.append(discord.SelectOption(
+                label=label,
+                value=value[:DiscordCharacterLimits.STRING_SELECT_OPTION_VALUE]
+            ))
 
         super().__init__(
-            placeholder=t(locale, 'player-select-placeholder-destination'),
+            placeholder=t(locale, 'player-select-placeholder-destination')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
             options=options if options else [discord.SelectOption(
-                label=t(locale, 'player-select-option-no-destinations'), value='none'
+                label=t(locale, 'player-select-option-no-destinations')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
+                value='none'
             )],
             custom_id=f'dest_container_select_{current_page}',
             disabled=not options
@@ -212,14 +224,18 @@ class ManageContainerSelect(Select):
             if container['id'] is not None:
                 value = container['id']
                 label = f"{container['name']} ({container['count']} items)"
-                if len(label) > 100:
-                    label = label[:97] + '...'
-                options.append(discord.SelectOption(label=label, value=value))
+                if len(label) > DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL:
+                    label = label[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL - 3] + '...'
+                options.append(discord.SelectOption(
+                    label=label,
+                    value=value[:DiscordCharacterLimits.STRING_SELECT_OPTION_VALUE]
+                ))
 
         super().__init__(
-            placeholder=t(locale, 'player-select-placeholder-container'),
+            placeholder=t(locale, 'player-select-placeholder-container')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
             options=options if options else [discord.SelectOption(
-                label=t(locale, 'player-select-option-no-containers'), value='none'
+                label=t(locale, 'player-select-option-no-containers')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
+                value='none'
             )],
             custom_id=f'manage_container_select_{current_page}',
             disabled=not options
