@@ -142,7 +142,7 @@ class ReQuest(commands.Bot):
                 name='pendingCharacters_ttl',
             )
         except Exception as e:
-            logger.error(f'[Indexes] Failed to ensure pendingCharacters TTL index: {e}')
+            logger.error('[Indexes] Failed to ensure pendingCharacters TTL index', exc_info=True)
 
     async def _migrate_legacy_quests(self):
         """Convert old embed-based quests to V2 components."""
