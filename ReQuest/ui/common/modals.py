@@ -4,6 +4,7 @@ import discord
 import discord.ui
 from discord.ui import Modal
 
+from ReQuest.utilities.constants import DiscordCharacterLimits
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, set_locale_context
 from ReQuest.utilities.exceptions import log_exception, UserFeedbackError
 
@@ -33,12 +34,15 @@ class ConfirmModal(LocaleModal):
         super().__init__(title=title)
         self.confirm_callback = confirm_callback
         self.prompt = discord.ui.TextInput(
-            label=prompt_label,
             placeholder=prompt_placeholder,
             required=True,
             max_length=len(self.confirm_word)
         )
-        self.add_item(self.prompt)
+        self.prompt_label = discord.ui.Label(
+            text=prompt_label[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.prompt
+        )
+        self.add_item(self.prompt_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -63,13 +67,16 @@ class PageJumpModal(LocaleModal):
         )
         self.calling_view = calling_view
         self.page_number_input = discord.ui.TextInput(
-            label=t(self._locale, 'common-page-jump-label'),
             custom_id='page_number_input',
             placeholder=t(self._locale, 'common-page-jump-placeholder', totalPages=str(self.calling_view.total_pages)),
             required=True,
             max_length=len(str(self.calling_view.total_pages))
         )
-        self.add_item(self.page_number_input)
+        self.page_number_label = discord.ui.Label(
+            text=t(self._locale, 'common-page-jump-label')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.page_number_input
+        )
+        self.add_item(self.page_number_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:

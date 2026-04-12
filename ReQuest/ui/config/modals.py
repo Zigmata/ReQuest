@@ -22,7 +22,7 @@ from ReQuest.ui.common.enums import ShopChannelType, RestockMode, ScheduleType
 from ReQuest.ui.common.modals import LocaleModal
 from ReQuest.utilities.constants import (
     CharacterFields, ConfigFields, CurrencyFields, QuestFields, ShopFields, RestockFields, RoleplayFields, CommonFields,
-    DatabaseCollections, DisplayLimits
+    DatabaseCollections, DiscordCharacterLimits, DisplayLimits
 )
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.currency import find_currency_or_denomination, get_denomination_map, format_currency_amount
@@ -115,10 +115,13 @@ class AddCurrencyTextModal(LocaleModal):
         )
         self.calling_view = calling_view
         self.text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-currency-name'),
             required=True,
             custom_id='new_currency_name_text_input')
-        self.add_item(self.text_input)
+        self.text_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-currency-name')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.text_input
+        )
+        self.add_item(self.text_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -172,12 +175,15 @@ class RenameCurrencyModal(LocaleModal):
         self.calling_view = calling_view
         self.old_currency_name = old_currency_name
         self.text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-new-currency-name'),
             required=True,
             default=old_currency_name,
             custom_id='rename_currency_text_input'
         )
-        self.add_item(self.text_input)
+        self.text_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-current-currency-name')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.text_input
+        )
+        self.add_item(self.text_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -241,12 +247,15 @@ class RenameDenominationModal(LocaleModal):
         self.currency_name = currency_name
         self.old_denomination_name = old_denomination_name
         self.text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-new-denomination-name'),
             required=True,
             default=old_denomination_name,
             custom_id='rename_denomination_text_input'
         )
-        self.add_item(self.text_input)
+        self.text_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-new-denomination-name')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.text_input
+        )
+        self.add_item(self.text_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -314,17 +323,23 @@ class AddCurrencyDenominationModal(LocaleModal):
         self.base_currency_name = base_currency_name
 
         self.denomination_name_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-denomination-name'),
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-denomination-name'),
             custom_id='denomination_name_text_input'
         )
+        self.denomination_name_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-denomination-name')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.denomination_name_text_input
+        )
         self.denomination_value_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-denomination-value'),
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-denomination-value'),
             custom_id='denomination_value_text_input'
         )
-        self.add_item(self.denomination_name_text_input)
-        self.add_item(self.denomination_value_text_input)
+        self.denomination_value_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-denomination-value')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.denomination_value_text_input
+        )
+        self.add_item(self.denomination_name_label)
+        self.add_item(self.denomination_value_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -393,14 +408,17 @@ class ForbiddenRolesModal(LocaleModal):
             timeout=600
         )
         self.names_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-names'),
             style=discord.TextStyle.paragraph,
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-names'),
             default=', '.join(current_list),
             custom_id='names_text_input',
             required=False
         )
-        self.add_item(self.names_text_input)
+        self.names_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-names')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.names_text_input
+        )
+        self.add_item(self.names_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -432,11 +450,14 @@ class PlayerBoardPurgeModal(LocaleModal):
         )
         self.calling_view = calling_view
         self.age_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-age'),
             custom_id='age_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-age')
         )
-        self.add_item(self.age_text_input)
+        self.age_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-age')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.age_text_input
+        )
+        self.add_item(self.age_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -490,7 +511,6 @@ class GMRewardsModal(LocaleModal):
 
         if self.xp_enabled:
             self.experience_text_input = discord.ui.TextInput(
-                label=t(DEFAULT_LOCALE, 'config-modal-label-experience'),
                 custom_id='experience_text_input',
                 placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-enter-number'),
                 default=(current_rewards[CharacterFields.EXPERIENCE]
@@ -498,10 +518,13 @@ class GMRewardsModal(LocaleModal):
                          else None),
                 required=False
             )
-            self.add_item(self.experience_text_input)
+            self.experience_label = discord.ui.Label(
+                text=t(DEFAULT_LOCALE, 'config-modal-label-experience')[:DiscordCharacterLimits.LABEL_LABEL],
+                component=self.experience_text_input
+            )
+            self.add_item(self.experience_label)
 
         self.items_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-items'),
             style=discord.TextStyle.paragraph,
             custom_id='items_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-items'),
@@ -510,7 +533,11 @@ class GMRewardsModal(LocaleModal):
                      else None),
             required=False
         )
-        self.add_item(self.items_text_input)
+        self.items_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-items')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.items_text_input
+        )
+        self.add_item(self.items_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -589,45 +616,57 @@ class ConfigShopDetailsModal(LocaleModal):
                 required=True
             )
             self.channel_label = Label(
-                text=t(DEFAULT_LOCALE, 'config-modal-label-shop-channel'),
+                text=t(DEFAULT_LOCALE, 'config-modal-label-shop-channel')[:DiscordCharacterLimits.LABEL_LABEL],
                 component=self.shop_channel_select
             )
             self.add_item(self.channel_label)
         self.shop_name_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-shop-name'),
             custom_id='shop_name_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-name'),
             default=name_default,
             required=True,
             max_length=DisplayLimits.SHOP_NAME
         )
+        self.shop_name_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-shop-name')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.shop_name_text_input
+        )
         self.shop_keeper_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-shopkeeper-name'),
             custom_id='shop_keeper_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shopkeeper-name'),
             default=keeper_default,
             required=False,
             max_length=DisplayLimits.SHOPKEEPER_NAME
         )
+        self.shop_keeper_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-shopkeeper-name')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.shop_keeper_text_input
+        )
         self.shop_description_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-shop-description'),
             style=discord.TextStyle.paragraph,
             custom_id='shop_description_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-description'),
             default=description_default,
             required=False
         )
+        self.shop_description_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-shop-description')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.shop_description_text_input
+        )
         self.shop_image_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-shop-image-url'),
             custom_id='shop_image_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-image-url'),
             default=image_default,
             required=False
         )
-        self.add_item(self.shop_name_text_input)
-        self.add_item(self.shop_keeper_text_input)
-        self.add_item(self.shop_description_text_input)
-        self.add_item(self.shop_image_text_input)
+        self.shop_image_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-shop-image-url')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.shop_image_text_input
+        )
+        self.add_item(self.shop_name_label)
+        self.add_item(self.shop_keeper_label)
+        self.add_item(self.shop_description_label)
+        self.add_item(self.shop_image_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -750,44 +789,59 @@ class ForumThreadShopModal(LocaleModal):
         self.forum_channel = forum_channel
 
         self.thread_name_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-thread-name'),
             custom_id='thread_name_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-thread-name'),
             required=True
         )
+        self.thread_name_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-thread-name')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.thread_name_input
+        )
         self.shop_name_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-shop-name'),
             custom_id='shop_name_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-name'),
             required=True,
             max_length=DisplayLimits.SHOP_NAME
         )
+        self.shop_name_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-shop-name')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.shop_name_input
+        )
         self.shop_keeper_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-shopkeeper-name'),
             custom_id='shop_keeper_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shopkeeper-name'),
             required=False,
             max_length=DisplayLimits.SHOPKEEPER_NAME
         )
+        self.shop_keeper_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-shopkeeper-name')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.shop_keeper_input
+        )
         self.shop_description_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-shop-description'),
             style=discord.TextStyle.paragraph,
             custom_id='shop_description_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-description'),
             required=False
         )
+        self.shop_description_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-shop-description')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.shop_description_input
+        )
         self.shop_image_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-shop-image-url'),
             custom_id='shop_image_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-shop-image-url'),
             required=False
         )
+        self.shop_image_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-shop-image-url')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.shop_image_input
+        )
 
-        self.add_item(self.thread_name_input)
-        self.add_item(self.shop_name_input)
-        self.add_item(self.shop_keeper_input)
-        self.add_item(self.shop_description_input)
-        self.add_item(self.shop_image_input)
+        self.add_item(self.thread_name_label)
+        self.add_item(self.shop_name_label)
+        self.add_item(self.shop_keeper_label)
+        self.add_item(self.shop_description_label)
+        self.add_item(self.shop_image_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -875,11 +929,11 @@ class ConfigShopJSONModal(LocaleModal):
             custom_id='shop_json_file_upload'
         )
         self.select_label = Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-shop-channel'),
+            text=t(DEFAULT_LOCALE, 'config-modal-label-shop-channel')[:DiscordCharacterLimits.LABEL_LABEL],
             component=self.shop_channel_select
         )
         self.upload_label = Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-upload-json'),
+            text=t(DEFAULT_LOCALE, 'config-modal-label-upload-json')[:DiscordCharacterLimits.LABEL_LABEL],
             component=self.shop_json_file_upload
         )
         self.add_item(self.select_label)
@@ -981,39 +1035,51 @@ class ShopItemModal(LocaleModal):
             costs_default = '\n'.join(lines)
 
         self.item_name_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-item-name'),
             custom_id='item_name_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-name'),
             default=name_default,
             max_length=DisplayLimits.ITEM_NAME
         )
+        self.item_name_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-item-name')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.item_name_text_input
+        )
         self.item_description_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-item-description'),
             style=discord.TextStyle.paragraph,
             custom_id='item_description_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-description'),
             default=description_default,
             required=False
         )
+        self.item_description_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-item-description')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.item_description_text_input
+        )
         self.item_quantity_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-item-quantity'),
             custom_id='item_quantity_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-quantity'),
             default=quantity_default,
             required=False
         )
+        self.item_quantity_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-item-quantity')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.item_quantity_text_input
+        )
         self.item_cost_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-item-costs'),
             style=discord.TextStyle.paragraph,
             custom_id='item_cost_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-costs'),
             default=costs_default,
             required=False
         )
-        self.add_item(self.item_name_text_input)
-        self.add_item(self.item_description_text_input)
-        self.add_item(self.item_quantity_text_input)
-        self.add_item(self.item_cost_text_input)
+        self.item_cost_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-item-costs')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.item_cost_text_input
+        )
+        self.add_item(self.item_name_label)
+        self.add_item(self.item_description_label)
+        self.add_item(self.item_quantity_label)
+        self.add_item(self.item_cost_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -1159,7 +1225,7 @@ class ConfigUpdateShopJSONModal(LocaleModal):
             required=True
         )
         self.upload_label = Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-upload-new-json'),
+            text=t(DEFAULT_LOCALE, 'config-modal-label-upload-new-json')[:DiscordCharacterLimits.LABEL_LABEL],
             component=self.shop_json_file_upload
         )
         self.add_item(self.upload_label)
@@ -1253,43 +1319,55 @@ class NewCharacterShopItemModal(LocaleModal):
             costs_default = '\n'.join(lines)
 
         self.item_name_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-item-name'),
             custom_id='item_name_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-name'),
             default=name_default,
             max_length=DisplayLimits.ITEM_NAME
         )
-        self.add_item(self.item_name_text_input)
+        self.item_name_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-item-name')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.item_name_text_input
+        )
+        self.add_item(self.item_name_label)
 
         self.item_description_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-item-description'),
             style=discord.TextStyle.paragraph,
             custom_id='item_description_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-description'),
             default=description_default,
             required=False
         )
-        self.add_item(self.item_description_text_input)
+        self.item_description_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-item-description')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.item_description_text_input
+        )
+        self.add_item(self.item_description_label)
 
         self.item_quantity_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-item-quantity'),
             custom_id='item_quantity_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-quantity-selection'),
             default=quantity_default,
             required=False
         )
-        self.add_item(self.item_quantity_text_input)
+        self.item_quantity_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-item-quantity')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.item_quantity_text_input
+        )
+        self.add_item(self.item_quantity_label)
 
         if inventory_type == 'purchase':
             self.item_cost_text_input = discord.ui.TextInput(
-                label=t(DEFAULT_LOCALE, 'config-modal-label-item-cost'),
                 custom_id='item_cost_text_input',
                 placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-costs'),
                 style=discord.TextStyle.paragraph,
                 default=costs_default,
                 required=False
             )
-            self.add_item(self.item_cost_text_input)
+            self.item_cost_label = discord.ui.Label(
+                text=t(DEFAULT_LOCALE, 'config-modal-label-item-cost')[:DiscordCharacterLimits.LABEL_LABEL],
+                component=self.item_cost_text_input
+            )
+            self.add_item(self.item_cost_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -1428,7 +1506,7 @@ class NewCharacterShopJSONModal(LocaleModal):
             custom_id='shop_json_file_upload'
         )
         self.upload_label = Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-upload-json'),
+            text=t(DEFAULT_LOCALE, 'config-modal-label-upload-json')[:DiscordCharacterLimits.LABEL_LABEL],
             component=self.shop_json_file_upload
         )
         self.add_item(self.upload_label)
@@ -1492,21 +1570,27 @@ class ConfigNewCharacterWealthModal(LocaleModal):
             timeout=600
         )
         self.amount_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-amount'),
             custom_id='amount_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-amount'),
             default=current_amount if current_amount is not None else '',
             max_length=13
         )
+        self.amount_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-amount')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.amount_text_input
+        )
         self.currency_name_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-currency-name'),
             custom_id='currency_name_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-currency-name'),
             default=current_currency or ''
         )
+        self.currency_name_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-currency-name')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.currency_name_text_input
+        )
         self.calling_view = calling_view
-        self.add_item(self.amount_text_input)
-        self.add_item(self.currency_name_text_input)
+        self.add_item(self.amount_label)
+        self.add_item(self.currency_name_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -1579,21 +1663,27 @@ class CreateStaticKitModal(LocaleModal):
         self.calling_view = calling_view
 
         self.kit_name_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-kit-name'),
             custom_id='kit_name_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-kit-name'),
             max_length=50
         )
+        self.kit_name_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-kit-name')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.kit_name_text_input
+        )
         self.kit_description_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-description'),
             style=discord.TextStyle.paragraph,
             custom_id='kit_description_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-kit-description'),
             required=False,
             max_length=200
         )
-        self.add_item(self.kit_name_text_input)
-        self.add_item(self.kit_description_text_input)
+        self.kit_description_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-description')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.kit_description_text_input
+        )
+        self.add_item(self.kit_name_label)
+        self.add_item(self.kit_description_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -1652,29 +1742,38 @@ class StaticKitItemModal(LocaleModal):
         quantity_default = str(existing_item.get(CommonFields.QUANTITY, '1')) if existing_item else '1'
 
         self.item_name_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-item-name'),
             custom_id='item_name_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-name'),
             default=name_default,
             max_length=DisplayLimits.ITEM_NAME
         )
+        self.item_name_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-item-name')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.item_name_text_input
+        )
         self.description_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-item-description'),
             style=discord.TextStyle.paragraph,
             custom_id='item_description_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-item-description'),
             default=description_default,
             required=False
         )
+        self.description_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-item-description')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.description_text_input
+        )
         self.item_quantity_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-item-quantity'),
             custom_id='item_quantity_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-kit-item-quantity'),
             default=quantity_default
         )
-        self.add_item(self.item_name_text_input)
-        self.add_item(self.description_text_input)
-        self.add_item(self.item_quantity_text_input)
+        self.item_quantity_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-item-quantity')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.item_quantity_text_input
+        )
+        self.add_item(self.item_name_label)
+        self.add_item(self.description_label)
+        self.add_item(self.item_quantity_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -1733,18 +1832,24 @@ class StaticKitCurrencyModal(LocaleModal):
         )
         self.calling_view = calling_view
         self.currency_name_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-currency-name'),
             custom_id='currency_name_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-currency-eg')
         )
+        self.currency_name_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-currency-name')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.currency_name_text_input
+        )
         self.amount_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-amount'),
             custom_id='amount_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-amount-eg'),
             max_length=13
         )
-        self.add_item(self.currency_name_text_input)
-        self.add_item(self.amount_text_input)
+        self.amount_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-amount')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.amount_text_input
+        )
+        self.add_item(self.currency_name_label)
+        self.add_item(self.amount_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -1833,38 +1938,50 @@ class RoleplaySettingsModal(LocaleModal):
         self.mode = config.get(RoleplayFields.MODE, 'accrued')
 
         self.minimum_length_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-min-message-length'),
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-min-message-length'),
             default=str(mode_config.get(RoleplayFields.MIN_LENGTH, 0)),
             max_length=4
         )
-        self.add_item(self.minimum_length_text_input)
+        self.minimum_length_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-min-message-length')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.minimum_length_text_input
+        )
+        self.add_item(self.minimum_length_label)
 
         self.cooldown_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-cooldown'),
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-cooldown'),
             default=str(mode_config.get(RoleplayFields.COOLDOWN, 30)),
             max_length=4
         )
-        self.add_item(self.cooldown_text_input)
+        self.cooldown_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-cooldown')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.cooldown_text_input
+        )
+        self.add_item(self.cooldown_label)
 
         if self.mode == 'scheduled':
             self.threshold_text_input = discord.ui.TextInput(
-                label=t(DEFAULT_LOCALE, 'config-modal-label-message-threshold'),
                 placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-message-threshold'),
                 default=str(mode_config.get(RoleplayFields.THRESHOLD, 20)),
                 max_length=4
             )
-            self.add_item(self.threshold_text_input)
+            self.threshold_label = discord.ui.Label(
+                text=t(DEFAULT_LOCALE, 'config-modal-label-message-threshold')[:DiscordCharacterLimits.LABEL_LABEL],
+                component=self.threshold_text_input
+            )
+            self.add_item(self.threshold_label)
 
         elif self.mode == 'accrued':
             self.frequency_text_input = discord.ui.TextInput(
-                label=t(DEFAULT_LOCALE, 'config-modal-label-frequency'),
                 placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-frequency'),
                 default=str(mode_config.get(RoleplayFields.FREQUENCY, 20)),
                 max_length=4
             )
-            self.add_item(self.frequency_text_input)
+            self.frequency_label = discord.ui.Label(
+                text=t(DEFAULT_LOCALE, 'config-modal-label-frequency')[:DiscordCharacterLimits.LABEL_LABEL],
+                component=self.frequency_text_input
+            )
+            self.add_item(self.frequency_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -1949,23 +2066,29 @@ class RoleplayRewardsModal(LocaleModal):
         self.xp_enabled = xp_enabled
         if self.xp_enabled:
             self.experience_text_input = discord.ui.TextInput(
-                label=t(DEFAULT_LOCALE, 'config-modal-label-experience'),
                 default=str(rewards.get(RoleplayFields.XP, 0)),
                 required=False
             )
-            self.add_item(self.experience_text_input)
+            self.experience_label = discord.ui.Label(
+                text=t(DEFAULT_LOCALE, 'config-modal-label-experience')[:DiscordCharacterLimits.LABEL_LABEL],
+                component=self.experience_text_input
+            )
+            self.add_item(self.experience_label)
 
         item_display = ''
         if items := rewards.get(RoleplayFields.ITEMS):
             item_display = '\n'.join([f'{k}: {v}' for k, v in sorted(items.items())])
 
         self.items = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-items-name-quantity'),
             style=discord.TextStyle.paragraph,
             default=item_display,
             required=False
         )
-        self.add_item(self.items)
+        self.items_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-items-name-quantity')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.items
+        )
+        self.add_item(self.items_label)
 
         currency_display = ''
         if currency := rewards.get(RoleplayFields.CURRENCY):
@@ -1979,12 +2102,15 @@ class RoleplayRewardsModal(LocaleModal):
             currency_display = '\n'.join(formatted_lines)
 
         self.currency = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-currency-name-amount'),
             style=discord.TextStyle.paragraph,
             default=currency_display,
             required=False
         )
-        self.add_item(self.currency)
+        self.currency_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-currency-name-amount')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.currency
+        )
+        self.add_item(self.currency_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -2064,11 +2190,14 @@ class SetItemStockModal(LocaleModal):
         self.item_name = item_name
 
         self.max_stock_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-max-stock'),
             custom_id='max_stock_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-max-stock'),
             default=str(current_max) if current_max is not None else '',
             required=True
+        )
+        self.max_stock_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-max-stock')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.max_stock_text_input
         )
 
         # Default current stock to max if setting up for first time
@@ -2079,24 +2208,30 @@ class SetItemStockModal(LocaleModal):
             default_current = str(current_max)
 
         self.current_stock_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-current-stock'),
             custom_id='current_stock_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-current-stock'),
             default=default_current,
             required=True
         )
+        self.current_stock_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-current-stock')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.current_stock_text_input
+        )
 
         self.increment_text_input = discord.ui.TextInput(
-            label=t(DEFAULT_LOCALE, 'config-modal-label-restock-increment'),
             custom_id='increment_text_input',
             placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-restock-increment'),
             default=str(current_increment) if current_increment is not None else '1',
             required=False
         )
+        self.increment_label = discord.ui.Label(
+            text=t(DEFAULT_LOCALE, 'config-modal-label-restock-increment')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.increment_text_input
+        )
 
-        self.add_item(self.max_stock_text_input)
-        self.add_item(self.current_stock_text_input)
-        self.add_item(self.increment_text_input)
+        self.add_item(self.max_stock_label)
+        self.add_item(self.current_stock_label)
+        self.add_item(self.increment_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -2230,7 +2365,7 @@ class RestockScheduleModal(LocaleModal):
             ]
         )
         self.schedule_label = Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-restock-schedule-label'),
+            text=t(DEFAULT_LOCALE, 'config-modal-restock-schedule-label')[:DiscordCharacterLimits.LABEL_LABEL],
             component=self.schedule_radio_group
         )
 
@@ -2241,7 +2376,7 @@ class RestockScheduleModal(LocaleModal):
             required=False
         )
         self.time_label = Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-time'),
+            text=t(DEFAULT_LOCALE, 'config-modal-label-time')[:DiscordCharacterLimits.LABEL_LABEL],
             description=t(DEFAULT_LOCALE, 'config-modal-desc-current-time', utcTime=utc_time_str),
             component=self.time_text_input
         )
@@ -2267,7 +2402,7 @@ class RestockScheduleModal(LocaleModal):
             ]
         )
         self.day_label = Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-restock-day-label'),
+            text=t(DEFAULT_LOCALE, 'config-modal-restock-day-label')[:DiscordCharacterLimits.LABEL_LABEL],
             component=self.day_radio_group
         )
 
@@ -2284,7 +2419,7 @@ class RestockScheduleModal(LocaleModal):
             ]
         )
         self.mode_label = Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-restock-mode-label'),
+            text=t(DEFAULT_LOCALE, 'config-modal-restock-mode-label')[:DiscordCharacterLimits.LABEL_LABEL],
             component=self.mode_radio_group
         )
 

@@ -4,7 +4,7 @@ import discord
 import discord.ui
 from ReQuest.ui.common.modals import LocaleModal
 
-from ReQuest.utilities.constants import DatabaseCollections
+from ReQuest.utilities.constants import DatabaseCollections, DiscordCharacterLimits
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.db_cache import update_cached_data
 from ReQuest.utilities.exceptions import log_exception
@@ -22,17 +22,23 @@ class AllowServerModal(LocaleModal):
         )
         self.calling_view = calling_view
         self.allow_server_name_input = discord.ui.TextInput(
-            label=t(self._locale, 'admin-modal-label-server-name'),
             custom_id='allow_server_name_input',
             placeholder=t(self._locale, 'admin-modal-placeholder-server-name')
         )
+        self.allow_server_name_label = discord.ui.Label(
+            text=t(self._locale, 'admin-modal-label-server-name')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.allow_server_name_input
+        )
         self.allow_server_id_input = discord.ui.TextInput(
-            label=t(self._locale, 'admin-modal-label-server-id'),
             custom_id='allow_server_text_input',
             placeholder=t(self._locale, 'admin-modal-placeholder-server-id')
         )
-        self.add_item(self.allow_server_name_input)
-        self.add_item(self.allow_server_id_input)
+        self.allow_server_id_label = discord.ui.Label(
+            text=t(self._locale, 'admin-modal-label-server-id')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.allow_server_id_input
+        )
+        self.add_item(self.allow_server_name_label)
+        self.add_item(self.allow_server_id_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -65,11 +71,14 @@ class AdminCogTextModal(LocaleModal):
             timeout=180
         )
         self.text_input = discord.ui.TextInput(
-            label=t(self._locale, 'admin-modal-label-cog-name'),
             placeholder=t(self._locale, 'admin-modal-placeholder-cog-name', action=function),
             custom_id='cog_name_text_input'
         )
-        self.add_item(self.text_input)
+        self.text_label = discord.ui.Label(
+            text=t(self._locale, 'admin-modal-label-cog-name')[:DiscordCharacterLimits.LABEL_LABEL],
+            component=self.text_input
+        )
+        self.add_item(self.text_label)
         self._on_submit = on_submit
 
     async def on_submit(self, interaction: discord.Interaction):
