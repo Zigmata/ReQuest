@@ -40,8 +40,7 @@ class GameMaster(Cog):
         try:
             locale = await resolve_locale(interaction)
 
-            view = views.GMBaseView()
-            view.locale = locale
+            view = views.GMBaseView(locale=locale)
             await interaction.response.send_message(view=view, ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)

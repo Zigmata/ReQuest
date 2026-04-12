@@ -104,8 +104,7 @@ class Admin(Cog):
     async def admin(self, interaction: discord.Interaction):
         try:
             locale = await resolve_locale(interaction)
-            view = views.AdminBaseView()
-            view.locale = locale
+            view = views.AdminBaseView(locale=locale)
             await interaction.response.send_message(view=view, ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)

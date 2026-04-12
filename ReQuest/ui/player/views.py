@@ -52,10 +52,11 @@ class PlayerBaseView(LocaleLayoutView):
         self.build_view()
 
     def build_view(self):
+        self.clear_items()
         locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
-        header_section = Section(accessory=MenuDoneButton())
+        header_section = Section(accessory=MenuDoneButton(locale=locale))
         header_section.add_item(TextDisplay(t(locale, 'player-title-main-menu')))
         container.add_item(header_section)
         container.add_item(Separator())
@@ -93,11 +94,15 @@ class PlayerBaseView(LocaleLayoutView):
             )
             if channel_query:
                 self.player_board_button.disabled = False
+                self.player_board_button.label = t(
+                    locale, 'player-menu-btn-player-board'
+                )[:DiscordLimits.BUTTON_LABEL]
             else:
                 self.player_board_button.disabled = True
                 self.player_board_button.label = t(
                     locale, 'player-menu-btn-player-board-disabled'
                 )[:DiscordLimits.BUTTON_LABEL]
+            self.build_view()
         except Exception as e:
             await log_exception(e)
 
@@ -1362,6 +1367,7 @@ class NewCharacterWizardView(LocaleLayoutView):
         self.build_view()
 
     def build_view(self):
+        self.clear_items()
         locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
         container.add_item(TextDisplay(

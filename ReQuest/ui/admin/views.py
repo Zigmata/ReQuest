@@ -26,9 +26,14 @@ logger = logging.getLogger(__name__)
 
 
 class AdminBaseView(LocaleLayoutView):
-    def __init__(self):
+    def __init__(self, locale=None):
         super().__init__(timeout=None)
-        locale = getattr(self, 'locale', DEFAULT_LOCALE)
+        self.locale = locale or DEFAULT_LOCALE
+        self.build_view()
+
+    def build_view(self):
+        self.clear_items()
+        locale = self.locale
 
         container = Container()
 
