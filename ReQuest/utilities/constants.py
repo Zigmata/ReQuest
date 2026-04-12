@@ -208,8 +208,11 @@ class DatabaseCollections:
     PENDING_CHARACTERS = 'pendingCharacters'
 
 
+PENDING_CHARACTER_TTL_DAYS = 14
+
+
 class DisplayLimits:
-    """Character limits for TextDisplay components. Discord enforces a 4000-char aggregate limit."""
+    """Character limits for TextDisplay components."""
     TEXT_DISPLAY_MAX = 4000
     SHOP_NAME = 50
     SHOPKEEPER_NAME = 32

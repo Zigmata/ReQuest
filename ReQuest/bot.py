@@ -13,7 +13,8 @@ import redis.asyncio as redis
 
 from ReQuest.ui.gm.views import QuestPostView
 from ReQuest.utilities.constants import (
-    ApprovalFields, QuestFields, QuestStatus, ConfigFields, CommonFields, DatabaseCollections
+    ApprovalFields, QuestFields, QuestStatus, ConfigFields, CommonFields, DatabaseCollections,
+    PENDING_CHARACTER_TTL_DAYS
 )
 from ReQuest.utilities.db_cache import get_cached_data, build_cache_key
 from ReQuest.utilities.discord_utils import attempt_delete, strip_id
@@ -125,12 +126,26 @@ class ReQuest(commands.Bot):
             self.allow_list_enabled = True
             await self.load_allow_list()
 
+        await self._ensure_indexes()
         await self._migrate_legacy_quests()
         await self._load_quest_views()
         await self._load_approval_views()
 
+    async def _ensure_indexes(self):
+        """
+        Create required MongoDB indexes.
+        """
+        try:
+            await self.gdb[DatabaseCollections.PENDING_CHARACTERS].create_index(
+                'created_at',
+                expireAfterSeconds=PENDING_CHARACTER_TTL_DAYS * 86400,
+                name='pendingCharacters_ttl',
+            )
+        except Exception as e:
+            logger.error('[Indexes] Failed to ensure pendingCharacters TTL index', exc_info=True)
+
     async def _migrate_legacy_quests(self):
-        """One-time migration: convert old embed-based quests to V2 components."""
+        """Convert old embed-based quests to V2 components."""
         quest_collection = self.gdb[DatabaseCollections.QUESTS]
         async for quest in quest_collection.find({QuestFields.STATUS: {'$exists': False}}):
             try:
@@ -144,7 +159,7 @@ class ReQuest(commands.Bot):
                     self.gdb.name, f'{guild_id}:{quest_id}', DatabaseCollections.QUESTS
                 )
 
-                # No message to migrate — set as draft so GM can publish fresh
+                # Quests without a messageID are set as draft
                 if not message_id:
                     gm_id = quest.get(QuestFields.GM)
                     await quest_collection.update_one(
@@ -383,7 +398,6 @@ async def main():
             await bot.start(bot_token, reconnect=True)
 
 
-# Handlers for graceful bot shutdown on container stop/restart
 async def shutdown_bot():
     print("Shutting down ReQuest gracefully...")
     await bot.close()
@@ -396,7 +410,7 @@ def handle_shutdown_signal(signal_number, frame):
     loop.create_task(shutdown_bot())
 
 
-signal.signal(signal.SIGINT, handle_shutdown_signal)
-signal.signal(signal.SIGTERM, handle_shutdown_signal)
-
-asyncio.run(main())
+if __name__ == '__main__':
+    signal.signal(signal.SIGINT, handle_shutdown_signal)
+    signal.signal(signal.SIGTERM, handle_shutdown_signal)
+    asyncio.run(main())
