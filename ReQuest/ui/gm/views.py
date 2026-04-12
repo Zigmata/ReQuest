@@ -25,7 +25,7 @@ from ReQuest.ui.gm import buttons, selects
 from ReQuest.utilities.character import update_character_inventory, update_character_experience, batch_update_character
 from ReQuest.utilities.constants import (
     CharacterFields, QuestFields, QuestStatus, ConfigFields, CommonFields, DatabaseCollections,
-    DiscordCharacterLimits
+    DiscordLimits
 )
 from ReQuest.utilities.containers import format_inventory_by_container
 from ReQuest.utilities.db_cache import (
@@ -165,7 +165,7 @@ class GMQuestMenuView(LocaleLayoutView):
         if self.total_pages > 1:
             nav_row = ActionRow()
             prev_button = Button(
-                label=t(locale, 'common-btn-previous')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(locale, 'common-btn-previous')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='gm_q_prev',
                 disabled=(self.current_page == 0)
@@ -177,7 +177,7 @@ class GMQuestMenuView(LocaleLayoutView):
                 label=t(
                     locale, 'common-page-display',
                     current=self.current_page + 1, total=self.total_pages
-                )[:DiscordCharacterLimits.BUTTON_LABEL],
+                )[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='gm_q_page'
             )
@@ -185,7 +185,7 @@ class GMQuestMenuView(LocaleLayoutView):
             nav_row.add_item(page_display)
 
             next_button = Button(
-                label=t(locale, 'common-btn-next')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(locale, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='gm_q_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -940,7 +940,7 @@ class RewardsMenuView(LocaleLayoutView):
             if options:
                 self.party_member_select.placeholder = t(
                     getattr(self, 'locale', DEFAULT_LOCALE), 'gm-select-placeholder-party-member'
-                )[:DiscordCharacterLimits.SELECT_PLACEHOLDER]
+                )[:DiscordLimits.SELECT_PLACEHOLDER]
                 self.party_member_select.disabled = False
                 self.party_member_select.options = options
             else:
@@ -982,8 +982,8 @@ class RewardsMenuView(LocaleLayoutView):
         for member_id, character_id, character in self._iter_party_members(party):
             name = character.get(CommonFields.NAME, f'Character {character_id}')
             options.append(discord.SelectOption(
-                label=name[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
-                value=str(character_id)[:DiscordCharacterLimits.STRING_SELECT_OPTION_VALUE]
+                label=name[:DiscordLimits.STRING_SELECT_OPTION_LABEL],
+                value=str(character_id)[:DiscordLimits.STRING_SELECT_OPTION_VALUE]
             ))
 
         return options
@@ -1260,8 +1260,8 @@ class RemovePlayerView(LocaleLayoutView):
                             character = player[str(member_id)][str(character_id)]
                             char_name = character[CommonFields.NAME]
                             options.append(discord.SelectOption(
-                                label=f'{char_name}'[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
-                                value=member_id[:DiscordCharacterLimits.STRING_SELECT_OPTION_VALUE]
+                                label=f'{char_name}'[:DiscordLimits.STRING_SELECT_OPTION_LABEL],
+                                value=member_id[:DiscordLimits.STRING_SELECT_OPTION_VALUE]
                             ))
             if wait_list:
                 for player in wait_list:
@@ -1270,17 +1270,17 @@ class RemovePlayerView(LocaleLayoutView):
                             character = player[str(member_id)][str(character_id)]
                             char_name = character[CommonFields.NAME]
                             options.append(discord.SelectOption(
-                                label=f'{char_name}'[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
-                                value=member_id[:DiscordCharacterLimits.STRING_SELECT_OPTION_VALUE]
+                                label=f'{char_name}'[:DiscordLimits.STRING_SELECT_OPTION_LABEL],
+                                value=member_id[:DiscordLimits.STRING_SELECT_OPTION_VALUE]
                             ))
             if not party and not wait_list:
                 locale = getattr(self, 'locale', DEFAULT_LOCALE)
                 no_players_text = t(locale, 'gm-label-no-players-in-roster')
                 options.append(discord.SelectOption(
-                    label=no_players_text[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
+                    label=no_players_text[:DiscordLimits.STRING_SELECT_OPTION_LABEL],
                     value='None'
                 ))
-                self.remove_player_select.placeholder = no_players_text[:DiscordCharacterLimits.SELECT_PLACEHOLDER]
+                self.remove_player_select.placeholder = no_players_text[:DiscordLimits.SELECT_PLACEHOLDER]
                 self.remove_player_select.disabled = True
 
             self.remove_player_select.options = options
@@ -1561,13 +1561,13 @@ class QuestPostView(LocaleLayoutView):
         if not lock_state:
             actions = ActionRow()
             join_button = Button(
-                label=t(locale, 'gm-btn-join')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(locale, 'gm-btn-join')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.success,
                 custom_id='join_quest_button'
             )
             join_button.callback = self.join_callback
             leave_button = Button(
-                label=t(locale, 'gm-btn-leave')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(locale, 'gm-btn-leave')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.danger,
                 custom_id='leave_quest_button'
             )

@@ -222,7 +222,7 @@ class DisplayLimits:
     MAX_CURRENCY_AMOUNT = 9_999_999_999
 
 
-class DiscordCharacterLimits:
+class DiscordLimits:
     """Limits for various Discord entities."""
     CHANNEL_NAME = 100
     ROLE_NAME = 100
@@ -261,4 +261,4 @@ class DiscordCharacterLimits:
     CHECKBOX_GROUP_OPTION_LABEL = 100
     CHECKBOX_GROUP_OPTION_VALUE = 100
     CHECKBOX_GROUP_OPTION_DESCRIPTION = 100
-    MODAL_TITLE = 100
+    MODAL_TITLE = 45

@@ -25,7 +25,7 @@ from ReQuest.ui.config import buttons, selects
 from ReQuest.ui.config.buttons import AddShopJSONButton
 from ReQuest.utilities.constants import (
     ConfigFields, CurrencyFields, ShopFields, RestockFields, RoleplayFields, CommonFields,
-    DatabaseCollections, DiscordCharacterLimits, DisplayLimits, MAX_QUEST_ROLES_PER_GM
+    DatabaseCollections, DiscordLimits, DisplayLimits, MAX_QUEST_ROLES_PER_GM
 )
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.currency import (
@@ -112,7 +112,7 @@ class ConfigWizardView(LocaleLayoutView):
         container = Container()
 
         header_section = Section(accessory=BackButton(ConfigBaseView))
-        header_section.accessory.label = t(DEFAULT_LOCALE, 'config-btn-quit')[:DiscordCharacterLimits.BUTTON_LABEL]
+        header_section.accessory.label = t(DEFAULT_LOCALE, 'config-btn-quit')[:DiscordLimits.BUTTON_LABEL]
         header_section.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-title-wizard')))
         container.add_item(header_section)
         container.add_item(Separator())
@@ -160,7 +160,7 @@ class ConfigWizardView(LocaleLayoutView):
             nav_row = ActionRow()
 
             prev_button = Button(
-                label=t(DEFAULT_LOCALE, 'common-btn-previous')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(DEFAULT_LOCALE, 'common-btn-previous')[:DiscordLimits.BUTTON_LABEL],
                 style=ButtonStyle.secondary,
                 custom_id='wizard_prev_page',
                 disabled=(self.current_page == 0)
@@ -172,7 +172,7 @@ class ConfigWizardView(LocaleLayoutView):
                 label=t(
                     DEFAULT_LOCALE, 'common-page-display',
                     current=str(self.current_page + 1), total=str(len(self.pages))
-                )[:DiscordCharacterLimits.BUTTON_LABEL],
+                )[:DiscordLimits.BUTTON_LABEL],
                 style=ButtonStyle.secondary,
                 custom_id='wizard_page_indicator'
             )
@@ -180,7 +180,7 @@ class ConfigWizardView(LocaleLayoutView):
             nav_row.add_item(page_button)
 
             next_button = Button(
-                label=t(DEFAULT_LOCALE, 'common-btn-next')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(DEFAULT_LOCALE, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=ButtonStyle.secondary,
                 custom_id='wizard_next_page',
                 disabled=(self.current_page == len(self.pages) - 1)
@@ -189,7 +189,7 @@ class ConfigWizardView(LocaleLayoutView):
             nav_row.add_item(next_button)
 
             scan_button = buttons.ScanServerButton(self)
-            scan_button.label = t(DEFAULT_LOCALE, 'config-btn-re-scan')[:DiscordCharacterLimits.BUTTON_LABEL]
+            scan_button.label = t(DEFAULT_LOCALE, 'config-btn-re-scan')[:DiscordLimits.BUTTON_LABEL]
             nav_row.add_item(scan_button)
 
             container.add_item(nav_row)
@@ -499,7 +499,10 @@ class ConfigWizardView(LocaleLayoutView):
                 report_lines.append(f'- Error validating {name} channel')
                 has_warnings = True
 
-        button = MenuViewButton(ConfigChannelsView, t(DEFAULT_LOCALE, 'config-btn-configure-channels')[:DiscordCharacterLimits.BUTTON_LABEL])
+        button = MenuViewButton(
+            ConfigChannelsView,
+            t(DEFAULT_LOCALE, 'config-btn-configure-channels')[:DiscordLimits.BUTTON_LABEL]
+        )
         button.disabled = not has_warnings
 
         return '\n'.join(report_lines), button
@@ -616,7 +619,10 @@ class ConfigWizardView(LocaleLayoutView):
         ]
         components.append({
             'content': '\n'.join(quest_section_content),
-            'shortcut_button': MenuViewButton(ConfigQuestsView, t(DEFAULT_LOCALE, 'config-btn-configure-quests')[:DiscordCharacterLimits.BUTTON_LABEL])
+            'shortcut_button': MenuViewButton(
+                ConfigQuestsView,
+                t(DEFAULT_LOCALE, 'config-btn-configure-quests')[:DiscordLimits.BUTTON_LABEL]
+            )
         })
 
         # Player Settings
@@ -630,7 +636,10 @@ class ConfigWizardView(LocaleLayoutView):
         ]
         components.append({
             'content': '\n'.join(player_section_content),
-            'shortcut_button': MenuViewButton(ConfigPlayersView, t(DEFAULT_LOCALE, 'config-btn-configure-players')[:DiscordCharacterLimits.BUTTON_LABEL])
+            'shortcut_button': MenuViewButton(
+                ConfigPlayersView,
+                t(DEFAULT_LOCALE, 'config-btn-configure-players')[:DiscordLimits.BUTTON_LABEL]
+            )
         })
 
         # Currency Settings
@@ -640,7 +649,10 @@ class ConfigWizardView(LocaleLayoutView):
         ]
         components.append({
             'content': '\n'.join(currency_section_content),
-            'shortcut_button': MenuViewButton(ConfigCurrencyView, t(DEFAULT_LOCALE, 'config-btn-configure-currency')[:DiscordCharacterLimits.BUTTON_LABEL])
+            'shortcut_button': MenuViewButton(
+                ConfigCurrencyView,
+                t(DEFAULT_LOCALE, 'config-btn-configure-currency')[:DiscordLimits.BUTTON_LABEL]
+            )
         })
 
         # Roleplay Rewards Settings
@@ -659,7 +671,10 @@ class ConfigWizardView(LocaleLayoutView):
         ]
         components.append({
             'content': '\n'.join(roleplay_section_content),
-            'shortcut_button': MenuViewButton(ConfigRoleplayView, t(DEFAULT_LOCALE, 'config-btn-configure-rp-rewards')[:DiscordCharacterLimits.BUTTON_LABEL])
+            'shortcut_button': MenuViewButton(
+                ConfigRoleplayView,
+                t(DEFAULT_LOCALE, 'config-btn-configure-rp-rewards')[:DiscordLimits.BUTTON_LABEL]
+            )
         })
 
         # Shops Settings
@@ -683,7 +698,10 @@ class ConfigWizardView(LocaleLayoutView):
                 )
         components.append({
             'content': '\n'.join(shops_section_content),
-            'shortcut_button': MenuViewButton(ConfigShopsView, t(DEFAULT_LOCALE, 'config-btn-configure-shops')[:DiscordCharacterLimits.BUTTON_LABEL])
+            'shortcut_button': MenuViewButton(
+                ConfigShopsView,
+                t(DEFAULT_LOCALE, 'config-btn-configure-shops')[:DiscordLimits.BUTTON_LABEL]
+            )
         })
 
         # New Character Setup
@@ -698,7 +716,10 @@ class ConfigWizardView(LocaleLayoutView):
         ]
         components.append({
             'content': '\n'.join(new_char_section_content),
-            'shortcut_button': MenuViewButton(ConfigPlayersView, t(DEFAULT_LOCALE, 'config-btn-new-char-setup')[:DiscordCharacterLimits.BUTTON_LABEL])
+            'shortcut_button': MenuViewButton(
+                ConfigPlayersView,
+                t(DEFAULT_LOCALE, 'config-btn-new-char-setup')[:DiscordLimits.BUTTON_LABEL]
+            )
         })
 
         # Header
@@ -906,7 +927,10 @@ class ConfigWizardView(LocaleLayoutView):
 
             # Role validation report
             role_text, role_has_warnings = self.validate_roles(guild, gm_roles_query, announcement_role_query)
-            role_button = MenuViewButton(ConfigRolesView, t(DEFAULT_LOCALE, 'config-btn-configure-roles')[:DiscordCharacterLimits.BUTTON_LABEL])
+            role_button = MenuViewButton(
+                ConfigRolesView,
+                t(DEFAULT_LOCALE, 'config-btn-configure-roles')[:DiscordLimits.BUTTON_LABEL]
+            )
             role_button.disabled = not role_has_warnings
 
             # Channel validation report
@@ -1123,7 +1147,7 @@ class ConfigGMRoleRemoveView(LocaleLayoutView):
             nav_row = ActionRow()
 
             prev_button = Button(
-                label=t(DEFAULT_LOCALE, 'common-btn-previous')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(DEFAULT_LOCALE, 'common-btn-previous')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='gm_role_prev',
                 disabled=(self.current_page == 0)
@@ -1135,7 +1159,7 @@ class ConfigGMRoleRemoveView(LocaleLayoutView):
                 label=t(
                     DEFAULT_LOCALE, 'common-page-label',
                     current=str(self.current_page + 1), total=str(self.total_pages)
-                )[:DiscordCharacterLimits.BUTTON_LABEL],
+                )[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='gm_role_page'
             )
@@ -1143,7 +1167,7 @@ class ConfigGMRoleRemoveView(LocaleLayoutView):
             nav_row.add_item(page_display)
 
             next_button = Button(
-                label=t(DEFAULT_LOCALE, 'common-btn-next')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(DEFAULT_LOCALE, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='gm_role_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -1415,7 +1439,10 @@ class ConfigQuestsView(LocaleLayoutView):
         container.add_item(Separator())
 
         gm_rewards_section = Section(
-            accessory=MenuViewButton(GMRewardsView, t(DEFAULT_LOCALE, 'config-label-gm-rewards')[:DiscordCharacterLimits.BUTTON_LABEL])
+            accessory=MenuViewButton(
+                GMRewardsView,
+                t(DEFAULT_LOCALE, 'config-label-gm-rewards')[:DiscordLimits.BUTTON_LABEL]
+            )
         )
         gm_rewards_section.add_item(TextDisplay(
             f"**{t(DEFAULT_LOCALE, 'config-label-gm-rewards')}**\n" +
@@ -1425,7 +1452,10 @@ class ConfigQuestsView(LocaleLayoutView):
         container.add_item(Separator())
 
         quest_roles_section = Section(
-            accessory=MenuViewButton(ConfigQuestRolesView, t(DEFAULT_LOCALE, 'config-btn-quest-roles')[:DiscordCharacterLimits.BUTTON_LABEL])
+            accessory=MenuViewButton(
+                ConfigQuestRolesView,
+                t(DEFAULT_LOCALE, 'config-btn-quest-roles')[:DiscordLimits.BUTTON_LABEL]
+            )
         )
         quest_roles_section.add_item(self.quest_role_info)
         container.add_item(quest_roles_section)
@@ -1582,7 +1612,7 @@ class ConfigQuestRolesView(LocaleLayoutView):
             static_section = Section(
                 accessory=MenuViewButton(
                     ConfigStaticQuestRolesView,
-                    t(DEFAULT_LOCALE, 'config-label-manage-assignments')[:DiscordCharacterLimits.BUTTON_LABEL]
+                    t(DEFAULT_LOCALE, 'config-label-manage-assignments')[:DiscordLimits.BUTTON_LABEL]
                 )
             )
             static_section.add_item(TextDisplay(
@@ -1657,7 +1687,7 @@ class ConfigStaticQuestRolesView(LocaleLayoutView):
         if self.total_pages > 1:
             nav_row = ActionRow()
             prev_button = Button(
-                label=t(DEFAULT_LOCALE, 'common-btn-previous')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(DEFAULT_LOCALE, 'common-btn-previous')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='static_qr_prev',
                 disabled=(self.current_page == 0)
@@ -1669,7 +1699,7 @@ class ConfigStaticQuestRolesView(LocaleLayoutView):
                 label=t(
                     DEFAULT_LOCALE, 'common-page-label',
                     current=str(self.current_page + 1), total=str(self.total_pages)
-                )[:DiscordCharacterLimits.BUTTON_LABEL],
+                )[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='static_qr_page'
             )
@@ -1677,7 +1707,7 @@ class ConfigStaticQuestRolesView(LocaleLayoutView):
             nav_row.add_item(page_display)
 
             next_button = Button(
-                label=t(DEFAULT_LOCALE, 'common-btn-next')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(DEFAULT_LOCALE, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='static_qr_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -1818,7 +1848,7 @@ class ConfigGMQuestRoleAssignView(LocaleLayoutView):
         if self.total_pages > 1:
             nav_row = ActionRow()
             prev_button = Button(
-                label=t(DEFAULT_LOCALE, 'common-btn-previous')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(DEFAULT_LOCALE, 'common-btn-previous')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='gm_qr_assign_prev',
                 disabled=(self.current_page == 0)
@@ -1830,7 +1860,7 @@ class ConfigGMQuestRoleAssignView(LocaleLayoutView):
                 label=t(
                     DEFAULT_LOCALE, 'common-page-label',
                     current=str(self.current_page + 1), total=str(self.total_pages)
-                )[:DiscordCharacterLimits.BUTTON_LABEL],
+                )[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='gm_qr_assign_page'
             )
@@ -1838,7 +1868,7 @@ class ConfigGMQuestRoleAssignView(LocaleLayoutView):
             nav_row.add_item(page_display)
 
             next_button = Button(
-                label=t(DEFAULT_LOCALE, 'common-btn-next')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(DEFAULT_LOCALE, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='gm_qr_assign_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -1923,7 +1953,8 @@ class ConfigPlayersView(LocaleLayoutView):
 
         new_character_section = Section(
             accessory=MenuViewButton(
-                ConfigNewCharacterView, t(DEFAULT_LOCALE, 'config-btn-new-character-settings')[:DiscordCharacterLimits.BUTTON_LABEL]
+                ConfigNewCharacterView,
+                t(DEFAULT_LOCALE, 'config-btn-new-character-settings')[:DiscordLimits.BUTTON_LABEL]
             )
         )
         new_character_section.add_item(TextDisplay(
@@ -1986,11 +2017,13 @@ class ConfigNewCharacterView(LocaleLayoutView):
         self.new_character_wealth = None
         self.currency_config = {}
         self.new_character_shop_button = MenuViewButton(
-            ConfigNewCharacterShopView, t(DEFAULT_LOCALE, 'config-btn-configure-new-character-shop')[:DiscordCharacterLimits.BUTTON_LABEL]
+            ConfigNewCharacterShopView,
+            t(DEFAULT_LOCALE, 'config-btn-configure-new-character-shop')[:DiscordLimits.BUTTON_LABEL]
         )
         self.new_character_wealth_button = buttons.ConfigNewCharacterWealthButton(self)
         self.static_kits_button = MenuViewButton(
-            ConfigStaticKitsView, t(DEFAULT_LOCALE, 'config-btn-configure-static-kits')[:DiscordCharacterLimits.BUTTON_LABEL]
+            ConfigStaticKitsView,
+            t(DEFAULT_LOCALE, 'config-btn-configure-static-kits')[:DiscordLimits.BUTTON_LABEL]
         )
 
     def build_view(self):
@@ -2067,9 +2100,13 @@ class ConfigNewCharacterView(LocaleLayoutView):
             self.currency_config = currency_config
 
             self.new_character_shop_button.disabled = True
-            self.new_character_shop_button.label = t(DEFAULT_LOCALE, 'config-btn-configure-new-character-shop')[:DiscordCharacterLimits.BUTTON_LABEL]
+            self.new_character_shop_button.label = t(
+                DEFAULT_LOCALE, 'config-btn-configure-new-character-shop'
+            )[:DiscordLimits.BUTTON_LABEL]
             self.new_character_wealth_button.disabled = True
-            self.new_character_wealth_button.label = t(DEFAULT_LOCALE, 'config-btn-configure-new-character-wealth')[:DiscordCharacterLimits.BUTTON_LABEL]
+            self.new_character_wealth_button.label = t(
+                DEFAULT_LOCALE, 'config-btn-configure-new-character-wealth'
+            )[:DiscordLimits.BUTTON_LABEL]
             self.static_kits_button.disabled = True
 
             if inventory_type == 'selection':
@@ -2077,16 +2114,24 @@ class ConfigNewCharacterView(LocaleLayoutView):
                 if currency_config:
                     self.new_character_wealth_button.disabled = False
                 else:
-                    self.new_character_wealth_button.label = t(DEFAULT_LOCALE, 'config-btn-disabled-no-currency')[:DiscordCharacterLimits.BUTTON_LABEL]
+                    self.new_character_wealth_button.label = t(
+                        DEFAULT_LOCALE, 'config-btn-disabled-no-currency'
+                    )[:DiscordLimits.BUTTON_LABEL]
 
             if inventory_type == 'purchase':
                 if not currency_config:
-                    self.new_character_shop_button.label = t(DEFAULT_LOCALE, 'config-btn-disabled-no-currency')[:DiscordCharacterLimits.BUTTON_LABEL]
-                    self.new_character_wealth_button.label = t(DEFAULT_LOCALE, 'config-btn-disabled-no-currency')[:DiscordCharacterLimits.BUTTON_LABEL]
+                    self.new_character_shop_button.label = t(
+                        DEFAULT_LOCALE, 'config-btn-disabled-no-currency'
+                    )[:DiscordLimits.BUTTON_LABEL]
+                    self.new_character_wealth_button.label = t(
+                        DEFAULT_LOCALE, 'config-btn-disabled-no-currency'
+                    )[:DiscordLimits.BUTTON_LABEL]
                 else:
                     self.new_character_wealth_button.disabled = False
                     if not new_character_wealth:
-                        self.new_character_shop_button.label = t(DEFAULT_LOCALE, 'config-btn-disabled-no-wealth')[:DiscordCharacterLimits.BUTTON_LABEL]
+                        self.new_character_shop_button.label = t(
+                            DEFAULT_LOCALE, 'config-btn-disabled-no-wealth'
+                        )[:DiscordLimits.BUTTON_LABEL]
                     else:
                         self.new_character_shop_button.disabled = False
 
@@ -2202,7 +2247,7 @@ class ConfigNewCharacterShopView(LocaleLayoutView):
             nav_row = ActionRow()
 
             prev_button = Button(
-                label=t(DEFAULT_LOCALE, 'common-btn-previous')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(DEFAULT_LOCALE, 'common-btn-previous')[:DiscordLimits.BUTTON_LABEL],
                 style=ButtonStyle.secondary,
                 custom_id='ss_prev',
                 disabled=(self.current_page == 0)
@@ -2214,14 +2259,14 @@ class ConfigNewCharacterShopView(LocaleLayoutView):
                 label=t(
                     DEFAULT_LOCALE, 'common-page-label',
                     current=str(self.current_page + 1), total=str(self.total_pages)
-                )[:DiscordCharacterLimits.BUTTON_LABEL],
+                )[:DiscordLimits.BUTTON_LABEL],
                 style=ButtonStyle.secondary,
                 disabled=True
             )
             nav_row.add_item(page_button)
 
             next_button = Button(
-                label=t(DEFAULT_LOCALE, 'common-btn-next')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(DEFAULT_LOCALE, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=ButtonStyle.primary,
                 custom_id='ss_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -2406,7 +2451,7 @@ class ConfigStaticKitsView(LocaleLayoutView):
             nav_row = ActionRow()
 
             prev_button = Button(
-                label=t(DEFAULT_LOCALE, 'common-btn-previous')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(DEFAULT_LOCALE, 'common-btn-previous')[:DiscordLimits.BUTTON_LABEL],
                 style=ButtonStyle.secondary,
                 custom_id='kit_conf_prev',
                 disabled=(self.current_page == 0)
@@ -2418,7 +2463,7 @@ class ConfigStaticKitsView(LocaleLayoutView):
                 label=t(
                     DEFAULT_LOCALE, 'common-page-label',
                     current=str(self.current_page + 1), total=str(self.total_pages)
-                )[:DiscordCharacterLimits.BUTTON_LABEL],
+                )[:DiscordLimits.BUTTON_LABEL],
                 style=ButtonStyle.secondary,
                 custom_id='kit_conf_page_disp'
             )
@@ -2426,7 +2471,7 @@ class ConfigStaticKitsView(LocaleLayoutView):
             nav_row.add_item(page_display)
 
             next_button = Button(
-                label=t(DEFAULT_LOCALE, 'common-btn-next')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(DEFAULT_LOCALE, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=ButtonStyle.secondary,
                 custom_id='kit_conf_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -2562,7 +2607,7 @@ class EditStaticKitView(LocaleLayoutView):
             if self.total_pages > 1:
                 nav_row = ActionRow()
                 prev_button = Button(
-                    label=t(DEFAULT_LOCALE, 'common-btn-previous')[:DiscordCharacterLimits.BUTTON_LABEL],
+                    label=t(DEFAULT_LOCALE, 'common-btn-previous')[:DiscordLimits.BUTTON_LABEL],
                     style=ButtonStyle.secondary,
                     custom_id='kit_prev',
                     disabled=(self.current_page == 0)
@@ -2574,14 +2619,14 @@ class EditStaticKitView(LocaleLayoutView):
                     label=t(
                         DEFAULT_LOCALE, 'common-page-label',
                         current=str(self.current_page + 1), total=str(self.total_pages)
-                    )[:DiscordCharacterLimits.BUTTON_LABEL],
+                    )[:DiscordLimits.BUTTON_LABEL],
                     style=ButtonStyle.secondary
                 )
                 page_button.callback = self.show_page_jump_modal
                 nav_row.add_item(page_button)
 
                 next_button = Button(
-                    label=t(DEFAULT_LOCALE, 'common-btn-next')[:DiscordCharacterLimits.BUTTON_LABEL],
+                    label=t(DEFAULT_LOCALE, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                     style=ButtonStyle.primary,
                     custom_id='kit_next',
                     disabled=(self.current_page >= self.total_pages - 1)
@@ -2695,7 +2740,7 @@ class ConfigCurrencyView(LocaleLayoutView):
         if self.total_pages > 1:
             nav_row = ActionRow()
             prev_button = Button(
-                label=t(DEFAULT_LOCALE, 'common-btn-previous')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(DEFAULT_LOCALE, 'common-btn-previous')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='curr_prev',
                 disabled=(self.current_page == 0)
@@ -2707,7 +2752,7 @@ class ConfigCurrencyView(LocaleLayoutView):
                 label=t(
                     DEFAULT_LOCALE, 'common-page-label',
                     current=str(self.current_page + 1), total=str(self.total_pages)
-                )[:DiscordCharacterLimits.BUTTON_LABEL],
+                )[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='curr_page_disp'
             )
@@ -2715,7 +2760,7 @@ class ConfigCurrencyView(LocaleLayoutView):
             nav_row.add_item(page_display)
 
             next_button = Button(
-                label=t(DEFAULT_LOCALE, 'common-btn-next')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(DEFAULT_LOCALE, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='curr_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -2805,7 +2850,9 @@ class ConfigEditCurrencyView(LocaleLayoutView):
 
         actions = ActionRow()
         toggle_double_button = buttons.ToggleDoubleButton(self)
-        toggle_double_button.label = t(DEFAULT_LOCALE, 'config-btn-toggle-display-current', type=display_type)[:DiscordCharacterLimits.BUTTON_LABEL]
+        toggle_double_button.label = t(
+            DEFAULT_LOCALE, 'config-btn-toggle-display-current', type=display_type
+        )[:DiscordLimits.BUTTON_LABEL]
         actions.add_item(toggle_double_button)
         actions.add_item(buttons.AddDenominationButton(self))
         actions.add_item(buttons.RenameCurrencyButton(self, self.currency_name))
@@ -2837,7 +2884,7 @@ class ConfigEditCurrencyView(LocaleLayoutView):
         if self.total_pages > 1:
             nav_row = ActionRow()
             prev_button = Button(
-                label=t(DEFAULT_LOCALE, 'common-btn-previous')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(DEFAULT_LOCALE, 'common-btn-previous')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='denom_prev',
                 disabled=(self.current_page == 0)
@@ -2849,7 +2896,7 @@ class ConfigEditCurrencyView(LocaleLayoutView):
                 label=t(
                     DEFAULT_LOCALE, 'common-page-label',
                     current=str(self.current_page + 1), total=str(self.total_pages)
-                )[:DiscordCharacterLimits.BUTTON_LABEL],
+                )[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='denom_page_disp'
             )
@@ -2857,7 +2904,7 @@ class ConfigEditCurrencyView(LocaleLayoutView):
             nav_row.add_item(page_display)
 
             next_button = Button(
-                label=t(DEFAULT_LOCALE, 'common-btn-next')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(DEFAULT_LOCALE, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='denom_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -2973,7 +3020,8 @@ class ConfigShopsView(LocaleLayoutView):
                 )
 
                 section = Section(accessory=buttons.ManageShopNavButton(
-                    channel_id, shop['data'], t(DEFAULT_LOCALE, 'common-btn-manage')[:DiscordCharacterLimits.BUTTON_LABEL]
+                    channel_id, shop['data'],
+                    t(DEFAULT_LOCALE, 'common-btn-manage')[:DiscordLimits.BUTTON_LABEL]
                 ))
                 section.add_item(TextDisplay(info))
                 container.add_item(section)
@@ -2983,7 +3031,7 @@ class ConfigShopsView(LocaleLayoutView):
         if self.total_pages > 1:
             nav_row = ActionRow()
             prev_button = Button(
-                label=t(DEFAULT_LOCALE, 'common-btn-previous')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(DEFAULT_LOCALE, 'common-btn-previous')[:DiscordLimits.BUTTON_LABEL],
                 style=ButtonStyle.secondary,
                 custom_id='conf_shop_prev',
                 disabled=(self.current_page == 0)
@@ -2995,7 +3043,7 @@ class ConfigShopsView(LocaleLayoutView):
                 label=t(
                     DEFAULT_LOCALE, 'common-page-label',
                     current=str(self.current_page + 1), total=str(self.total_pages)
-                )[:DiscordCharacterLimits.BUTTON_LABEL],
+                )[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='conf_shop_page'
             )
@@ -3003,7 +3051,7 @@ class ConfigShopsView(LocaleLayoutView):
             nav_row.add_item(page_display)
 
             next_button = Button(
-                label=t(DEFAULT_LOCALE, 'common-btn-next')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(DEFAULT_LOCALE, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=ButtonStyle.secondary,
                 custom_id='conf_shop_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -3101,7 +3149,7 @@ class ForumShopSetupView(LocaleLayoutView):
 
             new_thread_row = ActionRow()
             new_thread_btn = Button(
-                label=t(DEFAULT_LOCALE, 'config-btn-create-new-thread')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(DEFAULT_LOCALE, 'config-btn-create-new-thread')[:DiscordLimits.BUTTON_LABEL],
                 style=ButtonStyle.primary if self.create_new_thread else ButtonStyle.secondary,
                 custom_id='forum_new_thread_toggle'
             )
@@ -3109,7 +3157,7 @@ class ForumShopSetupView(LocaleLayoutView):
             new_thread_row.add_item(new_thread_btn)
 
             existing_thread_btn = Button(
-                label=t(DEFAULT_LOCALE, 'config-btn-use-existing-thread')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(DEFAULT_LOCALE, 'config-btn-use-existing-thread')[:DiscordLimits.BUTTON_LABEL],
                 style=ButtonStyle.primary if not self.create_new_thread else ButtonStyle.secondary,
                 custom_id='forum_existing_thread_toggle'
             )
@@ -3226,7 +3274,7 @@ class EditShopView(LocaleLayoutView):
         self.done_editing_button = buttons.ManageShopNavButton(
             self.channel_id,
             self.shop_data,
-            t(DEFAULT_LOCALE, 'config-btn-done-editing')[:DiscordCharacterLimits.BUTTON_LABEL],
+            t(DEFAULT_LOCALE, 'config-btn-done-editing')[:DiscordLimits.BUTTON_LABEL],
             ButtonStyle.secondary
         )
         self.currency_config = {}
@@ -3321,7 +3369,7 @@ class EditShopView(LocaleLayoutView):
             pagination_row = ActionRow()
 
             prev_button = Button(
-                label=t(DEFAULT_LOCALE, 'common-btn-previous')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(DEFAULT_LOCALE, 'common-btn-previous')[:DiscordLimits.BUTTON_LABEL],
                 style=ButtonStyle.secondary,
                 custom_id='shop_edit_prev',
                 disabled=(self.current_page == 0)
@@ -3332,14 +3380,14 @@ class EditShopView(LocaleLayoutView):
                 label=t(
                     DEFAULT_LOCALE, 'common-page-display',
                     current=str(self.current_page + 1), total=str(self.total_pages)
-                )[:DiscordCharacterLimits.BUTTON_LABEL],
+                )[:DiscordLimits.BUTTON_LABEL],
                 style=ButtonStyle.secondary,
                 custom_id='shop_edit_page'
             )
             page_display.callback = self.show_page_jump_modal
 
             next_button = Button(
-                label=t(DEFAULT_LOCALE, 'common-btn-next')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(DEFAULT_LOCALE, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=ButtonStyle.primary,
                 custom_id='shop_edit_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -3560,7 +3608,7 @@ class ConfigStockLimitsView(LocaleLayoutView):
             nav_row = ActionRow()
 
             prev_button = Button(
-                label=t(DEFAULT_LOCALE, 'common-btn-previous')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(DEFAULT_LOCALE, 'common-btn-previous')[:DiscordLimits.BUTTON_LABEL],
                 style=ButtonStyle.secondary,
                 custom_id='stock_limits_prev',
                 disabled=(self.current_page == 0)
@@ -3571,14 +3619,14 @@ class ConfigStockLimitsView(LocaleLayoutView):
                 label=t(
                     DEFAULT_LOCALE, 'common-page-display',
                     current=str(self.current_page + 1), total=str(self.total_pages)
-                )[:DiscordCharacterLimits.BUTTON_LABEL],
+                )[:DiscordLimits.BUTTON_LABEL],
                 style=ButtonStyle.secondary,
                 custom_id='stock_limits_page'
             )
             page_display.callback = self.show_page_jump_modal
 
             next_button = Button(
-                label=t(DEFAULT_LOCALE, 'common-btn-next')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(DEFAULT_LOCALE, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=ButtonStyle.primary,
                 custom_id='stock_limits_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -3669,7 +3717,7 @@ class ConfigRoleplayView(LocaleLayoutView):
         self.roleplay_toggle_button.label = (
             t(DEFAULT_LOCALE, 'common-btn-disable') if enabled
             else t(DEFAULT_LOCALE, 'common-btn-enable')
-        )[:DiscordCharacterLimits.BUTTON_LABEL]
+        )[:DiscordLimits.BUTTON_LABEL]
         self.roleplay_toggle_button.style = ButtonStyle.danger if enabled else ButtonStyle.success
         status_section.add_item(TextDisplay(status_text))
         container.add_item(status_section)
@@ -3830,7 +3878,7 @@ class ConfigLanguageView(LocaleLayoutView):
         if total_pages > 1:
             nav_row = ActionRow()
             prev_button = Button(
-                label=t(DEFAULT_LOCALE, 'common-btn-prev')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(DEFAULT_LOCALE, 'common-btn-prev')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='config_lang_prev_page',
                 disabled=(self.language_page == 0)
@@ -3839,14 +3887,14 @@ class ConfigLanguageView(LocaleLayoutView):
 
             page_display = Button(
                 label=t(DEFAULT_LOCALE, 'common-page-display',
-                        current=self.language_page + 1, total=total_pages)[:DiscordCharacterLimits.BUTTON_LABEL],
+                        current=self.language_page + 1, total=total_pages)[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='config_lang_page_display',
                 disabled=True
             )
 
             next_button = Button(
-                label=t(DEFAULT_LOCALE, 'common-btn-next')[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(DEFAULT_LOCALE, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='config_lang_next_page',
                 disabled=(self.language_page >= total_pages - 1)

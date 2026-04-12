@@ -4,7 +4,7 @@ import discord
 import discord.ui
 from discord.ui import Modal
 
-from ReQuest.utilities.constants import DiscordCharacterLimits
+from ReQuest.utilities.constants import DiscordLimits
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, set_locale_context
 from ReQuest.utilities.exceptions import log_exception, UserFeedbackError
 
@@ -25,15 +25,15 @@ class ConfirmModal(LocaleModal):
         self._locale = locale or DEFAULT_LOCALE
         self.confirm_word = t(self._locale, 'common-confirm-word')
         prompt_placeholder = t(self._locale, 'common-confirm-placeholder', confirmWord=self.confirm_word)
-        super().__init__(title=title[:DiscordCharacterLimits.MODAL_TITLE])
+        super().__init__(title=title[:DiscordLimits.MODAL_TITLE])
         self.confirm_callback = confirm_callback
         self.prompt = discord.ui.TextInput(
-            placeholder=prompt_placeholder[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
+            placeholder=prompt_placeholder[:DiscordLimits.TEXT_INPUT_PLACEHOLDER],
             required=True,
             max_length=len(self.confirm_word)
         )
         self.prompt_label = discord.ui.Label(
-            text=prompt_label[:DiscordCharacterLimits.LABEL_LABEL],
+            text=prompt_label[:DiscordLimits.LABEL_LABEL],
             component=self.prompt
         )
         self.add_item(self.prompt_label)
@@ -56,19 +56,19 @@ class PageJumpModal(LocaleModal):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         self._locale = locale
         super().__init__(
-            title=t(self._locale, 'common-page-jump-title')[:DiscordCharacterLimits.MODAL_TITLE],
+            title=t(self._locale, 'common-page-jump-title')[:DiscordLimits.MODAL_TITLE],
             timeout=180
         )
         self.calling_view = calling_view
         self.page_number_input = discord.ui.TextInput(
             custom_id='page_number_input',
             placeholder=t(self._locale, 'common-page-jump-placeholder',
-                         totalPages=str(self.calling_view.total_pages))[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
+                         totalPages=str(self.calling_view.total_pages))[:DiscordLimits.TEXT_INPUT_PLACEHOLDER],
             required=True,
             max_length=len(str(self.calling_view.total_pages))
         )
         self.page_number_label = discord.ui.Label(
-            text=t(self._locale, 'common-page-jump-label')[:DiscordCharacterLimits.LABEL_LABEL],
+            text=t(self._locale, 'common-page-jump-label')[:DiscordLimits.LABEL_LABEL],
             component=self.page_number_input
         )
         self.add_item(self.page_number_label)

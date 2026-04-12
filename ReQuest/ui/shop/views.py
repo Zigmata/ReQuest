@@ -20,7 +20,7 @@ from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.shop import buttons
 from ReQuest.utilities.constants import (
     CharacterFields, ConfigFields, ShopFields, CommonFields, CartFields, DatabaseCollections, DisplayLimits,
-    DiscordCharacterLimits
+    DiscordLimits
 )
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_locale
 from ReQuest.utilities.character import apply_currency_change_local, apply_item_change_local
@@ -175,7 +175,7 @@ class ShopBaseView(LocaleLayoutView):
             nav_row = ActionRow()
             if self.total_pages > 1:
                 prev_button = Button(
-                    label=t(locale, 'common-btn-previous')[:DiscordCharacterLimits.BUTTON_LABEL],
+                    label=t(locale, 'common-btn-previous')[:DiscordLimits.BUTTON_LABEL],
                     style=discord.ButtonStyle.secondary,
                     custom_id='shop_prev_page',
                     disabled=(self.current_page == 0)
@@ -186,14 +186,14 @@ class ShopBaseView(LocaleLayoutView):
                     label=t(
                         locale, 'common-page-display',
                         current=self.current_page + 1, total=self.total_pages
-                    )[:DiscordCharacterLimits.BUTTON_LABEL],
+                    )[:DiscordLimits.BUTTON_LABEL],
                     style=discord.ButtonStyle.secondary,
                     custom_id='shop_page_display'
                 )
                 page_display.callback = self.show_page_jump_modal
 
                 next_button = Button(
-                    label=t(locale, 'common-btn-next')[:DiscordCharacterLimits.BUTTON_LABEL],
+                    label=t(locale, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                     style=discord.ButtonStyle.primary,
                     custom_id='shop_next_page',
                     disabled=(self.current_page >= self.total_pages - 1)
@@ -209,9 +209,9 @@ class ShopBaseView(LocaleLayoutView):
             )
             view_cart_button = buttons.ViewCartButton(self)
             view_cart_button.label = (
-                t(locale, 'shop-btn-view-cart-count', count=cart_item_count)[:DiscordCharacterLimits.BUTTON_LABEL]
+                t(locale, 'shop-btn-view-cart-count', count=cart_item_count)[:DiscordLimits.BUTTON_LABEL]
                 if cart_item_count > 0
-                else t(locale, 'shop-btn-view-cart')[:DiscordCharacterLimits.BUTTON_LABEL]
+                else t(locale, 'shop-btn-view-cart')[:DiscordLimits.BUTTON_LABEL]
             )
 
             nav_row.add_item(view_cart_button)
@@ -405,7 +405,7 @@ class ShopCartView(LocaleLayoutView):
             if self.total_pages > 1:
 
                 prev_button = Button(
-                    label=t(locale, 'common-btn-previous')[:DiscordCharacterLimits.BUTTON_LABEL],
+                    label=t(locale, 'common-btn-previous')[:DiscordLimits.BUTTON_LABEL],
                     style=discord.ButtonStyle.secondary,
                     custom_id='shop_prev_page',
                     disabled=(self.current_page == 0)
@@ -416,14 +416,14 @@ class ShopCartView(LocaleLayoutView):
                     label=t(
                         locale, 'common-page-display',
                         current=self.current_page + 1, total=self.total_pages
-                    )[:DiscordCharacterLimits.BUTTON_LABEL],
+                    )[:DiscordLimits.BUTTON_LABEL],
                     style=discord.ButtonStyle.secondary,
                     custom_id='shop_page_display'
                 )
                 page_display.callback = self.show_page_jump_modal
 
                 next_button = Button(
-                    label=t(locale, 'common-btn-next')[:DiscordCharacterLimits.BUTTON_LABEL],
+                    label=t(locale, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                     style=discord.ButtonStyle.primary,
                     custom_id='shop_next_page',
                     disabled=(self.current_page >= self.total_pages - 1)
