@@ -66,7 +66,7 @@ class RemoveGMRoleButton(Button):
         super().__init__(
             label=t(DEFAULT_LOCALE, 'common-btn-remove')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
-            custom_id=f'remove_gm_role_{role_name}'
+            custom_id=f'remove_gm_role_{role_name}'[:DiscordLimits.COMPONENT_CUSTOM_ID]
         )
         self.calling_view = calling_view
         self.role_name = role_name
@@ -299,7 +299,7 @@ class RenameDenominationButton(Button):
         super().__init__(
             label=t(DEFAULT_LOCALE, 'common-btn-rename')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
-            custom_id=f'rename_denomination_button_{denomination_name}'
+            custom_id=f'rename_denomination_button_{denomination_name}'[:DiscordLimits.COMPONENT_CUSTOM_ID]
         )
         self.calling_view = calling_view
         self.denomination_name = denomination_name
@@ -338,7 +338,7 @@ class ManageCurrencyButton(Button):
         super().__init__(
             label=t(DEFAULT_LOCALE, 'common-btn-manage')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
-            custom_id=f'manage_currency_button_{currency_name}'
+            custom_id=f'manage_currency_button_{currency_name}'[:DiscordLimits.COMPONENT_CUSTOM_ID]
         )
         self.currency_name = currency_name
 

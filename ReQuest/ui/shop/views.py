@@ -598,16 +598,22 @@ class ShopCartView(LocaleLayoutView):
                 f'Player: {interaction.user.mention} as `{character_name}`\n'
                 f'Shop: {self.prev_view.shop_data.get(ShopFields.SHOP_NAME, t(locale, "common-label-unknown"))}'
             )
+
+            if added_items_summary:
+                stringified_items_summary = '\n'.join(added_items_summary)
+            else:
+                stringified_items_summary = t(locale, 'shop-label-no-items')
+
             receipt_embed.add_field(
-                name=t(locale, 'shop-embed-field-purchased'),
-                value="\n".join(added_items_summary) or t(locale, 'shop-label-no-items'),
+                name=t(locale, 'shop-embed-field-purchased')[:DiscordLimits.EMBED_FIELD_NAME],
+                value=stringified_items_summary[:DiscordLimits.EMBED_FIELD_VALUE],
                 inline=False
             )
 
             total_strs = format_consolidated_totals(committed_totals, committed_currency_config)
             receipt_embed.add_field(
-                name=t(locale, 'shop-embed-field-total-paid'),
-                value="\n".join(total_strs) or '0',
+                name=t(locale, 'shop-embed-field-total-paid')[:DiscordLimits.EMBED_FIELD_NAME],
+                value='\n'.join(total_strs)[:DiscordLimits.EMBED_FIELD_VALUE] or '0',
                 inline=False
             )
 
