@@ -3,7 +3,9 @@ from discord import ButtonStyle
 from discord.ui import Button
 
 from ReQuest.ui.shop import modals
-from ReQuest.utilities.constants import CharacterFields, ShopFields, CommonFields, CartFields, DatabaseCollections
+from ReQuest.utilities.constants import (
+    CharacterFields, ShopFields, CommonFields, CartFields, DatabaseCollections, DiscordLimits
+)
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.db_cache import get_cached_data
 from ReQuest.utilities.exceptions import UserFeedbackError, log_exception
@@ -31,15 +33,15 @@ class ShopItemButton(Button):
                 is_out_of_stock = True
 
         if is_out_of_stock:
-            label = t(locale, 'shop-btn-out-of-stock')
+            label = t(locale, 'shop-btn-out-of-stock')[:DiscordLimits.BUTTON_LABEL]
             style = ButtonStyle.secondary
             disabled = True
         elif len(costs) > 1:
-            label = t(locale, 'shop-btn-view-options')
+            label = t(locale, 'shop-btn-view-options')[:DiscordLimits.BUTTON_LABEL]
             style = ButtonStyle.success
             disabled = False
         else:
-            label = t(locale, 'shop-btn-add-to-cart', cost=cost_string)
+            label = t(locale, 'shop-btn-add-to-cart', cost=cost_string)[:DiscordLimits.BUTTON_LABEL]
             style = ButtonStyle.success
             disabled = False
 
@@ -84,7 +86,7 @@ class SelectCostOptionButton(Button):
     def __init__(self, shop_view, item, index):
         locale = getattr(shop_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'common-btn-select'),
+            label=t(locale, 'common-btn-select')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id=f'sel_opt_{item["name"]}_{index}'
         )
@@ -103,7 +105,7 @@ class ViewCartButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'shop-btn-view-cart'),
+            label=t(locale, 'shop-btn-view-cart')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='view_cart_button'
         )
@@ -155,7 +157,7 @@ class CartBackButton(Button):
     def __init__(self, target_view):
         locale = getattr(target_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'shop-btn-back-to-shop'),
+            label=t(locale, 'shop-btn-back-to-shop')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id='cart_back_button'
         )
@@ -173,7 +175,7 @@ class CartClearButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'shop-btn-clear-cart'),
+            label=t(locale, 'shop-btn-clear-cart')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id='cart_clear_button'
         )
@@ -206,7 +208,7 @@ class CartCheckoutButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'shop-btn-checkout'),
+            label=t(locale, 'shop-btn-checkout')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='cart_checkout_button'
         )
@@ -223,7 +225,7 @@ class EditCartItemButton(Button):
     def __init__(self, item_key, quantity, locale=None):
         locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label=t(locale, 'shop-btn-edit-quantity'),
+            label=t(locale, 'shop-btn-edit-quantity')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id=f'edit_cart_item_button_{item_key}'
         )

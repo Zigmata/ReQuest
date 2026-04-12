@@ -3,7 +3,7 @@ import logging
 import discord
 from discord.ui import Select
 
-from ReQuest.utilities.constants import QuestFields
+from ReQuest.utilities.constants import QuestFields, DiscordLimits
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.character import find_member_and_character_id_in_lists
 from ReQuest.utilities.exceptions import log_exception
@@ -17,7 +17,7 @@ class PartyMemberSelect(Select):
     def __init__(self, calling_view, disabled_components=None):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            placeholder=t(locale, 'gm-select-placeholder-party-member'),
+            placeholder=t(locale, 'gm-select-placeholder-party-member')[:DiscordLimits.SELECT_PLACEHOLDER],
             options=[],
             custom_id='party_member_select',
             disabled=True
@@ -50,7 +50,7 @@ class RemovePlayerSelect(Select):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            placeholder=t(locale, 'gm-select-placeholder-party-member'),
+            placeholder=t(locale, 'gm-select-placeholder-party-member')[:DiscordLimits.SELECT_PLACEHOLDER],
             options=[],
             custom_id='remove_player_select'
         )
@@ -66,8 +66,8 @@ class RemovePlayerSelect(Select):
             view.selected_member_id = member_id
             locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
             confirm_modal = common_modals.ConfirmModal(
-                title=t(locale, 'gm-modal-title-remove-from-quest'),
-                prompt_label=t(locale, 'gm-modal-label-remove-from-quest'),
+                title=t(locale, 'gm-modal-title-remove-from-quest')[:DiscordLimits.MODAL_TITLE],
+                prompt_label=t(locale, 'gm-modal-label-remove-from-quest')[:DiscordLimits.LABEL_LABEL],
                 confirm_callback=view.confirm_callback,
                 locale=locale
             )

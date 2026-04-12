@@ -8,7 +8,7 @@ from ReQuest.ui.common import modals as common_modals
 from ReQuest.ui.common.enums import InventoryType
 from ReQuest.ui.player import modals
 from ReQuest.utilities.constants import (
-    CharacterFields, CommonFields, ContainerFields, ShopFields, DatabaseCollections
+    CharacterFields, CommonFields, ContainerFields, ShopFields, DatabaseCollections, DiscordLimits
 )
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.containers import (
@@ -28,7 +28,7 @@ class RegisterCharacterButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'player-btn-register-character'),
+            label=t(locale, 'player-btn-register-character')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='register_character_button'
         )
@@ -46,7 +46,7 @@ class ResumeWizardButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'player-btn-resume'),
+            label=t(locale, 'player-btn-resume')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id='resume_wizard_button'
         )
@@ -74,7 +74,7 @@ class DiscardPendingCharacterButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'player-btn-discard'),
+            label=t(locale, 'player-btn-discard')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id='discard_pending_character_button'
         )
@@ -115,7 +115,7 @@ class DiscardPendingCharacterButton(Button):
 class ApprovalApproveButton(Button):
     def __init__(self, submission_id, locale=DEFAULT_LOCALE):
         super().__init__(
-            label=t(locale, 'player-approval-btn-approve'),
+            label=t(locale, 'player-approval-btn-approve')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id=f'approve_sub_{submission_id}'
         )
@@ -130,7 +130,7 @@ class ApprovalApproveButton(Button):
 class ApprovalDenyButton(Button):
     def __init__(self, submission_id, locale=DEFAULT_LOCALE):
         super().__init__(
-            label=t(locale, 'player-approval-btn-deny'),
+            label=t(locale, 'player-approval-btn-deny')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id=f'deny_sub_{submission_id}'
         )
@@ -145,7 +145,7 @@ class ApprovalDenyButton(Button):
 class ApprovalEditButton(Button):
     def __init__(self, submission_id, locale=DEFAULT_LOCALE):
         super().__init__(
-            label=t(locale, 'player-approval-btn-edit'),
+            label=t(locale, 'player-approval-btn-edit')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id=f'edit_sub_{submission_id}'
         )
@@ -161,7 +161,7 @@ class ValidationRetryButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'player-validation-btn-retry'),
+            label=t(locale, 'player-validation-btn-retry')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id='validation_retry_button'
         )
@@ -180,7 +180,7 @@ class RemoveCharacterButton(Button):
     def __init__(self, calling_view, character_id, character_name):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'common-btn-remove'),
+            label=t(locale, 'common-btn-remove')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id=f'remove_character_{character_id}'
         )
@@ -247,7 +247,7 @@ class ActivateCharacterButton(Button):
     def __init__(self, calling_view, character_id, disabled=False):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'player-btn-activate'),
+            label=t(locale, 'player-btn-activate')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id=f'activate_character_{character_id}',
             disabled=disabled
@@ -284,7 +284,7 @@ class CreatePlayerPostButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'player-btn-create-post'),
+            label=t(locale, 'player-btn-create-post')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='create_player_post_button'
         )
@@ -302,7 +302,7 @@ class RemovePlayerPostButton(Button):
     def __init__(self, calling_view, post):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'common-btn-remove'),
+            label=t(locale, 'common-btn-remove')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id=f'remove_player_post_button_{post.get("postId")}')
         self.calling_view = calling_view
@@ -368,7 +368,7 @@ class EditPlayerPostButton(Button):
     def __init__(self, calling_view, post):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'common-btn-edit'),
+            label=t(locale, 'common-btn-edit')[:DiscordLimits.BUTTON_LABEL],
             custom_id=f'edit_player_post_button_{post.get("postId")}'
         )
         self.calling_view = calling_view
@@ -386,7 +386,7 @@ class OpenStartingShopButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'player-btn-open-starting-shop'),
+            label=t(locale, 'player-btn-open-starting-shop')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id='open_starting_shop_button'
         )
@@ -409,7 +409,7 @@ class SelectStaticKitButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'player-btn-select-kit'),
+            label=t(locale, 'player-btn-select-kit')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id='select_static_kit_button'
         )
@@ -431,7 +431,7 @@ class OpenInventoryInputButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'player-btn-input-inventory'),
+            label=t(locale, 'player-btn-input-inventory')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id='open_inv_input_button'
         )
@@ -456,7 +456,7 @@ class WizardItemButton(Button):
                 label = t(locale, 'player-btn-add-to-cart-cost', costString=cost_string)
 
         super().__init__(
-            label=label,
+            label=label[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id=f'wiz_item_{item[CommonFields.NAME]}'
         )
@@ -479,7 +479,7 @@ class WizardSelectCostOptionButton(Button):
     def __init__(self, shop_view, item, index):
         locale = getattr(shop_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'common-btn-select'),
+            label=t(locale, 'common-btn-select')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id=f'wiz_sel_opt_{item[CommonFields.NAME]}_{index}'
         )
@@ -498,7 +498,7 @@ class WizardViewCartButton(Button):
     def __init__(self, calling_view, count=0):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'player-btn-review-submit', count=count),
+            label=t(locale, 'player-btn-review-submit', count=count)[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='wiz_view_cart_button'
         )
@@ -518,7 +518,7 @@ class WizardSubmitButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'player-btn-submit-character'),
+            label=t(locale, 'player-btn-submit-character')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='wiz_submit_button'
         )
@@ -535,7 +535,7 @@ class WizardKeepShoppingButton(Button):
     def __init__(self, shop_view):
         locale = getattr(shop_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'player-btn-keep-shopping'),
+            label=t(locale, 'player-btn-keep-shopping')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id='wiz_keep_shopping_button'
         )
@@ -552,7 +552,7 @@ class WizardKeepShoppingButton(Button):
 class WizardEditCartItemButton(Button):
     def __init__(self, item_key, quantity, locale=DEFAULT_LOCALE):
         super().__init__(
-            label=t(locale, 'player-btn-edit-quantity'),
+            label=t(locale, 'player-btn-edit-quantity')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id=f'wiz_edit_cart_{item_key}'
         )
@@ -571,7 +571,7 @@ class WizardClearCartButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'player-btn-clear-cart'),
+            label=t(locale, 'player-btn-clear-cart')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id='wiz_clear_cart_button'
         )
@@ -593,7 +593,7 @@ class SpendCurrencyButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'player-btn-spend-currency'),
+            label=t(locale, 'player-btn-spend-currency')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id='spend_currency_button'
         )
@@ -610,7 +610,7 @@ class SpendCurrencyButton(Button):
 class SelectKitOptionButton(Button):
     def __init__(self, kit_id, kit_data, locale=DEFAULT_LOCALE):
         super().__init__(
-            label=t(locale, 'common-btn-select'),
+            label=t(locale, 'common-btn-select')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id=f'sel_kit_{kit_id}'
         )
@@ -635,7 +635,7 @@ class SelectKitOptionButton(Button):
 class KitConfirmButton(Button):
     def __init__(self, locale=DEFAULT_LOCALE):
         super().__init__(
-            label=t(locale, 'player-btn-confirm-selection'),
+            label=t(locale, 'player-btn-confirm-selection')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='confirm_kit_btn'
         )
@@ -650,7 +650,7 @@ class KitConfirmButton(Button):
 class KitBackButton(Button):
     def __init__(self, locale=DEFAULT_LOCALE):
         super().__init__(
-            label=t(locale, 'player-btn-back-to-kits'),
+            label=t(locale, 'player-btn-back-to-kits')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id='kit_back_btn'
         )
@@ -672,7 +672,7 @@ class PrintInventoryButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'player-btn-print-inventory'),
+            label=t(locale, 'player-btn-print-inventory')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id='print_inventory_button'
         )
@@ -705,7 +705,7 @@ class ManageContainersButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'player-btn-manage-containers'),
+            label=t(locale, 'player-btn-manage-containers')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id='manage_containers_button'
         )
@@ -728,7 +728,7 @@ class CreateContainerButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'player-btn-create-new'),
+            label=t(locale, 'player-btn-create-new')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='create_container_button'
         )
@@ -746,7 +746,7 @@ class RenameContainerButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'common-btn-rename'),
+            label=t(locale, 'common-btn-rename')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id='rename_container_button',
             disabled=True
@@ -779,7 +779,7 @@ class DeleteContainerButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'common-btn-delete'),
+            label=t(locale, 'common-btn-delete')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id='delete_container_button',
             disabled=True
@@ -841,7 +841,7 @@ class MoveContainerUpButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'player-btn-up'),
+            label=t(locale, 'player-btn-up')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id='move_container_up_button',
             disabled=True
@@ -868,7 +868,7 @@ class MoveContainerDownButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'player-btn-down'),
+            label=t(locale, 'player-btn-down')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id='move_container_down_button',
             disabled=True
@@ -895,7 +895,7 @@ class ConsumeFromContainerButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'player-btn-consume-destroy'),
+            label=t(locale, 'player-btn-consume-destroy')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id='consume_from_container_button',
             disabled=True
@@ -927,7 +927,7 @@ class MoveItemButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'player-btn-move'),
+            label=t(locale, 'player-btn-move')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id='move_item_button',
             disabled=True
@@ -966,7 +966,7 @@ class MoveAllButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'player-btn-move-all'),
+            label=t(locale, 'player-btn-move-all')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='move_all_button',
             disabled=True
@@ -1003,7 +1003,7 @@ class MoveSomeButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'player-btn-move-some'),
+            label=t(locale, 'player-btn-move-some')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id='move_some_button',
             disabled=True
@@ -1025,7 +1025,7 @@ class MoveSomeButton(Button):
 class BackToInventoryOverviewButton(Button):
     def __init__(self, locale=DEFAULT_LOCALE):
         super().__init__(
-            label=t(locale, 'player-btn-back-to-overview'),
+            label=t(locale, 'player-btn-back-to-overview')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id='back_to_inv_overview_button'
         )
@@ -1044,7 +1044,7 @@ class CancelMoveButton(Button):
     def __init__(self, source_view):
         locale = getattr(source_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'player-btn-cancel-move'),
+            label=t(locale, 'player-btn-cancel-move')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id='cancel_move_button'
         )

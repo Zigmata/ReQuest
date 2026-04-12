@@ -20,7 +20,8 @@ from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
 from ReQuest.ui.common.enums import InventoryType
 from ReQuest.ui.player import buttons, selects
 from ReQuest.utilities.constants import (
-    ApprovalFields, CharacterFields, ConfigFields, CommonFields, ShopFields, DatabaseCollections, DisplayLimits
+    ApprovalFields, CharacterFields, ConfigFields, CommonFields, ShopFields, DatabaseCollections,
+    DiscordLimits, DisplayLimits
 )
 from ReQuest.utilities.checks import is_gm_or_mod
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_locale
@@ -45,7 +46,7 @@ class PlayerBaseView(LocaleLayoutView):
         super().__init__()
         locale = getattr(self, 'locale', DEFAULT_LOCALE)
         self.player_board_button = MenuViewButton(
-            PlayerBoardView, t(locale, 'player-menu-btn-player-board')
+            PlayerBoardView, t(locale, 'player-menu-btn-player-board')[:DiscordLimits.BUTTON_LABEL]
         )
 
         self.build_view()
@@ -60,13 +61,17 @@ class PlayerBaseView(LocaleLayoutView):
         container.add_item(Separator())
 
         character_section = Section(
-            accessory=MenuViewButton(CharacterBaseView, t(locale, 'player-menu-btn-characters'))
+            accessory=MenuViewButton(
+                CharacterBaseView,
+                t(locale, 'player-menu-btn-characters')[:DiscordLimits.BUTTON_LABEL])
         )
         character_section.add_item(TextDisplay(t(locale, 'player-menu-desc-characters')))
         container.add_item(character_section)
 
         inventory_section = Section(
-            accessory=MenuViewButton(InventoryOverviewView, t(locale, 'player-menu-btn-inventory'))
+            accessory=MenuViewButton(
+                InventoryOverviewView,
+                t(locale, 'player-menu-btn-inventory')[:DiscordLimits.BUTTON_LABEL])
         )
         inventory_section.add_item(TextDisplay(t(locale, 'player-menu-desc-inventory')))
         container.add_item(inventory_section)
@@ -90,7 +95,9 @@ class PlayerBaseView(LocaleLayoutView):
                 self.player_board_button.disabled = False
             else:
                 self.player_board_button.disabled = True
-                self.player_board_button.label = t(locale, 'player-menu-btn-player-board-disabled')
+                self.player_board_button.label = t(
+                    locale, 'player-menu-btn-player-board-disabled'
+                )[:DiscordLimits.BUTTON_LABEL]
         except Exception as e:
             await log_exception(e)
 
@@ -210,7 +217,7 @@ class CharacterBaseView(LocaleLayoutView):
 
                 activate_button = buttons.ActivateCharacterButton(self, character_id, disabled=is_active)
                 if is_active:
-                    activate_button.label = t(locale, 'player-btn-active')
+                    activate_button.label = t(locale, 'player-btn-active')[:DiscordLimits.BUTTON_LABEL]
                     activate_button.style = discord.ButtonStyle.success
 
                 actions.add_item(activate_button)
@@ -225,7 +232,7 @@ class CharacterBaseView(LocaleLayoutView):
             nav_row = ActionRow()
 
             prev_button = Button(
-                label=t(locale, 'common-btn-previous'),
+                label=t(locale, 'common-btn-previous')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='char_prev',
                 disabled=(self.current_page == 0)
@@ -234,7 +241,8 @@ class CharacterBaseView(LocaleLayoutView):
             nav_row.add_item(prev_button)
 
             page_display = Button(
-                label=t(locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages),
+                label=t(locale, 'common-page-label', current=self.current_page + 1,
+                       total=self.total_pages)[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='char_page_disp'
             )
@@ -242,7 +250,7 @@ class CharacterBaseView(LocaleLayoutView):
             nav_row.add_item(page_display)
 
             next_button = Button(
-                label=t(locale, 'common-btn-next'),
+                label=t(locale, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='char_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -482,7 +490,7 @@ class InventoryOverviewView(LocaleLayoutView):
             nav_row = ActionRow()
 
             prev_button = Button(
-                label=t(locale, 'common-btn-previous'),
+                label=t(locale, 'common-btn-previous')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='inv_overview_prev',
                 disabled=(self.current_page == 0)
@@ -491,7 +499,8 @@ class InventoryOverviewView(LocaleLayoutView):
             nav_row.add_item(prev_button)
 
             page_button = Button(
-                label=t(locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages),
+                label=t(locale, 'common-page-label', current=self.current_page + 1,
+                       total=self.total_pages)[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='inv_overview_page'
             )
@@ -499,7 +508,7 @@ class InventoryOverviewView(LocaleLayoutView):
             nav_row.add_item(page_button)
 
             next_button = Button(
-                label=t(locale, 'common-btn-next'),
+                label=t(locale, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='inv_overview_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -634,7 +643,7 @@ class ContainerItemsView(LocaleLayoutView):
             nav_row = ActionRow()
 
             prev_button = Button(
-                label=t(locale, 'common-btn-previous'),
+                label=t(locale, 'common-btn-previous')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='container_items_prev',
                 disabled=(self.current_page == 0)
@@ -643,7 +652,8 @@ class ContainerItemsView(LocaleLayoutView):
             nav_row.add_item(prev_button)
 
             page_button = Button(
-                label=t(locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages),
+                label=t(locale, 'common-page-label', current=self.current_page + 1,
+                       total=self.total_pages)[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='container_items_page'
             )
@@ -651,7 +661,7 @@ class ContainerItemsView(LocaleLayoutView):
             nav_row.add_item(page_button)
 
             next_button = Button(
-                label=t(locale, 'common-btn-next'),
+                label=t(locale, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='container_items_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -792,7 +802,7 @@ class MoveDestinationView(LocaleLayoutView):
             nav_row = ActionRow()
 
             prev_button = Button(
-                label=t(locale, 'common-btn-previous'),
+                label=t(locale, 'common-btn-previous')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='move_dest_prev',
                 disabled=(self.current_page == 0)
@@ -801,7 +811,8 @@ class MoveDestinationView(LocaleLayoutView):
             nav_row.add_item(prev_button)
 
             page_button = Button(
-                label=t(locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages),
+                label=t(locale, 'common-page-label', current=self.current_page + 1,
+                       total=self.total_pages)[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='move_dest_page'
             )
@@ -809,7 +820,7 @@ class MoveDestinationView(LocaleLayoutView):
             nav_row.add_item(page_button)
 
             next_button = Button(
-                label=t(locale, 'common-btn-next'),
+                label=t(locale, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='move_dest_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -969,7 +980,7 @@ class ContainerManagementView(LocaleLayoutView):
             nav_row = ActionRow()
 
             prev_button = Button(
-                label=t(locale, 'common-btn-previous'),
+                label=t(locale, 'common-btn-previous')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='manage_containers_prev',
                 disabled=(self.current_page == 0)
@@ -978,7 +989,8 @@ class ContainerManagementView(LocaleLayoutView):
             nav_row.add_item(prev_button)
 
             page_button = Button(
-                label=t(locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages),
+                label=t(locale, 'common-page-label', current=self.current_page + 1,
+                       total=self.total_pages)[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='manage_containers_page'
             )
@@ -986,7 +998,7 @@ class ContainerManagementView(LocaleLayoutView):
             nav_row.add_item(page_button)
 
             next_button = Button(
-                label=t(locale, 'common-btn-next'),
+                label=t(locale, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='manage_containers_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -1105,7 +1117,7 @@ class PlayerBoardView(LocaleLayoutView):
             nav_row = ActionRow()
 
             prev_button = Button(
-                label=t(locale, 'common-btn-previous'),
+                label=t(locale, 'common-btn-previous')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='pb_prev',
                 disabled=(self.current_page == 0)
@@ -1114,7 +1126,8 @@ class PlayerBoardView(LocaleLayoutView):
             nav_row.add_item(prev_button)
 
             page_display = Button(
-                label=t(locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages),
+                label=t(locale, 'common-page-label', current=self.current_page + 1,
+                       total=self.total_pages)[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='pb_page_disp'
             )
@@ -1122,7 +1135,7 @@ class PlayerBoardView(LocaleLayoutView):
             nav_row.add_item(page_display)
 
             next_button = Button(
-                label=t(locale, 'common-btn-next'),
+                label=t(locale, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='pb_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -1285,7 +1298,7 @@ class ValidationErrorView(LocaleLayoutView):
         if self.total_pages > 1:
             nav_row = ActionRow()
             prev_button = Button(
-                label=t(locale, 'common-btn-prev'),
+                label=t(locale, 'common-btn-prev')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='val_err_prev',
                 disabled=(self.current_page == 0)
@@ -1294,14 +1307,14 @@ class ValidationErrorView(LocaleLayoutView):
 
             page_display = Button(
                 label=t(locale, 'common-page-label',
-                        current=self.current_page + 1, total=self.total_pages),
+                        current=self.current_page + 1, total=self.total_pages)[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='val_err_page'
             )
             page_display.callback = self.show_page_jump_modal
 
             next_button = Button(
-                label=t(locale, 'common-btn-next'),
+                label=t(locale, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='val_err_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -1477,7 +1490,7 @@ class StaticKitSelectView(LocaleLayoutView):
         if self.total_pages > 1:
             nav_row = ActionRow()
             prev_button = Button(
-                label=t(locale, 'common-btn-prev'),
+                label=t(locale, 'common-btn-prev')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='kit_prev',
                 disabled=(self.current_page == 0)
@@ -1485,14 +1498,15 @@ class StaticKitSelectView(LocaleLayoutView):
             prev_button.callback = self.prev_page
 
             page_display = Button(
-                label=t(locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages),
+                label=t(locale, 'common-page-label', current=self.current_page + 1,
+                       total=self.total_pages)[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='kit_page_display'
             )
             page_display.callback = self.show_page_jump_modal
 
             next_button = Button(
-                label=t(locale, 'common-btn-next'),
+                label=t(locale, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='kit_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -1551,7 +1565,8 @@ class StaticKitConfirmView(LocaleLayoutView):
 
         description = self.kit_data.get('description')
         if description:
-            container.add_item(TextDisplay(escape_markdown(truncate_text(description, DisplayLimits.ITEM_DESCRIPTION))))
+            container.add_item(TextDisplay(
+                escape_markdown(truncate_text(description, DisplayLimits.ITEM_DESCRIPTION))))
             container.add_item(Separator())
 
         items = self.kit_data.get(CommonFields.ITEMS, [])
@@ -1567,7 +1582,8 @@ class StaticKitConfirmView(LocaleLayoutView):
             for item in items:
                 detail_lines.append(
                     f'- {item.get(CommonFields.QUANTITY, 1)}x '
-                    f'{escape_markdown(truncate_text(titlecase(item.get(CommonFields.NAME)), DisplayLimits.ITEM_NAME))}'
+                    f'{escape_markdown(truncate_text(
+                        titlecase(item.get(CommonFields.NAME)), DisplayLimits.ITEM_NAME))}'
                 )
 
         if not detail_lines:
@@ -1595,7 +1611,7 @@ class StaticKitConfirmView(LocaleLayoutView):
         if self.total_pages > 1:
             nav_row = ActionRow()
             prev_button = Button(
-                label=t(locale, 'common-btn-prev'),
+                label=t(locale, 'common-btn-prev')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='kit_confirm_prev',
                 disabled=(self.current_page == 0)
@@ -1603,14 +1619,15 @@ class StaticKitConfirmView(LocaleLayoutView):
             prev_button.callback = self.prev_page
 
             page_display = Button(
-                label=t(locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages),
+                label=t(locale, 'common-page-label', current=self.current_page + 1,
+                       total=self.total_pages)[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='kit_confirm_page'
             )
             page_display.callback = self.show_page_jump_modal
 
             next_button = Button(
-                label=t(locale, 'common-btn-next'),
+                label=t(locale, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='kit_confirm_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -1792,7 +1809,7 @@ class NewCharacterShopView(LocaleLayoutView):
         nav_row = ActionRow()
         if self.total_pages > 1:
             prev_button = Button(
-                label=t(locale, 'common-btn-prev'),
+                label=t(locale, 'common-btn-prev')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='wiz_prev',
                 disabled=(self.current_page == 0)
@@ -1800,7 +1817,7 @@ class NewCharacterShopView(LocaleLayoutView):
             prev_button.callback = self.prev_page
 
             next_button = Button(
-                label=t(locale, 'common-btn-next'),
+                label=t(locale, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='wiz_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -1987,7 +2004,7 @@ class NewCharacterCartView(LocaleLayoutView):
         nav_row = ActionRow()
         if self.total_pages > 1:
             prev_button = Button(
-                label=t(locale, 'common-btn-prev'),
+                label=t(locale, 'common-btn-prev')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='wiz_cart_prev',
                 disabled=(self.current_page == 0)
@@ -1995,14 +2012,15 @@ class NewCharacterCartView(LocaleLayoutView):
             prev_button.callback = self.prev_page
 
             page_display = Button(
-                label=t(locale, 'player-label-cart-page', current=self.current_page + 1, total=self.total_pages),
+                label=t(locale, 'player-label-cart-page', current=self.current_page + 1,
+                       total=self.total_pages)[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='wiz_cart_page_display'
             )
             page_display.callback = self.show_page_jump_modal
 
             next_button = Button(
-                label=t(locale, 'common-btn-next'),
+                label=t(locale, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='wiz_cart_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -2163,7 +2181,7 @@ class ApprovalPostView(LocaleLayoutView):
         if not self.resolved and self.total_pages > 1:
             nav_row = ActionRow()
             prev_button = Button(
-                label=t(locale, 'common-btn-prev'),
+                label=t(locale, 'common-btn-prev')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id=f'approval_prev_{self.submission_id}',
                 disabled=(self.current_page == 0)
@@ -2172,14 +2190,14 @@ class ApprovalPostView(LocaleLayoutView):
 
             page_display = Button(
                 label=t(locale, 'common-page-label',
-                        current=self.current_page + 1, total=self.total_pages),
+                        current=self.current_page + 1, total=self.total_pages)[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id=f'approval_page_{self.submission_id}'
             )
             page_display.callback = self.show_page_jump_modal
 
             next_button = Button(
-                label=t(locale, 'common-btn-next'),
+                label=t(locale, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id=f'approval_next_{self.submission_id}',
                 disabled=(self.current_page >= self.total_pages - 1)

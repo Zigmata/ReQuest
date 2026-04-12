@@ -1,7 +1,7 @@
 import discord
 from ReQuest.ui.common.modals import LocaleModal
 
-from ReQuest.utilities.constants import CartFields
+from ReQuest.utilities.constants import CartFields, DiscordLimits
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.exceptions import UserFeedbackError, log_exception
 from ReQuest.utilities.db_cache import run_in_transaction
@@ -13,21 +13,24 @@ class EditCartItemModal(LocaleModal):
         locale = getattr(cart_view, 'locale', DEFAULT_LOCALE)
         self._locale = locale
         super().__init__(
-            title=t(locale, 'shop-modal-title-edit-cart-qty'),
+            title=t(locale, 'shop-modal-title-edit-cart-qty')[:DiscordLimits.MODAL_TITLE],
         )
         self.cart_view = cart_view
         self.item_key = item_key
         self.current_quantity = current_quantity
 
         self.quantity_text_input = discord.ui.TextInput(
-            label=t(locale, 'shop-modal-label-quantity'),
             default=str(current_quantity),
             min_length=1,
             max_length=5,
-            placeholder=t(locale, 'shop-modal-placeholder-quantity'),
+            placeholder=t(locale, 'shop-modal-placeholder-quantity')[:DiscordLimits.TEXT_INPUT_PLACEHOLDER],
             custom_id='cart_quantity_text_input'
         )
-        self.add_item(self.quantity_text_input)
+        self.quantity_label = discord.ui.Label(
+            text=t(locale, 'shop-modal-label-quantity')[:DiscordLimits.LABEL_LABEL],
+            component=self.quantity_text_input
+        )
+        self.add_item(self.quantity_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:

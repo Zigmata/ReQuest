@@ -8,10 +8,13 @@ from discord.ui import Button
 from ReQuest.ui.common.modals import ConfirmModal
 from ReQuest.ui.gm import modals
 from ReQuest.ui.common.enums import RewardType
-from ReQuest.utilities.constants import QuestFields, QuestStatus, ConfigFields, CommonFields, DatabaseCollections
+from ReQuest.utilities.constants import (QuestFields, QuestStatus, ConfigFields, CommonFields, DatabaseCollections,
+                                         DiscordLimits)
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_locale
 from ReQuest.utilities.db_cache import get_cached_data, update_cached_data, delete_cached_data, build_cache_key
-from ReQuest.utilities.discord_utils import setup_view, strip_id, attempt_delete, get_guild_member, check_role_hierarchy
+from ReQuest.utilities.discord_utils import (
+    setup_view, strip_id, attempt_delete, get_guild_member, check_role_hierarchy
+)
 from ReQuest.utilities.exceptions import log_exception, UserFeedbackError
 
 logger = logging.getLogger(__name__)
@@ -21,7 +24,7 @@ class CreateQuestButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'gm-btn-create'),
+            label=t(locale, 'gm-btn-create')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='create_quest_button'
         )
@@ -39,7 +42,7 @@ class EditQuestButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'gm-btn-edit-details'),
+            label=t(locale, 'gm-btn-edit-details')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id='edit_quest_button'
         )
@@ -59,7 +62,7 @@ class EditQuestDetailsComboButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'gm-btn-edit-details-modal'),
+            label=t(locale, 'gm-btn-edit-details-modal')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id='edit_quest_details_combo_button'
         )
@@ -77,7 +80,7 @@ class EditQuestImagesComboButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'gm-btn-edit-images'),
+            label=t(locale, 'gm-btn-edit-images')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id='edit_quest_images_combo_button'
         )
@@ -101,7 +104,7 @@ class PublishQuestButton(Button):
         else:
             label = t(locale, 'gm-btn-update-post')
         super().__init__(
-            label=label,
+            label=label[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='publish_quest_button'
         )
@@ -300,7 +303,7 @@ class ToggleReadyButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'gm-btn-toggle-ready'),
+            label=t(locale, 'gm-btn-toggle-ready')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id='toggle_ready_button'
         )
@@ -317,7 +320,7 @@ class RewardsMenuButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'gm-btn-configure-rewards'),
+            label=t(locale, 'gm-btn-configure-rewards')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id='rewards_menu_button'
         )
@@ -337,7 +340,7 @@ class RemovePlayerButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'gm-btn-remove-player'),
+            label=t(locale, 'gm-btn-remove-player')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id='remove_player_button'
         )
@@ -358,7 +361,7 @@ class CancelQuestButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'gm-btn-cancel-quest'),
+            label=t(locale, 'gm-btn-cancel-quest')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id='cancel_quest_button'
         )
@@ -368,8 +371,8 @@ class CancelQuestButton(Button):
         try:
             locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
             confirm_modal = ConfirmModal(
-                title=t(locale, 'gm-modal-title-cancel-quest'),
-                prompt_label=t(locale, 'gm-modal-label-cancel-quest'),
+                title=t(locale, 'gm-modal-title-cancel-quest')[:DiscordLimits.MODAL_TITLE],
+                prompt_label=t(locale, 'gm-modal-label-cancel-quest')[:DiscordLimits.LABEL_LABEL],
                 confirm_callback=self.confirm_callback,
                 locale=locale
             )
@@ -397,7 +400,9 @@ class CancelQuestButton(Button):
                         member = await get_guild_member(guild, int(member_id))
                         if member:
                             try:
-                                member_locale = await resolve_locale(bot=bot, user_id=int(member_id), guild_id=guild_id)
+                                member_locale = await resolve_locale(
+                                    bot=bot, user_id=int(member_id), guild_id=guild_id
+                                )
                                 from ReQuest.ui.gm.views import _build_quest_dm_embed
                                 cancel_embed = _build_quest_dm_embed(
                                     member_locale, 'gm-dm-title-quest-cancelled', 'gm-dm-desc-quest-cancelled',
@@ -516,7 +521,7 @@ class PartyRewardsButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'gm-btn-manage-party-rewards'),
+            label=t(locale, 'gm-btn-manage-party-rewards')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id='party_rewards_button'
         )
@@ -583,7 +588,7 @@ class IndividualRewardsButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'gm-btn-manage-individual-rewards'),
+            label=t(locale, 'gm-btn-manage-individual-rewards')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id='individual_rewards_button',
             disabled=True
@@ -652,7 +657,7 @@ class CompleteQuestButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(locale, 'gm-btn-complete-quest'),
+            label=t(locale, 'gm-btn-complete-quest')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='complete_quest_button'
         )
@@ -681,7 +686,7 @@ class CompleteQuestButton(Button):
 class ManageQuestRowButton(Button):
     def __init__(self, quest, locale=DEFAULT_LOCALE):
         super().__init__(
-            label=t(locale, 'common-btn-manage'),
+            label=t(locale, 'common-btn-manage')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id=f'manage_quest_{quest[QuestFields.QUEST_ID]}'
         )
@@ -700,7 +705,7 @@ class ManageQuestRowButton(Button):
 class BackToManageQuestButton(Button):
     def __init__(self, quest, locale=DEFAULT_LOCALE):
         super().__init__(
-            label=t(locale, 'common-btn-back'),
+            label=t(locale, 'common-btn-back')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id='back_to_manage_quest'
         )
