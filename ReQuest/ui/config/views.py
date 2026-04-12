@@ -102,7 +102,7 @@ class ConfigWizardView(LocaleLayoutView):
         super().__init__(timeout=None)
         self.pages = []
         self.current_page = 0
-        self.total_pages = 4
+        self.total_pages = 5
         self.intro_text = t(DEFAULT_LOCALE, 'config-wizard-intro')
 
         self.build_view()
@@ -216,7 +216,7 @@ class ConfigWizardView(LocaleLayoutView):
             await interaction.response.edit_message(view=self)
 
     @staticmethod
-    def validate_bot_permission(guild):
+    def validate_bot_permission(guild, guild_locale=None):
         """
         Validate the bot's global permissions.
         Returns (report_string, has_warnings_boolean)
@@ -225,7 +225,6 @@ class ConfigWizardView(LocaleLayoutView):
             bot_member = guild.me
             bot_perms = bot_member.guild_permissions
 
-            # Use a dictionary to map permission attribute names to readable names
             required_permissions = {
                 'view_channel': t(DEFAULT_LOCALE, 'config-wizard-perm-view-channels'),
                 'manage_roles': t(DEFAULT_LOCALE, 'config-wizard-perm-manage-roles'),
@@ -243,10 +242,13 @@ class ConfigWizardView(LocaleLayoutView):
                 if not getattr(bot_perms, attr):
                     missing_perms.append(t(DEFAULT_LOCALE, 'config-wizard-missing-perm', permissionName=name))
 
+            language_display = guild_locale or t(DEFAULT_LOCALE, 'config-wizard-server-language-default')
+
             report_lines = [
                 t(DEFAULT_LOCALE, 'config-wizard-bot-permissions-header'),
                 t(DEFAULT_LOCALE, 'config-wizard-bot-permissions-desc') + '\n',
-                t(DEFAULT_LOCALE, 'config-wizard-bot-role', roleMention=bot_member.top_role.mention)
+                t(DEFAULT_LOCALE, 'config-wizard-bot-role', roleMention=bot_member.top_role.mention),
+                t(DEFAULT_LOCALE, 'config-wizard-server-language', language=language_display)
             ]
 
             if missing_perms:
@@ -589,19 +591,21 @@ class ConfigWizardView(LocaleLayoutView):
 
         return '\n'.join(report_lines)
 
-    def validate_dashboard_settings(self, wait_list_query, quest_summary_query, gm_rewards_query,
-                                    player_xp_query, currency_config, roleplay_config,
-                                    shops_config, inventory_config, new_char_shop, static_kits):
-
-        # Fetch data
-        wait_list_size = wait_list_query.get(ConfigFields.QUEST_WAIT_LIST, 0) if wait_list_query else 0
-        summary_enabled = quest_summary_query.get('questSummary', False) if quest_summary_query else False
-        xp_enabled = player_xp_query.get(ConfigFields.PLAYER_EXPERIENCE, False) if player_xp_query else False
-
-        # Define different sections/components
+    def validate_quest_settings(self, guild, wait_list_query, quest_summary_query,
+                                gm_rewards_query, quest_role_mode_query,
+                                quest_role_assignments_query):
+        """Build page 5: quest settings overview + GM quest role audit."""
         components = []
 
-        # Quest Settings
+        # Basic quest settings
+        wait_list_size = (
+            wait_list_query.get(ConfigFields.QUEST_WAIT_LIST, 0)
+            if wait_list_query else 0
+        )
+        summary_enabled = (
+            quest_summary_query.get('questSummary', False)
+            if quest_summary_query else False
+        )
         wait_list_display = (
             str(wait_list_size) if wait_list_size > 0
             else t(DEFAULT_LOCALE, 'config-label-rp-disabled')
@@ -610,10 +614,17 @@ class ConfigWizardView(LocaleLayoutView):
             t(DEFAULT_LOCALE, 'config-label-rp-enabled') if summary_enabled
             else t(DEFAULT_LOCALE, 'config-label-rp-disabled')
         )
+
+        quest_role_mode = (
+            quest_role_mode_query.get(ConfigFields.QUEST_ROLE_MODE, 'temporary')
+            if quest_role_mode_query else 'temporary'
+        )
+
         quest_section_content = [
             t(DEFAULT_LOCALE, 'config-wizard-quest-settings'),
             t(DEFAULT_LOCALE, 'config-wizard-quest-wait-list', size=wait_list_display),
             t(DEFAULT_LOCALE, 'config-wizard-quest-summary', status=summary_display),
+            t(DEFAULT_LOCALE, 'config-wizard-quest-role-mode', mode=quest_role_mode.capitalize()),
             '\n' + t(DEFAULT_LOCALE, 'config-wizard-gm-rewards-per-quest'),
             self._format_gm_rewards_report(gm_rewards_query)
         ]
@@ -621,9 +632,104 @@ class ConfigWizardView(LocaleLayoutView):
             'content': '\n'.join(quest_section_content),
             'shortcut_button': MenuViewButton(
                 ConfigQuestsView,
-                t(DEFAULT_LOCALE, 'config-btn-configure-quests')[:DiscordLimits.BUTTON_LABEL]
+                t(DEFAULT_LOCALE, 'config-btn-configure-quests')[
+                    :DiscordLimits.BUTTON_LABEL]
             )
         })
+
+        # GM Quest Roles audit (only for static mode)
+        quest_roles_content = [t(DEFAULT_LOCALE, 'config-wizard-quest-roles-label')]
+
+        if quest_role_mode != 'static':
+            quest_roles_content.append(
+                t(DEFAULT_LOCALE, 'config-wizard-quest-roles-not-static')
+            )
+        else:
+            assignments = (
+                quest_role_assignments_query.get(
+                    ConfigFields.QUEST_ROLE_ASSIGNMENTS, [])
+                if quest_role_assignments_query else []
+            )
+
+            if not assignments:
+                quest_roles_content.append(
+                    t(DEFAULT_LOCALE, 'config-wizard-quest-roles-no-assignments')
+                )
+            else:
+                unique_role_ids = {a['roleId'] for a in assignments}
+                quest_roles_content.append(
+                    t(DEFAULT_LOCALE, 'config-wizard-quest-roles-count',
+                      count=str(len(unique_role_ids)))
+                )
+
+                default_role = guild.default_role
+                all_ok = True
+
+                for role_id in sorted(unique_role_ids):
+                    role = guild.get_role(int(role_id))
+                    gm_user_ids = [
+                        a['userId'] for a in assignments
+                        if a['roleId'] == role_id
+                    ]
+
+                    if not role:
+                        all_ok = False
+                        quest_roles_content.append(
+                            t(DEFAULT_LOCALE,
+                              'config-wizard-quest-roles-not-found',
+                              roleId=role_id)
+                        )
+                        continue
+
+                    escalation_report = self._has_escalations(
+                        role, default_role
+                    )
+
+                    if escalation_report.has_escalations:
+                        all_ok = False
+                        quest_roles_content.extend(
+                            escalation_report.report_lines
+                        )
+                        gm_mentions = [
+                            f'<@{uid}>' for uid in gm_user_ids
+                        ]
+                        quest_roles_content.append(
+                            t(DEFAULT_LOCALE,
+                              'config-wizard-quest-roles-assigned-to',
+                              gmNames=', '.join(gm_mentions))
+                        )
+
+                if all_ok:
+                    quest_roles_content.append(
+                        t(DEFAULT_LOCALE, 'config-wizard-quest-roles-all-ok')
+                    )
+
+        components.append({
+            'content': '\n'.join(quest_roles_content),
+            'shortcut_button': MenuViewButton(
+                ConfigQuestsView,
+                t(DEFAULT_LOCALE, 'config-btn-configure-quests')[
+                    :DiscordLimits.BUTTON_LABEL]
+            )
+        })
+
+        intro_content = [
+            t(DEFAULT_LOCALE, 'config-wizard-quest-header'),
+            t(DEFAULT_LOCALE, 'config-wizard-quest-header-desc') + '\n'
+        ]
+
+        return {
+            'intro': '\n'.join(intro_content),
+            'sections': components
+        }
+
+    def validate_dashboard_settings(self, wait_list_query, quest_summary_query, gm_rewards_query,
+                                    player_xp_query, currency_config, roleplay_config,
+                                    shops_config, inventory_config, new_char_shop, static_kits):
+
+        xp_enabled = player_xp_query.get(ConfigFields.PLAYER_EXPERIENCE, False) if player_xp_query else False
+
+        components = []
 
         # Player Settings
         xp_display = (
@@ -684,17 +790,24 @@ class ConfigWizardView(LocaleLayoutView):
             t(DEFAULT_LOCALE, 'config-wizard-shops-count', count=str(len(shop_channels)))
         ]
         if shop_channels:
-            shop_names = [
-                data.get(ShopFields.SHOP_NAME, t(DEFAULT_LOCALE, 'config-wizard-unnamed-shop'))
-                for data in shop_channels.values()
-            ]
-            shop_names.sort(key=str.lower)
-            for shop_name in shop_names[:3]:
-                shops_section_content.append(f'  - {shop_name}')
-            if len(shop_names) > 3:
+            shop_entries = []
+            for channel_id, data in shop_channels.items():
+                mention = f'<#{channel_id}>'
+                has_limited_stock = any(
+                    item.get(ShopFields.MAX_STOCK) is not None
+                    for item in data.get(ShopFields.SHOP_STOCK, [])
+                )
+                has_restock = data.get(ShopFields.RESTOCK_CONFIG) is not None
+                if has_limited_stock and not has_restock:
+                    mention += ' — ' + t(DEFAULT_LOCALE, 'config-wizard-shop-restock-not-scheduled')
+                shop_entries.append(mention)
+            shop_entries.sort(key=str.lower)
+            for entry in shop_entries[:3]:
+                shops_section_content.append(f'  - {entry}')
+            if len(shop_entries) > 3:
                 shops_section_content.append(
                     '  - ' + t(DEFAULT_LOCALE, 'config-wizard-shops-more',
-                               count=str(len(shop_names) - 3))
+                               count=str(len(shop_entries) - 3))
                 )
         components.append({
             'content': '\n'.join(shops_section_content),
@@ -739,8 +852,17 @@ class ConfigWizardView(LocaleLayoutView):
             guild = interaction.guild
             gdb = interaction.client.gdb
 
+            # Guild locale
+            guild_locale_query = await get_cached_data(
+                bot=bot,
+                mongo_database=gdb,
+                collection_name=DatabaseCollections.GUILD_LOCALE,
+                query={CommonFields.ID: guild.id}
+            )
+            guild_locale = guild_locale_query.get('locale') if guild_locale_query else None
+
             # Bot permissions
-            bot_permission_text, bot_permission_warnings = self.validate_bot_permission(guild)
+            bot_permission_text, bot_permission_warnings = self.validate_bot_permission(guild, guild_locale)
 
             # Role configs
             announcement_role_query = await get_cached_data(
@@ -925,6 +1047,20 @@ class ConfigWizardView(LocaleLayoutView):
                 query={CommonFields.ID: guild.id}
             )
 
+            # Quest role configs
+            quest_role_mode_query = await get_cached_data(
+                bot=bot,
+                mongo_database=gdb,
+                collection_name=DatabaseCollections.QUEST_ROLE_MODE,
+                query={CommonFields.ID: guild.id}
+            )
+            quest_role_assignments_query = await get_cached_data(
+                bot=bot,
+                mongo_database=gdb,
+                collection_name=DatabaseCollections.QUEST_ROLE_ASSIGNMENTS,
+                query={CommonFields.ID: guild.id}
+            )
+
             # Role validation report
             role_text, role_has_warnings = self.validate_roles(guild, gm_roles_query, announcement_role_query)
             role_button = MenuViewButton(
@@ -940,6 +1076,12 @@ class ConfigWizardView(LocaleLayoutView):
             dashboard_data = self.validate_dashboard_settings(
                 wait_list_query, quest_summary_query, gm_rewards_query, player_xp_query, currency_config_query,
                 roleplay_config_query, shops_query, inventory_config_query, new_char_shop_query, static_kits_query
+            )
+
+            # Quest settings report (page 5)
+            quest_page_data = self.validate_quest_settings(
+                guild, wait_list_query, quest_summary_query, gm_rewards_query,
+                quest_role_mode_query, quest_role_assignments_query
             )
 
             # Compile pages
@@ -959,6 +1101,10 @@ class ConfigWizardView(LocaleLayoutView):
                 {
                     'content': dashboard_data.get('intro'),
                     'custom_sections': dashboard_data.get('sections', [])
+                },
+                {
+                    'content': quest_page_data.get('intro'),
+                    'custom_sections': quest_page_data.get('sections', [])
                 }
             ]
 

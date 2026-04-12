@@ -415,11 +415,9 @@ config-title-wizard = {"**"}Server Configuration - Wizard{"**"}
 config-wizard-intro =
     {"**"}Welcome to the ReQuest Configuration Wizard!{"**"}
 
-    This wizard will help you ensure that your server is properly configured to use ReQuest's features.
-    It will scan your current settings and provide recommendations for any adjustments needed.
+    This wizard will help you ensure that your server is properly configured to use ReQuest's features. It will scan your current settings and provide recommendations for any adjustments needed.
 
-    Use the "Launch Scan" button below to begin the validation process. Once the scan is complete,
-    you will receive a detailed report of your server's configuration along with any recommended changes.
+    Use the "Launch Scan" button below to begin the validation process. Once the scan is complete, you will receive a detailed report of your server's configuration along with any recommended changes.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Bot Global Permissions{"**"}__
@@ -544,6 +542,27 @@ config-wizard-gm-rewards-enabled = {"**"}Status:{"**"} Enabled
 config-wizard-gm-rewards-experience = - Experience: { $xp }
 config-wizard-gm-rewards-items = - Items:
 config-wizard-unnamed-shop = Unnamed Shop
+
+# Wizard - Server Language (Page 1)
+config-wizard-server-language = {"**"}Server Language:{"**"} { $language }
+config-wizard-server-language-default = Default (English)
+
+# Wizard - Shop Restock Info
+config-wizard-shop-restock-not-scheduled = ℹ️ Restock Not Scheduled
+
+# Wizard - Quest Settings (Page 5)
+config-wizard-quest-header = __{"**"}Quest Settings{"**"}__
+config-wizard-quest-header-desc =
+    This section provides an overview of quest-related configurations.
+config-wizard-quest-role-mode = - Quest Role Mode: { $mode }
+config-wizard-quest-roles-label = {"**"}GM Quest Roles{"**"}
+config-wizard-quest-roles-count = - Roles Assigned to GMs: { $count }
+config-wizard-quest-roles-all-ok = - ✅ All Roles OK
+config-wizard-quest-roles-escalation = - ⚠️ { $roleMention }: Permission Escalations Detected - { $escalations }
+config-wizard-quest-roles-assigned-to = {"    "}Assigned to: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ Role ID { $roleId }: Not Found/Deleted from Server
+config-wizard-quest-roles-not-static = - ℹ️ Quest Role Mode is not set to Static — no role audit required.
+config-wizard-quest-roles-no-assignments = - ℹ️ No Quest Roles Assigned
 
 ## Roles View
 config-title-roles = {"**"}Server Configuration - Roles{"**"}
