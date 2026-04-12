@@ -114,8 +114,10 @@ NEW_CHARACTER_SHOP_SCHEMA = {
 
 class AddCurrencyTextModal(LocaleModal):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-add-currency')[:DiscordLimits.MODAL_TITLE],
+            title=t(locale, 'config-modal-title-add-currency')[:DiscordLimits.MODAL_TITLE],
             timeout=180
         )
         self.calling_view = calling_view
@@ -123,13 +125,14 @@ class AddCurrencyTextModal(LocaleModal):
             required=True,
             custom_id='new_currency_name_text_input')
         self.text_label = discord.ui.Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-currency-name')[:DiscordLimits.LABEL_LABEL],
+            text=t(locale, 'config-modal-label-currency-name')[:DiscordLimits.LABEL_LABEL],
             component=self.text_input
         )
         self.add_item(self.text_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = self._locale
             bot = interaction.client
             guild_id = interaction.guild_id
             view = self.calling_view
@@ -149,7 +152,6 @@ class AddCurrencyTextModal(LocaleModal):
                             matches += 1
 
             if matches > 0:
-                locale = getattr(self, '_locale', DEFAULT_LOCALE)
                 await interaction.response.defer(ephemeral=True, thinking=True)
                 await interaction.followup.send(
                     t(locale, 'config-error-currency-already-exists', name=self.text_input.value)
@@ -173,8 +175,10 @@ class AddCurrencyTextModal(LocaleModal):
 
 class RenameCurrencyModal(LocaleModal):
     def __init__(self, calling_view, old_currency_name):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-rename-currency')[:DiscordLimits.MODAL_TITLE],
+            title=t(locale, 'config-modal-title-rename-currency')[:DiscordLimits.MODAL_TITLE],
             timeout=180
         )
         self.calling_view = calling_view
@@ -185,13 +189,14 @@ class RenameCurrencyModal(LocaleModal):
             custom_id='rename_currency_text_input'
         )
         self.text_label = discord.ui.Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-new-currency-name')[:DiscordLimits.LABEL_LABEL],
+            text=t(locale, 'config-modal-label-new-currency-name')[:DiscordLimits.LABEL_LABEL],
             component=self.text_input
         )
         self.add_item(self.text_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = self._locale
             bot = interaction.client
             guild_id = interaction.guild_id
             new_name = self.text_input.value.strip()
@@ -214,13 +219,13 @@ class RenameCurrencyModal(LocaleModal):
                 for currency in query.get(CurrencyFields.CURRENCIES, []):
                     if currency[CommonFields.NAME].lower() == new_name.lower():
                         raise UserFeedbackError(
-                            t(DEFAULT_LOCALE, 'config-error-currency-name-exists', name=new_name),
+                            t(locale, 'config-error-currency-name-exists', name=new_name),
                             message_id='config-error-currency-name-exists'
                         )
                     for denomination in currency.get(CurrencyFields.DENOMINATIONS, []):
                         if denomination[CommonFields.NAME].lower() == new_name.lower():
                             raise UserFeedbackError(
-                                t(DEFAULT_LOCALE, 'config-error-denomination-name-exists', name=new_name),
+                                t(locale, 'config-error-denomination-name-exists', name=new_name),
                                 message_id='config-error-denomination-name-exists'
                             )
 
@@ -244,8 +249,10 @@ class RenameCurrencyModal(LocaleModal):
 
 class RenameDenominationModal(LocaleModal):
     def __init__(self, calling_view, currency_name, old_denomination_name):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-rename-denomination')[:DiscordLimits.MODAL_TITLE],
+            title=t(locale, 'config-modal-title-rename-denomination')[:DiscordLimits.MODAL_TITLE],
             timeout=180
         )
         self.calling_view = calling_view
@@ -257,13 +264,14 @@ class RenameDenominationModal(LocaleModal):
             custom_id='rename_denomination_text_input'
         )
         self.text_label = discord.ui.Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-new-denomination-name')[:DiscordLimits.LABEL_LABEL],
+            text=t(locale, 'config-modal-label-new-denomination-name')[:DiscordLimits.LABEL_LABEL],
             component=self.text_input
         )
         self.add_item(self.text_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = self._locale
             bot = interaction.client
             guild_id = interaction.guild_id
             new_name = self.text_input.value.strip()
@@ -286,13 +294,13 @@ class RenameDenominationModal(LocaleModal):
                 for currency in query.get(CurrencyFields.CURRENCIES, []):
                     if currency[CommonFields.NAME].lower() == new_name.lower():
                         raise UserFeedbackError(
-                            t(DEFAULT_LOCALE, 'config-error-currency-name-exists', name=new_name),
+                            t(locale, 'config-error-currency-name-exists', name=new_name),
                             message_id='config-error-currency-name-exists'
                         )
                     for denomination in currency.get(CurrencyFields.DENOMINATIONS, []):
                         if denomination[CommonFields.NAME].lower() == new_name.lower():
                             raise UserFeedbackError(
-                                t(DEFAULT_LOCALE, 'config-error-denomination-name-exists', name=new_name),
+                                t(locale, 'config-error-denomination-name-exists', name=new_name),
                                 message_id='config-error-denomination-name-exists'
                             )
 
@@ -320,6 +328,8 @@ class RenameDenominationModal(LocaleModal):
 
 class AddCurrencyDenominationModal(LocaleModal):
     def __init__(self, calling_view, base_currency_name):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
             title=t(
                 DEFAULT_LOCALE, 'config-modal-title-add-denomination',
@@ -337,7 +347,7 @@ class AddCurrencyDenominationModal(LocaleModal):
             custom_id='denomination_name_text_input'
         )
         self.denomination_name_label = discord.ui.Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-denomination-name')[:DiscordLimits.LABEL_LABEL],
+            text=t(locale, 'config-modal-label-denomination-name')[:DiscordLimits.LABEL_LABEL],
             component=self.denomination_name_text_input
         )
         self.denomination_value_text_input = discord.ui.TextInput(
@@ -347,7 +357,7 @@ class AddCurrencyDenominationModal(LocaleModal):
             custom_id='denomination_value_text_input'
         )
         self.denomination_value_label = discord.ui.Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-denomination-value')[:DiscordLimits.LABEL_LABEL],
+            text=t(locale, 'config-modal-label-denomination-value')[:DiscordLimits.LABEL_LABEL],
             component=self.denomination_value_text_input
         )
         self.add_item(self.denomination_name_label)
@@ -355,6 +365,7 @@ class AddCurrencyDenominationModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = self._locale
             bot = interaction.client
             guild_id = interaction.guild_id
             new_name = self.denomination_name_text_input.value
@@ -368,14 +379,14 @@ class AddCurrencyDenominationModal(LocaleModal):
             for currency in query[CurrencyFields.CURRENCIES]:
                 if new_name.lower() == currency[CommonFields.NAME].lower():
                     raise UserFeedbackError(
-                        t(DEFAULT_LOCALE, 'config-error-denomination-matches-currency',
+                        t(locale, 'config-error-denomination-matches-currency',
                           existingName=currency[CommonFields.NAME]),
                         message_id='config-error-denomination-matches-currency'
                     )
                 for denomination in currency[CurrencyFields.DENOMINATIONS]:
                     if new_name.lower() == denomination[CommonFields.NAME].lower():
                         raise UserFeedbackError(
-                            t(DEFAULT_LOCALE, 'config-error-denomination-matches-denomination',
+                            t(locale, 'config-error-denomination-matches-denomination',
                               denominationName=denomination[CommonFields.NAME],
                               currencyName=currency[CommonFields.NAME]),
                             message_id='config-error-denomination-matches-denomination'
@@ -389,7 +400,7 @@ class AddCurrencyDenominationModal(LocaleModal):
                     if float(self.denomination_value_text_input.value) == denomination[CurrencyFields.VALUE]:
                         using_name = denomination[CommonFields.NAME]
                         raise UserFeedbackError(
-                            t(DEFAULT_LOCALE, 'config-error-denomination-value-exists',
+                            t(locale, 'config-error-denomination-value-exists',
                               denominationName=using_name),
                             message_id='config-error-denomination-value-exists'
                         )
@@ -414,9 +425,11 @@ class AddCurrencyDenominationModal(LocaleModal):
 
 
 class ForbiddenRolesModal(LocaleModal):
-    def __init__(self, current_list):
+    def __init__(self, current_list, locale=None):
+        locale = locale or DEFAULT_LOCALE
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-forbidden-roles')[:DiscordLimits.MODAL_TITLE],
+            title=t(locale, 'config-modal-title-forbidden-roles')[:DiscordLimits.MODAL_TITLE],
             timeout=600
         )
         self.names_text_input = discord.ui.TextInput(
@@ -429,13 +442,14 @@ class ForbiddenRolesModal(LocaleModal):
             required=False
         )
         self.names_label = discord.ui.Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-names')[:DiscordLimits.LABEL_LABEL],
+            text=t(locale, 'config-modal-label-names')[:DiscordLimits.LABEL_LABEL],
             component=self.names_text_input
         )
         self.add_item(self.names_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = self._locale
             bot = interaction.client
             names = []
             for name in self.names_text_input.value.strip().split(','):
@@ -448,7 +462,6 @@ class ForbiddenRolesModal(LocaleModal):
                 query={CommonFields.ID: interaction.guild_id},
                 update_data={'$set': {ConfigFields.FORBIDDEN_ROLES: names}}
             )
-            locale = getattr(self, '_locale', DEFAULT_LOCALE)
             await interaction.response.send_message(
                 t(locale, 'config-msg-forbidden-roles-updated'), ephemeral=True
             )
@@ -458,8 +471,10 @@ class ForbiddenRolesModal(LocaleModal):
 
 class PlayerBoardPurgeModal(LocaleModal):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-purge-player-board')[:DiscordLimits.MODAL_TITLE],
+            title=t(locale, 'config-modal-title-purge-player-board')[:DiscordLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
@@ -470,13 +485,14 @@ class PlayerBoardPurgeModal(LocaleModal):
             )[:DiscordLimits.TEXT_INPUT_PLACEHOLDER]
         )
         self.age_label = discord.ui.Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-age')[:DiscordLimits.LABEL_LABEL],
+            text=t(locale, 'config-modal-label-age')[:DiscordLimits.LABEL_LABEL],
             component=self.age_text_input
         )
         self.add_item(self.age_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = self._locale
             bot = interaction.client
             age = int(self.age_text_input.value)
 
@@ -505,7 +521,6 @@ class PlayerBoardPurgeModal(LocaleModal):
             channel = interaction.guild.get_channel(channel_id)
             await channel.purge(before=cutoff_date)
 
-            locale = getattr(self, '_locale', DEFAULT_LOCALE)
             await interaction.response.send_message(
                 t(locale, 'config-msg-posts-purged', days=str(age)),
                 ephemeral=True,
@@ -517,8 +532,10 @@ class PlayerBoardPurgeModal(LocaleModal):
 
 class GMRewardsModal(LocaleModal):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-gm-rewards')[:DiscordLimits.MODAL_TITLE],
+            title=t(locale, 'config-modal-title-gm-rewards')[:DiscordLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
@@ -537,7 +554,7 @@ class GMRewardsModal(LocaleModal):
                 required=False
             )
             self.experience_label = discord.ui.Label(
-                text=t(DEFAULT_LOCALE, 'config-modal-label-experience')[:DiscordLimits.LABEL_LABEL],
+                text=t(locale, 'config-modal-label-experience')[:DiscordLimits.LABEL_LABEL],
                 component=self.experience_text_input
             )
             self.add_item(self.experience_label)
@@ -554,13 +571,14 @@ class GMRewardsModal(LocaleModal):
             required=False
         )
         self.items_label = discord.ui.Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-items')[:DiscordLimits.LABEL_LABEL],
+            text=t(locale, 'config-modal-label-items')[:DiscordLimits.LABEL_LABEL],
             component=self.items_text_input
         )
         self.add_item(self.items_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = self._locale
             bot = interaction.client
             experience = None
             if self.xp_enabled and hasattr(self, 'experience_text_input') and self.experience_text_input.value:
@@ -568,7 +586,7 @@ class GMRewardsModal(LocaleModal):
                     experience = int(self.experience_text_input.value)
                 except ValueError:
                     raise UserFeedbackError(
-                        t(DEFAULT_LOCALE, 'config-error-experience-invalid'),
+                        t(locale, 'config-error-experience-invalid'),
                         message_id='config-error-experience-invalid'
                     )
 
@@ -581,7 +599,7 @@ class GMRewardsModal(LocaleModal):
                         items[titlecase(item_name.strip())] = int(quantity.strip())
                     except ValueError:
                         raise UserFeedbackError(
-                            t(DEFAULT_LOCALE, 'config-error-item-format-invalid', item=item),
+                            t(locale, 'config-error-item-format-invalid', item=item),
                             message_id='config-error-item-format-invalid'
                         )
 
@@ -610,8 +628,10 @@ class GMRewardsModal(LocaleModal):
 class ConfigShopDetailsModal(LocaleModal):
     def __init__(self, calling_view, existing_shop_data=None, existing_channel_id=None,
                  channel_type='text', parent_forum_id=None, preselected_channel=None):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-shop-details')[:DiscordLimits.MODAL_TITLE],
+            title=t(locale, 'config-modal-title-shop-details')[:DiscordLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
@@ -710,6 +730,7 @@ class ConfigShopDetailsModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = self._locale
             bot = interaction.client
             guild_id = interaction.guild_id
 
@@ -721,7 +742,7 @@ class ConfigShopDetailsModal(LocaleModal):
             else:
                 if not self.shop_channel_select or not self.shop_channel_select.values:
                     raise UserFeedbackError(
-                        t(DEFAULT_LOCALE, 'config-error-no-channel-selected'),
+                        t(locale, 'config-error-no-channel-selected'),
                         message_id='config-error-no-channel-selected'
                     )
                 channel_id = str(self.shop_channel_select.values[0].id)
@@ -735,7 +756,7 @@ class ConfigShopDetailsModal(LocaleModal):
                 )
                 if query and channel_id in query.get(ShopFields.SHOP_CHANNELS, {}):
                     raise UserFeedbackError(
-                        t(DEFAULT_LOCALE, 'config-error-shop-already-in-channel'),
+                        t(locale, 'config-error-shop-already-in-channel'),
                         message_id='config-error-shop-already-in-channel'
                     )
 
@@ -783,13 +804,15 @@ class ConfigShopDetailsModal(LocaleModal):
             await log_exception(e, interaction)
 
 
-def build_shop_header_view(shop_data: dict) -> LayoutView:
+def build_shop_header_view(shop_data: dict, locale=None) -> LayoutView:
     """
     Builds a static LayoutView displaying shop header information.
 
     :param shop_data: The shop configuration data
+    :param locale: The locale to use for translations
     :return: A LayoutView with the shop header
     """
+    locale = locale or DEFAULT_LOCALE
     view = LayoutView(timeout=None)
     container = Container()
     header_items = []
@@ -797,7 +820,7 @@ def build_shop_header_view(shop_data: dict) -> LayoutView:
     if shop_name := shop_data.get(ShopFields.SHOP_NAME):
         header_items.append(TextDisplay(f'# {shop_name}'))
     if shop_keeper := shop_data.get(ShopFields.SHOP_KEEPER):
-        header_items.append(TextDisplay(t(DEFAULT_LOCALE, 'config-label-shopkeeper', name=shop_keeper)))
+        header_items.append(TextDisplay(t(locale, 'config-label-shopkeeper', name=shop_keeper)))
     if shop_description := shop_data.get(ShopFields.SHOP_DESCRIPTION):
         header_items.append(TextDisplay(f'*{shop_description}*'))
 
@@ -812,7 +835,7 @@ def build_shop_header_view(shop_data: dict) -> LayoutView:
             container.add_item(item)
 
     container.add_item(Separator())
-    container.add_item(TextDisplay(t(DEFAULT_LOCALE, 'config-msg-use-shop-command')))
+    container.add_item(TextDisplay(t(locale, 'config-msg-use-shop-command')))
 
     view.add_item(container)
     return view
@@ -821,8 +844,10 @@ def build_shop_header_view(shop_data: dict) -> LayoutView:
 class ForumThreadShopModal(LocaleModal):
     """Modal for creating a shop in a new forum thread."""
     def __init__(self, calling_view, forum_channel):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-forum-thread-shop')[:DiscordLimits.MODAL_TITLE],
+            title=t(locale, 'config-modal-title-forum-thread-shop')[:DiscordLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
@@ -905,6 +930,7 @@ class ForumThreadShopModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = self._locale
             bot = interaction.client
             guild_id = interaction.guild_id
 
@@ -912,7 +938,7 @@ class ForumThreadShopModal(LocaleModal):
             forum = interaction.guild.get_channel(self.forum_channel.id)
             if not forum:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-forum-not-found'),
+                    t(locale, 'config-error-forum-not-found'),
                     message_id='config-error-forum-not-found'
                 )
 
@@ -929,7 +955,7 @@ class ForumThreadShopModal(LocaleModal):
             }
 
             # Create the shop header view for the initial post
-            header_view = build_shop_header_view(shop_data)
+            header_view = build_shop_header_view(shop_data, locale=locale)
 
             # Create the forum thread with the shop header view
             thread_with_message = await forum.create_thread(
@@ -950,7 +976,7 @@ class ForumThreadShopModal(LocaleModal):
             )
             if query and channel_id in query.get(ShopFields.SHOP_CHANNELS, {}):
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-shop-already-in-thread'),
+                    t(locale, 'config-error-shop-already-in-thread'),
                     message_id='config-error-shop-already-in-thread'
                 )
 
@@ -974,8 +1000,10 @@ class ForumThreadShopModal(LocaleModal):
 
 class ConfigShopJSONModal(LocaleModal):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-add-shop-json')[:DiscordLimits.MODAL_TITLE],
+            title=t(locale, 'config-modal-title-add-shop-json')[:DiscordLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
@@ -991,11 +1019,11 @@ class ConfigShopJSONModal(LocaleModal):
             custom_id='shop_json_file_upload'
         )
         self.select_label = Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-shop-channel')[:DiscordLimits.LABEL_LABEL],
+            text=t(locale, 'config-modal-label-shop-channel')[:DiscordLimits.LABEL_LABEL],
             component=self.shop_channel_select
         )
         self.upload_label = Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-upload-json')[:DiscordLimits.LABEL_LABEL],
+            text=t(locale, 'config-modal-label-upload-json')[:DiscordLimits.LABEL_LABEL],
             component=self.shop_json_file_upload
         )
         self.add_item(self.select_label)
@@ -1003,6 +1031,7 @@ class ConfigShopJSONModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = self._locale
             bot = interaction.client
             guild_id = interaction.guild_id
             channel_id = str(self.shop_channel_select.values[0].id)
@@ -1015,20 +1044,20 @@ class ConfigShopJSONModal(LocaleModal):
             )
             if query and channel_id in query.get(ShopFields.SHOP_CHANNELS, {}):
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-shop-already-in-channel'),
+                    t(locale, 'config-error-shop-already-in-channel'),
                     message_id='config-error-shop-already-in-channel'
                 )
 
             if not self.shop_json_file_upload.values:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-no-json-uploaded'),
+                    t(locale, 'config-error-no-json-uploaded'),
                     message_id='config-error-no-json-uploaded'
                 )
 
             uploaded_file = self.shop_json_file_upload.values[0]
             if not uploaded_file.filename.endswith('.json'):
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-file-must-be-json'),
+                    t(locale, 'config-error-file-must-be-json'),
                     message_id='config-error-file-must-be-json'
                 )
 
@@ -1040,7 +1069,7 @@ class ConfigShopJSONModal(LocaleModal):
                 shop_data = json.loads(file_content)
             except json.JSONDecodeError as jde:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-invalid-json', error=str(jde)),
+                    t(locale, 'config-error-invalid-json', error=str(jde)),
                     message_id='config-error-invalid-json'
                 )
 
@@ -1048,7 +1077,7 @@ class ConfigShopJSONModal(LocaleModal):
                 validate(instance=shop_data, schema=SHOP_SCHEMA)
             except jsonschema.exceptions.ValidationError as ve:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-json-validation-failed', error=str(ve)),
+                    t(locale, 'config-error-json-validation-failed', error=str(ve)),
                     message_id='config-error-json-validation-failed'
                 )
 
@@ -1077,8 +1106,10 @@ class ConfigShopJSONModal(LocaleModal):
 
 class ShopItemModal(LocaleModal):
     def __init__(self, calling_view, existing_item=None):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-shop-item')[:DiscordLimits.MODAL_TITLE],
+            title=t(locale, 'config-modal-title-shop-item')[:DiscordLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
@@ -1161,6 +1192,7 @@ class ShopItemModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = self._locale
             bot = interaction.client
             guild_id = interaction.guild_id
             view = self.calling_view
@@ -1173,7 +1205,7 @@ class ShopItemModal(LocaleModal):
                     raise ValueError
             except ValueError:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-item-quantity-positive'),
+                    t(locale, 'config-error-item-quantity-positive'),
                     message_id='config-error-item-quantity-positive'
                 )
 
@@ -1191,7 +1223,7 @@ class ShopItemModal(LocaleModal):
                         parts = component.strip().split(' ', 1)
                         if len(parts) < 2:
                             raise UserFeedbackError(
-                                t(DEFAULT_LOCALE, 'config-error-cost-format-invalid', option=option),
+                                t(locale, 'config-error-cost-format-invalid', option=option),
                                 message_id='config-error-cost-format-invalid'
                             )
 
@@ -1204,13 +1236,13 @@ class ShopItemModal(LocaleModal):
                                 raise ValueError
                         except ValueError:
                             raise UserFeedbackError(
-                                t(DEFAULT_LOCALE, 'config-error-cost-amount-invalid',
+                                t(locale, 'config-error-cost-amount-invalid',
                                   amount=amount_string, currency=currency_name),
                                 message_id='config-error-cost-amount-invalid'
                             )
                         if amount > DisplayLimits.MAX_CURRENCY_AMOUNT:
                             raise UserFeedbackError(
-                                t(DEFAULT_LOCALE, 'config-error-amount-exceeds-maximum',
+                                t(locale, 'config-error-amount-exceeds-maximum',
                                   max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)),
                                 message_id='config-error-amount-exceeds-maximum',
                                 max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)
@@ -1227,7 +1259,7 @@ class ShopItemModal(LocaleModal):
 
                         if not currency_config_entry:
                             raise UserFeedbackError(
-                                t(DEFAULT_LOCALE, 'config-error-unknown-currency', currency=currency_name),
+                                t(locale, 'config-error-unknown-currency', currency=currency_name),
                                 message_id='config-error-unknown-currency'
                             )
 
@@ -1268,7 +1300,7 @@ class ShopItemModal(LocaleModal):
                 for item in shop_stock:
                     if item.get(CommonFields.NAME).lower() == new_item[CommonFields.NAME].lower():
                         raise UserFeedbackError(
-                            t(DEFAULT_LOCALE, 'config-error-item-already-exists',
+                            t(locale, 'config-error-item-already-exists',
                               itemName=new_item[CommonFields.NAME]),
                             message_id='config-error-item-already-exists'
                         )
@@ -1291,8 +1323,10 @@ class ShopItemModal(LocaleModal):
 
 class ConfigUpdateShopJSONModal(LocaleModal):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-update-shop-json')[:DiscordLimits.MODAL_TITLE],
+            title=t(locale, 'config-modal-title-update-shop-json')[:DiscordLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
@@ -1303,27 +1337,28 @@ class ConfigUpdateShopJSONModal(LocaleModal):
             required=True
         )
         self.upload_label = Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-upload-new-json')[:DiscordLimits.LABEL_LABEL],
+            text=t(locale, 'config-modal-label-upload-new-json')[:DiscordLimits.LABEL_LABEL],
             component=self.shop_json_file_upload
         )
         self.add_item(self.upload_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = self._locale
             bot = interaction.client
             guild_id = interaction.guild_id
             channel_id = self.calling_view.selected_channel_id
 
             if not self.shop_json_file_upload.values:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-no-file-uploaded'),
+                    t(locale, 'config-error-no-file-uploaded'),
                     message_id='config-error-no-file-uploaded'
                 )
 
             uploaded_file = self.shop_json_file_upload.values[0]
             if not uploaded_file.filename.endswith('.json'):
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-file-must-be-json-ext'),
+                    t(locale, 'config-error-file-must-be-json-ext'),
                     message_id='config-error-file-must-be-json-ext'
                 )
 
@@ -1334,7 +1369,7 @@ class ConfigUpdateShopJSONModal(LocaleModal):
                 shop_data = json.loads(file_content)
             except json.JSONDecodeError as jde:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-invalid-json', error=str(jde)),
+                    t(locale, 'config-error-invalid-json', error=str(jde)),
                     message_id='config-error-invalid-json'
                 )
 
@@ -1342,7 +1377,7 @@ class ConfigUpdateShopJSONModal(LocaleModal):
                 validate(instance=shop_data, schema=SHOP_SCHEMA)
             except jsonschema.exceptions.ValidationError as err:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-json-validation-message', error=err.message),
+                    t(locale, 'config-error-json-validation-message', error=err.message),
                     message_id='config-error-json-validation-message'
                 )
 
@@ -1376,8 +1411,10 @@ class ConfigUpdateShopJSONModal(LocaleModal):
 
 class NewCharacterShopItemModal(LocaleModal):
     def __init__(self, calling_view, inventory_type, existing_item=None):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-new-char-item')[:DiscordLimits.MODAL_TITLE],
+            title=t(locale, 'config-modal-title-new-char-item')[:DiscordLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
@@ -1465,13 +1502,14 @@ class NewCharacterShopItemModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = self._locale
             bot = interaction.client
             guild_id = interaction.guild_id
 
             quantity_string = self.item_quantity_text_input.value
             if not quantity_string.isdigit() or int(quantity_string) < 1:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-item-quantity-positive'),
+                    t(locale, 'config-error-item-quantity-positive'),
                     message_id='config-error-item-quantity-positive'
                 )
 
@@ -1490,7 +1528,7 @@ class NewCharacterShopItemModal(LocaleModal):
                             parts = component.strip().split(' ', 1)
                             if len(parts) < 2:
                                 raise UserFeedbackError(
-                                    t(DEFAULT_LOCALE, 'config-error-cost-format-short',
+                                    t(locale, 'config-error-cost-format-short',
                                       component=component.strip()),
                                     message_id='config-error-cost-format-short'
                                 )
@@ -1504,13 +1542,13 @@ class NewCharacterShopItemModal(LocaleModal):
                                     raise ValueError
                             except ValueError:
                                 raise UserFeedbackError(
-                                    t(DEFAULT_LOCALE, 'config-error-amount-invalid-short',
+                                    t(locale, 'config-error-amount-invalid-short',
                                       amount=amount_str, currency=currency_name),
                                     message_id='config-error-amount-invalid-short'
                                 )
                             if amount > DisplayLimits.MAX_CURRENCY_AMOUNT:
                                 raise UserFeedbackError(
-                                    t(DEFAULT_LOCALE, 'config-error-amount-exceeds-maximum',
+                                    t(locale, 'config-error-amount-exceeds-maximum',
                                       max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)),
                                     message_id='config-error-amount-exceeds-maximum',
                                     max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)
@@ -1527,7 +1565,7 @@ class NewCharacterShopItemModal(LocaleModal):
 
                             if not currency_config_entry:
                                 raise UserFeedbackError(
-                                    t(DEFAULT_LOCALE, 'config-error-unknown-currency', currency=currency_name),
+                                    t(locale, 'config-error-unknown-currency', currency=currency_name),
                                     message_id='config-error-unknown-currency'
                                 )
 
@@ -1567,7 +1605,7 @@ class NewCharacterShopItemModal(LocaleModal):
                 for item in shop_stock:
                     if item.get(CommonFields.NAME).lower() == new_item[CommonFields.NAME].lower():
                         raise UserFeedbackError(
-                            t(DEFAULT_LOCALE, 'config-error-item-exists-new-char',
+                            t(locale, 'config-error-item-exists-new-char',
                               itemName=new_item[CommonFields.NAME]),
                             message_id='config-error-item-exists-new-char'
                         )
@@ -1590,8 +1628,10 @@ class NewCharacterShopItemModal(LocaleModal):
 
 class NewCharacterShopJSONModal(LocaleModal):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-upload-new-char-json')[:DiscordLimits.MODAL_TITLE],
+            title=t(locale, 'config-modal-title-upload-new-char-json')[:DiscordLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
@@ -1600,26 +1640,27 @@ class NewCharacterShopJSONModal(LocaleModal):
             custom_id='shop_json_file_upload'
         )
         self.upload_label = Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-upload-json')[:DiscordLimits.LABEL_LABEL],
+            text=t(locale, 'config-modal-label-upload-json')[:DiscordLimits.LABEL_LABEL],
             component=self.shop_json_file_upload
         )
         self.add_item(self.upload_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = self._locale
             bot = interaction.client
             guild_id = interaction.guild_id
 
             if not self.shop_json_file_upload.values:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-no-json-uploaded-short'),
+                    t(locale, 'config-error-no-json-uploaded-short'),
                     message_id='config-error-no-json-uploaded-short'
                 )
 
             uploaded_file = self.shop_json_file_upload.values[0]
             if not uploaded_file.filename.endswith('.json'):
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-file-must-be-json'),
+                    t(locale, 'config-error-file-must-be-json'),
                     message_id='config-error-file-must-be-json'
                 )
 
@@ -1630,7 +1671,7 @@ class NewCharacterShopJSONModal(LocaleModal):
                 shop_data = json.loads(file_content)
             except json.JSONDecodeError as jde:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-invalid-json', error=str(jde)),
+                    t(locale, 'config-error-invalid-json', error=str(jde)),
                     message_id='config-error-invalid-json'
                 )
 
@@ -1638,7 +1679,7 @@ class NewCharacterShopJSONModal(LocaleModal):
                 validate(instance=shop_data, schema=NEW_CHARACTER_SHOP_SCHEMA)
             except jsonschema.exceptions.ValidationError as ve:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-json-validation-failed', error=str(ve)),
+                    t(locale, 'config-error-json-validation-failed', error=str(ve)),
                     message_id='config-error-json-validation-failed'
                 )
 
@@ -1659,8 +1700,10 @@ class NewCharacterShopJSONModal(LocaleModal):
 
 class ConfigNewCharacterWealthModal(LocaleModal):
     def __init__(self, calling_view, current_amount=None, current_currency=None):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-set-wealth')[:DiscordLimits.MODAL_TITLE],
+            title=t(locale, 'config-modal-title-set-wealth')[:DiscordLimits.MODAL_TITLE],
             timeout=600
         )
         self.amount_text_input = discord.ui.TextInput(
@@ -1685,7 +1728,7 @@ class ConfigNewCharacterWealthModal(LocaleModal):
             default=current_currency or ''
         )
         self.currency_name_label = discord.ui.Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-currency-name')[:DiscordLimits.LABEL_LABEL],
+            text=t(locale, 'config-modal-label-currency-name')[:DiscordLimits.LABEL_LABEL],
             component=self.currency_name_text_input
         )
         self.calling_view = calling_view
@@ -1694,6 +1737,7 @@ class ConfigNewCharacterWealthModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = self._locale
             bot = interaction.client
             guild_id = interaction.guild_id
 
@@ -1702,7 +1746,7 @@ class ConfigNewCharacterWealthModal(LocaleModal):
             amount = float(self.amount_text_input.value)
             if amount > DisplayLimits.MAX_CURRENCY_AMOUNT:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-amount-exceeds-maximum',
+                    t(locale, 'config-error-amount-exceeds-maximum',
                       max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)),
                     message_id='config-error-amount-exceeds-maximum',
                     max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)
@@ -1727,7 +1771,7 @@ class ConfigNewCharacterWealthModal(LocaleModal):
 
                 if not currency_config:
                     raise UserFeedbackError(
-                        t(DEFAULT_LOCALE, 'config-error-no-currencies-configured'),
+                        t(locale, 'config-error-no-currencies-configured'),
                         message_id='config-error-no-currencies-configured'
                     )
 
@@ -1735,7 +1779,7 @@ class ConfigNewCharacterWealthModal(LocaleModal):
 
                 if not found_name:
                     raise UserFeedbackError(
-                        t(DEFAULT_LOCALE, 'config-error-currency-not-found', name=currency_input),
+                        t(locale, 'config-error-currency-not-found', name=currency_input),
                         message_id='config-error-currency-not-found'
                     )
 
@@ -1756,8 +1800,10 @@ class ConfigNewCharacterWealthModal(LocaleModal):
 
 class CreateStaticKitModal(LocaleModal):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-create-kit')[:DiscordLimits.MODAL_TITLE],
+            title=t(locale, 'config-modal-title-create-kit')[:DiscordLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
@@ -1770,7 +1816,7 @@ class CreateStaticKitModal(LocaleModal):
             max_length=50
         )
         self.kit_name_label = discord.ui.Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-kit-name')[:DiscordLimits.LABEL_LABEL],
+            text=t(locale, 'config-modal-label-kit-name')[:DiscordLimits.LABEL_LABEL],
             component=self.kit_name_text_input
         )
         self.kit_description_text_input = discord.ui.TextInput(
@@ -1783,7 +1829,7 @@ class CreateStaticKitModal(LocaleModal):
             max_length=200
         )
         self.kit_description_label = discord.ui.Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-description')[:DiscordLimits.LABEL_LABEL],
+            text=t(locale, 'config-modal-label-description')[:DiscordLimits.LABEL_LABEL],
             component=self.kit_description_text_input
         )
         self.add_item(self.kit_name_label)
@@ -1791,6 +1837,7 @@ class CreateStaticKitModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = self._locale
             bot = interaction.client
             guild_id = interaction.guild_id
             kit_id = str(shortuuid.uuid()[:8])
@@ -1807,7 +1854,7 @@ class CreateStaticKitModal(LocaleModal):
                 for kit_data in existing_kits.values():
                     if kit_name.lower() == kit_data[CommonFields.NAME].lower():
                         raise UserFeedbackError(
-                            t(DEFAULT_LOCALE, 'config-error-kit-name-exists', kitName=titlecase(kit_name)),
+                            t(locale, 'config-error-kit-name-exists', kitName=titlecase(kit_name)),
                             message_id='config-error-kit-name-exists'
                         )
 
@@ -1834,8 +1881,10 @@ class CreateStaticKitModal(LocaleModal):
 
 class StaticKitItemModal(LocaleModal):
     def __init__(self, calling_view, existing_item=None, index=None):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-kit-item')[:DiscordLimits.MODAL_TITLE],
+            title=t(locale, 'config-modal-title-kit-item')[:DiscordLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
@@ -1882,7 +1931,7 @@ class StaticKitItemModal(LocaleModal):
             default=quantity_default
         )
         self.item_quantity_label = discord.ui.Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-item-quantity')[:DiscordLimits.LABEL_LABEL],
+            text=t(locale, 'config-modal-label-item-quantity')[:DiscordLimits.LABEL_LABEL],
             component=self.item_quantity_text_input
         )
         self.add_item(self.item_name_label)
@@ -1891,6 +1940,7 @@ class StaticKitItemModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = self._locale
             if not self.item_quantity_text_input.value.isdigit() or int(self.item_quantity_text_input.value) < 1:
                 raise ValueError("Quantity must be a positive integer.")
 
@@ -1940,8 +1990,10 @@ class StaticKitItemModal(LocaleModal):
 
 class StaticKitCurrencyModal(LocaleModal):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-kit-currency')[:DiscordLimits.MODAL_TITLE],
+            title=t(locale, 'config-modal-title-kit-currency')[:DiscordLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
@@ -1952,7 +2004,7 @@ class StaticKitCurrencyModal(LocaleModal):
             )[:DiscordLimits.TEXT_INPUT_PLACEHOLDER]
         )
         self.currency_name_label = discord.ui.Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-currency-name')[:DiscordLimits.LABEL_LABEL],
+            text=t(locale, 'config-modal-label-currency-name')[:DiscordLimits.LABEL_LABEL],
             component=self.currency_name_text_input
         )
         self.amount_text_input = discord.ui.TextInput(
@@ -1963,7 +2015,7 @@ class StaticKitCurrencyModal(LocaleModal):
             max_length=13
         )
         self.amount_label = discord.ui.Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-amount')[:DiscordLimits.LABEL_LABEL],
+            text=t(locale, 'config-modal-label-amount')[:DiscordLimits.LABEL_LABEL],
             component=self.amount_text_input
         )
         self.add_item(self.currency_name_label)
@@ -1971,17 +2023,18 @@ class StaticKitCurrencyModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = self._locale
             bot = interaction.client
             currency_input = self.currency_name_text_input.value.strip()
             if not self.amount_text_input.value.replace('.', '', 1).isdigit():
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-amount-must-be-number'),
+                    t(locale, 'config-error-amount-must-be-number'),
                     message_id='config-error-amount-must-be-number'
                 )
             amount = float(self.amount_text_input.value)
             if amount > DisplayLimits.MAX_CURRENCY_AMOUNT:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-amount-exceeds-maximum',
+                    t(locale, 'config-error-amount-exceeds-maximum',
                       max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)),
                     message_id='config-error-amount-exceeds-maximum',
                     max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)
@@ -1995,7 +2048,7 @@ class StaticKitCurrencyModal(LocaleModal):
             )
             if not currency_config:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-no-currencies-on-server'),
+                    t(locale, 'config-error-no-currencies-on-server'),
                     message_id='config-error-no-currencies-on-server'
                 )
 
@@ -2003,21 +2056,21 @@ class StaticKitCurrencyModal(LocaleModal):
 
             if not denomination_map:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-currency-not-found-short', currency=currency_input),
+                    t(locale, 'config-error-currency-not-found-short', currency=currency_input),
                     message_id='config-error-currency-not-found-short'
                 )
 
             multiplier = denomination_map.get(currency_input.lower())
             if multiplier is None:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-denomination-not-found', denomination=currency_input),
+                    t(locale, 'config-error-denomination-not-found', denomination=currency_input),
                     message_id='config-error-denomination-not-found'
                 )
 
             converted_amount = amount * multiplier
             if converted_amount > DisplayLimits.MAX_CURRENCY_AMOUNT:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-amount-exceeds-maximum',
+                    t(locale, 'config-error-amount-exceeds-maximum',
                       max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)),
                     message_id='config-error-amount-exceeds-maximum',
                     max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)
@@ -2047,8 +2100,10 @@ class StaticKitCurrencyModal(LocaleModal):
 
 class RoleplaySettingsModal(LocaleModal):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-rp-settings')[:DiscordLimits.MODAL_TITLE]
+            title=t(locale, 'config-modal-title-rp-settings')[:DiscordLimits.MODAL_TITLE]
         )
         self.calling_view = calling_view
         config = calling_view.config
@@ -2078,7 +2133,7 @@ class RoleplaySettingsModal(LocaleModal):
             max_length=4
         )
         self.cooldown_label = discord.ui.Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-cooldown')[:DiscordLimits.LABEL_LABEL],
+            text=t(locale, 'config-modal-label-cooldown')[:DiscordLimits.LABEL_LABEL],
             component=self.cooldown_text_input
         )
         self.add_item(self.cooldown_label)
@@ -2092,7 +2147,7 @@ class RoleplaySettingsModal(LocaleModal):
                 max_length=4
             )
             self.threshold_label = discord.ui.Label(
-                text=t(DEFAULT_LOCALE, 'config-modal-label-message-threshold')[:DiscordLimits.LABEL_LABEL],
+                text=t(locale, 'config-modal-label-message-threshold')[:DiscordLimits.LABEL_LABEL],
                 component=self.threshold_text_input
             )
             self.add_item(self.threshold_label)
@@ -2106,13 +2161,14 @@ class RoleplaySettingsModal(LocaleModal):
                 max_length=4
             )
             self.frequency_label = discord.ui.Label(
-                text=t(DEFAULT_LOCALE, 'config-modal-label-frequency')[:DiscordLimits.LABEL_LABEL],
+                text=t(locale, 'config-modal-label-frequency')[:DiscordLimits.LABEL_LABEL],
                 component=self.frequency_text_input
             )
             self.add_item(self.frequency_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = self._locale
             bot = interaction.client
             new_config = self.calling_view.config.get(RoleplayFields.CONFIG, {})
 
@@ -2123,7 +2179,7 @@ class RoleplaySettingsModal(LocaleModal):
                     raise ValueError
             except ValueError:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-min-length-invalid'),
+                    t(locale, 'config-error-min-length-invalid'),
                     message_id='config-error-min-length-invalid'
                 )
 
@@ -2136,7 +2192,7 @@ class RoleplaySettingsModal(LocaleModal):
                     raise ValueError
             except ValueError:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-cooldown-invalid'),
+                    t(locale, 'config-error-cooldown-invalid'),
                     message_id='config-error-cooldown-invalid'
                 )
 
@@ -2150,7 +2206,7 @@ class RoleplaySettingsModal(LocaleModal):
                         raise ValueError
                 except ValueError:
                     raise UserFeedbackError(
-                        t(DEFAULT_LOCALE, 'config-error-threshold-invalid'),
+                        t(locale, 'config-error-threshold-invalid'),
                         message_id='config-error-threshold-invalid'
                     )
 
@@ -2164,7 +2220,7 @@ class RoleplaySettingsModal(LocaleModal):
                         raise ValueError
                 except ValueError:
                     raise UserFeedbackError(
-                        t(DEFAULT_LOCALE, 'config-error-frequency-invalid'),
+                        t(locale, 'config-error-frequency-invalid'),
                         message_id='config-error-frequency-invalid'
                     )
 
@@ -2187,7 +2243,9 @@ class RoleplaySettingsModal(LocaleModal):
 
 class RoleplayRewardsModal(LocaleModal):
     def __init__(self, calling_view, xp_enabled):
-        super().__init__(title=t(DEFAULT_LOCALE, 'config-modal-title-rp-rewards')[:DiscordLimits.MODAL_TITLE])
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
+        super().__init__(title=t(locale, 'config-modal-title-rp-rewards')[:DiscordLimits.MODAL_TITLE])
         self.calling_view = calling_view
         rewards = calling_view.config.get(RoleplayFields.REWARDS, {})
 
@@ -2198,7 +2256,7 @@ class RoleplayRewardsModal(LocaleModal):
                 required=False
             )
             self.experience_label = discord.ui.Label(
-                text=t(DEFAULT_LOCALE, 'config-modal-label-experience')[:DiscordLimits.LABEL_LABEL],
+                text=t(locale, 'config-modal-label-experience')[:DiscordLimits.LABEL_LABEL],
                 component=self.experience_text_input
             )
             self.add_item(self.experience_label)
@@ -2213,7 +2271,7 @@ class RoleplayRewardsModal(LocaleModal):
             required=False
         )
         self.items_label = discord.ui.Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-items-name-quantity')[:DiscordLimits.LABEL_LABEL],
+            text=t(locale, 'config-modal-label-items-name-quantity')[:DiscordLimits.LABEL_LABEL],
             component=self.items
         )
         self.add_item(self.items_label)
@@ -2235,13 +2293,14 @@ class RoleplayRewardsModal(LocaleModal):
             required=False
         )
         self.currency_label = discord.ui.Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-currency-name-amount')[:DiscordLimits.LABEL_LABEL],
+            text=t(locale, 'config-modal-label-currency-name-amount')[:DiscordLimits.LABEL_LABEL],
             component=self.currency
         )
         self.add_item(self.currency_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = self._locale
             bot = interaction.client
 
             xp = 0
@@ -2252,7 +2311,7 @@ class RoleplayRewardsModal(LocaleModal):
                         raise ValueError
                 except ValueError:
                     raise UserFeedbackError(
-                        t(DEFAULT_LOCALE, 'config-error-experience-non-negative'),
+                        t(locale, 'config-error-experience-non-negative'),
                         message_id='config-error-experience-non-negative'
                     )
 
@@ -2267,7 +2326,7 @@ class RoleplayRewardsModal(LocaleModal):
                                 raise ValueError
                         except ValueError:
                             raise UserFeedbackError(
-                                t(DEFAULT_LOCALE, 'config-error-item-quantity-positive-named',
+                                t(locale, 'config-error-item-quantity-positive-named',
                                   itemName=k.strip()),
                                 message_id='config-error-item-quantity-positive-named'
                             )
@@ -2283,7 +2342,7 @@ class RoleplayRewardsModal(LocaleModal):
                                 raise ValueError
                         except ValueError:
                             raise UserFeedbackError(
-                                t(DEFAULT_LOCALE, 'config-error-currency-amount-positive',
+                                t(locale, 'config-error-currency-amount-positive',
                                   currencyName=k.strip()),
                                 message_id='config-error-currency-amount-positive'
                             )
@@ -2310,6 +2369,8 @@ class RoleplayRewardsModal(LocaleModal):
 class SetItemStockModal(LocaleModal):
     def __init__(self, calling_view, item_name: str, current_max: int | None = None,
                  current_stock: int | None = None, current_increment: int | None = None):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
             title=t(
                 DEFAULT_LOCALE, 'config-modal-title-stock-limit', itemName=item_name[:40]
@@ -2328,7 +2389,7 @@ class SetItemStockModal(LocaleModal):
             required=True
         )
         self.max_stock_label = discord.ui.Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-max-stock')[:DiscordLimits.LABEL_LABEL],
+            text=t(locale, 'config-modal-label-max-stock')[:DiscordLimits.LABEL_LABEL],
             component=self.max_stock_text_input
         )
 
@@ -2348,7 +2409,7 @@ class SetItemStockModal(LocaleModal):
             required=True
         )
         self.current_stock_label = discord.ui.Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-current-stock')[:DiscordLimits.LABEL_LABEL],
+            text=t(locale, 'config-modal-label-current-stock')[:DiscordLimits.LABEL_LABEL],
             component=self.current_stock_text_input
         )
 
@@ -2361,7 +2422,7 @@ class SetItemStockModal(LocaleModal):
             required=False
         )
         self.increment_label = discord.ui.Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-restock-increment')[:DiscordLimits.LABEL_LABEL],
+            text=t(locale, 'config-modal-label-restock-increment')[:DiscordLimits.LABEL_LABEL],
             component=self.increment_text_input
         )
 
@@ -2371,6 +2432,7 @@ class SetItemStockModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = self._locale
             bot = interaction.client
             guild_id = interaction.guild_id
             channel_id = self.calling_view.channel_id
@@ -2383,7 +2445,7 @@ class SetItemStockModal(LocaleModal):
                     raise ValueError
             except ValueError:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-max-stock-positive'),
+                    t(locale, 'config-error-max-stock-positive'),
                     message_id='config-error-max-stock-positive'
                 )
 
@@ -2395,13 +2457,13 @@ class SetItemStockModal(LocaleModal):
                     raise ValueError
             except ValueError:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-current-stock-non-negative'),
+                    t(locale, 'config-error-current-stock-non-negative'),
                     message_id='config-error-current-stock-non-negative'
                 )
 
             if current_stock > max_stock:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-current-exceeds-max'),
+                    t(locale, 'config-error-current-exceeds-max'),
                     message_id='config-error-current-exceeds-max'
                 )
 
@@ -2415,7 +2477,7 @@ class SetItemStockModal(LocaleModal):
                         raise ValueError
                 except ValueError:
                     raise UserFeedbackError(
-                        t(DEFAULT_LOCALE, 'config-error-increment-positive'),
+                        t(locale, 'config-error-increment-positive'),
                         message_id='config-error-increment-positive'
                     )
 
@@ -2440,7 +2502,7 @@ class SetItemStockModal(LocaleModal):
 
             if not item_found:
                 raise UserFeedbackError(
-                    t(DEFAULT_LOCALE, 'config-error-item-not-in-shop', itemName=self.item_name),
+                    t(locale, 'config-error-item-not-in-shop', itemName=self.item_name),
                     message_id='config-error-item-not-in-shop'
                 )
 
@@ -2465,8 +2527,10 @@ class SetItemStockModal(LocaleModal):
 
 class RestockScheduleModal(LocaleModal):
     def __init__(self, calling_view, current_config: dict | None = None):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self._locale = locale
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-restock-schedule')[:DiscordLimits.MODAL_TITLE],
+            title=t(locale, 'config-modal-title-restock-schedule')[:DiscordLimits.MODAL_TITLE],
             timeout=600
         )
         self.calling_view = calling_view
@@ -2517,7 +2581,7 @@ class RestockScheduleModal(LocaleModal):
             ]
         )
         self.schedule_label = Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-restock-schedule-label')[:DiscordLimits.LABEL_LABEL],
+            text=t(locale, 'config-modal-restock-schedule-label')[:DiscordLimits.LABEL_LABEL],
             component=self.schedule_radio_group
         )
 
@@ -2530,7 +2594,7 @@ class RestockScheduleModal(LocaleModal):
             required=False
         )
         self.time_label = Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-label-time')[:DiscordLimits.LABEL_LABEL],
+            text=t(locale, 'config-modal-label-time')[:DiscordLimits.LABEL_LABEL],
             description=t(
                 DEFAULT_LOCALE, 'config-modal-desc-current-time', utcTime=utc_time_str
             )[:DiscordLimits.LABEL_DESCRIPTION],
@@ -2586,7 +2650,7 @@ class RestockScheduleModal(LocaleModal):
             ]
         )
         self.day_label = Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-restock-day-label')[:DiscordLimits.LABEL_LABEL],
+            text=t(locale, 'config-modal-restock-day-label')[:DiscordLimits.LABEL_LABEL],
             component=self.day_radio_group
         )
 
@@ -2610,7 +2674,7 @@ class RestockScheduleModal(LocaleModal):
             ]
         )
         self.mode_label = Label(
-            text=t(DEFAULT_LOCALE, 'config-modal-restock-mode-label')[:DiscordLimits.LABEL_LABEL],
+            text=t(locale, 'config-modal-restock-mode-label')[:DiscordLimits.LABEL_LABEL],
             component=self.mode_radio_group
         )
 
@@ -2621,6 +2685,7 @@ class RestockScheduleModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            locale = self._locale
             bot = interaction.client
             guild_id = interaction.guild_id
             channel_id = self.calling_view.channel_id
@@ -2639,7 +2704,7 @@ class RestockScheduleModal(LocaleModal):
                         raise ValueError
                 except (ValueError, IndexError):
                     raise UserFeedbackError(
-                        t(DEFAULT_LOCALE, 'config-error-time-format-invalid'),
+                        t(locale, 'config-error-time-format-invalid'),
                         message_id='config-error-time-format-invalid'
                     )
 

@@ -177,37 +177,38 @@ class ConfigWaitListSelect(Select):
 
 class InventoryTypeSelect(Select):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         _label = DiscordLimits.STRING_SELECT_OPTION_LABEL
         _desc = DiscordLimits.STRING_SELECT_OPTION_DESCRIPTION
         super().__init__(
             placeholder=t(
-                DEFAULT_LOCALE, 'config-select-placeholder-inventory-mode'
+                locale, 'config-select-placeholder-inventory-mode'
             )[:DiscordLimits.SELECT_PLACEHOLDER],
             options=[
                 discord.SelectOption(
-                    label=t(DEFAULT_LOCALE, 'config-select-option-disabled-label')[:_label],
+                    label=t(locale, 'config-select-option-disabled-label')[:_label],
                     value=InventoryType.DISABLED.value,
-                    description=t(DEFAULT_LOCALE, 'config-select-desc-disabled')[:_desc]
+                    description=t(locale, 'config-select-desc-disabled')[:_desc]
                 ),
                 discord.SelectOption(
-                    label=t(DEFAULT_LOCALE, 'config-select-option-selection')[:_label],
+                    label=t(locale, 'config-select-option-selection')[:_label],
                     value=InventoryType.SELECTION.value,
-                    description=t(DEFAULT_LOCALE, 'config-select-desc-selection')[:_desc]
+                    description=t(locale, 'config-select-desc-selection')[:_desc]
                 ),
                 discord.SelectOption(
-                    label=t(DEFAULT_LOCALE, 'config-select-option-purchase')[:_label],
+                    label=t(locale, 'config-select-option-purchase')[:_label],
                     value=InventoryType.PURCHASE.value,
-                    description=t(DEFAULT_LOCALE, 'config-select-desc-purchase')[:_desc]
+                    description=t(locale, 'config-select-desc-purchase')[:_desc]
                 ),
                 discord.SelectOption(
-                    label=t(DEFAULT_LOCALE, 'config-select-option-open')[:_label],
+                    label=t(locale, 'config-select-option-open')[:_label],
                     value=InventoryType.OPEN.value,
-                    description=t(DEFAULT_LOCALE, 'config-select-desc-open')[:_desc]
+                    description=t(locale, 'config-select-desc-open')[:_desc]
                 ),
                 discord.SelectOption(
-                    label=t(DEFAULT_LOCALE, 'config-select-option-static')[:_label],
+                    label=t(locale, 'config-select-option-static')[:_label],
                     value=InventoryType.STATIC.value,
-                    description=t(DEFAULT_LOCALE, 'config-select-desc-static')[:_desc]
+                    description=t(locale, 'config-select-desc-static')[:_desc]
                 ),
             ],
             custom_id='inventory_type_select'
@@ -327,27 +328,28 @@ class RoleplayModeSelect(Select):
 
 class RoleplayResetSelect(Select):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         _label = DiscordLimits.STRING_SELECT_OPTION_LABEL
         _desc = DiscordLimits.STRING_SELECT_OPTION_DESCRIPTION
         super().__init__(
             placeholder=t(
-                DEFAULT_LOCALE, 'config-select-placeholder-reset-period'
+                locale, 'config-select-placeholder-reset-period'
             )[:DiscordLimits.SELECT_PLACEHOLDER],
             options=[
                 discord.SelectOption(
-                    label=t(DEFAULT_LOCALE, 'config-select-option-hourly')[:_label],
+                    label=t(locale, 'config-select-option-hourly')[:_label],
                     value=ScheduleType.HOURLY.value,
-                    description=t(DEFAULT_LOCALE, 'config-select-desc-hourly')[:_desc]
+                    description=t(locale, 'config-select-desc-hourly')[:_desc]
                 ),
                 discord.SelectOption(
-                    label=t(DEFAULT_LOCALE, 'config-select-option-daily')[:_label],
+                    label=t(locale, 'config-select-option-daily')[:_label],
                     value=ScheduleType.DAILY.value,
-                    description=t(DEFAULT_LOCALE, 'config-select-desc-daily')[:_desc]
+                    description=t(locale, 'config-select-desc-daily')[:_desc]
                 ),
                 discord.SelectOption(
-                    label=t(DEFAULT_LOCALE, 'config-select-option-weekly')[:_label],
+                    label=t(locale, 'config-select-option-weekly')[:_label],
                     value=ScheduleType.WEEKLY.value,
-                    description=t(DEFAULT_LOCALE, 'config-select-desc-weekly')[:_desc]
+                    description=t(locale, 'config-select-desc-weekly')[:_desc]
                 )
             ],
             custom_id='rp_reset_select'
@@ -377,38 +379,39 @@ class RoleplayResetSelect(Select):
 
 class RoleplayResetDaySelect(Select):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         _label = DiscordLimits.STRING_SELECT_OPTION_LABEL
         super().__init__(
             placeholder=t(
-                DEFAULT_LOCALE, 'config-select-placeholder-reset-day'
+                locale, 'config-select-placeholder-reset-day'
             )[:DiscordLimits.SELECT_PLACEHOLDER],
             options=[
                 discord.SelectOption(
-                    label=t(DEFAULT_LOCALE, 'common-day-monday')[:_label],
+                    label=t(locale, 'common-day-monday')[:_label],
                     value=DayOfWeek.MONDAY.value
                 ),
                 discord.SelectOption(
-                    label=t(DEFAULT_LOCALE, 'common-day-tuesday')[:_label],
+                    label=t(locale, 'common-day-tuesday')[:_label],
                     value=DayOfWeek.TUESDAY.value
                 ),
                 discord.SelectOption(
-                    label=t(DEFAULT_LOCALE, 'common-day-wednesday')[:_label],
+                    label=t(locale, 'common-day-wednesday')[:_label],
                     value=DayOfWeek.WEDNESDAY.value
                 ),
                 discord.SelectOption(
-                    label=t(DEFAULT_LOCALE, 'common-day-thursday')[:_label],
+                    label=t(locale, 'common-day-thursday')[:_label],
                     value=DayOfWeek.THURSDAY.value
                 ),
                 discord.SelectOption(
-                    label=t(DEFAULT_LOCALE, 'common-day-friday')[:_label],
+                    label=t(locale, 'common-day-friday')[:_label],
                     value=DayOfWeek.FRIDAY.value
                 ),
                 discord.SelectOption(
-                    label=t(DEFAULT_LOCALE, 'common-day-saturday')[:_label],
+                    label=t(locale, 'common-day-saturday')[:_label],
                     value=DayOfWeek.SATURDAY.value
                 ),
                 discord.SelectOption(
-                    label=t(DEFAULT_LOCALE, 'common-day-sunday')[:_label],
+                    label=t(locale, 'common-day-sunday')[:_label],
                     value=DayOfWeek.SUNDAY.value
                 )
             ],
@@ -565,10 +568,11 @@ class ForumThreadSelect(Select):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
             selected_value = self.values[0]
             if selected_value == 'none':
                 await interaction.response.send_message(
-                    t(DEFAULT_LOCALE, 'config-error-select-valid-thread'),
+                    t(locale, 'config-error-select-valid-thread'),
                     ephemeral=True
                 )
                 return
@@ -590,7 +594,7 @@ class ForumThreadSelect(Select):
                 await interaction.response.edit_message(view=self.calling_view)
             else:
                 await interaction.response.send_message(
-                    t(DEFAULT_LOCALE, 'config-error-thread-not-found'),
+                    t(locale, 'config-error-thread-not-found'),
                     ephemeral=True
                 )
         except Exception as e:

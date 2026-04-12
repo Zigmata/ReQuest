@@ -5,7 +5,7 @@ from discord.ext.commands import Cog
 
 from ReQuest.ui.admin import views
 from ReQuest.utilities.checks import is_owner
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_locale, set_locale_context
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_locale
 from ReQuest.utilities.exceptions import log_exception
 
 
@@ -104,7 +104,6 @@ class Admin(Cog):
     async def admin(self, interaction: discord.Interaction):
         try:
             locale = await resolve_locale(interaction)
-            set_locale_context(locale)
             view = views.AdminBaseView()
             view.locale = locale
             await interaction.response.send_message(view=view, ephemeral=True)

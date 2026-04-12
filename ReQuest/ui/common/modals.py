@@ -5,19 +5,15 @@ import discord.ui
 from discord.ui import Modal
 
 from ReQuest.utilities.constants import DiscordLimits
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, set_locale_context
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
 from ReQuest.utilities.exceptions import log_exception, UserFeedbackError
 
 logger = logging.getLogger(__name__)
 
 
 class LocaleModal(Modal):
-    """Modal subclass that propagates locale via context var before on_submit."""
-
-    async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        locale = getattr(self, '_locale', None) or getattr(self, 'locale', None) or DEFAULT_LOCALE
-        set_locale_context(locale)
-        return True
+    """Modal subclass with locale support."""
+    pass
 
 
 class ConfirmModal(LocaleModal):
