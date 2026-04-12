@@ -174,7 +174,10 @@ class GMQuestMenuView(LocaleLayoutView):
             nav_row.add_item(prev_button)
 
             page_display = Button(
-                label=t(locale, 'common-page-display', current=self.current_page + 1, total=self.total_pages)[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(
+                    locale, 'common-page-display',
+                    current=self.current_page + 1, total=self.total_pages
+                )[:DiscordCharacterLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='gm_q_page'
             )
@@ -1255,8 +1258,9 @@ class RemovePlayerView(LocaleLayoutView):
                     for member_id in player:
                         for character_id in player[str(member_id)]:
                             character = player[str(member_id)][str(character_id)]
+                            char_name = character[CommonFields.NAME]
                             options.append(discord.SelectOption(
-                                label=f'{character[CommonFields.NAME]}'[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
+                                label=f'{char_name}'[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
                                 value=member_id[:DiscordCharacterLimits.STRING_SELECT_OPTION_VALUE]
                             ))
             if wait_list:
@@ -1264,8 +1268,9 @@ class RemovePlayerView(LocaleLayoutView):
                     for member_id in player:
                         for character_id in player[str(member_id)]:
                             character = player[str(member_id)][str(character_id)]
+                            char_name = character[CommonFields.NAME]
                             options.append(discord.SelectOption(
-                                label=f'{character[CommonFields.NAME]}'[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
+                                label=f'{char_name}'[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
                                 value=member_id[:DiscordCharacterLimits.STRING_SELECT_OPTION_VALUE]
                             ))
             if not party and not wait_list:

@@ -145,7 +145,9 @@ class EditQuestDetailsComboModal(LocaleModal):
             current_name = quest.get(QuestFields.PARTY_ROLE_NAME, '') or ''
             self.party_role_input = discord.ui.TextInput(
                 custom_id='edit_combo_party_role',
-                placeholder=t(locale, 'gm-modal-placeholder-party-role')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
+                placeholder=t(
+                    locale, 'gm-modal-placeholder-party-role'
+                )[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
                 default=current_name,
                 max_length=100,
                 required=False
@@ -344,7 +346,9 @@ class RewardsModal(LocaleModal):
             self.xp_input = discord.ui.TextInput(
                 style=discord.TextStyle.short,
                 custom_id='experience_text_input',
-                placeholder=t(locale, 'gm-modal-placeholder-experience')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
+                placeholder=t(
+                    locale, 'gm-modal-placeholder-experience'
+                )[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
                 default=xp_default,
                 required=False
             )
@@ -436,7 +440,9 @@ class ModPlayerModal(LocaleModal):
     def __init__(self, member: discord.Member, character_id, character_data, xp_enabled=True,
                  locale=DEFAULT_LOCALE):
         super().__init__(
-            title=t(locale, 'gm-modal-title-modifying-player', playerName=member.name)[:DiscordCharacterLimits.MODAL_TITLE],
+            title=t(
+                locale, 'gm-modal-title-modifying-player', playerName=member.name
+            )[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=600
         )
         self._locale = locale
@@ -447,7 +453,9 @@ class ModPlayerModal(LocaleModal):
 
         if self.xp_enabled:
             self.experience_text_input = discord.ui.TextInput(
-                placeholder=t(locale, 'gm-modal-placeholder-xp-add-remove')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
+                placeholder=t(
+                    locale, 'gm-modal-placeholder-xp-add-remove'
+                )[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
                 custom_id='experience_text_input',
                 required=False
             )
@@ -459,7 +467,9 @@ class ModPlayerModal(LocaleModal):
 
         self.inventory_text_input = discord.ui.TextInput(
             style=discord.TextStyle.paragraph,
-            placeholder=t(locale, 'gm-modal-placeholder-inventory-modify')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
+            placeholder=t(
+                locale, 'gm-modal-placeholder-inventory-modify'
+            )[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             custom_id='inventory_text_input',
             required=False
         )

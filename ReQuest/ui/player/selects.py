@@ -17,7 +17,8 @@ class ActiveCharacterSelect(Select):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            placeholder=t(locale, 'player-select-placeholder-no-characters')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
+            placeholder=t(locale, 'player-select-placeholder-no-characters')[
+                :DiscordCharacterLimits.SELECT_PLACEHOLDER],
             options=[],
             custom_id='active_character_select',
             disabled=True
@@ -51,7 +52,8 @@ class RemoveCharacterSelect(Select):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            placeholder=t(locale, 'player-select-placeholder-remove-character')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
+            placeholder=t(locale, 'player-select-placeholder-remove-character')[
+                :DiscordCharacterLimits.SELECT_PLACEHOLDER],
             options=[],
             custom_id='remove_character_select'
         )
@@ -105,9 +107,11 @@ class ContainerOverviewSelect(Select):
             ))
 
         super().__init__(
-            placeholder=t(locale, 'player-select-placeholder-container-view')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
+            placeholder=t(locale, 'player-select-placeholder-container-view')[
+                :DiscordCharacterLimits.SELECT_PLACEHOLDER],
             options=options if options else [discord.SelectOption(
-                label=t(locale, 'player-select-option-no-containers')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
+                label=t(locale, 'player-select-option-no-containers')[
+                    :DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
                 value='none'
             )],
             custom_id=f'container_overview_select_{current_page}',
@@ -189,7 +193,8 @@ class DestinationContainerSelect(Select):
         super().__init__(
             placeholder=t(locale, 'player-select-placeholder-destination')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
             options=options if options else [discord.SelectOption(
-                label=t(locale, 'player-select-option-no-destinations')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
+                label=t(locale, 'player-select-option-no-destinations')[
+                    :DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
                 value='none'
             )],
             custom_id=f'dest_container_select_{current_page}',
@@ -234,7 +239,8 @@ class ManageContainerSelect(Select):
         super().__init__(
             placeholder=t(locale, 'player-select-placeholder-container')[:DiscordCharacterLimits.SELECT_PLACEHOLDER],
             options=options if options else [discord.SelectOption(
-                label=t(locale, 'player-select-option-no-containers')[:DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
+                label=t(locale, 'player-select-option-no-containers')[
+                    :DiscordCharacterLimits.STRING_SELECT_OPTION_LABEL],
                 value='none'
             )],
             custom_id=f'manage_container_select_{current_page}',

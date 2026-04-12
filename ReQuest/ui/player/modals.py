@@ -524,7 +524,8 @@ class SpendCurrencyModal(LocaleModal):
             component=self.currency_name_text_input
         )
         self.currency_amount_text_input = discord.ui.TextInput(
-            placeholder=t(locale, 'player-modal-placeholder-currency-amount')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
+            placeholder=t(locale, 'player-modal-placeholder-currency-amount')[
+                :DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             custom_id='currency_amount_text_input',
             required=True,
             max_length=13
@@ -721,7 +722,8 @@ class CreatePlayerPostModal(LocaleModal):
         )
         self.title_text_input = discord.ui.TextInput(
             custom_id='title_text_input',
-            placeholder=t(locale, 'player-modal-placeholder-post-title')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
+            placeholder=t(locale, 'player-modal-placeholder-post-title')[
+                :DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             max_length=80
         )
         self.title_label = discord.ui.Label(
@@ -731,7 +733,8 @@ class CreatePlayerPostModal(LocaleModal):
         self.content_text_input = discord.ui.TextInput(
             style=discord.TextStyle.paragraph,
             custom_id='content_text_input',
-            placeholder=t(locale, 'player-modal-placeholder-post-content')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER]
+            placeholder=t(locale, 'player-modal-placeholder-post-content')[
+                :DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER]
         )
         self.content_label = discord.ui.Label(
             text=t(locale, 'player-modal-label-post-content')[:DiscordCharacterLimits.LABEL_LABEL],
@@ -762,7 +765,8 @@ class EditPlayerPostModal(LocaleModal):
         self.post = post
         self.title_text_input = discord.ui.TextInput(
             custom_id='title_text_input',
-            placeholder=t(locale, 'player-modal-placeholder-post-title')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
+            placeholder=t(locale, 'player-modal-placeholder-post-title')[
+                :DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=post['title'],
             max_length=80,
             required=False
@@ -774,7 +778,8 @@ class EditPlayerPostModal(LocaleModal):
         self.content_text_input = discord.ui.TextInput(
             style=discord.TextStyle.paragraph,
             custom_id='content_text_input',
-            placeholder=t(locale, 'player-modal-placeholder-post-content')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
+            placeholder=t(locale, 'player-modal-placeholder-post-content')[
+                :DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             default=post['content'],
             required=False
         )
@@ -854,7 +859,8 @@ class CreateContainerModal(LocaleModal):
         )
         self.calling_view = calling_view
         self.name_input = discord.ui.TextInput(
-            placeholder=t(locale, 'player-modal-placeholder-container-name')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
+            placeholder=t(locale, 'player-modal-placeholder-container-name')[
+                :DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             custom_id='container_name_input',
             max_length=50,
             required=True
@@ -892,7 +898,8 @@ class RenameContainerModal(LocaleModal):
         self.calling_view = calling_view
         self.container_id = container_id
         self.name_input = discord.ui.TextInput(
-            placeholder=t(locale, 'player-modal-placeholder-new-container-name')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
+            placeholder=t(locale, 'player-modal-placeholder-new-container-name')[
+                :DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             custom_id='container_rename_input',
             default=current_name,
             max_length=50,
@@ -934,13 +941,15 @@ class ConsumeFromContainerModal(LocaleModal):
         self.max_quantity = max_quantity
 
         self.quantity_input = discord.ui.TextInput(
-            placeholder=t(locale, 'player-modal-placeholder-consume-qty')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
+            placeholder=t(locale, 'player-modal-placeholder-consume-qty')[
+                :DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             custom_id='consume_quantity_input',
             default='1',
             required=True
         )
         self.quantity_label = discord.ui.Label(
-            text=t(locale, 'player-modal-label-consume-qty', maxQuantity=max_quantity)[:DiscordCharacterLimits.LABEL_LABEL],
+            text=t(locale, 'player-modal-label-consume-qty', maxQuantity=max_quantity)[
+                :DiscordCharacterLimits.LABEL_LABEL],
             component=self.quantity_input
         )
         self.add_item(self.quantity_label)
@@ -1093,7 +1102,8 @@ class MoveItemQuantityModal(LocaleModal):
             required=True
         )
         self.quantity_label = discord.ui.Label(
-            text=t(locale, 'player-modal-label-move-qty', maxQuantity=max_quantity)[:DiscordCharacterLimits.LABEL_LABEL],
+            text=t(locale, 'player-modal-label-move-qty', maxQuantity=max_quantity)[
+                :DiscordCharacterLimits.LABEL_LABEL],
             component=self.quantity_input
         )
         self.add_item(self.quantity_label)

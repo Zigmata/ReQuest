@@ -21,12 +21,17 @@ from titlecase import titlecase
 from ReQuest.ui.common.enums import ShopChannelType, RestockMode, ScheduleType
 from ReQuest.ui.common.modals import LocaleModal
 from ReQuest.utilities.constants import (
-    CharacterFields, ConfigFields, CurrencyFields, QuestFields, ShopFields, RestockFields, RoleplayFields, CommonFields,
-    DatabaseCollections, DiscordCharacterLimits, DisplayLimits
+    CharacterFields, ConfigFields, CurrencyFields, QuestFields, ShopFields,
+    RestockFields, RoleplayFields, CommonFields, DatabaseCollections,
+    DiscordCharacterLimits, DisplayLimits
 )
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
-from ReQuest.utilities.currency import find_currency_or_denomination, get_denomination_map, format_currency_amount
-from ReQuest.utilities.db_cache import get_cached_data, update_cached_data, delete_cached_data, encode_mongo_key
+from ReQuest.utilities.currency import (
+    find_currency_or_denomination, get_denomination_map, format_currency_amount
+)
+from ReQuest.utilities.db_cache import (
+    get_cached_data, update_cached_data, delete_cached_data, encode_mongo_key
+)
 from ReQuest.utilities.discord_utils import setup_view, strip_id
 from ReQuest.utilities.exceptions import log_exception, UserFeedbackError
 from ReQuest.utilities.shop import initialize_item_stock, get_item_stock
@@ -316,14 +321,19 @@ class RenameDenominationModal(LocaleModal):
 class AddCurrencyDenominationModal(LocaleModal):
     def __init__(self, calling_view, base_currency_name):
         super().__init__(
-            title=t(DEFAULT_LOCALE, 'config-modal-title-add-denomination', currencyName=base_currency_name)[:DiscordCharacterLimits.MODAL_TITLE],
+            title=t(
+                DEFAULT_LOCALE, 'config-modal-title-add-denomination',
+                currencyName=base_currency_name
+            )[:DiscordCharacterLimits.MODAL_TITLE],
             timeout=300
         )
         self.calling_view = calling_view
         self.base_currency_name = base_currency_name
 
         self.denomination_name_text_input = discord.ui.TextInput(
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-denomination-name')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
+            placeholder=t(
+                DEFAULT_LOCALE, 'config-modal-placeholder-denomination-name'
+            )[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             custom_id='denomination_name_text_input'
         )
         self.denomination_name_label = discord.ui.Label(
@@ -331,7 +341,9 @@ class AddCurrencyDenominationModal(LocaleModal):
             component=self.denomination_name_text_input
         )
         self.denomination_value_text_input = discord.ui.TextInput(
-            placeholder=t(DEFAULT_LOCALE, 'config-modal-placeholder-denomination-value')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
+            placeholder=t(
+                DEFAULT_LOCALE, 'config-modal-placeholder-denomination-value'
+            )[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             custom_id='denomination_value_text_input'
         )
         self.denomination_value_label = discord.ui.Label(
