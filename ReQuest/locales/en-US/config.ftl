@@ -544,6 +544,8 @@ config-wizard-gm-rewards-items = - Items:
 config-wizard-unnamed-shop = Unnamed Shop
 
 # Wizard - Server Language (Page 1)
+config-wizard-server-language-desc =
+    This is the language ReQuest will use for any public messages, such as Quest posts, Shop restock messages, and transaction logs.
 config-wizard-server-language = {"**"}Server Language:{"**"} { $language }
 config-wizard-server-language-default = Default (English)
 
@@ -561,7 +563,6 @@ config-wizard-quest-roles-all-ok = - ✅ All Roles OK
 config-wizard-quest-roles-escalation = - ⚠️ { $roleMention }: Permission Escalations Detected - { $escalations }
 config-wizard-quest-roles-assigned-to = {"    "}Assigned to: { $gmNames }
 config-wizard-quest-roles-not-found = - ⚠️ Role ID { $roleId }: Not Found/Deleted from Server
-config-wizard-quest-roles-not-static = - ℹ️ Quest Role Mode is not set to Static — no role audit required.
 config-wizard-quest-roles-no-assignments = - ℹ️ No Quest Roles Assigned
 
 ## Roles View

@@ -219,8 +219,18 @@ class ConfigWizardView(LocaleLayoutView):
     def validate_bot_permission(guild, guild_locale=None):
         """
         Validate the bot's global permissions.
-        Returns (report_string, has_warnings_boolean)
+        Returns (permissions_text, language_text, has_warnings)
         """
+        language_display = (
+            guild_locale
+            or t(DEFAULT_LOCALE, 'config-wizard-server-language-default')
+        )
+        language_text = (
+            t(DEFAULT_LOCALE, 'config-wizard-server-language-desc') + '\n' +
+            t(DEFAULT_LOCALE, 'config-wizard-server-language',
+              language=language_display)
+        )
+
         try:
             bot_member = guild.me
             bot_perms = bot_member.guild_permissions
@@ -242,13 +252,10 @@ class ConfigWizardView(LocaleLayoutView):
                 if not getattr(bot_perms, attr):
                     missing_perms.append(t(DEFAULT_LOCALE, 'config-wizard-missing-perm', permissionName=name))
 
-            language_display = guild_locale or t(DEFAULT_LOCALE, 'config-wizard-server-language-default')
-
             report_lines = [
                 t(DEFAULT_LOCALE, 'config-wizard-bot-permissions-header'),
                 t(DEFAULT_LOCALE, 'config-wizard-bot-permissions-desc') + '\n',
-                t(DEFAULT_LOCALE, 'config-wizard-bot-role', roleMention=bot_member.top_role.mention),
-                t(DEFAULT_LOCALE, 'config-wizard-server-language', language=language_display)
+                t(DEFAULT_LOCALE, 'config-wizard-bot-role', roleMention=bot_member.top_role.mention)
             ]
 
             if missing_perms:
@@ -256,11 +263,11 @@ class ConfigWizardView(LocaleLayoutView):
                 report_lines.extend(missing_perms)
                 report_lines.append('')
                 report_lines.append(t(DEFAULT_LOCALE, 'config-wizard-ensure-permissions'))
-                return '\n'.join(report_lines), True
+                return '\n'.join(report_lines), language_text, True
             else:
                 report_lines.append(t(DEFAULT_LOCALE, 'config-wizard-status-ok'))
                 report_lines.append(t(DEFAULT_LOCALE, 'config-wizard-bot-permissions-ok'))
-                return '\n'.join(report_lines), False
+                return '\n'.join(report_lines), language_text, False
 
         except Exception as e:
             required_perms_list = [
@@ -284,7 +291,7 @@ class ConfigWizardView(LocaleLayoutView):
                 '\n'.join([f'- {p}' for p in required_perms_list])
             ]
 
-            return '\n'.join(report_lines), True
+            return '\n'.join(report_lines), language_text, True
 
     def validate_roles(self, guild, gm_roles_config, announcement_role_config):
         """
@@ -642,7 +649,7 @@ class ConfigWizardView(LocaleLayoutView):
 
         if quest_role_mode != 'static':
             quest_roles_content.append(
-                t(DEFAULT_LOCALE, 'config-wizard-quest-roles-not-static')
+                '- ' + quest_role_mode.capitalize()
             )
         else:
             assignments = (
@@ -707,8 +714,8 @@ class ConfigWizardView(LocaleLayoutView):
         components.append({
             'content': '\n'.join(quest_roles_content),
             'shortcut_button': MenuViewButton(
-                ConfigQuestsView,
-                t(DEFAULT_LOCALE, 'config-btn-configure-quests')[
+                ConfigQuestRolesView,
+                t(DEFAULT_LOCALE, 'config-btn-quest-roles')[
                     :DiscordLimits.BUTTON_LABEL]
             )
         })
@@ -862,7 +869,9 @@ class ConfigWizardView(LocaleLayoutView):
             guild_locale = guild_locale_query.get('locale') if guild_locale_query else None
 
             # Bot permissions
-            bot_permission_text, bot_permission_warnings = self.validate_bot_permission(guild, guild_locale)
+            bot_permission_text, language_text, bot_permission_warnings = (
+                self.validate_bot_permission(guild, guild_locale)
+            )
 
             # Role configs
             announcement_role_query = await get_cached_data(
@@ -1087,8 +1096,15 @@ class ConfigWizardView(LocaleLayoutView):
             # Compile pages
             self.pages = [
                 {
-                    'content': bot_permission_text,
-                    'shortcut_button': None
+                    'custom_sections': [
+                        {'content': bot_permission_text},
+                        {'content': language_text,
+                         'shortcut_button': MenuViewButton(
+                             ConfigLanguageView,
+                             t(DEFAULT_LOCALE, 'config-menu-language')[
+                                 :DiscordLimits.BUTTON_LABEL]
+                         )}
+                    ]
                 },
                 {
                     'content': role_text,
