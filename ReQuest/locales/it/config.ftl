@@ -409,11 +409,9 @@ config-title-wizard = {"**"}Configurazione server - Procedura guidata{"**"}
 config-wizard-intro =
     {"**"}Benvenuto nella procedura guidata di configurazione di ReQuest!{"**"}
 
-    Questa procedura ti aiuterà ad assicurarti che il tuo server sia configurato correttamente per usare le funzionalità di ReQuest.
-    Eseguirà una scansione delle impostazioni attuali e fornirà raccomandazioni per eventuali modifiche necessarie.
+    Questa procedura ti aiuterà ad assicurarti che il tuo server sia configurato correttamente per usare le funzionalità di ReQuest. Eseguirà una scansione delle impostazioni attuali e fornirà raccomandazioni per eventuali modifiche necessarie.
 
-    Usa il pulsante "Avvia scansione" qui sotto per iniziare il processo di validazione. Una volta completata la scansione,
-    riceverai un report dettagliato della configurazione del tuo server insieme alle modifiche consigliate.
+    Usa il pulsante "Avvia scansione" qui sotto per iniziare il processo di validazione. Una volta completata la scansione, riceverai un report dettagliato della configurazione del tuo server insieme alle modifiche consigliate.
 
 # Procedura guidata - Validazione permessi bot
 config-wizard-bot-permissions-header = __{"**"}Permessi globali del bot{"**"}__

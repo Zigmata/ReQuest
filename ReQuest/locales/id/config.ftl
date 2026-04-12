@@ -409,11 +409,9 @@ config-title-wizard = {"**"}Konfigurasi Server - Wizard{"**"}
 config-wizard-intro =
     {"**"}Selamat datang di Wizard Konfigurasi ReQuest!{"**"}
 
-    Wizard ini akan membantu Anda memastikan bahwa server Anda dikonfigurasi dengan benar untuk menggunakan fitur-fitur ReQuest.
-    Wizard akan memindai pengaturan Anda saat ini dan memberikan rekomendasi untuk penyesuaian yang diperlukan.
+    Wizard ini akan membantu Anda memastikan bahwa server Anda dikonfigurasi dengan benar untuk menggunakan fitur-fitur ReQuest. Wizard akan memindai pengaturan Anda saat ini dan memberikan rekomendasi untuk penyesuaian yang diperlukan.
 
-    Gunakan tombol "Mulai Pemindaian" di bawah untuk memulai proses validasi. Setelah pemindaian selesai,
-    Anda akan menerima laporan terperinci tentang konfigurasi server Anda beserta perubahan yang direkomendasikan.
+    Gunakan tombol "Mulai Pemindaian" di bawah untuk memulai proses validasi. Setelah pemindaian selesai, Anda akan menerima laporan terperinci tentang konfigurasi server Anda beserta perubahan yang direkomendasikan.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Izin Global Bot{"**"}__

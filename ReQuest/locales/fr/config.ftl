@@ -409,11 +409,9 @@ config-title-wizard = {"**"}Configuration du serveur - Assistant{"**"}
 config-wizard-intro =
     {"**"}Bienvenue dans l'assistant de configuration ReQuest !{"**"}
 
-    Cet assistant vous aidera à vous assurer que votre serveur est correctement configuré pour utiliser les fonctionnalités de ReQuest.
-    Il analysera vos paramètres actuels et fournira des recommandations pour les ajustements nécessaires.
+    Cet assistant vous aidera à vous assurer que votre serveur est correctement configuré pour utiliser les fonctionnalités de ReQuest. Il analysera vos paramètres actuels et fournira des recommandations pour les ajustements nécessaires.
 
-    Utilisez le bouton « Lancer le scan » ci-dessous pour démarrer le processus de validation. Une fois le scan terminé,
-    vous recevrez un rapport détaillé de la configuration de votre serveur ainsi que les modifications recommandées.
+    Utilisez le bouton « Lancer le scan » ci-dessous pour démarrer le processus de validation. Une fois le scan terminé, vous recevrez un rapport détaillé de la configuration de votre serveur ainsi que les modifications recommandées.
 
 # Assistant - Validation des permissions du bot
 config-wizard-bot-permissions-header = __{"**"}Permissions globales du bot{"**"}__

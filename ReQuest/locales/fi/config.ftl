@@ -410,11 +410,9 @@ config-title-wizard = {"**"}Palvelimen asetukset - Velho{"**"}
 config-wizard-intro =
     {"**"}Tervetuloa ReQuestin asetusvelhoon!{"**"}
 
-    Tämä velho auttaa varmistamaan, että palvelimesi on asianmukaisesti määritetty ReQuestin ominaisuuksien käyttöön.
-    Se skannaa nykyiset asetuksesi ja antaa suosituksia tarvittavista muutoksista.
+    Tämä velho auttaa varmistamaan, että palvelimesi on asianmukaisesti määritetty ReQuestin ominaisuuksien käyttöön. Se skannaa nykyiset asetuksesi ja antaa suosituksia tarvittavista muutoksista.
 
-    Käytä alla olevaa "Käynnistä skannaus" -painiketta aloittaaksesi tarkistusprosessin. Skannauksen valmistuttua
-    saat yksityiskohtaisen raportin palvelimesi asetuksista sekä suositellut muutokset.
+    Käytä alla olevaa "Käynnistä skannaus" -painiketta aloittaaksesi tarkistusprosessin. Skannauksen valmistuttua saat yksityiskohtaisen raportin palvelimesi asetuksista sekä suositellut muutokset.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Botin yleiset oikeudet{"**"}__

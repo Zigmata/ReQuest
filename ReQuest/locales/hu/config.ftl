@@ -409,11 +409,9 @@ config-title-wizard = {"**"}Szerver konfiguráció - Varázsló{"**"}
 config-wizard-intro =
     {"**"}Üdvözlünk a ReQuest konfigurációs varázslóban!{"**"}
 
-    Ez a varázsló segít abban, hogy a szervered megfelelően legyen konfigurálva a ReQuest funkcióinak használatához.
-    A varázsló átvizsgálja a jelenlegi beállításaidat, és javaslatokat tesz a szükséges módosításokhoz.
+    Ez a varázsló segít abban, hogy a szervered megfelelően legyen konfigurálva a ReQuest funkcióinak használatához. A varázsló átvizsgálja a jelenlegi beállításaidat, és javaslatokat tesz a szükséges módosításokhoz.
 
-    Kattints az alábbi „Vizsgálat indítása" gombra az érvényesítési folyamat elindításához. A vizsgálat befejezése
-    után részletes jelentést kapsz a szervered konfigurációjáról és a javasolt módosításokról.
+    Kattints az alábbi „Vizsgálat indítása" gombra az érvényesítési folyamat elindításához. A vizsgálat befejezése után részletes jelentést kapsz a szervered konfigurációjáról és a javasolt módosításokról.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Bot globális jogosultságok{"**"}__

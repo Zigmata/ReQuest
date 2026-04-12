@@ -409,11 +409,9 @@ config-title-wizard = {"**"}Serverkonfigurasjon - Veiviser{"**"}
 config-wizard-intro =
     {"**"}Velkommen til ReQuest-konfigurasjonsveiviseren!{"**"}
 
-    Denne veiviseren hjelper deg med å sikre at serveren din er riktig konfigurert for å bruke ReQuests funksjoner.
-    Den vil skanne gjeldende innstillinger og gi anbefalinger for eventuelle justeringer.
+    Denne veiviseren hjelper deg med å sikre at serveren din er riktig konfigurert for å bruke ReQuests funksjoner. Den vil skanne gjeldende innstillinger og gi anbefalinger for eventuelle justeringer.
 
-    Bruk «Start skanning»-knappen nedenfor for å starte valideringsprosessen. Når skanningen er fullført,
-    vil du motta en detaljert rapport om serverens konfigurasjon sammen med eventuelle anbefalte endringer.
+    Bruk «Start skanning»-knappen nedenfor for å starte valideringsprosessen. Når skanningen er fullført, vil du motta en detaljert rapport om serverens konfigurasjon sammen med eventuelle anbefalte endringer.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Botens globale tillatelser{"**"}__

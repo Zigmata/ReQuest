@@ -409,11 +409,9 @@ config-title-wizard = {"**"}Konfiguracija poslužitelja - Čarobnjak{"**"}
 config-wizard-intro =
     {"**"}Dobrodošli u čarobnjak za konfiguraciju ReQuesta!{"**"}
 
-    Ovaj čarobnjak će vam pomoći da osigurate da je vaš poslužitelj ispravno konfiguriran za korištenje značajki ReQuesta.
-    Skenirat će vaše trenutne postavke i pružiti preporuke za potrebne prilagodbe.
+    Ovaj čarobnjak će vam pomoći da osigurate da je vaš poslužitelj ispravno konfiguriran za korištenje značajki ReQuesta. Skenirat će vaše trenutne postavke i pružiti preporuke za potrebne prilagodbe.
 
-    Koristite gumb "Pokreni skeniranje" u nastavku za početak procesa validacije. Nakon završetka skeniranja,
-    primit ćete detaljni izvještaj o konfiguraciji vašeg poslužitelja zajedno s preporučenim promjenama.
+    Koristite gumb "Pokreni skeniranje" u nastavku za početak procesa validacije. Nakon završetka skeniranja, primit ćete detaljni izvještaj o konfiguraciji vašeg poslužitelja zajedno s preporučenim promjenama.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Globalne dozvole bota{"**"}__

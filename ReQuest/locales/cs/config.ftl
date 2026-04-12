@@ -409,11 +409,9 @@ config-title-wizard = {"**"}Konfigurace serveru - Průvodce{"**"}
 config-wizard-intro =
     {"**"}Vítejte v Průvodci konfigurací ReQuestu!{"**"}
 
-    Tento průvodce vám pomůže zajistit, že je váš server správně nakonfigurován pro použití funkcí ReQuestu.
-    Prohledá vaše aktuální nastavení a poskytne doporučení pro případné úpravy.
+    Tento průvodce vám pomůže zajistit, že je váš server správně nakonfigurován pro použití funkcí ReQuestu. Prohledá vaše aktuální nastavení a poskytne doporučení pro případné úpravy.
 
-    Použijte tlačítko „Spustit skenování" níže pro zahájení ověřovacího procesu. Po dokončení skenování
-    obdržíte podrobnou zprávu o konfiguraci vašeho serveru spolu s doporučenými změnami.
+    Použijte tlačítko „Spustit skenování" níže pro zahájení ověřovacího procesu. Po dokončení skenování obdržíte podrobnou zprávu o konfiguraci vašeho serveru spolu s doporučenými změnami.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Globální oprávnění bota{"**"}__

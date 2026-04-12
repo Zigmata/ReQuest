@@ -409,11 +409,9 @@ config-title-wizard = {"**"}Konfiguracja serwera - Kreator{"**"}
 config-wizard-intro =
     {"**"}Witaj w Kreatorze Konfiguracji ReQuest!{"**"}
 
-    Ten kreator pomoże Ci upewnić się, że Twój serwer jest prawidłowo skonfigurowany do korzystania z funkcji ReQuesta.
-    Przeskanuje bieżące ustawienia i zaproponuje zalecenia dotyczące wymaganych zmian.
+    Ten kreator pomoże Ci upewnić się, że Twój serwer jest prawidłowo skonfigurowany do korzystania z funkcji ReQuesta. Przeskanuje bieżące ustawienia i zaproponuje zalecenia dotyczące wymaganych zmian.
 
-    Użyj przycisku "Uruchom skanowanie" poniżej, aby rozpocząć proces walidacji. Po zakończeniu skanowania
-    otrzymasz szczegółowy raport konfiguracji serwera wraz z zalecanymi zmianami.
+    Użyj przycisku "Uruchom skanowanie" poniżej, aby rozpocząć proces walidacji. Po zakończeniu skanowania otrzymasz szczegółowy raport konfiguracji serwera wraz z zalecanymi zmianami.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Uprawnienia globalne bota{"**"}__

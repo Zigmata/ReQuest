@@ -409,11 +409,9 @@ config-title-wizard = {"**"}Serverconfiguratie - Wizard{"**"}
 config-wizard-intro =
     {"**"}Welkom bij de ReQuest-configuratiewizard!{"**"}
 
-    Deze wizard helpt je ervoor te zorgen dat je server correct is geconfigureerd om de functies van ReQuest te gebruiken.
-    Het scant je huidige instellingen en geeft aanbevelingen voor eventuele aanpassingen.
+    Deze wizard helpt je ervoor te zorgen dat je server correct is geconfigureerd om de functies van ReQuest te gebruiken. Het scant je huidige instellingen en geeft aanbevelingen voor eventuele aanpassingen.
 
-    Gebruik de knop "Scan starten" hieronder om het validatieproces te beginnen. Zodra de scan is voltooid,
-    ontvang je een gedetailleerd rapport van de configuratie van je server samen met eventuele aanbevolen wijzigingen.
+    Gebruik de knop "Scan starten" hieronder om het validatieproces te beginnen. Zodra de scan is voltooid, ontvang je een gedetailleerd rapport van de configuratie van je server samen met eventuele aanbevolen wijzigingen.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Globale botmachtigingen{"**"}__

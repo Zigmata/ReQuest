@@ -409,11 +409,9 @@ config-title-wizard = {"**"}Serverkonfiguration - Guide{"**"}
 config-wizard-intro =
     {"**"}Välkommen till ReQuest-konfigurationsguiden!{"**"}
 
-    Denna guide hjälper dig att se till att din server är korrekt konfigurerad för att använda ReQuests funktioner.
-    Den skannar dina nuvarande inställningar och ger rekommendationer för eventuella justeringar som behövs.
+    Denna guide hjälper dig att se till att din server är korrekt konfigurerad för att använda ReQuests funktioner. Den skannar dina nuvarande inställningar och ger rekommendationer för eventuella justeringar som behövs.
 
-    Använd knappen "Starta skanning" nedan för att påbörja valideringsprocessen. När skanningen är klar
-    får du en detaljerad rapport om din servers konfiguration samt eventuella rekommenderade ändringar.
+    Använd knappen "Starta skanning" nedan för att påbörja valideringsprocessen. När skanningen är klar får du en detaljerad rapport om din servers konfiguration samt eventuella rekommenderade ändringar.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Botens globala behörigheter{"**"}__

@@ -409,11 +409,9 @@ config-title-wizard = {"**"}Sunucu Yapılandırması - Sihirbaz{"**"}
 config-wizard-intro =
     {"**"}ReQuest Yapılandırma Sihirbazına Hoş Geldiniz!{"**"}
 
-    Bu sihirbaz, sunucunuzun ReQuest özelliklerini kullanmak için düzgün yapılandırıldığından emin olmanıza yardımcı olacaktır.
-    Mevcut ayarlarınızı tarayacak ve gerekli düzenlemeler için önerilerde bulunacaktır.
+    Bu sihirbaz, sunucunuzun ReQuest özelliklerini kullanmak için düzgün yapılandırıldığından emin olmanıza yardımcı olacaktır. Mevcut ayarlarınızı tarayacak ve gerekli düzenlemeler için önerilerde bulunacaktır.
 
-    Doğrulama sürecini başlatmak için aşağıdaki "Taramayı Başlat" düğmesini kullanın. Tarama tamamlandıktan sonra,
-    sunucunuzun yapılandırmasının ayrıntılı bir raporunu ve önerilen değişiklikleri alacaksınız.
+    Doğrulama sürecini başlatmak için aşağıdaki "Taramayı Başlat" düğmesini kullanın. Tarama tamamlandıktan sonra, sunucunuzun yapılandırmasının ayrıntılı bir raporunu ve önerilen değişiklikleri alacaksınız.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Bot Genel İzinleri{"**"}__

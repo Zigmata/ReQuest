@@ -409,11 +409,9 @@ config-title-wizard = {"**"}Configuração do Servidor - Assistente{"**"}
 config-wizard-intro =
     {"**"}Bem-vindo ao Assistente de Configuração do ReQuest!{"**"}
 
-    Este assistente ajudará você a garantir que seu servidor esteja configurado corretamente para usar os recursos do ReQuest.
-    Ele analisará suas configurações atuais e fornecerá recomendações para quaisquer ajustes necessários.
+    Este assistente ajudará você a garantir que seu servidor esteja configurado corretamente para usar os recursos do ReQuest. Ele analisará suas configurações atuais e fornecerá recomendações para quaisquer ajustes necessários.
 
-    Use o botão "Iniciar Análise" abaixo para começar o processo de validação. Quando a análise for concluída,
-    você receberá um relatório detalhado da configuração do seu servidor junto com quaisquer alterações recomendadas.
+    Use o botão "Iniciar Análise" abaixo para começar o processo de validação. Quando a análise for concluída, você receberá um relatório detalhado da configuração do seu servidor junto com quaisquer alterações recomendadas.
 
 # Assistente - Validação de Permissões do Bot
 config-wizard-bot-permissions-header = __{"**"}Permissões Globais do Bot{"**"}__

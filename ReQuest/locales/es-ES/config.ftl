@@ -336,11 +336,9 @@ config-title-wizard = {"**"}Configuración del servidor - Asistente{"**"}
 config-wizard-intro =
     {"**"}¡Bienvenidos al asistente de configuración de ReQuest!{"**"}
 
-    Este asistente os ayudará a aseguraros de que vuestro servidor esté correctamente configurado para usar las funciones de ReQuest.
-    Escaneará vuestros ajustes actuales y proporcionará recomendaciones para cualquier ajuste necesario.
+    Este asistente os ayudará a aseguraros de que vuestro servidor esté correctamente configurado para usar las funciones de ReQuest. Escaneará vuestros ajustes actuales y proporcionará recomendaciones para cualquier ajuste necesario.
 
-    Usad el botón "Iniciar escaneo" a continuación para comenzar el proceso de validación. Una vez completado el escaneo,
-    recibiréis un informe detallado de la configuración de vuestro servidor junto con los cambios recomendados.
+    Usad el botón "Iniciar escaneo" a continuación para comenzar el proceso de validación. Una vez completado el escaneo, recibiréis un informe detallado de la configuración de vuestro servidor junto con los cambios recomendados.
 config-wizard-bot-permissions-header = __{"**"}Permisos globales del bot{"**"}__
 config-wizard-bot-permissions-desc = Esta sección verifica que ReQuest tiene los permisos correctos para funcionar correctamente.
 config-wizard-bot-role = Rol del bot: { $roleMention }

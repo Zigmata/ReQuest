@@ -409,11 +409,9 @@ config-title-wizard = {"**"}Cấu hình máy chủ - Hướng dẫn{"**"}
 config-wizard-intro =
     {"**"}Chào mừng đến với Trình hướng dẫn cấu hình ReQuest!{"**"}
 
-    Trình hướng dẫn này sẽ giúp bạn đảm bảo rằng máy chủ của bạn được cấu hình đúng để sử dụng các tính năng của ReQuest.
-    Nó sẽ quét cài đặt hiện tại và cung cấp đề xuất cho bất kỳ điều chỉnh nào cần thiết.
+    Trình hướng dẫn này sẽ giúp bạn đảm bảo rằng máy chủ của bạn được cấu hình đúng để sử dụng các tính năng của ReQuest. Nó sẽ quét cài đặt hiện tại và cung cấp đề xuất cho bất kỳ điều chỉnh nào cần thiết.
 
-    Sử dụng nút "Quét cấu hình máy chủ" bên dưới để bắt đầu quá trình xác thực. Sau khi quét xong,
-    bạn sẽ nhận được báo cáo chi tiết về cấu hình máy chủ cùng với các thay đổi được đề xuất.
+    Sử dụng nút "Quét cấu hình máy chủ" bên dưới để bắt đầu quá trình xác thực. Sau khi quét xong, bạn sẽ nhận được báo cáo chi tiết về cấu hình máy chủ cùng với các thay đổi được đề xuất.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Quyền toàn cục của Bot{"**"}__

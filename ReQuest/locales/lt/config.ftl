@@ -409,11 +409,9 @@ config-title-wizard = {"**"}Serverio konfigūracija - Vedlys{"**"}
 config-wizard-intro =
     {"**"}Sveiki atvykę į ReQuest konfigūracijos vedlį!{"**"}
 
-    Šis vedlys padės užtikrinti, kad jūsų serveris tinkamai sukonfigūruotas naudoti ReQuest funkcijas.
-    Jis nuskaitys dabartinius nustatymus ir pateiks rekomendacijas dėl reikalingų pakeitimų.
+    Šis vedlys padės užtikrinti, kad jūsų serveris tinkamai sukonfigūruotas naudoti ReQuest funkcijas. Jis nuskaitys dabartinius nustatymus ir pateiks rekomendacijas dėl reikalingų pakeitimų.
 
-    Naudokite žemiau esantį mygtuką „Pradėti nuskaitymą", kad pradėtumėte tikrinimo procesą. Kai nuskaitymas bus baigtas,
-    gausite išsamią serverio konfigūracijos ataskaitą kartu su rekomenduojamais pakeitimais.
+    Naudokite žemiau esantį mygtuką „Pradėti nuskaitymą", kad pradėtumėte tikrinimo procesą. Kai nuskaitymas bus baigtas, gausite išsamią serverio konfigūracijos ataskaitą kartu su rekomenduojamais pakeitimais.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Boto globalūs leidimai{"**"}__
