@@ -224,8 +224,6 @@ config-error-item-exists-new-char = Predmet s nazivom { $itemName } već postoji
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Učitaj trgovinu za nove likove (JSON)
 config-error-no-json-uploaded-short = JSON datoteka nije učitana.
-config-error-json-must-have-shopstock = JSON mora sadržavati polje 'shopStock'.
-config-error-items-must-have-name-price = Svi predmeti moraju imati 'name' i 'price'.
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Postavi bogatstvo novog lika
@@ -535,7 +533,27 @@ config-wizard-gm-rewards-disabled = {"**"}Status:{"**"} Onemogućeno
 config-wizard-gm-rewards-enabled = {"**"}Status:{"**"} Omogućeno
 config-wizard-gm-rewards-experience = - Iskustvo: { $xp }
 config-wizard-gm-rewards-items = - Predmeti:
-config-wizard-unnamed-shop = Neimenovana trgovina
+
+# Wizard - Jezik poslužitelja (Stranica 1)
+config-wizard-server-language-desc =
+    Ovo je jezik koji će ReQuest koristiti za sve javne poruke, kao što su objave questova, poruke o dopuni zaliha trgovine i zapisnici transakcija.
+config-wizard-server-language = {"**"}Jezik poslužitelja:{"**"} { $language }
+config-wizard-server-language-default = Zadano (engleski)
+
+# Wizard - Informacije o dopuni zaliha trgovine
+config-wizard-shop-restock-not-scheduled = ℹ️ Dopuna zaliha nije zakazana
+
+# Wizard - Postavke questova (Stranica 5)
+config-wizard-quest-header = __{"**"}Postavke questova{"**"}__
+config-wizard-quest-header-desc =
+    Ovaj odjeljak pruža pregled konfiguracija povezanih s questovima.
+config-wizard-quest-role-mode = - Način rada uloga questova: { $mode }
+config-wizard-quest-roles-label = {"**"}GM uloge questova{"**"}
+config-wizard-quest-roles-count = - Uloge dodijeljene GM-ovima: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Sve uloge u redu
+config-wizard-quest-roles-assigned-to = {"    "}Dodijeljeno: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ ID uloge { $roleId }: Nije pronađena/Obrisana s poslužitelja
+config-wizard-quest-roles-no-assignments = - ℹ️ Nema dodijeljenih uloga za questove
 
 ## Roles View
 config-title-roles = {"**"}Konfiguracija poslužitelja - Uloge{"**"}
@@ -831,9 +849,6 @@ config-select-placeholder-add-quest-role = Dodijelite ulogu(e) poslužitelja ovo
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}Konfiguracija poslužitelja - Uloge questa{"**"}
-config-label-quest-roles = Uloge questa
-config-desc-quest-roles =
-    Konfigurirajte kako se uloge družine upravljaju tijekom questova.
 
 config-label-quest-role-mode-disabled = {"**"}Način uloga questa:{"**"} Onemogućeno
     Uloge se ne stvaraju niti dodjeljuju tijekom questova.

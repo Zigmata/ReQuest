@@ -32,7 +32,6 @@ admin-modal-label-server-name = Szerver neve
 admin-modal-placeholder-server-name = Írj be egy rövid nevet a Discord szervernek
 admin-modal-label-server-id = Szerver ID
 admin-modal-placeholder-server-id = Írd be a Discord szerver ID-ját
-admin-select-placeholder-server = Válassz egy szervert az eltávolításhoz
 admin-modal-title-cog-action = Cog { $action }
 admin-modal-label-cog-name = Név
 admin-modal-placeholder-cog-name = Add meg a Cog nevét a(z) { $action } művelethez

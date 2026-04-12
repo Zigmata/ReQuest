@@ -55,10 +55,7 @@ gm-modal-placeholder-inventory-modify =
     jne.
 
 # GM errors
-gm-error-forbidden-role-name = Ryhmäroolille annettu nimi on kielletty.
-gm-error-role-already-exists = Samanniminen rooli on jo olemassa tällä palvelimella.
 gm-error-no-quest-channel = Quest-julkaisuja varten ei ole vielä määritetty kanavaa. Ota yhteyttä palvelimen ylläpitäjään quest-kanavan määrittämiseksi.
-gm-error-cannot-ping-announce = Ilmoitusroolia { $role } ei voitu pingata kanavassa { $channel }. Tarkista kanavan ja ReQuest-roolin oikeudet palvelimen ylläpitäjän kanssa.
 gm-error-invalid-item-format = Virheellinen esinemuoto: "{ $item }". Jokainen esine on oltava omalla rivillään muodossa "Nimi: Määrä".
 gm-error-already-on-quest = Olet jo tässä questissä hahmona { $characterName }.
 gm-error-no-active-character-long = Sinulla ei ole aktiivista hahmoa tällä palvelimella. Käytä `/player`-komentoa rekisteröidäksesi tai aktivoidaksesi hahmon.
@@ -121,8 +118,6 @@ gm-dm-role-not-found =
 
 # GM select menus
 gm-select-placeholder-party-member = Valitse ryhmän jäsen
-gm-modal-label-select-party-role = Ryhmärooli
-gm-modal-desc-select-party-role = Valitse rooli, joka annetaan questin ryhmälle.
 gm-select-option-no-role = Ei mitään (Ei ryhmäroolia)
 
 # GM embeds
@@ -150,18 +145,10 @@ gm-label-quest-locked = (Lukittu)
 gm-label-quest-draft = (Luonnos)
 gm-title-manage-quest = Hallinnoi questiä - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Muokkaa questin tietoja, kuten otsikkoa, kuvausta ja ryhmän kokoa.
-gm-title-edit-quest = Muokkaa questiä - { $questTitle }
 gm-label-field-not-set = Ei asetettu
 gm-label-description-not-set = Kuvausta ei ole asetettu
-gm-label-current-title = {"**"}Otsikko:{"**"} { $value }
-gm-label-current-description = {"**"}Kuvaus{"**"}
-gm-label-current-restrictions = {"**"}Rajoitukset:{"**"} { $value }
 gm-label-current-party-size = {"**"}Ryhmän enimmäiskoko:{"**"} { $value }
 gm-label-current-party-role = {"**"}Ryhmärooli:{"**"} { $value }
-gm-label-current-image = {"**"}Pikkukuva{"**"}
-gm-label-current-large-image = {"**"}Kuva{"**"}
-gm-desc-publish-quest = Julkaise tämä quest quest-taululle.
-gm-desc-update-quest-post = Päivitä questin julkaisu quest-taululla.
 gm-desc-toggle-ready = Vaihda valmiustila (Nykyinen: {"**"}{ $status }{"**"})
     - Lukitsee questin ryhmän ja ilmoittaa jäsenille, että quest alkaa pian. Jos rooli on määritetty, se annetaan ryhmän jäsenille lukittaessa.
     - Avaa ryhmän lukituksen, kun asetetaan Avoimeksi.
@@ -189,8 +176,6 @@ gm-label-no-players-in-roster = Questin ryhmässä ei ole pelaajia
 gm-title-character-sheet = Hahmoarkki: { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Kokemuspisteet:{"**"}__
 gm-label-possessions = __{"**"}Omaisuus{"**"}__
-gm-label-currency-heading = {"**"}Valuutta{"**"}
-gm-msg-inventory-empty = Inventaario on tyhjä.
 
 # GM approvals
 

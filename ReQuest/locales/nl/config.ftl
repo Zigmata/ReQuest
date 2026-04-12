@@ -224,8 +224,6 @@ config-error-item-exists-new-char = Een voorwerp met de naam { $itemName } besta
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Nieuw-personagewinkel uploaden (JSON)
 config-error-no-json-uploaded-short = Geen JSON-bestand geüpload.
-config-error-json-must-have-shopstock = JSON moet een 'shopStock'-array bevatten.
-config-error-items-must-have-name-price = Alle voorwerpen moeten 'name' en 'price' hebben.
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Startkapitaal instellen
@@ -535,7 +533,27 @@ config-wizard-gm-rewards-disabled = {"**"}Status:{"**"} Uitgeschakeld
 config-wizard-gm-rewards-enabled = {"**"}Status:{"**"} Ingeschakeld
 config-wizard-gm-rewards-experience = - Ervaring: { $xp }
 config-wizard-gm-rewards-items = - Voorwerpen:
-config-wizard-unnamed-shop = Naamloze winkel
+
+# Wizard - Servertaal (Pagina 1)
+config-wizard-server-language-desc =
+    Dit is de taal die ReQuest zal gebruiken voor alle openbare berichten, zoals Quest-publicaties, winkelherbevoorradingsberichten en transactielogboeken.
+config-wizard-server-language = {"**"}Servertaal:{"**"} { $language }
+config-wizard-server-language-default = Standaard (Engels)
+
+# Wizard - Winkelherbevoorradingsinfo
+config-wizard-shop-restock-not-scheduled = ℹ️ Herbevoorrading niet gepland
+
+# Wizard - Quest-instellingen (Pagina 5)
+config-wizard-quest-header = __{"**"}Quest-instellingen{"**"}__
+config-wizard-quest-header-desc =
+    Dit gedeelte biedt een overzicht van quest-gerelateerde configuraties.
+config-wizard-quest-role-mode = - Quest-rollenmodus: { $mode }
+config-wizard-quest-roles-label = {"**"}GM Quest-rollen{"**"}
+config-wizard-quest-roles-count = - Rollen toegewezen aan GM's: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Alle rollen OK
+config-wizard-quest-roles-assigned-to = {"    "}Toegewezen aan: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ Rol-ID { $roleId }: Niet gevonden/Verwijderd van de server
+config-wizard-quest-roles-no-assignments = - ℹ️ Geen quest-rollen toegewezen
 
 ## Roles View
 config-title-roles = {"**"}Serverconfiguratie - Rollen{"**"}
@@ -831,9 +849,6 @@ config-select-placeholder-add-quest-role = Serverrol(len) toewijzen aan deze GM
 
 ## Questrollen weergave
 config-title-quest-roles = {"**"}Serverconfiguratie - Questrollen{"**"}
-config-label-quest-roles = Questrollen
-config-desc-quest-roles =
-    Configureer hoe groepsrollen worden afgehandeld tijdens quests.
 
 config-label-quest-role-mode-disabled = {"**"}Questrolmodus:{"**"} Uitgeschakeld
     Er worden geen rollen aangemaakt of toegewezen tijdens quests.

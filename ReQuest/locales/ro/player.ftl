@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Schimb
-player-cmd-desc = Meniuri jucător
 
 # --- Buttons ---
 
@@ -224,8 +222,6 @@ player-label-empty-kit = {"*"}Kit gol{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Confirmă selecția: { $kitName }{"**"}
-player-label-items-heading = {"**"}Obiecte:{"**"}
-player-label-currency-heading = {"**"}Monedă:{"**"}
 player-msg-kit-empty = Acest kit este gol.
 
 # NewCharacterComplexItemPurchaseView
@@ -291,8 +287,6 @@ player-error-qty-only-have = Aveți doar { $maxQuantity } din acest obiect.
 player-error-invalid-format = Format invalid: „{ $line }". Folosiți <nume>: <cantitate>.
 player-error-empty-name = Numele obiectului nu poate fi gol în linia: „{ $line }".
 player-error-invalid-quantity = Cantitate invalidă pentru „{ $name }": „{ $quantity }". Trebuie să fie un număr întreg pozitiv.
-player-error-input-errors-header = Erori la introducerea inventarului:
-player-msg-no-valid-items = Niciun obiect valid furnizat. Se inițializează cu inventar gol.
 
 # Validation error view
 player-validation-error-title = Erori de introducere
@@ -302,11 +296,8 @@ player-validation-btn-retry = Încearcă din nou
 player-error-enter-valid-number = Vă rugăm să introduceți un număr pozitiv valid.
 
 # Submission embeds (approval queue)
-player-embed-title-approval = Aprobare inventar: { $characterName }
-player-embed-desc-submitted-by = Trimis de { $userMention }
 player-embed-field-items = Obiecte
 player-embed-field-currency-received = Monedă
-player-embed-footer-submission-id = ID trimitere: { $submissionId }
 player-label-approval-thread = Aprobare: { $characterName }
 player-embed-title-submission-sent = Trimitere inventar trimisă
 player-embed-desc-submission-sent =

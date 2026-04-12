@@ -102,4 +102,3 @@ info-language-desc-sv-se = Atur bahasa Anda ke Swedia
 info-language-desc-th = Atur bahasa Anda ke Thai
 info-language-desc-tr = Atur bahasa Anda ke Turki
 info-language-desc-vi = Atur bahasa Anda ke Vietnam
-info-language-updated = Bahasa berhasil diperbarui.

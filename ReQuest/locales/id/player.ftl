@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Tukar
-player-cmd-desc = Menu Pemain
 
 # --- Buttons ---
 
@@ -224,8 +222,6 @@ player-label-empty-kit = {"*"}Kit Kosong{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Konfirmasi Pilihan: { $kitName }{"**"}
-player-label-items-heading = {"**"}Barang:{"**"}
-player-label-currency-heading = {"**"}Mata Uang:{"**"}
 player-msg-kit-empty = Kit ini kosong.
 
 # NewCharacterComplexItemPurchaseView
@@ -291,8 +287,6 @@ player-error-qty-only-have = Anda hanya memiliki { $maxQuantity } barang ini.
 player-error-invalid-format = Format tidak valid: "{ $line }". Gunakan <nama>: <jumlah>.
 player-error-empty-name = Nama barang tidak boleh kosong pada baris: "{ $line }".
 player-error-invalid-quantity = Jumlah tidak valid untuk "{ $name }": "{ $quantity }". Harus berupa bilangan bulat positif.
-player-error-input-errors-header = Kesalahan pada input inventaris:
-player-msg-no-valid-items = Tidak ada barang yang valid. Menginisialisasi dengan inventaris kosong.
 
 # Validation error view
 player-validation-error-title = Kesalahan input
@@ -302,11 +296,8 @@ player-validation-btn-retry = Coba lagi
 player-error-enter-valid-number = Silakan masukkan angka positif yang valid.
 
 # Submission embeds (approval queue)
-player-embed-title-approval = Persetujuan Inventaris: { $characterName }
-player-embed-desc-submitted-by = Diajukan oleh { $userMention }
 player-embed-field-items = Barang
 player-embed-field-currency-received = Mata Uang
-player-embed-footer-submission-id = ID Pengajuan: { $submissionId }
 player-label-approval-thread = Persetujuan: { $characterName }
 player-embed-title-submission-sent = Pengajuan Inventaris Terkirim
 player-embed-desc-submission-sent =

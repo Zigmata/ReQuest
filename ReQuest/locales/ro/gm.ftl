@@ -55,10 +55,7 @@ gm-modal-placeholder-inventory-modify =
     etc.
 
 # GM errors
-gm-error-forbidden-role-name = Numele furnizat pentru rolul echipei este interzis.
-gm-error-role-already-exists = Un rol cu acel nume există deja pe acest server.
 gm-error-no-quest-channel = Un canal nu a fost încă desemnat pentru postările de quest. Contactați un administrator de server pentru a configura canalul de quest-uri.
-gm-error-cannot-ping-announce = Nu s-a putut notifica rolul de anunțare { $role } în canalul { $channel }. Verificați permisiunile canalului și ale rolului ReQuest cu administratorii serverului.
 gm-error-invalid-item-format = Format de obiect invalid: „{ $item }". Fiecare obiect trebuie să fie pe o linie nouă, în formatul „Nume: Cantitate".
 gm-error-already-on-quest = Sunteți deja pe acest quest ca { $characterName }.
 gm-error-no-active-character-long = Nu aveți un personaj activ pe acest server. Folosiți `/player` pentru a înregistra sau activa un personaj.
@@ -122,8 +119,6 @@ gm-dm-role-not-found =
 
 # GM select menus
 gm-select-placeholder-party-member = Selectați un membru al echipei
-gm-modal-label-select-party-role = Rol echipă
-gm-modal-desc-select-party-role = Selectați un rol de atribuit echipei quest-ului.
 gm-select-option-no-role = Niciunul (Fără rol de echipă)
 
 # GM embeds
@@ -151,18 +146,10 @@ gm-label-quest-locked = (Blocat)
 gm-label-quest-draft = (Ciornă)
 gm-title-manage-quest = Gestionare quest - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Editați detaliile quest-ului, cum ar fi titlul, descrierea și dimensiunea echipei.
-gm-title-edit-quest = Editare quest - { $questTitle }
 gm-label-field-not-set = Nesetat
 gm-label-description-not-set = Descriere nesetată
-gm-label-current-title = {"**"}Titlu:{"**"} { $value }
-gm-label-current-description = {"**"}Descriere{"**"}
-gm-label-current-restrictions = {"**"}Restricții:{"**"} { $value }
 gm-label-current-party-size = {"**"}Dimensiune maximă echipă:{"**"} { $value }
 gm-label-current-party-role = {"**"}Rol echipă:{"**"} { $value }
-gm-label-current-image = {"**"}Miniatură{"**"}
-gm-label-current-large-image = {"**"}Imagine{"**"}
-gm-desc-publish-quest = Publicați acest quest pe panoul de quest-uri.
-gm-desc-update-quest-post = Actualizați postarea quest-ului pe panoul de quest-uri.
 gm-desc-toggle-ready = Comutați starea de pregătire (Curent: {"**"}{ $status }{"**"})
     - Blochează lista quest-ului și notifică membrii echipei că quest-ul va începe curând. Dacă un rol este configurat, acesta va fi atribuit membrilor echipei la blocare.
     - Deblochează lista când este setat pe Deschis.
@@ -190,7 +177,5 @@ gm-label-no-players-in-roster = Niciun jucător pe lista quest-ului
 gm-title-character-sheet = Fișa personajului pentru { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Puncte de experiență:{"**"}__
 gm-label-possessions = __{"**"}Posesiuni{"**"}__
-gm-label-currency-heading = {"**"}Monedă{"**"}
-gm-msg-inventory-empty = Inventarul este gol.
 
 # GM approvals

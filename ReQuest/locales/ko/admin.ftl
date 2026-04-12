@@ -32,7 +32,6 @@ admin-modal-label-server-name = 서버 이름
 admin-modal-placeholder-server-name = Discord 서버의 간단한 이름을 입력하세요
 admin-modal-label-server-id = 서버 ID
 admin-modal-placeholder-server-id = Discord 서버의 ID를 입력하세요
-admin-select-placeholder-server = 제거할 서버를 선택하세요
 admin-modal-title-cog-action = 코그 { $action }
 admin-modal-label-cog-name = 이름
 admin-modal-placeholder-cog-name = { $action }할 코그의 이름을 입력하세요

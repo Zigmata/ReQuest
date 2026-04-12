@@ -55,10 +55,7 @@ gm-modal-placeholder-inventory-modify =
     etc.
 
 # Errores de GM
-gm-error-forbidden-role-name = El nombre proporcionado para el rol del grupo está prohibido.
-gm-error-role-already-exists = Ya existe un rol con ese nombre en este servidor.
 gm-error-no-quest-channel = Aún no se ha designado un canal para las publicaciones de quests. Contactad con un administrador del servidor para configurar el canal de quests.
-gm-error-cannot-ping-announce = No se ha podido mencionar el rol de anuncio { $role } en el canal { $channel }. Comprobad los permisos del canal y del rol de ReQuest con vuestros administradores.
 gm-error-invalid-item-format = Formato de objeto inválido: "{ $item }". Cada objeto debe estar en una línea nueva, con el formato "Nombre: Cantidad".
 gm-error-already-on-quest = Ya estáis en esta quest como { $characterName }.
 gm-error-no-active-character-long = No tenéis un personaje activo en este servidor. Usad `/player` para registrar o activar un personaje.
@@ -121,8 +118,6 @@ gm-dm-role-not-found =
 
 # Menús de selección de GM
 gm-select-placeholder-party-member = Seleccionad un miembro del grupo
-gm-modal-label-select-party-role = Rol del grupo
-gm-modal-desc-select-party-role = Seleccionad un rol para asignar al grupo de la quest.
 gm-select-option-no-role = Ninguno (Sin rol de grupo)
 
 # Embeds de GM
@@ -150,18 +145,10 @@ gm-label-quest-locked = (Bloqueada)
 gm-label-quest-draft = (Borrador)
 gm-title-manage-quest = Gestionar quest - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Editar detalles de la quest como título, descripción y tamaño del grupo.
-gm-title-edit-quest = Editar quest - { $questTitle }
 gm-label-field-not-set = No establecido
 gm-label-description-not-set = Descripción no establecida
-gm-label-current-title = {"**"}Título:{"**"} { $value }
-gm-label-current-description = {"**"}Descripción{"**"}
-gm-label-current-restrictions = {"**"}Restricciones:{"**"} { $value }
 gm-label-current-party-size = {"**"}Tamaño máx. del grupo:{"**"} { $value }
 gm-label-current-party-role = {"**"}Rol del grupo:{"**"} { $value }
-gm-label-current-image = {"**"}Miniatura{"**"}
-gm-label-current-large-image = {"**"}Imagen{"**"}
-gm-desc-publish-quest = Publicar esta quest en el tablón de quests.
-gm-desc-update-quest-post = Actualizar la publicación de la quest en el tablón de quests.
 gm-desc-toggle-ready = Alternar estado de preparación (Actual: {"**"}{ $status }{"**"})
     - Bloquea la lista del grupo y notifica a los miembros que la quest comenzará pronto. Si se ha configurado un rol, se asignará a los miembros del grupo al bloquear.
     - Desbloquea la lista cuando se establece como Abierto.
@@ -189,8 +176,6 @@ gm-label-no-players-in-roster = No hay jugadores en la lista de la quest
 gm-title-character-sheet = Ficha de personaje de { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Puntos de experiencia:{"**"}__
 gm-label-possessions = __{"**"}Posesiones{"**"}__
-gm-label-currency-heading = {"**"}Moneda{"**"}
-gm-msg-inventory-empty = El inventario está vacío.
 
 # Aprobaciones de GM
 

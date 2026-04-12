@@ -13,7 +13,6 @@ common-btn-select = Выбрать
 common-btn-manage = Управление
 common-btn-rename = Переименовать
 common-btn-continue = Продолжить
-common-btn-cancel = Отмена
 common-btn-enable = Включить
 common-btn-disable = Отключить
 
@@ -39,7 +38,6 @@ common-label-none = Нет
 common-label-unknown = Неизвестно
 common-label-locked = (ЗАБЛОКИРОВАНО)
 common-label-loose-items = Неразложенные предметы
-common-label-and-more = . . . и ещё { $remaining }.
 common-label-currency = Валюта
 common-label-inventory-empty = Инвентарь пуст.
 

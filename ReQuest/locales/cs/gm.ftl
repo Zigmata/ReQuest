@@ -55,10 +55,7 @@ gm-modal-placeholder-inventory-modify =
     atd.
 
 # GM errors
-gm-error-forbidden-role-name = Zadaný název role skupiny je zakázaný.
-gm-error-role-already-exists = Role s tímto názvem na tomto serveru již existuje.
 gm-error-no-quest-channel = Pro příspěvky questů nebyl dosud určen kanál. Kontaktujte administrátora serveru pro konfiguraci kanálu questů.
-gm-error-cannot-ping-announce = Nepodařilo se pingnout roli pro oznámení { $role } v kanálu { $channel }. Zkontrolujte oprávnění kanálu a role ReQuest s administrátory serveru.
 gm-error-invalid-item-format = Neplatný formát předmětu: „{ $item }". Každý předmět musí být na novém řádku ve formátu „Název: Množství".
 gm-error-already-on-quest = Tohoto questu se již účastníte jako { $characterName }.
 gm-error-no-active-character-long = Na tomto serveru nemáte aktivní postavu. Použijte `/player` k registraci nebo aktivaci postavy.
@@ -122,8 +119,6 @@ gm-dm-role-not-found =
 
 # GM select menus
 gm-select-placeholder-party-member = Vyberte člena skupiny
-gm-modal-label-select-party-role = Role skupiny
-gm-modal-desc-select-party-role = Vyberte roli k přiřazení skupině questu.
 gm-select-option-no-role = Žádná (Bez role skupiny)
 
 # GM embeds
@@ -151,16 +146,10 @@ gm-label-quest-locked = (Zamčeno)
 gm-label-quest-draft = (Koncept)
 gm-title-manage-quest = Správa questu - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Upravte detaily questu, jako je název, popis a velikost skupiny.
-gm-title-edit-quest = Upravit Quest - { $questTitle }
 gm-label-field-not-set = Nenastaveno
 gm-label-description-not-set = Popis není nastaven
-gm-label-current-title = {"**"}Název:{"**"} { $value }
-gm-label-current-description = {"**"}Popis{"**"}
-gm-label-current-restrictions = {"**"}Omezení:{"**"} { $value }
 gm-label-current-party-size = {"**"}Maximální velikost skupiny:{"**"} { $value }
 gm-label-current-party-role = {"**"}Role skupiny:{"**"} { $value }
-gm-label-current-image = {"**"}Miniatura{"**"}
-gm-label-current-large-image = {"**"}Obrázek{"**"}
 gm-desc-toggle-ready = Přepnout stav připravenosti (Aktuální: {"**"}{ $status }{"**"})
     - Zamkne soupisku questu a upozorní členy skupiny, že quest brzy začne. Pokud je nakonfigurována role, bude přiřazena členům skupiny při zamčení.
     - Odemkne soupisku, když je nastaven na Otevřený.
@@ -170,8 +159,6 @@ gm-desc-configure-rewards = Konfigurujte odměny pro vybraný quest.
 gm-desc-complete-quest = Dokončte quest. Vydá odměny, pokud existují, členům skupiny.
 gm-desc-remove-player = Odeberte hráče ze soupisky questu a upozorněte jej.
 gm-desc-cancel-quest = Zrušte quest a smažte jej z nástěnky questů.
-gm-desc-publish-quest = Publikovat tento quest na nástěnku questů.
-gm-desc-update-quest-post = Aktualizovat příspěvek questu na nástěnce questů.
 gm-error-role-hierarchy = ReQuest nemůže spravovat roli "{ $roleName }" (ID: { $roleId }), protože je umístěna výše než nejvyšší role ReQuest v hierarchii serveru. Kontaktujte administrátora serveru, aby přesunul roli pod roli ReQuest, nebo přidělil ReQuest vyšší roli, a poté operaci zopakujte.
 gm-title-player-management = Game Master - Správa hráčů
 gm-desc-player-management =
@@ -191,7 +178,5 @@ gm-label-no-players-in-roster = Žádní hráči na soupisce questu
 gm-title-character-sheet = List postavy pro { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Body zkušeností:{"**"}__
 gm-label-possessions = __{"**"}Vlastnictví{"**"}__
-gm-label-currency-heading = {"**"}Měna{"**"}
-gm-msg-inventory-empty = Inventář je prázdný.
 
 # GM approvals

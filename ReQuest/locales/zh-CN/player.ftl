@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = 交易
-player-cmd-desc = 玩家菜单
 
 # --- Buttons ---
 
@@ -224,8 +222,6 @@ player-label-empty-kit = {"*"}空套装{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}确认选择：{ $kitName }{"**"}
-player-label-items-heading = {"**"}物品：{"**"}
-player-label-currency-heading = {"**"}货币：{"**"}
 player-msg-kit-empty = 此套装为空。
 
 # NewCharacterComplexItemPurchaseView
@@ -291,8 +287,6 @@ player-error-qty-only-have = 您只有 { $maxQuantity } 个此物品。
 player-error-invalid-format = 无效的格式："{ $line }"。请使用 <名称>: <数量>。
 player-error-empty-name = 物品名称不能为空，位于行："{ $line }"。
 player-error-invalid-quantity = "{ $name }"的数量无效："{ $quantity }"。必须是正整数。
-player-error-input-errors-header = 物品栏输入中的错误：
-player-msg-no-valid-items = 未提供有效物品。将以空物品栏初始化。
 
 # Validation error view
 player-validation-error-title = 输入错误
@@ -302,11 +296,8 @@ player-validation-btn-retry = 重试
 player-error-enter-valid-number = 请输入有效的正数。
 
 # Submission embeds (approval queue)
-player-embed-title-approval = 物品栏审批：{ $characterName }
-player-embed-desc-submitted-by = 由 { $userMention } 提交
 player-embed-field-items = 物品
 player-embed-field-currency-received = 货币
-player-embed-footer-submission-id = 提交 ID: { $submissionId }
 player-label-approval-thread = 审批：{ $characterName }
 player-embed-title-submission-sent = 物品栏提交已发送
 player-embed-desc-submission-sent =

@@ -55,10 +55,7 @@ gm-modal-placeholder-inventory-modify =
     enz.
 
 # GM errors
-gm-error-forbidden-role-name = De opgegeven naam voor de groepsrol is verboden.
-gm-error-role-already-exists = Een rol met die naam bestaat al op deze server.
 gm-error-no-quest-channel = Er is nog geen kanaal aangewezen voor questberichten. Neem contact op met een serverbeheerder om het quest-kanaal te configureren.
-gm-error-cannot-ping-announce = Kon aankondigingsrol { $role } niet pingen in kanaal { $channel }. Controleer kanaal- en ReQuest-rolmachtigingen bij je serverbeheerder(s).
 gm-error-invalid-item-format = Ongeldig voorwerpformaat: "{ $item }". Elk voorwerp moet op een nieuwe regel staan, in het formaat "Naam: Hoeveelheid".
 gm-error-already-on-quest = Je doet al mee aan deze quest als { $characterName }.
 gm-error-no-active-character-long = Je hebt geen actief personage op deze server. Gebruik `/player` om een personage te registreren of te activeren.
@@ -122,8 +119,6 @@ gm-dm-role-not-found =
 
 # GM select menus
 gm-select-placeholder-party-member = Selecteer een groepslid
-gm-modal-label-select-party-role = Groepsrol
-gm-modal-desc-select-party-role = Selecteer een rol om aan de questgroep toe te wijzen.
 gm-select-option-no-role = Geen (geen groepsrol)
 
 # GM embeds
@@ -151,18 +146,10 @@ gm-label-quest-locked = (Vergrendeld)
 gm-label-quest-draft = (Concept)
 gm-title-manage-quest = Quest beheren - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Bewerk questdetails zoals titel, beschrijving en groepsgrootte.
-gm-title-edit-quest = Quest bewerken - { $questTitle }
 gm-label-field-not-set = Niet ingesteld
 gm-label-description-not-set = Beschrijving niet ingesteld
-gm-label-current-title = {"**"}Titel:{"**"} { $value }
-gm-label-current-description = {"**"}Beschrijving{"**"}
-gm-label-current-restrictions = {"**"}Beperkingen:{"**"} { $value }
 gm-label-current-party-size = {"**"}Maximale groepsgrootte:{"**"} { $value }
 gm-label-current-party-role = {"**"}Groepsrol:{"**"} { $value }
-gm-label-current-image = {"**"}Miniatuur{"**"}
-gm-label-current-large-image = {"**"}Afbeelding{"**"}
-gm-desc-publish-quest = Publiceer deze quest op het quest-bord.
-gm-desc-update-quest-post = Werk het questbericht bij op het quest-bord.
 gm-desc-toggle-ready = Gereedheid wisselen (Huidig: {"**"}{ $status }{"**"})
     - Vergrendelt de questgroep en stelt groepsleden op de hoogte dat de quest binnenkort begint. Als er een rol is geconfigureerd, wordt deze toegewezen aan groepsleden bij vergrendeling.
     - Ontgrendelt de groep wanneer ingesteld op Open.
@@ -190,7 +177,5 @@ gm-label-no-players-in-roster = Geen spelers in de questgroep
 gm-title-character-sheet = Personageblad voor { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Ervaringspunten:{"**"}__
 gm-label-possessions = __{"**"}Bezittingen{"**"}__
-gm-label-currency-heading = {"**"}Valuta{"**"}
-gm-msg-inventory-empty = Inventaris is leeg.
 
 # GM approvals

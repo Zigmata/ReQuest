@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Prekyba
-player-cmd-desc = Žaidėjo meniu
 
 # --- Buttons ---
 
@@ -224,8 +222,6 @@ player-label-empty-kit = {"*"}Tuščias rinkinys{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Patvirtinti pasirinkimą: { $kitName }{"**"}
-player-label-items-heading = {"**"}Daiktai:{"**"}
-player-label-currency-heading = {"**"}Valiuta:{"**"}
 player-msg-kit-empty = Šis rinkinys tuščias.
 
 # NewCharacterComplexItemPurchaseView
@@ -291,8 +287,6 @@ player-error-qty-only-have = Turite tik { $maxQuantity } šio daikto.
 player-error-invalid-format = Netinkamas formatas: „{ $line }". Naudokite <pavadinimas>: <kiekis>.
 player-error-empty-name = Daikto pavadinimas negali būti tuščias eilutėje: „{ $line }".
 player-error-invalid-quantity = Netinkamas kiekis „{ $name }": „{ $quantity }". Turi būti teigiamas sveikasis skaičius.
-player-error-input-errors-header = Inventoriaus įvedimo klaidos:
-player-msg-no-valid-items = Nepateikta tinkamų daiktų. Inicializuojama su tuščiu inventoriumi.
 
 # Validation error view
 player-validation-error-title = Įvesties klaidos
@@ -302,11 +296,8 @@ player-validation-btn-retry = Bandyti dar kartą
 player-error-enter-valid-number = Įveskite tinkamą teigiamą skaičių.
 
 # Submission embeds (approval queue)
-player-embed-title-approval = Inventoriaus patvirtinimas: { $characterName }
-player-embed-desc-submitted-by = Pateikė { $userMention }
 player-embed-field-items = Daiktai
 player-embed-field-currency-received = Valiuta
-player-embed-footer-submission-id = Pateikimo ID: { $submissionId }
 player-label-approval-thread = Patvirtinimas: { $characterName }
 player-embed-title-submission-sent = Inventoriaus pateikimas išsiųstas
 player-embed-desc-submission-sent =

@@ -224,8 +224,6 @@ config-error-item-exists-new-char = Ett föremål med namnet { $itemName } finns
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Ladda upp nykaraktärsbutik (JSON)
 config-error-no-json-uploaded-short = Ingen JSON-fil uppladdad.
-config-error-json-must-have-shopstock = JSON måste innehålla en 'shopStock'-array.
-config-error-items-must-have-name-price = Alla föremål måste ha 'name' och 'price'.
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Ange nykaraktärsförmögenhet
@@ -535,7 +533,27 @@ config-wizard-gm-rewards-disabled = {"**"}Status:{"**"} Inaktiverad
 config-wizard-gm-rewards-enabled = {"**"}Status:{"**"} Aktiverad
 config-wizard-gm-rewards-experience = - Erfarenhet: { $xp }
 config-wizard-gm-rewards-items = - Föremål:
-config-wizard-unnamed-shop = Namnlös butik
+
+# Wizard - Serverspråk (Sida 1)
+config-wizard-server-language-desc =
+    Detta är språket som ReQuest kommer att använda för alla offentliga meddelanden, såsom quest-inlägg, butiksåterfyllnadsmeddelanden och transaktionsloggar.
+config-wizard-server-language = {"**"}Serverspråk:{"**"} { $language }
+config-wizard-server-language-default = Standard (engelska)
+
+# Wizard - Butiksåterfyllnadsinformation
+config-wizard-shop-restock-not-scheduled = ℹ️ Återfyllnad inte schemalagd
+
+# Wizard - Quest-inställningar (Sida 5)
+config-wizard-quest-header = __{"**"}Quest-inställningar{"**"}__
+config-wizard-quest-header-desc =
+    Det här avsnittet ger en översikt av quest-relaterade konfigurationer.
+config-wizard-quest-role-mode = - Quest-rollsläge: { $mode }
+config-wizard-quest-roles-label = {"**"}GM Quest-roller{"**"}
+config-wizard-quest-roles-count = - Roller tilldelade till GM: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Alla roller OK
+config-wizard-quest-roles-assigned-to = {"    "}Tilldelad till: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ Roll-ID { $roleId }: Hittades inte/Borttagen från servern
+config-wizard-quest-roles-no-assignments = - ℹ️ Inga quest-roller tilldelade
 
 ## Roles View
 config-title-roles = {"**"}Serverkonfiguration - Roller{"**"}
@@ -831,9 +849,6 @@ config-select-placeholder-add-quest-role = Tilldela serverroll(er) till denna GM
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}Serverkonfiguration - Quest-roller{"**"}
-config-label-quest-roles = Quest-roller
-config-desc-quest-roles =
-    Konfigurera hur grupproller hanteras under quests.
 
 config-label-quest-role-mode-disabled = {"**"}Quest-rollläge:{"**"} Inaktiverat
     Inga roller skapas eller tilldelas under quests.

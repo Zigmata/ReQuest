@@ -224,8 +224,6 @@ config-error-item-exists-new-char = Un obiect cu numele { $itemName } există de
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Încarcă magazin personaj nou (JSON)
 config-error-no-json-uploaded-short = Niciun fișier JSON încărcat.
-config-error-json-must-have-shopstock = JSON-ul trebuie să conțină un array „shopStock".
-config-error-items-must-have-name-price = Toate obiectele trebuie să aibă „name" și „price".
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Setează averea personajului nou
@@ -535,7 +533,27 @@ config-wizard-gm-rewards-disabled = {"**"}Status:{"**"} Dezactivat
 config-wizard-gm-rewards-enabled = {"**"}Status:{"**"} Activat
 config-wizard-gm-rewards-experience = - Experiență: { $xp }
 config-wizard-gm-rewards-items = - Obiecte:
-config-wizard-unnamed-shop = Magazin fără nume
+
+# Wizard - Limba serverului (Pagina 1)
+config-wizard-server-language-desc =
+    Aceasta este limba pe care ReQuest o va folosi pentru toate mesajele publice, cum ar fi postările de quest-uri, mesajele de reaprovizionare a magazinului și jurnalele de tranzacții.
+config-wizard-server-language = {"**"}Limba serverului:{"**"} { $language }
+config-wizard-server-language-default = Implicit (engleză)
+
+# Wizard - Informații reaprovizionare magazin
+config-wizard-shop-restock-not-scheduled = ℹ️ Reaprovizionarea nu este programată
+
+# Wizard - Setări quest-uri (Pagina 5)
+config-wizard-quest-header = __{"**"}Setări quest-uri{"**"}__
+config-wizard-quest-header-desc =
+    Această secțiune oferă o prezentare generală a configurațiilor legate de quest-uri.
+config-wizard-quest-role-mode = - Modul rolurilor de quest: { $mode }
+config-wizard-quest-roles-label = {"**"}Roluri de quest GM{"**"}
+config-wizard-quest-roles-count = - Roluri atribuite GM-ilor: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Toate rolurile sunt OK
+config-wizard-quest-roles-assigned-to = {"    "}Atribuit la: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ ID rol { $roleId }: Nu a fost găsit/Șters de pe server
+config-wizard-quest-roles-no-assignments = - ℹ️ Nicio rol de quest atribuită
 
 ## Roles View
 config-title-roles = {"**"}Configurare server - Roluri{"**"}
@@ -831,9 +849,6 @@ config-select-placeholder-add-quest-role = Atribuiți rol(uri) de server acestui
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}Configurare server - Roluri de Quest{"**"}
-config-label-quest-roles = Roluri de Quest
-config-desc-quest-roles =
-    Configurați modul în care rolurile de echipă sunt gestionate în timpul quest-urilor.
 
 config-label-quest-role-mode-disabled = {"**"}Mod roluri de quest:{"**"} Dezactivat
     Nu se creează sau atribuie roluri în timpul quest-urilor.

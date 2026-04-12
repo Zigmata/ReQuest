@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Handeln
-player-cmd-desc = Spielermenüs
 
 # --- Schaltflächen ---
 
@@ -224,8 +222,6 @@ player-label-empty-kit = {"*"}Leeres Set{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Auswahl bestätigen: { $kitName }{"**"}
-player-label-items-heading = {"**"}Gegenstände:{"**"}
-player-label-currency-heading = {"**"}Währung:{"**"}
 player-msg-kit-empty = Dieses Set ist leer.
 
 # NewCharacterComplexItemPurchaseView
@@ -291,8 +287,6 @@ player-error-qty-only-have = Sie haben nur { $maxQuantity } von diesem Gegenstan
 player-error-invalid-format = Ungültiges Format: "{ $line }". Verwenden Sie <Name>: <Menge>.
 player-error-empty-name = Gegenstandsname darf in Zeile "{ $line }" nicht leer sein.
 player-error-invalid-quantity = Ungültige Menge für "{ $name }": "{ $quantity }". Muss eine positive Ganzzahl sein.
-player-error-input-errors-header = Fehler bei der Inventareingabe:
-player-msg-no-valid-items = Keine gültigen Gegenstände angegeben. Initialisierung mit leerem Inventar.
 
 # Validation error view
 player-validation-error-title = Eingabefehler
@@ -302,11 +296,8 @@ player-validation-btn-retry = Erneut versuchen
 player-error-enter-valid-number = Bitte geben Sie eine gültige positive Zahl ein.
 
 # Einreichungseinbettungen (Genehmigungswarteschlange)
-player-embed-title-approval = Inventargenehmigung: { $characterName }
-player-embed-desc-submitted-by = Eingereicht von { $userMention }
 player-embed-field-items = Gegenstände
 player-embed-field-currency-received = Währung
-player-embed-footer-submission-id = Einreichungs-ID: { $submissionId }
 player-label-approval-thread = Genehmigung: { $characterName }
 player-embed-title-submission-sent = Inventareinreichung gesendet
 player-embed-desc-submission-sent =

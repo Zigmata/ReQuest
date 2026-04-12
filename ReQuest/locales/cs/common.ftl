@@ -13,7 +13,6 @@ common-btn-select = Vybrat
 common-btn-manage = Spravovat
 common-btn-rename = Přejmenovat
 common-btn-continue = Pokračovat
-common-btn-cancel = Zrušit
 common-btn-enable = Zapnout
 common-btn-disable = Vypnout
 
@@ -39,7 +38,6 @@ common-label-none = Žádné
 common-label-unknown = Neznámé
 common-label-locked = (ZAMČENO)
 common-label-loose-items = Volné předměty
-common-label-and-more = . . . a dalších { $remaining }.
 common-label-currency = Měna
 common-label-inventory-empty = Inventář je prázdný.
 

@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Byt
-player-cmd-desc = Spelarmenyer
 
 # --- Buttons ---
 
@@ -224,8 +222,6 @@ player-label-empty-kit = {"*"}Tomt utrustningspaket{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Bekräfta val: { $kitName }{"**"}
-player-label-items-heading = {"**"}Föremål:{"**"}
-player-label-currency-heading = {"**"}Valuta:{"**"}
 player-msg-kit-empty = Detta utrustningspaket är tomt.
 
 # NewCharacterComplexItemPurchaseView
@@ -291,8 +287,6 @@ player-error-qty-only-have = Du har bara { $maxQuantity } av detta föremål.
 player-error-invalid-format = Ogiltigt format: "{ $line }". Använd <namn>: <antal>.
 player-error-empty-name = Föremålsnamn kan inte vara tomt i raden: "{ $line }".
 player-error-invalid-quantity = Ogiltigt antal för "{ $name }": "{ $quantity }". Måste vara ett positivt heltal.
-player-error-input-errors-header = Fel i inventarieinmatning:
-player-msg-no-valid-items = Inga giltiga föremål angavs. Initialiserar med tomt inventarie.
 
 # Validation error view
 player-validation-error-title = Inmatningsfel
@@ -302,11 +296,8 @@ player-validation-btn-retry = Försök igen
 player-error-enter-valid-number = Ange ett giltigt positivt nummer.
 
 # Submission embeds (approval queue)
-player-embed-title-approval = Inventariegodkännande: { $characterName }
-player-embed-desc-submitted-by = Inlämnad av { $userMention }
 player-embed-field-items = Föremål
 player-embed-field-currency-received = Valuta
-player-embed-footer-submission-id = Inlämnings-ID: { $submissionId }
 player-label-approval-thread = Godkännande: { $characterName }
 player-embed-title-submission-sent = Inventarieinlämning skickad
 player-embed-desc-submission-sent =

@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Търговия
-player-cmd-desc = Менюта за играчи
 
 # --- Buttons ---
 
@@ -224,8 +222,6 @@ player-label-empty-kit = {"*"}Празен комплект{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Потвърждение на избора: { $kitName }{"**"}
-player-label-items-heading = {"**"}Предмети:{"**"}
-player-label-currency-heading = {"**"}Валута:{"**"}
 player-msg-kit-empty = Този комплект е празен.
 
 # NewCharacterComplexItemPurchaseView
@@ -291,8 +287,6 @@ player-error-qty-only-have = Имате само { $maxQuantity } от този 
 player-error-invalid-format = Невалиден формат: "{ $line }". Използвайте <име>: <количество>.
 player-error-empty-name = Името на предмета не може да бъде празно в ред: "{ $line }".
 player-error-invalid-quantity = Невалидно количество за "{ $name }": "{ $quantity }". Трябва да е положително цяло число.
-player-error-input-errors-header = Грешки при въвеждане на инвентар:
-player-msg-no-valid-items = Няма предоставени валидни предмети. Инициализиране с празен инвентар.
 
 # Validation error view
 player-validation-error-title = Грешки при въвеждане
@@ -302,11 +296,8 @@ player-validation-btn-retry = Опитайте отново
 player-error-enter-valid-number = Моля, въведете валидно положително число.
 
 # Submission embeds (approval queue)
-player-embed-title-approval = Одобрение на инвентар: { $characterName }
-player-embed-desc-submitted-by = Изпратено от { $userMention }
 player-embed-field-items = Предмети
 player-embed-field-currency-received = Валута
-player-embed-footer-submission-id = ID на заявка: { $submissionId }
 player-label-approval-thread = Одобрение: { $characterName }
 player-embed-title-submission-sent = Заявката за инвентар е изпратена
 player-embed-desc-submission-sent =

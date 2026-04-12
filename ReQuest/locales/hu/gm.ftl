@@ -55,10 +55,7 @@ gm-modal-placeholder-inventory-modify =
     stb.
 
 # GM errors
-gm-error-forbidden-role-name = A csapatszerephez megadott név tiltott.
-gm-error-role-already-exists = Ilyen nevű szerep már létezik ezen a szerveren.
 gm-error-no-quest-channel = Még nincs kijelölt csatorna a quest bejegyzésekhez. Kérd meg a szerver adminisztrátort a Quest csatorna konfigurálására.
-gm-error-cannot-ping-announce = Nem sikerült a bejelentési szerep ({ $role }) pingelése a(z) { $channel } csatornában. Ellenőrizd a csatorna és a ReQuest szerep jogosultságait a szerver adminisztrátoroddal.
 gm-error-invalid-item-format = Érvénytelen tárgyformátum: „{ $item }". Minden tárgyat új sorba kell írni, „Név: Mennyiség" formátumban.
 gm-error-already-on-quest = Már részt veszel ezen a questen mint { $characterName }.
 gm-error-no-active-character-long = Nincs aktív karaktered ezen a szerveren. Használd a `/player` parancsot karakter regisztrálásához vagy aktiválásához.
@@ -121,8 +118,6 @@ gm-dm-role-not-found =
 
 # GM select menus
 gm-select-placeholder-party-member = Válassz csapattagot
-gm-modal-label-select-party-role = Csapat szerep
-gm-modal-desc-select-party-role = Válassz egy szerepet a quest csapatához való hozzárendeléshez.
 gm-select-option-no-role = Nincs (csapat szerep nélkül)
 
 # GM embeds
@@ -150,18 +145,10 @@ gm-label-quest-locked = (Zárolva)
 gm-label-quest-draft = (Piszkozat)
 gm-title-manage-quest = Quest kezelése - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Quest részleteinek szerkesztése, például cím, leírás és csapatméret.
-gm-title-edit-quest = Quest szerkesztése - { $questTitle }
 gm-label-field-not-set = Nincs beállítva
 gm-label-description-not-set = Leírás nincs beállítva
-gm-label-current-title = {"**"}Cím:{"**"} { $value }
-gm-label-current-description = {"**"}Leírás{"**"}
-gm-label-current-restrictions = {"**"}Korlátozások:{"**"} { $value }
 gm-label-current-party-size = {"**"}Max csapatméret:{"**"} { $value }
 gm-label-current-party-role = {"**"}Csapat szerep:{"**"} { $value }
-gm-label-current-image = {"**"}Bélyegkép{"**"}
-gm-label-current-large-image = {"**"}Kép{"**"}
-gm-desc-publish-quest = Quest közzététele a quest hirdetőtáblán.
-gm-desc-update-quest-post = A quest bejegyzés frissítése a quest hirdetőtáblán.
 gm-desc-toggle-ready = Készenléti állapot váltása (Jelenlegi: {"**"}{ $status }{"**"})
     - Zárolja a quest névsort és értesíti a csapattagokat, hogy a quest hamarosan elkezdődik. Ha szerep van konfigurálva, az zároláskor hozzárendelésre kerül a csapattagokhoz.
     - Feloldja a névsort, ha Nyitottra van állítva.
@@ -189,8 +176,6 @@ gm-label-no-players-in-roster = Nincsenek játékosok a quest névsorban
 gm-title-character-sheet = Karakterlap: { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Tapasztalatpontok:{"**"}__
 gm-label-possessions = __{"**"}Tulajdon{"**"}__
-gm-label-currency-heading = {"**"}Valuta{"**"}
-gm-msg-inventory-empty = A leltár üres.
 
 # GM approvals
 

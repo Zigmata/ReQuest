@@ -55,10 +55,7 @@ gm-modal-placeholder-inventory-modify =
     आदि।
 
 # GM errors
-gm-error-forbidden-role-name = पार्टी भूमिका के लिए दिया गया नाम प्रतिबंधित है।
-gm-error-role-already-exists = इस सर्वर में उस नाम की भूमिका पहले से मौजूद है।
 gm-error-no-quest-channel = Quest पोस्ट के लिए अभी तक कोई चैनल निर्धारित नहीं किया गया है। Quest चैनल कॉन्फ़िगर करने के लिए सर्वर एडमिन से संपर्क करें।
-gm-error-cannot-ping-announce = चैनल { $channel } में घोषणा भूमिका { $role } को पिंग नहीं किया जा सका। अपने सर्वर एडमिन से चैनल और ReQuest भूमिका अनुमतियाँ जाँचें।
 gm-error-invalid-item-format = अमान्य वस्तु प्रारूप: "{ $item }"। प्रत्येक वस्तु एक नई पंक्ति में होनी चाहिए, और प्रारूप "नाम: मात्रा" होना चाहिए।
 gm-error-already-on-quest = आप पहले से इस quest में { $characterName } के रूप में हैं।
 gm-error-no-active-character-long = इस सर्वर पर आपका कोई सक्रिय चरित्र नहीं है। चरित्र पंजीकृत या सक्रिय करने के लिए `/player` का उपयोग करें।
@@ -121,8 +118,6 @@ gm-dm-role-not-found =
 
 # GM select menus
 gm-select-placeholder-party-member = एक पार्टी सदस्य चुनें
-gm-modal-label-select-party-role = पार्टी भूमिका
-gm-modal-desc-select-party-role = Quest पार्टी को असाइन करने के लिए एक भूमिका चुनें।
 gm-select-option-no-role = कोई नहीं (कोई पार्टी भूमिका नहीं)
 
 # GM embeds
@@ -150,18 +145,10 @@ gm-label-quest-locked = (लॉक)
 gm-label-quest-draft = (ड्राफ्ट)
 gm-title-manage-quest = Quest प्रबंधित करें - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = शीर्षक, विवरण और पार्टी आकार जैसे quest विवरण संपादित करें।
-gm-title-edit-quest = Quest संपादित करें - { $questTitle }
 gm-label-field-not-set = सेट नहीं है
 gm-label-description-not-set = विवरण सेट नहीं है
-gm-label-current-title = {"**"}शीर्षक:{"**"} { $value }
-gm-label-current-description = {"**"}विवरण{"**"}
-gm-label-current-restrictions = {"**"}प्रतिबंध:{"**"} { $value }
 gm-label-current-party-size = {"**"}अधिकतम पार्टी आकार:{"**"} { $value }
 gm-label-current-party-role = {"**"}पार्टी भूमिका:{"**"} { $value }
-gm-label-current-image = {"**"}थंबनेल{"**"}
-gm-label-current-large-image = {"**"}छवि{"**"}
-gm-desc-publish-quest = इस quest को quest बोर्ड पर प्रकाशित करें।
-gm-desc-update-quest-post = Quest बोर्ड पर quest पोस्ट अपडेट करें।
 gm-desc-toggle-ready = तैयारी स्थिति टॉगल करें (वर्तमान: {"**"}{ $status }{"**"})
     - Quest सूची लॉक करता है और पार्टी सदस्यों को सूचित करता है कि quest जल्द शुरू होगी। यदि कोई भूमिका कॉन्फ़िगर है, तो लॉक होने पर यह पार्टी सदस्यों को असाइन की जाएगी।
     - ओपन पर सेट करने पर सूची अनलॉक हो जाती है।
@@ -189,8 +176,6 @@ gm-label-no-players-in-roster = Quest सूची में कोई खिल
 gm-title-character-sheet = { $characterName } का चरित्र पत्र (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}अनुभव अंक:{"**"}__
 gm-label-possessions = __{"**"}संपत्तियाँ{"**"}__
-gm-label-currency-heading = {"**"}मुद्रा{"**"}
-gm-msg-inventory-empty = सामान खाली है।
 
 # GM approvals
 

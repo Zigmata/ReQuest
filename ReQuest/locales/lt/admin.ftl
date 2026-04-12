@@ -32,7 +32,6 @@ admin-modal-label-server-name = Serverio pavadinimas
 admin-modal-placeholder-server-name = Įveskite trumpą Discord serverio pavadinimą
 admin-modal-label-server-id = Serverio ID
 admin-modal-placeholder-server-id = Įveskite Discord serverio ID
-admin-select-placeholder-server = Pasirinkite serverį, kurį norite pašalinti
 admin-modal-title-cog-action = { $action } Cog
 admin-modal-label-cog-name = Pavadinimas
 admin-modal-placeholder-cog-name = Įveskite Cog pavadinimą, kurį norite { $action }

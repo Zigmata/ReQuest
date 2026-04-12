@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Trade
-player-cmd-desc = Player Menus
 
 # --- Buttons ---
 
@@ -224,8 +222,6 @@ player-label-empty-kit = {"*"}Empty Kit{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Confirm Selection: { $kitName }{"**"}
-player-label-items-heading = {"**"}Items:{"**"}
-player-label-currency-heading = {"**"}Currency:{"**"}
 player-msg-kit-empty = This kit is empty.
 
 # NewCharacterComplexItemPurchaseView
@@ -291,8 +287,6 @@ player-error-qty-only-have = You only have { $maxQuantity } of this item.
 player-error-invalid-format = Invalid format: "{ $line }". Use <name>: <quantity>.
 player-error-empty-name = Item name cannot be empty in line: "{ $line }".
 player-error-invalid-quantity = Invalid quantity for "{ $name }": "{ $quantity }". Must be a positive integer.
-player-error-input-errors-header = Errors in inventory input:
-player-msg-no-valid-items = No valid items provided. Initializing with empty inventory.
 
 # Validation error view
 player-validation-error-title = Input Errors
@@ -302,11 +296,8 @@ player-validation-btn-retry = Try Again
 player-error-enter-valid-number = Please enter a valid positive number.
 
 # Submission embeds (approval queue)
-player-embed-title-approval = Inventory Approval: { $characterName }
-player-embed-desc-submitted-by = Submitted by { $userMention }
 player-embed-field-items = Items
 player-embed-field-currency-received = Currency
-player-embed-footer-submission-id = Submission ID: { $submissionId }
 player-label-approval-thread = Approval: { $characterName }
 player-embed-title-submission-sent = Inventory Submission Sent
 player-embed-desc-submission-sent =

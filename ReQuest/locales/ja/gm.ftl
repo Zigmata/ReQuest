@@ -55,10 +55,7 @@ gm-modal-placeholder-inventory-modify =
     など
 
 # GM errors
-gm-error-forbidden-role-name = パーティーロールに指定された名前は禁止されています。
-gm-error-role-already-exists = その名前のロールはこのサーバーに既に存在します。
 gm-error-no-quest-channel = Quest 投稿用のチャンネルがまだ設定されていません。サーバー管理者に Quest チャンネルの設定を依頼してください。
-gm-error-cannot-ping-announce = チャンネル { $channel } で告知ロール { $role } をメンションできませんでした。チャンネルと ReQuest ロールの権限をサーバー管理者に確認してください。
 gm-error-invalid-item-format = 無効なアイテム形式：「{ $item }」。各アイテムは新しい行に「名前: 数量」の形式で入力してください。
 gm-error-already-on-quest = あなたは既に { $characterName } としてこの Quest に参加しています。
 gm-error-no-active-character-long = このサーバーで有効なキャラクターがいません。`/player` を使用してキャラクターを登録または有効化してください。
@@ -122,8 +119,6 @@ gm-dm-role-not-found =
 
 # GM select menus
 gm-select-placeholder-party-member = パーティーメンバーを選択
-gm-modal-label-select-party-role = パーティーロール
-gm-modal-desc-select-party-role = Quest パーティーに割り当てるロールを選択してください。
 gm-select-option-no-role = なし（パーティーロールなし）
 
 # GM embeds
@@ -151,18 +146,10 @@ gm-label-quest-locked = （ロック中）
 gm-label-quest-draft = （下書き）
 gm-title-manage-quest = Quest 管理 - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = タイトル、説明、パーティーサイズなどの Quest 詳細を編集します。
-gm-title-edit-quest = Quest を編集 - { $questTitle }
 gm-label-field-not-set = 未設定
 gm-label-description-not-set = 説明が設定されていません
-gm-label-current-title = {"**"}タイトル:{"**"} { $value }
-gm-label-current-description = {"**"}説明{"**"}
-gm-label-current-restrictions = {"**"}制限:{"**"} { $value }
 gm-label-current-party-size = {"**"}最大パーティーサイズ:{"**"} { $value }
 gm-label-current-party-role = {"**"}パーティーロール:{"**"} { $value }
-gm-label-current-image = {"**"}サムネイル{"**"}
-gm-label-current-large-image = {"**"}画像{"**"}
-gm-desc-publish-quest = この Quest を Quest ボードに公開します。
-gm-desc-update-quest-post = Quest ボードの Quest 投稿を更新します。
 gm-desc-toggle-ready = 準備状態を切り替えます（現在: {"**"}{ $status }{"**"}）
     - Quest の名簿をロックし、パーティーメンバーに Quest がまもなく開始されることを通知します。ロールが設定されている場合、ロック時にパーティーメンバーに割り当てられます。
     - オープンに設定すると名簿のロックが解除されます。
@@ -190,7 +177,5 @@ gm-label-no-players-in-roster = Quest の名簿にプレイヤーがいません
 gm-title-character-sheet = { $characterName } のキャラクターシート (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}経験値:{"**"}__
 gm-label-possessions = __{"**"}所持品{"**"}__
-gm-label-currency-heading = {"**"}通貨{"**"}
-gm-msg-inventory-empty = インベントリは空です。
 
 # GM approvals

@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Intercambiar
-player-cmd-desc = Menús de Jugador
 
 # --- Botones ---
 
@@ -224,8 +222,6 @@ player-label-empty-kit = {"*"}Kit Vacío{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Confirmar Selección: { $kitName }{"**"}
-player-label-items-heading = {"**"}Objetos:{"**"}
-player-label-currency-heading = {"**"}Moneda:{"**"}
 player-msg-kit-empty = Este kit está vacío.
 
 # NewCharacterComplexItemPurchaseView
@@ -291,8 +287,6 @@ player-error-qty-only-have = Solo tienes { $maxQuantity } de este objeto.
 player-error-invalid-format = Formato inválido: "{ $line }". Usa <nombre>: <cantidad>.
 player-error-empty-name = El nombre del objeto no puede estar vacío en la línea: "{ $line }".
 player-error-invalid-quantity = Cantidad inválida para "{ $name }": "{ $quantity }". Debe ser un número entero positivo.
-player-error-input-errors-header = Errores en el ingreso de inventario:
-player-msg-no-valid-items = No se proporcionaron objetos válidos. Inicializando con inventario vacío.
 
 # Validation error view
 player-validation-error-title = Errores de entrada
@@ -302,11 +296,8 @@ player-validation-btn-retry = Intentar de nuevo
 player-error-enter-valid-number = Por favor ingresa un número positivo válido.
 
 # Embeds de solicitud (cola de aprobación)
-player-embed-title-approval = Aprobación de Inventario: { $characterName }
-player-embed-desc-submitted-by = Enviado por { $userMention }
 player-embed-field-items = Objetos
 player-embed-field-currency-received = Moneda
-player-embed-footer-submission-id = ID de Solicitud: { $submissionId }
 player-label-approval-thread = Aprobación: { $characterName }
 player-embed-title-submission-sent = Solicitud de Inventario Enviada
 player-embed-desc-submission-sent =

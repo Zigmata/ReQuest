@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Giao dịch
-player-cmd-desc = Menu Người chơi
 
 # --- Buttons ---
 
@@ -224,8 +222,6 @@ player-label-empty-kit = {"*"}Bộ trang bị Trống{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Xác nhận Lựa chọn: { $kitName }{"**"}
-player-label-items-heading = {"**"}Vật phẩm:{"**"}
-player-label-currency-heading = {"**"}Tiền tệ:{"**"}
 player-msg-kit-empty = Bộ trang bị này trống.
 
 # NewCharacterComplexItemPurchaseView
@@ -291,8 +287,6 @@ player-error-qty-only-have = Bạn chỉ có { $maxQuantity } vật phẩm này.
 player-error-invalid-format = Định dạng không hợp lệ: "{ $line }". Sử dụng <tên>: <số lượng>.
 player-error-empty-name = Tên vật phẩm không được để trống ở dòng: "{ $line }".
 player-error-invalid-quantity = Số lượng không hợp lệ cho "{ $name }": "{ $quantity }". Phải là số nguyên dương.
-player-error-input-errors-header = Lỗi trong dữ liệu kho đồ nhập vào:
-player-msg-no-valid-items = Không có vật phẩm hợp lệ. Khởi tạo với kho đồ trống.
 
 # Validation error view
 player-validation-error-title = Lỗi nhập liệu
@@ -302,11 +296,8 @@ player-validation-btn-retry = Thử lại
 player-error-enter-valid-number = Vui lòng nhập một số dương hợp lệ.
 
 # Submission embeds (approval queue)
-player-embed-title-approval = Phê duyệt Kho đồ: { $characterName }
-player-embed-desc-submitted-by = Gửi bởi { $userMention }
 player-embed-field-items = Vật phẩm
 player-embed-field-currency-received = Tiền tệ
-player-embed-footer-submission-id = ID Đệ trình: { $submissionId }
 player-label-approval-thread = Phê duyệt: { $characterName }
 player-embed-title-submission-sent = Đã Gửi Đệ trình Kho đồ
 player-embed-desc-submission-sent =

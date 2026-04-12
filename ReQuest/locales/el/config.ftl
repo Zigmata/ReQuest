@@ -224,8 +224,6 @@ config-error-item-exists-new-char = Ένα αντικείμενο με το όν
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Μεταφόρτωση Καταστήματος Νέου Χαρακτήρα (JSON)
 config-error-no-json-uploaded-short = Δεν μεταφορτώθηκε αρχείο JSON.
-config-error-json-must-have-shopstock = Το JSON πρέπει να περιέχει πίνακα 'shopStock'.
-config-error-items-must-have-name-price = Όλα τα αντικείμενα πρέπει να έχουν 'name' και 'price'.
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Ορισμός Αρχικού Πλούτου Χαρακτήρα
@@ -535,7 +533,27 @@ config-wizard-gm-rewards-disabled = {"**"}Κατάσταση:{"**"} Απενερ
 config-wizard-gm-rewards-enabled = {"**"}Κατάσταση:{"**"} Ενεργοποιημένο
 config-wizard-gm-rewards-experience = - Εμπειρία: { $xp }
 config-wizard-gm-rewards-items = - Αντικείμενα:
-config-wizard-unnamed-shop = Ανώνυμο Κατάστημα
+
+# Wizard - Γλώσσα Διακομιστή (Σελίδα 1)
+config-wizard-server-language-desc =
+    Αυτή είναι η γλώσσα που θα χρησιμοποιεί το ReQuest για όλα τα δημόσια μηνύματα, όπως δημοσιεύσεις αποστολών, μηνύματα ανανέωσης αποθέματος καταστήματος και αρχεία καταγραφής συναλλαγών.
+config-wizard-server-language = {"**"}Γλώσσα Διακομιστή:{"**"} { $language }
+config-wizard-server-language-default = Προεπιλογή (Αγγλικά)
+
+# Wizard - Πληροφορίες Ανανέωσης Αποθέματος Καταστήματος
+config-wizard-shop-restock-not-scheduled = ℹ️ Η Ανανέωση Αποθέματος Δεν Έχει Προγραμματιστεί
+
+# Wizard - Ρυθμίσεις Αποστολών (Σελίδα 5)
+config-wizard-quest-header = __{"**"}Ρυθμίσεις Αποστολών{"**"}__
+config-wizard-quest-header-desc =
+    Αυτή η ενότητα παρέχει μια επισκόπηση των ρυθμίσεων που σχετίζονται με αποστολές.
+config-wizard-quest-role-mode = - Λειτουργία Ρόλων Αποστολών: { $mode }
+config-wizard-quest-roles-label = {"**"}Ρόλοι Αποστολών GM{"**"}
+config-wizard-quest-roles-count = - Ρόλοι που έχουν ανατεθεί σε GM: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Όλοι οι Ρόλοι OK
+config-wizard-quest-roles-assigned-to = {"    "}Ανατέθηκε σε: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ ID Ρόλου { $roleId }: Δεν Βρέθηκε/Διαγράφηκε από τον Διακομιστή
+config-wizard-quest-roles-no-assignments = - ℹ️ Δεν Έχουν Ανατεθεί Ρόλοι Αποστολών
 
 ## Roles View
 config-title-roles = {"**"}Ρύθμιση Διακομιστή - Ρόλοι{"**"}
@@ -831,9 +849,6 @@ config-select-placeholder-add-quest-role = Ανάθεση ρόλου(-ων) δι
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}Ρυθμίσεις Διακομιστή - Ρόλοι Quest{"**"}
-config-label-quest-roles = Ρόλοι Quest
-config-desc-quest-roles =
-    Ρυθμίστε πώς διαχειρίζονται οι ρόλοι ομάδας κατά τη διάρκεια των quest.
 
 config-label-quest-role-mode-disabled = {"**"}Λειτουργία Ρόλων Quest:{"**"} Απενεργοποιημένο
     Δεν δημιουργούνται ούτε ανατίθενται ρόλοι κατά τη διάρκεια των quest.

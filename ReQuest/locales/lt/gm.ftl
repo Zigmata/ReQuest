@@ -55,10 +55,7 @@ gm-modal-placeholder-inventory-modify =
     ir t.t.
 
 # GM errors
-gm-error-forbidden-role-name = Nurodytas grupės rolės pavadinimas yra draudžiamas.
-gm-error-role-already-exists = Rolė tokiu pavadinimu jau egzistuoja šiame serveryje.
 gm-error-no-quest-channel = Kanalas quest'ų skelbimams dar nenustatytas. Kreipkitės į serverio administratorių, kad sukonfigūruotų Quest kanalą.
-gm-error-cannot-ping-announce = Nepavyko paminėti pranešimų rolės { $role } kanale { $channel }. Patikrinkite kanalo ir ReQuest rolės leidimus su serverio administratoriais.
 gm-error-invalid-item-format = Neteisingas daikto formatas: „{ $item }". Kiekvienas daiktas turi būti naujoje eilutėje formatu „Pavadinimas: Kiekis".
 gm-error-already-on-quest = Jūs jau dalyvaujate šiame quest'e kaip { $characterName }.
 gm-error-no-active-character-long = Jūs neturite aktyvaus personažo šiame serveryje. Naudokite `/player`, kad užregistruotumėte arba aktyvuotumėte personažą.
@@ -122,8 +119,6 @@ gm-dm-role-not-found =
 
 # GM select menus
 gm-select-placeholder-party-member = Pasirinkite grupės narį
-gm-modal-label-select-party-role = Grupės rolė
-gm-modal-desc-select-party-role = Pasirinkite rolę, kurią priskirti quest grupei.
 gm-select-option-no-role = Nėra (be grupės rolės)
 
 # GM embeds
@@ -151,18 +146,10 @@ gm-label-quest-locked = (Užrakinta)
 gm-label-quest-draft = (Juodraštis)
 gm-title-manage-quest = Valdyti quest'ą - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Redaguoti quest'o informaciją, pvz., pavadinimą, aprašymą ir grupės dydį.
-gm-title-edit-quest = Redaguoti quest'ą - { $questTitle }
 gm-label-field-not-set = Nenustatyta
 gm-label-description-not-set = Aprašymas nenustatytas
-gm-label-current-title = {"**"}Pavadinimas:{"**"} { $value }
-gm-label-current-description = {"**"}Aprašymas{"**"}
-gm-label-current-restrictions = {"**"}Apribojimai:{"**"} { $value }
 gm-label-current-party-size = {"**"}Maks. grupės dydis:{"**"} { $value }
 gm-label-current-party-role = {"**"}Grupės rolė:{"**"} { $value }
-gm-label-current-image = {"**"}Miniatiūra{"**"}
-gm-label-current-large-image = {"**"}Paveikslėlis{"**"}
-gm-desc-publish-quest = Paskelbti šį quest'ą quest'ų lentoje.
-gm-desc-update-quest-post = Atnaujinti quest'o įrašą quest'ų lentoje.
 gm-desc-toggle-ready = Perjungti parengties būseną (Dabartinė: {"**"}{ $status }{"**"})
     - Užrakina quest'o sąrašą ir informuoja grupės narius, kad quest'as netrukus prasidės. Jei sukonfigūruota rolė, ji bus priskirta grupės nariams užrakinus.
     - Atrakina sąrašą, kai nustatoma į „Atvira".
@@ -190,7 +177,5 @@ gm-label-no-players-in-roster = Quest'o sąraše nėra žaidėjų
 gm-title-character-sheet = Personažo lapas: { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Patirties taškai:{"**"}__
 gm-label-possessions = __{"**"}Turtas{"**"}__
-gm-label-currency-heading = {"**"}Valiuta{"**"}
-gm-msg-inventory-empty = Inventorius tuščias.
 
 # GM approvals

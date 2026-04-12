@@ -13,7 +13,6 @@ common-btn-select = 選擇
 common-btn-manage = 管理
 common-btn-rename = 重新命名
 common-btn-continue = 繼續
-common-btn-cancel = 取消
 common-btn-enable = 啟用
 common-btn-disable = 停用
 
@@ -39,7 +38,6 @@ common-label-none = 無
 common-label-unknown = 未知
 common-label-locked = （已鎖定）
 common-label-loose-items = 散落物品
-common-label-and-more = ⋯⋯還有 { $remaining } 項。
 common-label-currency = 貨幣
 common-label-inventory-empty = 背包是空的。
 

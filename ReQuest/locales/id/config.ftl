@@ -224,8 +224,6 @@ config-error-item-exists-new-char = Barang bernama { $itemName } sudah ada di to
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Unggah Toko Karakter Baru (JSON)
 config-error-no-json-uploaded-short = Tidak ada file JSON yang diunggah.
-config-error-json-must-have-shopstock = JSON harus mengandung array 'shopStock'.
-config-error-items-must-have-name-price = Semua barang harus memiliki 'name' dan 'price'.
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Tetapkan Kekayaan Karakter Baru
@@ -535,7 +533,27 @@ config-wizard-gm-rewards-disabled = {"**"}Status:{"**"} Nonaktif
 config-wizard-gm-rewards-enabled = {"**"}Status:{"**"} Aktif
 config-wizard-gm-rewards-experience = - Pengalaman: { $xp }
 config-wizard-gm-rewards-items = - Barang:
-config-wizard-unnamed-shop = Toko Tanpa Nama
+
+# Wizard - Bahasa Server (Halaman 1)
+config-wizard-server-language-desc =
+    Ini adalah bahasa yang akan digunakan ReQuest untuk semua pesan publik, seperti postingan Quest, pesan restock Toko, dan log transaksi.
+config-wizard-server-language = {"**"}Bahasa Server:{"**"} { $language }
+config-wizard-server-language-default = Default (Inggris)
+
+# Wizard - Info Restock Toko
+config-wizard-shop-restock-not-scheduled = ℹ️ Restock Belum Dijadwalkan
+
+# Wizard - Pengaturan Quest (Halaman 5)
+config-wizard-quest-header = __{"**"}Pengaturan Quest{"**"}__
+config-wizard-quest-header-desc =
+    Bagian ini menyediakan gambaran umum konfigurasi terkait quest.
+config-wizard-quest-role-mode = - Mode Peran Quest: { $mode }
+config-wizard-quest-roles-label = {"**"}Peran Quest GM{"**"}
+config-wizard-quest-roles-count = - Peran yang Ditetapkan ke GM: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Semua Peran OK
+config-wizard-quest-roles-assigned-to = {"    "}Ditetapkan ke: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ ID Peran { $roleId }: Tidak Ditemukan/Dihapus dari Server
+config-wizard-quest-roles-no-assignments = - ℹ️ Tidak Ada Peran Quest yang Ditetapkan
 
 ## Roles View
 config-title-roles = {"**"}Konfigurasi Server - Peran{"**"}
@@ -831,9 +849,6 @@ config-select-placeholder-add-quest-role = Tetapkan peran server ke GM ini
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}Konfigurasi Server - Peran Quest{"**"}
-config-label-quest-roles = Peran Quest
-config-desc-quest-roles =
-    Konfigurasi bagaimana peran rombongan ditangani selama quest.
 
 config-label-quest-role-mode-disabled = {"**"}Mode Peran Quest:{"**"} Nonaktif
     Tidak ada peran yang dibuat atau ditetapkan selama quest.

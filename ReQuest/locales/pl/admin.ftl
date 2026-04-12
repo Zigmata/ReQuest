@@ -32,7 +32,6 @@ admin-modal-label-server-name = Nazwa serwera
 admin-modal-placeholder-server-name = Wpisz krótką nazwę serwera Discord
 admin-modal-label-server-id = ID serwera
 admin-modal-placeholder-server-id = Wpisz ID serwera Discord
-admin-select-placeholder-server = Wybierz serwer do usunięcia
 admin-modal-title-cog-action = { $action } moduł
 admin-modal-label-cog-name = Nazwa
 admin-modal-placeholder-cog-name = Wpisz nazwę modułu do { $action }

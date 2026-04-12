@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Ανταλλαγή
-player-cmd-desc = Μενού Παίκτη
 
 # --- Buttons ---
 
@@ -224,8 +222,6 @@ player-label-empty-kit = {"*"}Κενό Κιτ{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Επιβεβαίωση Επιλογής: { $kitName }{"**"}
-player-label-items-heading = {"**"}Αντικείμενα:{"**"}
-player-label-currency-heading = {"**"}Νόμισμα:{"**"}
 player-msg-kit-empty = Αυτό το κιτ είναι κενό.
 
 # NewCharacterComplexItemPurchaseView
@@ -291,8 +287,6 @@ player-error-qty-only-have = Έχετε μόνο { $maxQuantity } από αυτ�
 player-error-invalid-format = Μη έγκυρη μορφή: "{ $line }". Χρησιμοποιήστε <όνομα>: <ποσότητα>.
 player-error-empty-name = Το όνομα αντικειμένου δεν μπορεί να είναι κενό στη γραμμή: "{ $line }".
 player-error-invalid-quantity = Μη έγκυρη ποσότητα για "{ $name }": "{ $quantity }". Πρέπει να είναι θετικός ακέραιος.
-player-error-input-errors-header = Σφάλματα στην εισαγωγή εξοπλισμού:
-player-msg-no-valid-items = Δεν δόθηκαν έγκυρα αντικείμενα. Αρχικοποίηση με κενό εξοπλισμό.
 
 # Validation error view
 player-validation-error-title = Σφάλματα εισαγωγής
@@ -302,11 +296,8 @@ player-validation-btn-retry = Δοκιμάστε ξανά
 player-error-enter-valid-number = Παρακαλώ εισάγετε έγκυρο θετικό αριθμό.
 
 # Submission embeds (approval queue)
-player-embed-title-approval = Έγκριση Εξοπλισμού: { $characterName }
-player-embed-desc-submitted-by = Υποβλήθηκε από { $userMention }
 player-embed-field-items = Αντικείμενα
 player-embed-field-currency-received = Νόμισμα
-player-embed-footer-submission-id = ID Υποβολής: { $submissionId }
 player-label-approval-thread = Έγκριση: { $characterName }
 player-embed-title-submission-sent = Υποβολή Εξοπλισμού Εστάλη
 player-embed-desc-submission-sent =

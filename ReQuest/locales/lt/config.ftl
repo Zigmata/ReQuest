@@ -224,8 +224,6 @@ config-error-item-exists-new-char = Daiktas pavadinimu { $itemName } jau egzistu
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Įkelti naujo personažo parduotuvę (JSON)
 config-error-no-json-uploaded-short = JSON failas neįkeltas.
-config-error-json-must-have-shopstock = JSON turi turėti „shopStock" masyvą.
-config-error-items-must-have-name-price = Visi daiktai turi turėti „name" ir „price".
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Nustatyti naujo personažo turtą
@@ -535,7 +533,27 @@ config-wizard-gm-rewards-disabled = {"**"}Būsena:{"**"} Išjungta
 config-wizard-gm-rewards-enabled = {"**"}Būsena:{"**"} Įjungta
 config-wizard-gm-rewards-experience = - Patirtis: { $xp }
 config-wizard-gm-rewards-items = - Daiktai:
-config-wizard-unnamed-shop = Bevardė parduotuvė
+
+# Wizard - Serverio kalba (1 puslapis)
+config-wizard-server-language-desc =
+    Tai kalba, kurią ReQuest naudos visiems viešiems pranešimams, tokiems kaip užduočių skelbimai, parduotuvės papildymo pranešimai ir operacijų žurnalai.
+config-wizard-server-language = {"**"}Serverio kalba:{"**"} { $language }
+config-wizard-server-language-default = Numatytoji (anglų)
+
+# Wizard - Parduotuvės papildymo informacija
+config-wizard-shop-restock-not-scheduled = ℹ️ Papildymas nesuplanuotas
+
+# Wizard - Užduočių nustatymai (5 puslapis)
+config-wizard-quest-header = __{"**"}Užduočių nustatymai{"**"}__
+config-wizard-quest-header-desc =
+    Šiame skyriuje pateikiama su užduotimis susijusių konfigūracijų apžvalga.
+config-wizard-quest-role-mode = - Užduočių vaidmenų režimas: { $mode }
+config-wizard-quest-roles-label = {"**"}GM užduočių vaidmenys{"**"}
+config-wizard-quest-roles-count = - GM priskirti vaidmenys: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Visi vaidmenys gerai
+config-wizard-quest-roles-assigned-to = {"    "}Priskirta: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ Vaidmens ID { $roleId }: Nerastas/Ištrintas iš serverio
+config-wizard-quest-roles-no-assignments = - ℹ️ Nėra priskirtų užduočių vaidmenų
 
 ## Roles View
 config-title-roles = {"**"}Serverio konfigūracija - Rolės{"**"}
@@ -831,9 +849,6 @@ config-select-placeholder-add-quest-role = Priskirti serverio rolę(-es) šiam G
 
 ## Quest rolių rodinys
 config-title-quest-roles = {"**"}Serverio konfigūracija - Quest rolės{"**"}
-config-label-quest-roles = Quest rolės
-config-desc-quest-roles =
-    Konfigūruokite, kaip grupės rolės valdomos quest'ų metu.
 
 config-label-quest-role-mode-disabled = {"**"}Quest rolės režimas:{"**"} Išjungta
     Quest'ų metu rolės nėra kuriamos ir nėra priskiriamos.

@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Razmjena
-player-cmd-desc = Izbornici igrača
 
 # --- Buttons ---
 
@@ -224,8 +222,6 @@ player-label-empty-kit = {"*"}Prazan set{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Potvrdite odabir: { $kitName }{"**"}
-player-label-items-heading = {"**"}Predmeti:{"**"}
-player-label-currency-heading = {"**"}Valuta:{"**"}
 player-msg-kit-empty = Ovaj set je prazan.
 
 # NewCharacterComplexItemPurchaseView
@@ -291,8 +287,6 @@ player-error-qty-only-have = Imate samo { $maxQuantity } ovog predmeta.
 player-error-invalid-format = Neispravan format: "{ $line }". Koristite <naziv>: <količina>.
 player-error-empty-name = Naziv predmeta ne smije biti prazan u retku: "{ $line }".
 player-error-invalid-quantity = Neispravna količina za "{ $name }": "{ $quantity }". Mora biti pozitivan cijeli broj.
-player-error-input-errors-header = Greške u unosu inventara:
-player-msg-no-valid-items = Nema valjanih predmeta. Inicijalizacija s praznim inventarom.
 
 # Validation error view
 player-validation-error-title = Greške unosa
@@ -302,11 +296,8 @@ player-validation-btn-retry = Pokušaj ponovo
 player-error-enter-valid-number = Unesite valjani pozitivan broj.
 
 # Submission embeds (approval queue)
-player-embed-title-approval = Odobrenje inventara: { $characterName }
-player-embed-desc-submitted-by = Poslao { $userMention }
 player-embed-field-items = Predmeti
 player-embed-field-currency-received = Valuta
-player-embed-footer-submission-id = ID prijave: { $submissionId }
 player-label-approval-thread = Odobrenje: { $characterName }
 player-embed-title-submission-sent = Prijava inventara poslana
 player-embed-desc-submission-sent =

@@ -102,4 +102,3 @@ info-language-desc-sv-se = 将语言设置为瑞典语
 info-language-desc-th = 将语言设置为泰语
 info-language-desc-tr = 将语言设置为土耳其语
 info-language-desc-vi = 将语言设置为越南语
-info-language-updated = 语言已成功更新。

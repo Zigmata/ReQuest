@@ -224,8 +224,6 @@ config-error-item-exists-new-char = Un objet nommé { $itemName } existe déjà 
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Envoyer la boutique de nouveau personnage (JSON)
 config-error-no-json-uploaded-short = Aucun fichier JSON envoyé.
-config-error-json-must-have-shopstock = Le JSON doit contenir un tableau « shopStock ».
-config-error-items-must-have-name-price = Tous les objets doivent avoir un « name » et un « price ».
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Définir la richesse de nouveau personnage
@@ -535,7 +533,27 @@ config-wizard-gm-rewards-disabled = {"**"}Statut :{"**"} Désactivé
 config-wizard-gm-rewards-enabled = {"**"}Statut :{"**"} Activé
 config-wizard-gm-rewards-experience = - Expérience : { $xp }
 config-wizard-gm-rewards-items = - Objets :
-config-wizard-unnamed-shop = Boutique sans nom
+
+# Assistant - Langue du serveur (Page 1)
+config-wizard-server-language-desc =
+    C'est la langue que ReQuest utilisera pour tous les messages publics, tels que les publications de quêtes, les messages de réapprovisionnement de boutique et les journaux de transactions.
+config-wizard-server-language = {"**"}Langue du serveur :{"**"} { $language }
+config-wizard-server-language-default = Par défaut (anglais)
+
+# Assistant - Info de réapprovisionnement de boutique
+config-wizard-shop-restock-not-scheduled = ℹ️ Réapprovisionnement non planifié
+
+# Assistant - Paramètres de quêtes (Page 5)
+config-wizard-quest-header = __{"**"}Paramètres de quêtes{"**"}__
+config-wizard-quest-header-desc =
+    Cette section fournit un aperçu des configurations liées aux quêtes.
+config-wizard-quest-role-mode = - Mode de rôles de quête : { $mode }
+config-wizard-quest-roles-label = {"**"}Rôles de quête GM{"**"}
+config-wizard-quest-roles-count = - Rôles attribués aux GM : { $count }
+config-wizard-quest-roles-all-ok = - ✅ Tous les rôles OK
+config-wizard-quest-roles-assigned-to = {"    "}Attribué à : { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ ID de rôle { $roleId } : Non trouvé/Supprimé du serveur
+config-wizard-quest-roles-no-assignments = - ℹ️ Aucun rôle de quête attribué
 
 ## Vue des rôles
 config-title-roles = {"**"}Configuration du serveur - Rôles{"**"}
@@ -831,9 +849,6 @@ config-select-placeholder-add-quest-role = Attribuer un/des rôle(s) serveur à 
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}Configuration du serveur - Rôles de quête{"**"}
-config-label-quest-roles = Rôles de quête
-config-desc-quest-roles =
-    Configurez la gestion des rôles du groupe pendant les quêtes.
 
 config-label-quest-role-mode-disabled = {"**"}Mode de rôles de quête :{"**"} Désactivé
     Aucun rôle n'est créé ou attribué pendant les quêtes.

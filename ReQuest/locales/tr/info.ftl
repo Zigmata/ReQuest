@@ -102,4 +102,3 @@ info-language-desc-sv-se = Dilinizi İsveççe olarak ayarlayın
 info-language-desc-th = Dilinizi Tayca olarak ayarlayın
 info-language-desc-tr = Dilinizi Türkçe olarak ayarlayın
 info-language-desc-vi = Dilinizi Vietnamca olarak ayarlayın
-info-language-updated = Dil başarıyla güncellendi.

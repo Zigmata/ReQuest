@@ -55,10 +55,7 @@ gm-modal-placeholder-inventory-modify =
     etc.
 
 # Erreurs GM
-gm-error-forbidden-role-name = Le nom fourni pour le rôle du groupe est interdit.
-gm-error-role-already-exists = Un rôle portant ce nom existe déjà dans ce serveur.
 gm-error-no-quest-channel = Aucun canal n'a encore été désigné pour les publications de quêtes. Contactez un administrateur du serveur pour configurer le canal de quêtes.
-gm-error-cannot-ping-announce = Impossible de mentionner le rôle d'annonce { $role } dans le canal { $channel }. Vérifiez les permissions du canal et du rôle ReQuest auprès de votre/vos administrateur(s) de serveur.
 gm-error-invalid-item-format = Format d'objet invalide : « { $item } ». Chaque objet doit être sur une nouvelle ligne, au format « Nom : Quantité ».
 gm-error-already-on-quest = Vous êtes déjà inscrit à cette quête en tant que { $characterName }.
 gm-error-no-active-character-long = Vous n'avez pas de personnage actif sur ce serveur. Utilisez `/player` pour enregistrer ou activer un personnage.
@@ -121,8 +118,6 @@ gm-dm-role-not-found =
 
 # Menus de sélection GM
 gm-select-placeholder-party-member = Sélectionnez un membre du groupe
-gm-modal-label-select-party-role = Rôle du groupe
-gm-modal-desc-select-party-role = Sélectionnez un rôle à attribuer au groupe de la quête.
 gm-select-option-no-role = Aucun (Pas de rôle de groupe)
 
 # Embeds GM
@@ -150,18 +145,10 @@ gm-label-quest-locked = (Verrouillée)
 gm-label-quest-draft = (Brouillon)
 gm-title-manage-quest = Gérer la quête - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Modifier les détails de la quête tels que le titre, la description et la taille du groupe.
-gm-title-edit-quest = Modifier la quête - { $questTitle }
 gm-label-field-not-set = Non défini
 gm-label-description-not-set = Description non définie
-gm-label-current-title = {"**"}Titre :{"**"} { $value }
-gm-label-current-description = {"**"}Description{"**"}
-gm-label-current-restrictions = {"**"}Restrictions :{"**"} { $value }
 gm-label-current-party-size = {"**"}Taille max. du groupe :{"**"} { $value }
 gm-label-current-party-role = {"**"}Rôle du groupe :{"**"} { $value }
-gm-label-current-image = {"**"}Miniature{"**"}
-gm-label-current-large-image = {"**"}Image{"**"}
-gm-desc-publish-quest = Publier cette quête sur le tableau des quêtes.
-gm-desc-update-quest-post = Mettre à jour la publication de la quête sur le tableau des quêtes.
 gm-desc-toggle-ready = Basculer l'état de préparation (Actuel : {"**"}{ $status }{"**"})
     - Verrouille le groupe de la quête et notifie les membres que la quête va bientôt commencer. Si un rôle est configuré, il sera attribué aux membres du groupe une fois verrouillé.
     - Déverrouille le groupe lorsque défini sur Ouvert.
@@ -189,8 +176,6 @@ gm-label-no-players-in-roster = Aucun joueur dans le groupe de la quête
 gm-title-character-sheet = Fiche de personnage de { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Points d'expérience :{"**"}__
 gm-label-possessions = __{"**"}Possessions{"**"}__
-gm-label-currency-heading = {"**"}Monnaie{"**"}
-gm-msg-inventory-empty = L'inventaire est vide.
 
 # Approbations GM
 

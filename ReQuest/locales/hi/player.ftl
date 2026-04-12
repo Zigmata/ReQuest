@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = व्यापार
-player-cmd-desc = खिलाड़ी मेनू
 
 # --- Buttons ---
 
@@ -224,8 +222,6 @@ player-label-empty-kit = {"*"}खाली किट{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}चयन की पुष्टि करें: { $kitName }{"**"}
-player-label-items-heading = {"**"}वस्तुएँ:{"**"}
-player-label-currency-heading = {"**"}मुद्रा:{"**"}
 player-msg-kit-empty = यह किट खाली है।
 
 # NewCharacterComplexItemPurchaseView
@@ -291,8 +287,6 @@ player-error-qty-only-have = आपके पास इस वस्तु क�
 player-error-invalid-format = अमान्य प्रारूप: "{ $line }"। <नाम>: <मात्रा> का उपयोग करें।
 player-error-empty-name = पंक्ति "{ $line }" में वस्तु का नाम खाली नहीं हो सकता।
 player-error-invalid-quantity = "{ $name }" के लिए अमान्य मात्रा: "{ $quantity }"। एक धनात्मक पूर्णांक होनी चाहिए।
-player-error-input-errors-header = सामान इनपुट में त्रुटियाँ:
-player-msg-no-valid-items = कोई मान्य वस्तु नहीं दी गई। खाली सामान से आरंभ किया जा रहा है।
 
 # Validation error view
 player-validation-error-title = इनपुट त्रुटियां
@@ -302,11 +296,8 @@ player-validation-btn-retry = पुनः प्रयास करें
 player-error-enter-valid-number = कृपया एक मान्य धनात्मक संख्या दर्ज करें।
 
 # Submission embeds (approval queue)
-player-embed-title-approval = सामान स्वीकृति: { $characterName }
-player-embed-desc-submitted-by = { $userMention } द्वारा सबमिट
 player-embed-field-items = वस्तुएँ
 player-embed-field-currency-received = मुद्रा
-player-embed-footer-submission-id = सबमिशन ID: { $submissionId }
 player-label-approval-thread = स्वीकृति: { $characterName }
 player-embed-title-submission-sent = सामान सबमिशन भेजा गया
 player-embed-desc-submission-sent =

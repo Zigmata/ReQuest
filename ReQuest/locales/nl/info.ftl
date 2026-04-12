@@ -102,4 +102,3 @@ info-language-desc-sv-se = Stel je taal in op Zweeds
 info-language-desc-th = Stel je taal in op Thai
 info-language-desc-tr = Stel je taal in op Turks
 info-language-desc-vi = Stel je taal in op Vietnamees
-info-language-updated = Taal succesvol bijgewerkt.

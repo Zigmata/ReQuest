@@ -32,7 +32,6 @@ admin-modal-label-server-name = Tên máy chủ
 admin-modal-placeholder-server-name = Nhập tên ngắn gọn cho máy chủ Discord
 admin-modal-label-server-id = ID máy chủ
 admin-modal-placeholder-server-id = Nhập ID của máy chủ Discord
-admin-select-placeholder-server = Chọn máy chủ để xóa
 admin-modal-title-cog-action = { $action } Cog
 admin-modal-label-cog-name = Tên
 admin-modal-placeholder-cog-name = Nhập tên Cog để { $action }

@@ -102,4 +102,3 @@ info-language-desc-sv-se = Set your language to Swedish
 info-language-desc-th = Set your language to Thai
 info-language-desc-tr = Set your language to Turkish
 info-language-desc-vi = Set your language to Vietnamese
-info-language-updated = Language updated successfully.

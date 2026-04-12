@@ -32,7 +32,6 @@ admin-modal-label-server-name = Sunucu Adı
 admin-modal-placeholder-server-name = Discord Sunucusu için kısa bir ad yazın
 admin-modal-label-server-id = Sunucu ID
 admin-modal-placeholder-server-id = Discord Sunucusunun ID'sini yazın
-admin-select-placeholder-server = Kaldırılacak bir sunucu seçin
 admin-modal-title-cog-action = Cog { $action }
 admin-modal-label-cog-name = Ad
 admin-modal-placeholder-cog-name = { $action } yapılacak Cog adını girin

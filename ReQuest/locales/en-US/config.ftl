@@ -230,8 +230,6 @@ config-error-item-exists-new-char = An item named { $itemName } already exists i
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Upload New Character Shop (JSON)
 config-error-no-json-uploaded-short = No JSON file uploaded.
-config-error-json-must-have-shopstock = JSON must contain a 'shopStock' array.
-config-error-items-must-have-name-price = All items must have 'name' and 'price'.
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Set New Character Wealth
@@ -541,7 +539,6 @@ config-wizard-gm-rewards-disabled = {"**"}Status:{"**"} Disabled
 config-wizard-gm-rewards-enabled = {"**"}Status:{"**"} Enabled
 config-wizard-gm-rewards-experience = - Experience: { $xp }
 config-wizard-gm-rewards-items = - Items:
-config-wizard-unnamed-shop = Unnamed Shop
 
 # Wizard - Server Language (Page 1)
 config-wizard-server-language-desc =
@@ -560,7 +557,6 @@ config-wizard-quest-role-mode = - Quest Role Mode: { $mode }
 config-wizard-quest-roles-label = {"**"}GM Quest Roles{"**"}
 config-wizard-quest-roles-count = - Roles Assigned to GMs: { $count }
 config-wizard-quest-roles-all-ok = - ✅ All Roles OK
-config-wizard-quest-roles-escalation = - ⚠️ { $roleMention }: Permission Escalations Detected - { $escalations }
 config-wizard-quest-roles-assigned-to = {"    "}Assigned to: { $gmNames }
 config-wizard-quest-roles-not-found = - ⚠️ Role ID { $roleId }: Not Found/Deleted from Server
 config-wizard-quest-roles-no-assignments = - ℹ️ No Quest Roles Assigned
@@ -854,9 +850,6 @@ config-error-quest-role-limit = This GM has reached the maximum of { $limit } as
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}Server Configuration - Quest Roles{"**"}
-config-label-quest-roles = Quest Roles
-config-desc-quest-roles =
-    Configure how party roles are handled during quests.
 
 config-label-quest-role-mode-disabled = {"**"}Quest Role Mode:{"**"} Disabled
     No roles are created or assigned during quests.

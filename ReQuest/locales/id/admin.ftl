@@ -32,7 +32,6 @@ admin-modal-label-server-name = Nama Server
 admin-modal-placeholder-server-name = Ketik nama singkat untuk Server Discord
 admin-modal-label-server-id = ID Server
 admin-modal-placeholder-server-id = Ketik ID Server Discord
-admin-select-placeholder-server = Pilih server untuk dihapus
 admin-modal-title-cog-action = { $action } Cog
 admin-modal-label-cog-name = Nama
 admin-modal-placeholder-cog-name = Masukkan nama Cog untuk di-{ $action }

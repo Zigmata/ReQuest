@@ -224,8 +224,6 @@ config-error-item-exists-new-char = 新角色商店中已存在名為 { $itemNam
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = 上傳新角色商店（JSON）
 config-error-no-json-uploaded-short = 未上傳 JSON 檔案。
-config-error-json-must-have-shopstock = JSON 必須包含 'shopStock' 陣列。
-config-error-items-must-have-name-price = 所有物品必須包含 'name' 和 'price'。
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = 設定新角色財富
@@ -535,7 +533,27 @@ config-wizard-gm-rewards-disabled = {"**"}狀態：{"**"} 已停用
 config-wizard-gm-rewards-enabled = {"**"}狀態：{"**"} 已啟用
 config-wizard-gm-rewards-experience = - 經驗值：{ $xp }
 config-wizard-gm-rewards-items = - 物品：
-config-wizard-unnamed-shop = 未命名商店
+
+# 精靈 - 伺服器語言（第1頁）
+config-wizard-server-language-desc =
+    這是 ReQuest 將用於所有公開訊息的語言，例如任務貼文、商店補貨訊息和交易記錄。
+config-wizard-server-language = {"**"}伺服器語言：{"**"} { $language }
+config-wizard-server-language-default = 預設（英語）
+
+# 精靈 - 商店補貨資訊
+config-wizard-shop-restock-not-scheduled = ℹ️ 未排程補貨
+
+# 精靈 - 任務設定（第5頁）
+config-wizard-quest-header = __{"**"}任務設定{"**"}__
+config-wizard-quest-header-desc =
+    本區段提供與任務相關的設定概覽。
+config-wizard-quest-role-mode = - 任務角色模式：{ $mode }
+config-wizard-quest-roles-label = {"**"}GM 任務角色{"**"}
+config-wizard-quest-roles-count = - 指派給 GM 的角色：{ $count }
+config-wizard-quest-roles-all-ok = - ✅ 所有角色正常
+config-wizard-quest-roles-assigned-to = {"    "}指派給：{ $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ 角色 ID { $roleId }：未找到/已從伺服器刪除
+config-wizard-quest-roles-no-assignments = - ℹ️ 未指派任務角色
 
 ## Roles View
 config-title-roles = {"**"}伺服器設定 - 身分組{"**"}
@@ -831,9 +849,6 @@ config-select-placeholder-add-quest-role = 為此 GM 指派伺服器身分組
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}伺服器設定 - Quest 身分組{"**"}
-config-label-quest-roles = Quest 身分組
-config-desc-quest-roles =
-    設定 Quest 期間如何處理隊伍身分組。
 
 config-label-quest-role-mode-disabled = {"**"}Quest 身分組模式：{"**"} 已停用
     Quest 期間不建立或指派任何身分組。
