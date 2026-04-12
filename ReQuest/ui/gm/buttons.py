@@ -12,7 +12,9 @@ from ReQuest.utilities.constants import (QuestFields, QuestStatus, ConfigFields,
                                         DiscordCharacterLimits)
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_locale
 from ReQuest.utilities.db_cache import get_cached_data, update_cached_data, delete_cached_data, build_cache_key
-from ReQuest.utilities.discord_utils import setup_view, strip_id, attempt_delete, get_guild_member, check_role_hierarchy
+from ReQuest.utilities.discord_utils import (
+    setup_view, strip_id, attempt_delete, get_guild_member, check_role_hierarchy
+)
 from ReQuest.utilities.exceptions import log_exception, UserFeedbackError
 
 logger = logging.getLogger(__name__)
@@ -398,7 +400,9 @@ class CancelQuestButton(Button):
                         member = await get_guild_member(guild, int(member_id))
                         if member:
                             try:
-                                member_locale = await resolve_locale(bot=bot, user_id=int(member_id), guild_id=guild_id)
+                                member_locale = await resolve_locale(
+                                    bot=bot, user_id=int(member_id), guild_id=guild_id
+                                )
                                 from ReQuest.ui.gm.views import _build_quest_dm_embed
                                 cancel_embed = _build_quest_dm_embed(
                                     member_locale, 'gm-dm-title-quest-cancelled', 'gm-dm-desc-quest-cancelled',

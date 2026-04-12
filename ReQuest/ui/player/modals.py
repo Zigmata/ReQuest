@@ -38,7 +38,8 @@ class TradeModal(LocaleModal):
         self.target = target
         self.locale = locale
         self.item_name_text_input = discord.ui.TextInput(
-            placeholder=t(locale, 'player-modal-placeholder-trade-name')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
+            placeholder=t(locale, 'player-modal-placeholder-trade-name')[
+                :DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             custom_id='item_name_text_input'
         )
         self.item_name_label = discord.ui.Label(
@@ -46,7 +47,8 @@ class TradeModal(LocaleModal):
             component=self.item_name_text_input
         )
         self.item_quantity_text_input = discord.ui.TextInput(
-            placeholder=t(locale, 'player-modal-placeholder-trade-quantity')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
+            placeholder=t(locale, 'player-modal-placeholder-trade-quantity')[
+                :DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             custom_id='item_quantity_text_input'
         )
         self.item_quantity_label = discord.ui.Label(
@@ -306,7 +308,8 @@ class CharacterRegisterModal(LocaleModal):
         )
         self.name_text_input = discord.ui.TextInput(
             custom_id='character_name_text_input',
-            placeholder=t(locale, 'player-modal-placeholder-char-name')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
+            placeholder=t(locale, 'player-modal-placeholder-char-name')[
+                :DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             max_length=40
         )
         self.name_label = discord.ui.Label(
@@ -315,7 +318,8 @@ class CharacterRegisterModal(LocaleModal):
         )
         self.note_text_input = discord.ui.TextInput(
             custom_id='character_note_text_input',
-            placeholder=t(locale, 'player-modal-placeholder-char-note')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
+            placeholder=t(locale, 'player-modal-placeholder-char-note')[
+                :DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             max_length=80
         )
         self.note_label = discord.ui.Label(
@@ -417,7 +421,8 @@ class OpenInventoryInputModal(LocaleModal):
         )
         self.calling_view = calling_view
         self.items_input = discord.ui.TextInput(
-            placeholder=t(locale, 'player-modal-placeholder-inventory-input')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
+            placeholder=t(locale, 'player-modal-placeholder-inventory-input')[
+                :DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             style=discord.TextStyle.paragraph,
             required=False
         )
@@ -480,7 +485,8 @@ class DenyReasonModal(LocaleModal):
         self.reason_input = discord.ui.TextInput(
             style=discord.TextStyle.paragraph,
             custom_id='deny_reason_input',
-            placeholder=t(locale, 'player-modal-placeholder-deny-reason')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
+            placeholder=t(locale, 'player-modal-placeholder-deny-reason')[
+                :DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             required=False,
             max_length=500
         )
@@ -508,7 +514,8 @@ class SpendCurrencyModal(LocaleModal):
         )
         self.calling_view = calling_view
         self.currency_name_text_input = discord.ui.TextInput(
-            placeholder=t(locale, 'player-modal-placeholder-currency-name')[:DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
+            placeholder=t(locale, 'player-modal-placeholder-currency-name')[
+                :DiscordCharacterLimits.TEXT_INPUT_PLACEHOLDER],
             custom_id='currency_name_text_input',
             required=True
         )

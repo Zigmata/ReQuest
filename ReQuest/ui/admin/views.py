@@ -136,7 +136,9 @@ class AdminAllowlistView(LocaleLayoutView):
             nav_row.add_item(prev_button)
 
             page_display = Button(
-                label=t(locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages)[:DiscordCharacterLimits.BUTTON_LABEL],
+                label=t(
+                    locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages
+                )[:DiscordCharacterLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='allow_page_disp'
             )
