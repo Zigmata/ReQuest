@@ -40,10 +40,9 @@ class AdminShutdownButton(Button):
         except Exception as e:
             await log_exception(e, interaction)
 
-    @staticmethod
-    async def _confirm_shutdown(interaction: discord.Interaction):
+    async def _confirm_shutdown(self, interaction: discord.Interaction):
         try:
-            locale = DEFAULT_LOCALE  # Admin-only DM; no user locale context
+            locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
             await interaction.response.send_message(t(locale, 'admin-msg-shutting-down'), ephemeral=True)
             await interaction.client.close()
         except Exception as e:

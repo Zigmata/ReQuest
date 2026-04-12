@@ -288,6 +288,7 @@ class ShopBaseView(LocaleLayoutView):
 class ShopCartView(LocaleLayoutView):
     def __init__(self, prev_view: ShopBaseView, currency_config: dict, character_data: dict):
         super().__init__(timeout=None)
+        self.locale = getattr(prev_view, 'locale', DEFAULT_LOCALE)
         self.prev_view = prev_view
         self.currency_config = currency_config
         self.character_data = character_data
@@ -670,6 +671,7 @@ class ShopCartView(LocaleLayoutView):
 class ComplexItemPurchaseView(LocaleLayoutView):
     def __init__(self, parent_view, item):
         super().__init__(timeout=None)
+        self.locale = getattr(parent_view, 'locale', DEFAULT_LOCALE)
         self.parent_view = parent_view
         self.item = item
         self.build_view()

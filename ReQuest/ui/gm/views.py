@@ -1285,6 +1285,7 @@ class RemovePlayerView(LocaleLayoutView):
                 self.remove_player_select.disabled = True
 
             self.remove_player_select.options = options
+            self.build_view()
         except Exception as e:
             await log_exception(e)
 

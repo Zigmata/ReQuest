@@ -1543,8 +1543,9 @@ class StaticKitSelectView(LocaleLayoutView):
 
 
 class StaticKitConfirmView(LocaleLayoutView):
-    def __init__(self, pending_character, kit_id, kit_data, currency_config):
+    def __init__(self, pending_character, kit_id, kit_data, currency_config, locale=None):
         super().__init__(timeout=None)
+        self.locale = locale or DEFAULT_LOCALE
         self.pending_character = pending_character
         self.character_id = pending_character['character_id']
         self.character_name = pending_character['name']
@@ -1676,6 +1677,7 @@ class StaticKitConfirmView(LocaleLayoutView):
 class NewCharacterComplexItemPurchaseView(LocaleLayoutView):
     def __init__(self, parent_view, item):
         super().__init__(timeout=None)
+        self.locale = getattr(parent_view, 'locale', DEFAULT_LOCALE)
         self.parent_view = parent_view
         self.item = item
         self.build_view()
