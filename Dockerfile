@@ -1,5 +1,5 @@
 # Build deps
-FROM dhi.io/python:3-alpine3.23-dev AS builder
+FROM dhi.io/python:3.14-alpine3.23-dev AS builder
 
 RUN apk add --no-cache \
       build-base \
@@ -15,7 +15,7 @@ RUN pip install -U pip && \
     pip install --no-cache-dir -r requirements.txt
 
 # Prod image
-FROM dhi.io/python:3-alpine3.23
+FROM dhi.io/python:3.14-alpine3.23
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
