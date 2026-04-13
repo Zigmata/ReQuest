@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = t.ex. 0.1
 config-error-denomination-matches-currency = Nytt valörnamn kan inte matcha en befintlig valuta på denna server! Hittade befintlig valuta med namnet "{ $existingName }".
 config-error-denomination-matches-denomination = Nytt valörnamn kan inte matcha en befintlig valör på denna server! Hittade befintlig valör med namnet "{ $denominationName }" under valutan "{ $currencyName }".
 config-error-denomination-value-exists = Valörer under en enskild valuta måste ha unika värden! { $denominationName } har redan detta värde tilldelat.
+config-label-denomination-info = **{ $name }** (Värde: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Förbjudna rollnamn

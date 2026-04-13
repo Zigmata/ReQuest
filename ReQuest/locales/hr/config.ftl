@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = npr. 0.1
 config-error-denomination-matches-currency = Naziv novog apoena ne može odgovarati postojećoj valuti na ovom poslužitelju! Pronađena postojeća valuta s nazivom "{ $existingName }".
 config-error-denomination-matches-denomination = Naziv novog apoena ne može odgovarati postojećem apoenu na ovom poslužitelju! Pronađen postojeći apoen s nazivom "{ $denominationName }" pod valutom "{ $currencyName }".
 config-error-denomination-value-exists = Apoeni unutar jedne valute moraju imati jedinstvene vrijednosti! { $denominationName } već ima dodijeljenu tu vrijednost.
+config-label-denomination-info = **{ $name }** (Vrijednost: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Nazivi zabranjenih uloga

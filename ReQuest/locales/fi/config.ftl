@@ -132,6 +132,7 @@ config-modal-placeholder-denomination-value = esim. 0.1
 config-error-denomination-matches-currency = Uuden nimellisarvon nimi ei voi vastata olemassa olevaa valuuttaa tällä palvelimella! Löydettiin olemassa oleva valuutta nimeltä "{ $existingName }".
 config-error-denomination-matches-denomination = Uuden nimellisarvon nimi ei voi vastata olemassa olevaa nimellisarvoa tällä palvelimella! Löydettiin olemassa oleva nimellisarvo nimeltä "{ $denominationName }" valuutan "{ $currencyName }" alla.
 config-error-denomination-value-exists = Yksittäisen valuutan nimellisarvoilla on oltava yksilölliset arvot! { $denominationName } -nimellisarvolle on jo määritetty tämä arvo.
+config-label-denomination-info = **{ $name }** (Arvo: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Kiellettyjen roolien nimet

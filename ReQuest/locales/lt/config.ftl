@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = pvz., 0.1
 config-error-denomination-matches-currency = Naujo nominalo pavadinimas negali sutapti su esama valiuta šiame serveryje! Rasta esama valiuta pavadinimu „{ $existingName }".
 config-error-denomination-matches-denomination = Naujo nominalo pavadinimas negali sutapti su esamu nominalu šiame serveryje! Rastas esamas nominalas pavadinimu „{ $denominationName }" prie valiutos „{ $currencyName }".
 config-error-denomination-value-exists = Nominalai vienoje valiutoje turi turėti unikalias reikšmes! { $denominationName } jau turi priskirtą šią reikšmę.
+config-label-denomination-info = **{ $name }** (Reikšmė: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Draudžiamų rolių pavadinimai

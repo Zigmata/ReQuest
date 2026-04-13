@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = напр. 0.1
 config-error-denomination-matches-currency = Името на новата деноминация не може да съвпада с вече съществуваща валута на този сървър! Намерена е валута с име "{ $existingName }".
 config-error-denomination-matches-denomination = Името на новата деноминация не може да съвпада с вече съществуваща деноминация на този сървър! Намерена е деноминация с име "{ $denominationName }" под валутата "{ $currencyName }".
 config-error-denomination-value-exists = Деноминациите в една валута трябва да имат уникални стойности! { $denominationName } вече има зададена тази стойност.
+config-label-denomination-info = **{ $name }** (Стойност: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Имена на забранени роли

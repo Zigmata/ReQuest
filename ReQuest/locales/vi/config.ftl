@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = Ví dụ: 0.1
 config-error-denomination-matches-currency = Tên mệnh giá mới không được trùng với tiền tệ đã có trên máy chủ này! Tìm thấy tiền tệ có tên "{ $existingName }".
 config-error-denomination-matches-denomination = Tên mệnh giá mới không được trùng với mệnh giá đã có trên máy chủ này! Tìm thấy mệnh giá có tên "{ $denominationName }" thuộc tiền tệ "{ $currencyName }".
 config-error-denomination-value-exists = Các mệnh giá trong cùng một tiền tệ phải có giá trị duy nhất! { $denominationName } đã được gán giá trị này.
+config-label-denomination-info = **{ $name }** (Giá trị: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Tên vai trò bị cấm

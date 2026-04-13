@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = उदा., 0.1
 config-error-denomination-matches-currency = नया मूल्यवर्ग नाम इस सर्वर पर किसी मौजूदा मुद्रा से मेल नहीं खा सकता! "{ $existingName }" नाम की मौजूदा मुद्रा मिली।
 config-error-denomination-matches-denomination = नया मूल्यवर्ग नाम इस सर्वर पर किसी मौजूदा मूल्यवर्ग से मेल नहीं खा सकता! "{ $currencyName }" मुद्रा के अंतर्गत "{ $denominationName }" नाम का मौजूदा मूल्यवर्ग मिला।
 config-error-denomination-value-exists = एक ही मुद्रा के मूल्यवर्गों के अद्वितीय मान होने चाहिए! { $denominationName } को यह मान पहले से सौंपा जा चुका है।
+config-label-denomination-info = **{ $name }** (मान: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = प्रतिबंधित भूमिका नाम

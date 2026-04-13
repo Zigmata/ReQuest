@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = 예: 0.1
 config-error-denomination-matches-currency = 새 단위 이름은 이 서버의 기존 화폐와 일치할 수 없습니다! "{ $existingName }"이라는 기존 화폐가 발견되었습니다.
 config-error-denomination-matches-denomination = 새 단위 이름은 이 서버의 기존 단위와 일치할 수 없습니다! "{ $currencyName }" 화폐 아래에 "{ $denominationName }"이라는 기존 단위가 발견되었습니다.
 config-error-denomination-value-exists = 하나의 화폐 내 단위는 고유한 값을 가져야 합니다! { $denominationName }에 이미 이 값이 할당되어 있습니다.
+config-label-denomination-info = **{ $name }** (값: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = 금지된 역할 이름

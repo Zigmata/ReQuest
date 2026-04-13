@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = pl. 0.1
 config-error-denomination-matches-currency = Az új címlet neve nem egyezhet meg egy meglévő valutával ezen a szerveren! Meglévő valuta: „{ $existingName }".
 config-error-denomination-matches-denomination = Az új címlet neve nem egyezhet meg egy meglévő címlettel ezen a szerveren! Meglévő címlet: „{ $denominationName }" a „{ $currencyName }" valuta alatt.
 config-error-denomination-value-exists = Egy valuta címletei egyedi értékekkel kell rendelkezzenek! A(z) { $denominationName } már rendelkezik ezzel az értékkel.
+config-label-denomination-info = **{ $name }** (Érték: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Tiltott szerepnevek

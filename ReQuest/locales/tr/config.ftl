@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = ör. 0.1
 config-error-denomination-matches-currency = Yeni birim adı bu sunucudaki mevcut bir para birimiyle eşleşemez! "{ $existingName }" adında mevcut bir para birimi bulundu.
 config-error-denomination-matches-denomination = Yeni birim adı bu sunucudaki mevcut bir birimle eşleşemez! "{ $currencyName }" para birimi altında "{ $denominationName }" adında mevcut bir birim bulundu.
 config-error-denomination-value-exists = Tek bir para birimi altındaki birimlerin benzersiz değerleri olmalıdır! { $denominationName } zaten bu değere atanmış.
+config-label-denomination-info = **{ $name }** (Değer: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Yasaklı Rol Adları

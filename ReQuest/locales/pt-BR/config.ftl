@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = ex.: 0,1
 config-error-denomination-matches-currency = O nome da nova denominação não pode ser igual a uma moeda existente neste servidor! Moeda existente encontrada: "{ $existingName }".
 config-error-denomination-matches-denomination = O nome da nova denominação não pode ser igual a uma denominação existente neste servidor! Denominação existente "{ $denominationName }" encontrada na moeda "{ $currencyName }".
 config-error-denomination-value-exists = As denominações de uma mesma moeda devem ter valores únicos! { $denominationName } já possui esse valor atribuído.
+config-label-denomination-info = **{ $name }** (Valor: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Nomes de Cargos Proibidos

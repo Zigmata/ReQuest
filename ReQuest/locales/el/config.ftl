@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = π.χ., 0.1
 config-error-denomination-matches-currency = Το όνομα της νέας ονομαστικής αξίας δεν μπορεί να ταιριάζει με υπάρχον νόμισμα σε αυτόν τον διακομιστή! Βρέθηκε υπάρχον νόμισμα με το όνομα "{ $existingName }".
 config-error-denomination-matches-denomination = Το όνομα της νέας ονομαστικής αξίας δεν μπορεί να ταιριάζει με υπάρχουσα ονομαστική αξία σε αυτόν τον διακομιστή! Βρέθηκε υπάρχουσα ονομαστική αξία "{ $denominationName }" στο νόμισμα "{ $currencyName }".
 config-error-denomination-value-exists = Οι ονομαστικές αξίες κάτω από ένα νόμισμα πρέπει να έχουν μοναδικές τιμές! Η { $denominationName } έχει ήδη αυτή την τιμή.
+config-label-denomination-info = **{ $name }** (Αξία: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Απαγορευμένα Ονόματα Ρόλων

@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = 例: 0.1
 config-error-denomination-matches-currency = 新しい額面名はこのサーバーの既存の通貨名と一致できません！「{ $existingName }」という既存の通貨が見つかりました。
 config-error-denomination-matches-denomination = 新しい額面名はこのサーバーの既存の額面名と一致できません！「{ $currencyName }」通貨の「{ $denominationName }」という既存の額面が見つかりました。
 config-error-denomination-value-exists = 同じ通貨の額面にはそれぞれ固有の値が必要です！{ $denominationName } には既にこの値が割り当てられています。
+config-label-denomination-info = **{ $name }** (値: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = 禁止ロール名

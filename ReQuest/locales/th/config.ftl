@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = เช่น 0.1
 config-error-denomination-matches-currency = ชื่อหน่วยย่อยใหม่ไม่สามารถตรงกับสกุลเงินที่มีอยู่บนเซิร์ฟเวอร์นี้ได้! พบสกุลเงินที่มีอยู่ชื่อ "{ $existingName }"
 config-error-denomination-matches-denomination = ชื่อหน่วยย่อยใหม่ไม่สามารถตรงกับหน่วยย่อยที่มีอยู่บนเซิร์ฟเวอร์นี้ได้! พบหน่วยย่อยที่มีอยู่ชื่อ "{ $denominationName }" ภายใต้สกุลเงินชื่อ "{ $currencyName }"
 config-error-denomination-value-exists = หน่วยย่อยภายใต้สกุลเงินเดียวกันต้องมีมูลค่าไม่ซ้ำกัน! { $denominationName } มีมูลค่านี้ถูกกำหนดไว้แล้ว
+config-label-denomination-info = **{ $name }** (มูลค่า: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = ชื่อบทบาทที่ห้ามใช้

@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = 例如：0.1
 config-error-denomination-matches-currency = 新面額名稱不能與此伺服器上的現有貨幣相同！發現現有貨幣名稱「{ $existingName }」。
 config-error-denomination-matches-denomination = 新面額名稱不能與此伺服器上的現有面額相同！在貨幣「{ $currencyName }」下發現現有面額名稱「{ $denominationName }」。
 config-error-denomination-value-exists = 同一貨幣下的面額必須有唯一的數值！{ $denominationName } 已被指派此數值。
+config-label-denomination-info = **{ $name }** (數值: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = 禁用身分組名稱

@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = contoh: 0.1
 config-error-denomination-matches-currency = Nama denominasi baru tidak boleh sama dengan mata uang yang sudah ada di server ini! Ditemukan mata uang bernama "{ $existingName }".
 config-error-denomination-matches-denomination = Nama denominasi baru tidak boleh sama dengan denominasi yang sudah ada di server ini! Ditemukan denominasi bernama "{ $denominationName }" di bawah mata uang bernama "{ $currencyName }".
 config-error-denomination-value-exists = Denominasi di bawah satu mata uang harus memiliki nilai unik! { $denominationName } sudah memiliki nilai ini.
+config-label-denomination-info = **{ $name }** (Nilai: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Nama Peran Terlarang

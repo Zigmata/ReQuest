@@ -3007,10 +3007,16 @@ class ConfigEditCurrencyView(LocaleLayoutView):
             page_items = self.denominations[start:end]
 
             for denomination in page_items:
-                denomination_name = denomination.get(CommonFields.NAME, 'Unknown')
+                denomination_name = denomination.get(
+                    CommonFields.NAME, t(locale, 'common-label-unknown')
+                )
                 denomination_value = denomination.get(CurrencyFields.VALUE, 0)
 
-                info = f"**{titlecase(denomination_name)}** (Value: {denomination_value})"
+                info = t(
+                    locale, 'config-label-denomination-info',
+                    name=titlecase(denomination_name),
+                    value=str(denomination_value)
+                )
                 container.add_item(TextDisplay(info))
 
                 denom_actions = ActionRow()
@@ -3342,6 +3348,7 @@ class ManageShopView(LocaleLayoutView):
         self.selected_channel_id = channel_id
         self.shop_data = shop_data
 
+    async def setup(self):
         self.build_view()
 
     def build_view(self):
@@ -3349,7 +3356,7 @@ class ManageShopView(LocaleLayoutView):
         locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
-        shop_name = self.shop_data.get(ShopFields.SHOP_NAME, 'Unknown')
+        shop_name = self.shop_data.get(ShopFields.SHOP_NAME, t(locale, 'common-label-unknown'))
 
         header_section = Section(accessory=BackButton(ConfigShopsView))
         header_section.add_item(TextDisplay(t(locale, 'config-title-manage-shop', shopName=shop_name)))
@@ -3400,7 +3407,6 @@ class ManageShopView(LocaleLayoutView):
 class EditShopView(LocaleLayoutView):
     def __init__(self, channel_id: str, shop_data: dict):
         super().__init__(timeout=None)
-        locale = getattr(self, 'locale', DEFAULT_LOCALE)
         self.channel_id = channel_id
         self.shop_data = shop_data
         self.all_stock = self.shop_data.get(ShopFields.SHOP_STOCK, [])
@@ -3408,12 +3414,6 @@ class EditShopView(LocaleLayoutView):
         self.items_per_page = 6
         self.current_page = 0
         self.total_pages = math.ceil(len(self.all_stock) / self.items_per_page)
-        self.done_editing_button = buttons.ManageShopNavButton(
-            self.channel_id,
-            self.shop_data,
-            t(locale, 'config-btn-done-editing')[:DiscordLimits.BUTTON_LABEL],
-            ButtonStyle.secondary
-        )
         self.currency_config = {}
 
     async def setup(self, bot, guild):
@@ -3503,6 +3503,13 @@ class EditShopView(LocaleLayoutView):
 
         self.add_item(container)
 
+        done_editing_button = buttons.ManageShopNavButton(
+            self.channel_id,
+            self.shop_data,
+            t(locale, 'config-btn-done-editing')[:DiscordLimits.BUTTON_LABEL],
+            ButtonStyle.secondary
+        )
+
         if self.total_pages > 1:
             pagination_row = ActionRow()
 
@@ -3535,12 +3542,12 @@ class EditShopView(LocaleLayoutView):
             pagination_row.add_item(prev_button)
             pagination_row.add_item(page_display)
             pagination_row.add_item(next_button)
-            pagination_row.add_item(self.done_editing_button)
+            pagination_row.add_item(done_editing_button)
 
             self.add_item(pagination_row)
         else:
             button_row = ActionRow()
-            button_row.add_item(self.done_editing_button)
+            button_row.add_item(done_editing_button)
             self.add_item(button_row)
 
     async def prev_page(self, interaction: discord.Interaction):

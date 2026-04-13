@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = z.B. 0,1
 config-error-denomination-matches-currency = Der Name der neuen Stückelung darf nicht mit einer bestehenden Währung auf diesem Server übereinstimmen! Bestehende Währung mit dem Namen "{ $existingName }" gefunden.
 config-error-denomination-matches-denomination = Der Name der neuen Stückelung darf nicht mit einer bestehenden Stückelung auf diesem Server übereinstimmen! Bestehende Stückelung mit dem Namen "{ $denominationName }" unter der Währung "{ $currencyName }" gefunden.
 config-error-denomination-value-exists = Stückelungen innerhalb einer Währung müssen eindeutige Werte haben! { $denominationName } hat diesen Wert bereits zugewiesen.
+config-label-denomination-info = **{ $name }** (Wert: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Verbotene Rollennamen

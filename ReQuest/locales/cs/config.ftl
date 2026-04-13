@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = např. 0.1
 config-error-denomination-matches-currency = Nový název nominální hodnoty nemůže odpovídat existující měně na tomto serveru! Nalezena existující měna s názvem „{ $existingName }".
 config-error-denomination-matches-denomination = Nový název nominální hodnoty nemůže odpovídat existující nominální hodnotě na tomto serveru! Nalezena existující nominální hodnota s názvem „{ $denominationName }" pod měnou „{ $currencyName }".
 config-error-denomination-value-exists = Nominální hodnoty v rámci jedné měny musí mít unikátní hodnoty! { $denominationName } již má tuto hodnotu přiřazenu.
+config-label-denomination-info = **{ $name }** (Hodnota: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Zakázané názvy rolí

@@ -673,6 +673,7 @@ class ManageShopNavButton(Button):
         try:
             from ReQuest.ui.config.views import ManageShopView
             view = ManageShopView(self.channel_id, self.shop_data)
+            await setup_view(view, interaction)
             await interaction.response.edit_message(view=view)
         except Exception as e:
             await log_exception(e, interaction)
