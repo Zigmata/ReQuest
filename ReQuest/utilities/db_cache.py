@@ -277,7 +277,7 @@ async def run_in_transaction(bot, callback, *args, **kwargs):
     pending: set[str] = set()
     token = _pending_cache_invalidations.set(pending)
     try:
-        async with await bot.mongo_client.start_session() as session:
+        async with bot.mongo_client.start_session() as session:
             result = await session.with_transaction(
                 lambda s: callback(s, *args, **kwargs)
             )
