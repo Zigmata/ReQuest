@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Byt
-player-cmd-desc = Spelarmenyer
 
 # --- Buttons ---
 
@@ -146,6 +144,15 @@ player-msg-no-characters = Du har inga registrerade karaktärer.
 player-label-active = (Aktiv)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Karaktär pågår: { $characterName }{"**"}
+    Din karaktärsregistrering väntar på inventarieinställning.
+player-btn-resume = Återuppta
+player-btn-discard = Kassera
+player-modal-title-discard-character = Kassera karaktär
+player-modal-label-discard-confirm = Kassera { $characterName }?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Bekräfta borttagning av karaktär
 player-modal-label-confirm-char-delete = Radera { $characterName }?
@@ -215,8 +222,6 @@ player-label-empty-kit = {"*"}Tomt utrustningspaket{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Bekräfta val: { $kitName }{"**"}
-player-label-items-heading = {"**"}Föremål:{"**"}
-player-label-currency-heading = {"**"}Valuta:{"**"}
 player-msg-kit-empty = Detta utrustningspaket är tomt.
 
 # NewCharacterComplexItemPurchaseView
@@ -264,6 +269,7 @@ player-embed-field-receipt = Kvitto
 # Spend currency errors
 player-error-amount-not-number = Beloppet måste vara ett nummer.
 player-error-amount-positive = Du måste spendera ett positivt belopp.
+player-error-amount-exceeds-maximum = Beloppet får inte överstiga { $max }.
 player-error-no-active-character-server = Du har ingen aktiv karaktär på denna server.
 player-error-no-currency-config = Ingen valutakonfiguration hittades för denna server.
 
@@ -281,18 +287,17 @@ player-error-qty-only-have = Du har bara { $maxQuantity } av detta föremål.
 player-error-invalid-format = Ogiltigt format: "{ $line }". Använd <namn>: <antal>.
 player-error-empty-name = Föremålsnamn kan inte vara tomt i raden: "{ $line }".
 player-error-invalid-quantity = Ogiltigt antal för "{ $name }": "{ $quantity }". Måste vara ett positivt heltal.
-player-error-input-errors-header = Fel i inventarieinmatning:
-player-msg-no-valid-items = Inga giltiga föremål angavs. Initialiserar med tomt inventarie.
+
+# Validation error view
+player-validation-error-title = Inmatningsfel
+player-validation-btn-retry = Försök igen
 
 # Cart quantity validation
 player-error-enter-valid-number = Ange ett giltigt positivt nummer.
 
 # Submission embeds (approval queue)
-player-embed-title-approval = Inventariegodkännande: { $characterName }
-player-embed-desc-submitted-by = Inlämnad av { $userMention }
 player-embed-field-items = Föremål
 player-embed-field-currency-received = Valuta
-player-embed-footer-submission-id = Inlämnings-ID: { $submissionId }
 player-label-approval-thread = Godkännande: { $characterName }
 player-embed-title-submission-sent = Inventarieinlämning skickad
 player-embed-desc-submission-sent =
@@ -306,3 +311,46 @@ player-embed-desc-starting-inventory = Spelare: { $playerMention } som `{ $chara
 player-embed-field-items-received = Mottagna föremål
 player-embed-field-currency-received-label = Mottagen valuta
 player-label-untitled = Utan titel
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Inventarieinlämning: { $characterName }{"**"}
+    Inskickad av { $userMention }
+player-approval-post-items = Föremål
+player-approval-post-currency = Valuta
+player-approval-resolved = Denna inlämning har behandlats.
+player-approval-btn-approve = Godkänn
+player-approval-btn-deny = Avslå
+player-approval-btn-edit = Redigera
+player-approval-error-no-permission = Du har inte behörighet för denna åtgärd.
+player-approval-error-not-submitter = Endast den ursprungliga inlämnaren kan redigera denna inlämning.
+player-approval-thread-instructions =
+    Denna tråd skapades för godkännande av {"**"}{ $characterName }{"**"}.
+    En spelledare kommer att granska inlämningen och godkänna eller avslå den.
+    När den har godkänts eller avslagits kommer denna tråd att låsas.
+
+    {"**"}Spelledare:{"**"} Diskutera eventuella nödvändiga ändringar med din
+    spelare tills inventariet är i ett acceptabelt skick. Använd bara
+    knappen `Avslå` för oförenliga inlämningar.
+
+    { $playerMention }: Använd knappen `Redigera` för att göra eventuella
+    ändringar som begärts här av en spelledare.
+player-approval-approved-by = Denna inlämning godkändes av { $approver }.
+player-approval-denied-by = Denna inlämning avslogs av { $denier }.
+player-approval-deny-reason = Anledning: { $reason }
+player-msg-submission-updated = Din inlämning har uppdaterats.
+
+
+# Denial modal
+player-modal-title-deny-reason = Avslå inlämning
+player-modal-label-deny-reason = Anledning till avslag
+player-modal-placeholder-deny-reason = Valfritt: förklara varför inlämningen avslogs
+# Approval DM notifications
+player-dm-title-approved = Karaktär godkänd
+player-dm-desc-approved =
+    Din karaktär {"**"}{ $characterName }{"**"} har godkänts
+    av { $approver } i {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Karaktär avslagen
+player-dm-desc-denied =
+    Din karaktär {"**"}{ $characterName }{"**"} har avslagits
+    av { $denier } i {"**"}{ $guildName }{"**"}.

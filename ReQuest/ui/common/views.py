@@ -8,16 +8,12 @@ from discord.ui import (
 )
 
 from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton
-from ReQuest.utilities.localizer import DEFAULT_LOCALE, set_locale_context
+from ReQuest.utilities.localizer import DEFAULT_LOCALE
 
 
 class LocaleLayoutView(LayoutView):
-    """LayoutView subclass that propagates locale via context var before every component callback."""
-
-    async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        locale = getattr(self, 'locale', None) or DEFAULT_LOCALE
-        set_locale_context(locale)
-        return True
+    """LayoutView subclass with locale support."""
+    pass
 
 
 class MenuBaseView(LocaleLayoutView):

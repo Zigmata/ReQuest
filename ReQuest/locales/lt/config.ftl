@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = pvz., 0.1
 config-error-denomination-matches-currency = Naujo nominalo pavadinimas negali sutapti su esama valiuta šiame serveryje! Rasta esama valiuta pavadinimu „{ $existingName }".
 config-error-denomination-matches-denomination = Naujo nominalo pavadinimas negali sutapti su esamu nominalu šiame serveryje! Rastas esamas nominalas pavadinimu „{ $denominationName }" prie valiutos „{ $currencyName }".
 config-error-denomination-value-exists = Nominalai vienoje valiutoje turi turėti unikalias reikšmes! { $denominationName } jau turi priskirtą šią reikšmę.
+config-label-denomination-info = **{ $name }** (Reikšmė: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Draudžiamų rolių pavadinimai
@@ -224,8 +225,6 @@ config-error-item-exists-new-char = Daiktas pavadinimu { $itemName } jau egzistu
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Įkelti naujo personažo parduotuvę (JSON)
 config-error-no-json-uploaded-short = JSON failas neįkeltas.
-config-error-json-must-have-shopstock = JSON turi turėti „shopStock" masyvą.
-config-error-items-must-have-name-price = Visi daiktai turi turėti „name" ir „price".
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Nustatyti naujo personažo turtą
@@ -252,6 +251,7 @@ config-modal-title-kit-currency = Pridėti rinkinio valiutą
 config-modal-placeholder-currency-eg = pvz., Auksas
 config-modal-placeholder-amount-eg = pvz., 100
 config-error-amount-must-be-number = Suma turi būti skaičius.
+config-error-amount-exceeds-maximum = Suma negali viršyti { $max }.
 config-error-no-currencies-on-server = Serveryje nėra sukonfigūruotų valiutų.
 config-error-currency-not-found-short = Valiuta „{ $currency }" nerasta.
 config-error-denomination-not-found = Nominalas „{ $denomination }" nerastas valiutos konfigūracijoje.
@@ -408,11 +408,9 @@ config-title-wizard = {"**"}Serverio konfigūracija - Vedlys{"**"}
 config-wizard-intro =
     {"**"}Sveiki atvykę į ReQuest konfigūracijos vedlį!{"**"}
 
-    Šis vedlys padės užtikrinti, kad jūsų serveris tinkamai sukonfigūruotas naudoti ReQuest funkcijas.
-    Jis nuskaitys dabartinius nustatymus ir pateiks rekomendacijas dėl reikalingų pakeitimų.
+    Šis vedlys padės užtikrinti, kad jūsų serveris tinkamai sukonfigūruotas naudoti ReQuest funkcijas. Jis nuskaitys dabartinius nustatymus ir pateiks rekomendacijas dėl reikalingų pakeitimų.
 
-    Naudokite žemiau esantį mygtuką „Pradėti nuskaitymą", kad pradėtumėte tikrinimo procesą. Kai nuskaitymas bus baigtas,
-    gausite išsamią serverio konfigūracijos ataskaitą kartu su rekomenduojamais pakeitimais.
+    Naudokite žemiau esantį mygtuką „Pradėti nuskaitymą", kad pradėtumėte tikrinimo procesą. Kai nuskaitymas bus baigtas, gausite išsamią serverio konfigūracijos ataskaitą kartu su rekomenduojamais pakeitimais.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Boto globalūs leidimai{"**"}__
@@ -536,7 +534,27 @@ config-wizard-gm-rewards-disabled = {"**"}Būsena:{"**"} Išjungta
 config-wizard-gm-rewards-enabled = {"**"}Būsena:{"**"} Įjungta
 config-wizard-gm-rewards-experience = - Patirtis: { $xp }
 config-wizard-gm-rewards-items = - Daiktai:
-config-wizard-unnamed-shop = Bevardė parduotuvė
+
+# Wizard - Serverio kalba (1 puslapis)
+config-wizard-server-language-desc =
+    Tai kalba, kurią ReQuest naudos visiems viešiems pranešimams, tokiems kaip užduočių skelbimai, parduotuvės papildymo pranešimai ir operacijų žurnalai.
+config-wizard-server-language = {"**"}Serverio kalba:{"**"} { $language }
+config-wizard-server-language-default = Numatytoji (anglų)
+
+# Wizard - Parduotuvės papildymo informacija
+config-wizard-shop-restock-not-scheduled = ℹ️ Papildymas nesuplanuotas
+
+# Wizard - Užduočių nustatymai (5 puslapis)
+config-wizard-quest-header = __{"**"}Užduočių nustatymai{"**"}__
+config-wizard-quest-header-desc =
+    Šiame skyriuje pateikiama su užduotimis susijusių konfigūracijų apžvalga.
+config-wizard-quest-role-mode = - Užduočių vaidmenų režimas: { $mode }
+config-wizard-quest-roles-label = {"**"}GM užduočių vaidmenys{"**"}
+config-wizard-quest-roles-count = - GM priskirti vaidmenys: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Visi vaidmenys gerai
+config-wizard-quest-roles-assigned-to = {"    "}Priskirta: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ Vaidmens ID { $roleId }: Nerastas/Ištrintas iš serverio
+config-wizard-quest-roles-no-assignments = - ℹ️ Nėra priskirtų užduočių vaidmenų
 
 ## Roles View
 config-title-roles = {"**"}Serverio konfigūracija - Rolės{"**"}
@@ -832,9 +850,6 @@ config-select-placeholder-add-quest-role = Priskirti serverio rolę(-es) šiam G
 
 ## Quest rolių rodinys
 config-title-quest-roles = {"**"}Serverio konfigūracija - Quest rolės{"**"}
-config-label-quest-roles = Quest rolės
-config-desc-quest-roles =
-    Konfigūruokite, kaip grupės rolės valdomos quest'ų metu.
 
 config-label-quest-role-mode-disabled = {"**"}Quest rolės režimas:{"**"} Išjungta
     Quest'ų metu rolės nėra kuriamos ir nėra priskiriamos.
@@ -853,6 +868,7 @@ config-desc-manage-assignments =
     Rolės turi būti žemesnės nei aukščiausia ReQuest rolė serverio hierarchijoje.
 config-msg-no-gm-members = Šiame serveryje nerasta narių su GM role.
 config-label-no-roles-assigned = Nėra priskirtų quest rolių
+config-label-more-roles = (+{ $count } daugiau)
 
 ## GM quest rolių priskyrimo rodinys
 config-title-gm-quest-role-assign = {"**"}Valdyti quest roles — { $gmName }{"**"}

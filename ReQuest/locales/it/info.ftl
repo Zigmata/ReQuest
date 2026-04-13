@@ -102,4 +102,3 @@ info-language-desc-sv-se = Imposta la lingua su svedese
 info-language-desc-th = Imposta la lingua su thailandese
 info-language-desc-tr = Imposta la lingua su turco
 info-language-desc-vi = Imposta la lingua su vietnamita
-info-language-updated = Lingua aggiornata con successo.

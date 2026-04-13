@@ -1,13 +1,16 @@
 ## Error and check failure strings
 
 # Error embed wrapper
-error-oops-title = ⚠️ Oops!
+error-oops-title = ⚠️ Ups!
 error-report-description =
-    Det oppstod en feil:
-
-    ```{ $exception }```
+    { $exception }
 
     Hvis denne feilen er uventet, eller du mistenker at boten ikke fungerer riktig, vennligst send en feilrapport i den [offisielle ReQuest Support Discord](https://discord.gg/Zq37gj4).
+
+error-report-unexpected =
+    Det oppstod en uventet feil. Vennligst prøv igjen.
+
+    Hvis dette fortsetter, vennligst send en feilrapport i den [offisielle ReQuest Support Discord](https://discord.gg/Zq37gj4).
 
 # Check failures
 error-owner-only = Bare boteieren kan bruke denne kommandoen!

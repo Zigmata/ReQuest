@@ -32,7 +32,6 @@ admin-modal-label-server-name = Servername
 admin-modal-placeholder-server-name = Geben Sie einen Kurznamen für den Discord-Server ein
 admin-modal-label-server-id = Server-ID
 admin-modal-placeholder-server-id = Geben Sie die ID des Discord-Servers ein
-admin-select-placeholder-server = Wählen Sie einen Server zum Entfernen aus
 admin-modal-title-cog-action = Cog { $action }
 admin-modal-label-cog-name = Name
 admin-modal-placeholder-cog-name = Geben Sie den Namen des Cogs ein, um { $action } auszuführen

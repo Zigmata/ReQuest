@@ -2,7 +2,7 @@
 
 # GM buttons
 gm-btn-create = Stvori
-gm-btn-edit-details = Uredi detalje
+gm-btn-edit-details = Uredi quest
 gm-btn-toggle-ready = Promijeni spremnost
 gm-btn-configure-rewards = Konfiguriraj nagrade
 gm-btn-remove-player = Ukloni igrača
@@ -12,9 +12,13 @@ gm-btn-manage-individual-rewards = Upravljaj individualnim nagradama
 gm-btn-join = Pridruži se
 gm-btn-leave = Napusti
 gm-btn-complete-quest = Dovrši quest
-gm-btn-review-submission = Pregledaj prijavu
-gm-btn-approve = Odobri
-gm-btn-deny = Odbij
+gm-btn-edit-details-modal = Uredi detalje
+gm-btn-edit-images = Uredi slike
+gm-btn-publish = Objavi
+gm-btn-update-post = Ažuriraj objavu
+gm-select-placeholder-party-role = Odaberite ulogu družine...
+gm-modal-title-edit-details = Uredi detalje questa
+gm-modal-title-edit-images = Uredi slike questa
 
 # GM modals
 gm-modal-title-create-quest = Stvori novi quest
@@ -28,9 +32,9 @@ gm-modal-label-party-role = Uloga družine
 gm-modal-placeholder-party-role = Stvorite ulogu za ovaj quest (neobavezno)
 gm-modal-label-description = Opis
 gm-modal-placeholder-description = Ovdje napišite detalje svog questa
-gm-modal-title-editing-quest = Uređivanje { $questTitle }
-gm-modal-label-title = Naslov
-gm-modal-label-max-party-size = Maks. veličina družine
+gm-modal-label-image-url = URL minijature
+gm-modal-label-large-image-url = URL velike slike
+gm-modal-placeholder-image-url = Unesite URL slike (ili ostavite prazno za uklanjanje)
 gm-modal-title-add-reward = Dodaj nagradu
 gm-modal-label-experience = Bodovi iskustva
 gm-modal-placeholder-experience = Unesite broj
@@ -49,25 +53,23 @@ gm-modal-placeholder-inventory-modify =
     predmet: količina
     predmet2: količina
     itd.
-gm-modal-title-review-submission = Pregledaj prijavu
-gm-modal-label-submission-id = ID prijave
-gm-modal-placeholder-submission-id = Unesite 8-znakovni ID
 
 # GM errors
-gm-error-forbidden-role-name = Navedeni naziv za ulogu družine je zabranjen.
-gm-error-role-already-exists = Uloga s tim nazivom već postoji na ovom poslužitelju.
 gm-error-no-quest-channel = Kanal za objave questova još nije određen. Kontaktirajte administratora poslužitelja za konfiguraciju kanala za questove.
-gm-error-cannot-ping-announce = Nije moguće pingovati ulogu za objave { $role } u kanalu { $channel }. Provjerite dozvole kanala i uloge ReQuesta s administratorima poslužitelja.
 gm-error-invalid-item-format = Neispravan format predmeta: "{ $item }". Svaki predmet mora biti u novom retku, u formatu "Naziv: Količina".
-gm-error-submission-not-found = Prijava nije pronađena.
 gm-error-already-on-quest = Već ste na ovom questu kao { $characterName }.
 gm-error-no-active-character-long = Nemate aktivnog lika na ovom poslužitelju. Koristite `/player` za registraciju ili aktivaciju lika.
 gm-error-quest-locked = Greška pri pridruživanju questu {"**"}{ $questTitle }{"**"}: Quest je zaključan od strane GM-a.
 gm-error-quest-full = Greška pri pridruživanju questu {"**"}{ $questTitle }{"**"}: Sastav questa je pun!
 gm-error-not-signed-up = Niste prijavljeni za ovaj quest.
+gm-error-quest-not-found = Zadatak više ne postoji.
 gm-error-quest-channel-not-set = Kanal za questove nije postavljen!
 gm-error-empty-roster = Ne možete dovršiti quest s praznim sastavom. Pokušajte otkazati umjesto toga.
 gm-error-invalid-xp-value = Vrijednost XP-a mora biti pozitivan cijeli broj!
+gm-error-party-size-positive = Veličina družine mora biti pozitivan broj.
+gm-error-party-size-too-small = Veličina družine ne može biti manja od trenutne družine ({ $currentSize } članova).
+gm-error-role-name-forbidden = Naziv uloge "{ $roleName }" je zabranjen na ovom poslužitelju.
+gm-error-role-name-exists = Uloga s nazivom "{ $roleName }" već postoji na ovom poslužitelju.
 
 # GM confirm modals
 gm-modal-title-cancel-quest = Otkaži quest
@@ -75,16 +77,29 @@ gm-modal-label-cancel-quest = Upišite POTVRDI za otkazivanje questa.
 gm-modal-title-remove-from-quest = Ukloni lika iz questa
 gm-modal-label-remove-from-quest = Potvrditi uklanjanje lika?
 
-# GM DM messages
-gm-dm-quest-cancelled = Quest {"**"}{ $questTitle }{"**"} je otkazan od strane GM-a.
-gm-dm-quest-ready = Quest {"**"}{ $questTitle }{"**"} je sada spreman!
-gm-dm-quest-unlocked = Quest {"**"}{ $questTitle }{"**"} više nije zaključan.
-gm-dm-quest-locked = Quest {"**"}{ $questTitle }{"**"} je sada zaključan od strane GM-a.
-gm-dm-player-removed = Uklonjeni ste iz questa {"**"}{ $questTitle }{"**"}.
-gm-dm-player-removed-waitlist = Uklonjeni ste s liste čekanja za {"**"}{ $questTitle }{"**"}.
-gm-dm-party-promotion = Dodani ste u družinu za {"**"}{ $questTitle }{"**"}, jer je igrač odustao!
-gm-dm-roster-locked = Sastav questa zaključan i družina obaviještena!
-gm-dm-roster-unlocked = Sastav questa je otključan.
+# GM DM embeds
+gm-dm-title-quest-cancelled = Quest otkazan
+gm-dm-desc-quest-cancelled = Quest {"**"}{ $questTitle }{"**"} je otkazan od strane GM-a.
+gm-dm-title-quest-ready = Quest spreman
+gm-dm-desc-quest-ready = Quest {"**"}{ $questTitle }{"**"} je sada spreman! Vaš GM će uskoro započeti quest.
+gm-dm-title-player-removed = Uklonjeni iz questa
+gm-dm-desc-player-removed = Uklonjeni ste iz questa {"**"}{ $questTitle }{"**"} od strane GM-a.
+gm-dm-desc-player-removed-waitlist = Uklonjeni ste s liste čekanja za {"**"}{ $questTitle }{"**"}.
+gm-dm-title-party-promotion = Promaknuće u družinu
+gm-dm-desc-party-promotion =
+    Promaknuti ste u glavnu družinu za {"**"}{ $questTitle }{"**"}
+    jer je igrač napustio quest.
+gm-dm-title-roster-locked = Sastav zaključan
+gm-dm-desc-roster-locked =
+    Sastav za {"**"}{ $questTitle }{"**"} je zaključan
+    i svi članovi družine su obaviješteni.
+gm-dm-title-roster-unlocked = Sastav otključan
+gm-dm-desc-roster-unlocked = Sastav za {"**"}{ $questTitle }{"**"} je otključan.
+gm-dm-title-player-removed-confirm = Igrač uklonjen
+gm-dm-desc-player-removed-confirm =
+    Igrač je uklonjen iz {"**"}{ $questTitle }{"**"}
+    i sastav questa je ažuriran.
+gm-dm-footer-quest = ID questa: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     Administrator vašeg poslužitelja je konfigurirao nagrade za Voditelje igre pri dovršetku
     questova. Međutim, budući da nemate registriranih likova, vaše nagrade
@@ -94,9 +109,16 @@ gm-dm-rewards-no-active-character =
     questova. Međutim, budući da nemate aktivnog lika na ovom poslužitelju, vaše nagrade
     nisu mogle biti automatski izdane u ovom trenutku.
 gm-dm-rewards-issued = Sljedeće je dodijeljeno vašem aktivnom liku, { $characterName }
+gm-dm-role-removal-failed =
+    ⚠️ Uklanjanje uloge {"**"}{ $roleName }{"**"} nije uspjelo za sljedeće članove: { $members }.
+    Obavijestite administratora poslužitelja da ručno ukloni ulogu.
+gm-dm-role-not-found =
+    ⚠️ Uloga questa (ID: { $roleId }) za quest {"**"}{ $questTitle }{"**"} više ne postoji na poslužitelju.
+    Operacije s ulogama su preskočene. Obavijestite administratora poslužitelja ako je ovo neočekivano.
 
 # GM select menus
 gm-select-placeholder-party-member = Odaberite člana družine
+gm-select-option-no-role = Ništa (bez uloge družine)
 
 # GM embeds
 gm-embed-title-mod-report = Izvješće o GM izmjeni igrača
@@ -108,7 +130,6 @@ gm-embed-field-party = __Družina__
 gm-embed-field-summary = Sažetak
 gm-embed-title-gm-rewards = GM nagrade izdane
 gm-embed-field-items = Predmeti
-gm-msg-player-removed = Igrač uklonjen i sastav questa ažuriran!
 
 # GM views
 gm-title-main-menu = Voditelj igre - Glavni izbornik
@@ -116,15 +137,18 @@ gm-menu-quests = Questovi
 gm-menu-desc-quests = Stvorite, uredite i upravljajte questovima.
 gm-menu-players = Igrači
 gm-menu-desc-players = Upravljajte inventarima igrača i mijenjajte likove.
-gm-menu-approvals = Odobrenja likova
-gm-menu-desc-approvals = Pregledajte i odobrite/odbijte prijave likova.
 
 gm-title-quest-management = Voditelj igre - Upravljanje questovima
 gm-desc-create-quest = Stvorite novi quest.
 gm-msg-no-quests = Questovi nisu pronađeni.
 gm-label-quest-locked = (Zaključano)
+gm-label-quest-draft = (Skica)
 gm-title-manage-quest = Upravljanje questom - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Uredite detalje questa poput naslova, opisa i veličine družine.
+gm-label-field-not-set = Nije postavljeno
+gm-label-description-not-set = Opis nije postavljen
+gm-label-current-party-size = {"**"}Maks. veličina družine:{"**"} { $value }
+gm-label-current-party-role = {"**"}Uloga družine:{"**"} { $value }
 gm-desc-toggle-ready = Promijeni stanje spremnosti (Trenutno: {"**"}{ $status }{"**"})
     - Zaključava sastav questa i obavještava članove družine da će quest uskoro započeti. Ako je uloga konfigurirana, bit će dodijeljena članovima družine pri zaključavanju.
     - Otključava sastav kada se postavi na Otvoreno.
@@ -152,29 +176,7 @@ gm-label-no-players-in-roster = Nema igrača u sastavu questa
 gm-title-character-sheet = List lika za { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Bodovi iskustva:{"**"}__
 gm-label-possessions = __{"**"}Posjedi{"**"}__
-gm-label-currency-heading = {"**"}Valuta{"**"}
-gm-msg-inventory-empty = Inventar je prazan.
 
 # GM approvals
-gm-title-approvals = Voditelj igre - Odobrenja inventara
-gm-desc-review-submission = Unesite ID prijave za pregled i odobrenje/odbijanje.
-gm-title-reviewing = Pregled: { $characterName }
-gm-label-items = {"**"}Predmeti:{"**"}
-gm-label-currency = {"**"}Valuta:{"**"}
-gm-embed-title-approved = Ažuriranje inventara odobreno
-gm-embed-desc-approved = Inventar za {"**"}{ $characterName }{"**"} je odobren od strane { $approver }.
-gm-embed-title-denied = Ažuriranje inventara odbijeno
-gm-embed-desc-denied = Inventar za {"**"}{ $characterName }{"**"} je odbijen od strane { $denier }.
-
-gm-modal-label-select-party-role = Uloga družine
-gm-modal-desc-select-party-role = Odaberite ulogu za dodjelu družini questa.
-gm-select-option-no-role = Ništa (bez uloge družine)
 
 gm-error-role-hierarchy = ReQuest ne može upravljati ulogom "{ $roleName }" (ID: { $roleId }) jer je pozicionirana iznad najviše uloge ReQuesta u hijerarhiji poslužitelja. Kontaktirajte administratora poslužitelja da premjesti ulogu ispod uloge ReQuesta ili dodijeli ReQuestu višu ulogu, zatim ponovite operaciju.
-gm-dm-role-removal-failed =
-    ⚠️ Uklanjanje uloge {"**"}{ $roleName }{"**"} nije uspjelo za sljedeće članove: { $members }.
-    Obavijestite administratora poslužitelja da ručno ukloni ulogu.
-
-gm-dm-role-not-found =
-    ⚠️ Uloga questa (ID: { $roleId }) za quest {"**"}{ $questTitle }{"**"} više ne postoji na poslužitelju.
-    Operacije s ulogama su preskočene. Obavijestite administratora poslužitelja ako je ovo neočekivano.

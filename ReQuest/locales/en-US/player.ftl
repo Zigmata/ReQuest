@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Trade
-player-cmd-desc = Player Menus
 
 # --- Buttons ---
 
@@ -146,6 +144,15 @@ player-msg-no-characters = You have no characters registered.
 player-label-active = (Active)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Character In Progress: { $characterName }{"**"}
+    Your character registration is awaiting inventory setup.
+player-btn-resume = Resume
+player-btn-discard = Discard
+player-modal-title-discard-character = Discard Character
+player-modal-label-discard-confirm = Discard { $characterName }?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Confirm Character Removal
 player-modal-label-confirm-char-delete = Delete { $characterName }?
@@ -215,8 +222,6 @@ player-label-empty-kit = {"*"}Empty Kit{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Confirm Selection: { $kitName }{"**"}
-player-label-items-heading = {"**"}Items:{"**"}
-player-label-currency-heading = {"**"}Currency:{"**"}
 player-msg-kit-empty = This kit is empty.
 
 # NewCharacterComplexItemPurchaseView
@@ -264,6 +269,7 @@ player-embed-field-receipt = Receipt
 # Spend currency errors
 player-error-amount-not-number = Amount must be a number.
 player-error-amount-positive = You must spend a positive amount.
+player-error-amount-exceeds-maximum = Amount cannot exceed { $max }.
 player-error-no-active-character-server = You do not have an active character on this server.
 player-error-no-currency-config = A currency configuration was not found for this server.
 
@@ -281,18 +287,17 @@ player-error-qty-only-have = You only have { $maxQuantity } of this item.
 player-error-invalid-format = Invalid format: "{ $line }". Use <name>: <quantity>.
 player-error-empty-name = Item name cannot be empty in line: "{ $line }".
 player-error-invalid-quantity = Invalid quantity for "{ $name }": "{ $quantity }". Must be a positive integer.
-player-error-input-errors-header = Errors in inventory input:
-player-msg-no-valid-items = No valid items provided. Initializing with empty inventory.
+
+# Validation error view
+player-validation-error-title = Input Errors
+player-validation-btn-retry = Try Again
 
 # Cart quantity validation
 player-error-enter-valid-number = Please enter a valid positive number.
 
 # Submission embeds (approval queue)
-player-embed-title-approval = Inventory Approval: { $characterName }
-player-embed-desc-submitted-by = Submitted by { $userMention }
 player-embed-field-items = Items
 player-embed-field-currency-received = Currency
-player-embed-footer-submission-id = Submission ID: { $submissionId }
 player-label-approval-thread = Approval: { $characterName }
 player-embed-title-submission-sent = Inventory Submission Sent
 player-embed-desc-submission-sent =
@@ -306,3 +311,46 @@ player-embed-desc-starting-inventory = Player: { $playerMention } as `{ $charact
 player-embed-field-items-received = Items Received
 player-embed-field-currency-received-label = Currency Received
 player-label-untitled = Untitled
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Inventory Submission: { $characterName }{"**"}
+    Submitted by { $userMention }
+player-approval-post-items = Items
+player-approval-post-currency = Currency
+player-approval-resolved = This submission has been resolved.
+player-approval-btn-approve = Approve
+player-approval-btn-deny = Deny
+player-approval-btn-edit = Edit
+player-approval-error-no-permission = You do not have permission to perform this action.
+player-approval-error-not-submitter = Only the original submitter can edit this submission.
+player-approval-approved-by = This submission was approved by { $approver }.
+player-approval-denied-by = This submission was denied by { $denier }.
+player-approval-deny-reason = Reason: { $reason }
+player-approval-thread-instructions =
+    This thread was created for the approval of {"**"}{ $characterName }{"**"}.
+    A Game Master will review the submission and approve or deny it.
+    Once approved or denied, this thread will be locked.
+
+    {"**"}Game Masters:{"**"} Discuss any required changes with your
+    player until the inventory is in an acceptable state. Only use
+    the `Deny` button for irreconcilable submissions.
+
+    { $playerMention }: Use the `Edit` button to make any changes
+    requested here by a Game Master.
+player-msg-submission-updated = Your submission has been updated.
+
+# Denial modal
+player-modal-title-deny-reason = Deny Submission
+player-modal-label-deny-reason = Reason for denial
+player-modal-placeholder-deny-reason = Optional: explain why the submission was denied
+
+# Approval DM notifications
+player-dm-title-approved = Character Approved
+player-dm-desc-approved =
+    Your character {"**"}{ $characterName }{"**"} has been approved
+    by { $approver } in {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Character Denied
+player-dm-desc-denied =
+    Your character {"**"}{ $characterName }{"**"} has been denied
+    by { $denier } in {"**"}{ $guildName }{"**"}.

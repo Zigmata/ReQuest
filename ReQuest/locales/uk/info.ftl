@@ -102,4 +102,3 @@ info-language-desc-sv-se = Встановити мову на шведську
 info-language-desc-th = Встановити мову на тайську
 info-language-desc-tr = Встановити мову на турецьку
 info-language-desc-vi = Встановити мову на в'єтнамську
-info-language-updated = Мову успішно оновлено.

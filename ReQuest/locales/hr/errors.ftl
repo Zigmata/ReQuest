@@ -3,11 +3,14 @@
 # Error embed wrapper
 error-oops-title = ⚠️ Ups!
 error-report-description =
-    Došlo je do iznimke:
-
-    ```{ $exception }```
+    { $exception }
 
     Ako je ova greška neočekivana ili sumnjate da bot ne radi ispravno, molimo prijavite grešku u [Službenom ReQuest Discord poslužitelju](https://discord.gg/Zq37gj4).
+
+error-report-unexpected =
+    Došlo je do neočekivane greške. Pokušajte ponovno.
+
+    Ako se to nastavi, molimo prijavite grešku u [Službenom ReQuest Discord poslužitelju](https://discord.gg/Zq37gj4).
 
 # Check failures
 error-owner-only = Samo vlasnik bota može koristiti ovu naredbu!

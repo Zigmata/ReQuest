@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Schimb
-player-cmd-desc = Meniuri jucător
 
 # --- Buttons ---
 
@@ -146,6 +144,15 @@ player-msg-no-characters = Nu aveți personaje înregistrate.
 player-label-active = (Activ)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Personaj în curs: { $characterName }{"**"}
+    Înregistrarea personajului tău așteaptă configurarea inventarului.
+player-btn-resume = Reia
+player-btn-discard = Renunță
+player-modal-title-discard-character = Renunță la personaj
+player-modal-label-discard-confirm = Renunți la { $characterName }?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Confirmă eliminarea personajului
 player-modal-label-confirm-char-delete = Ștergeți { $characterName }?
@@ -215,8 +222,6 @@ player-label-empty-kit = {"*"}Kit gol{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Confirmă selecția: { $kitName }{"**"}
-player-label-items-heading = {"**"}Obiecte:{"**"}
-player-label-currency-heading = {"**"}Monedă:{"**"}
 player-msg-kit-empty = Acest kit este gol.
 
 # NewCharacterComplexItemPurchaseView
@@ -264,6 +269,7 @@ player-embed-field-receipt = Chitanță
 # Spend currency errors
 player-error-amount-not-number = Suma trebuie să fie un număr.
 player-error-amount-positive = Trebuie să cheltuiți o sumă pozitivă.
+player-error-amount-exceeds-maximum = Suma nu poate depăși { $max }.
 player-error-no-active-character-server = Nu aveți un personaj activ pe acest server.
 player-error-no-currency-config = Configurarea monedei nu a fost găsită pentru acest server.
 
@@ -281,18 +287,17 @@ player-error-qty-only-have = Aveți doar { $maxQuantity } din acest obiect.
 player-error-invalid-format = Format invalid: „{ $line }". Folosiți <nume>: <cantitate>.
 player-error-empty-name = Numele obiectului nu poate fi gol în linia: „{ $line }".
 player-error-invalid-quantity = Cantitate invalidă pentru „{ $name }": „{ $quantity }". Trebuie să fie un număr întreg pozitiv.
-player-error-input-errors-header = Erori la introducerea inventarului:
-player-msg-no-valid-items = Niciun obiect valid furnizat. Se inițializează cu inventar gol.
+
+# Validation error view
+player-validation-error-title = Erori de introducere
+player-validation-btn-retry = Încearcă din nou
 
 # Cart quantity validation
 player-error-enter-valid-number = Vă rugăm să introduceți un număr pozitiv valid.
 
 # Submission embeds (approval queue)
-player-embed-title-approval = Aprobare inventar: { $characterName }
-player-embed-desc-submitted-by = Trimis de { $userMention }
 player-embed-field-items = Obiecte
 player-embed-field-currency-received = Monedă
-player-embed-footer-submission-id = ID trimitere: { $submissionId }
 player-label-approval-thread = Aprobare: { $characterName }
 player-embed-title-submission-sent = Trimitere inventar trimisă
 player-embed-desc-submission-sent =
@@ -306,3 +311,46 @@ player-embed-desc-starting-inventory = Jucător: { $playerMention } ca `{ $chara
 player-embed-field-items-received = Obiecte primite
 player-embed-field-currency-received-label = Monedă primită
 player-label-untitled = Fără titlu
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Cerere de Inventar: { $characterName }{"**"}
+    Trimis de { $userMention }
+player-approval-post-items = Obiecte
+player-approval-post-currency = Monedă
+player-approval-resolved = Această cerere a fost rezolvată.
+player-approval-btn-approve = Aprobă
+player-approval-btn-deny = Respinge
+player-approval-btn-edit = Editează
+player-approval-error-no-permission = Nu ai permisiunea de a efectua această acțiune.
+player-approval-error-not-submitter = Doar expeditorul original poate edita această cerere.
+player-approval-thread-instructions =
+    Acest fir a fost creat pentru aprobarea lui {"**"}{ $characterName }{"**"}.
+    Un Game Master va revizui cererea și o va aproba sau respinge.
+    Odată aprobată sau respinsă, acest fir va fi blocat.
+
+    {"**"}Game Masters:{"**"} Discutați orice modificări necesare cu
+    jucătorul dvs. până când inventarul este într-o stare acceptabilă.
+    Folosiți butonul `Respinge` doar pentru cereri ireconciliabile.
+
+    { $playerMention }: Folosește butonul `Editează` pentru a face orice
+    modificări solicitate aici de un Game Master.
+player-approval-approved-by = Această cerere a fost aprobată de { $approver }.
+player-approval-denied-by = Această cerere a fost respinsă de { $denier }.
+player-approval-deny-reason = Motiv: { $reason }
+player-msg-submission-updated = Cererea ta a fost actualizată.
+
+
+# Denial modal
+player-modal-title-deny-reason = Respinge cererea
+player-modal-label-deny-reason = Motivul respingerii
+player-modal-placeholder-deny-reason = Opțional: explicați motivul respingerii
+# Approval DM notifications
+player-dm-title-approved = Personaj aprobat
+player-dm-desc-approved =
+    Personajul tău {"**"}{ $characterName }{"**"} a fost aprobat
+    de { $approver } în {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Personaj respins
+player-dm-desc-denied =
+    Personajul tău {"**"}{ $characterName }{"**"} a fost respins
+    de { $denier } în {"**"}{ $guildName }{"**"}.

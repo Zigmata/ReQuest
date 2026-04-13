@@ -32,7 +32,6 @@ admin-modal-label-server-name = サーバー名
 admin-modal-placeholder-server-name = Discord サーバーの短い名前を入力してください
 admin-modal-label-server-id = サーバー ID
 admin-modal-placeholder-server-id = Discord サーバーの ID を入力してください
-admin-select-placeholder-server = 削除するサーバーを選択
 admin-modal-title-cog-action = Cogを{ $action }
 admin-modal-label-cog-name = 名前
 admin-modal-placeholder-cog-name = { $action }する Cog の名前を入力してください

@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Prekyba
-player-cmd-desc = Žaidėjo meniu
 
 # --- Buttons ---
 
@@ -146,6 +144,15 @@ player-msg-no-characters = Neturite registruotų veikėjų.
 player-label-active = (Aktyvus)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Kuriamas veikėjas: { $characterName }{"**"}
+    Jūsų veikėjo registracija laukia inventoriaus nustatymo.
+player-btn-resume = Tęsti
+player-btn-discard = Atmesti
+player-modal-title-discard-character = Atmesti veikėją
+player-modal-label-discard-confirm = Atmesti { $characterName }?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Patvirtinti veikėjo pašalinimą
 player-modal-label-confirm-char-delete = Ištrinti { $characterName }?
@@ -215,8 +222,6 @@ player-label-empty-kit = {"*"}Tuščias rinkinys{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Patvirtinti pasirinkimą: { $kitName }{"**"}
-player-label-items-heading = {"**"}Daiktai:{"**"}
-player-label-currency-heading = {"**"}Valiuta:{"**"}
 player-msg-kit-empty = Šis rinkinys tuščias.
 
 # NewCharacterComplexItemPurchaseView
@@ -264,6 +269,7 @@ player-embed-field-receipt = Kvitas
 # Spend currency errors
 player-error-amount-not-number = Suma turi būti skaičius.
 player-error-amount-positive = Turite išleisti teigiamą sumą.
+player-error-amount-exceeds-maximum = Suma negali viršyti { $max }.
 player-error-no-active-character-server = Neturite aktyvaus veikėjo šiame serveryje.
 player-error-no-currency-config = Šiam serveriui nerasta valiutos konfigūracija.
 
@@ -281,18 +287,17 @@ player-error-qty-only-have = Turite tik { $maxQuantity } šio daikto.
 player-error-invalid-format = Netinkamas formatas: „{ $line }". Naudokite <pavadinimas>: <kiekis>.
 player-error-empty-name = Daikto pavadinimas negali būti tuščias eilutėje: „{ $line }".
 player-error-invalid-quantity = Netinkamas kiekis „{ $name }": „{ $quantity }". Turi būti teigiamas sveikasis skaičius.
-player-error-input-errors-header = Inventoriaus įvedimo klaidos:
-player-msg-no-valid-items = Nepateikta tinkamų daiktų. Inicializuojama su tuščiu inventoriumi.
+
+# Validation error view
+player-validation-error-title = Įvesties klaidos
+player-validation-btn-retry = Bandyti dar kartą
 
 # Cart quantity validation
 player-error-enter-valid-number = Įveskite tinkamą teigiamą skaičių.
 
 # Submission embeds (approval queue)
-player-embed-title-approval = Inventoriaus patvirtinimas: { $characterName }
-player-embed-desc-submitted-by = Pateikė { $userMention }
 player-embed-field-items = Daiktai
 player-embed-field-currency-received = Valiuta
-player-embed-footer-submission-id = Pateikimo ID: { $submissionId }
 player-label-approval-thread = Patvirtinimas: { $characterName }
 player-embed-title-submission-sent = Inventoriaus pateikimas išsiųstas
 player-embed-desc-submission-sent =
@@ -306,3 +311,46 @@ player-embed-desc-starting-inventory = Žaidėjas: { $playerMention } kaip `{ $c
 player-embed-field-items-received = Gauti daiktai
 player-embed-field-currency-received-label = Gauta valiuta
 player-label-untitled = Be pavadinimo
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Inventoriaus paraiška: { $characterName }{"**"}
+    Pateikė { $userMention }
+player-approval-post-items = Daiktai
+player-approval-post-currency = Valiuta
+player-approval-resolved = Ši paraiška buvo išspręsta.
+player-approval-btn-approve = Patvirtinti
+player-approval-btn-deny = Atmesti
+player-approval-btn-edit = Redaguoti
+player-approval-error-no-permission = Neturite leidimo atlikti šį veiksmą.
+player-approval-error-not-submitter = Tik pradinis pateikėjas gali redaguoti šią paraišką.
+player-approval-thread-instructions =
+    Ši gija buvo sukurta {"**"}{ $characterName }{"**"} patvirtinimui.
+    Žaidimo vedėjas peržiūrės paraišką ir ją patvirtins arba atmes.
+    Patvirtinus arba atmetus, ši gija bus užrakinta.
+
+    {"**"}Žaidimo vedėjai:{"**"} Aptarkite reikiamus pakeitimus su
+    savo žaidėju, kol inventorius bus priimtinos būklės. `Atmesti`
+    mygtuką naudokite tik nesuderinamos paraiškos atveju.
+
+    { $playerMention }: Naudokite `Redaguoti` mygtuką, kad atliktumėte
+    žaidimo vedėjo čia prašomus pakeitimus.
+player-approval-approved-by = Ši paraiška buvo patvirtinta { $approver }.
+player-approval-denied-by = Ši paraiška buvo atmesta { $denier }.
+player-approval-deny-reason = Priežastis: { $reason }
+player-msg-submission-updated = Jūsų paraiška atnaujinta.
+
+
+# Denial modal
+player-modal-title-deny-reason = Atmesti paraišką
+player-modal-label-deny-reason = Atmetimo priežastis
+player-modal-placeholder-deny-reason = Neprivaloma: paaiškinkite atmetimo priežastį
+# Approval DM notifications
+player-dm-title-approved = Veikėjas patvirtintas
+player-dm-desc-approved =
+    Jūsų veikėjas {"**"}{ $characterName }{"**"} buvo patvirtintas
+    { $approver } serveryje {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Veikėjas atmestas
+player-dm-desc-denied =
+    Jūsų veikėjas {"**"}{ $characterName }{"**"} buvo atmestas
+    { $denier } serveryje {"**"}{ $guildName }{"**"}.

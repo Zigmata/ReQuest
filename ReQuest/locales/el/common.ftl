@@ -13,7 +13,6 @@ common-btn-select = Επιλογή
 common-btn-manage = Διαχείριση
 common-btn-rename = Μετονομασία
 common-btn-continue = Συνέχεια
-common-btn-cancel = Ακύρωση
 common-btn-enable = Ενεργοποίηση
 common-btn-disable = Απενεργοποίηση
 
@@ -39,16 +38,15 @@ common-label-none = Κανένα
 common-label-unknown = Άγνωστο
 common-label-locked = (ΚΛΕΙΔΩΜΕΝΟ)
 common-label-loose-items = Ελεύθερα Αντικείμενα
-common-label-and-more = . . . και { $remaining } ακόμη.
 common-label-currency = Νόμισμα
 common-label-inventory-empty = Το αντικειμενοθήκη είναι κενή.
 
 # Shared embed fields
 common-embed-field-party = __Ομάδα__
 common-embed-field-wait-list = __Λίστα Αναμονής__
-common-embed-footer-quest-id = Quest ID: { $questId }
+common-embed-footer-quest-id = Αναγνωριστικό αποστολής: { $questId }
 common-embed-footer-transaction-id = ID Συναλλαγής: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}Αφηγητής:{"**"}
 common-embed-label-party-restrictions = {"**"}Περιορισμοί Ομάδας:{"**"}
 
 # Translation notice

@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = トレード
-player-cmd-desc = プレイヤーメニュー
 
 # --- Buttons ---
 
@@ -146,6 +144,15 @@ player-msg-no-characters = 登録されたキャラクターがいません。
 player-label-active = （有効）
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}作成中のキャラクター: { $characterName }{"**"}
+    キャラクター登録はインベントリの設定を待っています。
+player-btn-resume = 再開
+player-btn-discard = 破棄
+player-modal-title-discard-character = キャラクター破棄
+player-modal-label-discard-confirm = { $characterName } を破棄しますか？
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = キャラクター削除の確認
 player-modal-label-confirm-char-delete = { $characterName } を削除しますか？
@@ -215,8 +222,6 @@ player-label-empty-kit = {"*"}空のキット{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}選択の確認: { $kitName }{"**"}
-player-label-items-heading = {"**"}アイテム:{"**"}
-player-label-currency-heading = {"**"}通貨:{"**"}
 player-msg-kit-empty = このキットは空です。
 
 # NewCharacterComplexItemPurchaseView
@@ -264,6 +269,7 @@ player-embed-field-receipt = レシート
 # Spend currency errors
 player-error-amount-not-number = 金額は数値でなければなりません。
 player-error-amount-positive = 正の金額を使用してください。
+player-error-amount-exceeds-maximum = 金額は { $max } を超えることはできません。
 player-error-no-active-character-server = このサーバーで有効なキャラクターがいません。
 player-error-no-currency-config = このサーバーの通貨設定が見つかりません。
 
@@ -281,18 +287,17 @@ player-error-qty-only-have = このアイテムは { $maxQuantity } 個しか所
 player-error-invalid-format = 無効な形式：「{ $line }」。<名前>: <数量> の形式で入力してください。
 player-error-empty-name = 行「{ $line }」でアイテム名が空です。
 player-error-invalid-quantity = 「{ $name }」の数量「{ $quantity }」が無効です。正の整数でなければなりません。
-player-error-input-errors-header = インベントリ入力のエラー:
-player-msg-no-valid-items = 有効なアイテムが入力されていません。空のインベントリで初期化します。
+
+# Validation error view
+player-validation-error-title = 入力エラー
+player-validation-btn-retry = もう一度
 
 # Cart quantity validation
 player-error-enter-valid-number = 有効な正の数値を入力してください。
 
 # Submission embeds (approval queue)
-player-embed-title-approval = インベントリ承認: { $characterName }
-player-embed-desc-submitted-by = 申請者: { $userMention }
 player-embed-field-items = アイテム
 player-embed-field-currency-received = 通貨
-player-embed-footer-submission-id = 申請 ID: { $submissionId }
 player-label-approval-thread = 承認: { $characterName }
 player-embed-title-submission-sent = インベントリ申請送信済み
 player-embed-desc-submission-sent =
@@ -306,3 +311,46 @@ player-embed-desc-starting-inventory = プレイヤー: { $playerMention }（{ $
 player-embed-field-items-received = 受け取ったアイテム
 player-embed-field-currency-received-label = 受け取った通貨
 player-label-untitled = 無題
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}インベントリ申請: { $characterName }{"**"}
+    申請者: { $userMention }
+player-approval-post-items = アイテム
+player-approval-post-currency = 通貨
+player-approval-resolved = この申請は処理済みです。
+player-approval-btn-approve = 承認
+player-approval-btn-deny = 拒否
+player-approval-btn-edit = 編集
+player-approval-error-no-permission = この操作を行う権限がありません。
+player-approval-error-not-submitter = 元の提出者のみがこの申請を編集できます。
+player-approval-thread-instructions =
+    このスレッドは {"**"}{ $characterName }{"**"} の承認のために作成されました。
+    ゲームマスターが申請を確認し、承認または拒否します。
+    承認または拒否された後、このスレッドはロックされます。
+
+    {"**"}ゲームマスター:{"**"} インベントリが受け入れ可能な状態に
+    なるまで、必要な変更についてプレイヤーと話し合ってください。
+    `拒否` ボタンは、調整不可能な申請にのみ使用してください。
+
+    { $playerMention }: ゲームマスターからここで要求された変更を
+    行うには、`編集` ボタンを使用してください。
+player-approval-approved-by = この申請は { $approver } によって承認されました。
+player-approval-denied-by = この申請は { $denier } によって拒否されました。
+player-approval-deny-reason = 理由: { $reason }
+player-msg-submission-updated = 申請が更新されました。
+
+
+# Denial modal
+player-modal-title-deny-reason = 申請を拒否
+player-modal-label-deny-reason = 拒否理由
+player-modal-placeholder-deny-reason = 任意: 拒否の理由を説明してください
+# Approval DM notifications
+player-dm-title-approved = キャラクター承認
+player-dm-desc-approved =
+    あなたのキャラクター {"**"}{ $characterName }{"**"} は
+    {"**"}{ $guildName }{"**"} で { $approver } によって承認されました！
+player-dm-title-denied = キャラクター拒否
+player-dm-desc-denied =
+    あなたのキャラクター {"**"}{ $characterName }{"**"} は
+    {"**"}{ $guildName }{"**"} で { $denier } によって拒否されました。

@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = ej., 0.1
 config-error-denomination-matches-currency = ¡El nombre de la nueva denominación no puede coincidir con una moneda existente en este servidor! Se encontró una moneda existente llamada "{ $existingName }".
 config-error-denomination-matches-denomination = ¡El nombre de la nueva denominación no puede coincidir con una denominación existente en este servidor! Se encontró una denominación existente llamada "{ $denominationName }" bajo la moneda llamada "{ $currencyName }".
 config-error-denomination-value-exists = ¡Las denominaciones bajo una misma moneda deben tener valores únicos! { $denominationName } ya tiene este valor asignado.
+config-label-denomination-info = **{ $name }** (Valor: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Nombres de Roles Prohibidos
@@ -224,8 +225,6 @@ config-error-item-exists-new-char = Ya existe un objeto llamado { $itemName } en
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Subir Tienda de Nuevo Personaje (JSON)
 config-error-no-json-uploaded-short = No se subió ningún archivo JSON.
-config-error-json-must-have-shopstock = El JSON debe contener un arreglo 'shopStock'.
-config-error-items-must-have-name-price = Todos los objetos deben tener 'name' y 'price'.
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Establecer Riqueza de Nuevo Personaje
@@ -252,6 +251,7 @@ config-modal-title-kit-currency = Agregar Moneda al Kit
 config-modal-placeholder-currency-eg = ej., Oro
 config-modal-placeholder-amount-eg = ej., 100
 config-error-amount-must-be-number = La cantidad debe ser un número.
+config-error-amount-exceeds-maximum = El monto no puede exceder { $max }.
 config-error-no-currencies-on-server = No hay monedas configuradas en el servidor.
 config-error-currency-not-found-short = Moneda "{ $currency }" no encontrada.
 config-error-denomination-not-found = Denominación "{ $denomination }" no encontrada en la configuración de monedas.
@@ -392,7 +392,7 @@ config-menu-currency = Moneda
 config-menu-desc-currency = Configuración global de monedas.
 config-menu-players = Jugadores
 config-menu-desc-players = Configuración global de jugadores, como el seguimiento de puntos de experiencia.
-config-menu-quests = Quests
+config-menu-quests = Misiones
 config-menu-desc-quests = Configuración global de quests, como listas de espera.
 config-menu-rp-rewards = Recompensas de RP
 config-menu-desc-rp-rewards = Configura las recompensas de roleplay.
@@ -408,11 +408,9 @@ config-title-wizard = {"**"}Configuración del Servidor - Asistente{"**"}
 config-wizard-intro =
     {"**"}¡Bienvenido al Asistente de Configuración de ReQuest!{"**"}
 
-    Este asistente te ayudará a asegurarte de que tu servidor esté correctamente configurado para usar las funciones de ReQuest.
-    Escaneará tu configuración actual y proporcionará recomendaciones para los ajustes necesarios.
+    Este asistente te ayudará a asegurarte de que tu servidor esté correctamente configurado para usar las funciones de ReQuest. Escaneará tu configuración actual y proporcionará recomendaciones para los ajustes necesarios.
 
-    Usa el botón "Iniciar Escaneo" a continuación para comenzar el proceso de validación. Una vez completado el escaneo,
-    recibirás un informe detallado de la configuración de tu servidor junto con los cambios recomendados.
+    Usa el botón "Iniciar Escaneo" a continuación para comenzar el proceso de validación. Una vez completado el escaneo, recibirás un informe detallado de la configuración de tu servidor junto con los cambios recomendados.
 
 # Asistente - Validación de Permisos del Bot
 config-wizard-bot-permissions-header = __{"**"}Permisos Globales del Bot{"**"}__
@@ -536,7 +534,27 @@ config-wizard-gm-rewards-disabled = {"**"}Estado:{"**"} Desactivado
 config-wizard-gm-rewards-enabled = {"**"}Estado:{"**"} Activado
 config-wizard-gm-rewards-experience = - Experiencia: { $xp }
 config-wizard-gm-rewards-items = - Objetos:
-config-wizard-unnamed-shop = Tienda Sin Nombre
+
+# Asistente - Idioma del Servidor (Página 1)
+config-wizard-server-language-desc =
+    Este es el idioma que ReQuest usará para todos los mensajes públicos, como publicaciones de quests, mensajes de reabastecimiento de tiendas y registros de transacciones.
+config-wizard-server-language = {"**"}Idioma del Servidor:{"**"} { $language }
+config-wizard-server-language-default = Predeterminado (Inglés)
+
+# Asistente - Info de Reabastecimiento de Tienda
+config-wizard-shop-restock-not-scheduled = ℹ️ Reabastecimiento No Programado
+
+# Asistente - Configuración de Quests (Página 5)
+config-wizard-quest-header = __{"**"}Configuración de Quests{"**"}__
+config-wizard-quest-header-desc =
+    Esta sección proporciona una descripción general de las configuraciones relacionadas con quests.
+config-wizard-quest-role-mode = - Modo de Roles de Quest: { $mode }
+config-wizard-quest-roles-label = {"**"}Roles de Quest de GM{"**"}
+config-wizard-quest-roles-count = - Roles Asignados a GMs: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Todos los Roles OK
+config-wizard-quest-roles-assigned-to = {"    "}Asignado a: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ ID de Rol { $roleId }: No Encontrado/Eliminado del Servidor
+config-wizard-quest-roles-no-assignments = - ℹ️ No Hay Roles de Quest Asignados
 
 ## Vista de Roles
 config-title-roles = {"**"}Configuración del Servidor - Roles{"**"}
@@ -832,9 +850,6 @@ config-select-placeholder-add-quest-role = Asignar rol(es) del servidor a este G
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}Configuración del Servidor - Roles de Quest{"**"}
-config-label-quest-roles = Roles de Quest
-config-desc-quest-roles =
-    Configura cómo se manejan los roles del grupo durante los quests.
 
 config-label-quest-role-mode-disabled = {"**"}Modo de Roles de Quest:{"**"} Desactivado
     No se crean ni asignan roles durante los quests.
@@ -853,6 +868,7 @@ config-desc-manage-assignments =
     Los roles deben estar por debajo del rol más alto de ReQuest en la jerarquía del servidor.
 config-msg-no-gm-members = No se encontraron miembros con un rol de GM en este servidor.
 config-label-no-roles-assigned = No hay roles de quest asignados
+config-label-more-roles = (+{ $count } más)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Administrar Roles de Quest — { $gmName }{"**"}

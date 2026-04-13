@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = 예: 0.1
 config-error-denomination-matches-currency = 새 단위 이름은 이 서버의 기존 화폐와 일치할 수 없습니다! "{ $existingName }"이라는 기존 화폐가 발견되었습니다.
 config-error-denomination-matches-denomination = 새 단위 이름은 이 서버의 기존 단위와 일치할 수 없습니다! "{ $currencyName }" 화폐 아래에 "{ $denominationName }"이라는 기존 단위가 발견되었습니다.
 config-error-denomination-value-exists = 하나의 화폐 내 단위는 고유한 값을 가져야 합니다! { $denominationName }에 이미 이 값이 할당되어 있습니다.
+config-label-denomination-info = **{ $name }** (값: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = 금지된 역할 이름
@@ -224,8 +225,6 @@ config-error-item-exists-new-char = 신규 캐릭터 상점에 { $itemName }이�
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = 신규 캐릭터 상점 업로드 (JSON)
 config-error-no-json-uploaded-short = JSON 파일이 업로드되지 않았습니다.
-config-error-json-must-have-shopstock = JSON에 'shopStock' 배열이 포함되어야 합니다.
-config-error-items-must-have-name-price = 모든 아이템에 'name'과 'price'가 있어야 합니다.
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = 신규 캐릭터 재산 설정
@@ -252,6 +251,7 @@ config-modal-title-kit-currency = 키트 화폐 추가
 config-modal-placeholder-currency-eg = 예: 골드
 config-modal-placeholder-amount-eg = 예: 100
 config-error-amount-must-be-number = 금액은 숫자여야 합니다.
+config-error-amount-exceeds-maximum = 금액은 { $max }을(를) 초과할 수 없습니다.
 config-error-no-currencies-on-server = 서버에 설정된 화폐가 없습니다.
 config-error-currency-not-found-short = 화폐 "{ $currency }"을(를) 찾을 수 없습니다.
 config-error-denomination-not-found = 화폐 설정에서 단위 "{ $denomination }"을(를) 찾을 수 없습니다.
@@ -408,11 +408,9 @@ config-title-wizard = {"**"}서버 설정 - 마법사{"**"}
 config-wizard-intro =
     {"**"}ReQuest 설정 마법사에 오신 것을 환영합니다!{"**"}
 
-    이 마법사는 서버가 ReQuest의 기능을 사용하도록 올바르게 설정되었는지 확인하는 데 도움을 줍니다.
-    현재 설정을 스캔하고 필요한 조정 사항에 대한 권장 사항을 제공합니다.
+    이 마법사는 서버가 ReQuest의 기능을 사용하도록 올바르게 설정되었는지 확인하는 데 도움을 줍니다. 현재 설정을 스캔하고 필요한 조정 사항에 대한 권장 사항을 제공합니다.
 
-    아래 "스캔 시작" 버튼을 사용하여 유효성 검사 프로세스를 시작하세요. 스캔이 완료되면
-    서버 설정에 대한 상세 보고서와 권장 변경 사항을 받게 됩니다.
+    아래 "스캔 시작" 버튼을 사용하여 유효성 검사 프로세스를 시작하세요. 스캔이 완료되면 서버 설정에 대한 상세 보고서와 권장 변경 사항을 받게 됩니다.
 
 # 마법사 - 봇 권한 검증
 config-wizard-bot-permissions-header = __{"**"}봇 전체 권한{"**"}__
@@ -536,7 +534,27 @@ config-wizard-gm-rewards-disabled = {"**"}상태:{"**"} 비활성화
 config-wizard-gm-rewards-enabled = {"**"}상태:{"**"} 활성화
 config-wizard-gm-rewards-experience = - 경험치: { $xp }
 config-wizard-gm-rewards-items = - 아이템:
-config-wizard-unnamed-shop = 이름 없는 상점
+
+# 마법사 - 서버 언어 (1페이지)
+config-wizard-server-language-desc =
+    이것은 ReQuest가 Quest 게시물, 상점 재입고 메시지, 거래 로그 등 모든 공개 메시지에 사용할 언어입니다.
+config-wizard-server-language = {"**"}서버 언어:{"**"} { $language }
+config-wizard-server-language-default = 기본값 (영어)
+
+# 마법사 - 상점 재입고 정보
+config-wizard-shop-restock-not-scheduled = ℹ️ 재입고 예정 없음
+
+# 마법사 - Quest 설정 (5페이지)
+config-wizard-quest-header = __{"**"}Quest 설정{"**"}__
+config-wizard-quest-header-desc =
+    이 섹션은 Quest 관련 설정에 대한 개요를 제공합니다.
+config-wizard-quest-role-mode = - Quest 역할 모드: { $mode }
+config-wizard-quest-roles-label = {"**"}GM Quest 역할{"**"}
+config-wizard-quest-roles-count = - GM에 할당된 역할: { $count }
+config-wizard-quest-roles-all-ok = - ✅ 모든 역할 정상
+config-wizard-quest-roles-assigned-to = {"    "}할당 대상: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ 역할 ID { $roleId }: 찾을 수 없음/서버에서 삭제됨
+config-wizard-quest-roles-no-assignments = - ℹ️ 할당된 Quest 역할 없음
 
 ## 역할 뷰
 config-title-roles = {"**"}서버 설정 - 역할{"**"}
@@ -832,9 +850,6 @@ config-select-placeholder-add-quest-role = 이 GM에 서버 역할 할당
 
 ## Quest 역할 뷰
 config-title-quest-roles = {"**"}서버 설정 - Quest 역할{"**"}
-config-label-quest-roles = Quest 역할
-config-desc-quest-roles =
-    Quest 중 파티 역할이 처리되는 방식을 설정합니다.
 
 config-label-quest-role-mode-disabled = {"**"}Quest 역할 모드:{"**"} 비활성화
     Quest 중 역할이 생성되거나 할당되지 않습니다.
@@ -853,6 +868,7 @@ config-desc-manage-assignments =
     역할은 서버 계층에서 ReQuest의 최상위 역할보다 낮아야 합니다.
 config-msg-no-gm-members = 이 서버에서 GM 역할을 가진 멤버를 찾을 수 없습니다.
 config-label-no-roles-assigned = 할당된 Quest 역할 없음
+config-label-more-roles = (+{ $count }개 더)
 
 ## GM Quest 역할 할당 뷰
 config-title-gm-quest-role-assign = {"**"}Quest 역할 관리 — { $gmName }{"**"}

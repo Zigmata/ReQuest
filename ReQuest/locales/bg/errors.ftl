@@ -3,11 +3,14 @@
 # Error embed wrapper
 error-oops-title = ⚠️ Опа!
 error-report-description =
-    Възникна изключение:
-
-    ```{ $exception }```
+    { $exception }
 
     Ако тази грешка е неочаквана или подозирате, че ботът не функционира правилно, моля подайте доклад за бъг в [Официалния Discord за поддръжка на ReQuest](https://discord.gg/Zq37gj4).
+
+error-report-unexpected =
+    Възникна неочаквана грешка. Моля, опитайте отново.
+
+    Ако това продължава да се случва, моля подайте доклад за бъг в [Официалния Discord за поддръжка на ReQuest](https://discord.gg/Zq37gj4).
 
 # Check failures
 error-owner-only = Само собственикът на бота може да използва тази команда!

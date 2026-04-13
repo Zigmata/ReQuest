@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = npr. 0.1
 config-error-denomination-matches-currency = Naziv novog apoena ne može odgovarati postojećoj valuti na ovom poslužitelju! Pronađena postojeća valuta s nazivom "{ $existingName }".
 config-error-denomination-matches-denomination = Naziv novog apoena ne može odgovarati postojećem apoenu na ovom poslužitelju! Pronađen postojeći apoen s nazivom "{ $denominationName }" pod valutom "{ $currencyName }".
 config-error-denomination-value-exists = Apoeni unutar jedne valute moraju imati jedinstvene vrijednosti! { $denominationName } već ima dodijeljenu tu vrijednost.
+config-label-denomination-info = **{ $name }** (Vrijednost: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Nazivi zabranjenih uloga
@@ -224,8 +225,6 @@ config-error-item-exists-new-char = Predmet s nazivom { $itemName } već postoji
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Učitaj trgovinu za nove likove (JSON)
 config-error-no-json-uploaded-short = JSON datoteka nije učitana.
-config-error-json-must-have-shopstock = JSON mora sadržavati polje 'shopStock'.
-config-error-items-must-have-name-price = Svi predmeti moraju imati 'name' i 'price'.
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Postavi bogatstvo novog lika
@@ -252,6 +251,7 @@ config-modal-title-kit-currency = Dodaj valutu seta
 config-modal-placeholder-currency-eg = npr. Zlato
 config-modal-placeholder-amount-eg = npr. 100
 config-error-amount-must-be-number = Iznos mora biti broj.
+config-error-amount-exceeds-maximum = Iznos ne može premašiti { $max }.
 config-error-no-currencies-on-server = Nijedna valuta nije konfigurirana na poslužitelju.
 config-error-currency-not-found-short = Valuta "{ $currency }" nije pronađena.
 config-error-denomination-not-found = Apoen "{ $denomination }" nije pronađen u konfiguraciji valute.
@@ -374,7 +374,7 @@ config-select-option-no-threads = Nema aktivnih tema
 config-select-desc-no-threads = Stvorite novu temu ili provjerite arhivirane teme
 config-select-option-select-forum-first = Najprije odaberite forum
 config-select-desc-select-forum-first = Molimo najprije odaberite forum kanal iznad
-config-select-desc-thread-id = Thread ID: { $threadId }
+config-select-desc-thread-id = ID niti: { $threadId }
 config-error-select-valid-thread = Odaberite valjanu temu ili stvorite novu.
 config-error-thread-not-found = Odabrana tema nije pronađena. Možda je obrisana ili arhivirana.
 
@@ -408,11 +408,9 @@ config-title-wizard = {"**"}Konfiguracija poslužitelja - Čarobnjak{"**"}
 config-wizard-intro =
     {"**"}Dobrodošli u čarobnjak za konfiguraciju ReQuesta!{"**"}
 
-    Ovaj čarobnjak će vam pomoći da osigurate da je vaš poslužitelj ispravno konfiguriran za korištenje značajki ReQuesta.
-    Skenirat će vaše trenutne postavke i pružiti preporuke za potrebne prilagodbe.
+    Ovaj čarobnjak će vam pomoći da osigurate da je vaš poslužitelj ispravno konfiguriran za korištenje značajki ReQuesta. Skenirat će vaše trenutne postavke i pružiti preporuke za potrebne prilagodbe.
 
-    Koristite gumb "Pokreni skeniranje" u nastavku za početak procesa validacije. Nakon završetka skeniranja,
-    primit ćete detaljni izvještaj o konfiguraciji vašeg poslužitelja zajedno s preporučenim promjenama.
+    Koristite gumb "Pokreni skeniranje" u nastavku za početak procesa validacije. Nakon završetka skeniranja, primit ćete detaljni izvještaj o konfiguraciji vašeg poslužitelja zajedno s preporučenim promjenama.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Globalne dozvole bota{"**"}__
@@ -536,7 +534,27 @@ config-wizard-gm-rewards-disabled = {"**"}Status:{"**"} Onemogućeno
 config-wizard-gm-rewards-enabled = {"**"}Status:{"**"} Omogućeno
 config-wizard-gm-rewards-experience = - Iskustvo: { $xp }
 config-wizard-gm-rewards-items = - Predmeti:
-config-wizard-unnamed-shop = Neimenovana trgovina
+
+# Wizard - Jezik poslužitelja (Stranica 1)
+config-wizard-server-language-desc =
+    Ovo je jezik koji će ReQuest koristiti za sve javne poruke, kao što su objave questova, poruke o dopuni zaliha trgovine i zapisnici transakcija.
+config-wizard-server-language = {"**"}Jezik poslužitelja:{"**"} { $language }
+config-wizard-server-language-default = Zadano (engleski)
+
+# Wizard - Informacije o dopuni zaliha trgovine
+config-wizard-shop-restock-not-scheduled = ℹ️ Dopuna zaliha nije zakazana
+
+# Wizard - Postavke questova (Stranica 5)
+config-wizard-quest-header = __{"**"}Postavke questova{"**"}__
+config-wizard-quest-header-desc =
+    Ovaj odjeljak pruža pregled konfiguracija povezanih s questovima.
+config-wizard-quest-role-mode = - Način rada uloga questova: { $mode }
+config-wizard-quest-roles-label = {"**"}GM uloge questova{"**"}
+config-wizard-quest-roles-count = - Uloge dodijeljene GM-ovima: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Sve uloge u redu
+config-wizard-quest-roles-assigned-to = {"    "}Dodijeljeno: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ ID uloge { $roleId }: Nije pronađena/Obrisana s poslužitelja
+config-wizard-quest-roles-no-assignments = - ℹ️ Nema dodijeljenih uloga za questove
 
 ## Roles View
 config-title-roles = {"**"}Konfiguracija poslužitelja - Uloge{"**"}
@@ -832,9 +850,6 @@ config-select-placeholder-add-quest-role = Dodijelite ulogu(e) poslužitelja ovo
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}Konfiguracija poslužitelja - Uloge questa{"**"}
-config-label-quest-roles = Uloge questa
-config-desc-quest-roles =
-    Konfigurirajte kako se uloge družine upravljaju tijekom questova.
 
 config-label-quest-role-mode-disabled = {"**"}Način uloga questa:{"**"} Onemogućeno
     Uloge se ne stvaraju niti dodjeljuju tijekom questova.
@@ -853,6 +868,7 @@ config-desc-manage-assignments =
     Uloge moraju biti niže od najviše uloge ReQuesta u hijerarhiji poslužitelja.
 config-msg-no-gm-members = Na ovom poslužitelju nisu pronađeni članovi s GM ulogom.
 config-label-no-roles-assigned = Nema dodijeljenih uloga questa
+config-label-more-roles = (+{ $count } više)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Upravljanje ulogama questa — { $gmName }{"**"}

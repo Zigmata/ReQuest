@@ -13,7 +13,6 @@ common-btn-select = Seleziona
 common-btn-manage = Gestisci
 common-btn-rename = Rinomina
 common-btn-continue = Continua
-common-btn-cancel = Annulla
 common-btn-enable = Abilita
 common-btn-disable = Disabilita
 
@@ -39,7 +38,6 @@ common-label-none = Nessuno
 common-label-unknown = Sconosciuto
 common-label-locked = (BLOCCATO)
 common-label-loose-items = Oggetti sparsi
-common-label-and-more = . . . e altri { $remaining }.
 common-label-currency = Valuta
 common-label-inventory-empty = L'inventario è vuoto.
 
@@ -48,7 +46,7 @@ common-embed-field-party = __Gruppo__
 common-embed-field-wait-list = __Lista d'attesa__
 common-embed-footer-quest-id = ID Quest: { $questId }
 common-embed-footer-transaction-id = ID Transazione: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}Narratore:{"**"}
 common-embed-label-party-restrictions = {"**"}Restrizioni del gruppo:{"**"}
 
 # Avviso di traduzione

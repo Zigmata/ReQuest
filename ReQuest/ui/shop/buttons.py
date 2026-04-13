@@ -3,31 +3,28 @@ from discord import ButtonStyle
 from discord.ui import Button
 
 from ReQuest.ui.shop import modals
-from ReQuest.utilities.constants import CharacterFields, ShopFields, CommonFields, CartFields, DatabaseCollections
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
-from ReQuest.utilities.supportFunctions import (
-    log_exception,
-    get_cached_data,
-    UserFeedbackError,
-    clear_cart_and_release_stock,
-    get_shop_stock,
-    get_cart,
-    get_item_stock
+from ReQuest.utilities.constants import (
+    CharacterFields, ShopFields, CommonFields, CartFields, DatabaseCollections, DiscordLimits
 )
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
+from ReQuest.utilities.db_cache import get_cached_data
+from ReQuest.utilities.exceptions import UserFeedbackError, log_exception
+from ReQuest.utilities.shop import clear_cart_and_release_stock, get_shop_stock, get_cart, get_item_stock
 
 
 class ShopItemButton(Button):
-    def __init__(self, item, cost_string='Free', stock_info=None):
+    def __init__(self, item, cost_string='Free', stock_info=None, locale=None):
         """
         Button to add item to cart or view purchase options.
 
         :param item: The item dictionary
         :param cost_string: Formatted cost string for display
         :param stock_info: Dict with ShopFields.AVAILABLE and ShopFields.RESERVED counts, or None if unlimited
+        :param locale: Locale for translation
         """
+        locale = locale or DEFAULT_LOCALE
         costs = item.get(ShopFields.COSTS, [])
 
-        # Check if out of stock (only if stock data is valid)
         is_out_of_stock = False
         if stock_info is not None and ShopFields.AVAILABLE in stock_info:
             available = stock_info.get(ShopFields.AVAILABLE, 0)
@@ -35,15 +32,15 @@ class ShopItemButton(Button):
                 is_out_of_stock = True
 
         if is_out_of_stock:
-            label = t(DEFAULT_LOCALE, 'shop-btn-out-of-stock')
+            label = t(locale, 'shop-btn-out-of-stock')[:DiscordLimits.BUTTON_LABEL]
             style = ButtonStyle.secondary
             disabled = True
         elif len(costs) > 1:
-            label = t(DEFAULT_LOCALE, 'shop-btn-view-options')
+            label = t(locale, 'shop-btn-view-options')[:DiscordLimits.BUTTON_LABEL]
             style = ButtonStyle.success
             disabled = False
         else:
-            label = t(DEFAULT_LOCALE, 'shop-btn-add-to-cart', **{'cost': cost_string})
+            label = t(locale, 'shop-btn-add-to-cart', cost=cost_string)[:DiscordLimits.BUTTON_LABEL]
             style = ButtonStyle.success
             disabled = False
 
@@ -58,18 +55,15 @@ class ShopItemButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            # Double-check stock availability (in case UI is stale)
             item_name = self.item[CommonFields.NAME]
-            # Use view's channel_id to ensure consistency with shop lookup
             channel_id = self.view.channel_id or str(interaction.channel_id)
             self.stock_info = await get_item_stock(interaction.client, interaction.guild_id, channel_id, item_name)
-            # Only check stock if data is valid (has ShopFields.AVAILABLE key)
             if (self.stock_info is not None
                     and ShopFields.AVAILABLE in self.stock_info
                     and self.stock_info.get(ShopFields.AVAILABLE, 0) <= 0):
                 locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
                 raise UserFeedbackError(
-                    t(locale, 'shop-error-item-out-of-stock', **{'itemName': self.item[CommonFields.NAME]}),
+                    t(locale, 'shop-error-item-out-of-stock', itemName=self.item[CommonFields.NAME]),
                     message_id='shop-error-item-out-of-stock'
                 )
 
@@ -86,8 +80,9 @@ class ShopItemButton(Button):
 
 class SelectCostOptionButton(Button):
     def __init__(self, shop_view, item, index):
+        locale = getattr(shop_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-select'),
+            label=t(locale, 'common-btn-select')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id=f'sel_opt_{item["name"]}_{index}'
         )
@@ -104,8 +99,9 @@ class SelectCostOptionButton(Button):
 
 class ViewCartButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'shop-btn-view-cart'),
+            label=t(locale, 'shop-btn-view-cart')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='view_cart_button'
         )
@@ -119,7 +115,6 @@ class ViewCartButton(Button):
             guild_id = interaction.guild_id
             user_id = interaction.user.id
 
-            # Ensure user context is set up on calling view
             if not self.calling_view.user_id:
                 await self.calling_view.setup_for_user(interaction)
 
@@ -141,7 +136,6 @@ class ViewCartButton(Button):
                 character_id = character_query[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
                 active_character = character_query[CharacterFields.CHARACTERS].get(character_id)
 
-            # Load cart from database
             channel_id = self.calling_view.channel_id
             db_cart = await get_cart(bot, guild_id, user_id, channel_id)
             if db_cart:
@@ -155,8 +149,9 @@ class ViewCartButton(Button):
 
 class CartBackButton(Button):
     def __init__(self, target_view):
+        locale = getattr(target_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'shop-btn-back-to-shop'),
+            label=t(locale, 'shop-btn-back-to-shop')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id='cart_back_button'
         )
@@ -172,8 +167,9 @@ class CartBackButton(Button):
 
 class CartClearButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'shop-btn-clear-cart'),
+            label=t(locale, 'shop-btn-clear-cart')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id='cart_clear_button'
         )
@@ -187,13 +183,10 @@ class CartClearButton(Button):
             prev_view = self.calling_view.prev_view
             channel_id = prev_view.channel_id
 
-            # Clear cart from database and release reserved stock
             await clear_cart_and_release_stock(bot, guild_id, user_id, channel_id)
 
-            # Clear local cart cache
             prev_view.cart.clear()
 
-            # Refresh stock info
             prev_view.stock_info = await get_shop_stock(bot, guild_id, channel_id)
 
             self.calling_view.build_view()
@@ -204,8 +197,9 @@ class CartClearButton(Button):
 
 class CartCheckoutButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'shop-btn-checkout'),
+            label=t(locale, 'shop-btn-checkout')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='cart_checkout_button'
         )
@@ -219,9 +213,10 @@ class CartCheckoutButton(Button):
 
 
 class EditCartItemButton(Button):
-    def __init__(self, item_key, quantity):
+    def __init__(self, item_key, quantity, locale=None):
+        locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'shop-btn-edit-quantity'),
+            label=t(locale, 'shop-btn-edit-quantity')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id=f'edit_cart_item_button_{item_key}'
         )

@@ -13,7 +13,6 @@ common-btn-select = Valitse
 common-btn-manage = Hallinnoi
 common-btn-rename = Nimeä uudelleen
 common-btn-continue = Jatka
-common-btn-cancel = Peruuta
 common-btn-enable = Ota käyttöön
 common-btn-disable = Poista käytöstä
 
@@ -39,7 +38,6 @@ common-label-none = Ei mitään
 common-label-unknown = Tuntematon
 common-label-locked = (LUKITTU)
 common-label-loose-items = Irtonaiset esineet
-common-label-and-more = . . . ja { $remaining } lisää.
 common-label-currency = Valuutta
 common-label-inventory-empty = Inventaario on tyhjä.
 
@@ -48,7 +46,7 @@ common-embed-field-party = __Ryhmä__
 common-embed-field-wait-list = __Jonotuslista__
 common-embed-footer-quest-id = Quest-ID: { $questId }
 common-embed-footer-transaction-id = Tapahtumatunnus: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}Pelinjohtaja:{"**"}
 common-embed-label-party-restrictions = {"**"}Ryhmärajoitukset:{"**"}
 
 # Translation notice

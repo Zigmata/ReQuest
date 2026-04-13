@@ -3,11 +3,14 @@
 # Error embed wrapper
 error-oops-title = ⚠️ Oeps!
 error-report-description =
-    Er is een uitzondering opgetreden:
-
-    ```{ $exception }```
+    { $exception }
 
     Als deze fout onverwacht is, of als je vermoedt dat de bot niet correct werkt, dien dan een bugrapport in op de [Officiële ReQuest Support Discord](https://discord.gg/Zq37gj4).
+
+error-report-unexpected =
+    Er is een onverwachte fout opgetreden. Probeer het opnieuw.
+
+    Als dit blijft gebeuren, dien dan een bugrapport in op de [Officiële ReQuest Support Discord](https://discord.gg/Zq37gj4).
 
 # Check failures
 error-owner-only = Alleen de bot-eigenaar kan dit commando gebruiken!

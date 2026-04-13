@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = เช่น 0.1
 config-error-denomination-matches-currency = ชื่อหน่วยย่อยใหม่ไม่สามารถตรงกับสกุลเงินที่มีอยู่บนเซิร์ฟเวอร์นี้ได้! พบสกุลเงินที่มีอยู่ชื่อ "{ $existingName }"
 config-error-denomination-matches-denomination = ชื่อหน่วยย่อยใหม่ไม่สามารถตรงกับหน่วยย่อยที่มีอยู่บนเซิร์ฟเวอร์นี้ได้! พบหน่วยย่อยที่มีอยู่ชื่อ "{ $denominationName }" ภายใต้สกุลเงินชื่อ "{ $currencyName }"
 config-error-denomination-value-exists = หน่วยย่อยภายใต้สกุลเงินเดียวกันต้องมีมูลค่าไม่ซ้ำกัน! { $denominationName } มีมูลค่านี้ถูกกำหนดไว้แล้ว
+config-label-denomination-info = **{ $name }** (มูลค่า: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = ชื่อบทบาทที่ห้ามใช้
@@ -224,8 +225,6 @@ config-error-item-exists-new-char = ไอเทมชื่อ { $itemName } �
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = อัปโหลดร้านค้าตัวละครใหม่ (JSON)
 config-error-no-json-uploaded-short = ไม่มีไฟล์ JSON ที่อัปโหลด
-config-error-json-must-have-shopstock = JSON ต้องมีอาร์เรย์ 'shopStock'
-config-error-items-must-have-name-price = ไอเทมทั้งหมดต้องมี 'name' และ 'price'
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = ตั้งค่าทรัพย์สินตัวละครใหม่
@@ -252,6 +251,7 @@ config-modal-title-kit-currency = เพิ่มสกุลเงินใน�
 config-modal-placeholder-currency-eg = เช่น Gold
 config-modal-placeholder-amount-eg = เช่น 100
 config-error-amount-must-be-number = จำนวนต้องเป็นตัวเลข
+config-error-amount-exceeds-maximum = จำนวนต้องไม่เกิน { $max }
 config-error-no-currencies-on-server = ไม่มีสกุลเงินที่ตั้งค่าบนเซิร์ฟเวอร์
 config-error-currency-not-found-short = ไม่พบสกุลเงิน "{ $currency }"
 config-error-denomination-not-found = ไม่พบหน่วยย่อย "{ $denomination }" ในการตั้งค่าสกุลเงิน
@@ -374,7 +374,7 @@ config-select-option-no-threads = ไม่พบกระทู้ที่ใ�
 config-select-desc-no-threads = สร้างกระทู้ใหม่หรือตรวจสอบกระทู้ที่เก็บถาวร
 config-select-option-select-forum-first = เลือก Forum ก่อน
 config-select-desc-select-forum-first = กรุณาเลือกช่อง Forum ด้านบน
-config-select-desc-thread-id = Thread ID: { $threadId }
+config-select-desc-thread-id = รหัสเธรด: { $threadId }
 config-error-select-valid-thread = กรุณาเลือกกระทู้ที่ถูกต้องหรือสร้างกระทู้ใหม่
 config-error-thread-not-found = ไม่พบกระทู้ที่เลือก อาจถูกลบหรือเก็บถาวรไปแล้ว
 
@@ -408,11 +408,9 @@ config-title-wizard = {"**"}การตั้งค่าเซิร์ฟเ�
 config-wizard-intro =
     {"**"}ยินดีต้อนรับสู่วิซาร์ดการตั้งค่า ReQuest!{"**"}
 
-    วิซาร์ดนี้จะช่วยให้คุณมั่นใจว่าเซิร์ฟเวอร์ของคุณได้รับการตั้งค่าอย่างถูกต้องเพื่อใช้ฟีเจอร์ของ ReQuest
-    วิซาร์ดจะสแกนการตั้งค่าปัจจุบันของคุณและให้คำแนะนำสำหรับการปรับเปลี่ยนที่จำเป็น
+    วิซาร์ดนี้จะช่วยให้คุณมั่นใจว่าเซิร์ฟเวอร์ของคุณได้รับการตั้งค่าอย่างถูกต้องเพื่อใช้ฟีเจอร์ของ ReQuest วิซาร์ดจะสแกนการตั้งค่าปัจจุบันของคุณและให้คำแนะนำสำหรับการปรับเปลี่ยนที่จำเป็น
 
-    ใช้ปุ่ม "เริ่มสแกน" ด้านล่างเพื่อเริ่มกระบวนการตรวจสอบ เมื่อสแกนเสร็จ
-    คุณจะได้รับรายงานละเอียดเกี่ยวกับการตั้งค่าเซิร์ฟเวอร์พร้อมคำแนะนำในการเปลี่ยนแปลง
+    ใช้ปุ่ม "เริ่มสแกน" ด้านล่างเพื่อเริ่มกระบวนการตรวจสอบ เมื่อสแกนเสร็จ คุณจะได้รับรายงานละเอียดเกี่ยวกับการตั้งค่าเซิร์ฟเวอร์พร้อมคำแนะนำในการเปลี่ยนแปลง
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}สิทธิ์ทั่วไปของบอท{"**"}__
@@ -536,7 +534,27 @@ config-wizard-gm-rewards-disabled = {"**"}สถานะ:{"**"} ปิดใช
 config-wizard-gm-rewards-enabled = {"**"}สถานะ:{"**"} เปิดใช้งาน
 config-wizard-gm-rewards-experience = - ประสบการณ์: { $xp }
 config-wizard-gm-rewards-items = - ไอเทม:
-config-wizard-unnamed-shop = ร้านค้าไม่มีชื่อ
+
+# Wizard - ภาษาเซิร์ฟเวอร์ (หน้า 1)
+config-wizard-server-language-desc =
+    นี่คือภาษาที่ ReQuest จะใช้สำหรับข้อความสาธารณะทั้งหมด เช่น โพสต์เควสต์ ข้อความเติมสต็อกร้านค้า และบันทึกธุรกรรม
+config-wizard-server-language = {"**"}ภาษาเซิร์ฟเวอร์:{"**"} { $language }
+config-wizard-server-language-default = ค่าเริ่มต้น (อังกฤษ)
+
+# Wizard - ข้อมูลการเติมสต็อกร้านค้า
+config-wizard-shop-restock-not-scheduled = ℹ️ ยังไม่ได้กำหนดการเติมสต็อก
+
+# Wizard - การตั้งค่าเควสต์ (หน้า 5)
+config-wizard-quest-header = __{"**"}การตั้งค่าเควสต์{"**"}__
+config-wizard-quest-header-desc =
+    ส่วนนี้ให้ภาพรวมของการกำหนดค่าที่เกี่ยวข้องกับเควสต์
+config-wizard-quest-role-mode = - โหมดบทบาทเควสต์: { $mode }
+config-wizard-quest-roles-label = {"**"}บทบาทเควสต์ GM{"**"}
+config-wizard-quest-roles-count = - บทบาทที่กำหนดให้ GM: { $count }
+config-wizard-quest-roles-all-ok = - ✅ บทบาททั้งหมดปกติ
+config-wizard-quest-roles-assigned-to = {"    "}กำหนดให้: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ ID บทบาท { $roleId }: ไม่พบ/ถูกลบจากเซิร์ฟเวอร์
+config-wizard-quest-roles-no-assignments = - ℹ️ ไม่มีบทบาทเควสต์ที่กำหนด
 
 ## Roles View
 config-title-roles = {"**"}การตั้งค่าเซิร์ฟเวอร์ - บทบาท{"**"}
@@ -707,7 +725,7 @@ config-desc-example-json =
     ดาวน์โหลดไฟล์ JSON ตัวอย่างที่แสดงรูปแบบที่คาดหวัง
 config-msg-example-json = นี่คือไฟล์ JSON ตัวอย่างที่แสดงรูปแบบที่คาดหวัง
 config-msg-no-shops = ไม่มีร้านค้าที่ตั้งค่า
-config-label-shop-type-forum = (Forum)
+config-label-shop-type-forum = (ฟอรัม)
 config-label-shop-channel = ช่อง: <#{ $channelId }>
 
 ## Shop Channel Type Selection View
@@ -832,9 +850,6 @@ config-select-placeholder-add-quest-role = กำหนดบทบาทเซ�
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}การตั้งค่าเซิร์ฟเวอร์ - บทบาท Quest{"**"}
-config-label-quest-roles = บทบาท Quest
-config-desc-quest-roles =
-    ตั้งค่าวิธีจัดการบทบาทปาร์ตี้ระหว่าง quest
 
 config-label-quest-role-mode-disabled = {"**"}โหมดบทบาท Quest:{"**"} ปิดใช้งาน
     ไม่มีการสร้างหรือกำหนดบทบาทระหว่าง quest
@@ -853,6 +868,7 @@ config-desc-manage-assignments =
     บทบาทต้องอยู่ต่ำกว่าบทบาทสูงสุดของ ReQuest ในลำดับชั้นของเซิร์ฟเวอร์
 config-msg-no-gm-members = ไม่พบสมาชิกที่มีบทบาท GM บนเซิร์ฟเวอร์นี้
 config-label-no-roles-assigned = ไม่มีบทบาท quest ที่กำหนด
+config-label-more-roles = (+{ $count } เพิ่มเติม)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}จัดการบทบาท Quest — { $gmName }{"**"}

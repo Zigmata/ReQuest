@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Търговия
-player-cmd-desc = Менюта за играчи
 
 # --- Buttons ---
 
@@ -146,6 +144,15 @@ player-msg-no-characters = Нямате регистрирани персона�
 player-label-active = (Активен)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Персонаж в процес: { $characterName }{"**"}
+    Регистрацията на вашия персонаж очаква настройка на инвентара.
+player-btn-resume = Продължи
+player-btn-discard = Отхвърли
+player-modal-title-discard-character = Отхвърляне на персонаж
+player-modal-label-discard-confirm = Отхвърляне на { $characterName }?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Потвърждение за премахване на персонаж
 player-modal-label-confirm-char-delete = Изтриване на { $characterName }?
@@ -196,7 +203,7 @@ player-error-cannot-delete-loose = Не може да се изтрият Раз
 player-title-player-board = {"**"}Команди за играча - Дъска за играчи{"**"}
 player-desc-create-post = Създаване на нова публикация за дъската за играчи.
 player-msg-no-posts = Нямате текущи публикации.
-player-label-post-info = {"**"}{ $title }{"**"} (ID: `{ $postId }`)
+player-label-post-info = {"**"}{ $title }{"**"} (Идент: `{ $postId }`)
 player-embed-field-author = Автор
 player-embed-footer-post-id = ID на публикация: { $postId }
 player-error-board-channel-not-found = Каналът на дъската за играчи не е намерен.
@@ -215,8 +222,6 @@ player-label-empty-kit = {"*"}Празен комплект{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Потвърждение на избора: { $kitName }{"**"}
-player-label-items-heading = {"**"}Предмети:{"**"}
-player-label-currency-heading = {"**"}Валута:{"**"}
 player-msg-kit-empty = Този комплект е празен.
 
 # NewCharacterComplexItemPurchaseView
@@ -264,6 +269,7 @@ player-embed-field-receipt = Разписка
 # Spend currency errors
 player-error-amount-not-number = Сумата трябва да е число.
 player-error-amount-positive = Трябва да похарчите положителна сума.
+player-error-amount-exceeds-maximum = Сумата не може да надвишава { $max }.
 player-error-no-active-character-server = Нямате активен персонаж на този сървър.
 player-error-no-currency-config = Конфигурация на валута не е намерена за този сървър.
 
@@ -281,18 +287,17 @@ player-error-qty-only-have = Имате само { $maxQuantity } от този 
 player-error-invalid-format = Невалиден формат: "{ $line }". Използвайте <име>: <количество>.
 player-error-empty-name = Името на предмета не може да бъде празно в ред: "{ $line }".
 player-error-invalid-quantity = Невалидно количество за "{ $name }": "{ $quantity }". Трябва да е положително цяло число.
-player-error-input-errors-header = Грешки при въвеждане на инвентар:
-player-msg-no-valid-items = Няма предоставени валидни предмети. Инициализиране с празен инвентар.
+
+# Validation error view
+player-validation-error-title = Грешки при въвеждане
+player-validation-btn-retry = Опитайте отново
 
 # Cart quantity validation
 player-error-enter-valid-number = Моля, въведете валидно положително число.
 
 # Submission embeds (approval queue)
-player-embed-title-approval = Одобрение на инвентар: { $characterName }
-player-embed-desc-submitted-by = Изпратено от { $userMention }
 player-embed-field-items = Предмети
 player-embed-field-currency-received = Валута
-player-embed-footer-submission-id = ID на заявка: { $submissionId }
 player-label-approval-thread = Одобрение: { $characterName }
 player-embed-title-submission-sent = Заявката за инвентар е изпратена
 player-embed-desc-submission-sent =
@@ -306,3 +311,46 @@ player-embed-desc-starting-inventory = Играч: { $playerMention } като `
 player-embed-field-items-received = Получени предмети
 player-embed-field-currency-received-label = Получена валута
 player-label-untitled = Без заглавие
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Заявка за инвентар: { $characterName }{"**"}
+    Подадена от { $userMention }
+player-approval-post-items = Предмети
+player-approval-post-currency = Валута
+player-approval-resolved = Тази заявка е приключена.
+player-approval-btn-approve = Одобри
+player-approval-btn-deny = Откажи
+player-approval-btn-edit = Редактирай
+player-approval-error-no-permission = Нямате разрешение за това действие.
+player-approval-error-not-submitter = Само оригиналният подател може да редактира тази заявка.
+player-approval-thread-instructions =
+    Тази тема беше създадена за одобрението на {"**"}{ $characterName }{"**"}.
+    Game Master ще прегледа заявката и ще я одобри или отхвърли.
+    След одобрение или отхвърляне, тази тема ще бъде заключена.
+
+    {"**"}Game Masters:{"**"} Обсъдете всички необходими промени с вашия
+    играч, докато инвентарът не бъде в приемливо състояние. Използвайте
+    бутона `Откажи` само за несъвместими заявки.
+
+    { $playerMention }: Използвайте бутона `Редактирай`, за да направите
+    промени, поискани тук от Game Master.
+player-approval-approved-by = Тази заявка беше одобрена от { $approver }.
+player-approval-denied-by = Тази заявка беше отхвърлена от { $denier }.
+player-approval-deny-reason = Причина: { $reason }
+player-msg-submission-updated = Вашата заявка е актуализирана.
+
+
+# Denial modal
+player-modal-title-deny-reason = Отхвърляне на заявка
+player-modal-label-deny-reason = Причина за отхвърляне
+player-modal-placeholder-deny-reason = По избор: обяснете защо заявката е отхвърлена
+# Approval DM notifications
+player-dm-title-approved = Персонаж одобрен
+player-dm-desc-approved =
+    Вашият персонаж {"**"}{ $characterName }{"**"} беше одобрен
+    от { $approver } в {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Персонаж отхвърлен
+player-dm-desc-denied =
+    Вашият персонаж {"**"}{ $characterName }{"**"} беше отхвърлен
+    от { $denier } в {"**"}{ $guildName }{"**"}.

@@ -3,11 +3,14 @@
 # Error embed wrapper
 error-oops-title = ⚠️ Ups!
 error-report-description =
-    A apărut o excepție:
-
-    ```{ $exception }```
+    { $exception }
 
     Dacă această eroare este neașteptată sau suspectați că botul nu funcționează corect, vă rugăm să trimiteți un raport de eroare în [Discordul Oficial de Suport ReQuest](https://discord.gg/Zq37gj4).
+
+error-report-unexpected =
+    A apărut o eroare neașteptată. Vă rugăm să încercați din nou.
+
+    Dacă acest lucru continuă, vă rugăm să trimiteți un raport de eroare în [Discordul Oficial de Suport ReQuest](https://discord.gg/Zq37gj4).
 
 # Check failures
 error-owner-only = Doar proprietarul botului poate folosi această comandă!

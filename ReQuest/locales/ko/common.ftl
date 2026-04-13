@@ -13,7 +13,6 @@ common-btn-select = 선택
 common-btn-manage = 관리
 common-btn-rename = 이름 변경
 common-btn-continue = 계속
-common-btn-cancel = 취소
 common-btn-enable = 활성화
 common-btn-disable = 비활성화
 
@@ -39,14 +38,13 @@ common-label-none = 없음
 common-label-unknown = 알 수 없음
 common-label-locked = (잠김)
 common-label-loose-items = 미분류 아이템
-common-label-and-more = . . . 외 { $remaining }개 더.
 common-label-currency = 화폐
 common-label-inventory-empty = 인벤토리가 비어 있습니다.
 
 # 공유 임베드 필드
 common-embed-field-party = __파티__
 common-embed-field-wait-list = __대기 목록__
-common-embed-footer-quest-id = Quest ID: { $questId }
+common-embed-footer-quest-id = 퀘스트 ID: { $questId }
 common-embed-footer-transaction-id = 거래 ID: { $transactionId }
 common-embed-label-gm = {"**"}GM:{"**"}
 common-embed-label-party-restrictions = {"**"}파티 제한:{"**"}

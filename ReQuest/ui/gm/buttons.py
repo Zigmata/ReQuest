@@ -8,28 +8,23 @@ from discord.ui import Button
 from ReQuest.ui.common.modals import ConfirmModal
 from ReQuest.ui.gm import modals
 from ReQuest.ui.common.enums import RewardType
-from ReQuest.utilities.constants import QuestFields, ConfigFields, CommonFields, DatabaseCollections
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_user_locale
-from ReQuest.utilities.supportFunctions import (
-    log_exception,
-    setup_view,
-    strip_id,
-    attempt_delete,
-    get_cached_data,
-    update_cached_data,
-    delete_cached_data,
-    build_cache_key,
-    get_guild_member,
-    check_role_hierarchy
+from ReQuest.utilities.constants import (QuestFields, QuestStatus, ConfigFields, CommonFields, DatabaseCollections,
+                                         DiscordLimits)
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_locale
+from ReQuest.utilities.db_cache import get_cached_data, update_cached_data, delete_cached_data, build_cache_key
+from ReQuest.utilities.discord_utils import (
+    setup_view, strip_id, attempt_delete, get_guild_member, check_role_hierarchy
 )
+from ReQuest.utilities.exceptions import log_exception, UserFeedbackError
 
 logger = logging.getLogger(__name__)
 
 
 class CreateQuestButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'gm-btn-create'),
+            label=t(locale, 'gm-btn-create')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='create_quest_button'
         )
@@ -37,8 +32,116 @@ class CreateQuestButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            modal = modals.CreateQuestModal(self.calling_view)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditQuestButton(Button):
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        super().__init__(
+            label=t(locale, 'gm-btn-edit-details')[:DiscordLimits.BUTTON_LABEL],
+            style=ButtonStyle.primary,
+            custom_id='edit_quest_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            from ReQuest.ui.gm.views import EditQuestView
+            view = EditQuestView(self.calling_view.selected_quest)
+            await setup_view(view, interaction)
+            await interaction.response.edit_message(view=view)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditQuestDetailsComboButton(Button):
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        super().__init__(
+            label=t(locale, 'gm-btn-edit-details-modal')[:DiscordLimits.BUTTON_LABEL],
+            style=ButtonStyle.primary,
+            custom_id='edit_quest_details_combo_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            modal = modals.EditQuestDetailsComboModal(self.calling_view)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class EditQuestImagesComboButton(Button):
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        super().__init__(
+            label=t(locale, 'gm-btn-edit-images')[:DiscordLimits.BUTTON_LABEL],
+            style=ButtonStyle.primary,
+            custom_id='edit_quest_images_combo_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            modal = modals.EditQuestImagesComboModal(self.calling_view)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+class PublishQuestButton(Button):
+    def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        quest = calling_view.quest
+        status = quest.get(QuestFields.STATUS, QuestStatus.PUBLISHED)
+        if status == QuestStatus.DRAFT:
+            label = t(locale, 'gm-btn-publish')
+        else:
+            label = t(locale, 'gm-btn-update-post')
+        super().__init__(
+            label=label[:DiscordLimits.BUTTON_LABEL],
+            style=ButtonStyle.success,
+            custom_id='publish_quest_button'
+        )
+        self.calling_view = calling_view
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.defer()
             bot = interaction.client
-            guild_id = interaction.guild_id
+            guild = interaction.guild
+            quest = self.calling_view.quest
+            guild_id = quest[QuestFields.GUILD_ID]
+            quest_id = quest[QuestFields.QUEST_ID]
+            locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
+            status = quest.get(QuestFields.STATUS, QuestStatus.PUBLISHED)
+
+            quest_channel_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUEST_CHANNEL,
+                query={CommonFields.ID: guild_id}
+            )
+            if not quest_channel_query:
+                raise UserFeedbackError(
+                    t(locale, 'gm-error-no-quest-channel'),
+                    message_id='gm-error-no-quest-channel'
+                )
+            channel_id = strip_id(quest_channel_query[ConfigFields.QUEST_CHANNEL])
+            quest_channel = bot.get_channel(channel_id)
+            if not quest_channel:
+                try:
+                    quest_channel = await bot.fetch_channel(channel_id)
+                except Exception:
+                    raise UserFeedbackError(
+                        t(locale, 'gm-error-no-quest-channel'),
+                        message_id='gm-error-no-quest-channel'
+                    )
 
             quest_role_mode_query = await get_cached_data(
                 bot=bot,
@@ -51,55 +154,136 @@ class CreateQuestButton(Button):
                 if quest_role_mode_query else 'temporary'
             )
 
-            assigned_roles = None
-            if quest_role_mode == 'static':
-                assignments_query = await get_cached_data(
+            new_role_id = quest.get(QuestFields.PARTY_ROLE_ID)
+            role_name = quest.get(QuestFields.PARTY_ROLE_NAME)
+            old_role_id = quest.get(QuestFields.PARTY_ROLE_ID)
+
+            if quest_role_mode == 'temporary' and role_name:
+                forbidden_query = await get_cached_data(
                     bot=bot,
                     mongo_database=bot.gdb,
-                    collection_name=DatabaseCollections.QUEST_ROLE_ASSIGNMENTS,
+                    collection_name=DatabaseCollections.FORBIDDEN_ROLES,
                     query={CommonFields.ID: guild_id}
                 )
-                if assignments_query:
-                    all_assignments = assignments_query.get(ConfigFields.QUEST_ROLE_ASSIGNMENTS, [])
-                    guild = interaction.guild
-                    bot_top_role = guild.me.top_role
-                    assigned_roles = [
-                        {'userId': a['userId'], 'roleId': a['roleId'], 'roleName': role.name}
-                        for a in all_assignments
-                        if a['userId'] == str(interaction.user.id)
-                        and (role := guild.get_role(a['roleId'])) is not None
-                        and not role.managed
-                        and role < bot_top_role
+                default_forbidden = ['everyone', 'administrator', 'game master', 'gm']
+                custom_forbidden = []
+                if forbidden_query:
+                    custom_forbidden = [
+                        n.lower() for n in forbidden_query.get(ConfigFields.FORBIDDEN_ROLES, [])
                     ]
+                if role_name.lower() in default_forbidden or role_name.lower() in custom_forbidden:
+                    raise UserFeedbackError(
+                        t(locale, 'gm-error-role-name-forbidden', roleName=role_name),
+                        message_id='gm-error-role-name-forbidden',
+                        roleName=role_name
+                    )
 
-            modal = modals.CreateQuestModal(self.calling_view, quest_role_mode, assigned_roles)
-            await interaction.response.send_modal(modal)
-        except Exception as e:
-            await log_exception(e, interaction)
+                existing_role = discord.utils.find(
+                    lambda r: r.name.lower() == role_name.lower(), guild.roles
+                )
 
+                if existing_role and existing_role.id != old_role_id:
+                    raise UserFeedbackError(
+                        t(locale, 'gm-error-role-name-exists', roleName=role_name),
+                        message_id='gm-error-role-name-exists',
+                        roleName=role_name
+                    )
 
-class EditQuestButton(Button):
-    def __init__(self, calling_view):
-        super().__init__(
-            label=t(DEFAULT_LOCALE, 'gm-btn-edit-details'),
-            style=ButtonStyle.primary,
-            custom_id='edit_quest_button'
-        )
-        self.calling_view = calling_view
+                if old_role_id:
+                    old_role = guild.get_role(old_role_id)
+                    if old_role and old_role.name.lower() != role_name.lower():
+                        await old_role.delete(reason=f'Quest {quest_id}: party role name changed')
+                        new_role = await guild.create_role(
+                            name=role_name,
+                            reason=f'Party role for quest {quest_id}'
+                        )
+                        new_role_id = new_role.id
+                    elif old_role:
+                        new_role_id = old_role_id
+                    else:
+                        new_role = await guild.create_role(
+                            name=role_name,
+                            reason=f'Party role for quest {quest_id}'
+                        )
+                        new_role_id = new_role.id
+                else:
+                    new_role = await guild.create_role(
+                        name=role_name,
+                        reason=f'Party role for quest {quest_id}'
+                    )
+                    new_role_id = new_role.id
+            elif quest_role_mode == 'temporary' and not role_name and old_role_id:
+                old_role = guild.get_role(old_role_id)
+                if old_role:
+                    await old_role.delete(reason=f'Quest {quest_id}: party role removed')
+                new_role_id = None
 
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            quest = self.calling_view.selected_quest
-            modal = modals.EditQuestModal(self.calling_view, quest)
-            await interaction.response.send_modal(modal)
+            wait_list_query = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUEST_WAIT_LIST,
+                query={CommonFields.ID: guild_id}
+            )
+            max_wait_list_size = (
+                wait_list_query[ConfigFields.QUEST_WAIT_LIST]
+                if wait_list_query else 0
+            )
+
+            updates = {
+                QuestFields.PARTY_ROLE_ID: new_role_id,
+                QuestFields.QUEST_ROLE_MODE: quest_role_mode,
+                QuestFields.MAX_WAIT_LIST_SIZE: max_wait_list_size,
+            }
+
+            if status == QuestStatus.DRAFT:
+                updates[QuestFields.STATUS] = QuestStatus.PUBLISHED
+
+            from ReQuest.ui.gm.views import QuestPostView
+            quest_view = QuestPostView(quest)
+            await quest_view.setup(bot=bot)
+
+            if status == QuestStatus.DRAFT:
+                msg = await quest_channel.send(view=quest_view)
+                updates[QuestFields.MESSAGE_ID] = msg.id
+            else:
+                message_id = quest.get(QuestFields.MESSAGE_ID)
+                if message_id and quest_channel:
+                    message = quest_channel.get_partial_message(message_id)
+                    try:
+                        await message.edit(view=quest_view)
+                    except discord.HTTPException:
+                        await attempt_delete(message)
+                        msg = await quest_channel.send(view=quest_view)
+                        updates[QuestFields.MESSAGE_ID] = msg.id
+
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUESTS,
+                query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
+                update_data={'$set': updates},
+                cache_id=f'{guild_id}:{quest_id}'
+            )
+            quest.update(updates)
+
+            admin_key = build_cache_key(bot.gdb.name, f'guild_quests:{guild_id}', 'quests')
+            await bot.rdb.delete(admin_key)
+            gm_key = build_cache_key(
+                bot.gdb.name, f'gm_quests:{guild_id}:{interaction.user.id}', 'quests'
+            )
+            await bot.rdb.delete(gm_key)
+
+            await setup_view(self.calling_view, interaction)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
 
 class ToggleReadyButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'gm-btn-toggle-ready'),
+            label=t(locale, 'gm-btn-toggle-ready')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id='toggle_ready_button'
         )
@@ -114,8 +298,9 @@ class ToggleReadyButton(Button):
 
 class RewardsMenuButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'gm-btn-configure-rewards'),
+            label=t(locale, 'gm-btn-configure-rewards')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id='rewards_menu_button'
         )
@@ -133,8 +318,9 @@ class RewardsMenuButton(Button):
 
 class RemovePlayerButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'gm-btn-remove-player'),
+            label=t(locale, 'gm-btn-remove-player')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id='remove_player_button'
         )
@@ -153,8 +339,9 @@ class RemovePlayerButton(Button):
 
 class CancelQuestButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'gm-btn-cancel-quest'),
+            label=t(locale, 'gm-btn-cancel-quest')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id='cancel_quest_button'
         )
@@ -164,8 +351,8 @@ class CancelQuestButton(Button):
         try:
             locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
             confirm_modal = ConfirmModal(
-                title=t(locale, 'gm-modal-title-cancel-quest'),
-                prompt_label=t(locale, 'gm-modal-label-cancel-quest'),
+                title=t(locale, 'gm-modal-title-cancel-quest')[:DiscordLimits.MODAL_TITLE],
+                prompt_label=t(locale, 'gm-modal-label-cancel-quest')[:DiscordLimits.LABEL_LABEL],
                 confirm_callback=self.confirm_callback,
                 locale=locale
             )
@@ -181,19 +368,24 @@ class CancelQuestButton(Button):
             guild_id = interaction.guild_id
             guild = interaction.guild
 
-            # If a party exists
             party = quest[QuestFields.PARTY]
             title = quest[QuestFields.TITLE]
             if party:
-                # Get party members and message them with results
+                guild_name = guild.name
                 for player in party:
                     for member_id in player:
-                        # Message the player that the quest was canceled.
                         member = await get_guild_member(guild, int(member_id))
                         if member:
                             try:
-                                member_locale = await resolve_user_locale(bot, int(member_id), guild_id)
-                                await member.send(t(member_locale, 'gm-dm-quest-cancelled', questTitle=title))
+                                member_locale = await resolve_locale(
+                                    bot=bot, user_id=int(member_id), guild_id=guild_id
+                                )
+                                from ReQuest.ui.gm.views import _build_quest_dm_embed
+                                cancel_embed = _build_quest_dm_embed(
+                                    member_locale, 'gm-dm-title-quest-cancelled', 'gm-dm-desc-quest-cancelled',
+                                    quest, guild_name, color=discord.Color.red(), questTitle=title
+                                )
+                                await member.send(embed=cancel_embed)
                             except discord.errors.Forbidden as e:
                                 logger.warning(f'Could not DM {member_id} about quest cancellation: {e}')
                             except Exception as e:
@@ -201,12 +393,13 @@ class CancelQuestButton(Button):
                         else:
                             logger.warning(f'Could not find member {member_id} in guild {guild_id}.')
 
-            # Remove the party role, if applicable
             party_role_id = quest[QuestFields.PARTY_ROLE_ID]
             if party_role_id:
                 party_role = guild.get_role(party_role_id)
                 if party_role:
-                    check_role_hierarchy(guild, party_role)
+                    check_role_hierarchy(
+                        guild, party_role, locale=getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
+                    )
                     role_mode = quest.get(QuestFields.QUEST_ROLE_MODE, 'temporary')
                     if role_mode == 'static':
                         if not guild.chunked:
@@ -230,7 +423,9 @@ class CancelQuestButton(Button):
                                     )
                                     failed_members.append(member)
                             if failed_members:
-                                gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                                gm_locale = await resolve_locale(
+                                    bot=bot, user_id=interaction.user.id, guild_id=guild_id
+                                )
                                 failed_list = ', '.join(m.mention for m in failed_members)
                                 await interaction.user.send(
                                     t(
@@ -249,14 +444,13 @@ class CancelQuestButton(Button):
                     logger.warning(f'Quest role {party_role_id} no longer exists in guild {guild_id}. '
                                    f'Skipping role cleanup for cancelled quest {quest[QuestFields.QUEST_ID]}.')
                     try:
-                        gm_locale = await resolve_user_locale(bot, interaction.user.id, guild_id)
+                        gm_locale = await resolve_locale(bot=bot, user_id=interaction.user.id, guild_id=guild_id)
                         await interaction.user.send(
                             t(gm_locale, 'gm-dm-role-not-found', roleId=str(party_role_id), questTitle=title)
                         )
                     except discord.errors.Forbidden:
                         logger.warning(f'Could not DM {interaction.user.id} about missing quest role.')
 
-            # Delete the quest from the database
             await delete_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -265,25 +459,28 @@ class CancelQuestButton(Button):
                 cache_id=f'{guild_id}:{quest[QuestFields.QUEST_ID]}'
             )
 
-            # Delete the quest from the redis cache
             admin_list_key = build_cache_key(bot.gdb.name, f'guild_quests:{guild_id}', 'quests')
             await bot.rdb.delete(admin_list_key)
 
             gm_list_key = build_cache_key(bot.gdb.name, f'gm_quests:{guild_id}:{quest[QuestFields.GM]}', 'quests')
             await bot.rdb.delete(gm_list_key)
 
-            # Delete the quest from the quest channel
-            channel_query = await get_cached_data(
-                bot=bot,
-                mongo_database=bot.gdb,
-                collection_name=DatabaseCollections.QUEST_CHANNEL,
-                query={CommonFields.ID: guild_id}
-            )
-            channel_id = strip_id(channel_query[ConfigFields.QUEST_CHANNEL])
-            quest_channel = guild.get_channel(channel_id)
-            message_id = quest[QuestFields.MESSAGE_ID]
-            message = quest_channel.get_partial_message(message_id)
-            await attempt_delete(message)
+            status = quest.get(QuestFields.STATUS, QuestStatus.PUBLISHED)
+            if status != QuestStatus.DRAFT:
+                channel_query = await get_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.QUEST_CHANNEL,
+                    query={CommonFields.ID: guild_id}
+                )
+                if channel_query:
+                    channel_id = strip_id(channel_query[ConfigFields.QUEST_CHANNEL])
+                    quest_channel = guild.get_channel(channel_id)
+                    if quest_channel:
+                        message_id = quest.get(QuestFields.MESSAGE_ID)
+                        if message_id:
+                            message = quest_channel.get_partial_message(message_id)
+                            await attempt_delete(message)
 
             from ReQuest.ui.gm.views import GMQuestMenuView
             view = GMQuestMenuView()
@@ -295,8 +492,9 @@ class CancelQuestButton(Button):
 
 class PartyRewardsButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'gm-btn-manage-party-rewards'),
+            label=t(locale, 'gm-btn-manage-party-rewards')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id='party_rewards_button'
         )
@@ -361,8 +559,9 @@ class PartyRewardsButton(Button):
 
 class IndividualRewardsButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'gm-btn-manage-individual-rewards'),
+            label=t(locale, 'gm-btn-manage-individual-rewards')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id='individual_rewards_button',
             disabled=True
@@ -427,42 +626,11 @@ class IndividualRewardsButton(Button):
             await log_exception(e, interaction)
 
 
-class JoinQuestButton(Button):
-    def __init__(self, calling_view):
-        super().__init__(
-            label=t(DEFAULT_LOCALE, 'gm-btn-join'),
-            style=ButtonStyle.success,
-            custom_id='join_quest_button'
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            await self.calling_view.join_callback(interaction)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-
-class LeaveQuestButton(Button):
-    def __init__(self, calling_view):
-        super().__init__(
-            label=t(DEFAULT_LOCALE, 'gm-btn-leave'),
-            style=ButtonStyle.danger,
-            custom_id='leave_quest_button'
-        )
-        self.calling_view = calling_view
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            await self.calling_view.leave_callback(interaction)
-        except Exception as e:
-            await log_exception(e, interaction)
-
-
 class CompleteQuestButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'gm-btn-complete-quest'),
+            label=t(locale, 'gm-btn-complete-quest')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='complete_quest_button'
         )
@@ -488,37 +656,10 @@ class CompleteQuestButton(Button):
             await log_exception(e, interaction)
 
 
-class ReviewSubmissionButton(Button):
-    def __init__(self, calling_view):
-        super().__init__(label=t(DEFAULT_LOCALE, 'gm-btn-review-submission'), style=ButtonStyle.success)
-        self.calling_view = calling_view
-
-    async def callback(self, interaction):
-        await interaction.response.send_modal(modals.ReviewSubmissionInputModal(self.calling_view))
-
-
-class ApproveSubmissionButton(Button):
-    def __init__(self, calling_view):
-        super().__init__(label=t(DEFAULT_LOCALE, 'gm-btn-approve'), style=ButtonStyle.success)
-        self.calling_view = calling_view
-
-    async def callback(self, interaction):
-        await self.calling_view.approve(interaction)
-
-
-class DenySubmissionButton(Button):
-    def __init__(self, calling_view):
-        super().__init__(label=t(DEFAULT_LOCALE, 'gm-btn-deny'), style=ButtonStyle.danger)
-        self.calling_view = calling_view
-
-    async def callback(self, interaction):
-        await self.calling_view.deny(interaction)
-
-
 class ManageQuestRowButton(Button):
-    def __init__(self, quest):
+    def __init__(self, quest, locale=DEFAULT_LOCALE):
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-manage'),
+            label=t(locale, 'common-btn-manage')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id=f'manage_quest_{quest[QuestFields.QUEST_ID]}'
         )
@@ -535,9 +676,9 @@ class ManageQuestRowButton(Button):
 
 
 class BackToManageQuestButton(Button):
-    def __init__(self, quest):
+    def __init__(self, quest, locale=DEFAULT_LOCALE):
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-back'),
+            label=t(locale, 'common-btn-back')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id='back_to_manage_quest'
         )

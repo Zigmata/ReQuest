@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = např. 0.1
 config-error-denomination-matches-currency = Nový název nominální hodnoty nemůže odpovídat existující měně na tomto serveru! Nalezena existující měna s názvem „{ $existingName }".
 config-error-denomination-matches-denomination = Nový název nominální hodnoty nemůže odpovídat existující nominální hodnotě na tomto serveru! Nalezena existující nominální hodnota s názvem „{ $denominationName }" pod měnou „{ $currencyName }".
 config-error-denomination-value-exists = Nominální hodnoty v rámci jedné měny musí mít unikátní hodnoty! { $denominationName } již má tuto hodnotu přiřazenu.
+config-label-denomination-info = **{ $name }** (Hodnota: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Zakázané názvy rolí
@@ -224,8 +225,6 @@ config-error-item-exists-new-char = Předmět s názvem { $itemName } již v obc
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Nahrát obchod pro nové postavy (JSON)
 config-error-no-json-uploaded-short = Nebyl nahrán žádný JSON soubor.
-config-error-json-must-have-shopstock = JSON musí obsahovat pole „shopStock".
-config-error-items-must-have-name-price = Všechny předměty musí mít „name" a „price".
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Nastavit počáteční majetek
@@ -252,6 +251,7 @@ config-modal-title-kit-currency = Přidat měnu do sady
 config-modal-placeholder-currency-eg = např. Gold
 config-modal-placeholder-amount-eg = např. 100
 config-error-amount-must-be-number = Částka musí být číslo.
+config-error-amount-exceeds-maximum = Částka nesmí překročit { $max }.
 config-error-no-currencies-on-server = Na serveru nejsou nakonfigurovány žádné měny.
 config-error-currency-not-found-short = Měna „{ $currency }" nebyla nalezena.
 config-error-denomination-not-found = Nominální hodnota „{ $denomination }" nebyla nalezena v konfiguraci měny.
@@ -408,11 +408,9 @@ config-title-wizard = {"**"}Konfigurace serveru - Průvodce{"**"}
 config-wizard-intro =
     {"**"}Vítejte v Průvodci konfigurací ReQuestu!{"**"}
 
-    Tento průvodce vám pomůže zajistit, že je váš server správně nakonfigurován pro použití funkcí ReQuestu.
-    Prohledá vaše aktuální nastavení a poskytne doporučení pro případné úpravy.
+    Tento průvodce vám pomůže zajistit, že je váš server správně nakonfigurován pro použití funkcí ReQuestu. Prohledá vaše aktuální nastavení a poskytne doporučení pro případné úpravy.
 
-    Použijte tlačítko „Spustit skenování" níže pro zahájení ověřovacího procesu. Po dokončení skenování
-    obdržíte podrobnou zprávu o konfiguraci vašeho serveru spolu s doporučenými změnami.
+    Použijte tlačítko „Spustit skenování" níže pro zahájení ověřovacího procesu. Po dokončení skenování obdržíte podrobnou zprávu o konfiguraci vašeho serveru spolu s doporučenými změnami.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Globální oprávnění bota{"**"}__
@@ -536,7 +534,27 @@ config-wizard-gm-rewards-disabled = {"**"}Stav:{"**"} Vypnuto
 config-wizard-gm-rewards-enabled = {"**"}Stav:{"**"} Zapnuto
 config-wizard-gm-rewards-experience = - Zkušenosti: { $xp }
 config-wizard-gm-rewards-items = - Předměty:
-config-wizard-unnamed-shop = Nepojmenovaný obchod
+
+# Wizard - Jazyk serveru (Strana 1)
+config-wizard-server-language-desc =
+    Toto je jazyk, který ReQuest použije pro všechny veřejné zprávy, jako jsou příspěvky o questech, zprávy o doplnění zásob obchodu a protokoly transakcí.
+config-wizard-server-language = {"**"}Jazyk serveru:{"**"} { $language }
+config-wizard-server-language-default = Výchozí (angličtina)
+
+# Wizard - Informace o doplnění zásob obchodu
+config-wizard-shop-restock-not-scheduled = ℹ️ Doplnění zásob není naplánováno
+
+# Wizard - Nastavení questů (Strana 5)
+config-wizard-quest-header = __{"**"}Nastavení questů{"**"}__
+config-wizard-quest-header-desc =
+    Tato sekce poskytuje přehled konfigurací souvisejících s questy.
+config-wizard-quest-role-mode = - Režim rolí questů: { $mode }
+config-wizard-quest-roles-label = {"**"}Role questů pro GM{"**"}
+config-wizard-quest-roles-count = - Role přiřazené GM: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Všechny role v pořádku
+config-wizard-quest-roles-assigned-to = {"    "}Přiřazeno k: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ ID role { $roleId }: Nenalezena/Smazána ze serveru
+config-wizard-quest-roles-no-assignments = - ℹ️ Žádné role questů nejsou přiřazeny
 
 ## Roles View
 config-title-roles = {"**"}Konfigurace serveru - Role{"**"}
@@ -832,9 +850,6 @@ config-select-placeholder-add-quest-role = Přiřadit serverovou roli(e) tomuto 
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}Konfigurace serveru - Role questů{"**"}
-config-label-quest-roles = Role questů
-config-desc-quest-roles =
-    Nastavte, jak se role skupiny spravují během questů.
 
 config-label-quest-role-mode-disabled = {"**"}Režim rolí questů:{"**"} Vypnuto
     Během questů se nevytvářejí ani nepřiřazují žádné role.
@@ -853,6 +868,7 @@ config-desc-manage-assignments =
     Role musí být níže než nejvyšší role ReQuest v hierarchii serveru.
 config-msg-no-gm-members = Na tomto serveru nebyli nalezeni žádní členové s rolí GM.
 config-label-no-roles-assigned = Žádné přiřazené role questů
+config-label-more-roles = (+{ $count } dalších)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Správa rolí questů — { $gmName }{"**"}

@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Takas
-player-cmd-desc = Oyuncu Menüleri
 
 # --- Buttons ---
 
@@ -146,6 +144,15 @@ player-msg-no-characters = Kayıtlı karakteriniz yok.
 player-label-active = (Aktif)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Devam eden karakter: { $characterName }{"**"}
+    Karakter kaydınız envanter ayarını bekliyor.
+player-btn-resume = Devam et
+player-btn-discard = İptal et
+player-modal-title-discard-character = Karakteri iptal et
+player-modal-label-discard-confirm = { $characterName } iptal edilsin mi?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Karakter Kaldırmayı Onayla
 player-modal-label-confirm-char-delete = { $characterName } silinsin mi?
@@ -196,7 +203,7 @@ player-error-cannot-delete-loose = Serbest Eşyalar silinemez.
 player-title-player-board = {"**"}Oyuncu Komutları - Oyuncu Panosu{"**"}
 player-desc-create-post = Oyuncu Panosu için yeni bir gönderi oluşturun.
 player-msg-no-posts = Mevcut gönderiniz yok.
-player-label-post-info = {"**"}{ $title }{"**"} (ID: `{ $postId }`)
+player-label-post-info = {"**"}{ $title }{"**"} (Kimlik: `{ $postId }`)
 player-embed-field-author = Yazar
 player-embed-footer-post-id = Gönderi ID: { $postId }
 player-error-board-channel-not-found = Oyuncu Panosu kanalı bulunamadı.
@@ -215,8 +222,6 @@ player-label-empty-kit = {"*"}Boş Kit{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Seçimi Onayla: { $kitName }{"**"}
-player-label-items-heading = {"**"}Eşyalar:{"**"}
-player-label-currency-heading = {"**"}Para Birimi:{"**"}
 player-msg-kit-empty = Bu kit boş.
 
 # NewCharacterComplexItemPurchaseView
@@ -264,6 +269,7 @@ player-embed-field-receipt = Makbuz
 # Spend currency errors
 player-error-amount-not-number = Miktar bir sayı olmalıdır.
 player-error-amount-positive = Pozitif bir miktar harcamalısınız.
+player-error-amount-exceeds-maximum = Miktar { $max } değerini aşamaz.
 player-error-no-active-character-server = Bu sunucuda aktif bir karakteriniz yok.
 player-error-no-currency-config = Bu sunucu için para birimi yapılandırması bulunamadı.
 
@@ -281,18 +287,17 @@ player-error-qty-only-have = Bu eşyadan yalnızca { $maxQuantity } adet var.
 player-error-invalid-format = Geçersiz biçim: "{ $line }". <ad>: <miktar> biçimini kullanın.
 player-error-empty-name = "{ $line }" satırında eşya adı boş olamaz.
 player-error-invalid-quantity = "{ $name }" için geçersiz miktar: "{ $quantity }". Pozitif bir tam sayı olmalıdır.
-player-error-input-errors-header = Envanter girişinde hatalar:
-player-msg-no-valid-items = Geçerli eşya sağlanmadı. Boş envanter ile başlatılıyor.
+
+# Validation error view
+player-validation-error-title = Giriş hataları
+player-validation-btn-retry = Tekrar dene
 
 # Cart quantity validation
 player-error-enter-valid-number = Lütfen geçerli bir pozitif sayı girin.
 
 # Submission embeds (approval queue)
-player-embed-title-approval = Envanter Onayı: { $characterName }
-player-embed-desc-submitted-by = { $userMention } tarafından gönderildi
 player-embed-field-items = Eşyalar
 player-embed-field-currency-received = Para Birimi
-player-embed-footer-submission-id = Başvuru ID: { $submissionId }
 player-label-approval-thread = Onay: { $characterName }
 player-embed-title-submission-sent = Envanter Başvurusu Gönderildi
 player-embed-desc-submission-sent =
@@ -306,3 +311,46 @@ player-embed-desc-starting-inventory = Oyuncu: { $playerMention } (`{ $character
 player-embed-field-items-received = Alınan Eşyalar
 player-embed-field-currency-received-label = Alınan Para Birimi
 player-label-untitled = Başlıksız
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Envanter Başvurusu: { $characterName }{"**"}
+    Gönderen: { $userMention }
+player-approval-post-items = Eşyalar
+player-approval-post-currency = Para Birimi
+player-approval-resolved = Bu başvuru işlendi.
+player-approval-btn-approve = Onayla
+player-approval-btn-deny = Reddet
+player-approval-btn-edit = Düzenle
+player-approval-error-no-permission = Bu işlemi gerçekleştirme yetkiniz yok.
+player-approval-error-not-submitter = Yalnızca orijinal gönderen bu başvuruyu düzenleyebilir.
+player-approval-thread-instructions =
+    Bu konu {"**"}{ $characterName }{"**"} adlı karakterin onayı için oluşturuldu.
+    Bir Oyun Yöneticisi başvuruyu inceleyip onaylayacak veya reddedecektir.
+    Onaylandıktan veya reddedildikten sonra bu konu kilitlenecektir.
+
+    {"**"}Oyun Yöneticileri:{"**"} Envanter kabul edilebilir bir duruma
+    gelene kadar gerekli değişiklikleri oyuncunuzla tartışın. `Reddet`
+    düğmesini yalnızca uzlaşılamaz başvurular için kullanın.
+
+    { $playerMention }: Bir Oyun Yöneticisi tarafından burada istenen
+    değişiklikleri yapmak için `Düzenle` düğmesini kullanın.
+player-approval-approved-by = Bu başvuru { $approver } tarafından onaylandı.
+player-approval-denied-by = Bu başvuru { $denier } tarafından reddedildi.
+player-approval-deny-reason = Sebep: { $reason }
+player-msg-submission-updated = Başvurunuz güncellendi.
+
+
+# Denial modal
+player-modal-title-deny-reason = Başvuruyu reddet
+player-modal-label-deny-reason = Red sebebi
+player-modal-placeholder-deny-reason = İsteğe bağlı: red sebebini açıklayın
+# Approval DM notifications
+player-dm-title-approved = Karakter onaylandı
+player-dm-desc-approved =
+    {"**"}{ $characterName }{"**"} adlı karakteriniz {"**"}{ $guildName }{"**"}
+    sunucusunda { $approver } tarafından onaylandı!
+player-dm-title-denied = Karakter reddedildi
+player-dm-desc-denied =
+    {"**"}{ $characterName }{"**"} adlı karakteriniz {"**"}{ $guildName }{"**"}
+    sunucusunda { $denier } tarafından reddedildi.

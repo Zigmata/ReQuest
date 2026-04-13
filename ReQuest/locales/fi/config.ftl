@@ -132,6 +132,7 @@ config-modal-placeholder-denomination-value = esim. 0.1
 config-error-denomination-matches-currency = Uuden nimellisarvon nimi ei voi vastata olemassa olevaa valuuttaa tällä palvelimella! Löydettiin olemassa oleva valuutta nimeltä "{ $existingName }".
 config-error-denomination-matches-denomination = Uuden nimellisarvon nimi ei voi vastata olemassa olevaa nimellisarvoa tällä palvelimella! Löydettiin olemassa oleva nimellisarvo nimeltä "{ $denominationName }" valuutan "{ $currencyName }" alla.
 config-error-denomination-value-exists = Yksittäisen valuutan nimellisarvoilla on oltava yksilölliset arvot! { $denominationName } -nimellisarvolle on jo määritetty tämä arvo.
+config-label-denomination-info = **{ $name }** (Arvo: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Kiellettyjen roolien nimet
@@ -225,8 +226,6 @@ config-error-item-exists-new-char = Esine nimeltä { $itemName } on jo olemassa 
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Lataa uuden hahmon kauppa (JSON)
 config-error-no-json-uploaded-short = JSON-tiedostoa ei ladattu.
-config-error-json-must-have-shopstock = JSON:n on sisällettävä 'shopStock'-taulukko.
-config-error-items-must-have-name-price = Kaikilla esineillä on oltava 'name' ja 'price'.
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Aseta uuden hahmon varallisuus
@@ -253,6 +252,7 @@ config-modal-title-kit-currency = Lisää varustesarjan valuutta
 config-modal-placeholder-currency-eg = esim. Kulta
 config-modal-placeholder-amount-eg = esim. 100
 config-error-amount-must-be-number = Summan on oltava numero.
+config-error-amount-exceeds-maximum = Summa ei voi ylittää { $max }.
 config-error-no-currencies-on-server = Palvelimelle ei ole määritetty valuuttoja.
 config-error-currency-not-found-short = Valuuttaa "{ $currency }" ei löytynyt.
 config-error-denomination-not-found = Nimellisarvoa "{ $denomination }" ei löytynyt valuuttamäärittelystä.
@@ -409,11 +409,9 @@ config-title-wizard = {"**"}Palvelimen asetukset - Velho{"**"}
 config-wizard-intro =
     {"**"}Tervetuloa ReQuestin asetusvelhoon!{"**"}
 
-    Tämä velho auttaa varmistamaan, että palvelimesi on asianmukaisesti määritetty ReQuestin ominaisuuksien käyttöön.
-    Se skannaa nykyiset asetuksesi ja antaa suosituksia tarvittavista muutoksista.
+    Tämä velho auttaa varmistamaan, että palvelimesi on asianmukaisesti määritetty ReQuestin ominaisuuksien käyttöön. Se skannaa nykyiset asetuksesi ja antaa suosituksia tarvittavista muutoksista.
 
-    Käytä alla olevaa "Käynnistä skannaus" -painiketta aloittaaksesi tarkistusprosessin. Skannauksen valmistuttua
-    saat yksityiskohtaisen raportin palvelimesi asetuksista sekä suositellut muutokset.
+    Käytä alla olevaa "Käynnistä skannaus" -painiketta aloittaaksesi tarkistusprosessin. Skannauksen valmistuttua saat yksityiskohtaisen raportin palvelimesi asetuksista sekä suositellut muutokset.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Botin yleiset oikeudet{"**"}__
@@ -537,7 +535,27 @@ config-wizard-gm-rewards-disabled = {"**"}Tila:{"**"} Pois käytöstä
 config-wizard-gm-rewards-enabled = {"**"}Tila:{"**"} Käytössä
 config-wizard-gm-rewards-experience = - Kokemus: { $xp }
 config-wizard-gm-rewards-items = - Esineet:
-config-wizard-unnamed-shop = Nimetön kauppa
+
+# Wizard - Palvelimen kieli (Sivu 1)
+config-wizard-server-language-desc =
+    Tämä on kieli, jota ReQuest käyttää kaikissa julkisissa viesteissä, kuten tehtäväjulkaisuissa, kaupan täydennysviesteissä ja tapahtumalokissa.
+config-wizard-server-language = {"**"}Palvelimen kieli:{"**"} { $language }
+config-wizard-server-language-default = Oletus (englanti)
+
+# Wizard - Kaupan täydennystiedot
+config-wizard-shop-restock-not-scheduled = ℹ️ Täydennystä ei ole ajoitettu
+
+# Wizard - Tehtäväasetukset (Sivu 5)
+config-wizard-quest-header = __{"**"}Tehtäväasetukset{"**"}__
+config-wizard-quest-header-desc =
+    Tämä osio tarjoaa yleiskatsauksen tehtäviin liittyvistä asetuksista.
+config-wizard-quest-role-mode = - Tehtäväroolien tila: { $mode }
+config-wizard-quest-roles-label = {"**"}GM:n tehtäväroolit{"**"}
+config-wizard-quest-roles-count = - GM:ille määritetyt roolit: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Kaikki roolit OK
+config-wizard-quest-roles-assigned-to = {"    "}Määritetty: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ Rooli-ID { $roleId }: Ei löydy/Poistettu palvelimelta
+config-wizard-quest-roles-no-assignments = - ℹ️ Ei määritettyjä tehtävärooleja
 
 ## Roles View
 config-title-roles = {"**"}Palvelimen asetukset - Roolit{"**"}
@@ -833,9 +851,6 @@ config-select-placeholder-add-quest-role = Määritä palvelinrooli(t) tälle GM
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}Palvelimen asetukset - Quest-roolit{"**"}
-config-label-quest-roles = Quest-roolit
-config-desc-quest-roles =
-    Määritä miten ryhmärooleja käsitellään questien aikana.
 
 config-label-quest-role-mode-disabled = {"**"}Quest-roolitila:{"**"} Pois käytöstä
     Rooleja ei luoda eikä määritetä questien aikana.
@@ -854,6 +869,7 @@ config-desc-manage-assignments =
     Roolien on oltava alempana kuin ReQuestin korkein rooli palvelinhierarkiassa.
 config-msg-no-gm-members = Palvelimelta ei löytynyt jäseniä, joilla on GM-rooli.
 config-label-no-roles-assigned = Quest-rooleja ei ole määritetty
+config-label-more-roles = (+{ $count } lisää)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Hallinnoi quest-rooleja — { $gmName }{"**"}

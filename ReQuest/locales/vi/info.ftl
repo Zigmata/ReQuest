@@ -102,4 +102,3 @@ info-language-desc-sv-se = Đặt ngôn ngữ thành tiếng Thụy Điển
 info-language-desc-th = Đặt ngôn ngữ thành tiếng Thái
 info-language-desc-tr = Đặt ngôn ngữ thành tiếng Thổ Nhĩ Kỳ
 info-language-desc-vi = Đặt ngôn ngữ thành tiếng Việt
-info-language-updated = Đã cập nhật ngôn ngữ thành công.

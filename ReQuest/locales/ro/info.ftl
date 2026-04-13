@@ -102,4 +102,3 @@ info-language-desc-sv-se = Setează limba la suedeză
 info-language-desc-th = Setează limba la thailandeză
 info-language-desc-tr = Setează limba la turcă
 info-language-desc-vi = Setează limba la vietnameză
-info-language-updated = Limba a fost actualizată cu succes.

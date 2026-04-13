@@ -3,11 +3,14 @@
 # Error embed wrapper
 error-oops-title = ⚠️ Jejda!
 error-report-description =
-    Došlo k výjimce:
-
-    ```{ $exception }```
+    { $exception }
 
     Pokud je tato chyba neočekávaná nebo máte podezření, že bot nefunguje správně, odešlete hlášení o chybě v [Oficiálním Discord serveru podpory ReQuest](https://discord.gg/Zq37gj4).
+
+error-report-unexpected =
+    Došlo k neočekávané chybě. Zkuste to prosím znovu.
+
+    Pokud se to opakuje, odešlete hlášení o chybě v [Oficiálním Discord serveru podpory ReQuest](https://discord.gg/Zq37gj4).
 
 # Check failures
 error-owner-only = Tento příkaz může použít pouze vlastník bota!

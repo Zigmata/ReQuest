@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Giao dịch
-player-cmd-desc = Menu Người chơi
 
 # --- Buttons ---
 
@@ -146,6 +144,15 @@ player-msg-no-characters = Bạn chưa đăng ký nhân vật nào.
 player-label-active = (Đang hoạt động)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Nhân vật đang xử lý: { $characterName }{"**"}
+    Đăng ký nhân vật của bạn đang chờ thiết lập trang bị.
+player-btn-resume = Tiếp tục
+player-btn-discard = Hủy bỏ
+player-modal-title-discard-character = Hủy nhân vật
+player-modal-label-discard-confirm = Hủy { $characterName }?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Xác nhận Xóa Nhân vật
 player-modal-label-confirm-char-delete = Xóa { $characterName }?
@@ -215,8 +222,6 @@ player-label-empty-kit = {"*"}Bộ trang bị Trống{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Xác nhận Lựa chọn: { $kitName }{"**"}
-player-label-items-heading = {"**"}Vật phẩm:{"**"}
-player-label-currency-heading = {"**"}Tiền tệ:{"**"}
 player-msg-kit-empty = Bộ trang bị này trống.
 
 # NewCharacterComplexItemPurchaseView
@@ -264,6 +269,7 @@ player-embed-field-receipt = Biên lai
 # Spend currency errors
 player-error-amount-not-number = Số lượng phải là một con số.
 player-error-amount-positive = Bạn phải chi một số lượng dương.
+player-error-amount-exceeds-maximum = Số tiền không được vượt quá { $max }.
 player-error-no-active-character-server = Bạn không có nhân vật đang hoạt động trên máy chủ này.
 player-error-no-currency-config = Không tìm thấy cấu hình tiền tệ cho máy chủ này.
 
@@ -281,18 +287,17 @@ player-error-qty-only-have = Bạn chỉ có { $maxQuantity } vật phẩm này.
 player-error-invalid-format = Định dạng không hợp lệ: "{ $line }". Sử dụng <tên>: <số lượng>.
 player-error-empty-name = Tên vật phẩm không được để trống ở dòng: "{ $line }".
 player-error-invalid-quantity = Số lượng không hợp lệ cho "{ $name }": "{ $quantity }". Phải là số nguyên dương.
-player-error-input-errors-header = Lỗi trong dữ liệu kho đồ nhập vào:
-player-msg-no-valid-items = Không có vật phẩm hợp lệ. Khởi tạo với kho đồ trống.
+
+# Validation error view
+player-validation-error-title = Lỗi nhập liệu
+player-validation-btn-retry = Thử lại
 
 # Cart quantity validation
 player-error-enter-valid-number = Vui lòng nhập một số dương hợp lệ.
 
 # Submission embeds (approval queue)
-player-embed-title-approval = Phê duyệt Kho đồ: { $characterName }
-player-embed-desc-submitted-by = Gửi bởi { $userMention }
 player-embed-field-items = Vật phẩm
 player-embed-field-currency-received = Tiền tệ
-player-embed-footer-submission-id = ID Đệ trình: { $submissionId }
 player-label-approval-thread = Phê duyệt: { $characterName }
 player-embed-title-submission-sent = Đã Gửi Đệ trình Kho đồ
 player-embed-desc-submission-sent =
@@ -306,3 +311,46 @@ player-embed-desc-starting-inventory = Người chơi: { $playerMention } với 
 player-embed-field-items-received = Vật phẩm Nhận được
 player-embed-field-currency-received-label = Tiền tệ Nhận được
 player-label-untitled = Không có tiêu đề
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Đệ trình Kho đồ: { $characterName }{"**"}
+    Được gửi bởi { $userMention }
+player-approval-post-items = Vật phẩm
+player-approval-post-currency = Tiền tệ
+player-approval-resolved = Yêu cầu này đã được xử lý.
+player-approval-btn-approve = Phê duyệt
+player-approval-btn-deny = Từ chối
+player-approval-btn-edit = Chỉnh sửa
+player-approval-error-no-permission = Bạn không có quyền thực hiện hành động này.
+player-approval-error-not-submitter = Chỉ người gửi ban đầu mới có thể chỉnh sửa yêu cầu này.
+player-approval-thread-instructions =
+    Chủ đề này được tạo để phê duyệt {"**"}{ $characterName }{"**"}.
+    Một Quản trò sẽ xem xét đệ trình và phê duyệt hoặc từ chối nó.
+    Sau khi được phê duyệt hoặc từ chối, chủ đề này sẽ bị khóa.
+
+    {"**"}Quản trò:{"**"} Thảo luận về các thay đổi cần thiết với
+    người chơi của bạn cho đến khi kho đồ ở trạng thái chấp nhận được.
+    Chỉ sử dụng nút `Từ chối` cho các đệ trình không thể dung hòa.
+
+    { $playerMention }: Sử dụng nút `Chỉnh sửa` để thực hiện bất kỳ
+    thay đổi nào được Quản trò yêu cầu tại đây.
+player-approval-approved-by = Yêu cầu này đã được phê duyệt bởi { $approver }.
+player-approval-denied-by = Yêu cầu này đã bị từ chối bởi { $denier }.
+player-approval-deny-reason = Lý do: { $reason }
+player-msg-submission-updated = Yêu cầu của bạn đã được cập nhật.
+
+
+# Denial modal
+player-modal-title-deny-reason = Từ chối yêu cầu
+player-modal-label-deny-reason = Lý do từ chối
+player-modal-placeholder-deny-reason = Tùy chọn: giải thích lý do từ chối
+# Approval DM notifications
+player-dm-title-approved = Nhân vật đã được phê duyệt
+player-dm-desc-approved =
+    Nhân vật {"**"}{ $characterName }{"**"} của bạn đã được phê duyệt
+    bởi { $approver } trong {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Nhân vật đã bị từ chối
+player-dm-desc-denied =
+    Nhân vật {"**"}{ $characterName }{"**"} của bạn đã bị từ chối
+    bởi { $denier } trong {"**"}{ $guildName }{"**"}.

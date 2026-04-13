@@ -13,7 +13,6 @@ common-btn-select = Auswählen
 common-btn-manage = Verwalten
 common-btn-rename = Umbenennen
 common-btn-continue = Fortfahren
-common-btn-cancel = Abbrechen
 common-btn-enable = Aktivieren
 common-btn-disable = Deaktivieren
 
@@ -39,7 +38,6 @@ common-label-none = Keine
 common-label-unknown = Unbekannt
 common-label-locked = (GESPERRT)
 common-label-loose-items = Lose Gegenstände
-common-label-and-more = . . . und { $remaining } weitere.
 common-label-currency = Währung
 common-label-inventory-empty = Das Inventar ist leer.
 
@@ -48,7 +46,7 @@ common-embed-field-party = __Gruppe__
 common-embed-field-wait-list = __Warteliste__
 common-embed-footer-quest-id = Quest-ID: { $questId }
 common-embed-footer-transaction-id = Transaktions-ID: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}Spielleiter:{"**"}
 common-embed-label-party-restrictions = {"**"}Gruppenbeschränkungen:{"**"}
 
 # Übersetzungshinweis

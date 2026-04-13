@@ -1,8 +1,6 @@
 import logging
 import os
 import re
-from contextvars import ContextVar
-
 import discord
 from discord import app_commands
 from fluent.runtime import FluentLocalization, FluentResourceLoader
@@ -76,30 +74,12 @@ def validate_locale_setup():
         )
 
 
-_render_locale: ContextVar[str | None] = ContextVar('_render_locale', default=None)
-
-
-def set_locale_context(locale: str):
-    """Set the active locale for the current asyncio task."""
-    _render_locale.set(locale)
-
-
 def get_localizer():
     return _localizer
 
 
 def t(locale, message_id, **kwargs):
-    """
-    Primary localization API.
-
-    When *locale* is DEFAULT_LOCALE, the context variable set by
-    set_locale_context() is checked first, allowing UI code to pick up
-    the user's real locale without changing call sites.
-    """
-    if locale == DEFAULT_LOCALE:
-        ctx_locale = _render_locale.get()
-        if ctx_locale is not None:
-            locale = ctx_locale
+    """Primary localization API. Always uses the locale passed explicitly."""
     return get_localizer().format(locale, message_id, **kwargs)
 
 
@@ -168,13 +148,10 @@ class FluentTranslator(app_commands.Translator):
         return result
 
 
-async def resolve_user_locale(bot, user_id, guild_id=None):
-    """
-    Resolve a user's preferred locale for DMs and other non-interaction contexts.
-    Fallback chain: user DB preference > guild locale > DEFAULT_LOCALE.
-    """
+async def _lookup_user_locale(bot, user_id):
+    """Return the user's DB locale preference, or None."""
     try:
-        from ReQuest.utilities.supportFunctions import get_cached_data
+        from ReQuest.utilities.db_cache import get_cached_data
         locale_data = await get_cached_data(
             bot=bot,
             mongo_database=bot.mdb,
@@ -187,25 +164,15 @@ async def resolve_user_locale(bot, user_id, guild_id=None):
                 return user_locale
     except Exception as e:
         logger.debug(f'Could not resolve user locale preference: {e}')
-
-    if guild_id:
-        guild_locale = await resolve_guild_locale(bot, guild_id)
-        if guild_locale != DEFAULT_LOCALE:
-            return guild_locale
-
-    return DEFAULT_LOCALE
+    return None
 
 
-async def resolve_guild_locale(bot, guild_id):
-    """
-    Resolve the guild's configured locale.
-    Returns the guild locale if set and supported, otherwise DEFAULT_LOCALE.
-    """
+async def _lookup_guild_locale(bot, guild_id):
+    """Return the guild's DB locale preference, or None."""
     if not guild_id:
-        return DEFAULT_LOCALE
-
+        return None
     try:
-        from ReQuest.utilities.supportFunctions import get_cached_data
+        from ReQuest.utilities.db_cache import get_cached_data
         guild_locale_data = await get_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
@@ -218,34 +185,59 @@ async def resolve_guild_locale(bot, guild_id):
                 return guild_locale
     except Exception as e:
         logger.debug(f'Could not resolve guild locale preference: {e}')
+    return None
 
-    return DEFAULT_LOCALE
 
+async def resolve_locale(interaction=None, *, bot=None, guild_id=None, user_id=None):
+    """Resolve a locale using one of three fallback chains.
 
-async def resolve_locale(interaction):
+    Mode is inferred from the arguments provided:
+
+    CALLER mode — resolve_locale(interaction):
+        user DB pref > interaction.locale > DEFAULT_LOCALE
+        Used for ephemeral responses to the interaction caller.
+
+    GUILD mode — resolve_locale(bot=bot, guild_id=gid):
+        guild DB pref > DEFAULT_LOCALE
+        Used for public embeds and posts.
+
+    TARGET_USER mode — resolve_locale(bot=bot, user_id=uid, guild_id=gid):
+        user DB pref > guild DB pref > DEFAULT_LOCALE
+        Used for DMs to a specific (non-interacting) user.
     """
-    Resolve the user's preferred locale via the fallback chain:
-    user DB preference > guild DB preference > interaction.locale > DEFAULT_LOCALE.
-    """
-    bot = interaction.client
+    if interaction is not None:
+        _bot = bot or interaction.client
+        result = await _lookup_user_locale(_bot, interaction.user.id)
+        if result:
+            return result
 
-    try:
-        from ReQuest.utilities.supportFunctions import get_cached_data
-        locale_data = await get_cached_data(
-            bot=bot,
-            mongo_database=bot.mdb,
-            collection_name=DatabaseCollections.USER_LOCALE,
-            query={CommonFields.ID: interaction.user.id}
-        )
-        if locale_data and 'locale' in locale_data:
-            user_locale = locale_data['locale']
-            if user_locale in SUPPORTED_LOCALES:
-                return user_locale
-    except Exception as e:
-        logger.debug(f'Could not resolve user locale preference: {e}')
+        discord_locale = str(interaction.locale) if interaction.locale else None
+        if discord_locale and discord_locale in SUPPORTED_LOCALES:
+            return discord_locale
 
-    discord_locale = str(interaction.locale) if interaction.locale else None
-    if discord_locale and discord_locale in SUPPORTED_LOCALES:
-        return discord_locale
+        return DEFAULT_LOCALE
 
-    return DEFAULT_LOCALE
+    if bot is None:
+        raise TypeError('resolve_locale() requires either interaction or bot=')
+
+    if user_id is not None:
+        result = await _lookup_user_locale(bot, user_id)
+        if result:
+            return result
+
+        if guild_id:
+            guild_result = await _lookup_guild_locale(bot, guild_id)
+            if guild_result:
+                return guild_result
+
+        return DEFAULT_LOCALE
+
+    if guild_id is not None:
+        result = await _lookup_guild_locale(bot, guild_id)
+        if result:
+            return result
+        return DEFAULT_LOCALE
+
+    raise TypeError(
+        'resolve_locale() requires interaction, or bot= with guild_id= and/or user_id='
+    )

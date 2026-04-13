@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = de ex., 0.1
 config-error-denomination-matches-currency = Noul nume de denominație nu poate coincide cu o monedă existentă pe acest server! S-a găsit o monedă existentă cu numele „{ $existingName }".
 config-error-denomination-matches-denomination = Noul nume de denominație nu poate coincide cu o denominație existentă pe acest server! S-a găsit o denominație existentă cu numele „{ $denominationName }" sub moneda numită „{ $currencyName }".
 config-error-denomination-value-exists = Denominațiile sub aceeași monedă trebuie să aibă valori unice! { $denominationName } are deja această valoare atribuită.
+config-label-denomination-info = **{ $name }** (Valoare: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Nume de roluri interzise
@@ -224,8 +225,6 @@ config-error-item-exists-new-char = Un obiect cu numele { $itemName } există de
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Încarcă magazin personaj nou (JSON)
 config-error-no-json-uploaded-short = Niciun fișier JSON încărcat.
-config-error-json-must-have-shopstock = JSON-ul trebuie să conțină un array „shopStock".
-config-error-items-must-have-name-price = Toate obiectele trebuie să aibă „name" și „price".
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Setează averea personajului nou
@@ -252,6 +251,7 @@ config-modal-title-kit-currency = Adaugă monedă la kit
 config-modal-placeholder-currency-eg = de ex., Aur
 config-modal-placeholder-amount-eg = de ex., 100
 config-error-amount-must-be-number = Suma trebuie să fie un număr.
+config-error-amount-exceeds-maximum = Suma nu poate depăși { $max }.
 config-error-no-currencies-on-server = Nicio monedă configurată pe server.
 config-error-currency-not-found-short = Moneda „{ $currency }" nu a fost găsită.
 config-error-denomination-not-found = Denominația „{ $denomination }" nu a fost găsită în configurarea monedei.
@@ -408,11 +408,9 @@ config-title-wizard = {"**"}Configurare server - Asistent{"**"}
 config-wizard-intro =
     {"**"}Bine ați venit la Asistentul de Configurare ReQuest!{"**"}
 
-    Acest asistent vă va ajuta să vă asigurați că serverul este configurat corect pentru a folosi funcționalitățile ReQuest.
-    Va scana setările curente și va oferi recomandări pentru orice ajustări necesare.
+    Acest asistent vă va ajuta să vă asigurați că serverul este configurat corect pentru a folosi funcționalitățile ReQuest. Va scana setările curente și va oferi recomandări pentru orice ajustări necesare.
 
-    Folosiți butonul „Lansează scanarea" de mai jos pentru a începe procesul de validare. Odată ce scanarea este completă,
-    veți primi un raport detaliat al configurației serverului împreună cu orice modificări recomandate.
+    Folosiți butonul „Lansează scanarea" de mai jos pentru a începe procesul de validare. Odată ce scanarea este completă, veți primi un raport detaliat al configurației serverului împreună cu orice modificări recomandate.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Permisiuni globale bot{"**"}__
@@ -536,7 +534,27 @@ config-wizard-gm-rewards-disabled = {"**"}Status:{"**"} Dezactivat
 config-wizard-gm-rewards-enabled = {"**"}Status:{"**"} Activat
 config-wizard-gm-rewards-experience = - Experiență: { $xp }
 config-wizard-gm-rewards-items = - Obiecte:
-config-wizard-unnamed-shop = Magazin fără nume
+
+# Wizard - Limba serverului (Pagina 1)
+config-wizard-server-language-desc =
+    Aceasta este limba pe care ReQuest o va folosi pentru toate mesajele publice, cum ar fi postările de quest-uri, mesajele de reaprovizionare a magazinului și jurnalele de tranzacții.
+config-wizard-server-language = {"**"}Limba serverului:{"**"} { $language }
+config-wizard-server-language-default = Implicit (engleză)
+
+# Wizard - Informații reaprovizionare magazin
+config-wizard-shop-restock-not-scheduled = ℹ️ Reaprovizionarea nu este programată
+
+# Wizard - Setări quest-uri (Pagina 5)
+config-wizard-quest-header = __{"**"}Setări quest-uri{"**"}__
+config-wizard-quest-header-desc =
+    Această secțiune oferă o prezentare generală a configurațiilor legate de quest-uri.
+config-wizard-quest-role-mode = - Modul rolurilor de quest: { $mode }
+config-wizard-quest-roles-label = {"**"}Roluri de quest GM{"**"}
+config-wizard-quest-roles-count = - Roluri atribuite GM-ilor: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Toate rolurile sunt OK
+config-wizard-quest-roles-assigned-to = {"    "}Atribuit la: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ ID rol { $roleId }: Nu a fost găsit/Șters de pe server
+config-wizard-quest-roles-no-assignments = - ℹ️ Nicio rol de quest atribuită
 
 ## Roles View
 config-title-roles = {"**"}Configurare server - Roluri{"**"}
@@ -832,9 +850,6 @@ config-select-placeholder-add-quest-role = Atribuiți rol(uri) de server acestui
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}Configurare server - Roluri de Quest{"**"}
-config-label-quest-roles = Roluri de Quest
-config-desc-quest-roles =
-    Configurați modul în care rolurile de echipă sunt gestionate în timpul quest-urilor.
 
 config-label-quest-role-mode-disabled = {"**"}Mod roluri de quest:{"**"} Dezactivat
     Nu se creează sau atribuie roluri în timpul quest-urilor.
@@ -853,6 +868,7 @@ config-desc-manage-assignments =
     Rolurile trebuie să fie mai jos decât cel mai înalt rol al ReQuest în ierarhia serverului.
 config-msg-no-gm-members = Nu s-au găsit membri cu rol de GM pe acest server.
 config-label-no-roles-assigned = Niciun rol de quest atribuit
+config-label-more-roles = (+{ $count } în plus)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Gestionare roluri de quest — { $gmName }{"**"}

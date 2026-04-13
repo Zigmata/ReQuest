@@ -13,7 +13,6 @@ common-btn-select = Kiválasztás
 common-btn-manage = Kezelés
 common-btn-rename = Átnevezés
 common-btn-continue = Tovább
-common-btn-cancel = Mégse
 common-btn-enable = Engedélyezés
 common-btn-disable = Letiltás
 
@@ -39,16 +38,15 @@ common-label-none = Nincs
 common-label-unknown = Ismeretlen
 common-label-locked = (ZÁROLVA)
 common-label-loose-items = Szabad tárgyak
-common-label-and-more = . . . és még { $remaining } további.
 common-label-currency = Valuta
 common-label-inventory-empty = A leltár üres.
 
 # Shared embed fields
 common-embed-field-party = __Csapat__
 common-embed-field-wait-list = __Várólistás__
-common-embed-footer-quest-id = Quest ID: { $questId }
+common-embed-footer-quest-id = Küldetés azon: { $questId }
 common-embed-footer-transaction-id = Tranzakció ID: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}Játékmester:{"**"}
 common-embed-label-party-restrictions = {"**"}Csapatkorlátozások:{"**"}
 
 # Translation notice

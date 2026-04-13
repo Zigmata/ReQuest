@@ -102,4 +102,3 @@ info-language-desc-sv-se = 言語をスウェーデン語に設定します
 info-language-desc-th = 言語をタイ語に設定します
 info-language-desc-tr = 言語をトルコ語に設定します
 info-language-desc-vi = 言語をベトナム語に設定します
-info-language-updated = 言語が正常に更新されました。

@@ -13,7 +13,6 @@ common-btn-select = Velg
 common-btn-manage = Administrer
 common-btn-rename = Gi nytt navn
 common-btn-continue = Fortsett
-common-btn-cancel = Avbryt
 common-btn-enable = Aktiver
 common-btn-disable = Deaktiver
 
@@ -39,7 +38,6 @@ common-label-none = Ingen
 common-label-unknown = Ukjent
 common-label-locked = (LÅST)
 common-label-loose-items = Løse gjenstander
-common-label-and-more = . . . og { $remaining } til.
 common-label-currency = Valuta
 common-label-inventory-empty = Inventaret er tomt.
 
@@ -48,7 +46,7 @@ common-embed-field-party = __Gruppe__
 common-embed-field-wait-list = __Venteliste__
 common-embed-footer-quest-id = Quest-ID: { $questId }
 common-embed-footer-transaction-id = Transaksjons-ID: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}Spilleder:{"**"}
 common-embed-label-party-restrictions = {"**"}Gruppebegrensninger:{"**"}
 
 # Translation notice

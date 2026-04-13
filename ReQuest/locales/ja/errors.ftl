@@ -3,11 +3,14 @@
 # Error embed wrapper
 error-oops-title = ⚠️ エラー！
 error-report-description =
-    例外が発生しました：
-
-    ```{ $exception }```
+    { $exception }
 
     このエラーが予期しないものである場合、またはボットが正しく動作していないと思われる場合は、[公式 ReQuest サポート Discord](https://discord.gg/Zq37gj4) でバグレポートを送信してください。
+
+error-report-unexpected =
+    予期しないエラーが発生しました。もう一度お試しください。
+
+    この問題が続く場合は、[公式 ReQuest サポート Discord](https://discord.gg/Zq37gj4) でバグレポートを送信してください。
 
 # Check failures
 error-owner-only = このコマンドはボットオーナーのみが使用できます！

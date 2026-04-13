@@ -32,7 +32,6 @@ admin-modal-label-server-name = Όνομα Διακομιστή
 admin-modal-placeholder-server-name = Πληκτρολογήστε ένα σύντομο όνομα για τον Discord Διακομιστή
 admin-modal-label-server-id = ID Διακομιστή
 admin-modal-placeholder-server-id = Πληκτρολογήστε το ID του Discord Διακομιστή
-admin-select-placeholder-server = Επιλέξτε διακομιστή για αφαίρεση
 admin-modal-title-cog-action = { $action } Cog
 admin-modal-label-cog-name = Όνομα
 admin-modal-placeholder-cog-name = Εισάγετε το όνομα του Cog για { $action }

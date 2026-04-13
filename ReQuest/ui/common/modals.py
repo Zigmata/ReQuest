@@ -4,19 +4,16 @@ import discord
 import discord.ui
 from discord.ui import Modal
 
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, set_locale_context
-from ReQuest.utilities.supportFunctions import log_exception, UserFeedbackError
+from ReQuest.utilities.constants import DiscordLimits
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
+from ReQuest.utilities.exceptions import log_exception, UserFeedbackError
 
 logger = logging.getLogger(__name__)
 
 
 class LocaleModal(Modal):
-    """Modal subclass that propagates locale via context var before on_submit."""
-
-    async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        locale = getattr(self, '_locale', None) or getattr(self, 'locale', None) or DEFAULT_LOCALE
-        set_locale_context(locale)
-        return True
+    """Modal subclass with locale support."""
+    pass
 
 
 class ConfirmModal(LocaleModal):
@@ -24,21 +21,18 @@ class ConfirmModal(LocaleModal):
         self._locale = locale or DEFAULT_LOCALE
         self.confirm_word = t(self._locale, 'common-confirm-word')
         prompt_placeholder = t(self._locale, 'common-confirm-placeholder', confirmWord=self.confirm_word)
-        if len(title) > 45:
-            title = title[:42] + '...'
-        if len(prompt_label) > 45:
-            prompt_label = prompt_label[:42] + '...'
-        if len(prompt_placeholder) > 100:
-            prompt_placeholder = prompt_placeholder[:97] + '...'
-        super().__init__(title=title)
+        super().__init__(title=title[:DiscordLimits.MODAL_TITLE])
         self.confirm_callback = confirm_callback
         self.prompt = discord.ui.TextInput(
-            label=prompt_label,
-            placeholder=prompt_placeholder,
+            placeholder=prompt_placeholder[:DiscordLimits.TEXT_INPUT_PLACEHOLDER],
             required=True,
             max_length=len(self.confirm_word)
         )
-        self.add_item(self.prompt)
+        self.prompt_label = discord.ui.Label(
+            text=prompt_label[:DiscordLimits.LABEL_LABEL],
+            component=self.prompt
+        )
+        self.add_item(self.prompt_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
@@ -58,18 +52,22 @@ class PageJumpModal(LocaleModal):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         self._locale = locale
         super().__init__(
-            title=t(self._locale, 'common-page-jump-title'),
+            title=t(self._locale, 'common-page-jump-title')[:DiscordLimits.MODAL_TITLE],
             timeout=180
         )
         self.calling_view = calling_view
         self.page_number_input = discord.ui.TextInput(
-            label=t(self._locale, 'common-page-jump-label'),
             custom_id='page_number_input',
-            placeholder=t(self._locale, 'common-page-jump-placeholder', totalPages=str(self.calling_view.total_pages)),
+            placeholder=t(self._locale, 'common-page-jump-placeholder',
+                         totalPages=str(self.calling_view.total_pages))[:DiscordLimits.TEXT_INPUT_PLACEHOLDER],
             required=True,
             max_length=len(str(self.calling_view.total_pages))
         )
-        self.add_item(self.page_number_input)
+        self.page_number_label = discord.ui.Label(
+            text=t(self._locale, 'common-page-jump-label')[:DiscordLimits.LABEL_LABEL],
+            component=self.page_number_input
+        )
+        self.add_item(self.page_number_label)
 
     async def on_submit(self, interaction: discord.Interaction):
         try:

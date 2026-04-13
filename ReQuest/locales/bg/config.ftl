@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = напр. 0.1
 config-error-denomination-matches-currency = Името на новата деноминация не може да съвпада с вече съществуваща валута на този сървър! Намерена е валута с име "{ $existingName }".
 config-error-denomination-matches-denomination = Името на новата деноминация не може да съвпада с вече съществуваща деноминация на този сървър! Намерена е деноминация с име "{ $denominationName }" под валутата "{ $currencyName }".
 config-error-denomination-value-exists = Деноминациите в една валута трябва да имат уникални стойности! { $denominationName } вече има зададена тази стойност.
+config-label-denomination-info = **{ $name }** (Стойност: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Имена на забранени роли
@@ -224,8 +225,6 @@ config-error-item-exists-new-char = Предмет с име { $itemName } ве�
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Качване на магазин за нови персонажи (JSON)
 config-error-no-json-uploaded-short = Не е качен JSON файл.
-config-error-json-must-have-shopstock = JSON трябва да съдържа масив 'shopStock'.
-config-error-items-must-have-name-price = Всички предмети трябва да имат 'name' и 'price'.
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Задаване на начално богатство
@@ -252,6 +251,7 @@ config-modal-title-kit-currency = Добавяне на валута в комп
 config-modal-placeholder-currency-eg = напр. Злато
 config-modal-placeholder-amount-eg = напр. 100
 config-error-amount-must-be-number = Сумата трябва да е число.
+config-error-amount-exceeds-maximum = Сумата не може да надвишава { $max }.
 config-error-no-currencies-on-server = На сървъра няма конфигурирани валути.
 config-error-currency-not-found-short = Валутата "{ $currency }" не е намерена.
 config-error-denomination-not-found = Деноминацията "{ $denomination }" не е намерена в конфигурацията на валутата.
@@ -408,11 +408,9 @@ config-title-wizard = {"**"}Конфигурация на сървъра - Съ�
 config-wizard-intro =
     {"**"}Добре дошли в съветника за конфигурация на ReQuest!{"**"}
 
-    Този съветник ще ви помогне да се уверите, че вашият сървър е правилно конфигуриран за използване на функциите на ReQuest.
-    Той ще сканира текущите ви настройки и ще предостави препоръки за необходимите корекции.
+    Този съветник ще ви помогне да се уверите, че вашият сървър е правилно конфигуриран за използване на функциите на ReQuest. Той ще сканира текущите ви настройки и ще предостави препоръки за необходимите корекции.
 
-    Използвайте бутона „Стартиране на сканиране" по-долу, за да започнете процеса на валидация. След като сканирането приключи,
-    ще получите подробен доклад за конфигурацията на вашия сървър, заедно с препоръчани промени.
+    Използвайте бутона „Стартиране на сканиране" по-долу, за да започнете процеса на валидация. След като сканирането приключи, ще получите подробен доклад за конфигурацията на вашия сървър, заедно с препоръчани промени.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Глобални права на бота{"**"}__
@@ -536,7 +534,27 @@ config-wizard-gm-rewards-disabled = {"**"}Статус:{"**"} Изключено
 config-wizard-gm-rewards-enabled = {"**"}Статус:{"**"} Включено
 config-wizard-gm-rewards-experience = - Опит: { $xp }
 config-wizard-gm-rewards-items = - Предмети:
-config-wizard-unnamed-shop = Магазин без име
+
+# Wizard - Език на сървъра (Страница 1)
+config-wizard-server-language-desc =
+    Това е езикът, който ReQuest ще използва за всички публични съобщения, като публикации на куестове, съобщения за зареждане на магазина и журнали за транзакции.
+config-wizard-server-language = {"**"}Език на сървъра:{"**"} { $language }
+config-wizard-server-language-default = По подразбиране (английски)
+
+# Wizard - Информация за зареждане на магазина
+config-wizard-shop-restock-not-scheduled = ℹ️ Зареждането не е планирано
+
+# Wizard - Настройки на куестове (Страница 5)
+config-wizard-quest-header = __{"**"}Настройки на куестове{"**"}__
+config-wizard-quest-header-desc =
+    Този раздел предоставя преглед на конфигурациите, свързани с куестове.
+config-wizard-quest-role-mode = - Режим на роли за куестове: { $mode }
+config-wizard-quest-roles-label = {"**"}Роли за куестове на GM{"**"}
+config-wizard-quest-roles-count = - Роли, назначени на GM-и: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Всички роли са наред
+config-wizard-quest-roles-assigned-to = {"    "}Назначена на: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ ID на роля { $roleId }: Не е намерена/Изтрита от сървъра
+config-wizard-quest-roles-no-assignments = - ℹ️ Няма назначени роли за куестове
 
 ## Roles View
 config-title-roles = {"**"}Конфигурация на сървъра - Роли{"**"}
@@ -707,7 +725,7 @@ config-desc-example-json =
     Изтеглете примерен JSON файл, показващ очаквания формат.
 config-msg-example-json = Ето примерен JSON файл, показващ очаквания формат.
 config-msg-no-shops = Няма конфигурирани магазини.
-config-label-shop-type-forum = (Forum)
+config-label-shop-type-forum = (Форум)
 config-label-shop-channel = Канал: <#{ $channelId }>
 
 ## Shop Channel Type Selection View
@@ -832,9 +850,6 @@ config-select-placeholder-add-quest-role = Присвояване на сърв�
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}Конфигурация на сървъра - Роли за куестове{"**"}
-config-label-quest-roles = Роли за куестове
-config-desc-quest-roles =
-    Конфигурирайте как се управляват ролите на групата по време на куестове.
 
 config-label-quest-role-mode-disabled = {"**"}Режим на роли за куестове:{"**"} Изключено
     Не се създават и не се присвояват роли по време на куестове.
@@ -853,6 +868,7 @@ config-desc-manage-assignments =
     Ролите трябва да са по-ниско от най-високата роля на ReQuest в йерархията на сървъра.
 config-msg-no-gm-members = Не са намерени членове с GM роля на този сървър.
 config-label-no-roles-assigned = Няма присвоени роли за куестове
+config-label-more-roles = (+{ $count } още)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Управление на роли за куестове — { $gmName }{"**"}

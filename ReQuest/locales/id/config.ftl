@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = contoh: 0.1
 config-error-denomination-matches-currency = Nama denominasi baru tidak boleh sama dengan mata uang yang sudah ada di server ini! Ditemukan mata uang bernama "{ $existingName }".
 config-error-denomination-matches-denomination = Nama denominasi baru tidak boleh sama dengan denominasi yang sudah ada di server ini! Ditemukan denominasi bernama "{ $denominationName }" di bawah mata uang bernama "{ $currencyName }".
 config-error-denomination-value-exists = Denominasi di bawah satu mata uang harus memiliki nilai unik! { $denominationName } sudah memiliki nilai ini.
+config-label-denomination-info = **{ $name }** (Nilai: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Nama Peran Terlarang
@@ -224,8 +225,6 @@ config-error-item-exists-new-char = Barang bernama { $itemName } sudah ada di to
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Unggah Toko Karakter Baru (JSON)
 config-error-no-json-uploaded-short = Tidak ada file JSON yang diunggah.
-config-error-json-must-have-shopstock = JSON harus mengandung array 'shopStock'.
-config-error-items-must-have-name-price = Semua barang harus memiliki 'name' dan 'price'.
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Tetapkan Kekayaan Karakter Baru
@@ -252,6 +251,7 @@ config-modal-title-kit-currency = Tambah Mata Uang Kit
 config-modal-placeholder-currency-eg = contoh: Gold
 config-modal-placeholder-amount-eg = contoh: 100
 config-error-amount-must-be-number = Jumlah harus berupa angka.
+config-error-amount-exceeds-maximum = Jumlah tidak boleh melebihi { $max }.
 config-error-no-currencies-on-server = Tidak ada mata uang yang dikonfigurasi di server.
 config-error-currency-not-found-short = Mata uang "{ $currency }" tidak ditemukan.
 config-error-denomination-not-found = Denominasi "{ $denomination }" tidak ditemukan dalam konfigurasi mata uang.
@@ -408,11 +408,9 @@ config-title-wizard = {"**"}Konfigurasi Server - Wizard{"**"}
 config-wizard-intro =
     {"**"}Selamat datang di Wizard Konfigurasi ReQuest!{"**"}
 
-    Wizard ini akan membantu Anda memastikan bahwa server Anda dikonfigurasi dengan benar untuk menggunakan fitur-fitur ReQuest.
-    Wizard akan memindai pengaturan Anda saat ini dan memberikan rekomendasi untuk penyesuaian yang diperlukan.
+    Wizard ini akan membantu Anda memastikan bahwa server Anda dikonfigurasi dengan benar untuk menggunakan fitur-fitur ReQuest. Wizard akan memindai pengaturan Anda saat ini dan memberikan rekomendasi untuk penyesuaian yang diperlukan.
 
-    Gunakan tombol "Mulai Pemindaian" di bawah untuk memulai proses validasi. Setelah pemindaian selesai,
-    Anda akan menerima laporan terperinci tentang konfigurasi server Anda beserta perubahan yang direkomendasikan.
+    Gunakan tombol "Mulai Pemindaian" di bawah untuk memulai proses validasi. Setelah pemindaian selesai, Anda akan menerima laporan terperinci tentang konfigurasi server Anda beserta perubahan yang direkomendasikan.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Izin Global Bot{"**"}__
@@ -536,7 +534,27 @@ config-wizard-gm-rewards-disabled = {"**"}Status:{"**"} Nonaktif
 config-wizard-gm-rewards-enabled = {"**"}Status:{"**"} Aktif
 config-wizard-gm-rewards-experience = - Pengalaman: { $xp }
 config-wizard-gm-rewards-items = - Barang:
-config-wizard-unnamed-shop = Toko Tanpa Nama
+
+# Wizard - Bahasa Server (Halaman 1)
+config-wizard-server-language-desc =
+    Ini adalah bahasa yang akan digunakan ReQuest untuk semua pesan publik, seperti postingan Quest, pesan restock Toko, dan log transaksi.
+config-wizard-server-language = {"**"}Bahasa Server:{"**"} { $language }
+config-wizard-server-language-default = Default (Inggris)
+
+# Wizard - Info Restock Toko
+config-wizard-shop-restock-not-scheduled = ℹ️ Restock Belum Dijadwalkan
+
+# Wizard - Pengaturan Quest (Halaman 5)
+config-wizard-quest-header = __{"**"}Pengaturan Quest{"**"}__
+config-wizard-quest-header-desc =
+    Bagian ini menyediakan gambaran umum konfigurasi terkait quest.
+config-wizard-quest-role-mode = - Mode Peran Quest: { $mode }
+config-wizard-quest-roles-label = {"**"}Peran Quest GM{"**"}
+config-wizard-quest-roles-count = - Peran yang Ditetapkan ke GM: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Semua Peran OK
+config-wizard-quest-roles-assigned-to = {"    "}Ditetapkan ke: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ ID Peran { $roleId }: Tidak Ditemukan/Dihapus dari Server
+config-wizard-quest-roles-no-assignments = - ℹ️ Tidak Ada Peran Quest yang Ditetapkan
 
 ## Roles View
 config-title-roles = {"**"}Konfigurasi Server - Peran{"**"}
@@ -832,9 +850,6 @@ config-select-placeholder-add-quest-role = Tetapkan peran server ke GM ini
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}Konfigurasi Server - Peran Quest{"**"}
-config-label-quest-roles = Peran Quest
-config-desc-quest-roles =
-    Konfigurasi bagaimana peran rombongan ditangani selama quest.
 
 config-label-quest-role-mode-disabled = {"**"}Mode Peran Quest:{"**"} Nonaktif
     Tidak ada peran yang dibuat atau ditetapkan selama quest.
@@ -853,6 +868,7 @@ config-desc-manage-assignments =
     Peran harus lebih rendah dari peran tertinggi ReQuest dalam hierarki server.
 config-msg-no-gm-members = Tidak ditemukan anggota dengan peran GM di server ini.
 config-label-no-roles-assigned = Tidak ada peran quest yang ditetapkan
+config-label-more-roles = (+{ $count } lagi)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Kelola Peran Quest — { $gmName }{"**"}

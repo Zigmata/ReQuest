@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = 例: 0.1
 config-error-denomination-matches-currency = 新しい額面名はこのサーバーの既存の通貨名と一致できません！「{ $existingName }」という既存の通貨が見つかりました。
 config-error-denomination-matches-denomination = 新しい額面名はこのサーバーの既存の額面名と一致できません！「{ $currencyName }」通貨の「{ $denominationName }」という既存の額面が見つかりました。
 config-error-denomination-value-exists = 同じ通貨の額面にはそれぞれ固有の値が必要です！{ $denominationName } には既にこの値が割り当てられています。
+config-label-denomination-info = **{ $name }** (値: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = 禁止ロール名
@@ -224,8 +225,6 @@ config-error-item-exists-new-char = { $itemName } という名前のアイテム
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = 新キャラクターショップをアップロード（JSON）
 config-error-no-json-uploaded-short = JSON ファイルがアップロードされていません。
-config-error-json-must-have-shopstock = JSON には「shopStock」配列が含まれている必要があります。
-config-error-items-must-have-name-price = すべてのアイテムには「name」と「price」が必要です。
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = 新キャラクターの所持金を設定
@@ -252,6 +251,7 @@ config-modal-title-kit-currency = キット通貨を追加
 config-modal-placeholder-currency-eg = 例: ゴールド
 config-modal-placeholder-amount-eg = 例: 100
 config-error-amount-must-be-number = 金額は数値でなければなりません。
+config-error-amount-exceeds-maximum = 金額は { $max } を超えることはできません。
 config-error-no-currencies-on-server = サーバーに通貨が設定されていません。
 config-error-currency-not-found-short = 通貨「{ $currency }」が見つかりません。
 config-error-denomination-not-found = 額面「{ $denomination }」が通貨設定に見つかりません。
@@ -408,11 +408,9 @@ config-title-wizard = {"**"}サーバー設定 - ウィザード{"**"}
 config-wizard-intro =
     {"**"}ReQuest 設定ウィザードへようこそ！{"**"}
 
-    このウィザードは、サーバーが ReQuest の機能を使用するために正しく設定されていることを確認するお手伝いをします。
-    現在の設定をスキャンし、必要な調整についての推奨事項を提供します。
+    このウィザードは、サーバーが ReQuest の機能を使用するために正しく設定されていることを確認するお手伝いをします。 現在の設定をスキャンし、必要な調整についての推奨事項を提供します。
 
-    以下の「スキャン開始」ボタンを使用して検証プロセスを開始してください。スキャンが完了すると、
-    サーバー設定の詳細レポートと推奨される変更が表示されます。
+    以下の「スキャン開始」ボタンを使用して検証プロセスを開始してください。スキャンが完了すると、 サーバー設定の詳細レポートと推奨される変更が表示されます。
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}ボットのグローバル権限{"**"}__
@@ -536,7 +534,27 @@ config-wizard-gm-rewards-disabled = {"**"}ステータス:{"**"} 無効
 config-wizard-gm-rewards-enabled = {"**"}ステータス:{"**"} 有効
 config-wizard-gm-rewards-experience = - 経験値: { $xp }
 config-wizard-gm-rewards-items = - アイテム:
-config-wizard-unnamed-shop = 名前なしショップ
+
+# ウィザード - サーバー言語（ページ1）
+config-wizard-server-language-desc =
+    これはReQuestがクエスト投稿、ショップ補充メッセージ、取引ログなどのすべての公開メッセージに使用する言語です。
+config-wizard-server-language = {"**"}サーバー言語：{"**"} { $language }
+config-wizard-server-language-default = デフォルト（英語）
+
+# ウィザード - ショップ補充情報
+config-wizard-shop-restock-not-scheduled = ℹ️ 補充は予定されていません
+
+# ウィザード - クエスト設定（ページ5）
+config-wizard-quest-header = __{"**"}クエスト設定{"**"}__
+config-wizard-quest-header-desc =
+    このセクションでは、クエスト関連の設定の概要を提供します。
+config-wizard-quest-role-mode = - クエストロールモード：{ $mode }
+config-wizard-quest-roles-label = {"**"}GMクエストロール{"**"}
+config-wizard-quest-roles-count = - GMに割り当てられたロール：{ $count }
+config-wizard-quest-roles-all-ok = - ✅ すべてのロールOK
+config-wizard-quest-roles-assigned-to = {"    "}割り当て先：{ $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ ロールID { $roleId }：見つかりません/サーバーから削除済み
+config-wizard-quest-roles-no-assignments = - ℹ️ クエストロールは割り当てられていません
 
 ## Roles View
 config-title-roles = {"**"}サーバー設定 - ロール{"**"}
@@ -830,9 +848,6 @@ config-select-placeholder-add-quest-role = この GM にサーバーロールを
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}サーバー設定 - Quest ロール{"**"}
-config-label-quest-roles = Quest ロール
-config-desc-quest-roles =
-    Quest 中のパーティーロールの扱い方を設定します。
 
 config-label-quest-role-mode-disabled = {"**"}Quest ロールモード:{"**"} 無効
     Quest 中にロールの作成や割り当ては行われません。
@@ -851,6 +866,7 @@ config-desc-manage-assignments =
     ロールはサーバー階層で ReQuest の最上位ロールより下位である必要があります。
 config-msg-no-gm-members = このサーバーに GM ロールを持つメンバーが見つかりません。
 config-label-no-roles-assigned = Quest ロールが割り当てられていません
+config-label-more-roles = (+{ $count } 件)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Quest ロールの管理 — { $gmName }{"**"}

@@ -32,7 +32,6 @@ admin-modal-label-server-name = Naziv poslužitelja
 admin-modal-placeholder-server-name = Upišite kratki naziv za Discord poslužitelj
 admin-modal-label-server-id = ID poslužitelja
 admin-modal-placeholder-server-id = Upišite ID Discord poslužitelja
-admin-select-placeholder-server = Odaberite poslužitelj za uklanjanje
 admin-modal-title-cog-action = { $action } Cog
 admin-modal-label-cog-name = Naziv
 admin-modal-placeholder-cog-name = Unesite naziv Coga za { $action }

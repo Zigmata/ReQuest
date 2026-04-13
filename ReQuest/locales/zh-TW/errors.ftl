@@ -3,11 +3,14 @@
 # Error embed wrapper
 error-oops-title = ⚠️ 糟糕！
 error-report-description =
-    發生了一個例外狀況：
-
-    ```{ $exception }```
+    { $exception }
 
     如果此錯誤出乎意料，或您懷疑機器人運作不正常，請在 [ReQuest 官方支援 Discord](https://discord.gg/Zq37gj4) 中提交錯誤報告。
+
+error-report-unexpected =
+    發生了意外錯誤。請重試。
+
+    如果此問題持續出現，請在 [ReQuest 官方支援 Discord](https://discord.gg/Zq37gj4) 中提交錯誤報告。
 
 # Check failures
 error-owner-only = 只有機器人擁有者可以使用此指令！

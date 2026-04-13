@@ -9,13 +9,9 @@ from pymongo import ReturnDocument
 
 from ReQuest.ui.common.enums import ScheduleType, RoleplayMode, DayOfWeek
 from ReQuest.utilities.constants import CharacterFields, RoleplayFields, DatabaseCollections
-from ReQuest.utilities.supportFunctions import (
-    log_exception,
-    get_cached_data,
-    update_character_inventory,
-    update_character_experience,
-    get_xp_config
-)
+from ReQuest.utilities.character import update_character_inventory, update_character_experience
+from ReQuest.utilities.db_cache import get_cached_data, get_xp_config
+from ReQuest.utilities.exceptions import log_exception
 
 logger = logging.getLogger(__name__)
 

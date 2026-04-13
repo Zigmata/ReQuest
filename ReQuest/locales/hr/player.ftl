@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Razmjena
-player-cmd-desc = Izbornici igrača
 
 # --- Buttons ---
 
@@ -146,6 +144,15 @@ player-msg-no-characters = Nemate registriranih likova.
 player-label-active = (Aktivan)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Lik u tijeku: { $characterName }{"**"}
+    Registracija vašeg lika čeka postavljanje inventara.
+player-btn-resume = Nastavi
+player-btn-discard = Odbaci
+player-modal-title-discard-character = Odbaci lik
+player-modal-label-discard-confirm = Odbaci { $characterName }?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Potvrdi uklanjanje lika
 player-modal-label-confirm-char-delete = Obrisati { $characterName }?
@@ -215,8 +222,6 @@ player-label-empty-kit = {"*"}Prazan set{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Potvrdite odabir: { $kitName }{"**"}
-player-label-items-heading = {"**"}Predmeti:{"**"}
-player-label-currency-heading = {"**"}Valuta:{"**"}
 player-msg-kit-empty = Ovaj set je prazan.
 
 # NewCharacterComplexItemPurchaseView
@@ -264,6 +269,7 @@ player-embed-field-receipt = Račun
 # Spend currency errors
 player-error-amount-not-number = Iznos mora biti broj.
 player-error-amount-positive = Morate potrošiti pozitivan iznos.
+player-error-amount-exceeds-maximum = Iznos ne može premašiti { $max }.
 player-error-no-active-character-server = Nemate aktivnog lika na ovom poslužitelju.
 player-error-no-currency-config = Konfiguracija valute nije pronađena za ovaj poslužitelj.
 
@@ -281,18 +287,17 @@ player-error-qty-only-have = Imate samo { $maxQuantity } ovog predmeta.
 player-error-invalid-format = Neispravan format: "{ $line }". Koristite <naziv>: <količina>.
 player-error-empty-name = Naziv predmeta ne smije biti prazan u retku: "{ $line }".
 player-error-invalid-quantity = Neispravna količina za "{ $name }": "{ $quantity }". Mora biti pozitivan cijeli broj.
-player-error-input-errors-header = Greške u unosu inventara:
-player-msg-no-valid-items = Nema valjanih predmeta. Inicijalizacija s praznim inventarom.
+
+# Validation error view
+player-validation-error-title = Greške unosa
+player-validation-btn-retry = Pokušaj ponovo
 
 # Cart quantity validation
 player-error-enter-valid-number = Unesite valjani pozitivan broj.
 
 # Submission embeds (approval queue)
-player-embed-title-approval = Odobrenje inventara: { $characterName }
-player-embed-desc-submitted-by = Poslao { $userMention }
 player-embed-field-items = Predmeti
 player-embed-field-currency-received = Valuta
-player-embed-footer-submission-id = ID prijave: { $submissionId }
 player-label-approval-thread = Odobrenje: { $characterName }
 player-embed-title-submission-sent = Prijava inventara poslana
 player-embed-desc-submission-sent =
@@ -306,3 +311,47 @@ player-embed-desc-starting-inventory = Igrač: { $playerMention } kao `{ $charac
 player-embed-field-items-received = Primljeni predmeti
 player-embed-field-currency-received-label = Primljena valuta
 player-label-untitled = Bez naslova
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Prijava inventara: { $characterName }{"**"}
+    Poslao/la { $userMention }
+player-approval-post-items = Predmeti
+player-approval-post-currency = Valuta
+player-approval-resolved = Ovaj zahtjev je riješen.
+player-approval-btn-approve = Odobri
+player-approval-btn-deny = Odbij
+player-approval-btn-edit = Uredi
+player-approval-error-no-permission = Nemate dozvolu za ovu radnju.
+player-approval-error-not-submitter = Samo izvorni podnositelj može urediti ovaj zahtjev.
+player-approval-thread-instructions =
+    Ova nit je stvorena za odobrenje lika {"**"}{ $characterName }{"**"}.
+    Voditelj igre će pregledati prijavu i odobriti je ili odbiti.
+    Nakon odobrenja ili odbijanja, ova nit će biti zaključana.
+
+    {"**"}Voditelji igre:{"**"} Razgovarajte o svim potrebnim
+    izmjenama sa svojim igračem dok inventar ne bude u
+    prihvatljivom stanju. Koristite gumb `Odbij` samo za
+    nepomirljive prijave.
+
+    { $playerMention }: Koristite gumb `Uredi` za sve izmjene
+    koje ovdje zatraži Voditelj igre.
+player-approval-approved-by = Ovaj zahtjev je odobren od { $approver }.
+player-approval-denied-by = Ovaj zahtjev je odbijen od { $denier }.
+player-approval-deny-reason = Razlog: { $reason }
+player-msg-submission-updated = Vaš zahtjev je ažuriran.
+
+
+# Denial modal
+player-modal-title-deny-reason = Odbij zahtjev
+player-modal-label-deny-reason = Razlog odbijanja
+player-modal-placeholder-deny-reason = Neobvezno: objasnite razlog odbijanja
+# Approval DM notifications
+player-dm-title-approved = Lik odobren
+player-dm-desc-approved =
+    Vaš lik {"**"}{ $characterName }{"**"} je odobren
+    od { $approver } na poslužitelju {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Lik odbijen
+player-dm-desc-denied =
+    Vaš lik {"**"}{ $characterName }{"**"} je odbijen
+    od { $denier } na poslužitelju {"**"}{ $guildName }{"**"}.

@@ -3,11 +3,14 @@
 # Embed de error
 error-oops-title = ⚠️ ¡Ups!
 error-report-description =
-    Ocurrió una excepción:
-
-    {"```"}{ $exception }{"```"}
+    { $exception }
 
     Si este error es inesperado, o sospechas que el bot no está funcionando correctamente, por favor envía un reporte de error en el [Discord Oficial de Soporte de ReQuest](https://discord.gg/Zq37gj4).
+
+error-report-unexpected =
+    Ocurrió un error inesperado. Por favor, inténtalo de nuevo.
+
+    Si esto sigue ocurriendo, por favor envía un reporte de error en el [Discord Oficial de Soporte de ReQuest](https://discord.gg/Zq37gj4).
 
 # Fallos de verificación
 error-owner-only = ¡Solo el dueño del bot puede usar este comando!

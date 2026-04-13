@@ -13,7 +13,6 @@ common-btn-select = Обрати
 common-btn-manage = Керувати
 common-btn-rename = Перейменувати
 common-btn-continue = Продовжити
-common-btn-cancel = Скасувати
 common-btn-enable = Увімкнути
 common-btn-disable = Вимкнути
 
@@ -39,7 +38,6 @@ common-label-none = Немає
 common-label-unknown = Невідомо
 common-label-locked = (ЗАБЛОКОВАНО)
 common-label-loose-items = Вільні предмети
-common-label-and-more = . . . та ще { $remaining }.
 common-label-currency = Валюта
 common-label-inventory-empty = Інвентар порожній.
 
@@ -48,7 +46,7 @@ common-embed-field-party = __Група__
 common-embed-field-wait-list = __Список очікування__
 common-embed-footer-quest-id = ID Quest: { $questId }
 common-embed-footer-transaction-id = ID транзакції: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}Ведучий:{"**"}
 common-embed-label-party-restrictions = {"**"}Обмеження групи:{"**"}
 
 # Повідомлення про переклад

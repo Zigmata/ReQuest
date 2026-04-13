@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = π.χ., 0.1
 config-error-denomination-matches-currency = Το όνομα της νέας ονομαστικής αξίας δεν μπορεί να ταιριάζει με υπάρχον νόμισμα σε αυτόν τον διακομιστή! Βρέθηκε υπάρχον νόμισμα με το όνομα "{ $existingName }".
 config-error-denomination-matches-denomination = Το όνομα της νέας ονομαστικής αξίας δεν μπορεί να ταιριάζει με υπάρχουσα ονομαστική αξία σε αυτόν τον διακομιστή! Βρέθηκε υπάρχουσα ονομαστική αξία "{ $denominationName }" στο νόμισμα "{ $currencyName }".
 config-error-denomination-value-exists = Οι ονομαστικές αξίες κάτω από ένα νόμισμα πρέπει να έχουν μοναδικές τιμές! Η { $denominationName } έχει ήδη αυτή την τιμή.
+config-label-denomination-info = **{ $name }** (Αξία: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Απαγορευμένα Ονόματα Ρόλων
@@ -224,8 +225,6 @@ config-error-item-exists-new-char = Ένα αντικείμενο με το όν
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Μεταφόρτωση Καταστήματος Νέου Χαρακτήρα (JSON)
 config-error-no-json-uploaded-short = Δεν μεταφορτώθηκε αρχείο JSON.
-config-error-json-must-have-shopstock = Το JSON πρέπει να περιέχει πίνακα 'shopStock'.
-config-error-items-must-have-name-price = Όλα τα αντικείμενα πρέπει να έχουν 'name' και 'price'.
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Ορισμός Αρχικού Πλούτου Χαρακτήρα
@@ -252,6 +251,7 @@ config-modal-title-kit-currency = Προσθήκη Νομίσματος Κιτ
 config-modal-placeholder-currency-eg = π.χ., Χρυσός
 config-modal-placeholder-amount-eg = π.χ., 100
 config-error-amount-must-be-number = Το ποσό πρέπει να είναι αριθμός.
+config-error-amount-exceeds-maximum = Το ποσό δεν μπορεί να υπερβαίνει το { $max }.
 config-error-no-currencies-on-server = Δεν έχουν ρυθμιστεί νομίσματα στον διακομιστή.
 config-error-currency-not-found-short = Το νόμισμα "{ $currency }" δεν βρέθηκε.
 config-error-denomination-not-found = Η ονομαστική αξία "{ $denomination }" δεν βρέθηκε στη ρύθμιση νομισμάτων.
@@ -374,7 +374,7 @@ config-select-option-no-threads = Δεν βρέθηκαν ενεργά threads
 config-select-desc-no-threads = Δημιουργήστε νέο thread ή ελέγξτε τα αρχειοθετημένα threads
 config-select-option-select-forum-first = Επιλέξτε πρώτα ένα Forum
 config-select-desc-select-forum-first = Επιλέξτε ένα κανάλι Forum παραπάνω
-config-select-desc-thread-id = Thread ID: { $threadId }
+config-select-desc-thread-id = Αναγνωριστικό νήματος: { $threadId }
 config-error-select-valid-thread = Επιλέξτε ένα έγκυρο thread ή δημιουργήστε νέο.
 config-error-thread-not-found = Δεν ήταν δυνατή η εύρεση του επιλεγμένου thread. Μπορεί να έχει διαγραφεί ή αρχειοθετηθεί.
 
@@ -392,7 +392,7 @@ config-menu-currency = Νόμισμα
 config-menu-desc-currency = Καθολικές ρυθμίσεις νομίσματος.
 config-menu-players = Παίκτες
 config-menu-desc-players = Καθολικές ρυθμίσεις παικτών, όπως παρακολούθηση πόντων εμπειρίας.
-config-menu-quests = Quests
+config-menu-quests = Αποστολές
 config-menu-desc-quests = Καθολικές ρυθμίσεις quest, όπως λίστες αναμονής.
 config-menu-rp-rewards = Ανταμοιβές RP
 config-menu-desc-rp-rewards = Ρυθμίστε ανταμοιβές roleplay.
@@ -408,11 +408,9 @@ config-title-wizard = {"**"}Ρύθμιση Διακομιστή - Οδηγός{"
 config-wizard-intro =
     {"**"}Καλώς ήρθατε στον Οδηγό Ρύθμισης ReQuest!{"**"}
 
-    Αυτός ο οδηγός θα σας βοηθήσει να βεβαιωθείτε ότι ο διακομιστής σας είναι σωστά ρυθμισμένος για τη χρήση των λειτουργιών του ReQuest.
-    Θα σαρώσει τις τρέχουσες ρυθμίσεις σας και θα παρέχει συστάσεις για τυχόν αναγκαίες προσαρμογές.
+    Αυτός ο οδηγός θα σας βοηθήσει να βεβαιωθείτε ότι ο διακομιστής σας είναι σωστά ρυθμισμένος για τη χρήση των λειτουργιών του ReQuest. Θα σαρώσει τις τρέχουσες ρυθμίσεις σας και θα παρέχει συστάσεις για τυχόν αναγκαίες προσαρμογές.
 
-    Χρησιμοποιήστε το κουμπί "Εκκίνηση Σάρωσης" παρακάτω για να ξεκινήσετε τη διαδικασία επαλήθευσης. Μόλις ολοκληρωθεί η σάρωση,
-    θα λάβετε αναλυτική αναφορά της ρύθμισης του διακομιστή σας μαζί με τυχόν προτεινόμενες αλλαγές.
+    Χρησιμοποιήστε το κουμπί "Εκκίνηση Σάρωσης" παρακάτω για να ξεκινήσετε τη διαδικασία επαλήθευσης. Μόλις ολοκληρωθεί η σάρωση, θα λάβετε αναλυτική αναφορά της ρύθμισης του διακομιστή σας μαζί με τυχόν προτεινόμενες αλλαγές.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Καθολικά Δικαιώματα Bot{"**"}__
@@ -536,7 +534,27 @@ config-wizard-gm-rewards-disabled = {"**"}Κατάσταση:{"**"} Απενερ
 config-wizard-gm-rewards-enabled = {"**"}Κατάσταση:{"**"} Ενεργοποιημένο
 config-wizard-gm-rewards-experience = - Εμπειρία: { $xp }
 config-wizard-gm-rewards-items = - Αντικείμενα:
-config-wizard-unnamed-shop = Ανώνυμο Κατάστημα
+
+# Wizard - Γλώσσα Διακομιστή (Σελίδα 1)
+config-wizard-server-language-desc =
+    Αυτή είναι η γλώσσα που θα χρησιμοποιεί το ReQuest για όλα τα δημόσια μηνύματα, όπως δημοσιεύσεις αποστολών, μηνύματα ανανέωσης αποθέματος καταστήματος και αρχεία καταγραφής συναλλαγών.
+config-wizard-server-language = {"**"}Γλώσσα Διακομιστή:{"**"} { $language }
+config-wizard-server-language-default = Προεπιλογή (Αγγλικά)
+
+# Wizard - Πληροφορίες Ανανέωσης Αποθέματος Καταστήματος
+config-wizard-shop-restock-not-scheduled = ℹ️ Η Ανανέωση Αποθέματος Δεν Έχει Προγραμματιστεί
+
+# Wizard - Ρυθμίσεις Αποστολών (Σελίδα 5)
+config-wizard-quest-header = __{"**"}Ρυθμίσεις Αποστολών{"**"}__
+config-wizard-quest-header-desc =
+    Αυτή η ενότητα παρέχει μια επισκόπηση των ρυθμίσεων που σχετίζονται με αποστολές.
+config-wizard-quest-role-mode = - Λειτουργία Ρόλων Αποστολών: { $mode }
+config-wizard-quest-roles-label = {"**"}Ρόλοι Αποστολών GM{"**"}
+config-wizard-quest-roles-count = - Ρόλοι που έχουν ανατεθεί σε GM: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Όλοι οι Ρόλοι OK
+config-wizard-quest-roles-assigned-to = {"    "}Ανατέθηκε σε: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ ID Ρόλου { $roleId }: Δεν Βρέθηκε/Διαγράφηκε από τον Διακομιστή
+config-wizard-quest-roles-no-assignments = - ℹ️ Δεν Έχουν Ανατεθεί Ρόλοι Αποστολών
 
 ## Roles View
 config-title-roles = {"**"}Ρύθμιση Διακομιστή - Ρόλοι{"**"}
@@ -707,7 +725,7 @@ config-desc-example-json =
     Κατεβάστε ένα παράδειγμα αρχείου JSON που δείχνει την αναμενόμενη μορφή.
 config-msg-example-json = Εδώ είναι ένα παράδειγμα αρχείου JSON που δείχνει την αναμενόμενη μορφή.
 config-msg-no-shops = Δεν έχουν ρυθμιστεί καταστήματα.
-config-label-shop-type-forum = (Forum)
+config-label-shop-type-forum = (Φόρουμ)
 config-label-shop-channel = Κανάλι: <#{ $channelId }>
 
 ## Shop Channel Type Selection View
@@ -832,9 +850,6 @@ config-select-placeholder-add-quest-role = Ανάθεση ρόλου(-ων) δι
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}Ρυθμίσεις Διακομιστή - Ρόλοι Quest{"**"}
-config-label-quest-roles = Ρόλοι Quest
-config-desc-quest-roles =
-    Ρυθμίστε πώς διαχειρίζονται οι ρόλοι ομάδας κατά τη διάρκεια των quest.
 
 config-label-quest-role-mode-disabled = {"**"}Λειτουργία Ρόλων Quest:{"**"} Απενεργοποιημένο
     Δεν δημιουργούνται ούτε ανατίθενται ρόλοι κατά τη διάρκεια των quest.
@@ -853,6 +868,7 @@ config-desc-manage-assignments =
     Οι ρόλοι πρέπει να είναι χαμηλότεροι από τον υψηλότερο ρόλο του ReQuest στην ιεραρχία του διακομιστή.
 config-msg-no-gm-members = Δεν βρέθηκαν μέλη με ρόλο GM σε αυτόν τον διακομιστή.
 config-label-no-roles-assigned = Δεν έχουν ανατεθεί ρόλοι quest
+config-label-more-roles = (+{ $count } ακόμη)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Διαχείριση Ρόλων Quest — { $gmName }{"**"}

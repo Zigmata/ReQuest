@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = напр., 0.1
 config-error-denomination-matches-currency = Назва нового номіналу не може збігатися з існуючою валютою на цьому сервері! Знайдено існуючу валюту з назвою "{ $existingName }".
 config-error-denomination-matches-denomination = Назва нового номіналу не може збігатися з існуючим номіналом на цьому сервері! Знайдено існуючий номінал з назвою "{ $denominationName }" під валютою "{ $currencyName }".
 config-error-denomination-value-exists = Номінали однієї валюти повинні мати унікальні значення! { $denominationName } вже має це призначене значення.
+config-label-denomination-info = **{ $name }** (Значення: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Заборонені назви ролей
@@ -224,8 +225,6 @@ config-error-item-exists-new-char = Предмет з назвою { $itemName }
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Завантажити магазин нового персонажа (JSON)
 config-error-no-json-uploaded-short = JSON-файл не завантажено.
-config-error-json-must-have-shopstock = JSON повинен містити масив 'shopStock'.
-config-error-items-must-have-name-price = Усі предмети повинні мати 'name' та 'price'.
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Встановити багатство нового персонажа
@@ -252,6 +251,7 @@ config-modal-title-kit-currency = Додати валюту набору
 config-modal-placeholder-currency-eg = напр., Золото
 config-modal-placeholder-amount-eg = напр., 100
 config-error-amount-must-be-number = Сума має бути числом.
+config-error-amount-exceeds-maximum = Сума не може перевищувати { $max }.
 config-error-no-currencies-on-server = На сервері валюти не налаштовано.
 config-error-currency-not-found-short = Валюту "{ $currency }" не знайдено.
 config-error-denomination-not-found = Номінал "{ $denomination }" не знайдено в конфігурації валюти.
@@ -408,11 +408,9 @@ config-title-wizard = {"**"}Конфігурація сервера - Майст
 config-wizard-intro =
     {"**"}Ласкаво просимо до Майстра конфігурації ReQuest!{"**"}
 
-    Цей майстер допоможе вам переконатися, що ваш сервер правильно налаштовано для використання функцій ReQuest.
-    Він просканує ваші поточні налаштування та надасть рекомендації щодо необхідних змін.
+    Цей майстер допоможе вам переконатися, що ваш сервер правильно налаштовано для використання функцій ReQuest. Він просканує ваші поточні налаштування та надасть рекомендації щодо необхідних змін.
 
-    Натисніть кнопку "Запустити сканування" нижче, щоб розпочати процес перевірки. Після завершення сканування
-    ви отримаєте детальний звіт про конфігурацію вашого сервера разом з рекомендованими змінами.
+    Натисніть кнопку "Запустити сканування" нижче, щоб розпочати процес перевірки. Після завершення сканування ви отримаєте детальний звіт про конфігурацію вашого сервера разом з рекомендованими змінами.
 
 # Майстер - Перевірка дозволів бота
 config-wizard-bot-permissions-header = __{"**"}Глобальні дозволи бота{"**"}__
@@ -536,7 +534,27 @@ config-wizard-gm-rewards-disabled = {"**"}Статус:{"**"} Вимкнено
 config-wizard-gm-rewards-enabled = {"**"}Статус:{"**"} Увімкнено
 config-wizard-gm-rewards-experience = - Досвід: { $xp }
 config-wizard-gm-rewards-items = - Предмети:
-config-wizard-unnamed-shop = Безіменний магазин
+
+# Майстер - Мова сервера (Сторінка 1)
+config-wizard-server-language-desc =
+    Це мова, яку ReQuest використовуватиме для всіх публічних повідомлень, таких як публікації квестів, повідомлення про поповнення магазину та журнали транзакцій.
+config-wizard-server-language = {"**"}Мова сервера:{"**"} { $language }
+config-wizard-server-language-default = За замовчуванням (англійська)
+
+# Майстер - Інформація про поповнення магазину
+config-wizard-shop-restock-not-scheduled = ℹ️ Поповнення не заплановано
+
+# Майстер - Налаштування квестів (Сторінка 5)
+config-wizard-quest-header = __{"**"}Налаштування квестів{"**"}__
+config-wizard-quest-header-desc =
+    Цей розділ містить огляд конфігурацій, пов'язаних з квестами.
+config-wizard-quest-role-mode = - Режим ролей квестів: { $mode }
+config-wizard-quest-roles-label = {"**"}Ролі квестів GM{"**"}
+config-wizard-quest-roles-count = - Ролі, призначені GM: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Усі ролі в порядку
+config-wizard-quest-roles-assigned-to = {"    "}Призначено: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ ID ролі { $roleId }: Не знайдено/Видалено з сервера
+config-wizard-quest-roles-no-assignments = - ℹ️ Ролі квестів не призначені
 
 ## Подання ролей
 config-title-roles = {"**"}Конфігурація сервера - Ролі{"**"}
@@ -832,9 +850,6 @@ config-select-placeholder-add-quest-role = Призначити роль(рол�
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}Конфігурація сервера - Ролі квестів{"**"}
-config-label-quest-roles = Ролі квестів
-config-desc-quest-roles =
-    Налаштуйте, як ролі групи обробляються під час квестів.
 
 config-label-quest-role-mode-disabled = {"**"}Режим ролей квестів:{"**"} Вимкнено
     Під час квестів ролі не створюються та не призначаються.
@@ -853,6 +868,7 @@ config-desc-manage-assignments =
     Ролі мають бути нижче найвищої ролі ReQuest в ієрархії сервера.
 config-msg-no-gm-members = На цьому сервері не знайдено учасників з роллю Ведучого Гри.
 config-label-no-roles-assigned = Ролі квестів не призначені
+config-label-more-roles = (+{ $count } ще)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Керування ролями квестів — { $gmName }{"**"}

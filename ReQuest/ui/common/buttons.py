@@ -1,11 +1,14 @@
+import inspect
 import logging
 
 import discord
 from discord import ButtonStyle
 from discord.ui import Button
 
+from ReQuest.utilities.constants import DiscordLimits
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
-from ReQuest.utilities.supportFunctions import log_exception, setup_view
+from ReQuest.utilities.exceptions import log_exception
+from ReQuest.utilities.discord_utils import setup_view
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +16,7 @@ logger = logging.getLogger(__name__)
 class BaseViewButton(Button):
     def __init__(self, target_view_class, label, style, custom_id):
         super().__init__(
-            label=label,
+            label=label[:DiscordLimits.BUTTON_LABEL],
             style=style,
             custom_id=custom_id
         )
@@ -22,8 +25,12 @@ class BaseViewButton(Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             await interaction.response.defer()
-            view = self.target_view_class()
             locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
+            init_params = inspect.signature(self.target_view_class.__init__).parameters
+            if 'locale' in init_params:
+                view = self.target_view_class(locale=locale)
+            else:
+                view = self.target_view_class()
             view.locale = locale
             if hasattr(view, 'setup'):
                 await setup_view(view, interaction)
@@ -49,7 +56,7 @@ class BackButton(BaseViewButton):
         self._locale = locale or DEFAULT_LOCALE
         super().__init__(
             target_view_class=target_view_class,
-            label=t(self._locale, 'common-btn-back'),
+            label=t(self._locale, 'common-btn-back')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id='menu_back_button'
         )
@@ -59,7 +66,7 @@ class MenuDoneButton(Button):
     def __init__(self, locale=None):
         self._locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label=t(self._locale, 'common-btn-done'),
+            label=t(self._locale, 'common-btn-done')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id='done_button'
         )

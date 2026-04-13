@@ -10,17 +10,12 @@ from ReQuest.utilities.constants import (
     CommonFields, ShopFields, RestockFields, DatabaseCollections,
     FIRST_RESTOCK_GRACE_HOURLY, FIRST_RESTOCK_GRACE_DAILY, FIRST_RESTOCK_GRACE_WEEKLY
 )
-from ReQuest.utilities.localizer import t, resolve_guild_locale
-from ReQuest.utilities.supportFunctions import (
-    cleanup_expired_carts,
-    get_last_restock,
-    get_item_stock,
-    get_shop_channel,
-    set_available_stock,
-    increment_available_stock,
-    update_last_restock,
-    log_exception,
-    escape_markdown
+from ReQuest.utilities.localizer import t, resolve_locale
+from ReQuest.utilities.discord_utils import escape_markdown
+from ReQuest.utilities.exceptions import log_task_exception
+from ReQuest.utilities.shop import (
+    cleanup_expired_carts, get_last_restock, get_item_stock, get_shop_channel,
+    set_available_stock, increment_available_stock, update_last_restock
 )
 
 logger = logging.getLogger(__name__)
@@ -48,19 +43,17 @@ class Tasks(Cog):
         try:
             await cleanup_expired_carts(self.bot)
         except Exception as e:
-            logger.error(f"Error in cart cleanup task: {e}")
-            await log_exception(e)
+            log_task_exception(e, 'cart cleanup')
 
     @cart_cleanup_task.before_loop
     async def before_cart_cleanup(self):
         """Wait for the bot to be ready and run initial cleanup."""
         await self.bot.wait_until_ready()
-        # Run immediate cleanup on startup for any orphaned carts
         try:
             await cleanup_expired_carts(self.bot)
             logger.info("Completed startup cart cleanup.")
         except Exception as e:
-            logger.error(f"Error in startup cart cleanup: {e}")
+            log_task_exception(e, 'startup cart cleanup')
 
     @tasks.loop(minutes=1)
     async def restock_check_task(self):
@@ -68,8 +61,7 @@ class Tasks(Cog):
         try:
             await self._process_restocks()
         except Exception as e:
-            logger.error(f"Error in restock check task: {e}")
-            await log_exception(e)
+            log_task_exception(e, 'restock check')
 
     @restock_check_task.before_loop
     async def before_restock_check(self):
@@ -90,32 +82,36 @@ class Tasks(Cog):
             shop_channels = guild_doc.get(ShopFields.SHOP_CHANNELS, {})
 
             for channel_id, shop_data in shop_channels.items():
-                restock_config = shop_data.get(ShopFields.RESTOCK_CONFIG)
-                if not restock_config or not restock_config.get(RestockFields.ENABLED):
-                    continue
+                try:
+                    restock_config = shop_data.get(ShopFields.RESTOCK_CONFIG)
+                    if not restock_config or not restock_config.get(RestockFields.ENABLED):
+                        continue
 
-                # Check if restock is due
-                last_restock_str = await get_last_restock(self.bot, guild_id, channel_id)
-                last_restock = None
-                if last_restock_str:
-                    try:
-                        last_restock = datetime.fromisoformat(last_restock_str.replace('Z', '+00:00'))
-                    except (ValueError, TypeError):
-                        logger.error(f'Malformed data for last restock in guild {guild_id}, channel {channel_id}')
+                    # Check if restock is due
+                    last_restock_str = await get_last_restock(self.bot, guild_id, channel_id)
+                    last_restock = None
+                    if last_restock_str:
+                        try:
+                            last_restock = datetime.fromisoformat(last_restock_str.replace('Z', '+00:00'))
+                        except (ValueError, TypeError):
+                            logger.warning(
+                                f'Malformed last restock timestamp in guild {guild_id}, channel {channel_id}'
+                            )
 
-                if self._is_restock_due(restock_config, last_restock, now):
-                    await self._restock_shop(guild_id, channel_id, shop_data, restock_config)
-                    await update_last_restock(self.bot, guild_id, channel_id, now.isoformat())
-                    logger.debug(f"Restocked shop in guild {guild_id}, channel {channel_id}")
+                    if self._is_restock_due(restock_config, last_restock, now):
+                        await self._restock_shop(guild_id, channel_id, shop_data, restock_config)
+                        await update_last_restock(self.bot, guild_id, channel_id, now.isoformat())
+                        logger.debug(f"Restocked shop in guild {guild_id}, channel {channel_id}")
+                except Exception as e:
+                    log_task_exception(e, f'restock for guild {guild_id}, channel {channel_id}')
 
     @staticmethod
     def _is_restock_due(restock_config: dict, last_restock: datetime | None, now: datetime) -> bool:
         """
         Determine if restocking should occur based on schedule.
 
-        Uses a "has the target time passed since the last restock?" approach
-        rather than exact minute matching, so the check is resilient to loop
-        drift and doesn't require the tick to land on the exact target minute.
+        Checks to see if the target time has passed since the last restock. This helps avoid loop
+        drift and doesn't require the tick to land on the exact minute.
 
         :param restock_config: The shop's restock configuration
         :param last_restock: The last restock datetime or None
@@ -129,7 +125,6 @@ class Tasks(Cog):
         target_day = restock_config.get(RestockFields.DAY_OF_WEEK, 0)  # 0 = Monday
 
         if schedule == ScheduleType.HOURLY.value:
-            # The target time this hour
             target_time = now.replace(minute=target_minute, second=0, microsecond=0)
 
             # Haven't reached target minute yet this hour
@@ -137,30 +132,22 @@ class Tasks(Cog):
                 return False
 
             if last_restock is None:
-                # First-ever restock: only fire if close to target to avoid an
-                # immediate catch-up restock on first bot start mid-hour.
                 return (now - target_time) <= timedelta(minutes=FIRST_RESTOCK_GRACE_HOURLY)
 
-            # Normal case: restock if we haven't restocked since this hour's target
             return last_restock < target_time
 
         elif schedule == ScheduleType.DAILY.value:
-            # Build today's target time
             target_time = now.replace(hour=target_hour, minute=target_minute, second=0, microsecond=0)
 
-            # Haven't reached target time yet today
             if now < target_time:
                 return False
 
             if last_restock is None:
-                # First-ever restock: only fire if close to target to avoid
-                # a catch-up restock on first bot start late in the day.
                 return (now - target_time) <= timedelta(minutes=FIRST_RESTOCK_GRACE_DAILY)
 
             return last_restock < target_time
 
         elif schedule == ScheduleType.WEEKLY.value:
-            # Calculate this week's target day (Mon=0 anchor)
             this_monday = now.date() - timedelta(days=now.weekday())
             target_date = this_monday + timedelta(days=target_day)
             target_time = datetime(
@@ -168,13 +155,10 @@ class Tasks(Cog):
                 target_hour, target_minute, 0, 0, timezone.utc
             )
 
-            # Haven't reached target time yet this week
             if now < target_time:
                 return False
 
             if last_restock is None:
-                # First-ever restock: only fire if close to target to avoid
-                # a catch-up restock on first bot start days after the target.
                 return (now - target_time) <= timedelta(minutes=FIRST_RESTOCK_GRACE_WEEKLY)
 
             return last_restock < target_time
@@ -207,14 +191,12 @@ class Tasks(Cog):
             current_available = current_stock[ShopFields.AVAILABLE] if current_stock else 0
 
             if current_available >= max_stock:
-                continue  # Already at or above max, skip
+                continue
 
             if mode == RestockMode.FULL.value:
-                # Set available to maxStock
                 await set_available_stock(self.bot, guild_id, channel_id, item_name, max_stock)
                 amount_added = max_stock - current_available
             else:
-                # Increment available up to maxStock, using per-item increment (default 1)
                 try:
                     increment_amount = max(1, int(item.get(ShopFields.RESTOCK_INCREMENT, 1)))
                 except (TypeError, ValueError):
@@ -239,14 +221,12 @@ class Tasks(Cog):
         :param restocked_items: List of (item_name, amount_added) tuples
         """
         try:
-            # Use helper to find channel (handles both text channels and forum threads)
             channel = await get_shop_channel(self.bot, guild_id, channel_id)
             if not channel:
                 return
 
-            locale = await resolve_guild_locale(self.bot, guild_id)
+            locale = await resolve_locale(bot=self.bot, guild_id=guild_id)
 
-            # Build the item list (cap at 20 items)
             max_display = 20
             item_lines = []
             for item_name, amount in restocked_items[:max_display]:
@@ -268,7 +248,7 @@ class Tasks(Cog):
 
             await channel.send(embed=embed)
         except Exception as e:
-            logger.error(f"Failed to post restock notification: {e}")
+            log_task_exception(e, f'restock notification for guild {guild_id}')
 
 
 async def setup(bot):

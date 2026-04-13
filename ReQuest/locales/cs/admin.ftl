@@ -32,7 +32,6 @@ admin-modal-label-server-name = Název serveru
 admin-modal-placeholder-server-name = Zadejte krátký název Discord serveru
 admin-modal-label-server-id = ID serveru
 admin-modal-placeholder-server-id = Zadejte ID Discord serveru
-admin-select-placeholder-server = Vyberte server k odebrání
 admin-modal-title-cog-action = { $action } Cog
 admin-modal-label-cog-name = Název
 admin-modal-placeholder-cog-name = Zadejte název Cogu pro { $action }

@@ -13,7 +13,6 @@ common-btn-select = चुनें
 common-btn-manage = प्रबंधित करें
 common-btn-rename = नाम बदलें
 common-btn-continue = जारी रखें
-common-btn-cancel = रद्द करें
 common-btn-enable = सक्षम करें
 common-btn-disable = अक्षम करें
 
@@ -39,16 +38,15 @@ common-label-none = कोई नहीं
 common-label-unknown = अज्ञात
 common-label-locked = (लॉक)
 common-label-loose-items = बिखरी वस्तुएँ
-common-label-and-more = . . . और { $remaining } अधिक।
 common-label-currency = मुद्रा
 common-label-inventory-empty = इन्वेंट्री खाली है।
 
 # Shared embed fields
 common-embed-field-party = __दल__
 common-embed-field-wait-list = __प्रतीक्षा सूची__
-common-embed-footer-quest-id = Quest ID: { $questId }
+common-embed-footer-quest-id = क्वेस्ट आईडी: { $questId }
 common-embed-footer-transaction-id = लेन-देन ID: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}गेम मास्टर:{"**"}
 common-embed-label-party-restrictions = {"**"}दल प्रतिबंध:{"**"}
 
 # Translation notice

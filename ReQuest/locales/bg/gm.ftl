@@ -2,7 +2,7 @@
 
 # GM buttons
 gm-btn-create = Създай
-gm-btn-edit-details = Редакция на детайли
+gm-btn-edit-details = Редактиране на Quest
 gm-btn-toggle-ready = Превключване на готовност
 gm-btn-configure-rewards = Конфигуриране на награди
 gm-btn-remove-player = Премахване на играч
@@ -12,9 +12,13 @@ gm-btn-manage-individual-rewards = Управление на индивидуа�
 gm-btn-join = Присъединяване
 gm-btn-leave = Напускане
 gm-btn-complete-quest = Завършване на quest
-gm-btn-review-submission = Преглед на заявка
-gm-btn-approve = Одобри
-gm-btn-deny = Отхвърли
+gm-btn-edit-details-modal = Редакция на детайли
+gm-btn-edit-images = Редакция на изображения
+gm-select-placeholder-party-role = Изберете роля за групата...
+gm-modal-title-edit-details = Редактиране на детайли на Quest
+gm-modal-title-edit-images = Редактиране на изображения на Quest
+gm-btn-publish = Публикуване
+gm-btn-update-post = Обновяване на публикацията
 
 # GM modals
 gm-modal-title-create-quest = Създаване на нов quest
@@ -28,9 +32,9 @@ gm-modal-label-party-role = Роля за групата
 gm-modal-placeholder-party-role = Създаване на роля за този quest (Незадължително)
 gm-modal-label-description = Описание
 gm-modal-placeholder-description = Напишете детайлите на вашия quest тук
-gm-modal-title-editing-quest = Редактиране на { $questTitle }
-gm-modal-label-title = Заглавие
-gm-modal-label-max-party-size = Максимален размер на групата
+gm-modal-label-image-url = URL на миниатюра
+gm-modal-label-large-image-url = URL на голямо изображение
+gm-modal-placeholder-image-url = Въведете URL на изображение (или оставете празно за премахване)
 gm-modal-title-add-reward = Добавяне на награда
 gm-modal-label-experience = Точки опит
 gm-modal-placeholder-experience = Въведете число
@@ -49,25 +53,23 @@ gm-modal-placeholder-inventory-modify =
     предмет: количество
     предмет2: количество
     и т.н.
-gm-modal-title-review-submission = Преглед на заявка
-gm-modal-label-submission-id = ID на заявка
-gm-modal-placeholder-submission-id = Въведете 8-символния ID
 
 # GM errors
-gm-error-forbidden-role-name = Предоставеното име за ролята на групата е забранено.
-gm-error-role-already-exists = Роля с това име вече съществува на този сървър.
 gm-error-no-quest-channel = Все още не е определен канал за публикуване на куестове. Свържете се с администратор на сървъра, за да конфигурира канала за куестове.
-gm-error-cannot-ping-announce = Не може да се спомене ролята за обявления { $role } в канал { $channel }. Проверете правата на канала и ролята на ReQuest с вашия администратор(и).
 gm-error-invalid-item-format = Невалиден формат на предмет: "{ $item }". Всеки предмет трябва да е на нов ред във формат "Име: Количество".
-gm-error-submission-not-found = Заявката не е намерена.
 gm-error-already-on-quest = Вече сте в този quest като { $characterName }.
 gm-error-no-active-character-long = Нямате активен персонаж на този сървър. Използвайте `/player`, за да регистрирате или активирате персонаж.
 gm-error-quest-locked = Грешка при присъединяване към quest {"**"}{ $questTitle }{"**"}: Куестът е заключен от GM.
 gm-error-quest-full = Грешка при присъединяване към quest {"**"}{ $questTitle }{"**"}: Групата е пълна!
 gm-error-not-signed-up = Не сте записани за този quest.
+gm-error-quest-not-found = Куестът вече не съществува.
 gm-error-quest-channel-not-set = Каналът за куестове не е зададен!
 gm-error-empty-roster = Не можете да завършите quest с празен списък. Опитайте да отмените вместо това.
 gm-error-invalid-xp-value = Стойността на XP трябва да е положително цяло число!
+gm-error-party-size-positive = Размерът на групата трябва да е положително число.
+gm-error-party-size-too-small = Размерът на групата не може да бъде по-малък от текущата група ({ $currentSize } членове).
+gm-error-role-name-forbidden = Името на ролята "{ $roleName }" е забранено на този сървър.
+gm-error-role-name-exists = Роля с име "{ $roleName }" вече съществува на този сървър.
 
 # GM confirm modals
 gm-modal-title-cancel-quest = Отмяна на quest
@@ -75,16 +77,29 @@ gm-modal-label-cancel-quest = Напишете ПОТВЪРДИ, за да от�
 gm-modal-title-remove-from-quest = Премахване на персонаж от quest
 gm-modal-label-remove-from-quest = Потвърдете премахването на персонажа?
 
-# GM DM messages
-gm-dm-quest-cancelled = Куестът {"**"}{ $questTitle }{"**"} беше отменен от GM.
-gm-dm-quest-ready = Куестът {"**"}{ $questTitle }{"**"} вече е готов!
-gm-dm-quest-unlocked = Куестът {"**"}{ $questTitle }{"**"} вече не е заключен.
-gm-dm-quest-locked = Куестът {"**"}{ $questTitle }{"**"} вече е заключен от GM.
-gm-dm-player-removed = Бяхте премахнат/а от quest {"**"}{ $questTitle }{"**"}.
-gm-dm-player-removed-waitlist = Бяхте премахнат/а от списъка на чакащите за {"**"}{ $questTitle }{"**"}.
-gm-dm-party-promotion = Бяхте добавен/а в групата за {"**"}{ $questTitle }{"**"}, поради напускане на друг играч!
-gm-dm-roster-locked = Списъкът на групата е заключен и групата е уведомена!
-gm-dm-roster-unlocked = Списъкът на групата е отключен.
+# GM DM embeds
+gm-dm-title-quest-cancelled = Quest отменен
+gm-dm-desc-quest-cancelled = Quest {"**"}{ $questTitle }{"**"} беше отменен от GM.
+gm-dm-title-quest-ready = Quest готов
+gm-dm-desc-quest-ready = Quest {"**"}{ $questTitle }{"**"} вече е готов! Вашият GM ще започне quest скоро.
+gm-dm-title-player-removed = Премахнат от Quest
+gm-dm-desc-player-removed = Бяхте премахнат/а от quest {"**"}{ $questTitle }{"**"} от GM.
+gm-dm-desc-player-removed-waitlist = Бяхте премахнат/а от листа на чакащи за quest {"**"}{ $questTitle }{"**"}.
+gm-dm-title-party-promotion = Повишение в групата
+gm-dm-desc-party-promotion =
+    Бяхте повишен/а в основната група за {"**"}{ $questTitle }{"**"}
+    защото играч напусна quest.
+gm-dm-title-roster-locked = Списъкът е заключен
+gm-dm-desc-roster-locked =
+    Списъкът за {"**"}{ $questTitle }{"**"} беше заключен
+    и всички членове на групата бяха уведомени.
+gm-dm-title-roster-unlocked = Списъкът е отключен
+gm-dm-desc-roster-unlocked = Списъкът за {"**"}{ $questTitle }{"**"} беше отключен.
+gm-dm-title-player-removed-confirm = Играч премахнат
+gm-dm-desc-player-removed-confirm =
+    Играчът беше премахнат от {"**"}{ $questTitle }{"**"}
+    и списъкът на quest беше обновен.
+gm-dm-footer-quest = Идент. куест: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     Администраторът на вашия сървър е конфигурирал награди за GM при завършване
     на куестове. Тъй като обаче нямате регистрирани персонажи, наградите ви не могат
@@ -94,9 +109,17 @@ gm-dm-rewards-no-active-character =
     на куестове. Тъй като обаче нямате активен персонаж на този сървър, наградите ви
     не могат да бъдат автоматично раздадени в момента.
 gm-dm-rewards-issued = Следното беше присъдено на вашия активен персонаж, { $characterName }
+gm-dm-role-removal-failed =
+    ⚠️ Неуспешно премахване на ролята {"**"}{ $roleName }{"**"} от следните членове: { $members }.
+    Моля, уведомете администратор на сървъра да премахне ролята ръчно.
+
+gm-dm-role-not-found =
+    ⚠️ Ролята за куест (ID: { $roleId }) за куест {"**"}{ $questTitle }{"**"} вече не съществува на сървъра.
+    Операциите с роли бяха пропуснати. Моля, уведомете администратор на сървъра, ако това е неочаквано.
 
 # GM select menus
 gm-select-placeholder-party-member = Изберете член на групата
+gm-select-option-no-role = Без (Без роля за групата)
 
 # GM embeds
 gm-embed-title-mod-report = Доклад за промяна на играч от GM
@@ -108,7 +131,6 @@ gm-embed-field-party = __Група__
 gm-embed-field-summary = Резюме
 gm-embed-title-gm-rewards = Раздадени GM награди
 gm-embed-field-items = Предмети
-gm-msg-player-removed = Играчът е премахнат и списъкът на групата е обновен!
 
 # GM views
 gm-title-main-menu = GM - Главно меню
@@ -116,15 +138,18 @@ gm-menu-quests = Куестове
 gm-menu-desc-quests = Създаване, редактиране и управление на куестове.
 gm-menu-players = Играчи
 gm-menu-desc-players = Управление на инвентарите на играчите и промяна на персонажи.
-gm-menu-approvals = Одобрения на персонажи
-gm-menu-desc-approvals = Преглед и одобрение/отхвърляне на заявки за персонажи.
 
 gm-title-quest-management = GM - Управление на куестове
 gm-desc-create-quest = Създаване на нов quest.
 gm-msg-no-quests = Няма намерени куестове.
 gm-label-quest-locked = (Заключен)
+gm-label-quest-draft = (Чернова)
 gm-title-manage-quest = Управление на quest - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Редакция на детайлите на quest, като заглавие, описание и размер на групата.
+gm-label-field-not-set = Не е зададено
+gm-label-description-not-set = Описанието не е зададено
+gm-label-current-party-size = {"**"}Максимален размер на групата:{"**"} { $value }
+gm-label-current-party-role = {"**"}Роля за групата:{"**"} { $value }
 gm-desc-toggle-ready = Превключване на състояние на готовност (Текущо: {"**"}{ $status }{"**"})
     - Заключва списъка на групата и уведомява членовете, че quest ще започне скоро. Ако е конфигурирана роля, тя ще бъде присвоена на членовете при заключване.
     - Отключва списъка, когато е зададено на Отворен.
@@ -134,6 +159,7 @@ gm-desc-configure-rewards = Конфигуриране на награди за 
 gm-desc-complete-quest = Завършване на quest. Раздава награди, ако има такива, на членовете на групата.
 gm-desc-remove-player = Премахване на играч от списъка на групата и уведомяването му.
 gm-desc-cancel-quest = Отмяна на quest и изтриването му от дъската за куестове.
+gm-error-role-hierarchy = ReQuest не може да управлява ролята "{ $roleName }" (ID: { $roleId }), защото е позиционирана по-високо от най-високата роля на ReQuest в йерархията на сървъра. Моля, свържете се с администратор на сървъра, за да премести ролята под ролята на ReQuest, или да присвои на ReQuest по-висока роля, след което опитайте отново.
 gm-title-player-management = GM - Управление на играчите
 gm-desc-player-management =
     Тези команди са мигрирани в контекстни менюта. Щракнете с десен бутон (десктоп) или натиснете и задръжте (мобилно) профила на играча за следните опции:
@@ -152,29 +178,5 @@ gm-label-no-players-in-roster = Няма играчи в списъка на г�
 gm-title-character-sheet = Лист на персонажа за { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Точки опит:{"**"}__
 gm-label-possessions = __{"**"}Притежания{"**"}__
-gm-label-currency-heading = {"**"}Валута{"**"}
-gm-msg-inventory-empty = Инвентарът е празен.
 
 # GM approvals
-gm-title-approvals = GM - Одобрения на инвентар
-gm-desc-review-submission = Въведете ID на заявка, за да я прегледате и одобрите/отхвърлите.
-gm-title-reviewing = Преглед: { $characterName }
-gm-label-items = {"**"}Предмети:{"**"}
-gm-label-currency = {"**"}Валута:{"**"}
-gm-embed-title-approved = Обновяването на инвентара е одобрено
-gm-embed-desc-approved = Инвентарът за {"**"}{ $characterName }{"**"} беше одобрен от { $approver }.
-gm-embed-title-denied = Обновяването на инвентара е отхвърлено
-gm-embed-desc-denied = Инвентарът за {"**"}{ $characterName }{"**"} беше отхвърлен от { $denier }.
-
-gm-modal-label-select-party-role = Роля за групата
-gm-modal-desc-select-party-role = Изберете роля за присвояване на групата на куеста.
-gm-select-option-no-role = Без (Без роля за групата)
-
-gm-error-role-hierarchy = ReQuest не може да управлява ролята "{ $roleName }" (ID: { $roleId }), защото е позиционирана по-високо от най-високата роля на ReQuest в йерархията на сървъра. Моля, свържете се с администратор на сървъра, за да премести ролята под ролята на ReQuest, или да присвои на ReQuest по-висока роля, след което опитайте отново.
-gm-dm-role-removal-failed =
-    ⚠️ Неуспешно премахване на ролята {"**"}{ $roleName }{"**"} от следните членове: { $members }.
-    Моля, уведомете администратор на сървъра да премахне ролята ръчно.
-
-gm-dm-role-not-found =
-    ⚠️ Ролята за куест (ID: { $roleId }) за куест {"**"}{ $questTitle }{"**"} вече не съществува на сървъра.
-    Операциите с роли бяха пропуснати. Моля, уведомете администратор на сървъра, ако това е неочаквано.

@@ -3,11 +3,14 @@
 # Error embed wrapper
 error-oops-title = ⚠️ อุ๊ปส์!
 error-report-description =
-    เกิดข้อผิดพลาด:
-
-    ```{ $exception }```
+    { $exception }
 
     หากข้อผิดพลาดนี้ไม่คาดคิด หรือคุณสงสัยว่าบอทไม่ทำงานอย่างถูกต้อง กรุณาส่งรายงานบั๊กใน [Discord สนับสนุนอย่างเป็นทางการของ ReQuest](https://discord.gg/Zq37gj4)
+
+error-report-unexpected =
+    เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองอีกครั้ง
+
+    หากปัญหานี้ยังคงเกิดขึ้น กรุณาส่งรายงานบั๊กใน [Discord สนับสนุนอย่างเป็นทางการของ ReQuest](https://discord.gg/Zq37gj4)
 
 # Check failures
 error-owner-only = เฉพาะเจ้าของบอทเท่านั้นที่สามารถใช้คำสั่งนี้ได้!

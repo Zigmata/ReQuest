@@ -102,4 +102,3 @@ info-language-desc-sv-se = Définir votre langue sur le suédois
 info-language-desc-th = Définir votre langue sur le thaï
 info-language-desc-tr = Définir votre langue sur le turc
 info-language-desc-vi = Définir votre langue sur le vietnamien
-info-language-updated = Langue mise à jour avec succès.

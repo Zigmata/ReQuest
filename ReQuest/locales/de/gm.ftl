@@ -2,7 +2,7 @@
 
 # GM-Schaltflächen
 gm-btn-create = Erstellen
-gm-btn-edit-details = Details bearbeiten
+gm-btn-edit-details = Quest bearbeiten
 gm-btn-toggle-ready = Bereitschaft umschalten
 gm-btn-configure-rewards = Belohnungen konfigurieren
 gm-btn-remove-player = Spieler entfernen
@@ -12,9 +12,13 @@ gm-btn-manage-individual-rewards = Einzelbelohnungen verwalten
 gm-btn-join = Beitreten
 gm-btn-leave = Verlassen
 gm-btn-complete-quest = Quest abschließen
-gm-btn-review-submission = Einreichung prüfen
-gm-btn-approve = Genehmigen
-gm-btn-deny = Ablehnen
+gm-btn-edit-details-modal = Details bearbeiten
+gm-btn-edit-images = Bilder bearbeiten
+gm-select-placeholder-party-role = Wählen Sie eine Gruppenrolle...
+gm-modal-title-edit-details = Quest-Details bearbeiten
+gm-modal-title-edit-images = Quest-Bilder bearbeiten
+gm-btn-publish = Veröffentlichen
+gm-btn-update-post = Beitrag aktualisieren
 
 # GM-Dialoge
 gm-modal-title-create-quest = Neuen Quest erstellen
@@ -28,9 +32,9 @@ gm-modal-label-party-role = Gruppenrolle
 gm-modal-placeholder-party-role = Eine Rolle für diesen Quest erstellen (Optional)
 gm-modal-label-description = Beschreibung
 gm-modal-placeholder-description = Schreiben Sie hier die Details Ihres Quests
-gm-modal-title-editing-quest = { $questTitle } bearbeiten
-gm-modal-label-title = Titel
-gm-modal-label-max-party-size = Maximale Gruppengröße
+gm-modal-label-image-url = Miniatur-URL
+gm-modal-label-large-image-url = Großbild-URL
+gm-modal-placeholder-image-url = Geben Sie eine Bild-URL ein (oder leer lassen zum Entfernen)
 gm-modal-title-add-reward = Belohnung hinzufügen
 gm-modal-label-experience = Erfahrungspunkte
 gm-modal-placeholder-experience = Geben Sie eine Zahl ein
@@ -49,25 +53,23 @@ gm-modal-placeholder-inventory-modify =
     Gegenstand: Menge
     Gegenstand2: Menge
     usw.
-gm-modal-title-review-submission = Einreichung prüfen
-gm-modal-label-submission-id = Einreichungs-ID
-gm-modal-placeholder-submission-id = Geben Sie die 8-stellige ID ein
 
 # GM-Fehler
-gm-error-forbidden-role-name = Der angegebene Name für die Gruppenrolle ist verboten.
-gm-error-role-already-exists = Eine Rolle mit diesem Namen existiert bereits auf diesem Server.
 gm-error-no-quest-channel = Es wurde noch kein Kanal für Quest-Beiträge festgelegt. Wenden Sie sich an einen Serveradministrator, um den Quest-Kanal zu konfigurieren.
-gm-error-cannot-ping-announce = Ankündigungsrolle { $role } konnte im Kanal { $channel } nicht gepingt werden. Überprüfen Sie die Kanal- und ReQuest-Rollenberechtigungen mit Ihrem/Ihren Serveradministrator(en).
 gm-error-invalid-item-format = Ungültiges Gegenstandsformat: "{ $item }". Jeder Gegenstand muss in einer neuen Zeile stehen und das Format "Name: Menge" haben.
-gm-error-submission-not-found = Einreichung nicht gefunden.
 gm-error-already-on-quest = Sie sind bereits als { $characterName } bei diesem Quest dabei.
 gm-error-no-active-character-long = Sie haben keinen aktiven Charakter auf diesem Server. Verwenden Sie `/player`, um einen Charakter zu registrieren oder zu aktivieren.
 gm-error-quest-locked = Fehler beim Beitreten zum Quest {"**"}{ $questTitle }{"**"}: Der Quest ist vom GM gesperrt.
 gm-error-quest-full = Fehler beim Beitreten zum Quest {"**"}{ $questTitle }{"**"}: Die Quest-Liste ist voll!
 gm-error-not-signed-up = Sie sind nicht für diesen Quest angemeldet.
+gm-error-quest-not-found = Quest existiert nicht mehr.
 gm-error-quest-channel-not-set = Quest-Kanal wurde nicht festgelegt!
 gm-error-empty-roster = Sie können einen Quest mit leerer Teilnehmerliste nicht abschließen. Versuchen Sie stattdessen, ihn abzubrechen.
 gm-error-invalid-xp-value = XP-Wert muss eine positive Ganzzahl sein!
+gm-error-party-size-positive = Die Gruppengröße muss eine positive Zahl sein.
+gm-error-party-size-too-small = Die Gruppengröße kann nicht kleiner sein als die aktuelle Gruppe ({ $currentSize } Mitglieder).
+gm-error-role-name-forbidden = Der Rollenname "{ $roleName }" ist auf diesem Server verboten.
+gm-error-role-name-exists = Eine Rolle mit dem Namen "{ $roleName }" existiert bereits auf diesem Server.
 
 # GM-Bestätigungsdialoge
 gm-modal-title-cancel-quest = Quest abbrechen
@@ -75,16 +77,29 @@ gm-modal-label-cancel-quest = Geben Sie BESTÄTIGEN ein, um den Quest abzubreche
 gm-modal-title-remove-from-quest = Charakter vom Quest entfernen
 gm-modal-label-remove-from-quest = Charakterentfernung bestätigen?
 
-# GM-Direktnachrichten
-gm-dm-quest-cancelled = Quest {"**"}{ $questTitle }{"**"} wurde vom GM abgebrochen.
-gm-dm-quest-ready = Quest {"**"}{ $questTitle }{"**"} ist jetzt bereit!
-gm-dm-quest-unlocked = Quest {"**"}{ $questTitle }{"**"} ist nicht mehr gesperrt.
-gm-dm-quest-locked = Quest {"**"}{ $questTitle }{"**"} ist jetzt vom GM gesperrt.
-gm-dm-player-removed = Sie wurden vom Quest {"**"}{ $questTitle }{"**"} entfernt.
-gm-dm-player-removed-waitlist = Sie wurden von der Warteliste für {"**"}{ $questTitle }{"**"} entfernt.
-gm-dm-party-promotion = Sie wurden der Gruppe für {"**"}{ $questTitle }{"**"} hinzugefügt, da ein Spieler abgesprungen ist!
-gm-dm-roster-locked = Quest-Liste gesperrt und Gruppe benachrichtigt!
-gm-dm-roster-unlocked = Quest-Liste wurde entsperrt.
+# GM DM embeds
+gm-dm-title-quest-cancelled = Quest abgebrochen
+gm-dm-desc-quest-cancelled = Quest {"**"}{ $questTitle }{"**"} wurde vom GM abgebrochen.
+gm-dm-title-quest-ready = Quest bereit
+gm-dm-desc-quest-ready = Quest {"**"}{ $questTitle }{"**"} ist jetzt bereit! Ihr GM wird den Quest bald beginnen.
+gm-dm-title-player-removed = Vom Quest entfernt
+gm-dm-desc-player-removed = Sie wurden vom GM aus Quest {"**"}{ $questTitle }{"**"} entfernt.
+gm-dm-desc-player-removed-waitlist = Sie wurden von der Warteliste für Quest {"**"}{ $questTitle }{"**"} entfernt.
+gm-dm-title-party-promotion = Gruppenbeförderung
+gm-dm-desc-party-promotion =
+    Sie wurden in die Hauptgruppe für {"**"}{ $questTitle }{"**"} befördert,
+    da ein Spieler den Quest verlassen hat.
+gm-dm-title-roster-locked = Liste gesperrt
+gm-dm-desc-roster-locked =
+    Die Liste für {"**"}{ $questTitle }{"**"} wurde gesperrt
+    und alle Gruppenmitglieder wurden benachrichtigt.
+gm-dm-title-roster-unlocked = Liste entsperrt
+gm-dm-desc-roster-unlocked = Die Liste für {"**"}{ $questTitle }{"**"} wurde entsperrt.
+gm-dm-title-player-removed-confirm = Spieler entfernt
+gm-dm-desc-player-removed-confirm =
+    Der Spieler wurde aus {"**"}{ $questTitle }{"**"} entfernt
+    und die Quest-Liste wurde aktualisiert.
+gm-dm-footer-quest = Quest-ID: { $questId } • { $guildName }
 gm-dm-rewards-no-characters =
     Ihr Serveradministrator hat Belohnungen für Spielleiter konfiguriert, die beim Abschluss von
     Quests vergeben werden. Da Sie jedoch keine registrierten Charaktere haben, konnten Ihre Belohnungen
@@ -94,9 +109,17 @@ gm-dm-rewards-no-active-character =
     Quests vergeben werden. Da Sie jedoch keinen aktiven Charakter auf diesem Server haben, konnten Ihre Belohnungen
     zu diesem Zeitpunkt nicht automatisch ausgegeben werden.
 gm-dm-rewards-issued = Folgendes wurde Ihrem aktiven Charakter { $characterName } verliehen
+gm-dm-role-removal-failed =
+    ⚠️ Die Rolle {"**"}{ $roleName }{"**"} konnte nicht von den folgenden Mitgliedern entfernt werden: { $members }.
+    Bitte benachrichtigen Sie einen Serveradministrator, um die Rolle manuell zu entfernen.
+
+gm-dm-role-not-found =
+    ⚠️ Die Quest-Rolle (ID: { $roleId }) für Quest {"**"}{ $questTitle }{"**"} existiert nicht mehr auf dem Server.
+    Rollenoperationen wurden übersprungen. Bitte benachrichtigen Sie einen Serveradministrator, falls dies unerwartet ist.
 
 # GM-Auswahlmenüs
 gm-select-placeholder-party-member = Gruppenmitglied auswählen
+gm-select-option-no-role = Keine (Keine Gruppenrolle)
 
 # GM-Einbettungen
 gm-embed-title-mod-report = GM-Spieleränderungsbericht
@@ -108,7 +131,6 @@ gm-embed-field-party = __Gruppe__
 gm-embed-field-summary = Zusammenfassung
 gm-embed-title-gm-rewards = GM-Belohnungen vergeben
 gm-embed-field-items = Gegenstände
-gm-msg-player-removed = Spieler entfernt und Quest-Liste aktualisiert!
 
 # GM-Ansichten
 gm-title-main-menu = Spielleiter - Hauptmenü
@@ -116,15 +138,18 @@ gm-menu-quests = Quests
 gm-menu-desc-quests = Quests erstellen, bearbeiten und verwalten.
 gm-menu-players = Spieler
 gm-menu-desc-players = Spielerinventare verwalten und Charaktere bearbeiten.
-gm-menu-approvals = Charaktergenehmigungen
-gm-menu-desc-approvals = Charaktereinreichungen prüfen und genehmigen/ablehnen.
 
 gm-title-quest-management = Spielleiter - Quest-Verwaltung
 gm-desc-create-quest = Einen neuen Quest erstellen.
 gm-msg-no-quests = Keine Quests gefunden.
 gm-label-quest-locked = (Gesperrt)
+gm-label-quest-draft = (Entwurf)
 gm-title-manage-quest = Quest verwalten - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Quest-Details wie Titel, Beschreibung und Gruppengröße bearbeiten.
+gm-label-field-not-set = Nicht festgelegt
+gm-label-description-not-set = Beschreibung nicht festgelegt
+gm-label-current-party-size = {"**"}Maximale Gruppengröße:{"**"} { $value }
+gm-label-current-party-role = {"**"}Gruppenrolle:{"**"} { $value }
 gm-desc-toggle-ready = Bereitschaftsstatus umschalten (Aktuell: {"**"}{ $status }{"**"})
     - Sperrt die Quest-Liste und benachrichtigt Gruppenmitglieder, dass der Quest bald beginnt. Wenn eine Rolle konfiguriert ist, wird sie den Gruppenmitgliedern bei Sperrung zugewiesen.
     - Entsperrt die Liste, wenn auf Offen gesetzt.
@@ -134,6 +159,7 @@ gm-desc-configure-rewards = Belohnungen für den ausgewählten Quest konfigurier
 gm-desc-complete-quest = Einen Quest abschließen. Vergibt Belohnungen, falls vorhanden, an Gruppenmitglieder.
 gm-desc-remove-player = Einen Spieler aus der Quest-Liste entfernen und benachrichtigen.
 gm-desc-cancel-quest = Den Quest abbrechen und von der Quest-Tafel löschen.
+gm-error-role-hierarchy = ReQuest kann die Rolle "{ $roleName }" (ID: { $roleId }) nicht verwalten, da sie höher als die höchste Rolle von ReQuest in der Serverhierarchie positioniert ist. Bitte wenden Sie sich an einen Serveradministrator, um die Rolle unter die Rolle von ReQuest zu verschieben, oder weisen Sie ReQuest eine höhere Rolle zu, und versuchen Sie es dann erneut.
 gm-title-player-management = Spielleiter - Spielerverwaltung
 gm-desc-player-management =
     Diese Befehle sind zu Kontextmenüs migriert. Klicken Sie mit der rechten Maustaste (Desktop) oder halten Sie lange gedrückt (Mobil) auf das Profil eines Spielers für die folgenden Menüoptionen:
@@ -152,29 +178,5 @@ gm-label-no-players-in-roster = Keine Spieler in der Quest-Liste
 gm-title-character-sheet = Charakterbogen für { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Erfahrungspunkte:{"**"}__
 gm-label-possessions = __{"**"}Besitztümer{"**"}__
-gm-label-currency-heading = {"**"}Währung{"**"}
-gm-msg-inventory-empty = Das Inventar ist leer.
 
 # GM-Genehmigungen
-gm-title-approvals = Spielleiter - Inventargenehmigungen
-gm-desc-review-submission = Geben Sie eine Einreichungs-ID ein, um sie zu prüfen und zu genehmigen/ablehnen.
-gm-title-reviewing = Prüfung: { $characterName }
-gm-label-items = {"**"}Gegenstände:{"**"}
-gm-label-currency = {"**"}Währung:{"**"}
-gm-embed-title-approved = Inventaraktualisierung genehmigt
-gm-embed-desc-approved = Das Inventar für {"**"}{ $characterName }{"**"} wurde von { $approver } genehmigt.
-gm-embed-title-denied = Inventaraktualisierung abgelehnt
-gm-embed-desc-denied = Das Inventar für {"**"}{ $characterName }{"**"} wurde von { $denier } abgelehnt.
-
-gm-modal-label-select-party-role = Gruppenrolle
-gm-modal-desc-select-party-role = Wählen Sie eine Rolle für die Quest-Gruppe aus.
-gm-select-option-no-role = Keine (Keine Gruppenrolle)
-
-gm-error-role-hierarchy = ReQuest kann die Rolle "{ $roleName }" (ID: { $roleId }) nicht verwalten, da sie höher als die höchste Rolle von ReQuest in der Serverhierarchie positioniert ist. Bitte wenden Sie sich an einen Serveradministrator, um die Rolle unter die Rolle von ReQuest zu verschieben, oder weisen Sie ReQuest eine höhere Rolle zu, und versuchen Sie es dann erneut.
-gm-dm-role-removal-failed =
-    ⚠️ Die Rolle {"**"}{ $roleName }{"**"} konnte nicht von den folgenden Mitgliedern entfernt werden: { $members }.
-    Bitte benachrichtigen Sie einen Serveradministrator, um die Rolle manuell zu entfernen.
-
-gm-dm-role-not-found =
-    ⚠️ Die Quest-Rolle (ID: { $roleId }) für Quest {"**"}{ $questTitle }{"**"} existiert nicht mehr auf dem Server.
-    Rollenoperationen wurden übersprungen. Bitte benachrichtigen Sie einen Serveradministrator, falls dies unerwartet ist.

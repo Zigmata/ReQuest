@@ -9,7 +9,8 @@ from ReQuest.ui.common.buttons import MenuDoneButton
 from ReQuest.ui.info.selects import LanguageSelect, get_locale_total_pages, get_locale_page
 from ReQuest.utilities.constants import CommonFields, DatabaseCollections
 from ReQuest.utilities.localizer import DEFAULT_LOCALE, SUPPORTED_LOCALES, t
-from ReQuest.utilities.supportFunctions import get_cached_data, log_exception
+from ReQuest.utilities.db_cache import get_cached_data
+from ReQuest.utilities.exceptions import log_exception
 
 logger = logging.getLogger(__name__)
 

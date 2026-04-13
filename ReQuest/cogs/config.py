@@ -3,8 +3,8 @@ from discord import app_commands
 from discord.ext.commands import Cog
 
 from ReQuest.ui.config import views
-from ReQuest.utilities.localizer import resolve_locale, set_locale_context
-from ReQuest.utilities.supportFunctions import log_exception
+from ReQuest.utilities.localizer import resolve_locale
+from ReQuest.utilities.exceptions import log_exception
 
 
 class Config(Cog):
@@ -22,9 +22,7 @@ class Config(Cog):
     async def config(self, interaction: discord.Interaction):
         try:
             locale = await resolve_locale(interaction)
-            set_locale_context(locale)
-            view = views.ConfigBaseView()
-            view.locale = locale
+            view = views.ConfigBaseView(locale=locale)
             await interaction.response.send_message(view=view, ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)

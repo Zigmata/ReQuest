@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = แลกเปลี่ยน
-player-cmd-desc = เมนูผู้เล่น
 
 # --- Buttons ---
 
@@ -146,6 +144,15 @@ player-msg-no-characters = คุณไม่มีตัวละครที�
 player-label-active = (ใช้งานอยู่)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}ตัวละครที่กำลังดำเนินการ: { $characterName }{"**"}
+    การลงทะเบียนตัวละครของคุณรอการตั้งค่าสิ่งของ
+player-btn-resume = ดำเนินการต่อ
+player-btn-discard = ยกเลิก
+player-modal-title-discard-character = ยกเลิกตัวละคร
+player-modal-label-discard-confirm = ยกเลิก { $characterName }?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = ยืนยันการลบตัวละคร
 player-modal-label-confirm-char-delete = ลบ { $characterName }?
@@ -196,7 +203,7 @@ player-error-cannot-delete-loose = ไม่สามารถลบไอเท
 player-title-player-board = {"**"}คำสั่งผู้เล่น - กระดานผู้เล่น{"**"}
 player-desc-create-post = สร้างโพสต์ใหม่สำหรับกระดานผู้เล่น
 player-msg-no-posts = คุณไม่มีโพสต์ในขณะนี้
-player-label-post-info = {"**"}{ $title }{"**"} (ID: `{ $postId }`)
+player-label-post-info = {"**"}{ $title }{"**"} (รหัส: `{ $postId }`)
 player-embed-field-author = ผู้เขียน
 player-embed-footer-post-id = ID โพสต์: { $postId }
 player-error-board-channel-not-found = ไม่พบช่องกระดานผู้เล่น
@@ -215,8 +222,6 @@ player-label-empty-kit = {"*"}ชุดว่างเปล่า{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}ยืนยันการเลือก: { $kitName }{"**"}
-player-label-items-heading = {"**"}ไอเทม:{"**"}
-player-label-currency-heading = {"**"}สกุลเงิน:{"**"}
 player-msg-kit-empty = ชุดนี้ว่างเปล่า
 
 # NewCharacterComplexItemPurchaseView
@@ -264,6 +269,7 @@ player-embed-field-receipt = ใบเสร็จ
 # Spend currency errors
 player-error-amount-not-number = จำนวนต้องเป็นตัวเลข
 player-error-amount-positive = คุณต้องใช้จำนวนที่เป็นบวก
+player-error-amount-exceeds-maximum = จำนวนต้องไม่เกิน { $max }
 player-error-no-active-character-server = คุณไม่มีตัวละครที่ใช้งานอยู่บนเซิร์ฟเวอร์นี้
 player-error-no-currency-config = ไม่พบการตั้งค่าสกุลเงินสำหรับเซิร์ฟเวอร์นี้
 
@@ -281,18 +287,17 @@ player-error-qty-only-have = คุณมีไอเทมนี้เพีย
 player-error-invalid-format = รูปแบบไม่ถูกต้อง: "{ $line }" ใช้รูปแบบ <ชื่อ>: <จำนวน>
 player-error-empty-name = ชื่อไอเทมต้องไม่ว่างเปล่าในบรรทัด: "{ $line }"
 player-error-invalid-quantity = จำนวนไม่ถูกต้องสำหรับ "{ $name }": "{ $quantity }" ต้องเป็นจำนวนเต็มบวก
-player-error-input-errors-header = ข้อผิดพลาดในการกรอกคลังไอเทม:
-player-msg-no-valid-items = ไม่มีไอเทมที่ถูกต้อง เริ่มต้นด้วยคลังไอเทมว่าง
+
+# Validation error view
+player-validation-error-title = ข้อผิดพลาดในการป้อนข้อมูล
+player-validation-btn-retry = ลองอีกครั้ง
 
 # Cart quantity validation
 player-error-enter-valid-number = กรุณากรอกตัวเลขบวกที่ถูกต้อง
 
 # Submission embeds (approval queue)
-player-embed-title-approval = การอนุมัติคลังไอเทม: { $characterName }
-player-embed-desc-submitted-by = ส่งโดย { $userMention }
 player-embed-field-items = ไอเทม
 player-embed-field-currency-received = สกุลเงิน
-player-embed-footer-submission-id = ID การส่ง: { $submissionId }
 player-label-approval-thread = การอนุมัติ: { $characterName }
 player-embed-title-submission-sent = ส่งคลังไอเทมแล้ว
 player-embed-desc-submission-sent =
@@ -306,3 +311,46 @@ player-embed-desc-starting-inventory = ผู้เล่น: { $playerMention }
 player-embed-field-items-received = ไอเทมที่ได้รับ
 player-embed-field-currency-received-label = สกุลเงินที่ได้รับ
 player-label-untitled = ไม่มีชื่อ
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}การส่งรายการไอเทม: { $characterName }{"**"}
+    ส่งโดย { $userMention }
+player-approval-post-items = สิ่งของ
+player-approval-post-currency = สกุลเงิน
+player-approval-resolved = คำขอนี้ได้รับการดำเนินการแล้ว
+player-approval-btn-approve = อนุมัติ
+player-approval-btn-deny = ปฏิเสธ
+player-approval-btn-edit = แก้ไข
+player-approval-error-no-permission = คุณไม่มีสิทธิ์ดำเนินการนี้
+player-approval-error-not-submitter = เฉพาะผู้ส่งดั้งเดิมเท่านั้นที่สามารถแก้ไขคำขอนี้ได้
+player-approval-thread-instructions =
+    กระทู้นี้ถูกสร้างขึ้นเพื่อการอนุมัติ {"**"}{ $characterName }{"**"}
+    Game Master จะตรวจสอบคำขอและอนุมัติหรือปฏิเสธ
+    เมื่ออนุมัติหรือปฏิเสธแล้ว กระทู้นี้จะถูกล็อค
+
+    {"**"}Game Masters:{"**"} พูดคุยเกี่ยวกับการเปลี่ยนแปลงที่จำเป็นกับ
+    ผู้เล่นของคุณจนกว่ารายการไอเทมจะอยู่ในสถานะที่ยอมรับได้ ใช้ปุ่ม
+    `ปฏิเสธ` สำหรับคำขอที่ไม่สามารถแก้ไขได้เท่านั้น
+
+    { $playerMention }: ใช้ปุ่ม `แก้ไข` เพื่อทำการเปลี่ยนแปลง
+    ที่ Game Master ร้องขอที่นี่
+player-approval-approved-by = คำขอนี้ได้รับการอนุมัติจาก { $approver }
+player-approval-denied-by = คำขอนี้ถูกปฏิเสธโดย { $denier }
+player-approval-deny-reason = เหตุผล: { $reason }
+player-msg-submission-updated = คำขอของคุณได้รับการอัปเดตแล้ว
+
+
+# Denial modal
+player-modal-title-deny-reason = ปฏิเสธคำขอ
+player-modal-label-deny-reason = เหตุผลในการปฏิเสธ
+player-modal-placeholder-deny-reason = ไม่บังคับ: อธิบายเหตุผลที่ปฏิเสธ
+# Approval DM notifications
+player-dm-title-approved = ตัวละครได้รับอนุมัติ
+player-dm-desc-approved =
+    ตัวละคร {"**"}{ $characterName }{"**"} ของคุณได้รับการอนุมัติ
+    โดย { $approver } ใน {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = ตัวละครถูกปฏิเสธ
+player-dm-desc-denied =
+    ตัวละคร {"**"}{ $characterName }{"**"} ของคุณถูกปฏิเสธ
+    โดย { $denier } ใน {"**"}{ $guildName }{"**"}

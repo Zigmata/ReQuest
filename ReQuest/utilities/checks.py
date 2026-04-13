@@ -2,7 +2,7 @@ from discord import app_commands, Interaction
 
 from ReQuest.utilities.constants import ConfigFields, CharacterFields, CommonFields, DatabaseCollections
 from ReQuest.utilities.localizer import resolve_locale, t
-from ReQuest.utilities.supportFunctions import get_cached_data
+from ReQuest.utilities.db_cache import get_cached_data
 
 
 def is_owner():
@@ -41,6 +41,24 @@ def has_gm_or_mod():
         raise app_commands.CheckFailure(t(locale, 'error-no-permission'))
 
     return app_commands.check(predicate)
+
+
+async def is_gm_or_mod(bot, guild, user) -> bool:
+    """Non-decorator version of has_gm_or_mod for use in view interaction checks."""
+    if user.guild_permissions.manage_guild:
+        return True
+    query = await get_cached_data(
+        bot=bot,
+        mongo_database=bot.gdb,
+        collection_name=DatabaseCollections.GM_ROLES,
+        query={CommonFields.ID: guild.id}
+    )
+    if query:
+        gm_role_mentions = [item[CommonFields.MENTION] for item in query.get(ConfigFields.GM_ROLES, [])]
+        for role in user.roles:
+            if role.mention in gm_role_mentions:
+                return True
+    return False
 
 
 def has_active_character():

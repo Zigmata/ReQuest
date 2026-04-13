@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = 例如：0.1
 config-error-denomination-matches-currency = 新面額名稱不能與此伺服器上的現有貨幣相同！發現現有貨幣名稱「{ $existingName }」。
 config-error-denomination-matches-denomination = 新面額名稱不能與此伺服器上的現有面額相同！在貨幣「{ $currencyName }」下發現現有面額名稱「{ $denominationName }」。
 config-error-denomination-value-exists = 同一貨幣下的面額必須有唯一的數值！{ $denominationName } 已被指派此數值。
+config-label-denomination-info = **{ $name }** (數值: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = 禁用身分組名稱
@@ -224,8 +225,6 @@ config-error-item-exists-new-char = 新角色商店中已存在名為 { $itemNam
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = 上傳新角色商店（JSON）
 config-error-no-json-uploaded-short = 未上傳 JSON 檔案。
-config-error-json-must-have-shopstock = JSON 必須包含 'shopStock' 陣列。
-config-error-items-must-have-name-price = 所有物品必須包含 'name' 和 'price'。
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = 設定新角色財富
@@ -252,6 +251,7 @@ config-modal-title-kit-currency = 新增套組貨幣
 config-modal-placeholder-currency-eg = 例如：Gold
 config-modal-placeholder-amount-eg = 例如：100
 config-error-amount-must-be-number = 金額必須為數字。
+config-error-amount-exceeds-maximum = 金額不能超過 { $max }。
 config-error-no-currencies-on-server = 伺服器上未設定任何貨幣。
 config-error-currency-not-found-short = 找不到貨幣「{ $currency }」。
 config-error-denomination-not-found = 在貨幣設定中找不到面額「{ $denomination }」。
@@ -408,11 +408,9 @@ config-title-wizard = {"**"}伺服器設定 - 精靈{"**"}
 config-wizard-intro =
     {"**"}歡迎使用 ReQuest 設定精靈！{"**"}
 
-    此精靈將協助您確認伺服器是否已正確設定以使用 ReQuest 的功能。
-    它將掃描您目前的設定並提供任何需要調整的建議。
+    此精靈將協助您確認伺服器是否已正確設定以使用 ReQuest 的功能。 它將掃描您目前的設定並提供任何需要調整的建議。
 
-    使用下方的「啟動掃描」按鈕開始驗證流程。掃描完成後，
-    您將收到伺服器設定的詳細報告以及建議的變更。
+    使用下方的「啟動掃描」按鈕開始驗證流程。掃描完成後， 您將收到伺服器設定的詳細報告以及建議的變更。
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}機器人全域權限{"**"}__
@@ -536,7 +534,27 @@ config-wizard-gm-rewards-disabled = {"**"}狀態：{"**"} 已停用
 config-wizard-gm-rewards-enabled = {"**"}狀態：{"**"} 已啟用
 config-wizard-gm-rewards-experience = - 經驗值：{ $xp }
 config-wizard-gm-rewards-items = - 物品：
-config-wizard-unnamed-shop = 未命名商店
+
+# 精靈 - 伺服器語言（第1頁）
+config-wizard-server-language-desc =
+    這是 ReQuest 將用於所有公開訊息的語言，例如任務貼文、商店補貨訊息和交易記錄。
+config-wizard-server-language = {"**"}伺服器語言：{"**"} { $language }
+config-wizard-server-language-default = 預設（英語）
+
+# 精靈 - 商店補貨資訊
+config-wizard-shop-restock-not-scheduled = ℹ️ 未排程補貨
+
+# 精靈 - 任務設定（第5頁）
+config-wizard-quest-header = __{"**"}任務設定{"**"}__
+config-wizard-quest-header-desc =
+    本區段提供與任務相關的設定概覽。
+config-wizard-quest-role-mode = - 任務角色模式：{ $mode }
+config-wizard-quest-roles-label = {"**"}GM 任務角色{"**"}
+config-wizard-quest-roles-count = - 指派給 GM 的角色：{ $count }
+config-wizard-quest-roles-all-ok = - ✅ 所有角色正常
+config-wizard-quest-roles-assigned-to = {"    "}指派給：{ $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ 角色 ID { $roleId }：未找到/已從伺服器刪除
+config-wizard-quest-roles-no-assignments = - ℹ️ 未指派任務角色
 
 ## Roles View
 config-title-roles = {"**"}伺服器設定 - 身分組{"**"}
@@ -832,9 +850,6 @@ config-select-placeholder-add-quest-role = 為此 GM 指派伺服器身分組
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}伺服器設定 - Quest 身分組{"**"}
-config-label-quest-roles = Quest 身分組
-config-desc-quest-roles =
-    設定 Quest 期間如何處理隊伍身分組。
 
 config-label-quest-role-mode-disabled = {"**"}Quest 身分組模式：{"**"} 已停用
     Quest 期間不建立或指派任何身分組。
@@ -853,6 +868,7 @@ config-desc-manage-assignments =
     身分組必須低於 ReQuest 在伺服器階層中的最高身分組。
 config-msg-no-gm-members = 在此伺服器上未找到擁有 GM 身分組的成員。
 config-label-no-roles-assigned = 未指派 Quest 身分組
+config-label-more-roles = (+{ $count } 更多)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}管理 Quest 身分組 — { $gmName }{"**"}

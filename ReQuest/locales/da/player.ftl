@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Byt
-player-cmd-desc = Spillermenuer
 
 # --- Buttons ---
 
@@ -61,7 +59,7 @@ player-modal-placeholder-trade-quantity = Indtast det antal du handler
 player-modal-title-register = Registrer ny karakter
 player-modal-label-char-name = Navn
 player-modal-placeholder-char-name = Indtast din karakters navn.
-player-modal-label-char-note = Note
+player-modal-label-char-note = Notat
 player-modal-placeholder-char-note = Indtast en note til at identificere din karakter
 
 # Open inventory input modal
@@ -146,6 +144,15 @@ player-msg-no-characters = Du har ingen registrerede karakterer.
 player-label-active = (Aktiv)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Karakter i gang: { $characterName }{"**"}
+    Din karakterregistrering afventer opsætning af inventar.
+player-btn-resume = Genoptag
+player-btn-discard = Kassér
+player-modal-title-discard-character = Kassér karakter
+player-modal-label-discard-confirm = Kassér { $characterName }?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Bekræft karakterfjernelse
 player-modal-label-confirm-char-delete = Slet { $characterName }?
@@ -215,8 +222,6 @@ player-label-empty-kit = {"*"}Tom pakke{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Bekræft valg: { $kitName }{"**"}
-player-label-items-heading = {"**"}Genstande:{"**"}
-player-label-currency-heading = {"**"}Valuta:{"**"}
 player-msg-kit-empty = Denne pakke er tom.
 
 # NewCharacterComplexItemPurchaseView
@@ -264,6 +269,7 @@ player-embed-field-receipt = Kvittering
 # Spend currency errors
 player-error-amount-not-number = Beløb skal være et tal.
 player-error-amount-positive = Du skal bruge et positivt beløb.
+player-error-amount-exceeds-maximum = Beløbet må ikke overstige { $max }.
 player-error-no-active-character-server = Du har ikke en aktiv karakter på denne server.
 player-error-no-currency-config = Der blev ikke fundet en valutakonfiguration for denne server.
 
@@ -281,18 +287,17 @@ player-error-qty-only-have = Du har kun { $maxQuantity } af denne genstand.
 player-error-invalid-format = Ugyldigt format: "{ $line }". Brug <navn>: <antal>.
 player-error-empty-name = Genstandsnavn kan ikke være tomt i linje: "{ $line }".
 player-error-invalid-quantity = Ugyldigt antal for "{ $name }": "{ $quantity }". Skal være et positivt heltal.
-player-error-input-errors-header = Fejl i inventarindtastning:
-player-msg-no-valid-items = Ingen gyldige genstande angivet. Initialiserer med tomt inventar.
+
+# Validation error view
+player-validation-error-title = Inputfejl
+player-validation-btn-retry = Prøv igen
 
 # Cart quantity validation
 player-error-enter-valid-number = Indtast venligst et gyldigt positivt tal.
 
 # Submission embeds (approval queue)
-player-embed-title-approval = Inventargodkendelse: { $characterName }
-player-embed-desc-submitted-by = Indsendt af { $userMention }
 player-embed-field-items = Genstande
 player-embed-field-currency-received = Valuta
-player-embed-footer-submission-id = Indsendelses-ID: { $submissionId }
 player-label-approval-thread = Godkendelse: { $characterName }
 player-embed-title-submission-sent = Inventarindsendelse sendt
 player-embed-desc-submission-sent =
@@ -306,3 +311,46 @@ player-embed-desc-starting-inventory = Spiller: { $playerMention } som `{ $chara
 player-embed-field-items-received = Modtagne genstande
 player-embed-field-currency-received-label = Modtaget valuta
 player-label-untitled = Uden titel
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Inventarindsendelse: { $characterName }{"**"}
+    Indsendt af { $userMention }
+player-approval-post-items = Genstande
+player-approval-post-currency = Valuta
+player-approval-resolved = Denne anmodning er blevet behandlet.
+player-approval-btn-approve = Godkend
+player-approval-btn-deny = Afvis
+player-approval-btn-edit = Rediger
+player-approval-error-no-permission = Du har ikke tilladelse til denne handling.
+player-approval-error-not-submitter = Kun den originale indsender kan redigere denne anmodning.
+player-approval-thread-instructions =
+    Denne tråd blev oprettet til godkendelse af {"**"}{ $characterName }{"**"}.
+    En Game Master vil gennemgå indsendelsen og godkende eller afvise den.
+    Når den er godkendt eller afvist, vil denne tråd blive låst.
+
+    {"**"}Game Masters:{"**"} Diskuter eventuelle nødvendige ændringer med
+    jeres spiller, indtil inventaret er i en acceptabel tilstand. Brug kun
+    knappen `Afvis` til uforenelige indsendelser.
+
+    { $playerMention }: Brug knappen `Rediger` til at foretage ændringer,
+    der anmodes om her af en Game Master.
+player-approval-approved-by = Denne anmodning blev godkendt af { $approver }.
+player-approval-denied-by = Denne anmodning blev afvist af { $denier }.
+player-approval-deny-reason = Årsag: { $reason }
+player-msg-submission-updated = Din anmodning er blevet opdateret.
+
+
+# Denial modal
+player-modal-title-deny-reason = Afvis anmodning
+player-modal-label-deny-reason = Årsag til afvisning
+player-modal-placeholder-deny-reason = Valgfrit: forklar hvorfor anmodningen blev afvist
+# Approval DM notifications
+player-dm-title-approved = Karakter godkendt
+player-dm-desc-approved =
+    Din karakter {"**"}{ $characterName }{"**"} er blevet godkendt
+    af { $approver } i {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Karakter afvist
+player-dm-desc-denied =
+    Din karakter {"**"}{ $characterName }{"**"} er blevet afvist
+    af { $denier } i {"**"}{ $guildName }{"**"}.

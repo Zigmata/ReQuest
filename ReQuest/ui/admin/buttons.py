@@ -8,9 +8,11 @@ from discord.ui import Button
 
 from ReQuest.ui.admin import modals
 from ReQuest.ui.common import modals as common_modals
-from ReQuest.utilities.constants import DatabaseCollections
+from ReQuest.utilities.constants import DatabaseCollections, DiscordLimits
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
-from ReQuest.utilities.supportFunctions import log_exception, setup_view, update_cached_data
+from ReQuest.utilities.db_cache import update_cached_data
+from ReQuest.utilities.exceptions import log_exception
+from ReQuest.utilities.discord_utils import setup_view
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +21,7 @@ class AdminShutdownButton(Button):
     def __init__(self, calling_view, locale=None):
         self._locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label=t(self._locale, 'admin-btn-shutdown'),
+            label=t(self._locale, 'admin-btn-shutdown')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id='shutdown_bot_button'
         )
@@ -29,8 +31,8 @@ class AdminShutdownButton(Button):
         try:
             locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
             confirm_modal = common_modals.ConfirmModal(
-                title=t(locale, 'admin-modal-title-confirm-shutdown'),
-                prompt_label=t(locale, 'admin-modal-label-shutdown-warning'),
+                title=t(locale, 'admin-modal-title-confirm-shutdown')[:DiscordLimits.MODAL_TITLE],
+                prompt_label=t(locale, 'admin-modal-label-shutdown-warning')[:DiscordLimits.LABEL_LABEL],
                 confirm_callback=self._confirm_shutdown,
                 locale=locale
             )
@@ -38,10 +40,10 @@ class AdminShutdownButton(Button):
         except Exception as e:
             await log_exception(e, interaction)
 
-    @staticmethod
-    async def _confirm_shutdown(interaction: discord.Interaction):
+    async def _confirm_shutdown(self, interaction: discord.Interaction):
         try:
-            await interaction.response.send_message(t(DEFAULT_LOCALE, 'admin-msg-shutting-down'), ephemeral=True)
+            locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
+            await interaction.response.send_message(t(locale, 'admin-msg-shutting-down'), ephemeral=True)
             await interaction.client.close()
         except Exception as e:
             await log_exception(e)
@@ -51,7 +53,7 @@ class AllowlistAddServerButton(Button):
     def __init__(self, calling_view, locale=None):
         self._locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label=t(self._locale, 'admin-btn-add-server'),
+            label=t(self._locale, 'admin-btn-add-server')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='allowlist_add_server_button'
         )
@@ -70,7 +72,7 @@ class AdminLoadCogButton(Button):
     def __init__(self, locale=None):
         self._locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label=t(self._locale, 'admin-btn-load-cog'),
+            label=t(self._locale, 'admin-btn-load-cog')[:DiscordLimits.BUTTON_LABEL],
             custom_id='admin_load_cog_button'
         )
 
@@ -95,7 +97,7 @@ class AdminReloadCogButton(Button):
     def __init__(self, locale=None):
         self._locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label=t(self._locale, 'admin-btn-reload-cog'),
+            label=t(self._locale, 'admin-btn-reload-cog')[:DiscordLimits.BUTTON_LABEL],
             custom_id='admin_reload_cog_button'
         )
 
@@ -120,7 +122,7 @@ class PrintGuildsButton(Button):
     def __init__(self, locale=None):
         self._locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label=t(self._locale, 'admin-btn-output-guilds'),
+            label=t(self._locale, 'admin-btn-output-guilds')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id='print_guilds_button'
         )
@@ -147,7 +149,7 @@ class RemoveServerButton(Button):
     def __init__(self, calling_view, guild_id, server_name, locale=None):
         self._locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label=t(self._locale, 'common-btn-remove'),
+            label=t(self._locale, 'common-btn-remove')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id=f'remove_server_{guild_id}'
         )
@@ -159,8 +161,8 @@ class RemoveServerButton(Button):
         try:
             locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
             confirm_modal = common_modals.ConfirmModal(
-                title=t(locale, 'admin-modal-title-confirm-server-removal'),
-                prompt_label=t(locale, 'admin-modal-label-server-removal'),
+                title=t(locale, 'admin-modal-title-confirm-server-removal')[:DiscordLimits.MODAL_TITLE],
+                prompt_label=t(locale, 'admin-modal-label-server-removal')[:DiscordLimits.LABEL_LABEL],
                 confirm_callback=self._confirm_delete,
                 locale=locale
             )

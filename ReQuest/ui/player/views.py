@@ -5,6 +5,7 @@ import discord
 import shortuuid
 from discord.ui import (
     Container,
+    LayoutView,
     Section,
     TextDisplay,
     Separator,
@@ -19,33 +20,23 @@ from ReQuest.ui.common.buttons import MenuViewButton, MenuDoneButton, BackButton
 from ReQuest.ui.common.enums import InventoryType
 from ReQuest.ui.player import buttons, selects
 from ReQuest.utilities.constants import (
-    CharacterFields, ConfigFields, CommonFields, ShopFields, DatabaseCollections
+    ApprovalFields, CharacterFields, ConfigFields, CommonFields, ShopFields, DatabaseCollections,
+    DiscordLimits, DisplayLimits
 )
-from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_guild_locale, resolve_locale
-from ReQuest.utilities.supportFunctions import (
-    log_exception,
-    strip_id,
-    format_currency_display,
-    setup_view,
-    find_currency_or_denomination,
-    update_character_inventory,
-    format_price_string,
-    consolidate_currency_totals,
-    check_sufficient_funds,
-    get_denomination_map,
-    format_consolidated_totals,
-    get_xp_config,
-    UserFeedbackError,
-    get_cached_data,
-    update_cached_data,
-    build_cache_key,
-    format_complex_cost,
-    get_containers_sorted,
-    get_container_name,
-    get_container_items,
-    escape_markdown,
-    decode_mongo_key
+from ReQuest.utilities.checks import is_gm_or_mod
+from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_locale
+from ReQuest.utilities.character import update_character_inventory
+from ReQuest.utilities.containers import get_containers_sorted, get_container_name, get_container_items
+from ReQuest.utilities.currency import (
+    find_currency_or_denomination, format_currency_display, format_price_string, consolidate_currency_totals,
+    check_sufficient_funds, get_denomination_map, format_consolidated_totals, format_complex_cost
 )
+from ReQuest.utilities.db_cache import (
+    get_cached_data, update_cached_data, build_cache_key, delete_cached_data, decode_mongo_key, get_xp_config,
+    run_in_transaction
+)
+from ReQuest.utilities.discord_utils import setup_view, strip_id, escape_markdown, truncate_text
+from ReQuest.utilities.exceptions import UserFeedbackError, log_exception
 
 logger = logging.getLogger(__name__)
 
@@ -55,28 +46,33 @@ class PlayerBaseView(LocaleLayoutView):
         super().__init__()
         locale = getattr(self, 'locale', DEFAULT_LOCALE)
         self.player_board_button = MenuViewButton(
-            PlayerBoardView, t(locale, 'player-menu-btn-player-board')
+            PlayerBoardView, t(locale, 'player-menu-btn-player-board')[:DiscordLimits.BUTTON_LABEL]
         )
 
         self.build_view()
 
     def build_view(self):
+        self.clear_items()
         locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
-        header_section = Section(accessory=MenuDoneButton())
+        header_section = Section(accessory=MenuDoneButton(locale=locale))
         header_section.add_item(TextDisplay(t(locale, 'player-title-main-menu')))
         container.add_item(header_section)
         container.add_item(Separator())
 
         character_section = Section(
-            accessory=MenuViewButton(CharacterBaseView, t(locale, 'player-menu-btn-characters'))
+            accessory=MenuViewButton(
+                CharacterBaseView,
+                t(locale, 'player-menu-btn-characters')[:DiscordLimits.BUTTON_LABEL])
         )
         character_section.add_item(TextDisplay(t(locale, 'player-menu-desc-characters')))
         container.add_item(character_section)
 
         inventory_section = Section(
-            accessory=MenuViewButton(InventoryOverviewView, t(locale, 'player-menu-btn-inventory'))
+            accessory=MenuViewButton(
+                InventoryOverviewView,
+                t(locale, 'player-menu-btn-inventory')[:DiscordLimits.BUTTON_LABEL])
         )
         inventory_section.add_item(TextDisplay(t(locale, 'player-menu-desc-inventory')))
         container.add_item(inventory_section)
@@ -98,9 +94,15 @@ class PlayerBaseView(LocaleLayoutView):
             )
             if channel_query:
                 self.player_board_button.disabled = False
+                self.player_board_button.label = t(
+                    locale, 'player-menu-btn-player-board'
+                )[:DiscordLimits.BUTTON_LABEL]
             else:
                 self.player_board_button.disabled = True
-                self.player_board_button.label = t(locale, 'player-menu-btn-player-board-disabled')
+                self.player_board_button.label = t(
+                    locale, 'player-menu-btn-player-board-disabled'
+                )[:DiscordLimits.BUTTON_LABEL]
+            self.build_view()
         except Exception as e:
             await log_exception(e)
 
@@ -112,6 +114,7 @@ class CharacterBaseView(LocaleLayoutView):
         self.active_character_id = None
         self.sorted_characters = []
         self.xp_enabled = True
+        self.pending_character = None
 
         self.items_per_page = 6
         self.current_page = 0
@@ -147,6 +150,14 @@ class CharacterBaseView(LocaleLayoutView):
 
             self.xp_enabled = await get_xp_config(interaction.client, interaction.guild_id)
 
+            pending_id = f'{interaction.user.id}_{interaction.guild_id}'
+            self.pending_character = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.PENDING_CHARACTERS,
+                query={CommonFields.ID: pending_id}
+            )
+
             self.build_view()
         except Exception as e:
             await log_exception(e, interaction)
@@ -161,7 +172,21 @@ class CharacterBaseView(LocaleLayoutView):
         container.add_item(header_section)
         container.add_item(Separator())
 
-        register_section = Section(accessory=buttons.RegisterCharacterButton(self))
+        if self.pending_character:
+            pending_name = self.pending_character.get('name', '')
+            container.add_item(TextDisplay(
+                t(locale, 'player-title-character-in-progress', characterName=pending_name)
+            ))
+            pending_actions = ActionRow()
+            pending_actions.add_item(buttons.ResumeWizardButton(self))
+            pending_actions.add_item(buttons.DiscardPendingCharacterButton(self))
+            container.add_item(pending_actions)
+            container.add_item(Separator())
+
+        register_button = buttons.RegisterCharacterButton(self)
+        if self.pending_character:
+            register_button.disabled = True
+        register_section = Section(accessory=register_button)
         register_section.add_item(TextDisplay(t(locale, 'player-desc-register-character')))
         container.add_item(register_section)
         container.add_item(Separator())
@@ -194,7 +219,7 @@ class CharacterBaseView(LocaleLayoutView):
 
                 activate_button = buttons.ActivateCharacterButton(self, character_id, disabled=is_active)
                 if is_active:
-                    activate_button.label = t(locale, 'player-btn-active')
+                    activate_button.label = t(locale, 'player-btn-active')[:DiscordLimits.BUTTON_LABEL]
                     activate_button.style = discord.ButtonStyle.success
 
                 actions.add_item(activate_button)
@@ -209,7 +234,7 @@ class CharacterBaseView(LocaleLayoutView):
             nav_row = ActionRow()
 
             prev_button = Button(
-                label=t(locale, 'common-btn-previous'),
+                label=t(locale, 'common-btn-previous')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='char_prev',
                 disabled=(self.current_page == 0)
@@ -218,7 +243,8 @@ class CharacterBaseView(LocaleLayoutView):
             nav_row.add_item(prev_button)
 
             page_display = Button(
-                label=t(locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages),
+                label=t(locale, 'common-page-label', current=self.current_page + 1,
+                       total=self.total_pages)[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='char_page_disp'
             )
@@ -226,7 +252,7 @@ class CharacterBaseView(LocaleLayoutView):
             nav_row.add_item(page_display)
 
             next_button = Button(
-                label=t(locale, 'common-btn-next'),
+                label=t(locale, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='char_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -264,7 +290,6 @@ class InventoryOverviewView(LocaleLayoutView):
         self.currencies = []
         self.currency_config = None
 
-        # Pagination for containers
         self.items_per_page = 25
         self.current_page = 0
         self.total_pages = 1
@@ -296,7 +321,6 @@ class InventoryOverviewView(LocaleLayoutView):
             self.active_character_id = query[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
             self.active_character = query[CharacterFields.CHARACTERS][self.active_character_id]
 
-            # Validate currencies in inventory and convert based on server config
             inventory_keys_to_check = list(
                 self.active_character[CharacterFields.ATTRIBUTES].get(
                     CharacterFields.INVENTORY, {}
@@ -321,13 +345,11 @@ class InventoryOverviewView(LocaleLayoutView):
                             float(quantity)
                         )
 
-                        # In the event a currency was given prior to being defined (and therefore stored as an item),
-                        # this second update removes the old entry from inventory and updates the currency dict
                         inventory = self.active_character[CharacterFields.ATTRIBUTES].get(
                             CharacterFields.INVENTORY, {}
                         )
                         if item_name_key in inventory:
-                            del inventory[item_name_key]  # Update local copy
+                            del inventory[item_name_key]
                             inv_path = (
                                 f'{CharacterFields.CHARACTERS}.{self.active_character_id}'
                                 f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}'
@@ -351,7 +373,6 @@ class InventoryOverviewView(LocaleLayoutView):
                                 ]
                             )
 
-                            # Invalidate cache after direct collection update
                             cache_key = build_cache_key(
                                 bot.mdb.name, interaction.user.id, DatabaseCollections.CHARACTERS
                             )
@@ -370,17 +391,16 @@ class InventoryOverviewView(LocaleLayoutView):
                     )
                     self.active_character = query[CharacterFields.CHARACTERS][self.active_character_id]
 
-            # Get containers
-            self.containers = get_containers_sorted(self.active_character)
+            self.containers = get_containers_sorted(
+                self.active_character, locale=getattr(self, 'locale', DEFAULT_LOCALE)
+            )
 
-            # Calculate pagination
             self.total_pages = math.ceil(len(self.containers) / self.items_per_page)
             if self.total_pages == 0:
                 self.total_pages = 1
             if self.current_page >= self.total_pages:
                 self.current_page = max(0, self.total_pages - 1)
 
-            # Get currencies
             player_currencies = self.active_character[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {})
             self.currencies = format_currency_display(player_currencies, self.currency_config)
 
@@ -413,7 +433,6 @@ class InventoryOverviewView(LocaleLayoutView):
         container.add_item(header_section)
         container.add_item(Separator())
 
-        # Build container summary
         summary_lines = []
         total_items = 0
         for c in self.containers:
@@ -433,7 +452,6 @@ class InventoryOverviewView(LocaleLayoutView):
         ))
         container.add_item(Separator())
 
-        # Container select (paginated)
         start = self.current_page * self.items_per_page
         end = start + self.items_per_page
         page_containers = self.containers[start:end]
@@ -445,7 +463,6 @@ class InventoryOverviewView(LocaleLayoutView):
 
         self.add_item(container)
 
-        # Action buttons row
         action_row = ActionRow()
         action_row.add_item(buttons.ManageContainersButton(self))
 
@@ -459,12 +476,11 @@ class InventoryOverviewView(LocaleLayoutView):
 
         self.add_item(action_row)
 
-        # Pagination row (if needed)
         if self.total_pages > 1:
             nav_row = ActionRow()
 
             prev_button = Button(
-                label=t(locale, 'common-btn-previous'),
+                label=t(locale, 'common-btn-previous')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='inv_overview_prev',
                 disabled=(self.current_page == 0)
@@ -473,7 +489,8 @@ class InventoryOverviewView(LocaleLayoutView):
             nav_row.add_item(prev_button)
 
             page_button = Button(
-                label=t(locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages),
+                label=t(locale, 'common-page-label', current=self.current_page + 1,
+                       total=self.total_pages)[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='inv_overview_page'
             )
@@ -481,7 +498,7 @@ class InventoryOverviewView(LocaleLayoutView):
             nav_row.add_item(page_button)
 
             next_button = Button(
-                label=t(locale, 'common-btn-next'),
+                label=t(locale, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='inv_overview_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -526,7 +543,6 @@ class ContainerItemsView(LocaleLayoutView):
         self.total_pages = 1
 
     async def setup(self, interaction: discord.Interaction):
-        # Refresh character data
         bot = interaction.client
         player_data = await get_cached_data(
             bot=bot,
@@ -537,10 +553,11 @@ class ContainerItemsView(LocaleLayoutView):
 
         self.character_data = player_data[CharacterFields.CHARACTERS][self.character_id]
 
-        self.container_name = get_container_name(self.character_data, self.container_id)
+        self.container_name = get_container_name(
+            self.character_data, self.container_id, locale=getattr(self, 'locale', DEFAULT_LOCALE)
+        )
         items_dict = get_container_items(self.character_data, self.container_id)
 
-        # Convert to sorted list of tuples
         self.items = sorted(items_dict.items(), key=lambda x: x[0].lower())
 
         self.total_pages = math.ceil(len(self.items) / self.items_per_page)
@@ -549,7 +566,6 @@ class ContainerItemsView(LocaleLayoutView):
         if self.current_page >= self.total_pages:
             self.current_page = max(0, self.total_pages - 1)
 
-        # Clear selection if item no longer exists
         if self.selected_item:
             item_names_lower = [name.lower() for name, _ in self.items]
             if self.selected_item.lower() not in item_names_lower:
@@ -562,7 +578,7 @@ class ContainerItemsView(LocaleLayoutView):
         locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
-        header_section = Section(accessory=buttons.BackToInventoryOverviewButton())
+        header_section = Section(accessory=buttons.BackToInventoryOverviewButton(locale=locale))
         header_section.add_item(TextDisplay(f'**{self.container_name}**'))
         container.add_item(header_section)
         container.add_item(Separator())
@@ -570,19 +586,18 @@ class ContainerItemsView(LocaleLayoutView):
         if not self.items:
             container.add_item(TextDisplay(t(locale, 'player-msg-container-empty')))
         else:
-            # Display items on current page
             start = self.current_page * self.items_per_page
             end = start + self.items_per_page
             page_items = self.items[start:end]
 
             items_display = []
             for item_name, quantity in page_items:
-                items_display.append(f'• {item_name}: **{quantity}**')
+                item_text = escape_markdown(truncate_text(item_name, DisplayLimits.ITEM_NAME))
+                items_display.append(f'• {item_text}: **{quantity}**')
 
             container.add_item(TextDisplay('\n'.join(items_display)))
             container.add_item(Separator())
 
-            # Item select
             item_select_row = ActionRow()
             item_select = selects.ContainerItemSelect(self, page_items, self.current_page)
             item_select_row.add_item(item_select)
@@ -595,7 +610,6 @@ class ContainerItemsView(LocaleLayoutView):
 
         self.add_item(container)
 
-        # Action buttons
         action_row = ActionRow()
 
         consume_button = buttons.ConsumeFromContainerButton(self)
@@ -608,12 +622,11 @@ class ContainerItemsView(LocaleLayoutView):
 
         self.add_item(action_row)
 
-        # Pagination
         if self.total_pages > 1:
             nav_row = ActionRow()
 
             prev_button = Button(
-                label=t(locale, 'common-btn-previous'),
+                label=t(locale, 'common-btn-previous')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='container_items_prev',
                 disabled=(self.current_page == 0)
@@ -622,7 +635,8 @@ class ContainerItemsView(LocaleLayoutView):
             nav_row.add_item(prev_button)
 
             page_button = Button(
-                label=t(locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages),
+                label=t(locale, 'common-page-label', current=self.current_page + 1,
+                       total=self.total_pages)[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='container_items_page'
             )
@@ -630,7 +644,7 @@ class ContainerItemsView(LocaleLayoutView):
             nav_row.add_item(page_button)
 
             next_button = Button(
-                label=t(locale, 'common-btn-next'),
+                label=t(locale, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='container_items_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -670,7 +684,7 @@ class MoveDestinationView(LocaleLayoutView):
         self.available_quantity = available_quantity
 
         self.selected_destination = None
-        self._loose_items_selected = False
+        self.loose_items_selected = False
         self.containers = []
 
         self.items_per_page = 25
@@ -678,7 +692,6 @@ class MoveDestinationView(LocaleLayoutView):
         self.total_pages = 1
 
     async def setup(self, interaction: discord.Interaction):
-        # Refresh character data
         bot = interaction.client
         player_data = await get_cached_data(
             bot=bot,
@@ -689,9 +702,10 @@ class MoveDestinationView(LocaleLayoutView):
 
         self.source_view.character_data = player_data[CharacterFields.CHARACTERS][self.source_view.character_id]
 
-        all_containers = get_containers_sorted(self.source_view.character_data)
+        all_containers = get_containers_sorted(
+            self.source_view.character_data, locale=getattr(self, 'locale', DEFAULT_LOCALE)
+        )
 
-        # Exclude source container
         self.containers = [c for c in all_containers if c['id'] != self.source_container_id]
 
         self.total_pages = math.ceil(len(self.containers) / self.items_per_page)
@@ -720,7 +734,6 @@ class MoveDestinationView(LocaleLayoutView):
         else:
             container.add_item(TextDisplay(t(locale, 'player-msg-select-destination')))
 
-            # Destination select (paginated)
             start = self.current_page * self.items_per_page
             end = start + self.items_per_page
             page_containers = self.containers[start:end]
@@ -730,9 +743,8 @@ class MoveDestinationView(LocaleLayoutView):
             destination_select_row.add_item(destination_select)
             container.add_item(destination_select_row)
 
-            if self.selected_destination is not None or self._loose_selected():
+            if self.selected_destination is not None or self.loose_items_selected:
                 destination_name = None
-                # Find destination name
                 if self.selected_destination is None:
                     destination_name = t(locale, 'common-label-loose-items')
                 else:
@@ -748,12 +760,9 @@ class MoveDestinationView(LocaleLayoutView):
 
         self.add_item(container)
 
-        # Move action buttons
         action_row = ActionRow()
 
-        # Check if we have a valid destination
-        loose_selected = self._loose_selected()
-        has_destination = loose_selected or self.selected_destination is not None
+        has_destination = self.loose_items_selected or self.selected_destination is not None
 
         move_all_button = buttons.MoveAllButton(self)
         move_all_button.disabled = not has_destination
@@ -765,12 +774,11 @@ class MoveDestinationView(LocaleLayoutView):
 
         self.add_item(action_row)
 
-        # Pagination
         if self.total_pages > 1:
             nav_row = ActionRow()
 
             prev_button = Button(
-                label=t(locale, 'common-btn-previous'),
+                label=t(locale, 'common-btn-previous')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='move_dest_prev',
                 disabled=(self.current_page == 0)
@@ -779,7 +787,8 @@ class MoveDestinationView(LocaleLayoutView):
             nav_row.add_item(prev_button)
 
             page_button = Button(
-                label=t(locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages),
+                label=t(locale, 'common-page-label', current=self.current_page + 1,
+                       total=self.total_pages)[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='move_dest_page'
             )
@@ -787,7 +796,7 @@ class MoveDestinationView(LocaleLayoutView):
             nav_row.add_item(page_button)
 
             next_button = Button(
-                label=t(locale, 'common-btn-next'),
+                label=t(locale, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='move_dest_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -796,9 +805,6 @@ class MoveDestinationView(LocaleLayoutView):
             nav_row.add_item(next_button)
 
             self.add_item(nav_row)
-
-    def _loose_selected(self) -> bool:
-        return self._loose_items_selected
 
     async def prev_page(self, interaction):
         if self.current_page > 0:
@@ -825,7 +831,7 @@ class ContainerManagementView(LocaleLayoutView):
         self.character_id = character_id
         self.character_data = character_data
 
-        self.selected_container_id = None  # None can mean Loose Items OR nothing selected
+        self.selected_container_id = None
         self.has_selection = False
         self.containers = []
 
@@ -834,7 +840,6 @@ class ContainerManagementView(LocaleLayoutView):
         self.total_pages = 1
 
     async def setup(self, interaction: discord.Interaction):
-        # Refresh character data
         bot = interaction.client
         player_data = await get_cached_data(
             bot=bot,
@@ -844,7 +849,9 @@ class ContainerManagementView(LocaleLayoutView):
         )
         self.character_data = player_data[CharacterFields.CHARACTERS][self.character_id]
 
-        self.containers = get_containers_sorted(self.character_data)
+        self.containers = get_containers_sorted(
+            self.character_data, locale=getattr(self, 'locale', DEFAULT_LOCALE)
+        )
 
         self.total_pages = math.ceil(len(self.containers) / self.items_per_page)
         if self.total_pages == 0:
@@ -859,12 +866,11 @@ class ContainerManagementView(LocaleLayoutView):
         locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
-        header_section = Section(accessory=buttons.BackToInventoryOverviewButton())
+        header_section = Section(accessory=buttons.BackToInventoryOverviewButton(locale=locale))
         header_section.add_item(TextDisplay(t(locale, 'player-title-manage-containers')))
         container.add_item(header_section)
         container.add_item(Separator())
 
-        # Container list
         container_lines = []
         for index, container_data in enumerate(self.containers):
             prefix = f'{index + 1}. '
@@ -880,7 +886,6 @@ class ContainerManagementView(LocaleLayoutView):
         ))
         container.add_item(Separator())
 
-        # Container select (paginated)
         start = self.current_page * self.items_per_page
         end = start + self.items_per_page
         page_containers = self.containers[start:end]
@@ -903,15 +908,12 @@ class ContainerManagementView(LocaleLayoutView):
 
         self.add_item(container)
 
-        # Action buttons row 1: Create
         create_row = ActionRow()
         create_row.add_item(buttons.CreateContainerButton(self))
         self.add_item(create_row)
 
-        # Action buttons row 2: Rename, Delete, Reorder
         manage_row = ActionRow()
 
-        # These are disabled for Loose Items (selected_container_id is None)
         has_valid_selection = self.has_selection and self.selected_container_id is not None
 
         rename_button = buttons.RenameContainerButton(self)
@@ -922,14 +924,12 @@ class ContainerManagementView(LocaleLayoutView):
         delete_button.disabled = not has_valid_selection
         manage_row.add_item(delete_button)
 
-        # Reorder buttons - check boundaries
         can_move_up = False
         can_move_down = False
         if has_valid_selection:
             for index, container_data in enumerate(self.containers):
                 if container_data['id'] == self.selected_container_id:
-                    # Index 0 is Loose Items, so real containers start at 1
-                    can_move_up = index > 1  # Can't move above Loose Items
+                    can_move_up = index > 1
                     can_move_down = index < len(self.containers) - 1
                     break
 
@@ -943,12 +943,11 @@ class ContainerManagementView(LocaleLayoutView):
 
         self.add_item(manage_row)
 
-        # Pagination
         if self.total_pages > 1:
             nav_row = ActionRow()
 
             prev_button = Button(
-                label=t(locale, 'common-btn-previous'),
+                label=t(locale, 'common-btn-previous')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='manage_containers_prev',
                 disabled=(self.current_page == 0)
@@ -957,7 +956,8 @@ class ContainerManagementView(LocaleLayoutView):
             nav_row.add_item(prev_button)
 
             page_button = Button(
-                label=t(locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages),
+                label=t(locale, 'common-page-label', current=self.current_page + 1,
+                       total=self.total_pages)[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='manage_containers_page'
             )
@@ -965,7 +965,7 @@ class ContainerManagementView(LocaleLayoutView):
             nav_row.add_item(page_button)
 
             next_button = Button(
-                label=t(locale, 'common-btn-next'),
+                label=t(locale, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='manage_containers_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -1028,7 +1028,6 @@ class PlayerBoardView(LocaleLayoutView):
                 cache_id=cache_id
             )
 
-            # Sort by newest first
             self.posts.sort(key=lambda x: x.get('timestamp', 0), reverse=True)
 
             self.total_pages = math.ceil(len(self.posts) / self.items_per_page)
@@ -1079,12 +1078,11 @@ class PlayerBoardView(LocaleLayoutView):
 
         self.add_item(container)
 
-        # Pagination
         if self.total_pages > 1:
             nav_row = ActionRow()
 
             prev_button = Button(
-                label=t(locale, 'common-btn-previous'),
+                label=t(locale, 'common-btn-previous')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='pb_prev',
                 disabled=(self.current_page == 0)
@@ -1093,7 +1091,8 @@ class PlayerBoardView(LocaleLayoutView):
             nav_row.add_item(prev_button)
 
             page_display = Button(
-                label=t(locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages),
+                label=t(locale, 'common-page-label', current=self.current_page + 1,
+                       total=self.total_pages)[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='pb_page_disp'
             )
@@ -1101,7 +1100,7 @@ class PlayerBoardView(LocaleLayoutView):
             nav_row.add_item(page_display)
 
             next_button = Button(
-                label=t(locale, 'common-btn-next'),
+                label=t(locale, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='pb_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -1132,7 +1131,7 @@ class PlayerBoardView(LocaleLayoutView):
     async def create_post(self, title, content, interaction):
         try:
             bot = interaction.client
-            guild_locale = await resolve_guild_locale(bot, interaction.guild_id)
+            guild_locale = await resolve_locale(bot=bot, guild_id=interaction.guild_id)
             user_locale = await resolve_locale(interaction)
             post_collection = bot.gdb[DatabaseCollections.PLAYER_BOARD]
             post_id = str(shortuuid.uuid()[:8])
@@ -1182,7 +1181,7 @@ class PlayerBoardView(LocaleLayoutView):
     async def edit_post(self, post, new_title, new_content, interaction):
         try:
             bot = interaction.client
-            guild_locale = await resolve_guild_locale(bot, interaction.guild_id)
+            guild_locale = await resolve_locale(bot=bot, guild_id=interaction.guild_id)
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -1228,16 +1227,107 @@ class PlayerBoardView(LocaleLayoutView):
             await log_exception(e, interaction)
 
 
-class NewCharacterWizardView(LocaleLayoutView):
-    def __init__(self, character_id, character_name, inventory_type):
+class ValidationErrorView(LocaleLayoutView):
+    """Paginated view for displaying input validation errors."""
+
+    def __init__(self, errors, calling_view):
         super().__init__(timeout=None)
-        self.character_id = character_id
-        self.character_name = character_name
+        self.errors = errors
+        self.calling_view = calling_view
+        self.locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
+        self.items_per_page = 15
+        self.current_page = 0
+        self.total_pages = max(1, math.ceil(len(errors) / self.items_per_page))
+        self.build_view()
+
+    def build_view(self):
+        self.clear_items()
+        locale = getattr(self, 'locale', DEFAULT_LOCALE)
+        container = Container()
+
+        container.add_item(TextDisplay(f'**{t(locale, "player-validation-error-title")}**'))
+        container.add_item(Separator())
+
+        start = self.current_page * self.items_per_page
+        end = start + self.items_per_page
+        page_errors = self.errors[start:end]
+        container.add_item(TextDisplay('\n'.join(f'- {e}' for e in page_errors)))
+        container.add_item(Separator())
+
+        actions = ActionRow()
+        actions.add_item(buttons.ValidationRetryButton(self))
+        container.add_item(actions)
+
+        self.add_item(container)
+
+        if self.total_pages > 1:
+            nav_row = ActionRow()
+            prev_button = Button(
+                label=t(locale, 'common-btn-prev')[:DiscordLimits.BUTTON_LABEL],
+                style=discord.ButtonStyle.secondary,
+                custom_id='val_err_prev',
+                disabled=(self.current_page == 0)
+            )
+            prev_button.callback = self.prev_page
+
+            page_display = Button(
+                label=t(locale, 'common-page-label',
+                        current=self.current_page + 1, total=self.total_pages)[:DiscordLimits.BUTTON_LABEL],
+                style=discord.ButtonStyle.secondary,
+                custom_id='val_err_page'
+            )
+            page_display.callback = self.show_page_jump_modal
+
+            next_button = Button(
+                label=t(locale, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
+                style=discord.ButtonStyle.secondary,
+                custom_id='val_err_next',
+                disabled=(self.current_page >= self.total_pages - 1)
+            )
+            next_button.callback = self.next_page
+
+            nav_row.add_item(prev_button)
+            nav_row.add_item(page_display)
+            nav_row.add_item(next_button)
+            self.add_item(nav_row)
+
+    async def prev_page(self, interaction):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction):
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def show_page_jump_modal(self, interaction):
+        try:
+            await interaction.response.send_modal(common_modals.PageJumpModal(self))
+        except Exception as e:
+            locale = getattr(self, 'locale', DEFAULT_LOCALE)
+            logger.error(f'Failed to send PageJumpModal: {e}')
+            await interaction.response.send_message(
+                t(locale, 'common-error-page-selector'), ephemeral=True
+            )
+
+
+class NewCharacterWizardView(LocaleLayoutView):
+    def __init__(self, pending_character, inventory_type, locale=None):
+        super().__init__(timeout=None)
+        self.pending_character = pending_character
+        self.character_id = pending_character['character_id']
+        self.character_name = pending_character['name']
         self.inventory_type = inventory_type
+        if locale:
+            self.locale = locale
 
         self.build_view()
 
     def build_view(self):
+        self.clear_items()
         locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
         container.add_item(TextDisplay(
@@ -1264,14 +1354,15 @@ class NewCharacterWizardView(LocaleLayoutView):
         self.add_item(container)
 
     async def submit_open_inventory(self, interaction, items):
-        await _handle_submission(interaction, self.character_id, self.character_name, items, {})
+        await _handle_submission(interaction, self.pending_character, items, {})
 
 
 class StaticKitSelectView(LocaleLayoutView):
-    def __init__(self, character_id, character_name):
+    def __init__(self, pending_character):
         super().__init__(timeout=None)
-        self.character_id = character_id
-        self.character_name = character_name
+        self.pending_character = pending_character
+        self.character_id = pending_character['character_id']
+        self.character_name = pending_character['name']
         self.kits = {}
         self.currency_config = None
         self.sorted_kits = []
@@ -1290,7 +1381,6 @@ class StaticKitSelectView(LocaleLayoutView):
         )
         self.kits = query.get('kits', {}) if query else {}
 
-        # Sort kits by name
         self.sorted_kits = sorted(self.kits.items(), key=lambda x: x[1].get(CommonFields.NAME, '').lower())
         self.total_pages = math.ceil(len(self.sorted_kits) / self.items_per_page)
 
@@ -1321,7 +1411,7 @@ class StaticKitSelectView(LocaleLayoutView):
             page_items = self.sorted_kits[start:end]
 
             for kit_id, kit_data in page_items:
-                select_button = buttons.SelectKitOptionButton(kit_id, kit_data)
+                select_button = buttons.SelectKitOptionButton(kit_id, kit_data, locale=locale)
                 section = Section(accessory=select_button)
 
                 kit_name = kit_data.get(CommonFields.NAME, 'Unknown Kit')
@@ -1331,13 +1421,11 @@ class StaticKitSelectView(LocaleLayoutView):
                 if description:
                     content_lines.append(f'*{escape_markdown(description)}*')
 
-                # Preview Contents
                 items = kit_data.get(CommonFields.ITEMS, [])
-                # Decode currency keys for display
                 currency = {decode_mongo_key(k): v for k, v in kit_data.get(CharacterFields.CURRENCY, {}).items()}
 
                 preview_list = []
-                for item in items[:3]:  # Show first 3 items
+                for item in items[:3]:
                     preview_list.append(
                         f'{item.get(CommonFields.QUANTITY, 1)}x '
                         f'{escape_markdown(titlecase(item.get(CommonFields.NAME, "")))}'
@@ -1361,11 +1449,10 @@ class StaticKitSelectView(LocaleLayoutView):
 
         self.add_item(container)
 
-        # Pagination
         if self.total_pages > 1:
             nav_row = ActionRow()
             prev_button = Button(
-                label=t(locale, 'common-btn-prev'),
+                label=t(locale, 'common-btn-prev')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='kit_prev',
                 disabled=(self.current_page == 0)
@@ -1373,14 +1460,15 @@ class StaticKitSelectView(LocaleLayoutView):
             prev_button.callback = self.prev_page
 
             page_display = Button(
-                label=t(locale, 'common-page-label', current=self.current_page + 1, total=self.total_pages),
+                label=t(locale, 'common-page-label', current=self.current_page + 1,
+                       total=self.total_pages)[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='kit_page_display'
             )
             page_display.callback = self.show_page_jump_modal
 
             next_button = Button(
-                label=t(locale, 'common-btn-next'),
+                label=t(locale, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='kit_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -1411,13 +1499,19 @@ class StaticKitSelectView(LocaleLayoutView):
 
 
 class StaticKitConfirmView(LocaleLayoutView):
-    def __init__(self, character_id, character_name, kit_id, kit_data, currency_config):
+    def __init__(self, pending_character, kit_id, kit_data, currency_config, locale=None):
         super().__init__(timeout=None)
-        self.character_id = character_id
-        self.character_name = character_name
+        self.locale = locale or DEFAULT_LOCALE
+        self.pending_character = pending_character
+        self.character_id = pending_character['character_id']
+        self.character_name = pending_character['name']
         self.kit_id = kit_id
         self.kit_data = kit_data
         self.currency_config = currency_config
+
+        self.items_per_page = 9
+        self.current_page = 0
+        self.total_pages = 1
 
         self.build_view()
 
@@ -1434,54 +1528,110 @@ class StaticKitConfirmView(LocaleLayoutView):
 
         description = self.kit_data.get('description')
         if description:
-            container.add_item(TextDisplay(escape_markdown(description)))
+            container.add_item(TextDisplay(
+                escape_markdown(truncate_text(description, DisplayLimits.ITEM_DESCRIPTION))))
             container.add_item(Separator())
 
         items = self.kit_data.get(CommonFields.ITEMS, [])
-        # Decode currency keys for display
         currency = {decode_mongo_key(k): v for k, v in self.kit_data.get(CharacterFields.CURRENCY, {}).items()}
 
-        details = []
-        if items:
-            details.append(t(locale, 'player-label-items-heading'))
-            for item in items:
-                details.append(
-                    f'- {item.get(CommonFields.QUANTITY, 1)}x '
-                    f'{escape_markdown(titlecase(item.get(CommonFields.NAME)))}'
-                )
-
+        detail_lines = []
         if currency:
-            details.append(f'\n{t(locale, "player-label-currency-heading")}')
             curr_strs = format_consolidated_totals(currency, self.currency_config)
             for s in curr_strs:
-                details.append(f'- {s}')
+                detail_lines.append(f'- {s}')
+        if items:
+            for item in items:
+                detail_lines.append(
+                    f'- {item.get(CommonFields.QUANTITY, 1)}x '
+                    f'{escape_markdown(truncate_text(
+                        titlecase(item.get(CommonFields.NAME)), DisplayLimits.ITEM_NAME))}'
+                )
 
-        if not details:
-            details.append(t(locale, 'player-msg-kit-empty'))
+        if not detail_lines:
+            container.add_item(TextDisplay(t(locale, 'player-msg-kit-empty')))
+        else:
+            self.total_pages = math.ceil(len(detail_lines) / self.items_per_page)
+            if self.current_page >= self.total_pages:
+                self.current_page = max(0, self.total_pages - 1)
 
-        container.add_item(TextDisplay('\n'.join(details)))
+            start = self.current_page * self.items_per_page
+            end = start + self.items_per_page
+            page_lines = detail_lines[start:end]
+
+            container.add_item(TextDisplay('\n'.join(page_lines)))
+
         container.add_item(Separator())
 
         actions = ActionRow()
-        actions.add_item(buttons.KitConfirmButton())
-        actions.add_item(buttons.KitBackButton())
+        actions.add_item(buttons.KitConfirmButton(locale=locale))
+        actions.add_item(buttons.KitBackButton(locale=locale))
         container.add_item(actions)
 
         self.add_item(container)
+
+        if self.total_pages > 1:
+            nav_row = ActionRow()
+            prev_button = Button(
+                label=t(locale, 'common-btn-prev')[:DiscordLimits.BUTTON_LABEL],
+                style=discord.ButtonStyle.secondary,
+                custom_id='kit_confirm_prev',
+                disabled=(self.current_page == 0)
+            )
+            prev_button.callback = self.prev_page
+
+            page_display = Button(
+                label=t(locale, 'common-page-label', current=self.current_page + 1,
+                       total=self.total_pages)[:DiscordLimits.BUTTON_LABEL],
+                style=discord.ButtonStyle.secondary,
+                custom_id='kit_confirm_page'
+            )
+            page_display.callback = self.show_page_jump_modal
+
+            next_button = Button(
+                label=t(locale, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
+                style=discord.ButtonStyle.secondary,
+                custom_id='kit_confirm_next',
+                disabled=(self.current_page >= self.total_pages - 1)
+            )
+            next_button.callback = self.next_page
+
+            nav_row.add_item(prev_button)
+            nav_row.add_item(page_display)
+            nav_row.add_item(next_button)
+            self.add_item(nav_row)
+
+    async def prev_page(self, interaction):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction):
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def show_page_jump_modal(self, interaction):
+        try:
+            await interaction.response.send_modal(common_modals.PageJumpModal(self))
+        except Exception as e:
+            await log_exception(e, interaction)
 
     async def submit(self, interaction):
         items = {
             item[CommonFields.NAME]: item[CommonFields.QUANTITY]
             for item in self.kit_data.get(CommonFields.ITEMS, [])
         }
-        # Decode currency keys for display
         currency = {decode_mongo_key(k): v for k, v in self.kit_data.get(CharacterFields.CURRENCY, {}).items()}
-        await _handle_submission(interaction, self.character_id, self.character_name, items, currency)
+        await _handle_submission(interaction, self.pending_character, items, currency)
 
 
 class NewCharacterComplexItemPurchaseView(LocaleLayoutView):
     def __init__(self, parent_view, item):
         super().__init__(timeout=None)
+        self.locale = getattr(parent_view, 'locale', DEFAULT_LOCALE)
         self.parent_view = parent_view
         self.item = item
         self.build_view()
@@ -1505,7 +1655,7 @@ class NewCharacterComplexItemPurchaseView(LocaleLayoutView):
             container.add_item(TextDisplay(t(locale, 'player-msg-no-cost-options')))
         else:
             for index, cost_option in enumerate(costs):
-                cost_str = format_complex_cost([cost_option], currency_config)
+                cost_str = format_complex_cost([cost_option], currency_config, locale=locale)
 
                 select_button = buttons.WizardSelectCostOptionButton(self.parent_view, self.item, index)
                 section = Section(accessory=select_button)
@@ -1518,10 +1668,11 @@ class NewCharacterComplexItemPurchaseView(LocaleLayoutView):
 
 
 class NewCharacterShopView(LocaleLayoutView):
-    def __init__(self, character_id, character_name, inventory_type):
+    def __init__(self, pending_character, inventory_type):
         super().__init__(timeout=None)
-        self.character_id = character_id
-        self.character_name = character_name
+        self.pending_character = pending_character
+        self.character_id = pending_character['character_id']
+        self.character_name = pending_character['name']
         self.inventory_type = inventory_type
         self.shop_stock = []
         self.cart = {}
@@ -1590,9 +1741,11 @@ class NewCharacterShopView(LocaleLayoutView):
             cost_string = t(locale, 'common-label-free')
             if self.inventory_type == InventoryType.PURCHASE.value:
                 costs = item.get(ShopFields.COSTS, [])
-                cost_string = format_complex_cost(costs, self.currency_config)
+                cost_string = format_complex_cost(costs, self.currency_config, locale=locale)
 
-            section = Section(accessory=buttons.WizardItemButton(item, self.inventory_type, cost_string))
+            section = Section(accessory=buttons.WizardItemButton(
+                item, self.inventory_type, cost_string, locale=locale
+            ))
 
             display = f'**{item[CommonFields.NAME]}**'
             if item.get(CommonFields.QUANTITY, 1) > 1:
@@ -1608,7 +1761,7 @@ class NewCharacterShopView(LocaleLayoutView):
                     display += f" {t(locale, 'player-label-in-cart', quantity=item_quantity_in_cart)}"
 
             if description := item.get('description'):
-                display += f"\n*{description}*"
+                display += f"\n*{escape_markdown(truncate_text(description, DisplayLimits.ITEM_DESCRIPTION))}*"
 
             section.add_item(TextDisplay(display))
             container.add_item(section)
@@ -1618,7 +1771,7 @@ class NewCharacterShopView(LocaleLayoutView):
         nav_row = ActionRow()
         if self.total_pages > 1:
             prev_button = Button(
-                label=t(locale, 'common-btn-prev'),
+                label=t(locale, 'common-btn-prev')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='wiz_prev',
                 disabled=(self.current_page == 0)
@@ -1626,7 +1779,7 @@ class NewCharacterShopView(LocaleLayoutView):
             prev_button.callback = self.prev_page
 
             next_button = Button(
-                label=t(locale, 'common-btn-next'),
+                label=t(locale, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='wiz_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -1726,7 +1879,9 @@ class NewCharacterCartView(LocaleLayoutView):
                 wallet[starting_wealth.get(CharacterFields.CURRENCY)] = starting_wealth.get(CommonFields.AMOUNT, 0)
 
             for base_currency, amount in consolidated_costs.items():
-                is_ok, _ = check_sufficient_funds(wallet, self.shop_view.currency_config, base_currency, amount)
+                is_ok, _ = check_sufficient_funds(
+                    wallet, self.shop_view.currency_config, base_currency, amount, locale=locale
+                )
                 if not is_ok:
                     self.can_afford = False
                     warnings.append(
@@ -1781,10 +1936,12 @@ class NewCharacterCartView(LocaleLayoutView):
                         selected_cost = costs[option_index]
                         if selected_cost:
                             total_line_cost = {k: v * quantity for k, v in selected_cost.items()}
-                            price_label = format_complex_cost([total_line_cost], self.shop_view.currency_config)
+                            price_label = format_complex_cost(
+                                [total_line_cost], self.shop_view.currency_config, locale=locale
+                            )
                             display += f' - {price_label}'
 
-                edit_button = buttons.WizardEditCartItemButton(key, quantity)
+                edit_button = buttons.WizardEditCartItemButton(key, quantity, locale=locale)
                 section = Section(accessory=edit_button)
                 section.add_item(TextDisplay(display))
                 container.add_item(section)
@@ -1809,7 +1966,7 @@ class NewCharacterCartView(LocaleLayoutView):
         nav_row = ActionRow()
         if self.total_pages > 1:
             prev_button = Button(
-                label=t(locale, 'common-btn-prev'),
+                label=t(locale, 'common-btn-prev')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='wiz_cart_prev',
                 disabled=(self.current_page == 0)
@@ -1817,14 +1974,15 @@ class NewCharacterCartView(LocaleLayoutView):
             prev_button.callback = self.prev_page
 
             page_display = Button(
-                label=t(locale, 'player-label-cart-page', current=self.current_page + 1, total=self.total_pages),
+                label=t(locale, 'player-label-cart-page', current=self.current_page + 1,
+                       total=self.total_pages)[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='wiz_cart_page_display'
             )
             page_display.callback = self.show_page_jump_modal
 
             next_button = Button(
-                label=t(locale, 'common-btn-next'),
+                label=t(locale, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
                 custom_id='wiz_cart_next',
                 disabled=(self.current_page >= self.total_pages - 1)
@@ -1866,15 +2024,457 @@ class NewCharacterCartView(LocaleLayoutView):
             if self.shop_view.inventory_type == InventoryType.PURCHASE.value else {}
         )
 
-        await _handle_submission(interaction, self.shop_view.character_id, self.shop_view.character_name,
-                                 self.cart_items, currency_to_give)
+        await _handle_submission(interaction, self.shop_view.pending_character, self.cart_items, currency_to_give)
 
 
-async def _handle_submission(interaction, character_id, character_name, items, currency):
+class ApprovalPostView(LocaleLayoutView):
+    """Persistent view posted in forum threads for GM approval of character submissions."""
+
+    def __init__(self, submission_id):
+        super().__init__(timeout=None)
+        self.submission_id = submission_id
+        self.locale = DEFAULT_LOCALE
+        self.submission_data = None
+        self.currency_config = None
+        self.resolved = False
+        self.resolved_by = None
+        self.resolved_action = None
+        self.deny_reason = None
+
+        self.items_per_page = 9
+        self.current_page = 0
+        self.total_pages = 1
+
+    async def setup(self, bot):
+        self.submission_data = await bot.gdb[DatabaseCollections.APPROVALS].find_one(
+            {ApprovalFields.SUBMISSION_ID: self.submission_id}
+        )
+        if not self.submission_data:
+            self.resolved = True
+        else:
+            guild_id = self.submission_data.get(ApprovalFields.GUILD_ID)
+            if not self.locale or self.locale == DEFAULT_LOCALE:
+                self.locale = await resolve_locale(bot=bot, guild_id=guild_id)
+            self.currency_config = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.CURRENCY,
+                query={CommonFields.ID: guild_id}
+            )
+        self.build_view()
+
+    def build_view(self):
+        self.clear_items()
+        locale = getattr(self, 'locale', None) or DEFAULT_LOCALE
+        container = Container()
+
+        if not self.submission_data:
+            container.add_item(TextDisplay(t(locale, 'player-approval-resolved')))
+            self.add_item(container)
+            return
+
+        character_name = self.submission_data.get(ApprovalFields.CHARACTER_NAME, '')
+        user_id = self.submission_data.get(ApprovalFields.USER_ID)
+        items = self.submission_data.get(ApprovalFields.ITEMS, {})
+        currency = self.submission_data.get(ApprovalFields.CURRENCY, {})
+
+        container.add_item(TextDisplay(
+            t(locale, 'player-approval-post-header',
+              characterName=character_name, userMention=f'<@{user_id}>')
+        ))
+        container.add_item(Separator())
+
+        detail_lines = []
+        if currency:
+            detail_lines.append(f'**{t(locale, "player-approval-post-currency")}**')
+            currency_labels = format_consolidated_totals(currency, self.currency_config)
+            for label in currency_labels:
+                detail_lines.append(f'- {label}')
+
+        if items:
+            detail_lines.append(f'**{t(locale, "player-approval-post-items")}**')
+            for name, quantity in sorted(items.items()):
+                quantity_label = f'{quantity}x ' if quantity > 1 else ''
+                detail_lines.append(
+                    f'- {quantity_label}{escape_markdown(truncate_text(name, DisplayLimits.ITEM_NAME))}'
+                )
+
+        if not detail_lines:
+            self.total_pages = 1
+            self.current_page = 0
+            container.add_item(TextDisplay(t(locale, 'common-label-none')))
+        else:
+            self.total_pages = math.ceil(len(detail_lines) / self.items_per_page)
+            if self.current_page >= self.total_pages:
+                self.current_page = max(0, self.total_pages - 1)
+
+            start = self.current_page * self.items_per_page
+            end = start + self.items_per_page
+            container.add_item(TextDisplay('\n'.join(detail_lines[start:end])))
+
+        container.add_item(Separator())
+
+        if self.resolved:
+            if self.resolved_action == ApprovalFields.STATUS_APPROVED:
+                container.add_item(TextDisplay(
+                    t(locale, 'player-approval-approved-by', approver=self.resolved_by)
+                ))
+            elif self.resolved_action == ApprovalFields.STATUS_DENIED:
+                deny_text = t(locale, 'player-approval-denied-by', denier=self.resolved_by)
+                if self.deny_reason:
+                    deny_text += f'\n{t(locale, "player-approval-deny-reason", reason=self.deny_reason)}'
+                container.add_item(TextDisplay(deny_text))
+            else:
+                container.add_item(TextDisplay(t(locale, 'player-approval-resolved')))
+        else:
+            actions = ActionRow()
+            actions.add_item(buttons.ApprovalApproveButton(self.submission_id, locale=locale))
+            actions.add_item(buttons.ApprovalDenyButton(self.submission_id, locale=locale))
+            actions.add_item(buttons.ApprovalEditButton(self.submission_id, locale=locale))
+            container.add_item(actions)
+
+        self.add_item(container)
+
+        if not self.resolved and self.total_pages > 1:
+            nav_row = ActionRow()
+            prev_button = Button(
+                label=t(locale, 'common-btn-prev')[:DiscordLimits.BUTTON_LABEL],
+                style=discord.ButtonStyle.secondary,
+                custom_id=f'approval_prev_{self.submission_id}',
+                disabled=(self.current_page == 0)
+            )
+            prev_button.callback = self.prev_page
+
+            page_display = Button(
+                label=t(locale, 'common-page-label',
+                        current=self.current_page + 1, total=self.total_pages)[:DiscordLimits.BUTTON_LABEL],
+                style=discord.ButtonStyle.secondary,
+                custom_id=f'approval_page_{self.submission_id}'
+            )
+            page_display.callback = self.show_page_jump_modal
+
+            next_button = Button(
+                label=t(locale, 'common-btn-next')[:DiscordLimits.BUTTON_LABEL],
+                style=discord.ButtonStyle.secondary,
+                custom_id=f'approval_next_{self.submission_id}',
+                disabled=(self.current_page >= self.total_pages - 1)
+            )
+            next_button.callback = self.next_page
+
+            nav_row.add_item(prev_button)
+            nav_row.add_item(page_display)
+            nav_row.add_item(next_button)
+            self.add_item(nav_row)
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        await super().interaction_check(interaction)
+        if self.resolved:
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+            return False
+
+        custom_id = interaction.data.get('custom_id', '')
+
+        if custom_id.startswith(('approve_sub_', 'deny_sub_')):
+            if not await is_gm_or_mod(interaction.client, interaction.guild, interaction.user):
+                caller_locale = await resolve_locale(interaction)
+                await interaction.response.send_message(
+                    t(caller_locale, 'player-approval-error-no-permission'), ephemeral=True
+                )
+                return False
+            return True
+
+        if custom_id.startswith('edit_sub_'):
+            submitter_id = self.submission_data.get(ApprovalFields.USER_ID)
+            if interaction.user.id != submitter_id:
+                caller_locale = await resolve_locale(interaction)
+                await interaction.response.send_message(
+                    t(caller_locale, 'player-approval-error-not-submitter'), ephemeral=True
+                )
+                return False
+            return True
+
+        return True
+
+    async def prev_page(self, interaction):
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def next_page(self, interaction):
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.build_view()
+            await interaction.response.edit_message(view=self)
+
+    async def show_page_jump_modal(self, interaction):
+        try:
+            await interaction.response.send_modal(common_modals.PageJumpModal(self))
+        except Exception as e:
+            caller_locale = await resolve_locale(interaction)
+            logger.error(f'Failed to send PageJumpModal: {e}')
+            await interaction.response.send_message(
+                t(caller_locale, 'common-error-page-selector'), ephemeral=True
+            )
+
+    async def approve(self, interaction):
+        bot = interaction.client
+        try:
+            await interaction.response.defer()
+
+            async def _do_approve(session):
+                claimed = await bot.gdb[DatabaseCollections.APPROVALS].find_one_and_update(
+                    {ApprovalFields.SUBMISSION_ID: self.submission_id,
+                     ApprovalFields.STATUS: ApprovalFields.STATUS_PENDING},
+                    {'$set': {ApprovalFields.STATUS: ApprovalFields.STATUS_PROCESSING}},
+                    session=session
+                )
+                if not claimed:
+                    return None
+
+                pending_character = claimed.get(ApprovalFields.PENDING_CHARACTER, {})
+                character_id = pending_character.get(
+                    ApprovalFields.CHARACTER_ID, claimed.get(ApprovalFields.CHARACTER_ID)
+                )
+                character_name = pending_character.get(
+                    CommonFields.NAME, claimed.get(ApprovalFields.CHARACTER_NAME)
+                )
+
+                inventory = {titlecase(k): int(v) for k, v in claimed.get(ApprovalFields.ITEMS, {}).items()}
+                currency = {titlecase(k): int(v) for k, v in claimed.get(ApprovalFields.CURRENCY, {}).items()}
+
+                await update_cached_data(
+                    bot=bot,
+                    mongo_database=bot.mdb,
+                    collection_name=DatabaseCollections.CHARACTERS,
+                    query={CommonFields.ID: claimed[ApprovalFields.USER_ID]},
+                    update_data={'$set': {
+                        f'{CharacterFields.ACTIVE_CHARACTERS}.{claimed[ApprovalFields.GUILD_ID]}': character_id,
+                        f'{CharacterFields.CHARACTERS}.{character_id}': {
+                            CharacterFields.NAME: character_name,
+                            'note': pending_character.get('note', ''),
+                            'registeredDate': (
+                                pending_character.get('registered_date')
+                                or claimed.get(ApprovalFields.TIMESTAMP)
+                            ),
+                            CharacterFields.ATTRIBUTES: {
+                                'level': None,
+                                CharacterFields.EXPERIENCE: None,
+                                CharacterFields.INVENTORY: inventory,
+                                CharacterFields.CURRENCY: currency
+                            }
+                        }
+                    }},
+                    session=session
+                )
+
+                await delete_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.APPROVALS,
+                    search_filter={ApprovalFields.SUBMISSION_ID: self.submission_id},
+                    cache_id=f'approval_submission:{self.submission_id}',
+                    session=session
+                )
+
+                return claimed
+
+            result = await run_in_transaction(bot, _do_approve)
+
+            if result is None:
+                self.resolved = True
+                self.build_view()
+                await interaction.edit_original_response(view=self)
+                return
+
+            self.submission_data = result
+            guild_id = result[ApprovalFields.GUILD_ID]
+            user_id = result[ApprovalFields.USER_ID]
+            character_name = result.get(ApprovalFields.PENDING_CHARACTER, {}).get(
+                CommonFields.NAME, result.get(ApprovalFields.CHARACTER_NAME)
+            )
+            granted_permissions = result.get(ApprovalFields.GRANTED_PERMISSIONS, [])
+
+            thread = interaction.channel
+            if isinstance(thread, discord.Thread):
+                await self._revoke_submitter_permissions(
+                    thread, bot, guild_id, user_id, granted_permissions
+                )
+
+            self.resolved = True
+            self.resolved_by = interaction.user.mention
+            self.resolved_action = ApprovalFields.STATUS_APPROVED
+            self.build_view()
+            await interaction.edit_original_response(view=self)
+
+            try:
+                user = await bot.fetch_user(user_id)
+                user_locale = await resolve_locale(bot=bot, user_id=user_id, guild_id=guild_id)
+                guild = bot.get_guild(guild_id)
+                guild_name = guild.name if guild else 'Unknown'
+                dm_embed = discord.Embed(
+                    title=t(user_locale, 'player-dm-title-approved'),
+                    description=t(user_locale, 'player-dm-desc-approved',
+                                  characterName=character_name,
+                                  approver=interaction.user.display_name,
+                                  guildName=guild_name),
+                    color=discord.Color.green()
+                )
+                await user.send(embed=dm_embed)
+            except discord.errors.Forbidden:
+                logger.warning(f'Could not DM user {user_id} about approval — DMs may be disabled.')
+
+            if isinstance(thread, discord.Thread):
+                await thread.edit(locked=True, archived=True)
+
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def deny(self, interaction):
+        try:
+            from ReQuest.ui.player import modals as player_modals
+            modal = player_modals.DenyReasonModal(self)
+            await interaction.response.send_modal(modal)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    async def process_denial(self, interaction, reason=''):
+        bot = interaction.client
+        try:
+            await interaction.response.defer()
+
+            async def _do_denial(session):
+                claimed = await bot.gdb[DatabaseCollections.APPROVALS].find_one_and_update(
+                    {ApprovalFields.SUBMISSION_ID: self.submission_id,
+                     ApprovalFields.STATUS: ApprovalFields.STATUS_PENDING},
+                    {'$set': {ApprovalFields.STATUS: ApprovalFields.STATUS_PROCESSING}},
+                    session=session
+                )
+                if not claimed:
+                    return None
+
+                await delete_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.APPROVALS,
+                    search_filter={ApprovalFields.SUBMISSION_ID: self.submission_id},
+                    cache_id=f'approval_submission:{self.submission_id}',
+                    session=session
+                )
+
+                return claimed
+
+            result = await run_in_transaction(bot, _do_denial)
+
+            if result is None:
+                self.resolved = True
+                self.build_view()
+                await interaction.edit_original_response(view=self)
+                return
+
+            self.submission_data = result
+            user_id = result[ApprovalFields.USER_ID]
+            guild_id = result[ApprovalFields.GUILD_ID]
+            character_name = result.get(ApprovalFields.CHARACTER_NAME, '')
+            granted_permissions = result.get(ApprovalFields.GRANTED_PERMISSIONS, [])
+
+            thread = interaction.channel
+            if isinstance(thread, discord.Thread):
+                await self._revoke_submitter_permissions(
+                    thread, bot, guild_id, user_id, granted_permissions
+                )
+
+            self.resolved = True
+            self.resolved_by = interaction.user.mention
+            self.resolved_action = ApprovalFields.STATUS_DENIED
+            self.deny_reason = reason or None
+            self.build_view()
+            await interaction.edit_original_response(view=self)
+
+            try:
+                user = await bot.fetch_user(user_id)
+                user_locale = await resolve_locale(bot=bot, user_id=user_id, guild_id=guild_id)
+                guild = bot.get_guild(guild_id)
+                guild_name = guild.name if guild else 'Unknown'
+                description = t(user_locale, 'player-dm-desc-denied',
+                                characterName=character_name,
+                                denier=interaction.user.display_name,
+                                guildName=guild_name)
+                if reason:
+                    description += f'\n\n{t(user_locale, "player-approval-deny-reason", reason=reason)}'
+                dm_embed = discord.Embed(
+                    title=t(user_locale, 'player-dm-title-denied'),
+                    description=description,
+                    color=discord.Color.red()
+                )
+                await user.send(embed=dm_embed)
+            except discord.errors.Forbidden:
+                logger.warning(f'Could not DM user {user_id} about denial — DMs may be disabled.')
+
+            if isinstance(thread, discord.Thread):
+                await thread.edit(locked=True, archived=True)
+
+        except Exception as e:
+            await log_exception(e, interaction)
+
+    @staticmethod
+    async def _revoke_submitter_permissions(thread, bot, guild_id, user_id, granted_permissions):
+        """Revoke only the forum channel permissions that were granted by the bot."""
+        try:
+            if not granted_permissions:
+                return
+            guild = bot.get_guild(guild_id)
+            if not guild:
+                return
+            member = guild.get_member(user_id) or await guild.fetch_member(user_id)
+            forum_channel = thread.parent
+            if not forum_channel:
+                return
+            overwrite = forum_channel.overwrites_for(member)
+            for perm in granted_permissions:
+                setattr(overwrite, perm, None)
+            if overwrite.is_empty():
+                await forum_channel.set_permissions(member, overwrite=None)
+            else:
+                await forum_channel.set_permissions(member, overwrite=overwrite)
+        except Exception as e:
+            logger.warning(f'Could not revoke forum access for user {user_id}: {e}')
+
+    async def edit(self, interaction):
+        try:
+            pending_character = self.submission_data.get(ApprovalFields.PENDING_CHARACTER)
+            if pending_character:
+                pending_character = dict(pending_character)
+            else:
+                pending_character = {
+                    'character_id': self.submission_data.get(ApprovalFields.CHARACTER_ID),
+                    'name': self.submission_data.get(ApprovalFields.CHARACTER_NAME),
+                    'note': '',
+                    'registered_date': self.submission_data.get(ApprovalFields.TIMESTAMP),
+                    'inventory_type': 'open'
+                }
+
+            inventory_type = pending_character.get('inventory_type', 'open')
+
+            pending_character['submission_id'] = self.submission_id
+
+            caller_locale = await resolve_locale(interaction)
+            view = NewCharacterWizardView(pending_character, inventory_type, locale=caller_locale)
+            await interaction.response.send_message(view=view, ephemeral=True)
+        except Exception as e:
+            await log_exception(e, interaction)
+
+
+async def _handle_submission(interaction, pending_character, items, currency):
     try:
-        locale = getattr(interaction, '_locale_override', DEFAULT_LOCALE)
+        locale = await resolve_locale(interaction)
         guild_id = interaction.guild_id
         bot = interaction.client
+        member_id = interaction.user.id
+        character_id = pending_character['character_id']
+        character_name = pending_character['name']
+
         currency_config = await get_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
@@ -1892,72 +2492,171 @@ async def _handle_submission(interaction, character_id, character_name, items, c
         channel_id = strip_id(approval_query[ConfigFields.APPROVAL_QUEUE_CHANNEL]) if approval_query else None
         forum_channel = bot.get_channel(channel_id) if channel_id else None
 
-        submission_data = {
-            'guild_id': guild_id,
-            'user_id': interaction.user.id,
-            'character_id': character_id,
-            'character_name': character_name,
-            'items': items,
-            'currency': currency,
-            'status': 'pending',
-            'timestamp': discord.utils.utcnow()
-        }
+        existing_submission_id = pending_character.get('submission_id')
 
         if forum_channel and isinstance(forum_channel, discord.ForumChannel):
-            # Create Embed for Forum Post
-            embed = discord.Embed(
-                title=t(locale, 'player-embed-title-approval', characterName=character_name),
-                description=t(locale, 'player-embed-desc-submitted-by', userMention=interaction.user.mention),
-                color=discord.Color.blue()
-            )
-            embed.set_author(name=interaction.user.display_name,
-                             icon_url=interaction.user.avatar.url if interaction.user.avatar else None)
+            guild_locale = await resolve_locale(bot=bot, guild_id=guild_id)
 
-            item_labels = [f'{k}: {v}' for k, v in items.items()]
-            embed.add_field(
-                name=t(locale, 'player-embed-field-items'),
-                value='\n'.join(item_labels) or t(locale, 'common-label-none'), inline=False
-            )
+            if existing_submission_id:
+                submission_id = existing_submission_id
+                await interaction.response.defer()
 
-            currency_labels = format_consolidated_totals(currency, currency_config)
-            embed.add_field(
-                name=t(locale, 'player-embed-field-currency-received'),
-                value='\n'.join(currency_labels) or t(locale, 'common-label-none'), inline=False
-            )
+                result = await bot.gdb[DatabaseCollections.APPROVALS].update_one(
+                    {ApprovalFields.SUBMISSION_ID: submission_id,
+                     ApprovalFields.STATUS: ApprovalFields.STATUS_PENDING,
+                     ApprovalFields.USER_ID: member_id},
+                    {'$set': {
+                        ApprovalFields.PENDING_CHARACTER: pending_character,
+                        ApprovalFields.ITEMS: items,
+                        ApprovalFields.CURRENCY: currency,
+                        ApprovalFields.TIMESTAMP: discord.utils.utcnow()
+                    }}
+                )
 
-            submission_id = shortuuid.uuid()[:8]
-            embed.set_footer(text=t(locale, 'player-embed-footer-submission-id', submissionId=submission_id))
+                if result.matched_count == 0:
+                    resolved_view = LayoutView()
+                    container = Container(accent_colour=discord.Colour.red())
+                    container.add_item(TextDisplay(t(locale, 'player-approval-resolved')))
+                    resolved_view.add_item(container)
+                    await interaction.edit_original_response(view=resolved_view)
+                    return
 
-            # Create Thread
-            thread_name = t(locale, 'player-label-approval-thread', characterName=character_name)
-            thread_message = await forum_channel.create_thread(name=thread_name, embed=embed)
+                confirmation_view = LayoutView()
+                container = Container(accent_colour=discord.Colour.green())
+                container.add_item(TextDisplay(t(locale, 'player-msg-submission-updated')))
+                confirmation_view.add_item(container)
+                await interaction.edit_original_response(view=confirmation_view)
 
-            # Store submission in DB (Needed for GM to approve later)
-            submission_data['thread_id'] = thread_message.thread.id
-            submission_data['submission_id'] = submission_id
+                approval_doc = await bot.gdb[DatabaseCollections.APPROVALS].find_one(
+                    {ApprovalFields.SUBMISSION_ID: submission_id}
+                )
+                if approval_doc and approval_doc.get(ApprovalFields.MESSAGE_ID):
+                    thread_id = approval_doc.get(ApprovalFields.THREAD_ID)
+                    thread = bot.get_channel(thread_id)
+                    if thread:
+                        message = thread.get_partial_message(approval_doc[ApprovalFields.MESSAGE_ID])
+                        approval_view = ApprovalPostView(submission_id)
+                        approval_view.locale = guild_locale
+                        await approval_view.setup(bot)
+                        await message.edit(view=approval_view)
+            else:
+                await interaction.response.defer()
 
-            await bot.gdb[DatabaseCollections.APPROVALS].insert_one(submission_data)
+                submission_id = shortuuid.uuid()[:8]
+                submission_data = {
+                    ApprovalFields.GUILD_ID: guild_id,
+                    ApprovalFields.USER_ID: member_id,
+                    ApprovalFields.PENDING_CHARACTER: pending_character,
+                    ApprovalFields.CHARACTER_ID: character_id,
+                    ApprovalFields.CHARACTER_NAME: character_name,
+                    ApprovalFields.ITEMS: items,
+                    ApprovalFields.CURRENCY: currency,
+                    ApprovalFields.STATUS: ApprovalFields.STATUS_PENDING,
+                    ApprovalFields.TIMESTAMP: discord.utils.utcnow(),
+                    ApprovalFields.SUBMISSION_ID: submission_id
+                }
 
-            # Reset the view to Character Base View
-            new_view = CharacterBaseView()
-            await setup_view(new_view, interaction)
-            await interaction.response.edit_message(view=new_view)
+                approval_view = ApprovalPostView(submission_id)
+                approval_view.submission_data = submission_data
+                approval_view.currency_config = currency_config
+                approval_view.locale = guild_locale
+                approval_view.build_view()
 
-            confirmation_embed = discord.Embed(
-                title=t(locale, 'player-embed-title-submission-sent'),
-                description=t(locale, 'player-embed-desc-submission-sent',
-                              characterName=character_name,
-                              threadUrl=thread_message.thread.jump_url),
-                color=discord.Color.green()
-            )
-            await interaction.followup.send(embed=confirmation_embed, ephemeral=True)
+                thread_name = t(guild_locale, 'player-label-approval-thread', characterName=character_name)
+                thread_message = await forum_channel.create_thread(name=thread_name, view=approval_view)
+
+                thread = thread_message.thread
+                submission_data[ApprovalFields.THREAD_ID] = thread.id
+                submission_data[ApprovalFields.MESSAGE_ID] = thread_message.message.id
+
+                await bot.gdb[DatabaseCollections.APPROVALS].insert_one(submission_data)
+
+                pending_id = f'{member_id}_{guild_id}'
+                await delete_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.PENDING_CHARACTERS,
+                    search_filter={CommonFields.ID: pending_id},
+                    cache_id=pending_id
+                )
+
+                try:
+                    forum_perms = forum_channel.permissions_for(interaction.user)
+                    needed_perms = {
+                        'view_channel': not forum_perms.view_channel,
+                        'send_messages_in_threads': not forum_perms.send_messages_in_threads,
+                        'read_message_history': not forum_perms.read_message_history,
+                    }
+                    if any(needed_perms.values()):
+                        overwrite = forum_channel.overwrites_for(interaction.user)
+                        granted = []
+                        for perm, needed in needed_perms.items():
+                            if needed and getattr(overwrite, perm) is None:
+                                setattr(overwrite, perm, True)
+                                granted.append(perm)
+                        if granted:
+                            await forum_channel.set_permissions(interaction.user, overwrite=overwrite)
+                            await bot.gdb[DatabaseCollections.APPROVALS].update_one(
+                                {ApprovalFields.SUBMISSION_ID: submission_id},
+                                {'$set': {ApprovalFields.GRANTED_PERMISSIONS: granted}}
+                            )
+                except Exception as e:
+                    logger.warning(f'Could not grant forum access for user {member_id}: {e}')
+
+                await thread.send(t(
+                    guild_locale, 'player-approval-thread-instructions',
+                    characterName=character_name,
+                    playerMention=interaction.user.mention
+                ))
+
+                new_view = CharacterBaseView()
+                await setup_view(new_view, interaction)
+                await interaction.edit_original_response(view=new_view)
+
+                confirmation_embed = discord.Embed(
+                    title=t(locale, 'player-embed-title-submission-sent'),
+                    description=t(locale, 'player-embed-desc-submission-sent',
+                                  characterName=character_name,
+                                  threadUrl=thread.jump_url),
+                    color=discord.Color.green()
+                )
+                await interaction.followup.send(embed=confirmation_embed, ephemeral=True)
 
         else:
-            for name, quantity in items.items():
-                await update_character_inventory(interaction, interaction.user.id, character_id, name, quantity)
+            await interaction.response.defer()
 
-            for name, quantity in currency.items():
-                await update_character_inventory(interaction, interaction.user.id, character_id, name, quantity)
+            starting_inventory = {titlecase(k): int(v) for k, v in items.items()}
+            starting_currency = {titlecase(k): int(v) for k, v in currency.items()}
+
+            await update_cached_data(
+                bot=bot,
+                mongo_database=bot.mdb,
+                collection_name=DatabaseCollections.CHARACTERS,
+                query={CommonFields.ID: member_id},
+                update_data={'$set': {
+                    f'{CharacterFields.ACTIVE_CHARACTERS}.{guild_id}': character_id,
+                    f'{CharacterFields.CHARACTERS}.{character_id}': {
+                        CharacterFields.NAME: character_name,
+                        'note': pending_character.get('note', ''),
+                        'registeredDate': pending_character.get('registered_date'),
+                        CharacterFields.ATTRIBUTES: {
+                            'level': None,
+                            CharacterFields.EXPERIENCE: None,
+                            CharacterFields.INVENTORY: starting_inventory,
+                            CharacterFields.CURRENCY: starting_currency
+                        }
+                    }
+                }}
+            )
+
+            pending_id = f'{member_id}_{guild_id}'
+            await delete_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.PENDING_CHARACTERS,
+                search_filter={CommonFields.ID: pending_id},
+                cache_id=pending_id
+            )
 
             report_embed = discord.Embed(
                 title=t(locale, 'player-embed-title-starting-inventory'),
@@ -1992,7 +2691,7 @@ async def _handle_submission(interaction, character_id, character_name, items, c
 
             view = CharacterBaseView()
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
             await interaction.followup.send(embed=report_embed, ephemeral=True)
 
     except Exception as e:

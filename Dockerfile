@@ -1,34 +1,31 @@
-FROM python:alpine
+# Build deps
+FROM dhi.io/python:3.14-alpine3.23-dev AS builder
 
-RUN apk add --no-cache --virtual .build-deps  \
+RUN apk add --no-cache \
       build-base \
       python3-dev \
       musl-dev \
       libffi-dev \
       openssl-dev \
-      git \
-    && apk add --no-cache bash ca-certificates
-
-RUN addgroup -S request -g 1001 && \
-    adduser -S request -u 10001 -G request
-
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PYTHONPATH=/app
-
-WORKDIR /app
+      git
 
 COPY requirements.txt .
 
 RUN pip install -U pip && \
-    pip install --no-cache-dir -r requirements.txt && \
-    apk del .build-deps
+    pip install --no-cache-dir -r requirements.txt
 
-COPY --chown=request:request ReQuest /app/ReQuest
+# Prod image
+FROM dhi.io/python:3.14-alpine3.23
 
-USER request
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app
+
 WORKDIR /app
+
+COPY --from=builder /usr/lib/python3.14/site-packages /usr/lib/python3.14/site-packages
+COPY --chown=65532:65532 ReQuest /app/ReQuest
+
+USER 65532
 
 CMD ["python", "-m", "ReQuest.bot"]

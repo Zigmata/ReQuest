@@ -13,7 +13,6 @@ common-btn-select = Pasirinkti
 common-btn-manage = Valdyti
 common-btn-rename = Pervadinti
 common-btn-continue = Tęsti
-common-btn-cancel = Atšaukti
 common-btn-enable = Įjungti
 common-btn-disable = Išjungti
 
@@ -39,16 +38,15 @@ common-label-none = Nėra
 common-label-unknown = Nežinoma
 common-label-locked = (UŽRAKINTA)
 common-label-loose-items = Laisvi daiktai
-common-label-and-more = . . . ir dar { $remaining }.
 common-label-currency = Valiuta
 common-label-inventory-empty = Inventorius tuščias.
 
 # Shared embed fields
 common-embed-field-party = __Grupė__
 common-embed-field-wait-list = __Laukimo sąrašas__
-common-embed-footer-quest-id = Quest ID: { $questId }
+common-embed-footer-quest-id = Užduoties ID: { $questId }
 common-embed-footer-transaction-id = Sandorio ID: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}Vadovas:{"**"}
 common-embed-label-party-restrictions = {"**"}Grupės apribojimai:{"**"}
 
 # Translation notice

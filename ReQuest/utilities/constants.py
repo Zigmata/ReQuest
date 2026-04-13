@@ -27,6 +27,17 @@ class QuestFields:
     PARTY_ROLE_ID = 'partyRoleId'
     QUEST_ROLE_MODE = 'questRoleMode'
     XP = 'xp'
+    STATUS = 'status'
+    IMAGE_URL = 'imageUrl'
+    LARGE_IMAGE_URL = 'largeImageUrl'
+    PARTY_ROLE_NAME = 'partyRoleName'
+
+
+class QuestStatus:
+    DRAFT = 'draft'
+    PUBLISHED = 'published'
+    LOCKED = 'locked'
+    COMPLETED = 'completed'
 
 
 class ShopFields:
@@ -76,9 +87,9 @@ class ConfigFields:
 
 MAX_QUEST_ROLES_PER_GM = 20
 
-FIRST_RESTOCK_GRACE_HOURLY = 2   # minutes
-FIRST_RESTOCK_GRACE_DAILY = 10   # minutes
-FIRST_RESTOCK_GRACE_WEEKLY = 30  # minutes
+FIRST_RESTOCK_GRACE_HOURLY = 2
+FIRST_RESTOCK_GRACE_DAILY = 10
+FIRST_RESTOCK_GRACE_WEEKLY = 30
 
 
 class RoleplayFields:
@@ -139,6 +150,27 @@ class CommonFields:
     ITEMS = 'items'
 
 
+class ApprovalFields:
+    SUBMISSION_ID = 'submission_id'
+    GUILD_ID = 'guild_id'
+    USER_ID = 'user_id'
+    CHARACTER_ID = 'character_id'
+    CHARACTER_NAME = 'character_name'
+    PENDING_CHARACTER = 'pending_character'
+    THREAD_ID = 'thread_id'
+    MESSAGE_ID = 'message_id'
+    STATUS = 'status'
+    TIMESTAMP = 'timestamp'
+    GRANTED_PERMISSIONS = 'granted_permissions'
+    ITEMS = 'items'
+    CURRENCY = 'currency'
+
+    STATUS_PENDING = 'pending'
+    STATUS_PROCESSING = 'processing'
+    STATUS_APPROVED = 'approved'
+    STATUS_DENIED = 'denied'
+
+
 class DatabaseCollections:
     SERVER_ALLOWLIST = 'serverAllowlist'
     ANNOUNCE_ROLE = 'announceRole'
@@ -172,3 +204,60 @@ class DatabaseCollections:
     QUEST_ROLE_MODE = 'questRoleMode'
     QUEST_ROLE_ASSIGNMENTS = 'questRoleAssignments'
     CHARACTERS = 'characters'
+    PENDING_CHARACTERS = 'pendingCharacters'
+
+
+PENDING_CHARACTER_TTL_DAYS = 14
+
+
+class DisplayLimits:
+    """Character limits for TextDisplay components."""
+    TEXT_DISPLAY_MAX = 4000
+    SHOP_NAME = 50
+    SHOPKEEPER_NAME = 32
+    SHOP_DESCRIPTION = 300
+    ITEM_NAME = 50
+    ITEM_DESCRIPTION = 256
+    MAX_CURRENCY_AMOUNT = 9_999_999_999
+
+
+class DiscordLimits:
+    """Limits for various Discord entities."""
+    CHANNEL_NAME = 100
+    ROLE_NAME = 100
+    EMOJI_NAME = 32
+    MESSAGE_CONTENT = 2000
+    EMBED_TITLE = 256
+    EMBED_DESCRIPTION = 4096
+    EMBED_FIELD_NAME = 256
+    EMBED_FIELD_VALUE = 1024
+    EMBED_FOOTER = 2048
+    EMBED_AUTHOR = 256
+    COMPONENT_CUSTOM_ID = 100
+    ACTION_ROW_COMPONENTS = 5
+    BUTTON_LABEL = 80
+    BUTTON_URL = 512
+    SELECT_PLACEHOLDER = 150
+    SELECT_OPTIONS = 25
+    STRING_SELECT_OPTION_LABEL = 100
+    STRING_SELECT_OPTION_VALUE = 100
+    STRING_SELECT_OPTION_DESCRIPTION = 100
+    TEXT_INPUT_VALUE = 4000
+    TEXT_INPUT_PLACEHOLDER = 100
+    SECTION_COMPONENTS = 3
+    TEXT_DISPLAY_CONTENT = 4000
+    THUMBNAIL_DESCRIPTION = 1024
+    MEDIA_GALLERY_ITEMS = 10
+    MEDIA_GALLERY_ITEM_DESCRIPTION = 1024
+    CONTAINER_CHILD_COMPONENTS = 40
+    LABEL_LABEL = 45
+    LABEL_DESCRIPTION = 100
+    RADIO_GROUP_OPTIONS = 10
+    RADIO_GROUP_OPTION_LABEL = 100
+    RADIO_GROUP_OPTION_VALUE = 100
+    RADIO_GROUP_OPTION_DESCRIPTION = 100
+    CHECKBOX_GROUP_OPTIONS = 10
+    CHECKBOX_GROUP_OPTION_LABEL = 100
+    CHECKBOX_GROUP_OPTION_VALUE = 100
+    CHECKBOX_GROUP_OPTION_DESCRIPTION = 100
+    MODAL_TITLE = 45

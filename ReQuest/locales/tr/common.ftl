@@ -13,7 +13,6 @@ common-btn-select = Seç
 common-btn-manage = Yönet
 common-btn-rename = Yeniden Adlandır
 common-btn-continue = Devam
-common-btn-cancel = İptal
 common-btn-enable = Etkinleştir
 common-btn-disable = Devre Dışı Bırak
 
@@ -39,16 +38,15 @@ common-label-none = Yok
 common-label-unknown = Bilinmiyor
 common-label-locked = (KİLİTLİ)
 common-label-loose-items = Serbest Eşyalar
-common-label-and-more = . . . ve { $remaining } tane daha.
 common-label-currency = Para Birimi
 common-label-inventory-empty = Envanter boş.
 
 # Shared embed fields
 common-embed-field-party = __Grup__
 common-embed-field-wait-list = __Bekleme Listesi__
-common-embed-footer-quest-id = Quest ID: { $questId }
+common-embed-footer-quest-id = Görev Kimliği: { $questId }
 common-embed-footer-transaction-id = İşlem ID: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}Oyun Yöneticisi:{"**"}
 common-embed-label-party-restrictions = {"**"}Grup Kısıtlamaları:{"**"}
 
 # Translation notice

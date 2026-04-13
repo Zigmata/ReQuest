@@ -4,9 +4,11 @@ import math
 import discord
 from discord.ui import Select
 
-from ReQuest.utilities.constants import CommonFields, DatabaseCollections
+from ReQuest.utilities.constants import CommonFields, DatabaseCollections, DiscordLimits
 from ReQuest.utilities.localizer import DEFAULT_LOCALE, SUPPORTED_LOCALES, t
-from ReQuest.utilities.supportFunctions import log_exception, setup_view, update_cached_data
+from ReQuest.utilities.db_cache import update_cached_data
+from ReQuest.utilities.exceptions import log_exception
+from ReQuest.utilities.discord_utils import setup_view
 
 logger = logging.getLogger(__name__)
 
@@ -154,8 +156,9 @@ def get_config_locale_page(locale_code):
 
 class LanguageSelect(Select):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            placeholder=t(DEFAULT_LOCALE, 'info-language-select-placeholder'),
+            placeholder=t(locale, 'info-language-select-placeholder'),
             options=[],
             custom_id='language_select'
         )
@@ -175,7 +178,8 @@ class LanguageSelect(Select):
         for supported_locale in page_locales:
             self.options.append(discord.SelectOption(
                 label=t(locale, LOCALE_LABELS[supported_locale]),
-                description=t(locale, LOCALE_DESCRIPTIONS[supported_locale]),
+                description=t(locale,
+                              LOCALE_DESCRIPTIONS[supported_locale])[:DiscordLimits.STRING_SELECT_OPTION_DESCRIPTION],
                 emoji=LOCALE_EMOJI.get(supported_locale),
                 value=supported_locale,
                 default=(supported_locale == locale)

@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = 例如：0.1
 config-error-denomination-matches-currency = 新面额名称不能与此服务器上已有的货币同名！发现已有货币名为"{ $existingName }"。
 config-error-denomination-matches-denomination = 新面额名称不能与此服务器上已有的面额同名！发现已有面额名为"{ $denominationName }"，属于货币"{ $currencyName }"。
 config-error-denomination-value-exists = 同一货币下的面额必须具有唯一数值！{ $denominationName } 已被分配此数值。
+config-label-denomination-info = **{ $name }** (数值: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = 禁止角色名称
@@ -224,8 +225,6 @@ config-error-item-exists-new-char = 新角色商店中已存在名为 { $itemNam
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = 上传新角色商店（JSON）
 config-error-no-json-uploaded-short = 未上传 JSON 文件。
-config-error-json-must-have-shopstock = JSON 必须包含 'shopStock' 数组。
-config-error-items-must-have-name-price = 所有物品必须包含 'name' 和 'price' 字段。
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = 设置新角色财富
@@ -252,6 +251,7 @@ config-modal-title-kit-currency = 添加套装货币
 config-modal-placeholder-currency-eg = 例如：Gold
 config-modal-placeholder-amount-eg = 例如：100
 config-error-amount-must-be-number = 金额必须是数字。
+config-error-amount-exceeds-maximum = 金额不能超过 { $max }。
 config-error-no-currencies-on-server = 服务器未配置任何货币。
 config-error-currency-not-found-short = 未找到货币"{ $currency }"。
 config-error-denomination-not-found = 在货币配置中未找到面额"{ $denomination }"。
@@ -374,7 +374,7 @@ config-select-option-no-threads = 没有找到活跃的 Thread
 config-select-desc-no-threads = 创建新 Thread 或检查已归档的 Thread
 config-select-option-select-forum-first = 请先选择一个 Forum
 config-select-desc-select-forum-first = 请先选择上方的 Forum 频道
-config-select-desc-thread-id = Thread ID: { $threadId }
+config-select-desc-thread-id = 话题ID: { $threadId }
 config-error-select-valid-thread = 请选择有效的 Thread 或创建新的。
 config-error-thread-not-found = 找不到所选的 Thread。它可能已被删除或归档。
 
@@ -408,11 +408,9 @@ config-title-wizard = {"**"}服务器配置 - 向导{"**"}
 config-wizard-intro =
     {"**"}欢迎使用 ReQuest 配置向导！{"**"}
 
-    此向导将帮助您确保服务器已正确配置以使用 ReQuest 的功能。
-    它将扫描您当前的设置并提供调整建议。
+    此向导将帮助您确保服务器已正确配置以使用 ReQuest 的功能。 它将扫描您当前的设置并提供调整建议。
 
-    使用下方的"启动扫描"按钮开始验证过程。扫描完成后，
-    您将收到服务器配置的详细报告以及建议的更改。
+    使用下方的"启动扫描"按钮开始验证过程。扫描完成后， 您将收到服务器配置的详细报告以及建议的更改。
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}机器人全局权限{"**"}__
@@ -536,7 +534,27 @@ config-wizard-gm-rewards-disabled = {"**"}状态：{"**"} 已禁用
 config-wizard-gm-rewards-enabled = {"**"}状态：{"**"} 已启用
 config-wizard-gm-rewards-experience = - 经验值：{ $xp }
 config-wizard-gm-rewards-items = - 物品：
-config-wizard-unnamed-shop = 未命名商店
+
+# 向导 - 服务器语言（第1页）
+config-wizard-server-language-desc =
+    这是 ReQuest 将用于所有公开消息的语言，例如任务帖子、商店补货消息和交易日志。
+config-wizard-server-language = {"**"}服务器语言：{"**"} { $language }
+config-wizard-server-language-default = 默认（英语）
+
+# 向导 - 商店补货信息
+config-wizard-shop-restock-not-scheduled = ℹ️ 未安排补货
+
+# 向导 - 任务设置（第5页）
+config-wizard-quest-header = __{"**"}任务设置{"**"}__
+config-wizard-quest-header-desc =
+    此部分提供与任务相关的配置概览。
+config-wizard-quest-role-mode = - 任务角色模式：{ $mode }
+config-wizard-quest-roles-label = {"**"}GM 任务角色{"**"}
+config-wizard-quest-roles-count = - 分配给 GM 的角色：{ $count }
+config-wizard-quest-roles-all-ok = - ✅ 所有角色正常
+config-wizard-quest-roles-assigned-to = {"    "}分配给：{ $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ 角色 ID { $roleId }：未找到/已从服务器删除
+config-wizard-quest-roles-no-assignments = - ℹ️ 未分配任务角色
 
 ## Roles View
 config-title-roles = {"**"}服务器配置 - 角色{"**"}
@@ -831,9 +849,6 @@ config-select-placeholder-add-quest-role = 为此 GM 分配服务器角色
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}服务器配置 - Quest 角色{"**"}
-config-label-quest-roles = Quest 角色
-config-desc-quest-roles =
-    配置 Quest 期间如何处理队伍角色。
 
 config-label-quest-role-mode-disabled = {"**"}Quest 角色模式：{"**"} 已禁用
     Quest 期间不创建或分配任何角色。
@@ -852,6 +867,7 @@ config-desc-manage-assignments =
     角色必须低于 ReQuest 在服务器层级中的最高角色。
 config-msg-no-gm-members = 在此服务器上未找到拥有 GM 角色的成员。
 config-label-no-roles-assigned = 未分配 Quest 角色
+config-label-more-roles = (+{ $count } 更多)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}管理 Quest 角色 — { $gmName }{"**"}

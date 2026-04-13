@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = f.eks., 0.1
 config-error-denomination-matches-currency = Nyt denominationsnavn kan ikke matche en eksisterende valuta på denne server! Fandt eksisterende valuta med navnet "{ $existingName }".
 config-error-denomination-matches-denomination = Nyt denominationsnavn kan ikke matche en eksisterende denomination på denne server! Fandt eksisterende denomination med navnet "{ $denominationName }" under valutaen "{ $currencyName }".
 config-error-denomination-value-exists = Denominationer under en enkelt valuta skal have unikke værdier! { $denominationName } har allerede denne værdi tildelt.
+config-label-denomination-info = **{ $name }** (Værdi: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Forbudte rollenavne
@@ -224,8 +225,6 @@ config-error-item-exists-new-char = En genstand med navnet { $itemName } findes 
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Upload ny karakterbutik (JSON)
 config-error-no-json-uploaded-short = Ingen JSON-fil uploadet.
-config-error-json-must-have-shopstock = JSON skal indeholde et 'shopStock'-array.
-config-error-items-must-have-name-price = Alle genstande skal have 'name' og 'price'.
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Indstil ny karakters formue
@@ -252,6 +251,7 @@ config-modal-title-kit-currency = Tilføj pakkevaluta
 config-modal-placeholder-currency-eg = f.eks., Guld
 config-modal-placeholder-amount-eg = f.eks., 100
 config-error-amount-must-be-number = Beløb skal være et tal.
+config-error-amount-exceeds-maximum = Beløbet må ikke overstige { $max }.
 config-error-no-currencies-on-server = Ingen valutaer konfigureret på serveren.
 config-error-currency-not-found-short = Valutaen "{ $currency }" blev ikke fundet.
 config-error-denomination-not-found = Denominationen "{ $denomination }" blev ikke fundet i valutakonfigurationen.
@@ -392,7 +392,7 @@ config-menu-currency = Valuta
 config-menu-desc-currency = Globale valutaindstillinger.
 config-menu-players = Spillere
 config-menu-desc-players = Globale spillerindstillinger, såsom erfaringspoint-sporing.
-config-menu-quests = Quests
+config-menu-quests = Opgaver
 config-menu-desc-quests = Globale quest-indstillinger, såsom ventelister.
 config-menu-rp-rewards = RP-belønninger
 config-menu-desc-rp-rewards = Konfigurer rollespilsbelønninger.
@@ -408,11 +408,9 @@ config-title-wizard = {"**"}Serverkonfiguration - Guide{"**"}
 config-wizard-intro =
     {"**"}Velkommen til ReQuest-konfigurationsguiden!{"**"}
 
-    Denne guide hjælper dig med at sikre, at din server er korrekt konfigureret til at bruge ReQuests funktioner.
-    Den scanner dine nuværende indstillinger og giver anbefalinger til eventuelle nødvendige justeringer.
+    Denne guide hjælper dig med at sikre, at din server er korrekt konfigureret til at bruge ReQuests funktioner. Den scanner dine nuværende indstillinger og giver anbefalinger til eventuelle nødvendige justeringer.
 
-    Brug knappen "Start scanning" nedenfor for at begynde valideringsprocessen. Når scanningen er færdig,
-    modtager du en detaljeret rapport over din servers konfiguration sammen med eventuelle anbefalede ændringer.
+    Brug knappen "Start scanning" nedenfor for at begynde valideringsprocessen. Når scanningen er færdig, modtager du en detaljeret rapport over din servers konfiguration sammen med eventuelle anbefalede ændringer.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Bot globale tilladelser{"**"}__
@@ -536,7 +534,27 @@ config-wizard-gm-rewards-disabled = {"**"}Status:{"**"} Deaktiveret
 config-wizard-gm-rewards-enabled = {"**"}Status:{"**"} Aktiveret
 config-wizard-gm-rewards-experience = - Erfaring: { $xp }
 config-wizard-gm-rewards-items = - Genstande:
-config-wizard-unnamed-shop = Unavngiven butik
+
+# Wizard - Serversprog (Side 1)
+config-wizard-server-language-desc =
+    Dette er det sprog, ReQuest vil bruge til alle offentlige beskeder, såsom quest-opslag, genopfyldningsbeskeder for butikker og transaktionslogge.
+config-wizard-server-language = {"**"}Serversprog:{"**"} { $language }
+config-wizard-server-language-default = Standard (engelsk)
+
+# Wizard - Info om butiks-genopfyldning
+config-wizard-shop-restock-not-scheduled = ℹ️ Genopfyldning ikke planlagt
+
+# Wizard - Quest-indstillinger (Side 5)
+config-wizard-quest-header = __{"**"}Quest-indstillinger{"**"}__
+config-wizard-quest-header-desc =
+    Denne sektion giver et overblik over quest-relaterede konfigurationer.
+config-wizard-quest-role-mode = - Quest-rolletilstand: { $mode }
+config-wizard-quest-roles-label = {"**"}GM Quest-roller{"**"}
+config-wizard-quest-roles-count = - Roller tildelt GM'er: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Alle roller OK
+config-wizard-quest-roles-assigned-to = {"    "}Tildelt til: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ Rolle-ID { $roleId }: Ikke fundet/Slettet fra serveren
+config-wizard-quest-roles-no-assignments = - ℹ️ Ingen quest-roller tildelt
 
 ## Roles View
 config-title-roles = {"**"}Serverkonfiguration - Roller{"**"}
@@ -832,9 +850,6 @@ config-select-placeholder-add-quest-role = Tildel serverrolle(r) til denne GM
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}Serverkonfiguration - Quest-roller{"**"}
-config-label-quest-roles = Quest-roller
-config-desc-quest-roles =
-    Konfigurer hvordan grupperoller håndteres under quests.
 
 config-label-quest-role-mode-disabled = {"**"}Quest-rolletilstand:{"**"} Deaktiveret
     Ingen roller oprettes eller tildeles under quests.
@@ -853,6 +868,7 @@ config-desc-manage-assignments =
     Roller skal være lavere end ReQuests højeste rolle i serverhierarkiet.
 config-msg-no-gm-members = Ingen medlemmer med en GM-rolle blev fundet på denne server.
 config-label-no-roles-assigned = Ingen quest-roller tildelt
+config-label-more-roles = (+{ $count } mere)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Administrer quest-roller — { $gmName }{"**"}

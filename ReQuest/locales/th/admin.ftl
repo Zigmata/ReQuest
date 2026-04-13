@@ -32,7 +32,6 @@ admin-modal-label-server-name = ชื่อเซิร์ฟเวอร์
 admin-modal-placeholder-server-name = พิมพ์ชื่อย่อของเซิร์ฟเวอร์ Discord
 admin-modal-label-server-id = ID เซิร์ฟเวอร์
 admin-modal-placeholder-server-id = พิมพ์ ID ของเซิร์ฟเวอร์ Discord
-admin-select-placeholder-server = เลือกเซิร์ฟเวอร์ที่จะลบ
 admin-modal-title-cog-action = { $action } Cog
 admin-modal-label-cog-name = ชื่อ
 admin-modal-placeholder-cog-name = ป้อนชื่อ Cog ที่จะ { $action }

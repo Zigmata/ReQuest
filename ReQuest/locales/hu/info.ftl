@@ -102,4 +102,3 @@ info-language-desc-sv-se = Nyelv beállítása svédre
 info-language-desc-th = Nyelv beállítása thaira
 info-language-desc-tr = Nyelv beállítása törökre
 info-language-desc-vi = Nyelv beállítása vietnámira
-info-language-updated = A nyelv sikeresen frissítve.

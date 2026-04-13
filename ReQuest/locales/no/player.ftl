@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Bytte
-player-cmd-desc = Spillermenyer
 
 # --- Buttons ---
 
@@ -146,6 +144,15 @@ player-msg-no-characters = Du har ingen registrerte karakterer.
 player-label-active = (Aktiv)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Karakter pågår: { $characterName }{"**"}
+    Karakterregistreringen din venter på inventaroppsett.
+player-btn-resume = Gjenoppta
+player-btn-discard = Forkast
+player-modal-title-discard-character = Forkast karakter
+player-modal-label-discard-confirm = Forkaste { $characterName }?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Bekreft fjerning av karakter
 player-modal-label-confirm-char-delete = Slette { $characterName }?
@@ -215,8 +222,6 @@ player-label-empty-kit = {"*"}Tomt sett{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Bekreft valg: { $kitName }{"**"}
-player-label-items-heading = {"**"}Gjenstander:{"**"}
-player-label-currency-heading = {"**"}Valuta:{"**"}
 player-msg-kit-empty = Dette settet er tomt.
 
 # NewCharacterComplexItemPurchaseView
@@ -264,6 +269,7 @@ player-embed-field-receipt = Kvittering
 # Spend currency errors
 player-error-amount-not-number = Beløp må være et tall.
 player-error-amount-positive = Du må bruke et positivt beløp.
+player-error-amount-exceeds-maximum = Beløpet kan ikke overstige { $max }.
 player-error-no-active-character-server = Du har ingen aktiv karakter på denne serveren.
 player-error-no-currency-config = En valutakonfigurasjon ble ikke funnet for denne serveren.
 
@@ -281,18 +287,17 @@ player-error-qty-only-have = Du har bare { $maxQuantity } av denne gjenstanden.
 player-error-invalid-format = Ugyldig format: "{ $line }". Bruk <navn>: <antall>.
 player-error-empty-name = Gjenstandsnavn kan ikke være tomt i linjen: "{ $line }".
 player-error-invalid-quantity = Ugyldig antall for "{ $name }": "{ $quantity }". Må være et positivt heltall.
-player-error-input-errors-header = Feil i inventarinntasting:
-player-msg-no-valid-items = Ingen gyldige gjenstander oppgitt. Initialiserer med tomt inventar.
+
+# Validation error view
+player-validation-error-title = Inndatafeil
+player-validation-btn-retry = Prøv igjen
 
 # Cart quantity validation
 player-error-enter-valid-number = Vennligst skriv inn et gyldig positivt tall.
 
 # Submission embeds (approval queue)
-player-embed-title-approval = Inventargodkjenning: { $characterName }
-player-embed-desc-submitted-by = Sendt inn av { $userMention }
 player-embed-field-items = Gjenstander
 player-embed-field-currency-received = Valuta
-player-embed-footer-submission-id = Innsendings-ID: { $submissionId }
 player-label-approval-thread = Godkjenning: { $characterName }
 player-embed-title-submission-sent = Inventarinnsending sendt
 player-embed-desc-submission-sent =
@@ -306,3 +311,46 @@ player-embed-desc-starting-inventory = Spiller: { $playerMention } som `{ $chara
 player-embed-field-items-received = Gjenstander mottatt
 player-embed-field-currency-received-label = Valuta mottatt
 player-label-untitled = Uten tittel
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Inventarinnsending: { $characterName }{"**"}
+    Sendt inn av { $userMention }
+player-approval-post-items = Gjenstander
+player-approval-post-currency = Valuta
+player-approval-resolved = Denne innsendingen er behandlet.
+player-approval-btn-approve = Godkjenn
+player-approval-btn-deny = Avslå
+player-approval-btn-edit = Rediger
+player-approval-error-no-permission = Du har ikke tillatelse til denne handlingen.
+player-approval-error-not-submitter = Kun den opprinnelige innsenderen kan redigere denne innsendingen.
+player-approval-thread-instructions =
+    Denne tråden ble opprettet for godkjenning av {"**"}{ $characterName }{"**"}.
+    En spilleder vil gjennomgå innsendingen og godkjenne eller avslå den.
+    Når den er godkjent eller avslått, vil denne tråden bli låst.
+
+    {"**"}Spilledere:{"**"} Diskuter eventuelle nødvendige endringer med
+    spilleren din til inventaret er i en akseptabel tilstand. Bruk
+    `Avslå`-knappen kun for uforenlige innsendinger.
+
+    { $playerMention }: Bruk `Rediger`-knappen for å gjøre endringer
+    som er forespurt her av en spilleder.
+player-approval-approved-by = Denne innsendingen ble godkjent av { $approver }.
+player-approval-denied-by = Denne innsendingen ble avslått av { $denier }.
+player-approval-deny-reason = Grunn: { $reason }
+player-msg-submission-updated = Innsendingen din er oppdatert.
+
+
+# Denial modal
+player-modal-title-deny-reason = Avslå innsending
+player-modal-label-deny-reason = Grunn for avslag
+player-modal-placeholder-deny-reason = Valgfritt: forklar grunnen til avslaget
+# Approval DM notifications
+player-dm-title-approved = Karakter godkjent
+player-dm-desc-approved =
+    Karakteren din {"**"}{ $characterName }{"**"} har blitt godkjent
+    av { $approver } i {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Karakter avslått
+player-dm-desc-denied =
+    Karakteren din {"**"}{ $characterName }{"**"} har blitt avslått
+    av { $denier } i {"**"}{ $guildName }{"**"}.

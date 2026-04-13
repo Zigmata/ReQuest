@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = bijv. 0.1
 config-error-denomination-matches-currency = Nieuwe denominatienaam mag niet overeenkomen met een bestaande valuta op deze server! Bestaande valuta gevonden met de naam "{ $existingName }".
 config-error-denomination-matches-denomination = Nieuwe denominatienaam mag niet overeenkomen met een bestaande denominatie op deze server! Bestaande denominatie gevonden met de naam "{ $denominationName }" onder de valuta "{ $currencyName }".
 config-error-denomination-value-exists = Denominaties onder een enkele valuta moeten unieke waarden hebben! { $denominationName } heeft deze waarde al toegewezen.
+config-label-denomination-info = **{ $name }** (Waarde: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Verboden rolnamen
@@ -224,8 +225,6 @@ config-error-item-exists-new-char = Een voorwerp met de naam { $itemName } besta
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Nieuw-personagewinkel uploaden (JSON)
 config-error-no-json-uploaded-short = Geen JSON-bestand geüpload.
-config-error-json-must-have-shopstock = JSON moet een 'shopStock'-array bevatten.
-config-error-items-must-have-name-price = Alle voorwerpen moeten 'name' en 'price' hebben.
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Startkapitaal instellen
@@ -252,6 +251,7 @@ config-modal-title-kit-currency = Kitvaluta toevoegen
 config-modal-placeholder-currency-eg = bijv. Goud
 config-modal-placeholder-amount-eg = bijv. 100
 config-error-amount-must-be-number = Bedrag moet een getal zijn.
+config-error-amount-exceeds-maximum = Het bedrag mag niet hoger zijn dan { $max }.
 config-error-no-currencies-on-server = Geen valuta's geconfigureerd op de server.
 config-error-currency-not-found-short = Valuta "{ $currency }" niet gevonden.
 config-error-denomination-not-found = Denominatie "{ $denomination }" niet gevonden in de valutaconfiguratie.
@@ -408,11 +408,9 @@ config-title-wizard = {"**"}Serverconfiguratie - Wizard{"**"}
 config-wizard-intro =
     {"**"}Welkom bij de ReQuest-configuratiewizard!{"**"}
 
-    Deze wizard helpt je ervoor te zorgen dat je server correct is geconfigureerd om de functies van ReQuest te gebruiken.
-    Het scant je huidige instellingen en geeft aanbevelingen voor eventuele aanpassingen.
+    Deze wizard helpt je ervoor te zorgen dat je server correct is geconfigureerd om de functies van ReQuest te gebruiken. Het scant je huidige instellingen en geeft aanbevelingen voor eventuele aanpassingen.
 
-    Gebruik de knop "Scan starten" hieronder om het validatieproces te beginnen. Zodra de scan is voltooid,
-    ontvang je een gedetailleerd rapport van de configuratie van je server samen met eventuele aanbevolen wijzigingen.
+    Gebruik de knop "Scan starten" hieronder om het validatieproces te beginnen. Zodra de scan is voltooid, ontvang je een gedetailleerd rapport van de configuratie van je server samen met eventuele aanbevolen wijzigingen.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Globale botmachtigingen{"**"}__
@@ -536,7 +534,27 @@ config-wizard-gm-rewards-disabled = {"**"}Status:{"**"} Uitgeschakeld
 config-wizard-gm-rewards-enabled = {"**"}Status:{"**"} Ingeschakeld
 config-wizard-gm-rewards-experience = - Ervaring: { $xp }
 config-wizard-gm-rewards-items = - Voorwerpen:
-config-wizard-unnamed-shop = Naamloze winkel
+
+# Wizard - Servertaal (Pagina 1)
+config-wizard-server-language-desc =
+    Dit is de taal die ReQuest zal gebruiken voor alle openbare berichten, zoals Quest-publicaties, winkelherbevoorradingsberichten en transactielogboeken.
+config-wizard-server-language = {"**"}Servertaal:{"**"} { $language }
+config-wizard-server-language-default = Standaard (Engels)
+
+# Wizard - Winkelherbevoorradingsinfo
+config-wizard-shop-restock-not-scheduled = ℹ️ Herbevoorrading niet gepland
+
+# Wizard - Quest-instellingen (Pagina 5)
+config-wizard-quest-header = __{"**"}Quest-instellingen{"**"}__
+config-wizard-quest-header-desc =
+    Dit gedeelte biedt een overzicht van quest-gerelateerde configuraties.
+config-wizard-quest-role-mode = - Quest-rollenmodus: { $mode }
+config-wizard-quest-roles-label = {"**"}GM Quest-rollen{"**"}
+config-wizard-quest-roles-count = - Rollen toegewezen aan GM's: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Alle rollen OK
+config-wizard-quest-roles-assigned-to = {"    "}Toegewezen aan: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ Rol-ID { $roleId }: Niet gevonden/Verwijderd van de server
+config-wizard-quest-roles-no-assignments = - ℹ️ Geen quest-rollen toegewezen
 
 ## Roles View
 config-title-roles = {"**"}Serverconfiguratie - Rollen{"**"}
@@ -832,9 +850,6 @@ config-select-placeholder-add-quest-role = Serverrol(len) toewijzen aan deze GM
 
 ## Questrollen weergave
 config-title-quest-roles = {"**"}Serverconfiguratie - Questrollen{"**"}
-config-label-quest-roles = Questrollen
-config-desc-quest-roles =
-    Configureer hoe groepsrollen worden afgehandeld tijdens quests.
 
 config-label-quest-role-mode-disabled = {"**"}Questrolmodus:{"**"} Uitgeschakeld
     Er worden geen rollen aangemaakt of toegewezen tijdens quests.
@@ -853,6 +868,7 @@ config-desc-manage-assignments =
     Rollen moeten lager zijn dan de hoogste rol van ReQuest in de serverhiërarchie.
 config-msg-no-gm-members = Er zijn geen leden met een GM-rol gevonden op deze server.
 config-label-no-roles-assigned = Geen questrollen toegewezen
+config-label-more-roles = (+{ $count } meer)
 
 ## GM questrol toewijzing weergave
 config-title-gm-quest-role-assign = {"**"}Questrollen beheren — { $gmName }{"**"}

@@ -3,11 +3,14 @@
 # Error embed wrapper
 error-oops-title = ⚠️ Ups!
 error-report-description =
-    Terjadi pengecualian:
-
-    ```{ $exception }```
+    { $exception }
 
     Jika kesalahan ini tidak terduga, atau Anda menduga bot tidak berfungsi dengan benar, silakan kirim laporan bug di [Discord Dukungan Resmi ReQuest](https://discord.gg/Zq37gj4).
+
+error-report-unexpected =
+    Terjadi kesalahan yang tidak terduga. Silakan coba lagi.
+
+    Jika ini terus terjadi, silakan kirim laporan bug di [Discord Dukungan Resmi ReQuest](https://discord.gg/Zq37gj4).
 
 # Check failures
 error-owner-only = Hanya pemilik bot yang dapat menggunakan perintah ini!

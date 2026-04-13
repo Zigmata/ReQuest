@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = t.ex. 0.1
 config-error-denomination-matches-currency = Nytt valörnamn kan inte matcha en befintlig valuta på denna server! Hittade befintlig valuta med namnet "{ $existingName }".
 config-error-denomination-matches-denomination = Nytt valörnamn kan inte matcha en befintlig valör på denna server! Hittade befintlig valör med namnet "{ $denominationName }" under valutan "{ $currencyName }".
 config-error-denomination-value-exists = Valörer under en enskild valuta måste ha unika värden! { $denominationName } har redan detta värde tilldelat.
+config-label-denomination-info = **{ $name }** (Värde: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Förbjudna rollnamn
@@ -224,8 +225,6 @@ config-error-item-exists-new-char = Ett föremål med namnet { $itemName } finns
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Ladda upp nykaraktärsbutik (JSON)
 config-error-no-json-uploaded-short = Ingen JSON-fil uppladdad.
-config-error-json-must-have-shopstock = JSON måste innehålla en 'shopStock'-array.
-config-error-items-must-have-name-price = Alla föremål måste ha 'name' och 'price'.
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Ange nykaraktärsförmögenhet
@@ -252,6 +251,7 @@ config-modal-title-kit-currency = Lägg till paketvaluta
 config-modal-placeholder-currency-eg = t.ex. Guld
 config-modal-placeholder-amount-eg = t.ex. 100
 config-error-amount-must-be-number = Beloppet måste vara ett tal.
+config-error-amount-exceeds-maximum = Beloppet får inte överstiga { $max }.
 config-error-no-currencies-on-server = Inga valutor konfigurerade på servern.
 config-error-currency-not-found-short = Valutan "{ $currency }" hittades inte.
 config-error-denomination-not-found = Valören "{ $denomination }" hittades inte i valutakonfigurationen.
@@ -392,7 +392,7 @@ config-menu-currency = Valuta
 config-menu-desc-currency = Globala valutainställningar.
 config-menu-players = Spelare
 config-menu-desc-players = Globala spelarinställningar, såsom erfarenhetspoängsspårning.
-config-menu-quests = Quests
+config-menu-quests = Uppdrag
 config-menu-desc-quests = Globala quest-inställningar, såsom väntelistor.
 config-menu-rp-rewards = RP-belöningar
 config-menu-desc-rp-rewards = Konfigurera rollspelsbelöningar.
@@ -408,11 +408,9 @@ config-title-wizard = {"**"}Serverkonfiguration - Guide{"**"}
 config-wizard-intro =
     {"**"}Välkommen till ReQuest-konfigurationsguiden!{"**"}
 
-    Denna guide hjälper dig att se till att din server är korrekt konfigurerad för att använda ReQuests funktioner.
-    Den skannar dina nuvarande inställningar och ger rekommendationer för eventuella justeringar som behövs.
+    Denna guide hjälper dig att se till att din server är korrekt konfigurerad för att använda ReQuests funktioner. Den skannar dina nuvarande inställningar och ger rekommendationer för eventuella justeringar som behövs.
 
-    Använd knappen "Starta skanning" nedan för att påbörja valideringsprocessen. När skanningen är klar
-    får du en detaljerad rapport om din servers konfiguration samt eventuella rekommenderade ändringar.
+    Använd knappen "Starta skanning" nedan för att påbörja valideringsprocessen. När skanningen är klar får du en detaljerad rapport om din servers konfiguration samt eventuella rekommenderade ändringar.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Botens globala behörigheter{"**"}__
@@ -536,7 +534,27 @@ config-wizard-gm-rewards-disabled = {"**"}Status:{"**"} Inaktiverad
 config-wizard-gm-rewards-enabled = {"**"}Status:{"**"} Aktiverad
 config-wizard-gm-rewards-experience = - Erfarenhet: { $xp }
 config-wizard-gm-rewards-items = - Föremål:
-config-wizard-unnamed-shop = Namnlös butik
+
+# Wizard - Serverspråk (Sida 1)
+config-wizard-server-language-desc =
+    Detta är språket som ReQuest kommer att använda för alla offentliga meddelanden, såsom quest-inlägg, butiksåterfyllnadsmeddelanden och transaktionsloggar.
+config-wizard-server-language = {"**"}Serverspråk:{"**"} { $language }
+config-wizard-server-language-default = Standard (engelska)
+
+# Wizard - Butiksåterfyllnadsinformation
+config-wizard-shop-restock-not-scheduled = ℹ️ Återfyllnad inte schemalagd
+
+# Wizard - Quest-inställningar (Sida 5)
+config-wizard-quest-header = __{"**"}Quest-inställningar{"**"}__
+config-wizard-quest-header-desc =
+    Det här avsnittet ger en översikt av quest-relaterade konfigurationer.
+config-wizard-quest-role-mode = - Quest-rollsläge: { $mode }
+config-wizard-quest-roles-label = {"**"}GM Quest-roller{"**"}
+config-wizard-quest-roles-count = - Roller tilldelade till GM: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Alla roller OK
+config-wizard-quest-roles-assigned-to = {"    "}Tilldelad till: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ Roll-ID { $roleId }: Hittades inte/Borttagen från servern
+config-wizard-quest-roles-no-assignments = - ℹ️ Inga quest-roller tilldelade
 
 ## Roles View
 config-title-roles = {"**"}Serverkonfiguration - Roller{"**"}
@@ -832,9 +850,6 @@ config-select-placeholder-add-quest-role = Tilldela serverroll(er) till denna GM
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}Serverkonfiguration - Quest-roller{"**"}
-config-label-quest-roles = Quest-roller
-config-desc-quest-roles =
-    Konfigurera hur grupproller hanteras under quests.
 
 config-label-quest-role-mode-disabled = {"**"}Quest-rollläge:{"**"} Inaktiverat
     Inga roller skapas eller tilldelas under quests.
@@ -853,6 +868,7 @@ config-desc-manage-assignments =
     Roller måste vara lägre än ReQuests högsta roll i serverhierarkin.
 config-msg-no-gm-members = Inga medlemmar med en GM-roll hittades på denna server.
 config-label-no-roles-assigned = Inga quest-roller tilldelade
+config-label-more-roles = (+{ $count } till)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Hantera quest-roller — { $gmName }{"**"}

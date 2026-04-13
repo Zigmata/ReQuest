@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Ανταλλαγή
-player-cmd-desc = Μενού Παίκτη
 
 # --- Buttons ---
 
@@ -146,6 +144,15 @@ player-msg-no-characters = Δεν έχετε εγγεγραμμένους χαρ
 player-label-active = (Ενεργός)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Χαρακτήρας σε εξέλιξη: { $characterName }{"**"}
+    Η εγγραφή του χαρακτήρα σας αναμένει ρύθμιση εξοπλισμού.
+player-btn-resume = Συνέχεια
+player-btn-discard = Απόρριψη
+player-modal-title-discard-character = Απόρριψη χαρακτήρα
+player-modal-label-discard-confirm = Απόρριψη { $characterName };
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Επιβεβαίωση Αφαίρεσης Χαρακτήρα
 player-modal-label-confirm-char-delete = Διαγραφή { $characterName };
@@ -196,7 +203,7 @@ player-error-cannot-delete-loose = Δεν είναι δυνατή η διαγρ�
 player-title-player-board = {"**"}Εντολές Παίκτη - Πίνακας Παικτών{"**"}
 player-desc-create-post = Δημιουργία νέας δημοσίευσης για τον Πίνακα Παικτών.
 player-msg-no-posts = Δεν έχετε τρέχουσες δημοσιεύσεις.
-player-label-post-info = {"**"}{ $title }{"**"} (ID: `{ $postId }`)
+player-label-post-info = {"**"}{ $title }{"**"} (Ταυτ: `{ $postId }`)
 player-embed-field-author = Συγγραφέας
 player-embed-footer-post-id = ID Δημοσίευσης: { $postId }
 player-error-board-channel-not-found = Το κανάλι Πίνακα Παικτών δεν βρέθηκε.
@@ -215,8 +222,6 @@ player-label-empty-kit = {"*"}Κενό Κιτ{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Επιβεβαίωση Επιλογής: { $kitName }{"**"}
-player-label-items-heading = {"**"}Αντικείμενα:{"**"}
-player-label-currency-heading = {"**"}Νόμισμα:{"**"}
 player-msg-kit-empty = Αυτό το κιτ είναι κενό.
 
 # NewCharacterComplexItemPurchaseView
@@ -264,6 +269,7 @@ player-embed-field-receipt = Απόδειξη
 # Spend currency errors
 player-error-amount-not-number = Το ποσό πρέπει να είναι αριθμός.
 player-error-amount-positive = Πρέπει να ξοδέψετε θετικό ποσό.
+player-error-amount-exceeds-maximum = Το ποσό δεν μπορεί να υπερβαίνει το { $max }.
 player-error-no-active-character-server = Δεν έχετε ενεργό χαρακτήρα σε αυτόν τον διακομιστή.
 player-error-no-currency-config = Δεν βρέθηκε ρύθμιση νομίσματος για αυτόν τον διακομιστή.
 
@@ -281,18 +287,17 @@ player-error-qty-only-have = Έχετε μόνο { $maxQuantity } από αυτ�
 player-error-invalid-format = Μη έγκυρη μορφή: "{ $line }". Χρησιμοποιήστε <όνομα>: <ποσότητα>.
 player-error-empty-name = Το όνομα αντικειμένου δεν μπορεί να είναι κενό στη γραμμή: "{ $line }".
 player-error-invalid-quantity = Μη έγκυρη ποσότητα για "{ $name }": "{ $quantity }". Πρέπει να είναι θετικός ακέραιος.
-player-error-input-errors-header = Σφάλματα στην εισαγωγή εξοπλισμού:
-player-msg-no-valid-items = Δεν δόθηκαν έγκυρα αντικείμενα. Αρχικοποίηση με κενό εξοπλισμό.
+
+# Validation error view
+player-validation-error-title = Σφάλματα εισαγωγής
+player-validation-btn-retry = Δοκιμάστε ξανά
 
 # Cart quantity validation
 player-error-enter-valid-number = Παρακαλώ εισάγετε έγκυρο θετικό αριθμό.
 
 # Submission embeds (approval queue)
-player-embed-title-approval = Έγκριση Εξοπλισμού: { $characterName }
-player-embed-desc-submitted-by = Υποβλήθηκε από { $userMention }
 player-embed-field-items = Αντικείμενα
 player-embed-field-currency-received = Νόμισμα
-player-embed-footer-submission-id = ID Υποβολής: { $submissionId }
 player-label-approval-thread = Έγκριση: { $characterName }
 player-embed-title-submission-sent = Υποβολή Εξοπλισμού Εστάλη
 player-embed-desc-submission-sent =
@@ -306,3 +311,46 @@ player-embed-desc-starting-inventory = Παίκτης: { $playerMention } ως `
 player-embed-field-items-received = Αντικείμενα που Λήφθηκαν
 player-embed-field-currency-received-label = Νόμισμα που Λήφθηκε
 player-label-untitled = Χωρίς Τίτλο
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Υποβολή Εξοπλισμού: { $characterName }{"**"}
+    Υποβλήθηκε από { $userMention }
+player-approval-post-items = Αντικείμενα
+player-approval-post-currency = Νόμισμα
+player-approval-resolved = Αυτή η υποβολή έχει επιλυθεί.
+player-approval-btn-approve = Έγκριση
+player-approval-btn-deny = Απόρριψη
+player-approval-btn-edit = Επεξεργασία
+player-approval-error-no-permission = Δεν έχετε δικαίωμα για αυτή την ενέργεια.
+player-approval-error-not-submitter = Μόνο ο αρχικός υποβάλλων μπορεί να επεξεργαστεί αυτή την υποβολή.
+player-approval-thread-instructions =
+    Αυτό το νήμα δημιουργήθηκε για την έγκριση του {"**"}{ $characterName }{"**"}.
+    Ένας Game Master θα εξετάσει την υποβολή και θα την εγκρίνει ή θα την απορρίψει.
+    Μόλις εγκριθεί ή απορριφθεί, αυτό το νήμα θα κλειδωθεί.
+
+    {"**"}Game Masters:{"**"} Συζητήστε τυχόν απαιτούμενες αλλαγές με τον
+    παίκτη σας μέχρι ο εξοπλισμός να είναι σε αποδεκτή κατάσταση.
+    Χρησιμοποιήστε το κουμπί `Απόρριψη` μόνο για ασυμβίβαστες υποβολές.
+
+    { $playerMention }: Χρησιμοποιήστε το κουμπί `Επεξεργασία` για να κάνετε
+    αλλαγές που ζητήθηκαν εδώ από έναν Game Master.
+player-approval-approved-by = Αυτή η υποβολή εγκρίθηκε από { $approver }.
+player-approval-denied-by = Αυτή η υποβολή απορρίφθηκε από { $denier }.
+player-approval-deny-reason = Αιτία: { $reason }
+player-msg-submission-updated = Η υποβολή σας ενημερώθηκε.
+
+
+# Denial modal
+player-modal-title-deny-reason = Απόρριψη υποβολής
+player-modal-label-deny-reason = Αιτία απόρριψης
+player-modal-placeholder-deny-reason = Προαιρετικό: εξηγήστε γιατί απορρίφθηκε
+# Approval DM notifications
+player-dm-title-approved = Χαρακτήρας εγκρίθηκε
+player-dm-desc-approved =
+    Ο χαρακτήρας σας {"**"}{ $characterName }{"**"} εγκρίθηκε
+    από { $approver } στο {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Χαρακτήρας απορρίφθηκε
+player-dm-desc-denied =
+    Ο χαρακτήρας σας {"**"}{ $characterName }{"**"} απορρίφθηκε
+    από { $denier } στο {"**"}{ $guildName }{"**"}.

@@ -13,7 +13,6 @@ common-btn-select = Vybrat
 common-btn-manage = Spravovat
 common-btn-rename = Přejmenovat
 common-btn-continue = Pokračovat
-common-btn-cancel = Zrušit
 common-btn-enable = Zapnout
 common-btn-disable = Vypnout
 
@@ -39,16 +38,15 @@ common-label-none = Žádné
 common-label-unknown = Neznámé
 common-label-locked = (ZAMČENO)
 common-label-loose-items = Volné předměty
-common-label-and-more = . . . a dalších { $remaining }.
 common-label-currency = Měna
 common-label-inventory-empty = Inventář je prázdný.
 
 # Shared embed fields
 common-embed-field-party = __Skupina__
 common-embed-field-wait-list = __Čekací listina__
-common-embed-footer-quest-id = Quest ID: { $questId }
+common-embed-footer-quest-id = ID úkolu: { $questId }
 common-embed-footer-transaction-id = ID transakce: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}Vypravěč:{"**"}
 common-embed-label-party-restrictions = {"**"}Omezení skupiny:{"**"}
 
 # Translation notice

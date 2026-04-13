@@ -13,7 +13,6 @@ common-btn-select = เลือก
 common-btn-manage = จัดการ
 common-btn-rename = เปลี่ยนชื่อ
 common-btn-continue = ดำเนินการต่อ
-common-btn-cancel = ยกเลิก
 common-btn-enable = เปิดใช้งาน
 common-btn-disable = ปิดใช้งาน
 
@@ -39,16 +38,15 @@ common-label-none = ไม่มี
 common-label-unknown = ไม่ทราบ
 common-label-locked = (ล็อกอยู่)
 common-label-loose-items = ไอเทมไม่จัดหมวด
-common-label-and-more = . . . และอีก { $remaining } รายการ
 common-label-currency = สกุลเงิน
 common-label-inventory-empty = คลังไอเทมว่างเปล่า
 
 # Shared embed fields
 common-embed-field-party = __ปาร์ตี้__
 common-embed-field-wait-list = __รายชื่อรอ__
-common-embed-footer-quest-id = Quest ID: { $questId }
+common-embed-footer-quest-id = รหัสเควส: { $questId }
 common-embed-footer-transaction-id = รหัสธุรกรรม: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}ผู้ดำเนินเกม:{"**"}
 common-embed-label-party-restrictions = {"**"}ข้อจำกัดปาร์ตี้:{"**"}
 
 # Translation notice

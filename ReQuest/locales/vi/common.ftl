@@ -13,7 +13,6 @@ common-btn-select = Chọn
 common-btn-manage = Quản lý
 common-btn-rename = Đổi tên
 common-btn-continue = Tiếp tục
-common-btn-cancel = Hủy
 common-btn-enable = Bật
 common-btn-disable = Tắt
 
@@ -39,7 +38,6 @@ common-label-none = Không có
 common-label-unknown = Không rõ
 common-label-locked = (ĐÃ KHÓA)
 common-label-loose-items = Vật phẩm rời
-common-label-and-more = . . . và { $remaining } nữa.
 common-label-currency = Tiền tệ
 common-label-inventory-empty = Kho đồ trống.
 
@@ -48,7 +46,7 @@ common-embed-field-party = __Đội hình__
 common-embed-field-wait-list = __Danh sách chờ__
 common-embed-footer-quest-id = ID Quest: { $questId }
 common-embed-footer-transaction-id = ID giao dịch: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}Quản Trò:{"**"}
 common-embed-label-party-restrictions = {"**"}Giới hạn đội hình:{"**"}
 
 # Translation notice

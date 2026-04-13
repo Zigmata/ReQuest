@@ -3,11 +3,14 @@
 # Error embed wrapper
 error-oops-title = ⚠️ Hups!
 error-report-description =
-    Tapahtui poikkeus:
-
-    ```{ $exception }```
+    { $exception }
 
     Jos tämä virhe on odottamaton tai epäilet, ettei botti toimi oikein, lähetä vikailmoitus [virallisessa ReQuest-tuki-Discordissa](https://discord.gg/Zq37gj4).
+
+error-report-unexpected =
+    Tapahtui odottamaton virhe. Yritä uudelleen.
+
+    Jos tämä toistuu, lähetä vikailmoitus [virallisessa ReQuest-tuki-Discordissa](https://discord.gg/Zq37gj4).
 
 # Check failures
 error-owner-only = Vain botin omistaja voi käyttää tätä komentoa!

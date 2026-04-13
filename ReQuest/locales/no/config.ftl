@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = f.eks. 0.1
 config-error-denomination-matches-currency = Nytt valørnavn kan ikke være likt en eksisterende valuta på denne serveren! Fant eksisterende valuta med navnet "{ $existingName }".
 config-error-denomination-matches-denomination = Nytt valørnavn kan ikke være likt en eksisterende valør på denne serveren! Fant eksisterende valør med navnet "{ $denominationName }" under valutaen "{ $currencyName }".
 config-error-denomination-value-exists = Valører under en enkelt valuta må ha unike verdier! { $denominationName } har allerede denne verdien tildelt.
+config-label-denomination-info = **{ $name }** (Verdi: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Forbudte rollenavn
@@ -224,8 +225,6 @@ config-error-item-exists-new-char = En gjenstand med navnet { $itemName } eksist
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Last opp ny karakter-butikk (JSON)
 config-error-no-json-uploaded-short = Ingen JSON-fil lastet opp.
-config-error-json-must-have-shopstock = JSON må inneholde en 'shopStock'-matrise.
-config-error-items-must-have-name-price = Alle gjenstander må ha 'name' og 'price'.
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Angi startformue for ny karakter
@@ -252,6 +251,7 @@ config-modal-title-kit-currency = Legg til settvaluta
 config-modal-placeholder-currency-eg = f.eks. Gull
 config-modal-placeholder-amount-eg = f.eks. 100
 config-error-amount-must-be-number = Beløp må være et tall.
+config-error-amount-exceeds-maximum = Beløpet kan ikke overstige { $max }.
 config-error-no-currencies-on-server = Ingen valutaer konfigurert på serveren.
 config-error-currency-not-found-short = Valutaen "{ $currency }" ble ikke funnet.
 config-error-denomination-not-found = Valøren "{ $denomination }" ble ikke funnet i valutakonfigurasjonen.
@@ -408,11 +408,9 @@ config-title-wizard = {"**"}Serverkonfigurasjon - Veiviser{"**"}
 config-wizard-intro =
     {"**"}Velkommen til ReQuest-konfigurasjonsveiviseren!{"**"}
 
-    Denne veiviseren hjelper deg med å sikre at serveren din er riktig konfigurert for å bruke ReQuests funksjoner.
-    Den vil skanne gjeldende innstillinger og gi anbefalinger for eventuelle justeringer.
+    Denne veiviseren hjelper deg med å sikre at serveren din er riktig konfigurert for å bruke ReQuests funksjoner. Den vil skanne gjeldende innstillinger og gi anbefalinger for eventuelle justeringer.
 
-    Bruk «Start skanning»-knappen nedenfor for å starte valideringsprosessen. Når skanningen er fullført,
-    vil du motta en detaljert rapport om serverens konfigurasjon sammen med eventuelle anbefalte endringer.
+    Bruk «Start skanning»-knappen nedenfor for å starte valideringsprosessen. Når skanningen er fullført, vil du motta en detaljert rapport om serverens konfigurasjon sammen med eventuelle anbefalte endringer.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Botens globale tillatelser{"**"}__
@@ -536,7 +534,27 @@ config-wizard-gm-rewards-disabled = {"**"}Status:{"**"} Deaktivert
 config-wizard-gm-rewards-enabled = {"**"}Status:{"**"} Aktivert
 config-wizard-gm-rewards-experience = - Erfaring: { $xp }
 config-wizard-gm-rewards-items = - Gjenstander:
-config-wizard-unnamed-shop = Navnløs butikk
+
+# Wizard - Serverspråk (Side 1)
+config-wizard-server-language-desc =
+    Dette er språket ReQuest vil bruke for alle offentlige meldinger, som quest-innlegg, butikkpåfyllingsmeldinger og transaksjonslogger.
+config-wizard-server-language = {"**"}Serverspråk:{"**"} { $language }
+config-wizard-server-language-default = Standard (engelsk)
+
+# Wizard - Butikkpåfyllingsinformasjon
+config-wizard-shop-restock-not-scheduled = ℹ️ Påfylling ikke planlagt
+
+# Wizard - Quest-innstillinger (Side 5)
+config-wizard-quest-header = __{"**"}Quest-innstillinger{"**"}__
+config-wizard-quest-header-desc =
+    Denne seksjonen gir en oversikt over quest-relaterte konfigurasjoner.
+config-wizard-quest-role-mode = - Quest-rollemodus: { $mode }
+config-wizard-quest-roles-label = {"**"}GM Quest-roller{"**"}
+config-wizard-quest-roles-count = - Roller tildelt GM-er: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Alle roller OK
+config-wizard-quest-roles-assigned-to = {"    "}Tildelt til: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ Rolle-ID { $roleId }: Ikke funnet/Slettet fra serveren
+config-wizard-quest-roles-no-assignments = - ℹ️ Ingen quest-roller tildelt
 
 ## Roles View
 config-title-roles = {"**"}Serverkonfigurasjon - Roller{"**"}
@@ -832,9 +850,6 @@ config-select-placeholder-add-quest-role = Tildel serverrolle(r) til denne spill
 
 ## Quest-roller visning
 config-title-quest-roles = {"**"}Serverkonfigurasjon - Quest-roller{"**"}
-config-label-quest-roles = Quest-roller
-config-desc-quest-roles =
-    Konfigurer hvordan grupperoller håndteres under quester.
 
 config-label-quest-role-mode-disabled = {"**"}Quest-rollemodus:{"**"} Deaktivert
     Ingen roller opprettes eller tildeles under quester.
@@ -853,6 +868,7 @@ config-desc-manage-assignments =
     Roller må være lavere enn ReQuests høyeste rolle i serverhierarkiet.
 config-msg-no-gm-members = Ingen medlemmer med en spilllederrolle ble funnet på denne serveren.
 config-label-no-roles-assigned = Ingen quest-roller tildelt
+config-label-more-roles = (+{ $count } til)
 
 ## GM quest-rolletildeling visning
 config-title-gm-quest-role-assign = {"**"}Administrer quest-roller — { $gmName }{"**"}

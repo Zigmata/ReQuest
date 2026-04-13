@@ -2,8 +2,6 @@
 
 # --- 코그 ---
 
-player-cmd-name = 거래
-player-cmd-desc = 플레이어 메뉴
 
 # --- 버튼 ---
 
@@ -146,6 +144,15 @@ player-msg-no-characters = 등록된 캐릭터가 없습니다.
 player-label-active = (활성)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}진행 중인 캐릭터: { $characterName }{"**"}
+    캐릭터 등록이 인벤토리 설정을 기다리고 있습니다.
+player-btn-resume = 계속
+player-btn-discard = 삭제
+player-modal-title-discard-character = 캐릭터 삭제
+player-modal-label-discard-confirm = { $characterName }을(를) 삭제하시겠습니까?
+
 # 캐릭터 제거 확인
 player-modal-title-confirm-char-removal = 캐릭터 제거 확인
 player-modal-label-confirm-char-delete = { $characterName }을(를) 삭제하시겠습니까?
@@ -215,8 +222,6 @@ player-label-empty-kit = {"*"}빈 키트{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}선택 확인: { $kitName }{"**"}
-player-label-items-heading = {"**"}아이템:{"**"}
-player-label-currency-heading = {"**"}화폐:{"**"}
 player-msg-kit-empty = 이 키트가 비어 있습니다.
 
 # NewCharacterComplexItemPurchaseView
@@ -264,6 +269,7 @@ player-embed-field-receipt = 영수증
 # 화폐 사용 오류
 player-error-amount-not-number = 금액은 숫자여야 합니다.
 player-error-amount-positive = 양수 금액을 사용해야 합니다.
+player-error-amount-exceeds-maximum = 금액은 { $max }을(를) 초과할 수 없습니다.
 player-error-no-active-character-server = 이 서버에서 활성화된 캐릭터가 없습니다.
 player-error-no-currency-config = 이 서버에 화폐 설정이 없습니다.
 
@@ -281,18 +287,17 @@ player-error-qty-only-have = 이 아이템은 { $maxQuantity }개만 보유하�
 player-error-invalid-format = 잘못된 형식: "{ $line }". <이름>: <수량>을 사용하세요.
 player-error-empty-name = 줄 "{ $line }"에서 아이템 이름이 비어 있습니다.
 player-error-invalid-quantity = "{ $name }"의 잘못된 수량: "{ $quantity }". 양의 정수여야 합니다.
-player-error-input-errors-header = 인벤토리 입력 오류:
-player-msg-no-valid-items = 유효한 아이템이 제공되지 않았습니다. 빈 인벤토리로 초기화합니다.
+
+# Validation error view
+player-validation-error-title = 입력 오류
+player-validation-btn-retry = 다시 시도
 
 # 장바구니 수량 유효성 검사
 player-error-enter-valid-number = 유효한 양수를 입력해 주세요.
 
 # 제출 임베드 (승인 대기열)
-player-embed-title-approval = 인벤토리 승인: { $characterName }
-player-embed-desc-submitted-by = { $userMention }이(가) 제출함
 player-embed-field-items = 아이템
 player-embed-field-currency-received = 화폐
-player-embed-footer-submission-id = 제출 ID: { $submissionId }
 player-label-approval-thread = 승인: { $characterName }
 player-embed-title-submission-sent = 인벤토리 제출 완료
 player-embed-desc-submission-sent =
@@ -306,3 +311,46 @@ player-embed-desc-starting-inventory = 플레이어: { $playerMention } (`{ $cha
 player-embed-field-items-received = 받은 아이템
 player-embed-field-currency-received-label = 받은 화폐
 player-label-untitled = 제목 없음
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}인벤토리 제출: { $characterName }{"**"}
+    { $userMention }이(가) 제출함
+player-approval-post-items = 아이템
+player-approval-post-currency = 화폐
+player-approval-resolved = 이 제출물은 처리되었습니다.
+player-approval-btn-approve = 승인
+player-approval-btn-deny = 거부
+player-approval-btn-edit = 편집
+player-approval-error-no-permission = 이 작업을 수행할 권한이 없습니다.
+player-approval-error-not-submitter = 원래 제출자만 이 제출물을 편집할 수 있습니다.
+player-approval-thread-instructions =
+    이 스레드는 {"**"}{ $characterName }{"**"}의 승인을 위해 생성되었습니다.
+    게임 마스터가 제출물을 검토하고 승인 또는 거부합니다.
+    승인 또는 거부되면 이 스레드는 잠깁니다.
+
+    {"**"}게임 마스터:{"**"} 인벤토리가 허용 가능한 상태가 될 때까지
+    플레이어와 필요한 변경 사항을 논의하세요. `거부` 버튼은
+    조정 불가능한 제출물에만 사용하세요.
+
+    { $playerMention }: 게임 마스터가 여기에서 요청한 변경 사항을
+    적용하려면 `편집` 버튼을 사용하세요.
+player-approval-approved-by = 이 제출물은 { $approver }에 의해 승인되었습니다.
+player-approval-denied-by = 이 제출물은 { $denier }에 의해 거부되었습니다.
+player-approval-deny-reason = 사유: { $reason }
+player-msg-submission-updated = 제출물이 업데이트되었습니다.
+
+
+# Denial modal
+player-modal-title-deny-reason = 제출물 거부
+player-modal-label-deny-reason = 거부 사유
+player-modal-placeholder-deny-reason = 선택사항: 거부 사유를 설명하세요
+# Approval DM notifications
+player-dm-title-approved = 캐릭터 승인됨
+player-dm-desc-approved =
+    당신의 캐릭터 {"**"}{ $characterName }{"**"}이(가)
+    {"**"}{ $guildName }{"**"}에서 { $approver }에 의해 승인되었습니다!
+player-dm-title-denied = 캐릭터 거부됨
+player-dm-desc-denied =
+    당신의 캐릭터 {"**"}{ $characterName }{"**"}이(가)
+    {"**"}{ $guildName }{"**"}에서 { $denier }에 의해 거부되었습니다.

@@ -13,7 +13,6 @@ common-btn-select = Wybierz
 common-btn-manage = Zarządzaj
 common-btn-rename = Zmień nazwę
 common-btn-continue = Kontynuuj
-common-btn-cancel = Anuluj
 common-btn-enable = Włącz
 common-btn-disable = Wyłącz
 
@@ -39,7 +38,6 @@ common-label-none = Brak
 common-label-unknown = Nieznany
 common-label-locked = (ZABLOKOWANY)
 common-label-loose-items = Luźne przedmioty
-common-label-and-more = . . . i jeszcze { $remaining }.
 common-label-currency = Waluta
 common-label-inventory-empty = Ekwipunek jest pusty.
 
@@ -48,7 +46,7 @@ common-embed-field-party = __Drużyna__
 common-embed-field-wait-list = __Lista oczekujących__
 common-embed-footer-quest-id = ID Questu: { $questId }
 common-embed-footer-transaction-id = ID transakcji: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}Mistrz Gry:{"**"}
 common-embed-label-party-restrictions = {"**"}Ograniczenia drużyny:{"**"}
 
 # Translation notice

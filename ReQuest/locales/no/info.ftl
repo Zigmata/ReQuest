@@ -102,4 +102,3 @@ info-language-desc-sv-se = Sett språket til svensk
 info-language-desc-th = Sett språket til thai
 info-language-desc-tr = Sett språket til tyrkisk
 info-language-desc-vi = Sett språket til vietnamesisk
-info-language-updated = Språket ble oppdatert.

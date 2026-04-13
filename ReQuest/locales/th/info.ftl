@@ -102,4 +102,3 @@ info-language-desc-sv-se = ตั้งค่าภาษาเป็นภา�
 info-language-desc-th = ตั้งค่าภาษาเป็นภาษาไทย
 info-language-desc-tr = ตั้งค่าภาษาเป็นภาษาตุรกี
 info-language-desc-vi = ตั้งค่าภาษาเป็นภาษาเวียดนาม
-info-language-updated = อัปเดตภาษาเรียบร้อยแล้ว

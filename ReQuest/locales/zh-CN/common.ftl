@@ -13,7 +13,6 @@ common-btn-select = 选择
 common-btn-manage = 管理
 common-btn-rename = 重命名
 common-btn-continue = 继续
-common-btn-cancel = 取消
 common-btn-enable = 启用
 common-btn-disable = 禁用
 
@@ -39,16 +38,15 @@ common-label-none = 无
 common-label-unknown = 未知
 common-label-locked = （已锁定）
 common-label-loose-items = 散落物品
-common-label-and-more = . . . 以及其他 { $remaining } 项。
 common-label-currency = 货币
 common-label-inventory-empty = 物品栏为空。
 
 # Shared embed fields
 common-embed-field-party = __队伍__
 common-embed-field-wait-list = __等待列表__
-common-embed-footer-quest-id = Quest ID: { $questId }
+common-embed-footer-quest-id = 任务ID: { $questId }
 common-embed-footer-transaction-id = 交易 ID: { $transactionId }
-common-embed-label-gm = {"**"}GM:{"**"}
+common-embed-label-gm = {"**"}主持人:{"**"}
 common-embed-label-party-restrictions = {"**"}队伍限制:{"**"}
 
 # Translation notice

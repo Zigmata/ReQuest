@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Vaihtokauppa
-player-cmd-desc = Pelaajavalikot
 
 # --- Buttons ---
 
@@ -146,6 +144,15 @@ player-msg-no-characters = Sinulla ei ole rekisteröityjä hahmoja.
 player-label-active = (Aktiivinen)
 player-label-xp = { $xp } XP
 
+# Pending character
+player-title-character-in-progress =
+    {"**"}Hahmo kesken: { $characterName }{"**"}
+    Hahmosi rekisteröinti odottaa varusteluettelon määritystä.
+player-btn-resume = Jatka
+player-btn-discard = Hylkää
+player-modal-title-discard-character = Hylkää hahmo
+player-modal-label-discard-confirm = Hylkää { $characterName }?
+
 # Confirm character removal
 player-modal-title-confirm-char-removal = Vahvista hahmon poisto
 player-modal-label-confirm-char-delete = Poistetaanko { $characterName }?
@@ -196,7 +203,7 @@ player-error-cannot-delete-loose = Irtonaisia esineitä ei voi poistaa.
 player-title-player-board = {"**"}Pelaajakomennot - Pelaajataulu{"**"}
 player-desc-create-post = Luo uusi julkaisu pelaajataululle.
 player-msg-no-posts = Sinulla ei ole julkaisuja.
-player-label-post-info = {"**"}{ $title }{"**"} (ID: `{ $postId }`)
+player-label-post-info = {"**"}{ $title }{"**"} (Tunnus: `{ $postId }`)
 player-embed-field-author = Tekijä
 player-embed-footer-post-id = Julkaisun ID: { $postId }
 player-error-board-channel-not-found = Pelaajataulun kanavaa ei löytynyt.
@@ -215,8 +222,6 @@ player-label-empty-kit = {"*"}Tyhjä varustesarja{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Vahvista valinta: { $kitName }{"**"}
-player-label-items-heading = {"**"}Esineet:{"**"}
-player-label-currency-heading = {"**"}Valuutta:{"**"}
 player-msg-kit-empty = Tämä varustesarja on tyhjä.
 
 # NewCharacterComplexItemPurchaseView
@@ -264,6 +269,7 @@ player-embed-field-receipt = Kuitti
 # Spend currency errors
 player-error-amount-not-number = Summan on oltava numero.
 player-error-amount-positive = Käytettävän summan on oltava positiivinen.
+player-error-amount-exceeds-maximum = Summa ei voi ylittää { $max }.
 player-error-no-active-character-server = Sinulla ei ole aktiivista hahmoa tällä palvelimella.
 player-error-no-currency-config = Tälle palvelimelle ei löytynyt valuuttamääritystä.
 
@@ -281,18 +287,17 @@ player-error-qty-only-have = Sinulla on vain { $maxQuantity } tätä esinettä.
 player-error-invalid-format = Virheellinen muoto: "{ $line }". Käytä muotoa <nimi>: <määrä>.
 player-error-empty-name = Esineen nimi ei voi olla tyhjä rivillä: "{ $line }".
 player-error-invalid-quantity = Virheellinen määrä esineelle "{ $name }": "{ $quantity }". Arvon on oltava positiivinen kokonaisluku.
-player-error-input-errors-header = Virheitä inventaarion syötteessä:
-player-msg-no-valid-items = Kelvollisia esineitä ei annettu. Alustetaan tyhjällä inventaariolla.
+
+# Validation error view
+player-validation-error-title = Syötevirheet
+player-validation-btn-retry = Yritä uudelleen
 
 # Cart quantity validation
 player-error-enter-valid-number = Syötä kelvollinen positiivinen numero.
 
 # Submission embeds (approval queue)
-player-embed-title-approval = Inventaarion hyväksyntä: { $characterName }
-player-embed-desc-submitted-by = Lähettäjä: { $userMention }
 player-embed-field-items = Esineet
 player-embed-field-currency-received = Valuutta
-player-embed-footer-submission-id = Hakemustunnus: { $submissionId }
 player-label-approval-thread = Hyväksyntä: { $characterName }
 player-embed-title-submission-sent = Inventaariohakemus lähetetty
 player-embed-desc-submission-sent =
@@ -306,3 +311,46 @@ player-embed-desc-starting-inventory = Pelaaja: { $playerMention } hahmona `{ $c
 player-embed-field-items-received = Saadut esineet
 player-embed-field-currency-received-label = Saatu valuutta
 player-label-untitled = Nimetön
+
+# ApprovalPostView
+player-approval-post-header =
+    {"**"}Inventaariohakemus: { $characterName }{"**"}
+    Lähettäjä: { $userMention }
+player-approval-post-items = Esineet
+player-approval-post-currency = Valuutta
+player-approval-resolved = Tämä hakemus on käsitelty.
+player-approval-btn-approve = Hyväksy
+player-approval-btn-deny = Hylkää
+player-approval-btn-edit = Muokkaa
+player-approval-error-no-permission = Sinulla ei ole oikeutta tähän toimintoon.
+player-approval-error-not-submitter = Vain alkuperäinen lähettäjä voi muokata tätä hakemusta.
+player-approval-thread-instructions =
+    Tämä ketju luotiin hahmon {"**"}{ $characterName }{"**"} hyväksyntää varten.
+    Pelinjohtaja tarkistaa hakemuksen ja hyväksyy tai hylkää sen.
+    Hyväksynnän tai hylkäyksen jälkeen tämä ketju lukitaan.
+
+    {"**"}Pelinjohtajat:{"**"} Keskustelkaa tarvittavista muutoksista
+    pelaajan kanssa, kunnes inventaario on hyväksyttävässä tilassa. Käyttäkää
+    `Hylkää`-painiketta vain sovittamattomien hakemusten kohdalla.
+
+    { $playerMention }: Käytä `Muokkaa`-painiketta tehdäksesi pelinjohtajan
+    täällä pyytämät muutokset.
+player-approval-approved-by = Tämä hakemus hyväksyttiin käyttäjältä { $approver }.
+player-approval-denied-by = Tämä hakemus hylättiin käyttäjältä { $denier }.
+player-approval-deny-reason = Syy: { $reason }
+player-msg-submission-updated = Hakemuksesi on päivitetty.
+
+
+# Denial modal
+player-modal-title-deny-reason = Hylkää hakemus
+player-modal-label-deny-reason = Hylkäyksen syy
+player-modal-placeholder-deny-reason = Valinnainen: selitä miksi hakemus hylättiin
+# Approval DM notifications
+player-dm-title-approved = Hahmo hyväksytty
+player-dm-desc-approved =
+    Hahmosi {"**"}{ $characterName }{"**"} on hyväksytty
+    käyttäjältä { $approver } palvelimella {"**"}{ $guildName }{"**"}!
+player-dm-title-denied = Hahmo hylätty
+player-dm-desc-denied =
+    Hahmosi {"**"}{ $characterName }{"**"} on hylätty
+    käyttäjältä { $denier } palvelimella {"**"}{ $guildName }{"**"}.

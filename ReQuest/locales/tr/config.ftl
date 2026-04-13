@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = ör. 0.1
 config-error-denomination-matches-currency = Yeni birim adı bu sunucudaki mevcut bir para birimiyle eşleşemez! "{ $existingName }" adında mevcut bir para birimi bulundu.
 config-error-denomination-matches-denomination = Yeni birim adı bu sunucudaki mevcut bir birimle eşleşemez! "{ $currencyName }" para birimi altında "{ $denominationName }" adında mevcut bir birim bulundu.
 config-error-denomination-value-exists = Tek bir para birimi altındaki birimlerin benzersiz değerleri olmalıdır! { $denominationName } zaten bu değere atanmış.
+config-label-denomination-info = **{ $name }** (Değer: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Yasaklı Rol Adları
@@ -224,8 +225,6 @@ config-error-item-exists-new-char = Yeni Karakter mağazasında { $itemName } ad
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Yeni Karakter Mağazasını Yükle (JSON)
 config-error-no-json-uploaded-short = JSON dosyası yüklenmedi.
-config-error-json-must-have-shopstock = JSON bir 'shopStock' dizisi içermelidir.
-config-error-items-must-have-name-price = Tüm eşyaların 'name' ve 'price' alanları olmalıdır.
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Yeni Karakter Servetini Ayarla
@@ -252,6 +251,7 @@ config-modal-title-kit-currency = Kit Para Birimi Ekle
 config-modal-placeholder-currency-eg = ör. Altın
 config-modal-placeholder-amount-eg = ör. 100
 config-error-amount-must-be-number = Miktar bir sayı olmalıdır.
+config-error-amount-exceeds-maximum = Miktar { $max } değerini aşamaz.
 config-error-no-currencies-on-server = Sunucuda para birimi yapılandırılmamış.
 config-error-currency-not-found-short = "{ $currency }" para birimi bulunamadı.
 config-error-denomination-not-found = "{ $denomination }" birimi para birimi yapılandırmasında bulunamadı.
@@ -408,11 +408,9 @@ config-title-wizard = {"**"}Sunucu Yapılandırması - Sihirbaz{"**"}
 config-wizard-intro =
     {"**"}ReQuest Yapılandırma Sihirbazına Hoş Geldiniz!{"**"}
 
-    Bu sihirbaz, sunucunuzun ReQuest özelliklerini kullanmak için düzgün yapılandırıldığından emin olmanıza yardımcı olacaktır.
-    Mevcut ayarlarınızı tarayacak ve gerekli düzenlemeler için önerilerde bulunacaktır.
+    Bu sihirbaz, sunucunuzun ReQuest özelliklerini kullanmak için düzgün yapılandırıldığından emin olmanıza yardımcı olacaktır. Mevcut ayarlarınızı tarayacak ve gerekli düzenlemeler için önerilerde bulunacaktır.
 
-    Doğrulama sürecini başlatmak için aşağıdaki "Taramayı Başlat" düğmesini kullanın. Tarama tamamlandıktan sonra,
-    sunucunuzun yapılandırmasının ayrıntılı bir raporunu ve önerilen değişiklikleri alacaksınız.
+    Doğrulama sürecini başlatmak için aşağıdaki "Taramayı Başlat" düğmesini kullanın. Tarama tamamlandıktan sonra, sunucunuzun yapılandırmasının ayrıntılı bir raporunu ve önerilen değişiklikleri alacaksınız.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Bot Genel İzinleri{"**"}__
@@ -536,7 +534,27 @@ config-wizard-gm-rewards-disabled = {"**"}Durum:{"**"} Devre Dışı
 config-wizard-gm-rewards-enabled = {"**"}Durum:{"**"} Etkin
 config-wizard-gm-rewards-experience = - Deneyim: { $xp }
 config-wizard-gm-rewards-items = - Eşyalar:
-config-wizard-unnamed-shop = İsimsiz Mağaza
+
+# Sihirbaz - Sunucu Dili (Sayfa 1)
+config-wizard-server-language-desc =
+    Bu, ReQuest'in görev gönderileri, mağaza yeniden stoklama mesajları ve işlem günlükleri gibi tüm herkese açık mesajlar için kullanacağı dildir.
+config-wizard-server-language = {"**"}Sunucu Dili:{"**"} { $language }
+config-wizard-server-language-default = Varsayılan (İngilizce)
+
+# Sihirbaz - Mağaza Yeniden Stoklama Bilgisi
+config-wizard-shop-restock-not-scheduled = ℹ️ Yeniden Stoklama Planlanmadı
+
+# Sihirbaz - Görev Ayarları (Sayfa 5)
+config-wizard-quest-header = __{"**"}Görev Ayarları{"**"}__
+config-wizard-quest-header-desc =
+    Bu bölüm, görevlerle ilgili yapılandırmalara genel bir bakış sunar.
+config-wizard-quest-role-mode = - Görev Rol Modu: { $mode }
+config-wizard-quest-roles-label = {"**"}GM Görev Rolleri{"**"}
+config-wizard-quest-roles-count = - GM'lere Atanan Roller: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Tüm Roller Tamam
+config-wizard-quest-roles-assigned-to = {"    "}Atanan: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ Rol Kimliği { $roleId }: Bulunamadı/Sunucudan Silindi
+config-wizard-quest-roles-no-assignments = - ℹ️ Görev Rolü Atanmadı
 
 ## Roles View
 config-title-roles = {"**"}Sunucu Yapılandırması - Roller{"**"}
@@ -832,9 +850,6 @@ config-select-placeholder-add-quest-role = Bu GM'ye sunucu rolü/rolleri atayın
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}Sunucu Yapılandırması - Quest Rolleri{"**"}
-config-label-quest-roles = Quest Rolleri
-config-desc-quest-roles =
-    Quest'ler sırasında grup rollerinin nasıl yönetileceğini yapılandırın.
 
 config-label-quest-role-mode-disabled = {"**"}Quest Rol Modu:{"**"} Devre Dışı
     Quest'ler sırasında hiçbir rol oluşturulmaz veya atanmaz.
@@ -853,6 +868,7 @@ config-desc-manage-assignments =
     Roller, sunucu hiyerarşisinde ReQuest'in en yüksek rolünün altında olmalıdır.
 config-msg-no-gm-members = Bu sunucuda GM rolüne sahip üye bulunamadı.
 config-label-no-roles-assigned = Atanmış quest rolü yok
+config-label-more-roles = (+{ $count } daha fazla)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Quest Rollerini Yönet — { $gmName }{"**"}

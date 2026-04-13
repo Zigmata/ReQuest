@@ -131,6 +131,7 @@ config-modal-placeholder-denomination-value = z.B. 0,1
 config-error-denomination-matches-currency = Der Name der neuen Stückelung darf nicht mit einer bestehenden Währung auf diesem Server übereinstimmen! Bestehende Währung mit dem Namen "{ $existingName }" gefunden.
 config-error-denomination-matches-denomination = Der Name der neuen Stückelung darf nicht mit einer bestehenden Stückelung auf diesem Server übereinstimmen! Bestehende Stückelung mit dem Namen "{ $denominationName }" unter der Währung "{ $currencyName }" gefunden.
 config-error-denomination-value-exists = Stückelungen innerhalb einer Währung müssen eindeutige Werte haben! { $denominationName } hat diesen Wert bereits zugewiesen.
+config-label-denomination-info = **{ $name }** (Wert: { $value })
 
 # ForbiddenRolesModal
 config-modal-title-forbidden-roles = Verbotene Rollennamen
@@ -224,8 +225,6 @@ config-error-item-exists-new-char = Ein Gegenstand mit dem Namen { $itemName } e
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Neuen-Charakter-Shop hochladen (JSON)
 config-error-no-json-uploaded-short = Keine JSON-Datei hochgeladen.
-config-error-json-must-have-shopstock = JSON muss ein 'shopStock'-Array enthalten.
-config-error-items-must-have-name-price = Alle Gegenstände müssen 'name' und 'price' haben.
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Neues Charaktervermögen festlegen
@@ -252,6 +251,7 @@ config-modal-title-kit-currency = Set-Währung hinzufügen
 config-modal-placeholder-currency-eg = z.B. Gold
 config-modal-placeholder-amount-eg = z.B. 100
 config-error-amount-must-be-number = Der Betrag muss eine Zahl sein.
+config-error-amount-exceeds-maximum = Der Betrag darf { $max } nicht überschreiten.
 config-error-no-currencies-on-server = Keine Währungen auf dem Server konfiguriert.
 config-error-currency-not-found-short = Währung "{ $currency }" nicht gefunden.
 config-error-denomination-not-found = Stückelung "{ $denomination }" in der Währungskonfiguration nicht gefunden.
@@ -408,11 +408,9 @@ config-title-wizard = {"**"}Serverkonfiguration - Assistent{"**"}
 config-wizard-intro =
     {"**"}Willkommen beim ReQuest-Konfigurationsassistenten!{"**"}
 
-    Dieser Assistent hilft Ihnen sicherzustellen, dass Ihr Server ordnungsgemäß für die Nutzung der ReQuest-Funktionen konfiguriert ist.
-    Er scannt Ihre aktuellen Einstellungen und gibt Empfehlungen für erforderliche Anpassungen.
+    Dieser Assistent hilft Ihnen sicherzustellen, dass Ihr Server ordnungsgemäß für die Nutzung der ReQuest-Funktionen konfiguriert ist. Er scannt Ihre aktuellen Einstellungen und gibt Empfehlungen für erforderliche Anpassungen.
 
-    Verwenden Sie die Schaltfläche „Scan starten" unten, um den Validierungsprozess zu beginnen. Nach Abschluss des Scans
-    erhalten Sie einen detaillierten Bericht über die Konfiguration Ihres Servers zusammen mit empfohlenen Änderungen.
+    Verwenden Sie die Schaltfläche „Scan starten" unten, um den Validierungsprozess zu beginnen. Nach Abschluss des Scans erhalten Sie einen detaillierten Bericht über die Konfiguration Ihres Servers zusammen mit empfohlenen Änderungen.
 
 # Assistent - Bot-Berechtigungsvalidierung
 config-wizard-bot-permissions-header = __{"**"}Globale Bot-Berechtigungen{"**"}__
@@ -536,7 +534,27 @@ config-wizard-gm-rewards-disabled = {"**"}Status:{"**"} Deaktiviert
 config-wizard-gm-rewards-enabled = {"**"}Status:{"**"} Aktiviert
 config-wizard-gm-rewards-experience = - Erfahrung: { $xp }
 config-wizard-gm-rewards-items = - Gegenstände:
-config-wizard-unnamed-shop = Unbenannter Shop
+
+# Assistent - Serversprache (Seite 1)
+config-wizard-server-language-desc =
+    Dies ist die Sprache, die ReQuest für alle öffentlichen Nachrichten verwendet, wie z.B. Quest-Beiträge, Shop-Nachfüll-Nachrichten und Transaktionsprotokolle.
+config-wizard-server-language = {"**"}Serversprache:{"**"} { $language }
+config-wizard-server-language-default = Standard (Englisch)
+
+# Assistent - Shop-Nachfüll-Info
+config-wizard-shop-restock-not-scheduled = ℹ️ Nachfüllung nicht geplant
+
+# Assistent - Quest-Einstellungen (Seite 5)
+config-wizard-quest-header = __{"**"}Quest-Einstellungen{"**"}__
+config-wizard-quest-header-desc =
+    Dieser Abschnitt bietet eine Übersicht über questbezogene Konfigurationen.
+config-wizard-quest-role-mode = - Quest-Rollenmodus: { $mode }
+config-wizard-quest-roles-label = {"**"}GM-Quest-Rollen{"**"}
+config-wizard-quest-roles-count = - GMs zugewiesene Rollen: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Alle Rollen OK
+config-wizard-quest-roles-assigned-to = {"    "}Zugewiesen an: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ Rollen-ID { $roleId }: Nicht gefunden/Vom Server gelöscht
+config-wizard-quest-roles-no-assignments = - ℹ️ Keine Quest-Rollen zugewiesen
 
 ## Rollenansicht
 config-title-roles = {"**"}Serverkonfiguration - Rollen{"**"}
@@ -832,9 +850,6 @@ config-select-placeholder-add-quest-role = Serverrolle(n) diesem SL zuweisen
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}Serverkonfiguration - Quest-Rollen{"**"}
-config-label-quest-roles = Quest-Rollen
-config-desc-quest-roles =
-    Konfigurieren Sie, wie Gruppenrollen während Quests verwaltet werden.
 
 config-label-quest-role-mode-disabled = {"**"}Quest-Rollenmodus:{"**"} Deaktiviert
     Während Quests werden keine Rollen erstellt oder zugewiesen.
@@ -853,6 +868,7 @@ config-desc-manage-assignments =
     Rollen müssen niedriger als die höchste Rolle von ReQuest in der Serverhierarchie sein.
 config-msg-no-gm-members = Auf diesem Server wurden keine Mitglieder mit einer SL-Rolle gefunden.
 config-label-no-roles-assigned = Keine Quest-Rollen zugewiesen
+config-label-more-roles = (+{ $count } weitere)
 
 ## GM Quest Role Assign View
 config-title-gm-quest-role-assign = {"**"}Quest-Rollen verwalten — { $gmName }{"**"}
