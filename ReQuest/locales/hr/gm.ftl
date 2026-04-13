@@ -55,10 +55,7 @@ gm-modal-placeholder-inventory-modify =
     itd.
 
 # GM errors
-gm-error-forbidden-role-name = Navedeni naziv za ulogu družine je zabranjen.
-gm-error-role-already-exists = Uloga s tim nazivom već postoji na ovom poslužitelju.
 gm-error-no-quest-channel = Kanal za objave questova još nije određen. Kontaktirajte administratora poslužitelja za konfiguraciju kanala za questove.
-gm-error-cannot-ping-announce = Nije moguće pingovati ulogu za objave { $role } u kanalu { $channel }. Provjerite dozvole kanala i uloge ReQuesta s administratorima poslužitelja.
 gm-error-invalid-item-format = Neispravan format predmeta: "{ $item }". Svaki predmet mora biti u novom retku, u formatu "Naziv: Količina".
 gm-error-already-on-quest = Već ste na ovom questu kao { $characterName }.
 gm-error-no-active-character-long = Nemate aktivnog lika na ovom poslužitelju. Koristite `/player` za registraciju ili aktivaciju lika.
@@ -121,8 +118,6 @@ gm-dm-role-not-found =
 
 # GM select menus
 gm-select-placeholder-party-member = Odaberite člana družine
-gm-modal-label-select-party-role = Uloga družine
-gm-modal-desc-select-party-role = Odaberite ulogu za dodjelu družini questa.
 gm-select-option-no-role = Ništa (bez uloge družine)
 
 # GM embeds
@@ -150,18 +145,10 @@ gm-label-quest-locked = (Zaključano)
 gm-label-quest-draft = (Skica)
 gm-title-manage-quest = Upravljanje questom - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Uredite detalje questa poput naslova, opisa i veličine družine.
-gm-title-edit-quest = Uredi quest - { $questTitle }
 gm-label-field-not-set = Nije postavljeno
 gm-label-description-not-set = Opis nije postavljen
-gm-label-current-title = {"**"}Naslov:{"**"} { $value }
-gm-label-current-description = {"**"}Opis{"**"}
-gm-label-current-restrictions = {"**"}Ograničenja:{"**"} { $value }
 gm-label-current-party-size = {"**"}Maks. veličina družine:{"**"} { $value }
 gm-label-current-party-role = {"**"}Uloga družine:{"**"} { $value }
-gm-label-current-image = {"**"}Minijatura{"**"}
-gm-label-current-large-image = {"**"}Slika{"**"}
-gm-desc-publish-quest = Objavite ovaj quest na ploči questova.
-gm-desc-update-quest-post = Ažurirajte objavu questa na ploči questova.
 gm-desc-toggle-ready = Promijeni stanje spremnosti (Trenutno: {"**"}{ $status }{"**"})
     - Zaključava sastav questa i obavještava članove družine da će quest uskoro započeti. Ako je uloga konfigurirana, bit će dodijeljena članovima družine pri zaključavanju.
     - Otključava sastav kada se postavi na Otvoreno.
@@ -189,8 +176,6 @@ gm-label-no-players-in-roster = Nema igrača u sastavu questa
 gm-title-character-sheet = List lika za { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Bodovi iskustva:{"**"}__
 gm-label-possessions = __{"**"}Posjedi{"**"}__
-gm-label-currency-heading = {"**"}Valuta{"**"}
-gm-msg-inventory-empty = Inventar je prazan.
 
 # GM approvals
 

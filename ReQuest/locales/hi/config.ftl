@@ -224,8 +224,6 @@ config-error-item-exists-new-char = नए चरित्र की दुक�
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = नए चरित्र की दुकान अपलोड करें (JSON)
 config-error-no-json-uploaded-short = कोई JSON फ़ाइल अपलोड नहीं की गई।
-config-error-json-must-have-shopstock = JSON में 'shopStock' ऐरे होना चाहिए।
-config-error-items-must-have-name-price = सभी वस्तुओं में 'name' और 'price' होना चाहिए।
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = नए चरित्र की संपत्ति सेट करें
@@ -409,11 +407,9 @@ config-title-wizard = {"**"}सर्वर कॉन्फ़िगरेशन
 config-wizard-intro =
     {"**"}ReQuest कॉन्फ़िगरेशन विज़ार्ड में आपका स्वागत है!{"**"}
 
-    यह विज़ार्ड यह सुनिश्चित करने में आपकी मदद करेगा कि आपका सर्वर ReQuest की सुविधाओं का उपयोग करने के लिए सही ढंग से कॉन्फ़िगर है।
-    यह आपकी वर्तमान सेटिंग को स्कैन करेगा और किसी भी आवश्यक समायोजन के लिए सिफारिशें प्रदान करेगा।
+    यह विज़ार्ड यह सुनिश्चित करने में आपकी मदद करेगा कि आपका सर्वर ReQuest की सुविधाओं का उपयोग करने के लिए सही ढंग से कॉन्फ़िगर है। यह आपकी वर्तमान सेटिंग को स्कैन करेगा और किसी भी आवश्यक समायोजन के लिए सिफारिशें प्रदान करेगा।
 
-    सत्यापन प्रक्रिया शुरू करने के लिए नीचे "स्कैन लॉन्च करें" बटन का उपयोग करें। स्कैन पूरा होने के बाद,
-    आपको अपने सर्वर के कॉन्फ़िगरेशन की विस्तृत रिपोर्ट और किसी भी अनुशंसित परिवर्तन प्राप्त होंगे।
+    सत्यापन प्रक्रिया शुरू करने के लिए नीचे "स्कैन लॉन्च करें" बटन का उपयोग करें। स्कैन पूरा होने के बाद, आपको अपने सर्वर के कॉन्फ़िगरेशन की विस्तृत रिपोर्ट और किसी भी अनुशंसित परिवर्तन प्राप्त होंगे।
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}बॉट वैश्विक अनुमतियाँ{"**"}__
@@ -537,7 +533,27 @@ config-wizard-gm-rewards-disabled = {"**"}स्थिति:{"**"} अक्ष
 config-wizard-gm-rewards-enabled = {"**"}स्थिति:{"**"} सक्षम
 config-wizard-gm-rewards-experience = - अनुभव: { $xp }
 config-wizard-gm-rewards-items = - वस्तुएँ:
-config-wizard-unnamed-shop = अनामित दुकान
+
+# Wizard - सर्वर भाषा (पृष्ठ 1)
+config-wizard-server-language-desc =
+    यह वह भाषा है जिसका उपयोग ReQuest सभी सार्वजनिक संदेशों के लिए करेगा, जैसे कि क्वेस्ट पोस्ट, दुकान पुनःस्टॉक संदेश और लेन-देन लॉग।
+config-wizard-server-language = {"**"}सर्वर भाषा:{"**"} { $language }
+config-wizard-server-language-default = डिफ़ॉल्ट (अंग्रेज़ी)
+
+# Wizard - दुकान पुनःस्टॉक जानकारी
+config-wizard-shop-restock-not-scheduled = ℹ️ पुनःस्टॉक निर्धारित नहीं
+
+# Wizard - क्वेस्ट सेटिंग्स (पृष्ठ 5)
+config-wizard-quest-header = __{"**"}क्वेस्ट सेटिंग्स{"**"}__
+config-wizard-quest-header-desc =
+    यह अनुभाग क्वेस्ट-संबंधित कॉन्फ़िगरेशन का अवलोकन प्रदान करता है।
+config-wizard-quest-role-mode = - क्वेस्ट भूमिका मोड: { $mode }
+config-wizard-quest-roles-label = {"**"}GM क्वेस्ट भूमिकाएँ{"**"}
+config-wizard-quest-roles-count = - GM को सौंपी गई भूमिकाएँ: { $count }
+config-wizard-quest-roles-all-ok = - ✅ सभी भूमिकाएँ ठीक
+config-wizard-quest-roles-assigned-to = {"    "}को सौंपा गया: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ भूमिका ID { $roleId }: नहीं मिली/सर्वर से हटा दी गई
+config-wizard-quest-roles-no-assignments = - ℹ️ कोई क्वेस्ट भूमिकाएँ सौंपी नहीं गई हैं
 
 ## Roles View
 config-title-roles = {"**"}सर्वर कॉन्फ़िगरेशन - भूमिकाएँ{"**"}
@@ -833,9 +849,6 @@ config-select-placeholder-add-quest-role = इस GM को सर्वर भ�
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}सर्वर कॉन्फ़िगरेशन - Quest भूमिकाएँ{"**"}
-config-label-quest-roles = Quest भूमिकाएँ
-config-desc-quest-roles =
-    Quest के दौरान पार्टी भूमिकाओं को कैसे संभाला जाए, यह कॉन्फ़िगर करें।
 
 config-label-quest-role-mode-disabled = {"**"}Quest भूमिका मोड:{"**"} अक्षम
     Quest के दौरान कोई भूमिका नहीं बनाई या असाइन की जाती है।

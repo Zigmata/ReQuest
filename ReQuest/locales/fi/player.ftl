@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Vaihtokauppa
-player-cmd-desc = Pelaajavalikot
 
 # --- Buttons ---
 
@@ -224,8 +222,6 @@ player-label-empty-kit = {"*"}Tyhjä varustesarja{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Vahvista valinta: { $kitName }{"**"}
-player-label-items-heading = {"**"}Esineet:{"**"}
-player-label-currency-heading = {"**"}Valuutta:{"**"}
 player-msg-kit-empty = Tämä varustesarja on tyhjä.
 
 # NewCharacterComplexItemPurchaseView
@@ -291,8 +287,6 @@ player-error-qty-only-have = Sinulla on vain { $maxQuantity } tätä esinettä.
 player-error-invalid-format = Virheellinen muoto: "{ $line }". Käytä muotoa <nimi>: <määrä>.
 player-error-empty-name = Esineen nimi ei voi olla tyhjä rivillä: "{ $line }".
 player-error-invalid-quantity = Virheellinen määrä esineelle "{ $name }": "{ $quantity }". Arvon on oltava positiivinen kokonaisluku.
-player-error-input-errors-header = Virheitä inventaarion syötteessä:
-player-msg-no-valid-items = Kelvollisia esineitä ei annettu. Alustetaan tyhjällä inventaariolla.
 
 # Validation error view
 player-validation-error-title = Syötevirheet
@@ -302,11 +296,8 @@ player-validation-btn-retry = Yritä uudelleen
 player-error-enter-valid-number = Syötä kelvollinen positiivinen numero.
 
 # Submission embeds (approval queue)
-player-embed-title-approval = Inventaarion hyväksyntä: { $characterName }
-player-embed-desc-submitted-by = Lähettäjä: { $userMention }
 player-embed-field-items = Esineet
 player-embed-field-currency-received = Valuutta
-player-embed-footer-submission-id = Hakemustunnus: { $submissionId }
 player-label-approval-thread = Hyväksyntä: { $characterName }
 player-embed-title-submission-sent = Inventaariohakemus lähetetty
 player-embed-desc-submission-sent =

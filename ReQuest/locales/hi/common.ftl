@@ -13,7 +13,6 @@ common-btn-select = चुनें
 common-btn-manage = प्रबंधित करें
 common-btn-rename = नाम बदलें
 common-btn-continue = जारी रखें
-common-btn-cancel = रद्द करें
 common-btn-enable = सक्षम करें
 common-btn-disable = अक्षम करें
 
@@ -39,7 +38,6 @@ common-label-none = कोई नहीं
 common-label-unknown = अज्ञात
 common-label-locked = (लॉक)
 common-label-loose-items = बिखरी वस्तुएँ
-common-label-and-more = . . . और { $remaining } अधिक।
 common-label-currency = मुद्रा
 common-label-inventory-empty = इन्वेंट्री खाली है।
 

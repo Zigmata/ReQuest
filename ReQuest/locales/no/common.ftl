@@ -13,7 +13,6 @@ common-btn-select = Velg
 common-btn-manage = Administrer
 common-btn-rename = Gi nytt navn
 common-btn-continue = Fortsett
-common-btn-cancel = Avbryt
 common-btn-enable = Aktiver
 common-btn-disable = Deaktiver
 
@@ -39,7 +38,6 @@ common-label-none = Ingen
 common-label-unknown = Ukjent
 common-label-locked = (LÅST)
 common-label-loose-items = Løse gjenstander
-common-label-and-more = . . . og { $remaining } til.
 common-label-currency = Valuta
 common-label-inventory-empty = Inventaret er tomt.
 

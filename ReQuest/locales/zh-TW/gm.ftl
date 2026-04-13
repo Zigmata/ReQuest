@@ -55,10 +55,7 @@ gm-modal-placeholder-inventory-modify =
     以此類推。
 
 # GM errors
-gm-error-forbidden-role-name = 所提供的隊伍身分組名稱已被禁用。
-gm-error-role-already-exists = 此伺服器中已存在同名的身分組。
 gm-error-no-quest-channel = 尚未為 Quest 發文指定頻道。請聯繫伺服器管理員設定 Quest 頻道。
-gm-error-cannot-ping-announce = 無法在頻道 { $channel } 中提及公告身分組 { $role }。請與伺服器管理員確認頻道和 ReQuest 身分組的權限。
 gm-error-invalid-item-format = 無效的物品格式：「{ $item }」。每個物品必須獨立一行，格式為「名稱：數量」。
 gm-error-already-on-quest = 您已經以 { $characterName } 身分參加了此 Quest。
 gm-error-no-active-character-long = 您在此伺服器上沒有啟用的角色。請使用 `/player` 來註冊或啟用角色。
@@ -120,8 +117,6 @@ gm-dm-role-not-found =
 
 # GM select menus
 gm-select-placeholder-party-member = 選擇一位隊伍成員
-gm-modal-label-select-party-role = 隊伍身分組
-gm-modal-desc-select-party-role = 選擇要指派給 Quest 隊伍的身分組。
 gm-select-option-no-role = 無（不設隊伍身分組）
 
 # GM embeds
@@ -149,18 +144,10 @@ gm-label-quest-locked = （已鎖定）
 gm-label-quest-draft = （草稿）
 gm-title-manage-quest = 管理 Quest - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = 編輯 Quest 詳情，如標題、描述和隊伍人數。
-gm-title-edit-quest = 編輯 Quest - { $questTitle }
 gm-label-field-not-set = 未設定
 gm-label-description-not-set = 未設定描述
-gm-label-current-title = {"**"}標題：{"**"} { $value }
-gm-label-current-description = {"**"}描述{"**"}
-gm-label-current-restrictions = {"**"}限制：{"**"} { $value }
 gm-label-current-party-size = {"**"}隊伍人數上限：{"**"} { $value }
 gm-label-current-party-role = {"**"}隊伍身分組：{"**"} { $value }
-gm-label-current-image = {"**"}縮圖{"**"}
-gm-label-current-large-image = {"**"}圖片{"**"}
-gm-desc-publish-quest = 將此 Quest 發布到 Quest 公告板。
-gm-desc-update-quest-post = 更新 Quest 公告板上的 Quest 貼文。
 gm-desc-toggle-ready = 切換就緒狀態（目前：{"**"}{ $status }{"**"}）
     - 鎖定 Quest 名單並通知隊伍成員 Quest 即將開始。如果已設定身分組，鎖定時會指派給隊伍成員。
     - 設為開放時解除名單鎖定。
@@ -188,7 +175,5 @@ gm-label-no-players-in-roster = Quest 名單中沒有玩家
 gm-title-character-sheet = { $characterName } 的角色卡（<@{ $memberId }>）
 gm-label-experience-points = __{"**"}經驗值：{"**"}__
 gm-label-possessions = __{"**"}持有物{"**"}__
-gm-label-currency-heading = {"**"}貨幣{"**"}
-gm-msg-inventory-empty = 背包是空的。
 
 # GM approvals

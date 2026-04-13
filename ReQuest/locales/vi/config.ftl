@@ -224,8 +224,6 @@ config-error-item-exists-new-char = Vật phẩm có tên { $itemName } đã t�
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Tải lên cửa hàng nhân vật mới (JSON)
 config-error-no-json-uploaded-short = Chưa tải lên tệp JSON.
-config-error-json-must-have-shopstock = JSON phải chứa mảng 'shopStock'.
-config-error-items-must-have-name-price = Tất cả vật phẩm phải có 'name' và 'price'.
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Đặt tài sản nhân vật mới
@@ -409,11 +407,9 @@ config-title-wizard = {"**"}Cấu hình máy chủ - Hướng dẫn{"**"}
 config-wizard-intro =
     {"**"}Chào mừng đến với Trình hướng dẫn cấu hình ReQuest!{"**"}
 
-    Trình hướng dẫn này sẽ giúp bạn đảm bảo rằng máy chủ của bạn được cấu hình đúng để sử dụng các tính năng của ReQuest.
-    Nó sẽ quét cài đặt hiện tại và cung cấp đề xuất cho bất kỳ điều chỉnh nào cần thiết.
+    Trình hướng dẫn này sẽ giúp bạn đảm bảo rằng máy chủ của bạn được cấu hình đúng để sử dụng các tính năng của ReQuest. Nó sẽ quét cài đặt hiện tại và cung cấp đề xuất cho bất kỳ điều chỉnh nào cần thiết.
 
-    Sử dụng nút "Quét cấu hình máy chủ" bên dưới để bắt đầu quá trình xác thực. Sau khi quét xong,
-    bạn sẽ nhận được báo cáo chi tiết về cấu hình máy chủ cùng với các thay đổi được đề xuất.
+    Sử dụng nút "Quét cấu hình máy chủ" bên dưới để bắt đầu quá trình xác thực. Sau khi quét xong, bạn sẽ nhận được báo cáo chi tiết về cấu hình máy chủ cùng với các thay đổi được đề xuất.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Quyền toàn cục của Bot{"**"}__
@@ -537,7 +533,27 @@ config-wizard-gm-rewards-disabled = {"**"}Trạng thái:{"**"} Đã tắt
 config-wizard-gm-rewards-enabled = {"**"}Trạng thái:{"**"} Đã bật
 config-wizard-gm-rewards-experience = - Kinh nghiệm: { $xp }
 config-wizard-gm-rewards-items = - Vật phẩm:
-config-wizard-unnamed-shop = Cửa hàng chưa đặt tên
+
+# Wizard - Ngôn ngữ máy chủ (Trang 1)
+config-wizard-server-language-desc =
+    Đây là ngôn ngữ mà ReQuest sẽ sử dụng cho tất cả các tin nhắn công khai, chẳng hạn như bài đăng Quest, tin nhắn nhập hàng Cửa hàng và nhật ký giao dịch.
+config-wizard-server-language = {"**"}Ngôn ngữ máy chủ:{"**"} { $language }
+config-wizard-server-language-default = Mặc định (Tiếng Anh)
+
+# Wizard - Thông tin nhập hàng cửa hàng
+config-wizard-shop-restock-not-scheduled = ℹ️ Chưa lên lịch nhập hàng
+
+# Wizard - Cài đặt Quest (Trang 5)
+config-wizard-quest-header = __{"**"}Cài đặt Quest{"**"}__
+config-wizard-quest-header-desc =
+    Phần này cung cấp tổng quan về các cấu hình liên quan đến Quest.
+config-wizard-quest-role-mode = - Chế độ vai trò Quest: { $mode }
+config-wizard-quest-roles-label = {"**"}Vai trò Quest của GM{"**"}
+config-wizard-quest-roles-count = - Vai trò được gán cho GM: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Tất cả vai trò OK
+config-wizard-quest-roles-assigned-to = {"    "}Được gán cho: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ ID vai trò { $roleId }: Không tìm thấy/Đã bị xóa khỏi máy chủ
+config-wizard-quest-roles-no-assignments = - ℹ️ Chưa gán vai trò Quest nào
 
 ## Roles View
 config-title-roles = {"**"}Cấu hình máy chủ - Vai trò{"**"}
@@ -833,9 +849,6 @@ config-select-placeholder-add-quest-role = Gán vai trò máy chủ cho GM này
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}Cấu hình máy chủ - Vai trò Quest{"**"}
-config-label-quest-roles = Vai trò Quest
-config-desc-quest-roles =
-    Cấu hình cách vai trò đội hình được xử lý trong quest.
 
 config-label-quest-role-mode-disabled = {"**"}Chế độ vai trò Quest:{"**"} Đã tắt
     Không có vai trò nào được tạo hoặc gán trong quest.

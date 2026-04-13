@@ -54,8 +54,8 @@ def _build_quest_dm_embed(locale, title_key, desc_key, quest, guild_name, color=
 
 
 class GMBaseView(MenuBaseView):
-    def __init__(self):
-        locale = getattr(self, 'locale', DEFAULT_LOCALE)
+    def __init__(self, locale=None):
+        locale = locale or DEFAULT_LOCALE
         super().__init__(
             title=t(locale, 'gm-title-main-menu'),
             menu_items=[
@@ -70,7 +70,8 @@ class GMBaseView(MenuBaseView):
                     'view_class': GMPlayerMenuView
                 }
             ],
-            menu_level=0
+            menu_level=0,
+            locale=locale
         )
 
 
@@ -1284,6 +1285,7 @@ class RemovePlayerView(LocaleLayoutView):
                 self.remove_player_select.disabled = True
 
             self.remove_player_select.options = options
+            self.build_view()
         except Exception as e:
             await log_exception(e)
 

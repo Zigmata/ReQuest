@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = แลกเปลี่ยน
-player-cmd-desc = เมนูผู้เล่น
 
 # --- Buttons ---
 
@@ -224,8 +222,6 @@ player-label-empty-kit = {"*"}ชุดว่างเปล่า{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}ยืนยันการเลือก: { $kitName }{"**"}
-player-label-items-heading = {"**"}ไอเทม:{"**"}
-player-label-currency-heading = {"**"}สกุลเงิน:{"**"}
 player-msg-kit-empty = ชุดนี้ว่างเปล่า
 
 # NewCharacterComplexItemPurchaseView
@@ -291,8 +287,6 @@ player-error-qty-only-have = คุณมีไอเทมนี้เพีย
 player-error-invalid-format = รูปแบบไม่ถูกต้อง: "{ $line }" ใช้รูปแบบ <ชื่อ>: <จำนวน>
 player-error-empty-name = ชื่อไอเทมต้องไม่ว่างเปล่าในบรรทัด: "{ $line }"
 player-error-invalid-quantity = จำนวนไม่ถูกต้องสำหรับ "{ $name }": "{ $quantity }" ต้องเป็นจำนวนเต็มบวก
-player-error-input-errors-header = ข้อผิดพลาดในการกรอกคลังไอเทม:
-player-msg-no-valid-items = ไม่มีไอเทมที่ถูกต้อง เริ่มต้นด้วยคลังไอเทมว่าง
 
 # Validation error view
 player-validation-error-title = ข้อผิดพลาดในการป้อนข้อมูล
@@ -302,11 +296,8 @@ player-validation-btn-retry = ลองอีกครั้ง
 player-error-enter-valid-number = กรุณากรอกตัวเลขบวกที่ถูกต้อง
 
 # Submission embeds (approval queue)
-player-embed-title-approval = การอนุมัติคลังไอเทม: { $characterName }
-player-embed-desc-submitted-by = ส่งโดย { $userMention }
 player-embed-field-items = ไอเทม
 player-embed-field-currency-received = สกุลเงิน
-player-embed-footer-submission-id = ID การส่ง: { $submissionId }
 player-label-approval-thread = การอนุมัติ: { $characterName }
 player-embed-title-submission-sent = ส่งคลังไอเทมแล้ว
 player-embed-desc-submission-sent =

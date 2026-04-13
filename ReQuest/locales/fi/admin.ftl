@@ -32,7 +32,6 @@ admin-modal-label-server-name = Palvelimen nimi
 admin-modal-placeholder-server-name = Kirjoita lyhyt nimi Discord-palvelimelle
 admin-modal-label-server-id = Palvelimen ID
 admin-modal-placeholder-server-id = Kirjoita Discord-palvelimen ID
-admin-select-placeholder-server = Valitse poistettava palvelin
 admin-modal-title-cog-action = { $action } Cog
 admin-modal-label-cog-name = Nimi
 admin-modal-placeholder-cog-name = Syötä Cogin nimi, joka { $action }

@@ -224,8 +224,6 @@ config-error-item-exists-new-char = 新角色商店中已存在名为 { $itemNam
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = 上传新角色商店（JSON）
 config-error-no-json-uploaded-short = 未上传 JSON 文件。
-config-error-json-must-have-shopstock = JSON 必须包含 'shopStock' 数组。
-config-error-items-must-have-name-price = 所有物品必须包含 'name' 和 'price' 字段。
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = 设置新角色财富
@@ -409,11 +407,9 @@ config-title-wizard = {"**"}服务器配置 - 向导{"**"}
 config-wizard-intro =
     {"**"}欢迎使用 ReQuest 配置向导！{"**"}
 
-    此向导将帮助您确保服务器已正确配置以使用 ReQuest 的功能。
-    它将扫描您当前的设置并提供调整建议。
+    此向导将帮助您确保服务器已正确配置以使用 ReQuest 的功能。 它将扫描您当前的设置并提供调整建议。
 
-    使用下方的"启动扫描"按钮开始验证过程。扫描完成后，
-    您将收到服务器配置的详细报告以及建议的更改。
+    使用下方的"启动扫描"按钮开始验证过程。扫描完成后， 您将收到服务器配置的详细报告以及建议的更改。
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}机器人全局权限{"**"}__
@@ -537,7 +533,27 @@ config-wizard-gm-rewards-disabled = {"**"}状态：{"**"} 已禁用
 config-wizard-gm-rewards-enabled = {"**"}状态：{"**"} 已启用
 config-wizard-gm-rewards-experience = - 经验值：{ $xp }
 config-wizard-gm-rewards-items = - 物品：
-config-wizard-unnamed-shop = 未命名商店
+
+# 向导 - 服务器语言（第1页）
+config-wizard-server-language-desc =
+    这是 ReQuest 将用于所有公开消息的语言，例如任务帖子、商店补货消息和交易日志。
+config-wizard-server-language = {"**"}服务器语言：{"**"} { $language }
+config-wizard-server-language-default = 默认（英语）
+
+# 向导 - 商店补货信息
+config-wizard-shop-restock-not-scheduled = ℹ️ 未安排补货
+
+# 向导 - 任务设置（第5页）
+config-wizard-quest-header = __{"**"}任务设置{"**"}__
+config-wizard-quest-header-desc =
+    此部分提供与任务相关的配置概览。
+config-wizard-quest-role-mode = - 任务角色模式：{ $mode }
+config-wizard-quest-roles-label = {"**"}GM 任务角色{"**"}
+config-wizard-quest-roles-count = - 分配给 GM 的角色：{ $count }
+config-wizard-quest-roles-all-ok = - ✅ 所有角色正常
+config-wizard-quest-roles-assigned-to = {"    "}分配给：{ $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ 角色 ID { $roleId }：未找到/已从服务器删除
+config-wizard-quest-roles-no-assignments = - ℹ️ 未分配任务角色
 
 ## Roles View
 config-title-roles = {"**"}服务器配置 - 角色{"**"}
@@ -832,9 +848,6 @@ config-select-placeholder-add-quest-role = 为此 GM 分配服务器角色
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}服务器配置 - Quest 角色{"**"}
-config-label-quest-roles = Quest 角色
-config-desc-quest-roles =
-    配置 Quest 期间如何处理队伍角色。
 
 config-label-quest-role-mode-disabled = {"**"}Quest 角色模式：{"**"} 已禁用
     Quest 期间不创建或分配任何角色。

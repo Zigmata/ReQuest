@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Kereskedés
-player-cmd-desc = Játékos menük
 
 # --- Buttons ---
 
@@ -224,8 +222,6 @@ player-label-empty-kit = {"*"}Üres készlet{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Kiválasztás megerősítése: { $kitName }{"**"}
-player-label-items-heading = {"**"}Tárgyak:{"**"}
-player-label-currency-heading = {"**"}Valuta:{"**"}
 player-msg-kit-empty = Ez a készlet üres.
 
 # NewCharacterComplexItemPurchaseView
@@ -291,8 +287,6 @@ player-error-qty-only-have = Csak { $maxQuantity } darab van ebből a tárgyból
 player-error-invalid-format = Érvénytelen formátum: „{ $line }". Használd a <név>: <mennyiség> formátumot.
 player-error-empty-name = A tárgy neve nem lehet üres ebben a sorban: „{ $line }".
 player-error-invalid-quantity = Érvénytelen mennyiség „{ $name }" tárgyhoz: „{ $quantity }". Pozitív egész számnak kell lennie.
-player-error-input-errors-header = Hibák a leltár megadásában:
-player-msg-no-valid-items = Nem adtál meg érvényes tárgyakat. Üres leltár inicializálása.
 
 # Validation error view
 player-validation-error-title = Beviteli hibák
@@ -302,11 +296,8 @@ player-validation-btn-retry = Újrapróbálás
 player-error-enter-valid-number = Kérjük, adj meg egy érvényes pozitív számot.
 
 # Submission embeds (approval queue)
-player-embed-title-approval = Leltár jóváhagyás: { $characterName }
-player-embed-desc-submitted-by = Beküldő: { $userMention }
 player-embed-field-items = Tárgyak
 player-embed-field-currency-received = Valuta
-player-embed-footer-submission-id = Beküldés ID: { $submissionId }
 player-label-approval-thread = Jóváhagyás: { $characterName }
 player-embed-title-submission-sent = Leltár beküldés elküldve
 player-embed-desc-submission-sent =

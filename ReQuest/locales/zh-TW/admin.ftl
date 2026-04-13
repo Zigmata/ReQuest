@@ -32,7 +32,6 @@ admin-modal-label-server-name = 伺服器名稱
 admin-modal-placeholder-server-name = 輸入 Discord 伺服器的簡短名稱
 admin-modal-label-server-id = 伺服器 ID
 admin-modal-placeholder-server-id = 輸入 Discord 伺服器的 ID
-admin-select-placeholder-server = 選擇要移除的伺服器
 admin-modal-title-cog-action = { $action } Cog
 admin-modal-label-cog-name = 名稱
 admin-modal-placeholder-cog-name = 輸入要{ $action }的 Cog 名稱

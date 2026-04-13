@@ -55,10 +55,7 @@ gm-modal-placeholder-inventory-modify =
     vb.
 
 # GM errors
-gm-error-forbidden-role-name = Grup rolü için girilen ad yasaklanmış.
-gm-error-role-already-exists = Bu sunucuda bu adda bir rol zaten mevcut.
 gm-error-no-quest-channel = Quest gönderileri için henüz bir kanal belirlenemedi. Quest Kanalını yapılandırmak için bir sunucu yöneticisiyle iletişime geçin.
-gm-error-cannot-ping-announce = { $channel } kanalında { $role } duyuru rolü etiketlenemedi. Kanal ve ReQuest rol izinlerini sunucu yöneticiniz/yöneticilerinizle kontrol edin.
 gm-error-invalid-item-format = Geçersiz eşya biçimi: "{ $item }". Her eşya yeni bir satırda ve "Ad: Miktar" biçiminde olmalıdır.
 gm-error-already-on-quest = Bu quest'te zaten { $characterName } olarak bulunuyorsunuz.
 gm-error-no-active-character-long = Bu sunucuda aktif bir karakteriniz yok. Bir karakter kaydetmek veya etkinleştirmek için `/player` komutunu kullanın.
@@ -122,8 +119,6 @@ gm-dm-role-not-found =
 
 # GM select menus
 gm-select-placeholder-party-member = Bir grup üyesi seçin
-gm-modal-label-select-party-role = Grup Rolü
-gm-modal-desc-select-party-role = Quest grubuna atanacak bir rol seçin.
 gm-select-option-no-role = Yok (Grup Rolü Yok)
 
 # GM embeds
@@ -151,18 +146,10 @@ gm-label-quest-locked = (Kilitli)
 gm-label-quest-draft = (Taslak)
 gm-title-manage-quest = Quest Yönet - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Başlık, açıklama ve grup boyutu gibi quest detaylarını düzenleyin.
-gm-title-edit-quest = Quest'i Düzenle - { $questTitle }
 gm-label-field-not-set = Ayarlanmadı
 gm-label-description-not-set = Açıklama ayarlanmadı
-gm-label-current-title = {"**"}Başlık:{"**"} { $value }
-gm-label-current-description = {"**"}Açıklama{"**"}
-gm-label-current-restrictions = {"**"}Kısıtlamalar:{"**"} { $value }
 gm-label-current-party-size = {"**"}Maks Grup Boyutu:{"**"} { $value }
 gm-label-current-party-role = {"**"}Grup Rolü:{"**"} { $value }
-gm-label-current-image = {"**"}Küçük Resim{"**"}
-gm-label-current-large-image = {"**"}Görsel{"**"}
-gm-desc-publish-quest = Bu quest'i quest panosuna yayınlayın.
-gm-desc-update-quest-post = Quest panosundaki quest gönderisini güncelleyin.
 gm-desc-toggle-ready = Hazır durumunu aç/kapat (Mevcut: {"**"}{ $status }{"**"})
     - Quest kadrosunu kilitler ve grup üyelerini quest'in yakında başlayacağı konusunda bilgilendirir. Bir rol yapılandırılmışsa, kilitlendiğinde grup üyelerine atanır.
     - Açık olarak ayarlandığında kadronun kilidini açar.
@@ -190,7 +177,5 @@ gm-label-no-players-in-roster = Quest kadrosunda oyuncu yok
 gm-title-character-sheet = { $characterName } için Karakter Sayfası (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Deneyim Puanları:{"**"}__
 gm-label-possessions = __{"**"}Eşyalar{"**"}__
-gm-label-currency-heading = {"**"}Para Birimi{"**"}
-gm-msg-inventory-empty = Envanter boş.
 
 # GM approvals

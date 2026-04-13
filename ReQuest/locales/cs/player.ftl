@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Obchod
-player-cmd-desc = Menu hráče
 
 # --- Buttons ---
 
@@ -224,8 +222,6 @@ player-label-empty-kit = {"*"}Prázdná sada{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Potvrdit výběr: { $kitName }{"**"}
-player-label-items-heading = {"**"}Předměty:{"**"}
-player-label-currency-heading = {"**"}Měna:{"**"}
 player-msg-kit-empty = Tato sada je prázdná.
 
 # NewCharacterComplexItemPurchaseView
@@ -291,8 +287,6 @@ player-error-qty-only-have = Máte pouze { $maxQuantity } tohoto předmětu.
 player-error-invalid-format = Neplatný formát: „{ $line }". Použijte <název>: <množství>.
 player-error-empty-name = Název předmětu nemůže být prázdný v řádku: „{ $line }".
 player-error-invalid-quantity = Neplatné množství pro „{ $name }": „{ $quantity }". Musí to být kladné celé číslo.
-player-error-input-errors-header = Chyby ve vstupu inventáře:
-player-msg-no-valid-items = Nebyly zadány žádné platné předměty. Inicializace s prázdným inventářem.
 
 # Validation error view
 player-validation-error-title = Chyby vstupu
@@ -302,11 +296,8 @@ player-validation-btn-retry = Zkusit znovu
 player-error-enter-valid-number = Zadejte prosím platné kladné číslo.
 
 # Submission embeds (approval queue)
-player-embed-title-approval = Schválení inventáře: { $characterName }
-player-embed-desc-submitted-by = Odesláno uživatelem { $userMention }
 player-embed-field-items = Předměty
 player-embed-field-currency-received = Měna
-player-embed-footer-submission-id = ID podání: { $submissionId }
 player-label-approval-thread = Schválení: { $characterName }
 player-embed-title-submission-sent = Podání inventáře odesláno
 player-embed-desc-submission-sent =

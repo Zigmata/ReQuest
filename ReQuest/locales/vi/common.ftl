@@ -13,7 +13,6 @@ common-btn-select = Chọn
 common-btn-manage = Quản lý
 common-btn-rename = Đổi tên
 common-btn-continue = Tiếp tục
-common-btn-cancel = Hủy
 common-btn-enable = Bật
 common-btn-disable = Tắt
 
@@ -39,7 +38,6 @@ common-label-none = Không có
 common-label-unknown = Không rõ
 common-label-locked = (ĐÃ KHÓA)
 common-label-loose-items = Vật phẩm rời
-common-label-and-more = . . . và { $remaining } nữa.
 common-label-currency = Tiền tệ
 common-label-inventory-empty = Kho đồ trống.
 

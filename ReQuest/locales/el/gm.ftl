@@ -55,10 +55,7 @@ gm-modal-placeholder-inventory-modify =
     κ.λπ.
 
 # GM errors
-gm-error-forbidden-role-name = Το όνομα που δόθηκε για τον ρόλο ομάδας δεν επιτρέπεται.
-gm-error-role-already-exists = Ένας ρόλος με αυτό το όνομα υπάρχει ήδη σε αυτόν τον διακομιστή.
 gm-error-no-quest-channel = Δεν έχει οριστεί κανάλι για δημοσιεύσεις quest. Επικοινωνήστε με τον διαχειριστή του διακομιστή για να ρυθμίσει το Κανάλι Quest.
-gm-error-cannot-ping-announce = Δεν ήταν δυνατή η ειδοποίηση του ρόλου { $role } στο κανάλι { $channel }. Ελέγξτε τα δικαιώματα καναλιού και ρόλου ReQuest με τον/τους διαχειριστή/-ές του διακομιστή σας.
 gm-error-invalid-item-format = Μη έγκυρη μορφή αντικειμένου: "{ $item }". Κάθε αντικείμενο πρέπει να είναι σε νέα γραμμή, στη μορφή "Όνομα: Ποσότητα".
 gm-error-already-on-quest = Είστε ήδη σε αυτό το quest ως { $characterName }.
 gm-error-no-active-character-long = Δεν έχετε ενεργό χαρακτήρα σε αυτόν τον διακομιστή. Χρησιμοποιήστε `/player` για να εγγράψετε ή να ενεργοποιήσετε έναν χαρακτήρα.
@@ -121,8 +118,6 @@ gm-dm-role-not-found =
 
 # GM select menus
 gm-select-placeholder-party-member = Επιλέξτε μέλος ομάδας
-gm-modal-label-select-party-role = Ρόλος Ομάδας
-gm-modal-desc-select-party-role = Επιλέξτε έναν ρόλο για ανάθεση στην ομάδα του quest.
 gm-select-option-no-role = Κανένας (Χωρίς Ρόλο Ομάδας)
 
 # GM embeds
@@ -150,18 +145,10 @@ gm-label-quest-locked = (Κλειδωμένο)
 gm-label-quest-draft = (Πρόχειρο)
 gm-title-manage-quest = Διαχείριση Quest - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Επεξεργασία λεπτομερειών quest όπως τίτλος, περιγραφή και μέγεθος ομάδας.
-gm-title-edit-quest = Επεξεργασία Quest - { $questTitle }
 gm-label-field-not-set = Δεν έχει οριστεί
 gm-label-description-not-set = Η περιγραφή δεν έχει οριστεί
-gm-label-current-title = {"**"}Τίτλος:{"**"} { $value }
-gm-label-current-description = {"**"}Περιγραφή{"**"}
-gm-label-current-restrictions = {"**"}Περιορισμοί:{"**"} { $value }
 gm-label-current-party-size = {"**"}Μέγιστο Μέγεθος Ομάδας:{"**"} { $value }
 gm-label-current-party-role = {"**"}Ρόλος Ομάδας:{"**"} { $value }
-gm-label-current-image = {"**"}Μικρογραφία{"**"}
-gm-label-current-large-image = {"**"}Εικόνα{"**"}
-gm-desc-publish-quest = Δημοσίευση αυτού του quest στον πίνακα quest.
-gm-desc-update-quest-post = Ενημέρωση της δημοσίευσης quest στον πίνακα quest.
 gm-desc-toggle-ready = Εναλλαγή κατάστασης ετοιμότητας (Τρέχουσα: {"**"}{ $status }{"**"})
     - Κλειδώνει τη λίστα ομάδας του quest και ειδοποιεί τα μέλη ότι το quest θα ξεκινήσει σύντομα. Αν έχει ρυθμιστεί ρόλος, θα ανατεθεί στα μέλη της ομάδας κατά το κλείδωμα.
     - Ξεκλειδώνει τη λίστα όταν ορίζεται σε Ανοιχτό.
@@ -189,8 +176,6 @@ gm-label-no-players-in-roster = Δεν υπάρχουν παίκτες στη λ
 gm-title-character-sheet = Φύλλο Χαρακτήρα για { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Πόντοι Εμπειρίας:{"**"}__
 gm-label-possessions = __{"**"}Αντικείμενα{"**"}__
-gm-label-currency-heading = {"**"}Νόμισμα{"**"}
-gm-msg-inventory-empty = Ο εξοπλισμός είναι άδειος.
 
 # GM approvals
 

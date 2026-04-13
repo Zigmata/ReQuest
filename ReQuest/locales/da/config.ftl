@@ -224,8 +224,6 @@ config-error-item-exists-new-char = En genstand med navnet { $itemName } findes 
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Upload ny karakterbutik (JSON)
 config-error-no-json-uploaded-short = Ingen JSON-fil uploadet.
-config-error-json-must-have-shopstock = JSON skal indeholde et 'shopStock'-array.
-config-error-items-must-have-name-price = Alle genstande skal have 'name' og 'price'.
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Indstil ny karakters formue
@@ -409,11 +407,9 @@ config-title-wizard = {"**"}Serverkonfiguration - Guide{"**"}
 config-wizard-intro =
     {"**"}Velkommen til ReQuest-konfigurationsguiden!{"**"}
 
-    Denne guide hjælper dig med at sikre, at din server er korrekt konfigureret til at bruge ReQuests funktioner.
-    Den scanner dine nuværende indstillinger og giver anbefalinger til eventuelle nødvendige justeringer.
+    Denne guide hjælper dig med at sikre, at din server er korrekt konfigureret til at bruge ReQuests funktioner. Den scanner dine nuværende indstillinger og giver anbefalinger til eventuelle nødvendige justeringer.
 
-    Brug knappen "Start scanning" nedenfor for at begynde valideringsprocessen. Når scanningen er færdig,
-    modtager du en detaljeret rapport over din servers konfiguration sammen med eventuelle anbefalede ændringer.
+    Brug knappen "Start scanning" nedenfor for at begynde valideringsprocessen. Når scanningen er færdig, modtager du en detaljeret rapport over din servers konfiguration sammen med eventuelle anbefalede ændringer.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Bot globale tilladelser{"**"}__
@@ -537,7 +533,27 @@ config-wizard-gm-rewards-disabled = {"**"}Status:{"**"} Deaktiveret
 config-wizard-gm-rewards-enabled = {"**"}Status:{"**"} Aktiveret
 config-wizard-gm-rewards-experience = - Erfaring: { $xp }
 config-wizard-gm-rewards-items = - Genstande:
-config-wizard-unnamed-shop = Unavngiven butik
+
+# Wizard - Serversprog (Side 1)
+config-wizard-server-language-desc =
+    Dette er det sprog, ReQuest vil bruge til alle offentlige beskeder, såsom quest-opslag, genopfyldningsbeskeder for butikker og transaktionslogge.
+config-wizard-server-language = {"**"}Serversprog:{"**"} { $language }
+config-wizard-server-language-default = Standard (engelsk)
+
+# Wizard - Info om butiks-genopfyldning
+config-wizard-shop-restock-not-scheduled = ℹ️ Genopfyldning ikke planlagt
+
+# Wizard - Quest-indstillinger (Side 5)
+config-wizard-quest-header = __{"**"}Quest-indstillinger{"**"}__
+config-wizard-quest-header-desc =
+    Denne sektion giver et overblik over quest-relaterede konfigurationer.
+config-wizard-quest-role-mode = - Quest-rolletilstand: { $mode }
+config-wizard-quest-roles-label = {"**"}GM Quest-roller{"**"}
+config-wizard-quest-roles-count = - Roller tildelt GM'er: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Alle roller OK
+config-wizard-quest-roles-assigned-to = {"    "}Tildelt til: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ Rolle-ID { $roleId }: Ikke fundet/Slettet fra serveren
+config-wizard-quest-roles-no-assignments = - ℹ️ Ingen quest-roller tildelt
 
 ## Roles View
 config-title-roles = {"**"}Serverkonfiguration - Roller{"**"}
@@ -833,9 +849,6 @@ config-select-placeholder-add-quest-role = Tildel serverrolle(r) til denne GM
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}Serverkonfiguration - Quest-roller{"**"}
-config-label-quest-roles = Quest-roller
-config-desc-quest-roles =
-    Konfigurer hvordan grupperoller håndteres under quests.
 
 config-label-quest-role-mode-disabled = {"**"}Quest-rolletilstand:{"**"} Deaktiveret
     Ingen roller oprettes eller tildeles under quests.

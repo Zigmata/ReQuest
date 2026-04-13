@@ -1,3 +1,4 @@
+import inspect
 import logging
 
 import discord
@@ -24,8 +25,12 @@ class BaseViewButton(Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             await interaction.response.defer()
-            view = self.target_view_class()
             locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
+            init_params = inspect.signature(self.target_view_class.__init__).parameters
+            if 'locale' in init_params:
+                view = self.target_view_class(locale=locale)
+            else:
+                view = self.target_view_class()
             view.locale = locale
             if hasattr(view, 'setup'):
                 await setup_view(view, interaction)

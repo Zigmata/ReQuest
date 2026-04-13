@@ -1,8 +1,6 @@
 import logging
 import os
 import re
-from contextvars import ContextVar
-
 import discord
 from discord import app_commands
 from fluent.runtime import FluentLocalization, FluentResourceLoader
@@ -76,30 +74,12 @@ def validate_locale_setup():
         )
 
 
-_render_locale: ContextVar[str | None] = ContextVar('_render_locale', default=None)
-
-
-def set_locale_context(locale: str):
-    """Set the active locale for the current asyncio task."""
-    _render_locale.set(locale)
-
-
 def get_localizer():
     return _localizer
 
 
 def t(locale, message_id, **kwargs):
-    """
-    Primary localization API.
-
-    When *locale* is DEFAULT_LOCALE, the context variable set by
-    set_locale_context() is checked first, allowing UI code to pick up
-    the user's real locale without changing call sites.
-    """
-    if locale == DEFAULT_LOCALE:
-        ctx_locale = _render_locale.get()
-        if ctx_locale is not None:
-            locale = ctx_locale
+    """Primary localization API. Always uses the locale passed explicitly."""
     return get_localizer().format(locale, message_id, **kwargs)
 
 

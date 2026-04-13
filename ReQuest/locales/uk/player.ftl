@@ -2,8 +2,6 @@
 
 # --- Ког ---
 
-player-cmd-name = Обмін
-player-cmd-desc = Меню гравця
 
 # --- Кнопки ---
 
@@ -224,8 +222,6 @@ player-label-empty-kit = {"*"}Порожній набір{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Підтвердити вибір: { $kitName }{"**"}
-player-label-items-heading = {"**"}Предмети:{"**"}
-player-label-currency-heading = {"**"}Валюта:{"**"}
 player-msg-kit-empty = Цей набір порожній.
 
 # NewCharacterComplexItemPurchaseView
@@ -291,8 +287,6 @@ player-error-qty-only-have = У вас лише { $maxQuantity } цього пр
 player-error-invalid-format = Недійсний формат: "{ $line }". Використовуйте <назва>: <кількість>.
 player-error-empty-name = Назва предмета не може бути порожньою в рядку: "{ $line }".
 player-error-invalid-quantity = Недійсна кількість для "{ $name }": "{ $quantity }". Має бути додатнім цілим числом.
-player-error-input-errors-header = Помилки у введенні інвентарю:
-player-msg-no-valid-items = Дійсних предметів не надано. Ініціалізація з порожнім інвентарем.
 
 # Validation error view
 player-validation-error-title = Помилки введення
@@ -302,11 +296,8 @@ player-validation-btn-retry = Спробувати знову
 player-error-enter-valid-number = Будь ласка, введіть дійсне додатне число.
 
 # Вбудовані повідомлення заявок (черга схвалення)
-player-embed-title-approval = Схвалення інвентарю: { $characterName }
-player-embed-desc-submitted-by = Надіслано { $userMention }
 player-embed-field-items = Предмети
 player-embed-field-currency-received = Валюта
-player-embed-footer-submission-id = ID заявки: { $submissionId }
 player-label-approval-thread = Схвалення: { $characterName }
 player-embed-title-submission-sent = Заявку на інвентар надіслано
 player-embed-desc-submission-sent =

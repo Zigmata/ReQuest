@@ -55,10 +55,7 @@ gm-modal-placeholder-inventory-modify =
     以此类推。
 
 # GM errors
-gm-error-forbidden-role-name = 为队伍角色提供的名称被禁止使用。
-gm-error-role-already-exists = 此服务器中已存在同名角色。
 gm-error-no-quest-channel = 尚未指定 Quest 发布频道。请联系服务器管理员配置 Quest 频道。
-gm-error-cannot-ping-announce = 无法在频道 { $channel } 中提及公告角色 { $role }。请与服务器管理员检查频道和 ReQuest 角色权限。
 gm-error-invalid-item-format = 无效的物品格式："{ $item }"。每个物品必须在新行上，格式为"名称: 数量"。
 gm-error-already-on-quest = 您已经以 { $characterName } 的身份参加了此 Quest。
 gm-error-no-active-character-long = 您在此服务器上没有活跃角色。请使用 `/player` 注册或激活角色。
@@ -120,8 +117,6 @@ gm-dm-role-not-found =
 
 # GM select menus
 gm-select-placeholder-party-member = 选择一名队伍成员
-gm-modal-label-select-party-role = 队伍角色
-gm-modal-desc-select-party-role = 选择要分配给 Quest 队伍的角色。
 gm-select-option-no-role = 无（不设队伍角色）
 
 # GM embeds
@@ -149,18 +144,10 @@ gm-label-quest-locked = （已锁定）
 gm-label-quest-draft = （草稿）
 gm-title-manage-quest = 管理 Quest - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = 编辑 Quest 详情，如标题、描述和队伍人数。
-gm-title-edit-quest = 编辑 Quest - { $questTitle }
 gm-label-field-not-set = 未设置
 gm-label-description-not-set = 未设置描述
-gm-label-current-title = {"**"}标题：{"**"} { $value }
-gm-label-current-description = {"**"}描述{"**"}
-gm-label-current-restrictions = {"**"}限制条件：{"**"} { $value }
 gm-label-current-party-size = {"**"}最大队伍人数：{"**"} { $value }
 gm-label-current-party-role = {"**"}队伍角色：{"**"} { $value }
-gm-label-current-image = {"**"}缩略图{"**"}
-gm-label-current-large-image = {"**"}图片{"**"}
-gm-desc-publish-quest = 将此 Quest 发布到 Quest 公告板。
-gm-desc-update-quest-post = 更新 Quest 公告板上的 Quest 帖子。
 gm-desc-toggle-ready = 切换就绪状态（当前：{"**"}{ $status }{"**"}）
     - 锁定 Quest 名单并通知队伍成员 Quest 即将开始。如果配置了角色，将在锁定时分配给队伍成员。
     - 设为开放时解锁名单。
@@ -188,7 +175,5 @@ gm-label-no-players-in-roster = Quest 名单中没有玩家
 gm-title-character-sheet = { $characterName } 的角色信息（<@{ $memberId }>）
 gm-label-experience-points = __{"**"}经验值：{"**"}__
 gm-label-possessions = __{"**"}持有物{"**"}__
-gm-label-currency-heading = {"**"}货币{"**"}
-gm-msg-inventory-empty = 物品栏为空。
 
 # GM approvals

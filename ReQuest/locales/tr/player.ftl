@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Takas
-player-cmd-desc = Oyuncu Menüleri
 
 # --- Buttons ---
 
@@ -224,8 +222,6 @@ player-label-empty-kit = {"*"}Boş Kit{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Seçimi Onayla: { $kitName }{"**"}
-player-label-items-heading = {"**"}Eşyalar:{"**"}
-player-label-currency-heading = {"**"}Para Birimi:{"**"}
 player-msg-kit-empty = Bu kit boş.
 
 # NewCharacterComplexItemPurchaseView
@@ -291,8 +287,6 @@ player-error-qty-only-have = Bu eşyadan yalnızca { $maxQuantity } adet var.
 player-error-invalid-format = Geçersiz biçim: "{ $line }". <ad>: <miktar> biçimini kullanın.
 player-error-empty-name = "{ $line }" satırında eşya adı boş olamaz.
 player-error-invalid-quantity = "{ $name }" için geçersiz miktar: "{ $quantity }". Pozitif bir tam sayı olmalıdır.
-player-error-input-errors-header = Envanter girişinde hatalar:
-player-msg-no-valid-items = Geçerli eşya sağlanmadı. Boş envanter ile başlatılıyor.
 
 # Validation error view
 player-validation-error-title = Giriş hataları
@@ -302,11 +296,8 @@ player-validation-btn-retry = Tekrar dene
 player-error-enter-valid-number = Lütfen geçerli bir pozitif sayı girin.
 
 # Submission embeds (approval queue)
-player-embed-title-approval = Envanter Onayı: { $characterName }
-player-embed-desc-submitted-by = { $userMention } tarafından gönderildi
 player-embed-field-items = Eşyalar
 player-embed-field-currency-received = Para Birimi
-player-embed-footer-submission-id = Başvuru ID: { $submissionId }
 player-label-approval-thread = Onay: { $characterName }
 player-embed-title-submission-sent = Envanter Başvurusu Gönderildi
 player-embed-desc-submission-sent =

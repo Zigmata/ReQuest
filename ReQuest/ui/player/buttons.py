@@ -625,7 +625,8 @@ class SelectKitOptionButton(Button):
                 self.view.pending_character,
                 self.kit_id,
                 self.kit_data,
-                self.view.currency_config
+                self.view.currency_config,
+                locale=getattr(self.view, 'locale', None)
             )
             await interaction.response.edit_message(view=view)
         except Exception as e:

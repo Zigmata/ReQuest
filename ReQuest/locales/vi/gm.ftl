@@ -55,10 +55,7 @@ gm-modal-placeholder-inventory-modify =
     v.v.
 
 # GM errors
-gm-error-forbidden-role-name = Tên vai trò đội hình này bị cấm.
-gm-error-role-already-exists = Vai trò có tên đó đã tồn tại trong máy chủ này.
 gm-error-no-quest-channel = Chưa chỉ định kênh cho bài đăng quest. Liên hệ quản trị viên máy chủ để cấu hình kênh Quest.
-gm-error-cannot-ping-announce = Không thể ping vai trò thông báo { $role } trong kênh { $channel }. Kiểm tra quyền kênh và vai trò ReQuest với quản trị viên máy chủ.
 gm-error-invalid-item-format = Định dạng vật phẩm không hợp lệ: "{ $item }". Mỗi vật phẩm phải nằm trên một dòng riêng, theo định dạng "Tên: Số lượng".
 gm-error-already-on-quest = Bạn đã tham gia quest này với nhân vật { $characterName }.
 gm-error-no-active-character-long = Bạn không có nhân vật đang hoạt động trên máy chủ này. Sử dụng `/player` để đăng ký hoặc kích hoạt nhân vật.
@@ -122,8 +119,6 @@ gm-dm-role-not-found =
 
 # GM select menus
 gm-select-placeholder-party-member = Chọn thành viên đội hình
-gm-modal-label-select-party-role = Vai trò đội hình
-gm-modal-desc-select-party-role = Chọn vai trò để gán cho đội hình quest.
 gm-select-option-no-role = Không (Không có vai trò đội hình)
 
 # GM embeds
@@ -151,18 +146,10 @@ gm-label-quest-locked = (Đã khóa)
 gm-label-quest-draft = (Bản nháp)
 gm-title-manage-quest = Quản lý Quest - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Sửa chi tiết quest như tiêu đề, mô tả và số lượng đội hình.
-gm-title-edit-quest = Sửa Quest - { $questTitle }
 gm-label-field-not-set = Chưa đặt
 gm-label-description-not-set = Chưa đặt mô tả
-gm-label-current-title = {"**"}Tiêu đề:{"**"} { $value }
-gm-label-current-description = {"**"}Mô tả{"**"}
-gm-label-current-restrictions = {"**"}Giới hạn:{"**"} { $value }
 gm-label-current-party-size = {"**"}Đội hình tối đa:{"**"} { $value }
 gm-label-current-party-role = {"**"}Vai trò đội hình:{"**"} { $value }
-gm-label-current-image = {"**"}Hình thu nhỏ{"**"}
-gm-label-current-large-image = {"**"}Hình ảnh{"**"}
-gm-desc-publish-quest = Đăng quest này lên bảng quest.
-gm-desc-update-quest-post = Cập nhật bài đăng quest trên bảng quest.
 gm-desc-toggle-ready = Bật/tắt trạng thái sẵn sàng (Hiện tại: {"**"}{ $status }{"**"})
     - Khóa đội hình quest và thông báo cho thành viên đội hình rằng quest sắp bắt đầu. Nếu đã cấu hình vai trò, vai trò sẽ được gán cho thành viên đội hình khi khóa.
     - Mở khóa đội hình khi đặt thành Mở.
@@ -190,7 +177,5 @@ gm-label-no-players-in-roster = Không có người chơi trong đội hình que
 gm-title-character-sheet = Bảng nhân vật của { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Điểm kinh nghiệm:{"**"}__
 gm-label-possessions = __{"**"}Tài sản{"**"}__
-gm-label-currency-heading = {"**"}Tiền tệ{"**"}
-gm-msg-inventory-empty = Kho đồ trống.
 
 # GM approvals

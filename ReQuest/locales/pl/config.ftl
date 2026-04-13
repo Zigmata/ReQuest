@@ -224,8 +224,6 @@ config-error-item-exists-new-char = Przedmiot o nazwie { $itemName } już istnie
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Prześlij Sklep Nowej Postaci (JSON)
 config-error-no-json-uploaded-short = Nie przesłano pliku JSON.
-config-error-json-must-have-shopstock = JSON musi zawierać tablicę 'shopStock'.
-config-error-items-must-have-name-price = Wszystkie przedmioty muszą mieć 'name' i 'price'.
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Ustaw majątek nowej postaci
@@ -409,11 +407,9 @@ config-title-wizard = {"**"}Konfiguracja serwera - Kreator{"**"}
 config-wizard-intro =
     {"**"}Witaj w Kreatorze Konfiguracji ReQuest!{"**"}
 
-    Ten kreator pomoże Ci upewnić się, że Twój serwer jest prawidłowo skonfigurowany do korzystania z funkcji ReQuesta.
-    Przeskanuje bieżące ustawienia i zaproponuje zalecenia dotyczące wymaganych zmian.
+    Ten kreator pomoże Ci upewnić się, że Twój serwer jest prawidłowo skonfigurowany do korzystania z funkcji ReQuesta. Przeskanuje bieżące ustawienia i zaproponuje zalecenia dotyczące wymaganych zmian.
 
-    Użyj przycisku "Uruchom skanowanie" poniżej, aby rozpocząć proces walidacji. Po zakończeniu skanowania
-    otrzymasz szczegółowy raport konfiguracji serwera wraz z zalecanymi zmianami.
+    Użyj przycisku "Uruchom skanowanie" poniżej, aby rozpocząć proces walidacji. Po zakończeniu skanowania otrzymasz szczegółowy raport konfiguracji serwera wraz z zalecanymi zmianami.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Uprawnienia globalne bota{"**"}__
@@ -537,7 +533,27 @@ config-wizard-gm-rewards-disabled = {"**"}Status:{"**"} Wyłączone
 config-wizard-gm-rewards-enabled = {"**"}Status:{"**"} Włączone
 config-wizard-gm-rewards-experience = - Doświadczenie: { $xp }
 config-wizard-gm-rewards-items = - Przedmioty:
-config-wizard-unnamed-shop = Sklep bez nazwy
+
+# Wizard - Język serwera (Strona 1)
+config-wizard-server-language-desc =
+    To jest język, którego ReQuest będzie używał dla wszystkich publicznych wiadomości, takich jak posty o questach, wiadomości o uzupełnieniu sklepu i dzienniki transakcji.
+config-wizard-server-language = {"**"}Język serwera:{"**"} { $language }
+config-wizard-server-language-default = Domyślny (angielski)
+
+# Wizard - Informacje o uzupełnieniu sklepu
+config-wizard-shop-restock-not-scheduled = ℹ️ Uzupełnienie niezaplanowane
+
+# Wizard - Ustawienia questów (Strona 5)
+config-wizard-quest-header = __{"**"}Ustawienia questów{"**"}__
+config-wizard-quest-header-desc =
+    Ta sekcja zawiera przegląd konfiguracji związanych z questami.
+config-wizard-quest-role-mode = - Tryb ról questów: { $mode }
+config-wizard-quest-roles-label = {"**"}Role questów GM{"**"}
+config-wizard-quest-roles-count = - Role przypisane do GM: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Wszystkie role OK
+config-wizard-quest-roles-assigned-to = {"    "}Przypisano do: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ ID roli { $roleId }: Nie znaleziono/Usunięto z serwera
+config-wizard-quest-roles-no-assignments = - ℹ️ Brak przypisanych ról questów
 
 ## Roles View
 config-title-roles = {"**"}Konfiguracja serwera - Role{"**"}
@@ -831,9 +847,6 @@ config-select-placeholder-add-quest-role = Przypisz rolę(-e) serwera do tego MG
 
 ## Widok ról questowych
 config-title-quest-roles = {"**"}Konfiguracja serwera - Role questowe{"**"}
-config-label-quest-roles = Role questowe
-config-desc-quest-roles =
-    Skonfiguruj sposób obsługi ról drużyny podczas questów.
 
 config-label-quest-role-mode-disabled = {"**"}Tryb ról questowych:{"**"} Wyłączony
     Podczas questów nie są tworzone ani przypisywane żadne role.

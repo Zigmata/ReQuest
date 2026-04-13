@@ -13,7 +13,6 @@ common-btn-select = Selectează
 common-btn-manage = Administrează
 common-btn-rename = Redenumește
 common-btn-continue = Continuă
-common-btn-cancel = Anulează
 common-btn-enable = Activează
 common-btn-disable = Dezactivează
 
@@ -39,7 +38,6 @@ common-label-none = Niciunul
 common-label-unknown = Necunoscut
 common-label-locked = (BLOCAT)
 common-label-loose-items = Obiecte libere
-common-label-and-more = . . . și încă { $remaining }.
 common-label-currency = Monedă
 common-label-inventory-empty = Inventarul este gol.
 

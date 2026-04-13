@@ -13,7 +13,6 @@ common-btn-select = Kiválasztás
 common-btn-manage = Kezelés
 common-btn-rename = Átnevezés
 common-btn-continue = Tovább
-common-btn-cancel = Mégse
 common-btn-enable = Engedélyezés
 common-btn-disable = Letiltás
 
@@ -39,7 +38,6 @@ common-label-none = Nincs
 common-label-unknown = Ismeretlen
 common-label-locked = (ZÁROLVA)
 common-label-loose-items = Szabad tárgyak
-common-label-and-more = . . . és még { $remaining } további.
 common-label-currency = Valuta
 common-label-inventory-empty = A leltár üres.
 

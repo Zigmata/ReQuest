@@ -224,8 +224,6 @@ config-error-item-exists-new-char = Предмет с именем { $itemName }
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Загрузить магазин нового персонажа (JSON)
 config-error-no-json-uploaded-short = JSON-файл не загружен.
-config-error-json-must-have-shopstock = JSON должен содержать массив 'shopStock'.
-config-error-items-must-have-name-price = Все предметы должны иметь 'name' и 'price'.
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Установить начальное богатство
@@ -409,11 +407,9 @@ config-title-wizard = {"**"}Настройка сервера - Мастер{"**
 config-wizard-intro =
     {"**"}Добро пожаловать в Мастер настройки ReQuest!{"**"}
 
-    Этот мастер поможет убедиться, что ваш сервер правильно настроен для использования функций ReQuest.
-    Он просканирует текущие настройки и предоставит рекомендации по необходимым изменениям.
+    Этот мастер поможет убедиться, что ваш сервер правильно настроен для использования функций ReQuest. Он просканирует текущие настройки и предоставит рекомендации по необходимым изменениям.
 
-    Нажмите кнопку «Запустить сканирование» ниже, чтобы начать проверку. После завершения сканирования
-    вы получите подробный отчёт о конфигурации сервера вместе с рекомендуемыми изменениями.
+    Нажмите кнопку «Запустить сканирование» ниже, чтобы начать проверку. После завершения сканирования вы получите подробный отчёт о конфигурации сервера вместе с рекомендуемыми изменениями.
 
 # Мастер - Проверка прав бота
 config-wizard-bot-permissions-header = __{"**"}Глобальные права бота{"**"}__
@@ -537,7 +533,27 @@ config-wizard-gm-rewards-disabled = {"**"}Статус:{"**"} Отключено
 config-wizard-gm-rewards-enabled = {"**"}Статус:{"**"} Включено
 config-wizard-gm-rewards-experience = - Опыт: { $xp }
 config-wizard-gm-rewards-items = - Предметы:
-config-wizard-unnamed-shop = Безымянный магазин
+
+# Мастер - Язык сервера (Страница 1)
+config-wizard-server-language-desc =
+    Это язык, который ReQuest будет использовать для всех публичных сообщений, таких как публикации квестов, сообщения о пополнении магазина и журналы транзакций.
+config-wizard-server-language = {"**"}Язык сервера:{"**"} { $language }
+config-wizard-server-language-default = По умолчанию (английский)
+
+# Мастер - Информация о пополнении магазина
+config-wizard-shop-restock-not-scheduled = ℹ️ Пополнение не запланировано
+
+# Мастер - Настройки квестов (Страница 5)
+config-wizard-quest-header = __{"**"}Настройки квестов{"**"}__
+config-wizard-quest-header-desc =
+    Этот раздел содержит обзор конфигураций, связанных с квестами.
+config-wizard-quest-role-mode = - Режим ролей квестов: { $mode }
+config-wizard-quest-roles-label = {"**"}Роли квестов GM{"**"}
+config-wizard-quest-roles-count = - Роли, назначенные GM: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Все роли в порядке
+config-wizard-quest-roles-assigned-to = {"    "}Назначено: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ ID роли { $roleId }: Не найдена/Удалена с сервера
+config-wizard-quest-roles-no-assignments = - ℹ️ Роли квестов не назначены
 
 ## Представление ролей
 config-title-roles = {"**"}Настройка сервера - Роли{"**"}
@@ -833,9 +849,6 @@ config-select-placeholder-add-quest-role = Назначить роль(и) се�
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}Настройка сервера - Роли квестов{"**"}
-config-label-quest-roles = Роли квестов
-config-desc-quest-roles =
-    Настройте управление ролями отряда во время квестов.
 
 config-label-quest-role-mode-disabled = {"**"}Режим ролей квестов:{"**"} Отключено
     Роли не создаются и не назначаются во время квестов.

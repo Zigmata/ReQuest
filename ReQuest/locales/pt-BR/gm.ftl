@@ -55,10 +55,7 @@ gm-modal-placeholder-inventory-modify =
     etc.
 
 # GM errors
-gm-error-forbidden-role-name = O nome fornecido para o cargo do grupo é proibido.
-gm-error-role-already-exists = Já existe um cargo com esse nome neste servidor.
 gm-error-no-quest-channel = Um canal ainda não foi definido para postagens de quests. Entre em contato com um administrador do servidor para configurar o canal de quests.
-gm-error-cannot-ping-announce = Não foi possível mencionar o cargo { $role } no canal { $channel }. Verifique as permissões do canal e do ReQuest com o(s) administrador(es) do servidor.
 gm-error-invalid-item-format = Formato de item inválido: "{ $item }". Cada item deve estar em uma nova linha, no formato "Nome: Quantidade".
 gm-error-already-on-quest = Você já está nesta quest como { $characterName }.
 gm-error-no-active-character-long = Você não possui um personagem ativo neste servidor. Use `/player` para registrar ou ativar um personagem.
@@ -118,8 +115,6 @@ gm-dm-role-not-found =
 
 # GM select menus
 gm-select-placeholder-party-member = Selecione um membro do grupo
-gm-modal-label-select-party-role = Cargo do Grupo
-gm-modal-desc-select-party-role = Selecione um cargo para atribuir ao grupo da quest.
 gm-select-option-no-role = Nenhum (Sem Cargo de Grupo)
 
 # GM embeds
@@ -147,16 +142,10 @@ gm-label-quest-locked = (Bloqueada)
 gm-label-quest-draft = (Rascunho)
 gm-title-manage-quest = Gerenciar Quest - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Editar detalhes da quest como título, descrição e tamanho do grupo.
-gm-title-edit-quest = Editar Quest - { $questTitle }
 gm-label-field-not-set = Não definido
 gm-label-description-not-set = Descrição não definida
-gm-label-current-title = {"**"}Título:{"**"} { $value }
-gm-label-current-description = {"**"}Descrição{"**"}
-gm-label-current-restrictions = {"**"}Restrições:{"**"} { $value }
 gm-label-current-party-size = {"**"}Tamanho Máximo do Grupo:{"**"} { $value }
 gm-label-current-party-role = {"**"}Cargo do Grupo:{"**"} { $value }
-gm-label-current-image = {"**"}Miniatura{"**"}
-gm-label-current-large-image = {"**"}Imagem{"**"}
 gm-error-party-size-positive = O tamanho do grupo deve ser um número positivo.
 gm-error-party-size-too-small = O tamanho do grupo não pode ser menor que o grupo atual ({ $currentSize } membros).
 gm-desc-toggle-ready = Alternar estado de prontidão (Atual: {"**"}{ $status }{"**"})
@@ -168,8 +157,6 @@ gm-desc-configure-rewards = Configurar recompensas para a quest selecionada.
 gm-desc-complete-quest = Concluir uma quest. Concede recompensas, se houver, aos membros do grupo.
 gm-desc-remove-player = Remover um jogador do grupo da quest e notificá-lo.
 gm-desc-cancel-quest = Cancelar a quest e removê-la do quadro de quests.
-gm-desc-publish-quest = Publicar esta quest no quadro de quests.
-gm-desc-update-quest-post = Atualizar o post da quest no quadro de quests.
 gm-error-role-name-forbidden = O nome do cargo "{ $roleName }" é proibido neste servidor.
 gm-error-role-name-exists = Já existe um cargo chamado "{ $roleName }" neste servidor.
 gm-title-player-management = Mestre - Gerenciamento de Jogadores
@@ -190,7 +177,5 @@ gm-label-no-players-in-roster = Nenhum jogador no grupo da quest
 gm-title-character-sheet = Ficha de Personagem de { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Pontos de Experiência:{"**"}__
 gm-label-possessions = __{"**"}Posses{"**"}__
-gm-label-currency-heading = {"**"}Moeda{"**"}
-gm-msg-inventory-empty = O inventário está vazio.
 
 # GM approvals

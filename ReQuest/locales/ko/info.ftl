@@ -102,4 +102,3 @@ info-language-desc-sv-se = 언어를 스웨덴어로 설정
 info-language-desc-th = 언어를 태국어로 설정
 info-language-desc-tr = 언어를 터키어로 설정
 info-language-desc-vi = 언어를 베트남어로 설정
-info-language-updated = 언어가 성공적으로 변경되었습니다.

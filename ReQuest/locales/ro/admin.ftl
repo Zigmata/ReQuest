@@ -32,7 +32,6 @@ admin-modal-label-server-name = Numele serverului
 admin-modal-placeholder-server-name = Introduceți un nume scurt pentru serverul Discord
 admin-modal-label-server-id = ID-ul serverului
 admin-modal-placeholder-server-id = Introduceți ID-ul serverului Discord
-admin-select-placeholder-server = Selectați un server de eliminat
 admin-modal-title-cog-action = { $action } modul
 admin-modal-label-cog-name = Nume
 admin-modal-placeholder-cog-name = Introduceți numele modulului pentru { $action }

@@ -13,7 +13,6 @@ common-btn-select = 選択
 common-btn-manage = 管理
 common-btn-rename = 名前変更
 common-btn-continue = 続行
-common-btn-cancel = キャンセル
 common-btn-enable = 有効
 common-btn-disable = 無効
 
@@ -39,7 +38,6 @@ common-label-none = なし
 common-label-unknown = 不明
 common-label-locked = （ロック中）
 common-label-loose-items = 未整理アイテム
-common-label-and-more = . . . 他 { $remaining } 件
 common-label-currency = 通貨
 common-label-inventory-empty = インベントリは空です。
 

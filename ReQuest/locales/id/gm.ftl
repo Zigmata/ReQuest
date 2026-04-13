@@ -55,10 +55,7 @@ gm-modal-placeholder-inventory-modify =
     dst.
 
 # GM errors
-gm-error-forbidden-role-name = Nama yang diberikan untuk peran rombongan dilarang.
-gm-error-role-already-exists = Peran dengan nama tersebut sudah ada di server ini.
 gm-error-no-quest-channel = Kanal belum ditetapkan untuk posting quest. Hubungi admin server untuk mengonfigurasi Kanal Quest.
-gm-error-cannot-ping-announce = Tidak dapat menyebut peran pengumuman { $role } di kanal { $channel }. Periksa izin kanal dan peran ReQuest dengan admin server Anda.
 gm-error-invalid-item-format = Format barang tidak valid: "{ $item }". Setiap barang harus di baris baru, dengan format "Nama: Jumlah".
 gm-error-already-on-quest = Anda sudah bergabung di quest ini sebagai { $characterName }.
 gm-error-no-active-character-long = Anda tidak memiliki karakter aktif di server ini. Gunakan `/player` untuk mendaftar atau mengaktifkan karakter.
@@ -121,8 +118,6 @@ gm-dm-role-not-found =
 
 # GM select menus
 gm-select-placeholder-party-member = Pilih anggota rombongan
-gm-modal-label-select-party-role = Peran Rombongan
-gm-modal-desc-select-party-role = Pilih peran untuk ditetapkan ke rombongan quest.
 gm-select-option-no-role = Tidak ada (Tanpa Peran Rombongan)
 
 # GM embeds
@@ -150,18 +145,10 @@ gm-label-quest-locked = (Terkunci)
 gm-label-quest-draft = (Draf)
 gm-title-manage-quest = Kelola Quest - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Ubah detail quest seperti judul, deskripsi, dan ukuran rombongan.
-gm-title-edit-quest = Ubah Misi - { $questTitle }
 gm-label-field-not-set = Belum diatur
 gm-label-description-not-set = Deskripsi belum diatur
-gm-label-current-title = {"**"}Judul:{"**"} { $value }
-gm-label-current-description = {"**"}Deskripsi{"**"}
-gm-label-current-restrictions = {"**"}Batasan:{"**"} { $value }
 gm-label-current-party-size = {"**"}Ukuran Maks Rombongan:{"**"} { $value }
 gm-label-current-party-role = {"**"}Peran Rombongan:{"**"} { $value }
-gm-label-current-image = {"**"}Thumbnail{"**"}
-gm-label-current-large-image = {"**"}Gambar{"**"}
-gm-desc-publish-quest = Terbitkan quest ini ke papan quest.
-gm-desc-update-quest-post = Perbarui posting quest di papan quest.
 gm-desc-toggle-ready = Alihkan status kesiapan (Saat ini: {"**"}{ $status }{"**"})
     - Mengunci daftar rombongan quest dan memberi tahu anggota rombongan bahwa quest akan segera dimulai. Jika peran dikonfigurasi, peran akan diberikan kepada anggota rombongan saat dikunci.
     - Membuka daftar rombongan saat diatur ke Terbuka.
@@ -189,8 +176,6 @@ gm-label-no-players-in-roster = Tidak ada pemain di daftar rombongan quest
 gm-title-character-sheet = Lembar Karakter untuk { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Poin Pengalaman:{"**"}__
 gm-label-possessions = __{"**"}Kepemilikan{"**"}__
-gm-label-currency-heading = {"**"}Mata Uang{"**"}
-gm-msg-inventory-empty = Inventaris kosong.
 
 # GM approvals
 

@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Handelen
-player-cmd-desc = Spelermenu's
 
 # --- Buttons ---
 
@@ -224,8 +222,6 @@ player-label-empty-kit = {"*"}Lege kit{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Selectie bevestigen: { $kitName }{"**"}
-player-label-items-heading = {"**"}Voorwerpen:{"**"}
-player-label-currency-heading = {"**"}Valuta:{"**"}
 player-msg-kit-empty = Deze kit is leeg.
 
 # NewCharacterComplexItemPurchaseView
@@ -291,8 +287,6 @@ player-error-qty-only-have = Je hebt slechts { $maxQuantity } van dit voorwerp.
 player-error-invalid-format = Ongeldig formaat: "{ $line }". Gebruik <naam>: <hoeveelheid>.
 player-error-empty-name = Voorwerpnaam mag niet leeg zijn in regel: "{ $line }".
 player-error-invalid-quantity = Ongeldige hoeveelheid voor "{ $name }": "{ $quantity }". Moet een positief geheel getal zijn.
-player-error-input-errors-header = Fouten in inventarisinvoer:
-player-msg-no-valid-items = Geen geldige voorwerpen opgegeven. Inventaris wordt leeg geïnitialiseerd.
 
 # Validation error view
 player-validation-error-title = Invoerfouten
@@ -302,11 +296,8 @@ player-validation-btn-retry = Opnieuw proberen
 player-error-enter-valid-number = Voer een geldig positief getal in.
 
 # Submission embeds (approval queue)
-player-embed-title-approval = Inventarisgoedkeuring: { $characterName }
-player-embed-desc-submitted-by = Ingediend door { $userMention }
 player-embed-field-items = Voorwerpen
 player-embed-field-currency-received = Valuta
-player-embed-footer-submission-id = Inzending-ID: { $submissionId }
 player-label-approval-thread = Goedkeuring: { $characterName }
 player-embed-title-submission-sent = Inventarisinzending verstuurd
 player-embed-desc-submission-sent =

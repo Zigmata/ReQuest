@@ -13,7 +13,6 @@ common-btn-select = Odaberi
 common-btn-manage = Upravljaj
 common-btn-rename = Preimenuj
 common-btn-continue = Nastavi
-common-btn-cancel = Odustani
 common-btn-enable = Omogući
 common-btn-disable = Onemogući
 
@@ -39,7 +38,6 @@ common-label-none = Nema
 common-label-unknown = Nepoznato
 common-label-locked = (ZAKLJUČANO)
 common-label-loose-items = Slobodni predmeti
-common-label-and-more = . . . i još { $remaining }.
 common-label-currency = Valuta
 common-label-inventory-empty = Inventar je prazan.
 

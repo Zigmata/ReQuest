@@ -55,10 +55,7 @@ gm-modal-placeholder-inventory-modify =
     тощо.
 
 # Помилки GM
-gm-error-forbidden-role-name = Надана назва для ролі групи є забороненою.
-gm-error-role-already-exists = Роль з такою назвою вже існує на цьому сервері.
 gm-error-no-quest-channel = Канал для публікацій квестів ще не призначено. Зверніться до адміністратора сервера для налаштування каналу квестів.
-gm-error-cannot-ping-announce = Не вдалося згадати роль оголошень { $role } у каналі { $channel }. Перевірте дозволи каналу та ролі ReQuest з адміністратором(ами) сервера.
 gm-error-invalid-item-format = Недійсний формат предмета: "{ $item }". Кожен предмет має бути на новому рядку у форматі "Назва: Кількість".
 gm-error-already-on-quest = Ви вже на цьому квесті як { $characterName }.
 gm-error-no-active-character-long = У вас немає активного персонажа на цьому сервері. Використовуйте `/player`, щоб зареєструвати або активувати персонажа.
@@ -122,8 +119,6 @@ gm-dm-role-not-found =
 
 # Меню вибору GM
 gm-select-placeholder-party-member = Оберіть учасника групи
-gm-modal-label-select-party-role = Роль групи
-gm-modal-desc-select-party-role = Оберіть роль для призначення групі квесту.
 gm-select-option-no-role = Немає (без ролі групи)
 
 # Вбудовані повідомлення GM
@@ -151,18 +146,10 @@ gm-label-quest-locked = (Заблоковано)
 gm-label-quest-draft = (Чернетка)
 gm-title-manage-quest = Керування квестом - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Редагувати деталі квесту, такі як назва, опис та розмір групи.
-gm-title-edit-quest = Редагування квесту - { $questTitle }
 gm-label-field-not-set = Не задано
 gm-label-description-not-set = Опис не задано
-gm-label-current-title = {"**"}Назва:{"**"} { $value }
-gm-label-current-description = {"**"}Опис{"**"}
-gm-label-current-restrictions = {"**"}Обмеження:{"**"} { $value }
 gm-label-current-party-size = {"**"}Максимальний розмір групи:{"**"} { $value }
 gm-label-current-party-role = {"**"}Роль групи:{"**"} { $value }
-gm-label-current-image = {"**"}Мініатюра{"**"}
-gm-label-current-large-image = {"**"}Зображення{"**"}
-gm-desc-publish-quest = Опублікувати цей квест на дошці квестів.
-gm-desc-update-quest-post = Оновити публікацію квесту на дошці квестів.
 gm-desc-toggle-ready = Перемкнути стан готовності (Поточний: {"**"}{ $status }{"**"})
     - Блокує список учасників квесту та повідомляє членів групи про швидкий початок квесту. Якщо налаштовано роль, вона буде призначена членам групи при блокуванні.
     - Розблоковує список учасників при встановленні на Відкрито.
@@ -190,7 +177,5 @@ gm-label-no-players-in-roster = Немає гравців у списку уча
 gm-title-character-sheet = Аркуш персонажа { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Очки досвіду:{"**"}__
 gm-label-possessions = __{"**"}Майно{"**"}__
-gm-label-currency-heading = {"**"}Валюта{"**"}
-gm-msg-inventory-empty = Інвентар порожній.
 
 # Схвалення GM

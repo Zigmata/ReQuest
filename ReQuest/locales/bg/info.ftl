@@ -102,4 +102,3 @@ info-language-desc-sv-se = Задаване на език на шведски
 info-language-desc-th = Задаване на език на тайски
 info-language-desc-tr = Задаване на език на турски
 info-language-desc-vi = Задаване на език на виетнамски
-info-language-updated = Езикът е успешно обновен.

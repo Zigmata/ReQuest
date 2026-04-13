@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Échange
-player-cmd-desc = Menus joueur
 
 # --- Boutons ---
 
@@ -224,8 +222,6 @@ player-label-empty-kit = {"*"}Kit vide{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Confirmer la sélection : { $kitName }{"**"}
-player-label-items-heading = {"**"}Objets :{"**"}
-player-label-currency-heading = {"**"}Monnaie :{"**"}
 player-msg-kit-empty = Ce kit est vide.
 
 # NewCharacterComplexItemPurchaseView
@@ -291,8 +287,6 @@ player-error-qty-only-have = Vous n'avez que { $maxQuantity } de cet objet.
 player-error-invalid-format = Format invalide : « { $line } ». Utilisez <nom> : <quantité>.
 player-error-empty-name = Le nom de l'objet ne peut pas être vide dans la ligne : « { $line } ».
 player-error-invalid-quantity = Quantité invalide pour « { $name } » : « { $quantity } ». Doit être un entier positif.
-player-error-input-errors-header = Erreurs dans la saisie de l'inventaire :
-player-msg-no-valid-items = Aucun objet valide fourni. Initialisation avec un inventaire vide.
 
 # Validation error view
 player-validation-error-title = Erreurs de saisie
@@ -302,11 +296,8 @@ player-validation-btn-retry = Réessayer
 player-error-enter-valid-number = Veuillez entrer un nombre positif valide.
 
 # Embeds de soumission (file d'approbation)
-player-embed-title-approval = Approbation d'inventaire : { $characterName }
-player-embed-desc-submitted-by = Soumis par { $userMention }
 player-embed-field-items = Objets
 player-embed-field-currency-received = Monnaie
-player-embed-footer-submission-id = ID de soumission : { $submissionId }
 player-label-approval-thread = Approbation : { $characterName }
 player-embed-title-submission-sent = Soumission d'inventaire envoyée
 player-embed-desc-submission-sent =

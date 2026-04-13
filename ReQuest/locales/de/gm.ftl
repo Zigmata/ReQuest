@@ -55,10 +55,7 @@ gm-modal-placeholder-inventory-modify =
     usw.
 
 # GM-Fehler
-gm-error-forbidden-role-name = Der angegebene Name für die Gruppenrolle ist verboten.
-gm-error-role-already-exists = Eine Rolle mit diesem Namen existiert bereits auf diesem Server.
 gm-error-no-quest-channel = Es wurde noch kein Kanal für Quest-Beiträge festgelegt. Wenden Sie sich an einen Serveradministrator, um den Quest-Kanal zu konfigurieren.
-gm-error-cannot-ping-announce = Ankündigungsrolle { $role } konnte im Kanal { $channel } nicht gepingt werden. Überprüfen Sie die Kanal- und ReQuest-Rollenberechtigungen mit Ihrem/Ihren Serveradministrator(en).
 gm-error-invalid-item-format = Ungültiges Gegenstandsformat: "{ $item }". Jeder Gegenstand muss in einer neuen Zeile stehen und das Format "Name: Menge" haben.
 gm-error-already-on-quest = Sie sind bereits als { $characterName } bei diesem Quest dabei.
 gm-error-no-active-character-long = Sie haben keinen aktiven Charakter auf diesem Server. Verwenden Sie `/player`, um einen Charakter zu registrieren oder zu aktivieren.
@@ -122,8 +119,6 @@ gm-dm-role-not-found =
 
 # GM-Auswahlmenüs
 gm-select-placeholder-party-member = Gruppenmitglied auswählen
-gm-modal-label-select-party-role = Gruppenrolle
-gm-modal-desc-select-party-role = Wählen Sie eine Rolle für die Quest-Gruppe aus.
 gm-select-option-no-role = Keine (Keine Gruppenrolle)
 
 # GM-Einbettungen
@@ -151,16 +146,10 @@ gm-label-quest-locked = (Gesperrt)
 gm-label-quest-draft = (Entwurf)
 gm-title-manage-quest = Quest verwalten - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Quest-Details wie Titel, Beschreibung und Gruppengröße bearbeiten.
-gm-title-edit-quest = Quest bearbeiten - { $questTitle }
 gm-label-field-not-set = Nicht festgelegt
 gm-label-description-not-set = Beschreibung nicht festgelegt
-gm-label-current-title = {"**"}Titel:{"**"} { $value }
-gm-label-current-description = {"**"}Beschreibung{"**"}
-gm-label-current-restrictions = {"**"}Einschränkungen:{"**"} { $value }
 gm-label-current-party-size = {"**"}Maximale Gruppengröße:{"**"} { $value }
 gm-label-current-party-role = {"**"}Gruppenrolle:{"**"} { $value }
-gm-label-current-image = {"**"}Miniatur{"**"}
-gm-label-current-large-image = {"**"}Bild{"**"}
 gm-desc-toggle-ready = Bereitschaftsstatus umschalten (Aktuell: {"**"}{ $status }{"**"})
     - Sperrt die Quest-Liste und benachrichtigt Gruppenmitglieder, dass der Quest bald beginnt. Wenn eine Rolle konfiguriert ist, wird sie den Gruppenmitgliedern bei Sperrung zugewiesen.
     - Entsperrt die Liste, wenn auf Offen gesetzt.
@@ -170,8 +159,6 @@ gm-desc-configure-rewards = Belohnungen für den ausgewählten Quest konfigurier
 gm-desc-complete-quest = Einen Quest abschließen. Vergibt Belohnungen, falls vorhanden, an Gruppenmitglieder.
 gm-desc-remove-player = Einen Spieler aus der Quest-Liste entfernen und benachrichtigen.
 gm-desc-cancel-quest = Den Quest abbrechen und von der Quest-Tafel löschen.
-gm-desc-publish-quest = Diesen Quest auf der Quest-Tafel veröffentlichen.
-gm-desc-update-quest-post = Den Quest-Beitrag auf der Quest-Tafel aktualisieren.
 gm-error-role-hierarchy = ReQuest kann die Rolle "{ $roleName }" (ID: { $roleId }) nicht verwalten, da sie höher als die höchste Rolle von ReQuest in der Serverhierarchie positioniert ist. Bitte wenden Sie sich an einen Serveradministrator, um die Rolle unter die Rolle von ReQuest zu verschieben, oder weisen Sie ReQuest eine höhere Rolle zu, und versuchen Sie es dann erneut.
 gm-title-player-management = Spielleiter - Spielerverwaltung
 gm-desc-player-management =
@@ -191,7 +178,5 @@ gm-label-no-players-in-roster = Keine Spieler in der Quest-Liste
 gm-title-character-sheet = Charakterbogen für { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Erfahrungspunkte:{"**"}__
 gm-label-possessions = __{"**"}Besitztümer{"**"}__
-gm-label-currency-heading = {"**"}Währung{"**"}
-gm-msg-inventory-empty = Das Inventar ist leer.
 
 # GM-Genehmigungen

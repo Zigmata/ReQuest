@@ -55,10 +55,7 @@ gm-modal-placeholder-inventory-modify =
     etc.
 
 # GM errors
-gm-error-forbidden-role-name = The name provided for the party role is forbidden.
-gm-error-role-already-exists = A role with that name already exists in this server.
 gm-error-no-quest-channel = A channel has not yet been designated for quest posts. Contact a server admin to configure the Quest Channel.
-gm-error-cannot-ping-announce = Could not ping announce role { $role } in channel { $channel }. Check channel and ReQuest role permissions with your server admin(s).
 gm-error-invalid-item-format = Invalid item format: "{ $item }". Each item must be on a new line, and in the format "Name: Quantity".
 gm-error-already-on-quest = You are already on this quest as { $characterName }.
 gm-error-no-active-character-long = You do not have an active character on this server. Use `/player` to register or activate a character.
@@ -118,8 +115,6 @@ gm-dm-role-not-found =
 
 # GM select menus
 gm-select-placeholder-party-member = Select a party member
-gm-modal-label-select-party-role = Party Role
-gm-modal-desc-select-party-role = Select a role to assign to the quest party.
 gm-select-option-no-role = None (No Party Role)
 
 # GM embeds
@@ -147,16 +142,10 @@ gm-label-quest-locked = (Locked)
 gm-label-quest-draft = (Draft)
 gm-title-manage-quest = Manage Quest - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Edit quest details such as title, description, and party size.
-gm-title-edit-quest = Edit Quest - { $questTitle }
 gm-label-field-not-set = Not set
 gm-label-description-not-set = Description not set
-gm-label-current-title = {"**"}Title:{"**"} { $value }
-gm-label-current-description = {"**"}Description{"**"}
-gm-label-current-restrictions = {"**"}Restrictions:{"**"} { $value }
 gm-label-current-party-size = {"**"}Max Party Size:{"**"} { $value }
 gm-label-current-party-role = {"**"}Party Role:{"**"} { $value }
-gm-label-current-image = {"**"}Thumbnail{"**"}
-gm-label-current-large-image = {"**"}Image{"**"}
 gm-error-party-size-positive = Party size must be a positive number.
 gm-error-party-size-too-small = Party size cannot be smaller than the current party ({ $currentSize } members).
 gm-desc-toggle-ready = Toggle ready state (Current: {"**"}{ $status }{"**"})
@@ -168,8 +157,6 @@ gm-desc-configure-rewards = Configure rewards for the selected quest.
 gm-desc-complete-quest = Complete a quest. Issues rewards, if any, to party members.
 gm-desc-remove-player = Remove a player from the quest roster and notify them.
 gm-desc-cancel-quest = Cancel the quest and delete it from the quest board.
-gm-desc-publish-quest = Publish this quest to the quest board.
-gm-desc-update-quest-post = Update the quest post on the quest board.
 gm-error-role-name-forbidden = The role name "{ $roleName }" is forbidden on this server.
 gm-error-role-name-exists = A role named "{ $roleName }" already exists on this server.
 gm-title-player-management = Game Master - Player Management
@@ -190,7 +177,5 @@ gm-label-no-players-in-roster = No players in quest roster
 gm-title-character-sheet = Character Sheet for { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Experience Points:{"**"}__
 gm-label-possessions = __{"**"}Possessions{"**"}__
-gm-label-currency-heading = {"**"}Currency{"**"}
-gm-msg-inventory-empty = Inventory is empty.
 
 # GM approvals

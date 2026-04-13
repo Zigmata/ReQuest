@@ -55,10 +55,7 @@ gm-modal-placeholder-inventory-modify =
     ฯลฯ
 
 # GM errors
-gm-error-forbidden-role-name = ชื่อที่ใช้สำหรับบทบาทปาร์ตี้ไม่ได้รับอนุญาต
-gm-error-role-already-exists = มีบทบาทที่ใช้ชื่อนี้อยู่แล้วในเซิร์ฟเวอร์นี้
 gm-error-no-quest-channel = ยังไม่ได้กำหนดช่องสำหรับโพสต์ quest ติดต่อผู้ดูแลเซิร์ฟเวอร์เพื่อตั้งค่าช่อง Quest
-gm-error-cannot-ping-announce = ไม่สามารถ ping บทบาทประกาศ { $role } ในช่อง { $channel } ได้ ตรวจสอบสิทธิ์ของช่องและบทบาท ReQuest กับผู้ดูแลเซิร์ฟเวอร์
 gm-error-invalid-item-format = รูปแบบไอเทมไม่ถูกต้อง: "{ $item }" แต่ละไอเทมต้องอยู่คนละบรรทัด ในรูปแบบ "ชื่อ: จำนวน"
 gm-error-already-on-quest = คุณอยู่ใน quest นี้แล้วในฐานะ { $characterName }
 gm-error-no-active-character-long = คุณไม่มีตัวละครที่ใช้งานอยู่บนเซิร์ฟเวอร์นี้ ใช้ `/player` เพื่อลงทะเบียนหรือเปิดใช้งานตัวละคร
@@ -122,8 +119,6 @@ gm-dm-role-not-found =
 
 # GM select menus
 gm-select-placeholder-party-member = เลือกสมาชิกปาร์ตี้
-gm-modal-label-select-party-role = บทบาทปาร์ตี้
-gm-modal-desc-select-party-role = เลือกบทบาทที่จะกำหนดให้ปาร์ตี้ของ quest
 gm-select-option-no-role = ไม่มี (ไม่มีบทบาทปาร์ตี้)
 
 # GM embeds
@@ -151,18 +146,10 @@ gm-label-quest-locked = (ล็อก)
 gm-label-quest-draft = (แบบร่าง)
 gm-title-manage-quest = จัดการ Quest - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = แก้ไขรายละเอียด quest เช่น ชื่อ รายละเอียด และขนาดปาร์ตี้
-gm-title-edit-quest = แก้ไข Quest - { $questTitle }
 gm-label-field-not-set = ไม่ได้ตั้งค่า
 gm-label-description-not-set = ไม่ได้ตั้งค่ารายละเอียด
-gm-label-current-title = {"**"}ชื่อ:{"**"} { $value }
-gm-label-current-description = {"**"}รายละเอียด{"**"}
-gm-label-current-restrictions = {"**"}ข้อจำกัด:{"**"} { $value }
 gm-label-current-party-size = {"**"}ขนาดปาร์ตี้สูงสุด:{"**"} { $value }
 gm-label-current-party-role = {"**"}บทบาทปาร์ตี้:{"**"} { $value }
-gm-label-current-image = {"**"}รูปขนาดย่อ{"**"}
-gm-label-current-large-image = {"**"}รูปภาพ{"**"}
-gm-desc-publish-quest = เผยแพร่ quest นี้ไปยังกระดาน quest
-gm-desc-update-quest-post = อัปเดตโพสต์ quest บนกระดาน quest
 gm-desc-toggle-ready = สลับสถานะพร้อม (ปัจจุบัน: {"**"}{ $status }{"**"})
     - ล็อกรายชื่อ quest และแจ้งสมาชิกปาร์ตี้ว่า quest จะเริ่มเร็วๆ นี้ หากตั้งค่าบทบาทไว้ จะถูกกำหนดให้สมาชิกปาร์ตี้เมื่อล็อก
     - ปลดล็อกรายชื่อเมื่อตั้งเป็นเปิด
@@ -190,7 +177,5 @@ gm-label-no-players-in-roster = ไม่มีผู้เล่นในรา
 gm-title-character-sheet = แผ่นตัวละครของ { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}แต้มประสบการณ์:{"**"}__
 gm-label-possessions = __{"**"}สิ่งของ{"**"}__
-gm-label-currency-heading = {"**"}สกุลเงิน{"**"}
-gm-msg-inventory-empty = คลังไอเทมว่างเปล่า
 
 # GM approvals

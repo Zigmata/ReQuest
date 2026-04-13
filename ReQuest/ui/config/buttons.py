@@ -28,8 +28,9 @@ logger = logging.getLogger(__name__)
 
 class QuestAnnounceRoleRemoveButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-clear')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-clear')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id='quest_announce_role_remove_button'
         )
@@ -52,10 +53,11 @@ class QuestAnnounceRoleRemoveButton(Button):
 
 
 class GMRoleRemoveViewButton(BaseViewButton):
-    def __init__(self, target_view_class):
+    def __init__(self, target_view_class, locale=None):
+        locale = locale or DEFAULT_LOCALE
         super().__init__(
             target_view_class=target_view_class,
-            label=t(DEFAULT_LOCALE, 'config-btn-remove-gm-roles')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-remove-gm-roles')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id='gm_role_remove_view_button'
         )
@@ -63,8 +65,9 @@ class GMRoleRemoveViewButton(BaseViewButton):
 
 class RemoveGMRoleButton(Button):
     def __init__(self, calling_view, role_name):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-remove')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'common-btn-remove')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id=f'remove_gm_role_{role_name}'[:DiscordLimits.COMPONENT_CUSTOM_ID]
         )
@@ -103,8 +106,9 @@ class RemoveGMRoleButton(Button):
 
 class QuestSummaryToggleButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-toggle-quest-summary')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-toggle-quest-summary')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id='quest_summary_toggle_button'
         )
@@ -156,8 +160,9 @@ class QuestSummaryToggleButton(Button):
 
 class PlayerExperienceToggleButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-toggle-player-experience')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-toggle-player-experience')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id='config_player_experience_toggle_button'
         )
@@ -199,8 +204,9 @@ class PlayerExperienceToggleButton(Button):
 
 class ToggleDoubleButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-toggle-display')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-toggle-display')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id='toggle_double_button'
         )
@@ -230,8 +236,9 @@ class ToggleDoubleButton(Button):
 
 class AddDenominationButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-add-denomination')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-add-denomination')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='add_denomination_button'
         )
@@ -250,8 +257,9 @@ class AddDenominationButton(Button):
 
 class RemoveDenominationButton(Button):
     def __init__(self, calling_view, denomination_name):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-remove')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'common-btn-remove')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id=f'remove_denomination_button_{denomination_name}'
         )
@@ -296,8 +304,9 @@ class RemoveDenominationButton(Button):
 
 class RenameDenominationButton(Button):
     def __init__(self, calling_view, denomination_name):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-rename')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'common-btn-rename')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id=f'rename_denomination_button_{denomination_name}'[:DiscordLimits.COMPONENT_CUSTOM_ID]
         )
@@ -319,8 +328,9 @@ class RenameDenominationButton(Button):
 
 class AddCurrencyButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-add-new-currency')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-add-new-currency')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='add_currency_button'
         )
@@ -334,9 +344,10 @@ class AddCurrencyButton(Button):
 
 
 class ManageCurrencyButton(Button):
-    def __init__(self, currency_name):
+    def __init__(self, currency_name, locale=None):
+        locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-manage')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'common-btn-manage')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id=f'manage_currency_button_{currency_name}'[:DiscordLimits.COMPONENT_CUSTOM_ID]
         )
@@ -354,8 +365,9 @@ class ManageCurrencyButton(Button):
 
 class RemoveCurrencyButton(Button):
     def __init__(self, calling_view, currency_name):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-remove-currency')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-remove-currency')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id='remove_currency_button'
         )
@@ -398,8 +410,9 @@ class RemoveCurrencyButton(Button):
 
 class RenameCurrencyButton(Button):
     def __init__(self, calling_view, currency_name):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-rename')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'common-btn-rename')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id='rename_currency_button'
         )
@@ -417,8 +430,9 @@ class RenameCurrencyButton(Button):
 
 class ClearChannelButton(Button):
     def __init__(self, calling_view, collection_name):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-clear')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-clear')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id=f'clear_{collection_name}_channel_button'
         )
@@ -443,8 +457,9 @@ class ClearChannelButton(Button):
 
 class ForbiddenRolesButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-forbidden-roles')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-forbidden-roles')[:DiscordLimits.BUTTON_LABEL],
             custom_id='forbidden_roles_button'
         )
         self.calling_view = calling_view
@@ -461,7 +476,9 @@ class ForbiddenRolesButton(Button):
             )
             if config_query and config_query[ConfigFields.FORBIDDEN_ROLES]:
                 current_roles = config_query[ConfigFields.FORBIDDEN_ROLES]
-            modal = modals.ForbiddenRolesModal(current_roles)
+            modal = modals.ForbiddenRolesModal(
+                current_roles, locale=getattr(self.calling_view, 'locale', None)
+            )
             await interaction.response.send_modal(modal)
         except Exception as e:
             await log_exception(e, interaction)
@@ -469,8 +486,9 @@ class ForbiddenRolesButton(Button):
 
 class PlayerBoardPurgeButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-purge-player-board')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-purge-player-board')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id='player_board_purge_button'
         )
@@ -486,8 +504,9 @@ class PlayerBoardPurgeButton(Button):
 
 class GMRewardsButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-add-modify-rewards')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-add-modify-rewards')[:DiscordLimits.BUTTON_LABEL],
             custom_id='gm_rewards_button'
         )
         self.calling_view = calling_view
@@ -502,8 +521,9 @@ class GMRewardsButton(Button):
 
 class AddShopWizardButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-add-shop-wizard')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-add-shop-wizard')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='add_shop_wizard_button'
         )
@@ -522,8 +542,9 @@ class AddShopWizardButton(Button):
 class TextChannelShopButton(Button):
     """Opens the existing text channel shop modal."""
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-select')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'common-btn-select')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id='text_channel_shop_button'
         )
@@ -541,8 +562,9 @@ class TextChannelShopButton(Button):
 class ForumThreadShopButton(Button):
     """Opens the forum thread shop setup view."""
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-select')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'common-btn-select')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id='forum_thread_shop_button'
         )
@@ -561,8 +583,9 @@ class ForumThreadShopButton(Button):
 class CreateNewForumThreadButton(Button):
     """Opens modal to create a new forum thread for the shop."""
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-continue')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'common-btn-continue')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='create_new_forum_thread_button'
         )
@@ -570,9 +593,10 @@ class CreateNewForumThreadButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
             if not self.calling_view.selected_forum:
                 await interaction.response.send_message(
-                    t(DEFAULT_LOCALE, 'config-error-select-forum-first'),
+                    t(locale, 'config-error-select-forum-first'),
                     ephemeral=True
                 )
                 return
@@ -587,8 +611,9 @@ class CreateNewForumThreadButton(Button):
 class UseExistingThreadButton(Button):
     """Opens modal to configure shop in an existing forum thread."""
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-continue')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'common-btn-continue')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='use_existing_thread_button'
         )
@@ -596,9 +621,10 @@ class UseExistingThreadButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
             if not self.calling_view.selected_thread:
                 await interaction.response.send_message(
-                    t(DEFAULT_LOCALE, 'config-error-select-thread-first'),
+                    t(locale, 'config-error-select-thread-first'),
                     ephemeral=True
                 )
                 return
@@ -617,8 +643,9 @@ class UseExistingThreadButton(Button):
 
 class AddShopJSONButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-add-shop-json')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-add-shop-json')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='add_shop_json_button',
             row=2
@@ -653,8 +680,9 @@ class ManageShopNavButton(Button):
 
 class EditShopButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-edit-shop-wizard')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-edit-shop-wizard')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id='edit_shop_wizard_button'
         )
@@ -662,6 +690,7 @@ class EditShopButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
             bot = interaction.client
             query = await get_cached_data(
                 bot=bot,
@@ -673,7 +702,7 @@ class EditShopButton(Button):
 
             if not shop_data:
                 await interaction.response.send_message(
-                    t(DEFAULT_LOCALE, 'config-error-shop-data-not-found'), ephemeral=True)
+                    t(locale, 'config-error-shop-data-not-found'), ephemeral=True)
                 return
 
             from ReQuest.ui.config.views import EditShopView
@@ -687,8 +716,9 @@ class EditShopButton(Button):
 
 class RemoveShopButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-remove-shop')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-remove-shop')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id='remove_shop_button'
         )
@@ -759,8 +789,9 @@ class RemoveShopButton(Button):
 
 class EditShopItemButton(Button):
     def __init__(self, item: dict, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-edit')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'common-btn-edit')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id=f"edit_shop_item_{item[CommonFields.NAME]}"
         )
@@ -780,8 +811,9 @@ class EditShopItemButton(Button):
 
 class DeleteShopItemButton(Button):
     def __init__(self, item: dict, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-delete')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'common-btn-delete')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id=f"delete_shop_item_{item[CommonFields.NAME]}"
         )
@@ -816,8 +848,9 @@ class DeleteShopItemButton(Button):
 
 class AddItemButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-add-item')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-add-item')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='add_shop_item_button'
         )
@@ -832,8 +865,9 @@ class AddItemButton(Button):
 
 class EditShopDetailsButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-edit-shop-details')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-edit-shop-details')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id='edit_shop_details_button'
         )
@@ -852,15 +886,17 @@ class EditShopDetailsButton(Button):
 
 
 class ExampleShopJSONButton(Button):
-    def __init__(self):
+    def __init__(self, locale=None):
+        locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-example-json')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-example-json')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id='example_shop_json_button'
         )
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
             example = {
                 "shopName": "Example Shop",
                 "shopKeeper": "Shopkeeper Name",
@@ -912,7 +948,7 @@ class ExampleShopJSONButton(Button):
             shop_file = discord.File(json_bytes, filename='example_shop.json')
 
             await interaction.response.send_message(
-                t(DEFAULT_LOCALE, 'config-msg-example-json'),
+                t(locale, 'config-msg-example-json'),
                 file=shop_file,
                 ephemeral=True
             )
@@ -922,8 +958,9 @@ class ExampleShopJSONButton(Button):
 
 class DownloadShopJSONButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-download-json')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-download-json')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id='download_shop_json_button'
         )
@@ -931,6 +968,7 @@ class DownloadShopJSONButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
             bot = interaction.client
             guild_id = interaction.guild_id
             channel_id = self.calling_view.selected_channel_id
@@ -955,7 +993,7 @@ class DownloadShopJSONButton(Button):
             shop_file = discord.File(json_bytes, filename=file_name)
 
             await interaction.response.send_message(
-                t(DEFAULT_LOCALE, 'config-msg-shop-json-download', shopName=shop_name),
+                t(locale, 'config-msg-shop-json-download', shopName=shop_name),
                 file=shop_file,
                 ephemeral=True
             )
@@ -966,8 +1004,9 @@ class DownloadShopJSONButton(Button):
 
 class UpdateShopJSONButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-edit-shop-json')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-edit-shop-json')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id='edit_shop_json_button'
         )
@@ -984,8 +1023,9 @@ class UpdateShopJSONButton(Button):
 
 class ScanServerButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-scan-server-configs')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-scan-server-configs')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='scan_server_button'
         )
@@ -1001,8 +1041,9 @@ class ScanServerButton(Button):
 
 class AddNewCharacterShopItemButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-add-item')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-add-item')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='add_new_character_shop_item_button'
         )
@@ -1018,8 +1059,9 @@ class AddNewCharacterShopItemButton(Button):
 
 class EditNewCharacterShopItemButton(Button):
     def __init__(self, item: dict, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-edit')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'common-btn-edit')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id=f"edit_new_character_shop_item_{item[CommonFields.NAME]}"
         )
@@ -1037,8 +1079,9 @@ class EditNewCharacterShopItemButton(Button):
 
 class DeleteNewCharacterShopItemButton(Button):
     def __init__(self, item: dict, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-delete')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'common-btn-delete')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id=f"delete_new_character_shop_item_{item[CommonFields.NAME]}"
         )
@@ -1069,8 +1112,9 @@ class DeleteNewCharacterShopItemButton(Button):
 
 class NewCharacterShopJSONButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-upload-json')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-upload-json')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='upload_new_character_shop_json_button',
             row=1
@@ -1086,8 +1130,9 @@ class NewCharacterShopJSONButton(Button):
 
 class DownloadNewCharacterShopJSONButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-download-json')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-download-json')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id='download_new_character_shop_json_button',
             row=1
@@ -1096,6 +1141,7 @@ class DownloadNewCharacterShopJSONButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
             bot = interaction.client
             guild_id = interaction.guild_id
 
@@ -1115,7 +1161,7 @@ class DownloadNewCharacterShopJSONButton(Button):
             shop_file = discord.File(json_bytes, filename=file_name)
 
             await interaction.response.send_message(
-                t(DEFAULT_LOCALE, 'config-msg-new-char-shop-json-download'),
+                t(locale, 'config-msg-new-char-shop-json-download'),
                 file=shop_file,
                 ephemeral=True
             )
@@ -1124,15 +1170,17 @@ class DownloadNewCharacterShopJSONButton(Button):
 
 
 class ExampleNewCharacterShopJSONButton(Button):
-    def __init__(self):
+    def __init__(self, locale=None):
+        locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-example-json')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-example-json')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id='example_new_char_shop_json_button'
         )
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
             example = {
                 "shopStock": [
                     {
@@ -1169,7 +1217,7 @@ class ExampleNewCharacterShopJSONButton(Button):
             shop_file = discord.File(json_bytes, filename='example_new_character_shop.json')
 
             await interaction.response.send_message(
-                t(DEFAULT_LOCALE, 'config-msg-example-json'),
+                t(locale, 'config-msg-example-json'),
                 file=shop_file,
                 ephemeral=True
             )
@@ -1179,8 +1227,9 @@ class ExampleNewCharacterShopJSONButton(Button):
 
 class ClearNewCharacterShopButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-clear-shop')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-clear-shop')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id='clear_new_character_shop_button'
         )
@@ -1221,8 +1270,9 @@ class ClearNewCharacterShopButton(Button):
 
 class ConfigNewCharacterWealthButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-configure-new-character-wealth')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-configure-new-character-wealth')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id='config_new_character_wealth_button'
         )
@@ -1254,8 +1304,9 @@ class ConfigNewCharacterWealthButton(Button):
 
 class AddStaticKitButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-create-new-kit')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-create-new-kit')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='add_static_kit_button'
         )
@@ -1269,9 +1320,10 @@ class AddStaticKitButton(Button):
 
 
 class EditStaticKitButton(Button):
-    def __init__(self, kit_id, kit_data):
+    def __init__(self, kit_id, kit_data, locale=None):
+        locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-edit')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'common-btn-edit')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id=f'edit_static_kit_button_{kit_id}'
         )
@@ -1299,9 +1351,10 @@ class EditStaticKitButton(Button):
 
 
 class RemoveStaticKitButton(Button):
-    def __init__(self, kit_id, kit_name):
+    def __init__(self, kit_id, kit_name, locale=None):
+        locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-delete-kit')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-delete-kit')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id=f'remove_static_kit_button_{kit_id}'
         )
@@ -1343,8 +1396,9 @@ class RemoveStaticKitButton(Button):
 
 class AddKitItemButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-add-item')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-add-item')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='add_kit_item_btn'
         )
@@ -1359,8 +1413,9 @@ class AddKitItemButton(Button):
 
 class EditKitItemButton(Button):
     def __init__(self, calling_view, item, index):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-edit')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'common-btn-edit')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id=f'edit_kit_item_{index}'
         )
@@ -1379,8 +1434,9 @@ class EditKitItemButton(Button):
 
 class DeleteKitItemButton(Button):
     def __init__(self, calling_view, index):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-delete')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'common-btn-delete')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id=f'del_kit_item_{index}'
         )
@@ -1421,8 +1477,9 @@ class DeleteKitItemButton(Button):
 
 class AddKitCurrencyButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-add-currency')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-add-currency')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.success,
             custom_id='add_kit_curr_btn'
         )
@@ -1437,8 +1494,9 @@ class AddKitCurrencyButton(Button):
 
 class DeleteKitCurrencyButton(Button):
     def __init__(self, calling_view, currency_name):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'common-btn-delete')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'common-btn-delete')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id=f'del_kit_curr_{currency_name}'
         )
@@ -1470,8 +1528,9 @@ class DeleteKitCurrencyButton(Button):
 
 class RoleplayToggleEnableButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-toggle-rp-rewards')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-toggle-rp-rewards')[:DiscordLimits.BUTTON_LABEL],
             custom_id='rp_toggle_button'
         )
         self.calling_view = calling_view
@@ -1495,8 +1554,9 @@ class RoleplayToggleEnableButton(Button):
 
 class RoleplayClearChannelsButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-clear-channels')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-clear-channels')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id='rp_clear_channels_button'
         )
@@ -1520,8 +1580,9 @@ class RoleplayClearChannelsButton(Button):
 
 class RoleplaySettingsButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-edit-settings')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-edit-settings')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id='rp_settings_button'
         )
@@ -1536,8 +1597,9 @@ class RoleplaySettingsButton(Button):
 
 class RoleplayRewardsButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-configure-rewards')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-configure-rewards')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id='rp_rewards_button')
         self.calling_view = calling_view
@@ -1553,8 +1615,9 @@ class RoleplayRewardsButton(Button):
 
 class ConfigStockLimitsButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-stock-limits')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-stock-limits')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id='config_stock_limits_button'
         )
@@ -1576,10 +1639,11 @@ class ConfigStockLimitsButton(Button):
 
 class SetItemStockButton(Button):
     def __init__(self, item: dict, calling_view, current_stock: int | None = None):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         # Determine label based on whether limit exists
         has_limit = item.get(ShopFields.MAX_STOCK) is not None
-        label = (t(DEFAULT_LOCALE, 'config-btn-edit-limit') if has_limit
-                 else t(DEFAULT_LOCALE, 'config-btn-set-limit'))[:DiscordLimits.BUTTON_LABEL]
+        label = (t(locale, 'config-btn-edit-limit') if has_limit
+                 else t(locale, 'config-btn-set-limit'))[:DiscordLimits.BUTTON_LABEL]
 
         super().__init__(
             label=label,
@@ -1606,8 +1670,9 @@ class SetItemStockButton(Button):
 
 class RemoveItemStockLimitButton(Button):
     def __init__(self, item: dict, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-remove-limit')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-remove-limit')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id=f"remove_stock_limit_{item[CommonFields.NAME]}"
         )
@@ -1672,8 +1737,9 @@ class RemoveItemStockLimitButton(Button):
 
 class RestockScheduleButton(Button):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-configure-restock-schedule')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-configure-restock-schedule')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id='restock_schedule_button'
         )
@@ -1692,9 +1758,10 @@ class RestockScheduleButton(Button):
 
 
 class BackToEditShopButton(Button):
-    def __init__(self, channel_id: str, shop_data: dict):
+    def __init__(self, channel_id: str, shop_data: dict, locale=None):
+        locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-back-to-shop-editor')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-back-to-shop-editor')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.secondary,
             custom_id='back_to_edit_shop_button'
         )
@@ -1713,9 +1780,10 @@ class BackToEditShopButton(Button):
 
 
 class ManageGMQuestRolesButton(Button):
-    def __init__(self, member):
+    def __init__(self, member, locale=None):
+        locale = locale or DEFAULT_LOCALE
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-manage-gm-quest-roles')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-manage-gm-quest-roles')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.primary,
             custom_id=f'manage_gm_quest_roles_{member.id}'
         )
@@ -1733,8 +1801,9 @@ class ManageGMQuestRolesButton(Button):
 
 class RemoveGMQuestRoleButton(Button):
     def __init__(self, calling_view, member_id, role_id, role_name, gm_name):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            label=t(DEFAULT_LOCALE, 'config-btn-clear')[:DiscordLimits.BUTTON_LABEL],
+            label=t(locale, 'config-btn-clear')[:DiscordLimits.BUTTON_LABEL],
             style=ButtonStyle.danger,
             custom_id=f'remove_gm_quest_role_{member_id}_{role_id}'
         )

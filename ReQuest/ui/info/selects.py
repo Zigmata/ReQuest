@@ -156,8 +156,9 @@ def get_config_locale_page(locale_code):
 
 class LanguageSelect(Select):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
-            placeholder=t(DEFAULT_LOCALE, 'info-language-select-placeholder'),
+            placeholder=t(locale, 'info-language-select-placeholder'),
             options=[],
             custom_id='language_select'
         )

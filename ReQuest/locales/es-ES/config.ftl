@@ -195,8 +195,6 @@ config-error-amount-invalid-short = Cantidad inválida '{ $amount }' para la mon
 config-error-item-exists-new-char = Ya existe un objeto llamado { $itemName } en la tienda de nuevo personaje.
 config-modal-title-upload-new-char-json = Subir tienda de nuevo personaje (JSON)
 config-error-no-json-uploaded-short = No se ha subido ningún archivo JSON.
-config-error-json-must-have-shopstock = El JSON debe contener un array 'shopStock'.
-config-error-items-must-have-name-price = Todos los objetos deben tener 'name' y 'price'.
 config-modal-title-set-wealth = Establecer riqueza de nuevo personaje
 config-modal-label-amount = Cantidad
 config-modal-placeholder-amount = Introducid la cantidad de esta moneda.
@@ -336,11 +334,9 @@ config-title-wizard = {"**"}Configuración del servidor - Asistente{"**"}
 config-wizard-intro =
     {"**"}¡Bienvenidos al asistente de configuración de ReQuest!{"**"}
 
-    Este asistente os ayudará a aseguraros de que vuestro servidor esté correctamente configurado para usar las funciones de ReQuest.
-    Escaneará vuestros ajustes actuales y proporcionará recomendaciones para cualquier ajuste necesario.
+    Este asistente os ayudará a aseguraros de que vuestro servidor esté correctamente configurado para usar las funciones de ReQuest. Escaneará vuestros ajustes actuales y proporcionará recomendaciones para cualquier ajuste necesario.
 
-    Usad el botón "Iniciar escaneo" a continuación para comenzar el proceso de validación. Una vez completado el escaneo,
-    recibiréis un informe detallado de la configuración de vuestro servidor junto con los cambios recomendados.
+    Usad el botón "Iniciar escaneo" a continuación para comenzar el proceso de validación. Una vez completado el escaneo, recibiréis un informe detallado de la configuración de vuestro servidor junto con los cambios recomendados.
 config-wizard-bot-permissions-header = __{"**"}Permisos globales del bot{"**"}__
 config-wizard-bot-permissions-desc = Esta sección verifica que ReQuest tiene los permisos correctos para funcionar correctamente.
 config-wizard-bot-role = Rol del bot: { $roleMention }
@@ -444,7 +440,27 @@ config-wizard-gm-rewards-disabled = {"**"}Estado:{"**"} Desactivado
 config-wizard-gm-rewards-enabled = {"**"}Estado:{"**"} Activado
 config-wizard-gm-rewards-experience = - Experiencia: { $xp }
 config-wizard-gm-rewards-items = - Objetos:
-config-wizard-unnamed-shop = Tienda sin nombre
+# Asistente - Idioma del servidor (Página 1)
+config-wizard-server-language-desc =
+    Este es el idioma que ReQuest usará para todos los mensajes públicos, como publicaciones de quests, mensajes de reabastecimiento de tiendas y registros de transacciones.
+config-wizard-server-language = {"**"}Idioma del servidor:{"**"} { $language }
+config-wizard-server-language-default = Predeterminado (inglés)
+
+# Asistente - Info de reabastecimiento de tienda
+config-wizard-shop-restock-not-scheduled = ℹ️ Reabastecimiento no programado
+
+# Asistente - Configuración de quests (Página 5)
+config-wizard-quest-header = __{"**"}Configuración de quests{"**"}__
+config-wizard-quest-header-desc =
+    Esta sección proporciona una descripción general de las configuraciones relacionadas con quests.
+config-wizard-quest-role-mode = - Modo de roles de quest: { $mode }
+config-wizard-quest-roles-label = {"**"}Roles de quest de GM{"**"}
+config-wizard-quest-roles-count = - Roles asignados a GMs: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Todos los roles OK
+config-wizard-quest-roles-assigned-to = {"    "}Asignado a: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ ID de rol { $roleId }: No encontrado/Eliminado del servidor
+config-wizard-quest-roles-no-assignments = - ℹ️ No hay roles de quest asignados
+
 config-title-roles = {"**"}Configuración del servidor - Roles{"**"}
 config-label-announcement-role = {"**"}Rol de anuncio:{"**"} { $status }
 config-desc-announcement-role = Este rol se menciona cuando se publica una quest.
@@ -679,9 +695,6 @@ config-select-placeholder-add-quest-role = Asignar rol(es) del servidor a este G
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}Configuración del servidor - Roles de quest{"**"}
-config-label-quest-roles = Roles de quest
-config-desc-quest-roles =
-    Configurad cómo se gestionan los roles del grupo durante las quests.
 
 config-label-quest-role-mode-disabled = {"**"}Modo de roles de quest:{"**"} Desactivado
     No se crean ni asignan roles durante las quests.

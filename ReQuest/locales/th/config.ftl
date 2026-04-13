@@ -224,8 +224,6 @@ config-error-item-exists-new-char = ไอเทมชื่อ { $itemName } �
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = อัปโหลดร้านค้าตัวละครใหม่ (JSON)
 config-error-no-json-uploaded-short = ไม่มีไฟล์ JSON ที่อัปโหลด
-config-error-json-must-have-shopstock = JSON ต้องมีอาร์เรย์ 'shopStock'
-config-error-items-must-have-name-price = ไอเทมทั้งหมดต้องมี 'name' และ 'price'
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = ตั้งค่าทรัพย์สินตัวละครใหม่
@@ -409,11 +407,9 @@ config-title-wizard = {"**"}การตั้งค่าเซิร์ฟเ�
 config-wizard-intro =
     {"**"}ยินดีต้อนรับสู่วิซาร์ดการตั้งค่า ReQuest!{"**"}
 
-    วิซาร์ดนี้จะช่วยให้คุณมั่นใจว่าเซิร์ฟเวอร์ของคุณได้รับการตั้งค่าอย่างถูกต้องเพื่อใช้ฟีเจอร์ของ ReQuest
-    วิซาร์ดจะสแกนการตั้งค่าปัจจุบันของคุณและให้คำแนะนำสำหรับการปรับเปลี่ยนที่จำเป็น
+    วิซาร์ดนี้จะช่วยให้คุณมั่นใจว่าเซิร์ฟเวอร์ของคุณได้รับการตั้งค่าอย่างถูกต้องเพื่อใช้ฟีเจอร์ของ ReQuest วิซาร์ดจะสแกนการตั้งค่าปัจจุบันของคุณและให้คำแนะนำสำหรับการปรับเปลี่ยนที่จำเป็น
 
-    ใช้ปุ่ม "เริ่มสแกน" ด้านล่างเพื่อเริ่มกระบวนการตรวจสอบ เมื่อสแกนเสร็จ
-    คุณจะได้รับรายงานละเอียดเกี่ยวกับการตั้งค่าเซิร์ฟเวอร์พร้อมคำแนะนำในการเปลี่ยนแปลง
+    ใช้ปุ่ม "เริ่มสแกน" ด้านล่างเพื่อเริ่มกระบวนการตรวจสอบ เมื่อสแกนเสร็จ คุณจะได้รับรายงานละเอียดเกี่ยวกับการตั้งค่าเซิร์ฟเวอร์พร้อมคำแนะนำในการเปลี่ยนแปลง
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}สิทธิ์ทั่วไปของบอท{"**"}__
@@ -537,7 +533,27 @@ config-wizard-gm-rewards-disabled = {"**"}สถานะ:{"**"} ปิดใช
 config-wizard-gm-rewards-enabled = {"**"}สถานะ:{"**"} เปิดใช้งาน
 config-wizard-gm-rewards-experience = - ประสบการณ์: { $xp }
 config-wizard-gm-rewards-items = - ไอเทม:
-config-wizard-unnamed-shop = ร้านค้าไม่มีชื่อ
+
+# Wizard - ภาษาเซิร์ฟเวอร์ (หน้า 1)
+config-wizard-server-language-desc =
+    นี่คือภาษาที่ ReQuest จะใช้สำหรับข้อความสาธารณะทั้งหมด เช่น โพสต์เควสต์ ข้อความเติมสต็อกร้านค้า และบันทึกธุรกรรม
+config-wizard-server-language = {"**"}ภาษาเซิร์ฟเวอร์:{"**"} { $language }
+config-wizard-server-language-default = ค่าเริ่มต้น (อังกฤษ)
+
+# Wizard - ข้อมูลการเติมสต็อกร้านค้า
+config-wizard-shop-restock-not-scheduled = ℹ️ ยังไม่ได้กำหนดการเติมสต็อก
+
+# Wizard - การตั้งค่าเควสต์ (หน้า 5)
+config-wizard-quest-header = __{"**"}การตั้งค่าเควสต์{"**"}__
+config-wizard-quest-header-desc =
+    ส่วนนี้ให้ภาพรวมของการกำหนดค่าที่เกี่ยวข้องกับเควสต์
+config-wizard-quest-role-mode = - โหมดบทบาทเควสต์: { $mode }
+config-wizard-quest-roles-label = {"**"}บทบาทเควสต์ GM{"**"}
+config-wizard-quest-roles-count = - บทบาทที่กำหนดให้ GM: { $count }
+config-wizard-quest-roles-all-ok = - ✅ บทบาททั้งหมดปกติ
+config-wizard-quest-roles-assigned-to = {"    "}กำหนดให้: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ ID บทบาท { $roleId }: ไม่พบ/ถูกลบจากเซิร์ฟเวอร์
+config-wizard-quest-roles-no-assignments = - ℹ️ ไม่มีบทบาทเควสต์ที่กำหนด
 
 ## Roles View
 config-title-roles = {"**"}การตั้งค่าเซิร์ฟเวอร์ - บทบาท{"**"}
@@ -833,9 +849,6 @@ config-select-placeholder-add-quest-role = กำหนดบทบาทเซ�
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}การตั้งค่าเซิร์ฟเวอร์ - บทบาท Quest{"**"}
-config-label-quest-roles = บทบาท Quest
-config-desc-quest-roles =
-    ตั้งค่าวิธีจัดการบทบาทปาร์ตี้ระหว่าง quest
 
 config-label-quest-role-mode-disabled = {"**"}โหมดบทบาท Quest:{"**"} ปิดใช้งาน
     ไม่มีการสร้างหรือกำหนดบทบาทระหว่าง quest

@@ -12,7 +12,6 @@ common-btn-select = Seleccionar
 common-btn-manage = Gestionar
 common-btn-rename = Renombrar
 common-btn-continue = Continuar
-common-btn-cancel = Cancelar
 common-btn-enable = Activar
 common-btn-disable = Desactivar
 # Paginación
@@ -34,7 +33,6 @@ common-label-none = Ninguno
 common-label-unknown = Desconocido
 common-label-locked = (BLOQUEADO)
 common-label-loose-items = Objetos sueltos
-common-label-and-more = . . . y { $remaining } más.
 common-label-currency = Moneda
 common-label-inventory-empty = El inventario está vacío.
 # Campos de embed compartidos

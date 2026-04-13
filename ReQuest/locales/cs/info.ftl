@@ -102,4 +102,3 @@ info-language-desc-sv-se = Nastavit jazyk na švédštinu
 info-language-desc-th = Nastavit jazyk na thajštinu
 info-language-desc-tr = Nastavit jazyk na turečtinu
 info-language-desc-vi = Nastavit jazyk na vietnamštinu
-info-language-updated = Jazyk byl úspěšně aktualizován.

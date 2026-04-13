@@ -102,4 +102,3 @@ info-language-desc-sv-se = Ορισμός γλώσσας σε Σουηδικά
 info-language-desc-th = Ορισμός γλώσσας σε Ταϊλανδικά
 info-language-desc-tr = Ορισμός γλώσσας σε Τουρκικά
 info-language-desc-vi = Ορισμός γλώσσας σε Βιετναμικά
-info-language-updated = Η γλώσσα ενημερώθηκε επιτυχώς.

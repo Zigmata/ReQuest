@@ -2,8 +2,6 @@
 
 # --- 코그 ---
 
-player-cmd-name = 거래
-player-cmd-desc = 플레이어 메뉴
 
 # --- 버튼 ---
 
@@ -224,8 +222,6 @@ player-label-empty-kit = {"*"}빈 키트{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}선택 확인: { $kitName }{"**"}
-player-label-items-heading = {"**"}아이템:{"**"}
-player-label-currency-heading = {"**"}화폐:{"**"}
 player-msg-kit-empty = 이 키트가 비어 있습니다.
 
 # NewCharacterComplexItemPurchaseView
@@ -291,8 +287,6 @@ player-error-qty-only-have = 이 아이템은 { $maxQuantity }개만 보유하�
 player-error-invalid-format = 잘못된 형식: "{ $line }". <이름>: <수량>을 사용하세요.
 player-error-empty-name = 줄 "{ $line }"에서 아이템 이름이 비어 있습니다.
 player-error-invalid-quantity = "{ $name }"의 잘못된 수량: "{ $quantity }". 양의 정수여야 합니다.
-player-error-input-errors-header = 인벤토리 입력 오류:
-player-msg-no-valid-items = 유효한 아이템이 제공되지 않았습니다. 빈 인벤토리로 초기화합니다.
 
 # Validation error view
 player-validation-error-title = 입력 오류
@@ -302,11 +296,8 @@ player-validation-btn-retry = 다시 시도
 player-error-enter-valid-number = 유효한 양수를 입력해 주세요.
 
 # 제출 임베드 (승인 대기열)
-player-embed-title-approval = 인벤토리 승인: { $characterName }
-player-embed-desc-submitted-by = { $userMention }이(가) 제출함
 player-embed-field-items = 아이템
 player-embed-field-currency-received = 화폐
-player-embed-footer-submission-id = 제출 ID: { $submissionId }
 player-label-approval-thread = 승인: { $characterName }
 player-embed-title-submission-sent = 인벤토리 제출 완료
 player-embed-desc-submission-sent =

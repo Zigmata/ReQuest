@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Bytte
-player-cmd-desc = Spillermenyer
 
 # --- Buttons ---
 
@@ -224,8 +222,6 @@ player-label-empty-kit = {"*"}Tomt sett{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Bekreft valg: { $kitName }{"**"}
-player-label-items-heading = {"**"}Gjenstander:{"**"}
-player-label-currency-heading = {"**"}Valuta:{"**"}
 player-msg-kit-empty = Dette settet er tomt.
 
 # NewCharacterComplexItemPurchaseView
@@ -291,8 +287,6 @@ player-error-qty-only-have = Du har bare { $maxQuantity } av denne gjenstanden.
 player-error-invalid-format = Ugyldig format: "{ $line }". Bruk <navn>: <antall>.
 player-error-empty-name = Gjenstandsnavn kan ikke være tomt i linjen: "{ $line }".
 player-error-invalid-quantity = Ugyldig antall for "{ $name }": "{ $quantity }". Må være et positivt heltall.
-player-error-input-errors-header = Feil i inventarinntasting:
-player-msg-no-valid-items = Ingen gyldige gjenstander oppgitt. Initialiserer med tomt inventar.
 
 # Validation error view
 player-validation-error-title = Inndatafeil
@@ -302,11 +296,8 @@ player-validation-btn-retry = Prøv igjen
 player-error-enter-valid-number = Vennligst skriv inn et gyldig positivt tall.
 
 # Submission embeds (approval queue)
-player-embed-title-approval = Inventargodkjenning: { $characterName }
-player-embed-desc-submitted-by = Sendt inn av { $userMention }
 player-embed-field-items = Gjenstander
 player-embed-field-currency-received = Valuta
-player-embed-footer-submission-id = Innsendings-ID: { $submissionId }
 player-label-approval-thread = Godkjenning: { $characterName }
 player-embed-title-submission-sent = Inventarinnsending sendt
 player-embed-desc-submission-sent =

@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = トレード
-player-cmd-desc = プレイヤーメニュー
 
 # --- Buttons ---
 
@@ -224,8 +222,6 @@ player-label-empty-kit = {"*"}空のキット{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}選択の確認: { $kitName }{"**"}
-player-label-items-heading = {"**"}アイテム:{"**"}
-player-label-currency-heading = {"**"}通貨:{"**"}
 player-msg-kit-empty = このキットは空です。
 
 # NewCharacterComplexItemPurchaseView
@@ -291,8 +287,6 @@ player-error-qty-only-have = このアイテムは { $maxQuantity } 個しか所
 player-error-invalid-format = 無効な形式：「{ $line }」。<名前>: <数量> の形式で入力してください。
 player-error-empty-name = 行「{ $line }」でアイテム名が空です。
 player-error-invalid-quantity = 「{ $name }」の数量「{ $quantity }」が無効です。正の整数でなければなりません。
-player-error-input-errors-header = インベントリ入力のエラー:
-player-msg-no-valid-items = 有効なアイテムが入力されていません。空のインベントリで初期化します。
 
 # Validation error view
 player-validation-error-title = 入力エラー
@@ -302,11 +296,8 @@ player-validation-btn-retry = もう一度
 player-error-enter-valid-number = 有効な正の数値を入力してください。
 
 # Submission embeds (approval queue)
-player-embed-title-approval = インベントリ承認: { $characterName }
-player-embed-desc-submitted-by = 申請者: { $userMention }
 player-embed-field-items = アイテム
 player-embed-field-currency-received = 通貨
-player-embed-footer-submission-id = 申請 ID: { $submissionId }
 player-label-approval-thread = 承認: { $characterName }
 player-embed-title-submission-sent = インベントリ申請送信済み
 player-embed-desc-submission-sent =

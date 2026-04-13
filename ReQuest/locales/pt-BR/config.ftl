@@ -224,8 +224,6 @@ config-error-item-exists-new-char = Um item chamado { $itemName } já existe na 
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Enviar Loja de Novo Personagem (JSON)
 config-error-no-json-uploaded-short = Nenhum arquivo JSON enviado.
-config-error-json-must-have-shopstock = O JSON deve conter um array 'shopStock'.
-config-error-items-must-have-name-price = Todos os itens devem ter 'name' e 'price'.
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Definir Riqueza de Novo Personagem
@@ -409,11 +407,9 @@ config-title-wizard = {"**"}Configuração do Servidor - Assistente{"**"}
 config-wizard-intro =
     {"**"}Bem-vindo ao Assistente de Configuração do ReQuest!{"**"}
 
-    Este assistente ajudará você a garantir que seu servidor esteja configurado corretamente para usar os recursos do ReQuest.
-    Ele analisará suas configurações atuais e fornecerá recomendações para quaisquer ajustes necessários.
+    Este assistente ajudará você a garantir que seu servidor esteja configurado corretamente para usar os recursos do ReQuest. Ele analisará suas configurações atuais e fornecerá recomendações para quaisquer ajustes necessários.
 
-    Use o botão "Iniciar Análise" abaixo para começar o processo de validação. Quando a análise for concluída,
-    você receberá um relatório detalhado da configuração do seu servidor junto com quaisquer alterações recomendadas.
+    Use o botão "Iniciar Análise" abaixo para começar o processo de validação. Quando a análise for concluída, você receberá um relatório detalhado da configuração do seu servidor junto com quaisquer alterações recomendadas.
 
 # Assistente - Validação de Permissões do Bot
 config-wizard-bot-permissions-header = __{"**"}Permissões Globais do Bot{"**"}__
@@ -537,7 +533,27 @@ config-wizard-gm-rewards-disabled = {"**"}Status:{"**"} Desativado
 config-wizard-gm-rewards-enabled = {"**"}Status:{"**"} Ativado
 config-wizard-gm-rewards-experience = - Experiência: { $xp }
 config-wizard-gm-rewards-items = - Itens:
-config-wizard-unnamed-shop = Loja Sem Nome
+
+# Assistente - Idioma do Servidor (Página 1)
+config-wizard-server-language-desc =
+    Este é o idioma que o ReQuest usará para todas as mensagens públicas, como publicações de quests, mensagens de reabastecimento de loja e registros de transações.
+config-wizard-server-language = {"**"}Idioma do Servidor:{"**"} { $language }
+config-wizard-server-language-default = Padrão (Inglês)
+
+# Assistente - Info de Reabastecimento da Loja
+config-wizard-shop-restock-not-scheduled = ℹ️ Reabastecimento Não Agendado
+
+# Assistente - Configurações de Quest (Página 5)
+config-wizard-quest-header = __{"**"}Configurações de Quest{"**"}__
+config-wizard-quest-header-desc =
+    Esta seção fornece uma visão geral das configurações relacionadas a quests.
+config-wizard-quest-role-mode = - Modo de Cargos de Quest: { $mode }
+config-wizard-quest-roles-label = {"**"}Cargos de Quest do Mestre{"**"}
+config-wizard-quest-roles-count = - Cargos Atribuídos a Mestres: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Todos os Cargos OK
+config-wizard-quest-roles-assigned-to = {"    "}Atribuído a: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ ID do Cargo { $roleId }: Não Encontrado/Excluído do Servidor
+config-wizard-quest-roles-no-assignments = - ℹ️ Nenhum Cargo de Quest Atribuído
 
 ## View de Cargos
 config-title-roles = {"**"}Configuração do Servidor - Cargos{"**"}
@@ -832,9 +848,6 @@ config-select-placeholder-add-quest-role = Atribuir cargo(s) do servidor a este 
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}Configuração do Servidor - Cargos de Quest{"**"}
-config-label-quest-roles = Cargos de Quest
-config-desc-quest-roles =
-    Configure como os cargos de grupo são gerenciados durante as quests.
 
 config-label-quest-role-mode-disabled = {"**"}Modo de Cargo de Quest:{"**"} Desativado
     Nenhum cargo é criado ou atribuído durante as quests.

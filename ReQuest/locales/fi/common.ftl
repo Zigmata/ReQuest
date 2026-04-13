@@ -13,7 +13,6 @@ common-btn-select = Valitse
 common-btn-manage = Hallinnoi
 common-btn-rename = Nimeä uudelleen
 common-btn-continue = Jatka
-common-btn-cancel = Peruuta
 common-btn-enable = Ota käyttöön
 common-btn-disable = Poista käytöstä
 
@@ -39,7 +38,6 @@ common-label-none = Ei mitään
 common-label-unknown = Tuntematon
 common-label-locked = (LUKITTU)
 common-label-loose-items = Irtonaiset esineet
-common-label-and-more = . . . ja { $remaining } lisää.
 common-label-currency = Valuutta
 common-label-inventory-empty = Inventaario on tyhjä.
 

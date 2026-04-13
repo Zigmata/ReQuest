@@ -13,7 +13,6 @@ common-btn-select = Pilih
 common-btn-manage = Kelola
 common-btn-rename = Ganti Nama
 common-btn-continue = Lanjutkan
-common-btn-cancel = Batal
 common-btn-enable = Aktifkan
 common-btn-disable = Nonaktifkan
 
@@ -39,7 +38,6 @@ common-label-none = Tidak Ada
 common-label-unknown = Tidak Diketahui
 common-label-locked = (TERKUNCI)
 common-label-loose-items = Barang Lepas
-common-label-and-more = . . . dan { $remaining } lagi.
 common-label-currency = Mata Uang
 common-label-inventory-empty = Inventaris kosong.
 

@@ -13,7 +13,6 @@ common-btn-select = Seç
 common-btn-manage = Yönet
 common-btn-rename = Yeniden Adlandır
 common-btn-continue = Devam
-common-btn-cancel = İptal
 common-btn-enable = Etkinleştir
 common-btn-disable = Devre Dışı Bırak
 
@@ -39,7 +38,6 @@ common-label-none = Yok
 common-label-unknown = Bilinmiyor
 common-label-locked = (KİLİTLİ)
 common-label-loose-items = Serbest Eşyalar
-common-label-and-more = . . . ve { $remaining } tane daha.
 common-label-currency = Para Birimi
 common-label-inventory-empty = Envanter boş.
 

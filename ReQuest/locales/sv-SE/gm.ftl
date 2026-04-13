@@ -55,10 +55,7 @@ gm-modal-placeholder-inventory-modify =
     osv.
 
 # GM errors
-gm-error-forbidden-role-name = Namnet som angetts för grupprollen är förbjudet.
-gm-error-role-already-exists = En roll med det namnet finns redan på denna server.
 gm-error-no-quest-channel = Ingen kanal har ännu angetts för quest-inlägg. Kontakta en serveradministratör för att konfigurera quest-kanalen.
-gm-error-cannot-ping-announce = Kunde inte pinga aviseringsrollen { $role } i kanalen { $channel }. Kontrollera kanal- och ReQuest-rollbehörigheter med din serveradministratör.
 gm-error-invalid-item-format = Ogiltigt föremålsformat: "{ $item }". Varje föremål måste vara på en ny rad, i formatet "Namn: Antal".
 gm-error-already-on-quest = Du är redan med i denna quest som { $characterName }.
 gm-error-no-active-character-long = Du har ingen aktiv karaktär på denna server. Använd `/player` för att registrera eller aktivera en karaktär.
@@ -122,8 +119,6 @@ gm-dm-role-not-found =
 
 # GM select menus
 gm-select-placeholder-party-member = Välj en gruppmedlem
-gm-modal-label-select-party-role = Grupproll
-gm-modal-desc-select-party-role = Välj en roll att tilldela quest-gruppen.
 gm-select-option-no-role = Ingen (Ingen grupproll)
 
 # GM embeds
@@ -151,18 +146,10 @@ gm-label-quest-locked = (Låst)
 gm-label-quest-draft = (Utkast)
 gm-title-manage-quest = Hantera quest - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = Redigera quest-detaljer som titel, beskrivning och gruppstorlek.
-gm-title-edit-quest = Redigera quest - { $questTitle }
 gm-label-field-not-set = Inte angiven
 gm-label-description-not-set = Beskrivning ej angiven
-gm-label-current-title = {"**"}Titel:{"**"} { $value }
-gm-label-current-description = {"**"}Beskrivning{"**"}
-gm-label-current-restrictions = {"**"}Begränsningar:{"**"} { $value }
 gm-label-current-party-size = {"**"}Max gruppstorlek:{"**"} { $value }
 gm-label-current-party-role = {"**"}Grupproll:{"**"} { $value }
-gm-label-current-image = {"**"}Miniatyr{"**"}
-gm-label-current-large-image = {"**"}Bild{"**"}
-gm-desc-publish-quest = Publicera denna quest till quest-tavlan.
-gm-desc-update-quest-post = Uppdatera quest-inlägget på quest-tavlan.
 gm-desc-toggle-ready = Växla redo-status (Nuvarande: {"**"}{ $status }{"**"})
     - Låser quest-listan och meddelar gruppmedlemmar att questen börjar snart. Om en roll är konfigurerad tilldelas den till gruppmedlemmar vid låsning.
     - Låser upp listan när den sätts till Öppen.
@@ -190,7 +177,5 @@ gm-label-no-players-in-roster = Inga spelare i quest-listan
 gm-title-character-sheet = Karaktärsblad för { $characterName } (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}Erfarenhetspoäng:{"**"}__
 gm-label-possessions = __{"**"}Ägodelar{"**"}__
-gm-label-currency-heading = {"**"}Valuta{"**"}
-gm-msg-inventory-empty = Inventariet är tomt.
 
 # GM approvals

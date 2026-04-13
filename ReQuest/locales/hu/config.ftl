@@ -224,8 +224,6 @@ config-error-item-exists-new-char = Már létezik egy { $itemName } nevű tárgy
 # NewCharacterShopJSONModal
 config-modal-title-upload-new-char-json = Új karakter bolt feltöltése (JSON)
 config-error-no-json-uploaded-short = Nem lett JSON fájl feltöltve.
-config-error-json-must-have-shopstock = A JSON-nak tartalmaznia kell egy 'shopStock' tömböt.
-config-error-items-must-have-name-price = Minden tárgynak rendelkeznie kell 'name' és 'price' mezővel.
 
 # ConfigNewCharacterWealthModal
 config-modal-title-set-wealth = Kezdő vagyon beállítása
@@ -409,11 +407,9 @@ config-title-wizard = {"**"}Szerver konfiguráció - Varázsló{"**"}
 config-wizard-intro =
     {"**"}Üdvözlünk a ReQuest konfigurációs varázslóban!{"**"}
 
-    Ez a varázsló segít abban, hogy a szervered megfelelően legyen konfigurálva a ReQuest funkcióinak használatához.
-    A varázsló átvizsgálja a jelenlegi beállításaidat, és javaslatokat tesz a szükséges módosításokhoz.
+    Ez a varázsló segít abban, hogy a szervered megfelelően legyen konfigurálva a ReQuest funkcióinak használatához. A varázsló átvizsgálja a jelenlegi beállításaidat, és javaslatokat tesz a szükséges módosításokhoz.
 
-    Kattints az alábbi „Vizsgálat indítása" gombra az érvényesítési folyamat elindításához. A vizsgálat befejezése
-    után részletes jelentést kapsz a szervered konfigurációjáról és a javasolt módosításokról.
+    Kattints az alábbi „Vizsgálat indítása" gombra az érvényesítési folyamat elindításához. A vizsgálat befejezése után részletes jelentést kapsz a szervered konfigurációjáról és a javasolt módosításokról.
 
 # Wizard - Bot Permission Validation
 config-wizard-bot-permissions-header = __{"**"}Bot globális jogosultságok{"**"}__
@@ -537,7 +533,27 @@ config-wizard-gm-rewards-disabled = {"**"}Állapot:{"**"} Letiltva
 config-wizard-gm-rewards-enabled = {"**"}Állapot:{"**"} Engedélyezve
 config-wizard-gm-rewards-experience = - Tapasztalat: { $xp }
 config-wizard-gm-rewards-items = - Tárgyak:
-config-wizard-unnamed-shop = Névtelen bolt
+
+# Wizard - Szerver nyelve (1. oldal)
+config-wizard-server-language-desc =
+    Ez az a nyelv, amelyet a ReQuest fog használni minden nyilvános üzenethez, mint például a küldetés-bejegyzések, bolt-feltöltési üzenetek és tranzakciós naplók.
+config-wizard-server-language = {"**"}Szerver nyelve:{"**"} { $language }
+config-wizard-server-language-default = Alapértelmezett (angol)
+
+# Wizard - Bolt feltöltési információ
+config-wizard-shop-restock-not-scheduled = ℹ️ Feltöltés nincs ütemezve
+
+# Wizard - Küldetés beállítások (5. oldal)
+config-wizard-quest-header = __{"**"}Küldetés beállítások{"**"}__
+config-wizard-quest-header-desc =
+    Ez a rész áttekintést nyújt a küldetésekkel kapcsolatos konfigurációkról.
+config-wizard-quest-role-mode = - Küldetés szerepkör mód: { $mode }
+config-wizard-quest-roles-label = {"**"}GM küldetés szerepkörök{"**"}
+config-wizard-quest-roles-count = - GM-ekhez rendelt szerepkörök: { $count }
+config-wizard-quest-roles-all-ok = - ✅ Minden szerepkör rendben
+config-wizard-quest-roles-assigned-to = {"    "}Hozzárendelve: { $gmNames }
+config-wizard-quest-roles-not-found = - ⚠️ Szerepkör-azonosító { $roleId }: Nem található/Törölve a szerverről
+config-wizard-quest-roles-no-assignments = - ℹ️ Nincsenek küldetés szerepkörök hozzárendelve
 
 ## Roles View
 config-title-roles = {"**"}Szerver konfiguráció - Szerepek{"**"}
@@ -833,9 +849,6 @@ config-select-placeholder-add-quest-role = Szerver szerep(ek) hozzárendelése e
 
 ## Quest Roles View
 config-title-quest-roles = {"**"}Szerver konfiguráció - Quest szerepek{"**"}
-config-label-quest-roles = Quest szerepek
-config-desc-quest-roles =
-    Állítsd be, hogyan kezelje a rendszer a csapatszerepeket a questek során.
 
 config-label-quest-role-mode-disabled = {"**"}Quest szerep mód:{"**"} Letiltva
     Szerepek nem jönnek létre és nem kerülnek kiosztásra a questek során.

@@ -102,4 +102,3 @@ info-language-desc-sv-se = भाषा स्वीडिश पर सेट �
 info-language-desc-th = भाषा थाई पर सेट करें
 info-language-desc-tr = भाषा तुर्की पर सेट करें
 info-language-desc-vi = भाषा वियतनामी पर सेट करें
-info-language-updated = भाषा सफलतापूर्वक अपडेट की गई।

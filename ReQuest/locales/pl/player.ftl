@@ -2,8 +2,6 @@
 
 # --- Cog ---
 
-player-cmd-name = Wymiana
-player-cmd-desc = Menu gracza
 
 # --- Buttons ---
 
@@ -224,8 +222,6 @@ player-label-empty-kit = {"*"}Pusty zestaw{"*"}
 
 # StaticKitConfirmView
 player-title-confirm-kit = {"**"}Potwierdź wybór: { $kitName }{"**"}
-player-label-items-heading = {"**"}Przedmioty:{"**"}
-player-label-currency-heading = {"**"}Waluta:{"**"}
 player-msg-kit-empty = Ten zestaw jest pusty.
 
 # NewCharacterComplexItemPurchaseView
@@ -291,8 +287,6 @@ player-error-qty-only-have = Posiadasz tylko { $maxQuantity } tego przedmiotu.
 player-error-invalid-format = Nieprawidłowy format: "{ $line }". Użyj <nazwa>: <ilość>.
 player-error-empty-name = Nazwa przedmiotu nie może być pusta w linii: "{ $line }".
 player-error-invalid-quantity = Nieprawidłowa ilość dla "{ $name }": "{ $quantity }". Musi być dodatnią liczbą całkowitą.
-player-error-input-errors-header = Błędy w danych ekwipunku:
-player-msg-no-valid-items = Nie podano prawidłowych przedmiotów. Inicjalizacja z pustym ekwipunkiem.
 
 # Validation error view
 player-validation-error-title = Błędy wejściowe
@@ -302,11 +296,8 @@ player-validation-btn-retry = Spróbuj ponownie
 player-error-enter-valid-number = Proszę wpisać prawidłową liczbę dodatnią.
 
 # Submission embeds (approval queue)
-player-embed-title-approval = Zatwierdzanie ekwipunku: { $characterName }
-player-embed-desc-submitted-by = Przesłane przez { $userMention }
 player-embed-field-items = Przedmioty
 player-embed-field-currency-received = Waluta
-player-embed-footer-submission-id = ID zgłoszenia: { $submissionId }
 player-label-approval-thread = Zatwierdzanie: { $characterName }
 player-embed-title-submission-sent = Zgłoszenie ekwipunku wysłane
 player-embed-desc-submission-sent =

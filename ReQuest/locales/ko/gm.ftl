@@ -55,10 +55,7 @@ gm-modal-placeholder-inventory-modify =
     등등.
 
 # GM 오류
-gm-error-forbidden-role-name = 파티 역할에 제공된 이름은 금지되어 있습니다.
-gm-error-role-already-exists = 이 서버에 해당 이름의 역할이 이미 존재합니다.
 gm-error-no-quest-channel = Quest 게시용 채널이 아직 지정되지 않았습니다. 서버 관리자에게 Quest 채널 설정을 요청하세요.
-gm-error-cannot-ping-announce = { $channel } 채널에서 알림 역할 { $role }을(를) 멘션할 수 없습니다. 서버 관리자에게 채널 및 ReQuest 역할 권한을 확인하세요.
 gm-error-invalid-item-format = 잘못된 아이템 형식: "{ $item }". 각 아이템은 새 줄에 "이름: 수량" 형식으로 입력해야 합니다.
 gm-error-already-on-quest = 이미 { $characterName }(으)로 이 Quest에 참가 중입니다.
 gm-error-no-active-character-long = 이 서버에서 활성화된 캐릭터가 없습니다. `/player`를 사용하여 캐릭터를 등록하거나 활성화하세요.
@@ -122,8 +119,6 @@ gm-dm-role-not-found =
 
 # GM 셀렉트 메뉴
 gm-select-placeholder-party-member = 파티 멤버를 선택하세요
-gm-modal-label-select-party-role = 파티 역할
-gm-modal-desc-select-party-role = Quest 파티에 할당할 역할을 선택하세요.
 gm-select-option-no-role = 없음 (파티 역할 없음)
 
 # GM 임베드
@@ -151,18 +146,10 @@ gm-label-quest-locked = (잠김)
 gm-label-quest-draft = (임시 저장)
 gm-title-manage-quest = Quest 관리 - { $questTitle } `{ $questId }`
 gm-desc-edit-quest = 제목, 설명, 파티 인원 등 Quest 세부 사항을 편집합니다.
-gm-title-edit-quest = Quest 편집 - { $questTitle }
 gm-label-field-not-set = 설정되지 않음
 gm-label-description-not-set = 설명이 설정되지 않음
-gm-label-current-title = {"**"}제목:{"**"} { $value }
-gm-label-current-description = {"**"}설명{"**"}
-gm-label-current-restrictions = {"**"}제한 사항:{"**"} { $value }
 gm-label-current-party-size = {"**"}최대 파티 인원:{"**"} { $value }
 gm-label-current-party-role = {"**"}파티 역할:{"**"} { $value }
-gm-label-current-image = {"**"}썸네일{"**"}
-gm-label-current-large-image = {"**"}이미지{"**"}
-gm-desc-publish-quest = 이 Quest를 Quest 게시판에 게시합니다.
-gm-desc-update-quest-post = Quest 게시판의 Quest 게시물을 업데이트합니다.
 gm-desc-toggle-ready = 준비 상태 전환 (현재: {"**"}{ $status }{"**"})
     - Quest 명단을 잠그고 파티 멤버에게 Quest가 곧 시작됨을 알립니다. 역할이 설정된 경우, 잠금 시 파티 멤버에게 할당됩니다.
     - 열림으로 설정하면 명단 잠금이 해제됩니다.
@@ -190,7 +177,5 @@ gm-label-no-players-in-roster = Quest 명단에 플레이어가 없습니다
 gm-title-character-sheet = { $characterName }의 캐릭터 시트 (<@{ $memberId }>)
 gm-label-experience-points = __{"**"}경험치:{"**"}__
 gm-label-possessions = __{"**"}소지품{"**"}__
-gm-label-currency-heading = {"**"}화폐{"**"}
-gm-msg-inventory-empty = 인벤토리가 비어 있습니다.
 
 # GM 승인

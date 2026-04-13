@@ -13,7 +13,6 @@ common-btn-select = Selecteren
 common-btn-manage = Beheren
 common-btn-rename = Hernoemen
 common-btn-continue = Doorgaan
-common-btn-cancel = Annuleren
 common-btn-enable = Inschakelen
 common-btn-disable = Uitschakelen
 
@@ -39,7 +38,6 @@ common-label-none = Geen
 common-label-unknown = Onbekend
 common-label-locked = (VERGRENDELD)
 common-label-loose-items = Losse voorwerpen
-common-label-and-more = . . . en nog { $remaining }.
 common-label-currency = Valuta
 common-label-inventory-empty = Inventaris is leeg.
 

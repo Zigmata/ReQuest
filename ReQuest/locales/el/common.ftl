@@ -13,7 +13,6 @@ common-btn-select = Επιλογή
 common-btn-manage = Διαχείριση
 common-btn-rename = Μετονομασία
 common-btn-continue = Συνέχεια
-common-btn-cancel = Ακύρωση
 common-btn-enable = Ενεργοποίηση
 common-btn-disable = Απενεργοποίηση
 
@@ -39,7 +38,6 @@ common-label-none = Κανένα
 common-label-unknown = Άγνωστο
 common-label-locked = (ΚΛΕΙΔΩΜΕΝΟ)
 common-label-loose-items = Ελεύθερα Αντικείμενα
-common-label-and-more = . . . και { $remaining } ακόμη.
 common-label-currency = Νόμισμα
 common-label-inventory-empty = Το αντικειμενοθήκη είναι κενή.
 

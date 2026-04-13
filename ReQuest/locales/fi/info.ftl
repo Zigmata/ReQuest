@@ -102,4 +102,3 @@ info-language-desc-sv-se = Aseta kieleksi ruotsi
 info-language-desc-th = Aseta kieleksi thai
 info-language-desc-tr = Aseta kieleksi turkki
 info-language-desc-vi = Aseta kieleksi vietnam
-info-language-updated = Kieli päivitetty onnistuneesti.

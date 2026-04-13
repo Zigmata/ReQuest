@@ -102,4 +102,3 @@ info-language-desc-sv-se = Nustatyti kalbą į švedų
 info-language-desc-th = Nustatyti kalbą į tajų
 info-language-desc-tr = Nustatyti kalbą į turkų
 info-language-desc-vi = Nustatyti kalbą į vietnamiečių
-info-language-updated = Kalba sėkmingai atnaujinta.

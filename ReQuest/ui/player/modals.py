@@ -975,12 +975,6 @@ class ConsumeFromContainerModal(LocaleModal):
                     message_id='player-error-qty-only-have'
                 )
 
-            container_name = get_container_name(
-                self.calling_view.character_data,
-                self.calling_view.container_id,
-                locale=locale
-            )
-
             await consume_item_from_container(
                 interaction.client,
                 interaction.user.id,
@@ -995,16 +989,28 @@ class ConsumeFromContainerModal(LocaleModal):
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
 
-            # Send receipt
+            # Send receipt (public — use guild locale)
+            bot = interaction.client
+            guild_id = interaction.guild_id
+            guild_locale = await resolve_locale(bot=bot, guild_id=guild_id)
+            container_name = get_container_name(
+                self.calling_view.character_data,
+                self.calling_view.container_id,
+                locale=guild_locale
+            )
+            consume_transaction_id = shortuuid.uuid()[:12]
+            character_name = self.calling_view.character_data[CharacterFields.NAME]
+            item_display = escape_markdown(titlecase(self.item_name))
+
             receipt_embed = discord.Embed(
-                title=t(locale, 'player-embed-title-consume'),
+                title=t(guild_locale, 'player-embed-title-consume'),
                 description=(
-                    t(locale, 'player-embed-desc-consume',
+                    t(guild_locale, 'player-embed-desc-consume',
                       playerMention=interaction.user.mention,
-                      characterName=self.calling_view.character_data[CharacterFields.NAME]) + '\n' +
-                    t(locale, 'player-embed-desc-consume-removed',
+                      characterName=character_name) + '\n' +
+                    t(guild_locale, 'player-embed-desc-consume-removed',
                       quantity=quantity,
-                      itemName=escape_markdown(titlecase(self.item_name)),
+                      itemName=item_display,
                       containerName=container_name)
                 ),
                 color=discord.Color.gold(),
@@ -1014,18 +1020,14 @@ class ConsumeFromContainerModal(LocaleModal):
                 name=interaction.user.display_name,
                 icon_url=interaction.user.display_avatar.url if interaction.user.display_avatar else None
             )
-            consume_transaction_id = shortuuid.uuid()[:12]
             receipt_embed.set_footer(text=t(
-                locale, 'player-embed-footer-transaction-id',
+                guild_locale, 'player-embed-footer-transaction-id',
                 transactionId=consume_transaction_id
             ))
 
             receipt_message = await interaction.followup.send(embed=receipt_embed, wait=True)
 
             # Log to transaction channel if set
-            bot = interaction.client
-            guild_id = interaction.guild_id
-
             log_channel_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -1036,49 +1038,26 @@ class ConsumeFromContainerModal(LocaleModal):
                 log_channel_id = strip_id(log_channel_query[ConfigFields.PLAYER_TRANSACTION_LOG_CHANNEL])
                 log_channel = interaction.guild.get_channel(log_channel_id)
                 if log_channel:
-                    guild_locale = await resolve_locale(bot=bot, guild_id=guild_id)
-                    if guild_locale != locale:
-                        log_embed = discord.Embed(
-                            title=t(guild_locale, 'player-embed-title-consume'),
-                            description=(
-                                t(guild_locale, 'player-embed-desc-consume',
-                                  playerMention=interaction.user.mention,
-                                  characterName=self.calling_view.character_data[CharacterFields.NAME]) + '\n' +
-                                t(guild_locale, 'player-embed-desc-consume-removed',
-                                  quantity=quantity,
-                                  itemName=escape_markdown(titlecase(self.item_name)),
-                                  containerName=container_name)
-                            ),
-                            color=discord.Color.gold(),
-                            type='rich'
-                        )
-                        log_embed.set_author(
-                            name=interaction.user.display_name,
-                            icon_url=interaction.user.display_avatar.url if interaction.user.display_avatar else None
-                        )
-                        log_embed.add_field(
-                            name=t(guild_locale, 'player-embed-field-channel'),
-                            value=interaction.channel.mention
-                        )
-                        log_embed.add_field(
-                            name=t(guild_locale, 'player-embed-field-receipt'),
-                            value=receipt_message.jump_url
-                        )
-                        log_embed.set_footer(text=t(
-                            guild_locale, 'player-embed-footer-transaction-id',
-                            transactionId=consume_transaction_id
-                        ))
-                        await log_channel.send(embed=log_embed)
-                    else:
-                        receipt_embed.add_field(
-                            name=t(locale, 'player-embed-field-channel'),
-                            value=interaction.channel.mention
-                        )
-                        receipt_embed.add_field(
-                            name=t(locale, 'player-embed-field-receipt'),
-                            value=receipt_message.jump_url
-                        )
-                        await log_channel.send(embed=receipt_embed)
+                    log_embed = discord.Embed(
+                        title=receipt_embed.title,
+                        description=receipt_embed.description,
+                        color=discord.Color.gold(),
+                        type='rich'
+                    )
+                    log_embed.set_author(
+                        name=interaction.user.display_name,
+                        icon_url=interaction.user.display_avatar.url if interaction.user.display_avatar else None
+                    )
+                    log_embed.add_field(
+                        name=t(guild_locale, 'player-embed-field-channel'),
+                        value=interaction.channel.mention
+                    )
+                    log_embed.add_field(
+                        name=t(guild_locale, 'player-embed-field-receipt'),
+                        value=receipt_message.jump_url
+                    )
+                    log_embed.set_footer(text=receipt_embed.footer.text)
+                    await log_channel.send(embed=log_embed)
         except Exception as e:
             await log_exception(e, interaction)
 
