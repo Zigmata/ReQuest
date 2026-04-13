@@ -1104,9 +1104,10 @@ class ConfigWizardView(LocaleLayoutView):
 
 
 class ConfigRolesView(LocaleLayoutView):
-    def __init__(self):
+    def __init__(self, locale=None):
         super().__init__(timeout=None)
-        locale = getattr(self, 'locale', DEFAULT_LOCALE)
+        self.locale = locale or DEFAULT_LOCALE
+        locale = self.locale
 
         self.announcement_role_status = TextDisplay(
             t(locale, 'config-label-announcement-role-default') + '\n' +
@@ -1331,9 +1332,10 @@ class ConfigGMRoleRemoveView(LocaleLayoutView):
 
 
 class ConfigChannelsView(LocaleLayoutView):
-    def __init__(self):
+    def __init__(self, locale=None):
         super().__init__(timeout=None)
-        locale = getattr(self, 'locale', DEFAULT_LOCALE)
+        self.locale = locale or DEFAULT_LOCALE
+        locale = self.locale
         self.quest_board_info = TextDisplay(
             t(locale, 'config-label-quest-board-default') + '\n' +
             t(locale, 'config-desc-quest-board')
@@ -1533,9 +1535,10 @@ class ConfigChannelsView(LocaleLayoutView):
 
 
 class ConfigQuestsView(LocaleLayoutView):
-    def __init__(self):
+    def __init__(self, locale=None):
         super().__init__(timeout=None)
-        locale = getattr(self, 'locale', DEFAULT_LOCALE)
+        self.locale = locale or DEFAULT_LOCALE
+        locale = self.locale
         self.wait_list_info = TextDisplay(
             t(locale, 'config-label-wait-list-disabled') + '\n' +
             t(locale, 'config-desc-wait-list')
@@ -1656,9 +1659,10 @@ class ConfigQuestsView(LocaleLayoutView):
 
 
 class GMRewardsView(LocaleLayoutView):
-    def __init__(self):
+    def __init__(self, locale=None):
         super().__init__(timeout=None)
-        locale = getattr(self, 'locale', DEFAULT_LOCALE)
+        self.locale = locale or DEFAULT_LOCALE
+        locale = self.locale
         self.gm_rewards_info = TextDisplay(t(locale, 'config-msg-no-rewards'))
         self.current_rewards = None
         self.xp_enabled = True
@@ -1723,9 +1727,10 @@ class GMRewardsView(LocaleLayoutView):
 
 
 class ConfigQuestRolesView(LocaleLayoutView):
-    def __init__(self):
+    def __init__(self, locale=None):
         super().__init__(timeout=None)
-        locale = getattr(self, 'locale', DEFAULT_LOCALE)
+        self.locale = locale or DEFAULT_LOCALE
+        locale = self.locale
         self.quest_role_mode = 'temporary'
         self.mode_info = TextDisplay(t(locale, 'config-label-quest-role-mode-temporary'))
         self.mode_select = selects.QuestRoleModeSelect(self)
@@ -2065,9 +2070,10 @@ class ConfigGMQuestRoleAssignView(LocaleLayoutView):
 
 
 class ConfigPlayersView(LocaleLayoutView):
-    def __init__(self):
+    def __init__(self, locale=None):
         super().__init__(timeout=None)
-        locale = getattr(self, 'locale', DEFAULT_LOCALE)
+        self.locale = locale or DEFAULT_LOCALE
+        locale = self.locale
         self.player_experience_info = TextDisplay(
             t(locale, 'config-label-player-experience-disabled') + '\n' +
             t(locale, 'config-desc-player-experience')
@@ -2132,9 +2138,10 @@ class ConfigPlayersView(LocaleLayoutView):
 
 
 class ConfigNewCharacterView(LocaleLayoutView):
-    def __init__(self):
+    def __init__(self, locale=None):
         super().__init__(timeout=None)
-        locale = getattr(self, 'locale', DEFAULT_LOCALE)
+        self.locale = locale or DEFAULT_LOCALE
+        locale = self.locale
         self.inventory_type_info = TextDisplay(
             t(locale, 'config-label-inventory-type-disabled') + '\n' +
             t(locale, 'config-desc-inventory-type')
@@ -3965,9 +3972,10 @@ class ConfigRoleplayView(LocaleLayoutView):
 
 
 class ConfigLanguageView(LocaleLayoutView):
-    def __init__(self):
+    def __init__(self, locale=None):
         super().__init__(timeout=None)
-        locale = getattr(self, 'locale', DEFAULT_LOCALE)
+        self.locale = locale or DEFAULT_LOCALE
+        locale = self.locale
         self.language_info = TextDisplay(t(locale, 'config-label-server-language-default'))
         self.language_help = TextDisplay(t(locale, 'config-server-language-help'))
         self.language_select = selects.ConfigLanguageSelect(self)
