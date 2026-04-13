@@ -150,7 +150,6 @@ class CharacterBaseView(LocaleLayoutView):
 
             self.xp_enabled = await get_xp_config(interaction.client, interaction.guild_id)
 
-            # Check for a pending character registration on this guild
             pending_id = f'{interaction.user.id}_{interaction.guild_id}'
             self.pending_character = await get_cached_data(
                 bot=bot,
@@ -173,7 +172,6 @@ class CharacterBaseView(LocaleLayoutView):
         container.add_item(header_section)
         container.add_item(Separator())
 
-        # Show pending character section if one exists for this guild
         if self.pending_character:
             pending_name = self.pending_character.get('name', '')
             container.add_item(TextDisplay(
@@ -185,7 +183,6 @@ class CharacterBaseView(LocaleLayoutView):
             container.add_item(pending_actions)
             container.add_item(Separator())
 
-        # Disable registration if a pending character exists
         register_button = buttons.RegisterCharacterButton(self)
         if self.pending_character:
             register_button.disabled = True
@@ -293,7 +290,6 @@ class InventoryOverviewView(LocaleLayoutView):
         self.currencies = []
         self.currency_config = None
 
-        # Pagination for containers
         self.items_per_page = 25
         self.current_page = 0
         self.total_pages = 1
@@ -325,7 +321,6 @@ class InventoryOverviewView(LocaleLayoutView):
             self.active_character_id = query[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
             self.active_character = query[CharacterFields.CHARACTERS][self.active_character_id]
 
-            # Validate currencies in inventory and convert based on server config
             inventory_keys_to_check = list(
                 self.active_character[CharacterFields.ATTRIBUTES].get(
                     CharacterFields.INVENTORY, {}
@@ -350,13 +345,11 @@ class InventoryOverviewView(LocaleLayoutView):
                             float(quantity)
                         )
 
-                        # In the event a currency was given prior to being defined (and therefore stored as an item),
-                        # this second update removes the old entry from inventory and updates the currency dict
                         inventory = self.active_character[CharacterFields.ATTRIBUTES].get(
                             CharacterFields.INVENTORY, {}
                         )
                         if item_name_key in inventory:
-                            del inventory[item_name_key]  # Update local copy
+                            del inventory[item_name_key]
                             inv_path = (
                                 f'{CharacterFields.CHARACTERS}.{self.active_character_id}'
                                 f'.{CharacterFields.ATTRIBUTES}.{CharacterFields.INVENTORY}'
@@ -380,7 +373,6 @@ class InventoryOverviewView(LocaleLayoutView):
                                 ]
                             )
 
-                            # Invalidate cache after direct collection update
                             cache_key = build_cache_key(
                                 bot.mdb.name, interaction.user.id, DatabaseCollections.CHARACTERS
                             )
@@ -399,19 +391,16 @@ class InventoryOverviewView(LocaleLayoutView):
                     )
                     self.active_character = query[CharacterFields.CHARACTERS][self.active_character_id]
 
-            # Get containers
             self.containers = get_containers_sorted(
                 self.active_character, locale=getattr(self, 'locale', DEFAULT_LOCALE)
             )
 
-            # Calculate pagination
             self.total_pages = math.ceil(len(self.containers) / self.items_per_page)
             if self.total_pages == 0:
                 self.total_pages = 1
             if self.current_page >= self.total_pages:
                 self.current_page = max(0, self.total_pages - 1)
 
-            # Get currencies
             player_currencies = self.active_character[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {})
             self.currencies = format_currency_display(player_currencies, self.currency_config)
 
@@ -444,7 +433,6 @@ class InventoryOverviewView(LocaleLayoutView):
         container.add_item(header_section)
         container.add_item(Separator())
 
-        # Build container summary
         summary_lines = []
         total_items = 0
         for c in self.containers:
@@ -464,7 +452,6 @@ class InventoryOverviewView(LocaleLayoutView):
         ))
         container.add_item(Separator())
 
-        # Container select (paginated)
         start = self.current_page * self.items_per_page
         end = start + self.items_per_page
         page_containers = self.containers[start:end]
@@ -476,7 +463,6 @@ class InventoryOverviewView(LocaleLayoutView):
 
         self.add_item(container)
 
-        # Action buttons row
         action_row = ActionRow()
         action_row.add_item(buttons.ManageContainersButton(self))
 
@@ -490,7 +476,6 @@ class InventoryOverviewView(LocaleLayoutView):
 
         self.add_item(action_row)
 
-        # Pagination row (if needed)
         if self.total_pages > 1:
             nav_row = ActionRow()
 
@@ -558,7 +543,6 @@ class ContainerItemsView(LocaleLayoutView):
         self.total_pages = 1
 
     async def setup(self, interaction: discord.Interaction):
-        # Refresh character data
         bot = interaction.client
         player_data = await get_cached_data(
             bot=bot,
@@ -574,7 +558,6 @@ class ContainerItemsView(LocaleLayoutView):
         )
         items_dict = get_container_items(self.character_data, self.container_id)
 
-        # Convert to sorted list of tuples
         self.items = sorted(items_dict.items(), key=lambda x: x[0].lower())
 
         self.total_pages = math.ceil(len(self.items) / self.items_per_page)
@@ -583,7 +566,6 @@ class ContainerItemsView(LocaleLayoutView):
         if self.current_page >= self.total_pages:
             self.current_page = max(0, self.total_pages - 1)
 
-        # Clear selection if item no longer exists
         if self.selected_item:
             item_names_lower = [name.lower() for name, _ in self.items]
             if self.selected_item.lower() not in item_names_lower:
@@ -604,7 +586,6 @@ class ContainerItemsView(LocaleLayoutView):
         if not self.items:
             container.add_item(TextDisplay(t(locale, 'player-msg-container-empty')))
         else:
-            # Display items on current page
             start = self.current_page * self.items_per_page
             end = start + self.items_per_page
             page_items = self.items[start:end]
@@ -617,7 +598,6 @@ class ContainerItemsView(LocaleLayoutView):
             container.add_item(TextDisplay('\n'.join(items_display)))
             container.add_item(Separator())
 
-            # Item select
             item_select_row = ActionRow()
             item_select = selects.ContainerItemSelect(self, page_items, self.current_page)
             item_select_row.add_item(item_select)
@@ -630,7 +610,6 @@ class ContainerItemsView(LocaleLayoutView):
 
         self.add_item(container)
 
-        # Action buttons
         action_row = ActionRow()
 
         consume_button = buttons.ConsumeFromContainerButton(self)
@@ -643,7 +622,6 @@ class ContainerItemsView(LocaleLayoutView):
 
         self.add_item(action_row)
 
-        # Pagination
         if self.total_pages > 1:
             nav_row = ActionRow()
 
@@ -714,7 +692,6 @@ class MoveDestinationView(LocaleLayoutView):
         self.total_pages = 1
 
     async def setup(self, interaction: discord.Interaction):
-        # Refresh character data
         bot = interaction.client
         player_data = await get_cached_data(
             bot=bot,
@@ -729,7 +706,6 @@ class MoveDestinationView(LocaleLayoutView):
             self.source_view.character_data, locale=getattr(self, 'locale', DEFAULT_LOCALE)
         )
 
-        # Exclude source container
         self.containers = [c for c in all_containers if c['id'] != self.source_container_id]
 
         self.total_pages = math.ceil(len(self.containers) / self.items_per_page)
@@ -758,7 +734,6 @@ class MoveDestinationView(LocaleLayoutView):
         else:
             container.add_item(TextDisplay(t(locale, 'player-msg-select-destination')))
 
-            # Destination select (paginated)
             start = self.current_page * self.items_per_page
             end = start + self.items_per_page
             page_containers = self.containers[start:end]
@@ -770,7 +745,6 @@ class MoveDestinationView(LocaleLayoutView):
 
             if self.selected_destination is not None or self.loose_items_selected:
                 destination_name = None
-                # Find destination name
                 if self.selected_destination is None:
                     destination_name = t(locale, 'common-label-loose-items')
                 else:
@@ -786,10 +760,8 @@ class MoveDestinationView(LocaleLayoutView):
 
         self.add_item(container)
 
-        # Move action buttons
         action_row = ActionRow()
 
-        # Check if we have a valid destination
         has_destination = self.loose_items_selected or self.selected_destination is not None
 
         move_all_button = buttons.MoveAllButton(self)
@@ -802,7 +774,6 @@ class MoveDestinationView(LocaleLayoutView):
 
         self.add_item(action_row)
 
-        # Pagination
         if self.total_pages > 1:
             nav_row = ActionRow()
 
@@ -860,7 +831,7 @@ class ContainerManagementView(LocaleLayoutView):
         self.character_id = character_id
         self.character_data = character_data
 
-        self.selected_container_id = None  # None can mean Loose Items OR nothing selected
+        self.selected_container_id = None
         self.has_selection = False
         self.containers = []
 
@@ -869,7 +840,6 @@ class ContainerManagementView(LocaleLayoutView):
         self.total_pages = 1
 
     async def setup(self, interaction: discord.Interaction):
-        # Refresh character data
         bot = interaction.client
         player_data = await get_cached_data(
             bot=bot,
@@ -901,7 +871,6 @@ class ContainerManagementView(LocaleLayoutView):
         container.add_item(header_section)
         container.add_item(Separator())
 
-        # Container list
         container_lines = []
         for index, container_data in enumerate(self.containers):
             prefix = f'{index + 1}. '
@@ -917,7 +886,6 @@ class ContainerManagementView(LocaleLayoutView):
         ))
         container.add_item(Separator())
 
-        # Container select (paginated)
         start = self.current_page * self.items_per_page
         end = start + self.items_per_page
         page_containers = self.containers[start:end]
@@ -940,15 +908,12 @@ class ContainerManagementView(LocaleLayoutView):
 
         self.add_item(container)
 
-        # Action buttons row 1: Create
         create_row = ActionRow()
         create_row.add_item(buttons.CreateContainerButton(self))
         self.add_item(create_row)
 
-        # Action buttons row 2: Rename, Delete, Reorder
         manage_row = ActionRow()
 
-        # These are disabled for Loose Items (selected_container_id is None)
         has_valid_selection = self.has_selection and self.selected_container_id is not None
 
         rename_button = buttons.RenameContainerButton(self)
@@ -959,14 +924,12 @@ class ContainerManagementView(LocaleLayoutView):
         delete_button.disabled = not has_valid_selection
         manage_row.add_item(delete_button)
 
-        # Reorder buttons - check boundaries
         can_move_up = False
         can_move_down = False
         if has_valid_selection:
             for index, container_data in enumerate(self.containers):
                 if container_data['id'] == self.selected_container_id:
-                    # Index 0 is Loose Items, so real containers start at 1
-                    can_move_up = index > 1  # Can't move above Loose Items
+                    can_move_up = index > 1
                     can_move_down = index < len(self.containers) - 1
                     break
 
@@ -980,7 +943,6 @@ class ContainerManagementView(LocaleLayoutView):
 
         self.add_item(manage_row)
 
-        # Pagination
         if self.total_pages > 1:
             nav_row = ActionRow()
 
@@ -1066,7 +1028,6 @@ class PlayerBoardView(LocaleLayoutView):
                 cache_id=cache_id
             )
 
-            # Sort by newest first
             self.posts.sort(key=lambda x: x.get('timestamp', 0), reverse=True)
 
             self.total_pages = math.ceil(len(self.posts) / self.items_per_page)
@@ -1117,7 +1078,6 @@ class PlayerBoardView(LocaleLayoutView):
 
         self.add_item(container)
 
-        # Pagination
         if self.total_pages > 1:
             nav_row = ActionRow()
 
@@ -1421,7 +1381,6 @@ class StaticKitSelectView(LocaleLayoutView):
         )
         self.kits = query.get('kits', {}) if query else {}
 
-        # Sort kits by name
         self.sorted_kits = sorted(self.kits.items(), key=lambda x: x[1].get(CommonFields.NAME, '').lower())
         self.total_pages = math.ceil(len(self.sorted_kits) / self.items_per_page)
 
@@ -1462,13 +1421,11 @@ class StaticKitSelectView(LocaleLayoutView):
                 if description:
                     content_lines.append(f'*{escape_markdown(description)}*')
 
-                # Preview Contents
                 items = kit_data.get(CommonFields.ITEMS, [])
-                # Decode currency keys for display
                 currency = {decode_mongo_key(k): v for k, v in kit_data.get(CharacterFields.CURRENCY, {}).items()}
 
                 preview_list = []
-                for item in items[:3]:  # Show first 3 items
+                for item in items[:3]:
                     preview_list.append(
                         f'{item.get(CommonFields.QUANTITY, 1)}x '
                         f'{escape_markdown(titlecase(item.get(CommonFields.NAME, "")))}'
@@ -1492,7 +1449,6 @@ class StaticKitSelectView(LocaleLayoutView):
 
         self.add_item(container)
 
-        # Pagination
         if self.total_pages > 1:
             nav_row = ActionRow()
             prev_button = Button(
@@ -1579,7 +1535,6 @@ class StaticKitConfirmView(LocaleLayoutView):
         items = self.kit_data.get(CommonFields.ITEMS, [])
         currency = {decode_mongo_key(k): v for k, v in self.kit_data.get(CharacterFields.CURRENCY, {}).items()}
 
-        # Build combined list of detail lines
         detail_lines = []
         if currency:
             curr_strs = format_consolidated_totals(currency, self.currency_config)
@@ -1669,7 +1624,6 @@ class StaticKitConfirmView(LocaleLayoutView):
             item[CommonFields.NAME]: item[CommonFields.QUANTITY]
             for item in self.kit_data.get(CommonFields.ITEMS, [])
         }
-        # Decode currency keys for display
         currency = {decode_mongo_key(k): v for k, v in self.kit_data.get(CharacterFields.CURRENCY, {}).items()}
         await _handle_submission(interaction, self.pending_character, items, currency)
 
@@ -2084,7 +2038,7 @@ class ApprovalPostView(LocaleLayoutView):
         self.currency_config = None
         self.resolved = False
         self.resolved_by = None
-        self.resolved_action = None  # 'approved' or 'denied'
+        self.resolved_action = None
         self.deny_reason = None
 
         self.items_per_page = 9
@@ -2124,14 +2078,12 @@ class ApprovalPostView(LocaleLayoutView):
         items = self.submission_data.get(ApprovalFields.ITEMS, {})
         currency = self.submission_data.get(ApprovalFields.CURRENCY, {})
 
-        # Header
         container.add_item(TextDisplay(
             t(locale, 'player-approval-post-header',
               characterName=character_name, userMention=f'<@{user_id}>')
         ))
         container.add_item(Separator())
 
-        # Build combined detail lines (currency first, then items)
         detail_lines = []
         if currency:
             detail_lines.append(f'**{t(locale, "player-approval-post-currency")}**')
@@ -2163,7 +2115,6 @@ class ApprovalPostView(LocaleLayoutView):
         container.add_item(Separator())
 
         if self.resolved:
-            # Show resolution info instead of buttons
             if self.resolved_action == ApprovalFields.STATUS_APPROVED:
                 container.add_item(TextDisplay(
                     t(locale, 'player-approval-approved-by', approver=self.resolved_by)
@@ -2176,7 +2127,6 @@ class ApprovalPostView(LocaleLayoutView):
             else:
                 container.add_item(TextDisplay(t(locale, 'player-approval-resolved')))
         else:
-            # Action buttons
             actions = ActionRow()
             actions.add_item(buttons.ApprovalApproveButton(self.submission_id, locale=locale))
             actions.add_item(buttons.ApprovalDenyButton(self.submission_id, locale=locale))
@@ -2185,7 +2135,6 @@ class ApprovalPostView(LocaleLayoutView):
 
         self.add_item(container)
 
-        # Pagination (only when not resolved)
         if not self.resolved and self.total_pages > 1:
             nav_row = ActionRow()
             prev_button = Button(
@@ -2226,7 +2175,6 @@ class ApprovalPostView(LocaleLayoutView):
 
         custom_id = interaction.data.get('custom_id', '')
 
-        # Approve/Deny: require GM or mod
         if custom_id.startswith(('approve_sub_', 'deny_sub_')):
             if not await is_gm_or_mod(interaction.client, interaction.guild, interaction.user):
                 caller_locale = await resolve_locale(interaction)
@@ -2236,7 +2184,6 @@ class ApprovalPostView(LocaleLayoutView):
                 return False
             return True
 
-        # Edit: require original submitter
         if custom_id.startswith('edit_sub_'):
             submitter_id = self.submission_data.get(ApprovalFields.USER_ID)
             if interaction.user.id != submitter_id:
@@ -2247,7 +2194,6 @@ class ApprovalPostView(LocaleLayoutView):
                 return False
             return True
 
-        # Pagination: allow anyone who can see the thread
         return True
 
     async def prev_page(self, interaction):
@@ -2278,7 +2224,6 @@ class ApprovalPostView(LocaleLayoutView):
             await interaction.response.defer()
 
             async def _do_approve(session):
-                # Atomically claim the submission to prevent concurrent approve/deny
                 claimed = await bot.gdb[DatabaseCollections.APPROVALS].find_one_and_update(
                     {ApprovalFields.SUBMISSION_ID: self.submission_id,
                      ApprovalFields.STATUS: ApprovalFields.STATUS_PENDING},
@@ -2288,7 +2233,6 @@ class ApprovalPostView(LocaleLayoutView):
                 if not claimed:
                     return None
 
-                # Use the claimed doc as the authoritative data source
                 pending_character = claimed.get(ApprovalFields.PENDING_CHARACTER, {})
                 character_id = pending_character.get(
                     ApprovalFields.CHARACTER_ID, claimed.get(ApprovalFields.CHARACTER_ID)
@@ -2297,11 +2241,9 @@ class ApprovalPostView(LocaleLayoutView):
                     CommonFields.NAME, claimed.get(ApprovalFields.CHARACTER_NAME)
                 )
 
-                # Build the full character document with inventory and currency pre-populated
                 inventory = {titlecase(k): int(v) for k, v in claimed.get(ApprovalFields.ITEMS, {}).items()}
                 currency = {titlecase(k): int(v) for k, v in claimed.get(ApprovalFields.CURRENCY, {}).items()}
 
-                # Create the character in the CHARACTERS collection
                 await update_cached_data(
                     bot=bot,
                     mongo_database=bot.mdb,
@@ -2327,7 +2269,6 @@ class ApprovalPostView(LocaleLayoutView):
                     session=session
                 )
 
-                # Delete the approval record
                 await delete_cached_data(
                     bot=bot,
                     mongo_database=bot.gdb,
@@ -2347,7 +2288,6 @@ class ApprovalPostView(LocaleLayoutView):
                 await interaction.edit_original_response(view=self)
                 return
 
-            # Transaction committed — handle Discord side effects
             self.submission_data = result
             guild_id = result[ApprovalFields.GUILD_ID]
             user_id = result[ApprovalFields.USER_ID]
@@ -2356,21 +2296,18 @@ class ApprovalPostView(LocaleLayoutView):
             )
             granted_permissions = result.get(ApprovalFields.GRANTED_PERMISSIONS, [])
 
-            # Revoke granted forum permissions
             thread = interaction.channel
             if isinstance(thread, discord.Thread):
                 await self._revoke_submitter_permissions(
                     thread, bot, guild_id, user_id, granted_permissions
                 )
 
-            # Update view to resolved state
             self.resolved = True
             self.resolved_by = interaction.user.mention
             self.resolved_action = ApprovalFields.STATUS_APPROVED
             self.build_view()
             await interaction.edit_original_response(view=self)
 
-            # DM the player
             try:
                 user = await bot.fetch_user(user_id)
                 user_locale = await resolve_locale(bot=bot, user_id=user_id, guild_id=guild_id)
@@ -2388,7 +2325,6 @@ class ApprovalPostView(LocaleLayoutView):
             except discord.errors.Forbidden:
                 logger.warning(f'Could not DM user {user_id} about approval — DMs may be disabled.')
 
-            # Lock and archive the thread
             if isinstance(thread, discord.Thread):
                 await thread.edit(locked=True, archived=True)
 
@@ -2397,7 +2333,6 @@ class ApprovalPostView(LocaleLayoutView):
 
     async def deny(self, interaction):
         try:
-            # Present the GM with a reason modal
             from ReQuest.ui.player import modals as player_modals
             modal = player_modals.DenyReasonModal(self)
             await interaction.response.send_modal(modal)
@@ -2410,7 +2345,6 @@ class ApprovalPostView(LocaleLayoutView):
             await interaction.response.defer()
 
             async def _do_denial(session):
-                # Atomically claim the submission to prevent concurrent approve/deny
                 claimed = await bot.gdb[DatabaseCollections.APPROVALS].find_one_and_update(
                     {ApprovalFields.SUBMISSION_ID: self.submission_id,
                      ApprovalFields.STATUS: ApprovalFields.STATUS_PENDING},
@@ -2420,7 +2354,6 @@ class ApprovalPostView(LocaleLayoutView):
                 if not claimed:
                     return None
 
-                # Delete the approval record (character was never created)
                 await delete_cached_data(
                     bot=bot,
                     mongo_database=bot.gdb,
@@ -2440,21 +2373,18 @@ class ApprovalPostView(LocaleLayoutView):
                 await interaction.edit_original_response(view=self)
                 return
 
-            # Transaction committed — handle Discord side effects
             self.submission_data = result
             user_id = result[ApprovalFields.USER_ID]
             guild_id = result[ApprovalFields.GUILD_ID]
             character_name = result.get(ApprovalFields.CHARACTER_NAME, '')
             granted_permissions = result.get(ApprovalFields.GRANTED_PERMISSIONS, [])
 
-            # Revoke granted forum permissions
             thread = interaction.channel
             if isinstance(thread, discord.Thread):
                 await self._revoke_submitter_permissions(
                     thread, bot, guild_id, user_id, granted_permissions
                 )
 
-            # Update view to resolved state
             self.resolved = True
             self.resolved_by = interaction.user.mention
             self.resolved_action = ApprovalFields.STATUS_DENIED
@@ -2462,7 +2392,6 @@ class ApprovalPostView(LocaleLayoutView):
             self.build_view()
             await interaction.edit_original_response(view=self)
 
-            # DM the player
             try:
                 user = await bot.fetch_user(user_id)
                 user_locale = await resolve_locale(bot=bot, user_id=user_id, guild_id=guild_id)
@@ -2483,7 +2412,6 @@ class ApprovalPostView(LocaleLayoutView):
             except discord.errors.Forbidden:
                 logger.warning(f'Could not DM user {user_id} about denial — DMs may be disabled.')
 
-            # Lock and archive the thread
             if isinstance(thread, discord.Thread):
                 await thread.edit(locked=True, archived=True)
 
@@ -2515,12 +2443,10 @@ class ApprovalPostView(LocaleLayoutView):
 
     async def edit(self, interaction):
         try:
-            # Re-open the inventory wizard for the submitting player
             pending_character = self.submission_data.get(ApprovalFields.PENDING_CHARACTER)
             if pending_character:
                 pending_character = dict(pending_character)
             else:
-                # Backwards compat: build from flat fields
                 pending_character = {
                     'character_id': self.submission_data.get(ApprovalFields.CHARACTER_ID),
                     'name': self.submission_data.get(ApprovalFields.CHARACTER_NAME),
@@ -2531,7 +2457,6 @@ class ApprovalPostView(LocaleLayoutView):
 
             inventory_type = pending_character.get('inventory_type', 'open')
 
-            # Store the submission_id so _handle_submission can update instead of insert
             pending_character['submission_id'] = self.submission_id
 
             caller_locale = await resolve_locale(interaction)
@@ -2567,14 +2492,12 @@ async def _handle_submission(interaction, pending_character, items, currency):
         channel_id = strip_id(approval_query[ConfigFields.APPROVAL_QUEUE_CHANNEL]) if approval_query else None
         forum_channel = bot.get_channel(channel_id) if channel_id else None
 
-        # Check if this is a re-submission (edit flow from ApprovalPostView)
         existing_submission_id = pending_character.get('submission_id')
 
         if forum_channel and isinstance(forum_channel, discord.ForumChannel):
             guild_locale = await resolve_locale(bot=bot, guild_id=guild_id)
 
             if existing_submission_id:
-                # Edit re-submission: update the existing APPROVALS doc and refresh the forum post
                 submission_id = existing_submission_id
                 await interaction.response.defer()
 
@@ -2604,7 +2527,6 @@ async def _handle_submission(interaction, pending_character, items, currency):
                 confirmation_view.add_item(container)
                 await interaction.edit_original_response(view=confirmation_view)
 
-                # Refresh the forum post view
                 approval_doc = await bot.gdb[DatabaseCollections.APPROVALS].find_one(
                     {ApprovalFields.SUBMISSION_ID: submission_id}
                 )
@@ -2618,7 +2540,6 @@ async def _handle_submission(interaction, pending_character, items, currency):
                         await approval_view.setup(bot)
                         await message.edit(view=approval_view)
             else:
-                # New submission: create thread with ApprovalPostView
                 await interaction.response.defer()
 
                 submission_id = shortuuid.uuid()[:8]
@@ -2635,7 +2556,6 @@ async def _handle_submission(interaction, pending_character, items, currency):
                     ApprovalFields.SUBMISSION_ID: submission_id
                 }
 
-                # Create ApprovalPostView for the forum thread
                 approval_view = ApprovalPostView(submission_id)
                 approval_view.submission_data = submission_data
                 approval_view.currency_config = currency_config
@@ -2651,7 +2571,6 @@ async def _handle_submission(interaction, pending_character, items, currency):
 
                 await bot.gdb[DatabaseCollections.APPROVALS].insert_one(submission_data)
 
-                # Clean up the pending character record now that the submission is persisted
                 pending_id = f'{member_id}_{guild_id}'
                 await delete_cached_data(
                     bot=bot,
@@ -2661,7 +2580,6 @@ async def _handle_submission(interaction, pending_character, items, currency):
                     cache_id=pending_id
                 )
 
-                # Grant forum channel access to submitter for any missing permissions
                 try:
                     forum_perms = forum_channel.permissions_for(interaction.user)
                     needed_perms = {
@@ -2685,14 +2603,12 @@ async def _handle_submission(interaction, pending_character, items, currency):
                 except Exception as e:
                     logger.warning(f'Could not grant forum access for user {member_id}: {e}')
 
-                # Send canned instructions in the thread
                 await thread.send(t(
                     guild_locale, 'player-approval-thread-instructions',
                     characterName=character_name,
                     playerMention=interaction.user.mention
                 ))
 
-                # Return player to character list
                 new_view = CharacterBaseView()
                 await setup_view(new_view, interaction)
                 await interaction.edit_original_response(view=new_view)
@@ -2707,10 +2623,8 @@ async def _handle_submission(interaction, pending_character, items, currency):
                 await interaction.followup.send(embed=confirmation_embed, ephemeral=True)
 
         else:
-            # Direct-apply path: create character and apply inventory immediately
             await interaction.response.defer()
 
-            # Build the full character document with inventory and currency pre-populated
             starting_inventory = {titlecase(k): int(v) for k, v in items.items()}
             starting_currency = {titlecase(k): int(v) for k, v in currency.items()}
 
@@ -2735,7 +2649,6 @@ async def _handle_submission(interaction, pending_character, items, currency):
                 }}
             )
 
-            # Clean up the pending character record now that the character is created
             pending_id = f'{member_id}_{guild_id}'
             await delete_cached_data(
                 bot=bot,

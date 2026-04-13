@@ -352,7 +352,6 @@ class CharacterRegisterModal(LocaleModal):
             )
 
             if inventory_type == InventoryType.DISABLED.value:
-                # No inventory wizard needed — create character immediately
                 await update_cached_data(
                     bot=bot,
                     mongo_database=bot.mdb,
@@ -376,7 +375,6 @@ class CharacterRegisterModal(LocaleModal):
                 await setup_view(self.calling_view, interaction)
                 await interaction.response.edit_message(view=self.calling_view)
             else:
-                # Store pending character and enter inventory wizard
                 pending_character = {
                     'character_id': character_id,
                     'name': character_name,
@@ -984,12 +982,10 @@ class ConsumeFromContainerModal(LocaleModal):
                 self.calling_view.container_id
             )
 
-            # Clear selection and refresh
             self.calling_view.selected_item = None
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
 
-            # Send receipt (public — use guild locale)
             bot = interaction.client
             guild_id = interaction.guild_id
             guild_locale = await resolve_locale(bot=bot, guild_id=guild_id)
@@ -1027,7 +1023,6 @@ class ConsumeFromContainerModal(LocaleModal):
 
             receipt_message = await interaction.followup.send(embed=receipt_embed, wait=True)
 
-            # Log to transaction channel if set
             log_channel_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -1118,7 +1113,6 @@ class MoveItemQuantityModal(LocaleModal):
                 self.calling_view.selected_destination
             )
 
-            # Return to the source container view
             from ReQuest.ui.player.views import ContainerItemsView
             view = ContainerItemsView(
                 self.calling_view.source_view.character_id,

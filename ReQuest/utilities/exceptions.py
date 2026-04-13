@@ -72,7 +72,6 @@ async def log_exception(exception, interaction=None):
                 logger.error(f'Failed to handle user feedback in log_exception: {e}')
         return
 
-    # Unexpected errors — log full details, show generic message to user
     logger.error(f'{type(exception).__name__}: {exception}')
     logger.error(''.join(traceback.format_exception(exception)))
 

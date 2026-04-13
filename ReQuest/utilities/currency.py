@@ -78,7 +78,6 @@ def format_currency_display(player_currency: dict, currency_config: dict) -> lis
         if not denominations_in_wallet:
             continue
 
-        # Display as double
         if currency.get(CurrencyFields.IS_DOUBLE, False):
             total_value = 0.0
             for denom_name_lower in denominations_in_wallet:
@@ -89,9 +88,7 @@ def format_currency_display(player_currency: dict, currency_config: dict) -> lis
             if total_value > 0:
                 output_lines.append(f"{titlecase(base_name)}: **{total_value:.2f}**")
 
-        # Display as separate integers
         else:
-            # Sort by value descending
             sorted_denoms = sorted(denominations_in_wallet, key=lambda d: denomination_map[d], reverse=True)
             for denom_name_lower in sorted_denoms:
                 quantity = norm_player_wallet.get(denom_name_lower, 0)
@@ -129,7 +126,7 @@ def get_denomination_map(currency_config: dict, currency_name: str) -> Tuple[dic
     )
 
     if not parent_currency_config:
-        return None, None  # Config is inconsistent
+        return None, None
 
     denomination_map = {parent_name.lower(): 1.0}
     for denom in parent_currency_config.get(CurrencyFields.DENOMINATIONS, []):

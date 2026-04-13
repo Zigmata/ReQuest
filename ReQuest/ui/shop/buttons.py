@@ -25,7 +25,6 @@ class ShopItemButton(Button):
         locale = locale or DEFAULT_LOCALE
         costs = item.get(ShopFields.COSTS, [])
 
-        # Check if out of stock (only if stock data is valid)
         is_out_of_stock = False
         if stock_info is not None and ShopFields.AVAILABLE in stock_info:
             available = stock_info.get(ShopFields.AVAILABLE, 0)
@@ -56,12 +55,9 @@ class ShopItemButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            # Double-check stock availability (in case UI is stale)
             item_name = self.item[CommonFields.NAME]
-            # Use view's channel_id to ensure consistency with shop lookup
             channel_id = self.view.channel_id or str(interaction.channel_id)
             self.stock_info = await get_item_stock(interaction.client, interaction.guild_id, channel_id, item_name)
-            # Only check stock if data is valid (has ShopFields.AVAILABLE key)
             if (self.stock_info is not None
                     and ShopFields.AVAILABLE in self.stock_info
                     and self.stock_info.get(ShopFields.AVAILABLE, 0) <= 0):
@@ -119,7 +115,6 @@ class ViewCartButton(Button):
             guild_id = interaction.guild_id
             user_id = interaction.user.id
 
-            # Ensure user context is set up on calling view
             if not self.calling_view.user_id:
                 await self.calling_view.setup_for_user(interaction)
 
@@ -141,7 +136,6 @@ class ViewCartButton(Button):
                 character_id = character_query[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
                 active_character = character_query[CharacterFields.CHARACTERS].get(character_id)
 
-            # Load cart from database
             channel_id = self.calling_view.channel_id
             db_cart = await get_cart(bot, guild_id, user_id, channel_id)
             if db_cart:
@@ -189,13 +183,10 @@ class CartClearButton(Button):
             prev_view = self.calling_view.prev_view
             channel_id = prev_view.channel_id
 
-            # Clear cart from database and release reserved stock
             await clear_cart_and_release_stock(bot, guild_id, user_id, channel_id)
 
-            # Clear local cart cache
             prev_view.cart.clear()
 
-            # Refresh stock info
             prev_view.stock_info = await get_shop_stock(bot, guild_id, channel_id)
 
             self.calling_view.build_view()

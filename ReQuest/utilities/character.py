@@ -75,10 +75,8 @@ async def trade_currency(interaction, currency_name, amount, sending_member_id, 
 
 async def trade_item(bot, item_name, quantity, sending_member_id, receiving_member_id, guild_id,
                      session=None):
-    # Normalize the item name for consistent storage and comparison
     normalized_item_name = item_name.lower()
 
-    # Fetch sending character
     sender_data = await get_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
@@ -89,7 +87,6 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
     sender_character_id = sender_data[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
     sender_character = sender_data[CharacterFields.CHARACTERS][sender_character_id]
 
-    # Fetch receiving character
     receiver_data = await get_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
@@ -100,7 +97,6 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
     receiver_character_id = receiver_data[CharacterFields.ACTIVE_CHARACTERS][str(guild_id)]
     receiver_character = receiver_data[CharacterFields.CHARACTERS][receiver_character_id]
 
-    # Check if sender has enough items across all containers + loose items
     quantity_owned = get_total_item_quantity(sender_character, item_name)
     if quantity_owned < quantity:
         raise UserFeedbackError(f'You have {quantity_owned}x {titlecase(normalized_item_name)} but are trying to give '
@@ -109,9 +105,7 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
                                 itemName=titlecase(normalized_item_name), owned=str(quantity_owned),
                                 quantity=str(quantity))
 
-    # Get item locations and remove items (loose items first, then containers)
     locations = get_item_locations(sender_character, item_name)
-    # Sort so loose items (id=None) come first
     locations.sort(key=lambda x: (x['id'] is not None, x['name']))
 
     remaining_to_remove = quantity
@@ -124,7 +118,6 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
         remove_from_here = min(loc_qty, remaining_to_remove)
 
         if container_id is None:
-            # Remove from loose items
             inventory = sender_character[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
             for key in list(inventory.keys()):
                 if key.lower() == normalized_item_name:
@@ -133,7 +126,6 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
                         del inventory[key]
                     break
         else:
-            # Remove from container
             container_items = (
                 sender_character[CharacterFields.ATTRIBUTES][CharacterFields.CONTAINERS][container_id]
                 .get(CharacterFields.ITEMS, {})
@@ -147,9 +139,7 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
 
         remaining_to_remove -= remove_from_here
 
-    # Add items to receiver's loose inventory
     receiver_inventory = receiver_character[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
-    # Find existing key (case-insensitive) or use titlecase
     existing_key = None
     for key in receiver_inventory:
         if key.lower() == normalized_item_name:
@@ -161,13 +151,11 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
     else:
         receiver_inventory[titlecase(item_name)] = quantity
 
-    # Update sender's character data
     sender_update = {
         f'{CharacterFields.CHARACTERS}.{sender_character_id}.{CharacterFields.ATTRIBUTES}'
         f'.{CharacterFields.INVENTORY}': sender_character[CharacterFields.ATTRIBUTES]
         .get(CharacterFields.INVENTORY, {})
     }
-    # Include container updates if containers exist
     if sender_character[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS):
         sender_update[
             f'{CharacterFields.CHARACTERS}.{sender_character_id}'
@@ -183,7 +171,6 @@ async def trade_item(bot, item_name, quantity, sending_member_id, receiving_memb
         session=session
     )
 
-    # Update receiver's inventory
     await update_cached_data(
         bot=bot,
         mongo_database=bot.mdb,

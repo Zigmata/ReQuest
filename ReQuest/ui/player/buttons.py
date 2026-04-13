@@ -22,8 +22,6 @@ from ReQuest.utilities.exceptions import UserFeedbackError, log_exception
 logger = logging.getLogger(__name__)
 
 
-# ----- CHARACTER MANAGEMENT -----
-
 class RegisterCharacterButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
@@ -109,8 +107,6 @@ class DiscardPendingCharacterButton(Button):
         except Exception as e:
             await log_exception(e, interaction)
 
-
-# ----- APPROVAL POST BUTTONS -----
 
 class ApprovalApproveButton(Button):
     def __init__(self, submission_id, locale=DEFAULT_LOCALE):
@@ -206,7 +202,6 @@ class RemoveCharacterButton(Button):
             bot = interaction.client
             member_id = interaction.user.id
 
-            # Remove character from db
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
@@ -215,7 +210,6 @@ class RemoveCharacterButton(Button):
                 update_data={'$unset': {f'{CharacterFields.CHARACTERS}.{self.character_id}': ''}}
             )
 
-            # Unset active character if it was the one removed
             character_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.mdb,
@@ -277,9 +271,6 @@ class ActivateCharacterButton(Button):
             await log_exception(e, interaction)
 
 
-# ----- PLAYER BOARD -----
-
-
 class CreatePlayerPostButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
@@ -328,7 +319,6 @@ class RemovePlayerPostButton(Button):
             message_id = self.post.get('messageId')
             guild_id = interaction.guild_id
 
-            # Delete from db
             await delete_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -337,7 +327,6 @@ class RemovePlayerPostButton(Button):
                 cache_id=f'{guild_id}:{post_id}'
             )
 
-            # Delete the post message
             channel_id = self.calling_view.player_board_channel_id
             if channel_id:
                 channel = interaction.client.get_channel(channel_id)
@@ -350,7 +339,6 @@ class RemovePlayerPostButton(Button):
                     except Exception as e:
                         logger.error(f"Error deleting message {message_id}: {e}")
 
-            # Invalidate the cached list
             cache_id = f'{guild_id}:{interaction.user.id}'
             redis_key = build_cache_key(
                 interaction.client.gdb.name, cache_id, DatabaseCollections.PLAYER_BOARD
@@ -586,9 +574,6 @@ class WizardClearCartButton(Button):
             await log_exception(e, interaction)
 
 
-# ----- INVENTORY MANAGEMENT -----
-
-
 class SpendCurrencyButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
@@ -699,9 +684,6 @@ class PrintInventoryButton(Button):
             await log_exception(e, interaction)
 
 
-# ----- CONTAINER MANAGEMENT -----
-
-
 class ManageContainersButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
@@ -764,7 +746,6 @@ class RenameContainerButton(Button):
                     message_id='player-error-cannot-rename-loose'
                 )
 
-            # Get current name
             containers = self.calling_view.character_data[
                 CharacterFields.ATTRIBUTES
             ].get(CharacterFields.CONTAINERS, {})
@@ -856,7 +837,7 @@ class MoveContainerUpButton(Button):
                 interaction.user.id,
                 self.calling_view.character_id,
                 self.calling_view.selected_container_id,
-                -1  # Move up
+                -1
             )
 
             await setup_view(self.calling_view, interaction)
@@ -883,7 +864,7 @@ class MoveContainerDownButton(Button):
                 interaction.user.id,
                 self.calling_view.character_id,
                 self.calling_view.selected_container_id,
-                1  # Move down
+                1
             )
 
             await setup_view(self.calling_view, interaction)
@@ -911,7 +892,6 @@ class ConsumeFromContainerButton(Button):
                 self.calling_view.container_id
             )
 
-            # Find quantity (case-insensitive)
             max_qty = 0
             for name, qty in items.items():
                 if name.lower() == item_name.lower():
@@ -945,7 +925,6 @@ class MoveItemButton(Button):
                 self.calling_view.container_id
             )
 
-            # Find quantity (case-insensitive)
             max_qty = 0
             for name, qty in items.items():
                 if name.lower() == item_name.lower():
@@ -988,7 +967,6 @@ class MoveAllButton(Button):
                 self.calling_view.selected_destination
             )
 
-            # Return to source container view
             view = ContainerItemsView(
                 self.calling_view.source_view.character_id,
                 self.calling_view.source_view.character_data,

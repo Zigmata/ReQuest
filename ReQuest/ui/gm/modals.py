@@ -72,13 +72,11 @@ class CreateQuestModal(LocaleModal):
             quest_collection = bot.gdb[DatabaseCollections.QUESTS]
             await quest_collection.insert_one(quest)
 
-            # Clear the cached quest lists
             admin_key = build_cache_key(bot.gdb.name, f'guild_quests:{guild_id}', 'quests')
             await bot.rdb.delete(admin_key)
             gm_key = build_cache_key(bot.gdb.name, f'gm_quests:{guild_id}:{author_id}', 'quests')
             await bot.rdb.delete(gm_key)
 
-            # Navigate to the Manage Quest view for the new draft
             from ReQuest.ui.gm.views import ManageQuestsView
             view = ManageQuestsView(quest)
             await setup_view(view, interaction)
@@ -140,7 +138,6 @@ class EditQuestDetailsComboModal(LocaleModal):
         self.add_item(self.restrictions_label)
         self.add_item(self.party_size_label)
 
-        # Party role — 4th field, mode-dependent
         if quest_role_mode == 'temporary':
             current_name = quest.get(QuestFields.PARTY_ROLE_NAME, '') or ''
             self.party_role_input = discord.ui.TextInput(
@@ -199,7 +196,6 @@ class EditQuestDetailsComboModal(LocaleModal):
             quest_id = quest[QuestFields.QUEST_ID]
             locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
 
-            # Validate party size if provided
             party_size_value = self.party_size_input.value.strip()
             if party_size_value:
                 try:
@@ -230,7 +226,6 @@ class EditQuestDetailsComboModal(LocaleModal):
                 QuestFields.DESCRIPTION: self.description_input.value,
             }
 
-            # Handle party role based on mode
             if self.quest_role_mode == 'temporary' and self.party_role_input:
                 role_name = self.party_role_input.value.strip() if self.party_role_input.value else ''
                 updates[QuestFields.PARTY_ROLE_NAME] = role_name or None
@@ -536,7 +531,6 @@ class ModPlayerModal(LocaleModal):
                         item_changes[item_name.lower()] = (item_changes.get(item_name.lower(), 0) +
                                                            int(quantity))
 
-            # Apply DB changes
             if self.xp_enabled and xp:
                 await update_character_experience(interaction, self.member.id, self.character_id, xp)
 
@@ -578,21 +572,18 @@ class ModPlayerModal(LocaleModal):
                 embed.set_footer(text=t(loc, 'common-embed-footer-transaction-id', transactionId=transaction_id))
                 return embed
 
-            # Ephemeral response to GM in their locale
             caller_locale = await resolve_locale(interaction)
             guild_locale = await resolve_locale(bot=bot, guild_id=guild_id)
 
             caller_embed = build_mod_embed(caller_locale)
             await interaction.response.send_message(embed=caller_embed, ephemeral=True)
 
-            # Log channel in guild locale
             if log_channel:
                 if guild_locale != caller_locale:
                     await log_channel.send(embed=build_mod_embed(guild_locale))
                 else:
                     await log_channel.send(embed=caller_embed)
 
-            # DM to target member in their locale
             try:
                 member_locale = await resolve_locale(bot=bot, user_id=self.member.id, guild_id=guild_id)
                 if member_locale != caller_locale:

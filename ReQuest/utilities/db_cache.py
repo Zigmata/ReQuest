@@ -7,8 +7,6 @@ from ReQuest.utilities.exceptions import log_exception
 
 logger = logging.getLogger(__name__)
 
-# Collects cache key strings to invalidate after a transaction commits.
-# Set by run_in_transaction(); appended to by invalidate_cache_key().
 _pending_cache_invalidations: ContextVar[set[str] | None] = ContextVar('_pending_cache_invalidations', default=None)
 
 __all__ = [
@@ -34,11 +32,9 @@ def encode_mongo_key(key: str) -> str:
     """
     if not key:
         return key
-    # Order matters: encode '%' first to avoid double-encoding
     result = key.replace('%', '%25')
     result = result.replace('.', '%2E')
     result = result.replace('$', '%24')
-    # Strip null characters (invalid in MongoDB field names and have no display value)
     result = result.replace('\x00', '')
     return result
 
@@ -51,7 +47,6 @@ def decode_mongo_key(key: str) -> str:
     """
     if not key:
         return key
-    # Order matters: decode '%' last to avoid incorrect decoding
     result = key.replace('%2E', '.')
     result = result.replace('%24', '$')
     result = result.replace('%25', '%')
@@ -114,8 +109,6 @@ async def get_cached_data(bot, mongo_database, collection_name, query, is_single
 
         return data
     except Exception as e:
-        # Inside a transaction, swallowing errors would let the caller proceed with
-        # missing data and commit incorrect state. Re-raise so the transaction aborts.
         if session is not None:
             raise
         await log_exception(e)
@@ -189,7 +182,6 @@ async def replace_cached_data(bot, mongo_database, collection_name, query, new_d
 
     try:
         mongo_collection = mongo_database[collection_name]
-        # Strip _id to prevent type mismatch when doc was deserialized from Redis cache
         replacement = {k: v for k, v in new_data.items() if k != '_id'}
         await mongo_collection.replace_one(
             query,
@@ -283,16 +275,12 @@ async def run_in_transaction(bot, callback, *args, **kwargs):
     :return: the return value of callback
     """
     pending: set[str] = set()
-    # The ContextVar is reset in the finally block below, so even if with_transaction()
-    # raises (final retry exhausted, unhandled callback exception), the next call to
-    # run_in_transaction() starts with a fresh, empty pending set.
     token = _pending_cache_invalidations.set(pending)
     try:
         async with await bot.mongo_client.start_session() as session:
             result = await session.with_transaction(
                 lambda s: callback(s, *args, **kwargs)
             )
-        # Transaction committed — flush deferred cache invalidations in a single round-trip
         if pending:
             try:
                 await bot.rdb.delete(*pending)
@@ -322,9 +310,9 @@ async def get_xp_config(bot, guild_id) -> bool:
             query={CommonFields.ID: guild_id}
         )
         if query is None:
-            return True  # Default to XP enabled if no config found
+            return True
         return query.get(ConfigFields.PLAYER_EXPERIENCE, True)
     except Exception as e:
         logger.error(f"Error retrieving XP config: {e}")
         await log_exception(e)
-        return True  # Default to XP enabled on error
+        return True

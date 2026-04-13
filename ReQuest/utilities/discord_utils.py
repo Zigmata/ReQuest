@@ -80,9 +80,7 @@ def escape_markdown(text: str) -> str:
     """
     if not text:
         return text
-    # Escape backslash first to avoid double-escaping
     text = text.replace('\\', '\\\\')
-    # Escape other markdown characters
     for char in ('*', '_', '~', '`', '|', '>', '[', ']', '(', ')'):
         text = text.replace(char, f'\\{char}')
     return text

@@ -87,9 +87,9 @@ class ConfigFields:
 
 MAX_QUEST_ROLES_PER_GM = 20
 
-FIRST_RESTOCK_GRACE_HOURLY = 2   # minutes
-FIRST_RESTOCK_GRACE_DAILY = 10   # minutes
-FIRST_RESTOCK_GRACE_WEEKLY = 30  # minutes
+FIRST_RESTOCK_GRACE_HOURLY = 2
+FIRST_RESTOCK_GRACE_DAILY = 10
+FIRST_RESTOCK_GRACE_WEEKLY = 30
 
 
 class RoleplayFields:
@@ -165,7 +165,6 @@ class ApprovalFields:
     ITEMS = 'items'
     CURRENCY = 'currency'
 
-    # Status values
     STATUS_PENDING = 'pending'
     STATUS_PROCESSING = 'processing'
     STATUS_APPROVED = 'approved'

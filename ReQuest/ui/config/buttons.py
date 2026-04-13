@@ -745,7 +745,6 @@ class RemoveShopButton(Button):
             guild_id = interaction.guild_id
             channel_id = view.selected_channel_id
 
-            # Get shop data to check if it's a forum thread
             shop_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -758,7 +757,6 @@ class RemoveShopButton(Button):
                 shop_data = shop_query.get(ShopFields.SHOP_CHANNELS, {}).get(channel_id, {})
             channel_type = shop_data.get(ShopFields.CHANNEL_TYPE, 'text')
 
-            # Archive and lock if forum thread
             if channel_type == ShopChannelType.FORUM_THREAD.value:
                 try:
                     thread = bot.get_channel(int(channel_id))
@@ -1299,9 +1297,6 @@ class ConfigNewCharacterWealthButton(Button):
             await log_exception(e, interaction)
 
 
-# ----- Static Kits -----
-
-
 class AddStaticKitButton(Button):
     def __init__(self, calling_view):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
@@ -1640,7 +1635,6 @@ class ConfigStockLimitsButton(Button):
 class SetItemStockButton(Button):
     def __init__(self, item: dict, calling_view, current_stock: int | None = None):
         locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
-        # Determine label based on whether limit exists
         has_limit = item.get(ShopFields.MAX_STOCK) is not None
         label = (t(locale, 'config-btn-edit-limit') if has_limit
                  else t(locale, 'config-btn-set-limit'))[:DiscordLimits.BUTTON_LABEL]
@@ -1699,7 +1693,6 @@ class RemoveItemStockLimitButton(Button):
             channel_id = self.calling_view.channel_id
             item_name = self.item[CommonFields.NAME]
 
-            # Update shop config to remove maxStock from item
             shop_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -1709,14 +1702,12 @@ class RemoveItemStockLimitButton(Button):
             shop_data = shop_query.get(ShopFields.SHOP_CHANNELS, {}).get(channel_id, {})
             shop_stock = shop_data.get(ShopFields.SHOP_STOCK, [])
 
-            # Find and update the item
             for item in shop_stock:
                 if item.get(CommonFields.NAME) == item_name:
                     if ShopFields.MAX_STOCK in item:
                         del item[ShopFields.MAX_STOCK]
                     break
 
-            # Save shop config
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -1725,10 +1716,8 @@ class RemoveItemStockLimitButton(Button):
                 update_data={'$set': {f'{ShopFields.SHOP_CHANNELS}.{channel_id}': shop_data}}
             )
 
-            # Remove from runtime stock tracking
             await remove_item_stock_limit(bot, guild_id, channel_id, item_name)
 
-            # Refresh the view
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:

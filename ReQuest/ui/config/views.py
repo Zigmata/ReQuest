@@ -96,9 +96,6 @@ class ConfigBaseView(common_views.MenuBaseView):
         )
 
 
-# ------ WIZARD ------
-
-
 class ConfigWizardView(LocaleLayoutView):
     def __init__(self):
         super().__init__(timeout=None)
@@ -134,7 +131,6 @@ class ConfigWizardView(LocaleLayoutView):
                     container.add_item(TextDisplay(page_data['content']))
                     container.add_item(Separator())
 
-                # Build custom sections
                 for section_data in page_data['custom_sections']:
                     content = section_data.get('content')
                     button = section_data.get('shortcut_button')
@@ -160,7 +156,6 @@ class ConfigWizardView(LocaleLayoutView):
                     container.add_item(TextDisplay(content_text))
                     container.add_item(Separator())
 
-            # Navigation
             nav_row = ActionRow()
 
             prev_button = Button(
@@ -309,11 +304,9 @@ class ConfigWizardView(LocaleLayoutView):
             t(locale, 'config-wizard-role-desc')
         ]
 
-        # Validate default (@everyone) role
         default_role = guild.default_role
         default_issues = []
 
-        # These are needed for users to access the bot's features
         required_default_permissions = {
             'view_channel': t(locale, 'config-wizard-perm-view-channels'),
             'read_message_history': t(locale, 'config-wizard-perm-read-message-history'),
@@ -329,7 +322,6 @@ class ConfigWizardView(LocaleLayoutView):
                     permissionName=name
                 ))
 
-        # These are generally a bad idea, or may enable users to circumvent bot features
         dangerous_permissions = {
             'manage_channels': t(locale, 'config-wizard-perm-manage-channels'),
             'manage_roles': t(locale, 'config-wizard-perm-manage-roles'),
@@ -362,7 +354,6 @@ class ConfigWizardView(LocaleLayoutView):
                 t(locale, 'config-wizard-default-role-ok')
             )
 
-        # Validate at least one GM role is configured, and does not extend permissions of the default role
         if not gm_roles_config or not gm_roles_config.get(ConfigFields.GM_ROLES):
             has_warnings = True
             report_lines.append(
@@ -398,7 +389,6 @@ class ConfigWizardView(LocaleLayoutView):
                     logger.error(f'Error validating role {role_data}: {e}')
                     report_lines.append(f'- Error validating {role_data[CommonFields.NAME]}')
 
-        # Validate announcement role
         if not announcement_role_config or not announcement_role_config.get(ConfigFields.ANNOUNCE_ROLE):
             has_warnings = True
             report_lines.append(
@@ -477,7 +467,6 @@ class ConfigWizardView(LocaleLayoutView):
                     report_lines.append(f'\n**{name}:**\n' + t(locale, 'config-wizard-channel-not-found'))
                     continue
 
-                # Check bot permissions
                 bot_permissions = channel.permissions_for(bot_member)
                 channel_issues = []
 
@@ -494,7 +483,6 @@ class ConfigWizardView(LocaleLayoutView):
                         botMention=bot_mention
                     ))
 
-                # Check default role permissions
                 default_role = guild.default_role
                 default_permissions = channel.permissions_for(default_role)
                 if default_permissions.send_messages:
@@ -528,7 +516,6 @@ class ConfigWizardView(LocaleLayoutView):
         escalations = []
         for permission_name, value in role.permissions:
             if value and not getattr(default_role.permissions, permission_name):
-                # Format names to be readable
                 formatted_name = permission_name.replace('_', ' ').title()
                 escalations.append(formatted_name)
 
@@ -611,7 +598,6 @@ class ConfigWizardView(LocaleLayoutView):
         locale = self.locale
         components = []
 
-        # Basic quest settings
         wait_list_size = (
             wait_list_query.get(ConfigFields.QUEST_WAIT_LIST, 0)
             if wait_list_query else 0
@@ -651,7 +637,6 @@ class ConfigWizardView(LocaleLayoutView):
             )
         })
 
-        # GM Quest Roles audit (only for static mode)
         quest_roles_content = [t(locale, 'config-wizard-quest-roles-label')]
 
         if quest_role_mode != 'static':
@@ -745,7 +730,6 @@ class ConfigWizardView(LocaleLayoutView):
 
         components = []
 
-        # Player Settings
         xp_display = (
             t(locale, 'config-label-rp-enabled') if xp_enabled
             else t(locale, 'config-label-rp-disabled')
@@ -762,7 +746,6 @@ class ConfigWizardView(LocaleLayoutView):
             )
         })
 
-        # Currency Settings
         currency_section_content = [
             t(locale, 'config-wizard-currency-settings'),
             self._format_currency_report(currency_config)
@@ -775,7 +758,6 @@ class ConfigWizardView(LocaleLayoutView):
             )
         })
 
-        # Roleplay Rewards Settings
         rp_enabled = roleplay_config.get(RoleplayFields.ENABLED, False) if roleplay_config else False
         rp_mode = roleplay_config.get(RoleplayFields.MODE, 'scheduled') if roleplay_config else 'scheduled'
         rp_channels = roleplay_config.get(RoleplayFields.CHANNELS, []) if roleplay_config else []
@@ -797,7 +779,6 @@ class ConfigWizardView(LocaleLayoutView):
             )
         })
 
-        # Shops Settings
         shop_channels = shops_config.get(ShopFields.SHOP_CHANNELS, {}) if shops_config else {}
         shops_section_content = [
             t(locale, 'config-wizard-shops'),
@@ -831,7 +812,6 @@ class ConfigWizardView(LocaleLayoutView):
             )
         })
 
-        # New Character Setup
         inv_type = inventory_config.get(ConfigFields.INVENTORY_TYPE, 'none') if inventory_config else 'none'
         shop_items = new_char_shop.get(ShopFields.SHOP_STOCK, []) if new_char_shop else []
         kits = static_kits.get('kits', []) if static_kits else []
@@ -849,7 +829,6 @@ class ConfigWizardView(LocaleLayoutView):
             )
         })
 
-        # Header
         intro_content = [
             t(locale, 'config-wizard-dashboard-header'),
             t(locale, 'config-wizard-dashboard-desc') + '\n'
@@ -867,7 +846,6 @@ class ConfigWizardView(LocaleLayoutView):
             guild = interaction.guild
             gdb = interaction.client.gdb
 
-            # Guild locale
             guild_locale_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
@@ -876,12 +854,10 @@ class ConfigWizardView(LocaleLayoutView):
             )
             guild_locale = guild_locale_query.get('locale') if guild_locale_query else None
 
-            # Bot permissions
             bot_permission_text, language_text, bot_permission_warnings = (
                 self.validate_bot_permission(guild, guild_locale)
             )
 
-            # Role configs
             announcement_role_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
@@ -895,7 +871,6 @@ class ConfigWizardView(LocaleLayoutView):
                 query={CommonFields.ID: guild.id}
             )
 
-            # Channel configs
             channels = []
             quest_channel_query = await get_cached_data(
                 bot=bot,
@@ -996,7 +971,6 @@ class ConfigWizardView(LocaleLayoutView):
                 }
             )
 
-            # Dashboard configs
             wait_list_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
@@ -1028,7 +1002,6 @@ class ConfigWizardView(LocaleLayoutView):
                 query={CommonFields.ID: guild.id}
             )
 
-            # Roleplay config
             roleplay_config_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
@@ -1036,7 +1009,6 @@ class ConfigWizardView(LocaleLayoutView):
                 query={CommonFields.ID: guild.id}
             )
 
-            # Shops config
             shops_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
@@ -1044,7 +1016,6 @@ class ConfigWizardView(LocaleLayoutView):
                 query={CommonFields.ID: guild.id}
             )
 
-            # New character setup configs
             inventory_config_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
@@ -1064,7 +1035,6 @@ class ConfigWizardView(LocaleLayoutView):
                 query={CommonFields.ID: guild.id}
             )
 
-            # Quest role configs
             quest_role_mode_query = await get_cached_data(
                 bot=bot,
                 mongo_database=gdb,
@@ -1078,7 +1048,6 @@ class ConfigWizardView(LocaleLayoutView):
                 query={CommonFields.ID: guild.id}
             )
 
-            # Role validation report
             role_text, role_has_warnings = self.validate_roles(guild, gm_roles_query, announcement_role_query)
             role_button = MenuViewButton(
                 ConfigRolesView,
@@ -1086,22 +1055,18 @@ class ConfigWizardView(LocaleLayoutView):
             )
             role_button.disabled = not role_has_warnings
 
-            # Channel validation report
             channel_text, channel_button = self.validate_channels(guild, channels)
 
-            # Dashboard settings report
             dashboard_data = self.validate_dashboard_settings(
                 wait_list_query, quest_summary_query, gm_rewards_query, player_xp_query, currency_config_query,
                 roleplay_config_query, shops_query, inventory_config_query, new_char_shop_query, static_kits_query
             )
 
-            # Quest settings report (page 5)
             quest_page_data = self.validate_quest_settings(
                 guild, wait_list_query, quest_summary_query, gm_rewards_query,
                 quest_role_mode_query, quest_role_assignments_query
             )
 
-            # Compile pages
             self.pages = [
                 {
                     'custom_sections': [
@@ -1138,9 +1103,6 @@ class ConfigWizardView(LocaleLayoutView):
             await interaction.edit_original_response(view=self)
         except Exception as e:
             await log_exception(e, interaction)
-
-
-# ------ ROLES ------
 
 
 class ConfigRolesView(LocaleLayoutView):
@@ -1370,9 +1332,6 @@ class ConfigGMRoleRemoveView(LocaleLayoutView):
             await log_exception(e, interaction)
 
 
-# ------ CHANNELS ------
-
-
 class ConfigChannelsView(LocaleLayoutView):
     def __init__(self):
         super().__init__(timeout=None)
@@ -1575,9 +1534,6 @@ class ConfigChannelsView(LocaleLayoutView):
             await log_exception(e)
 
 
-# ------ QUESTS ------
-
-
 class ConfigQuestsView(LocaleLayoutView):
     def __init__(self):
         super().__init__(timeout=None)
@@ -1768,9 +1724,6 @@ class GMRewardsView(LocaleLayoutView):
             await log_exception(e)
 
 
-# ------ QUEST ROLES ------
-
-
 class ConfigQuestRolesView(LocaleLayoutView):
     def __init__(self):
         super().__init__(timeout=None)
@@ -1922,7 +1875,6 @@ class ConfigStaticQuestRolesView(LocaleLayoutView):
                         role_id = int(mention.strip('<@&>'))
                         gm_role_ids.add(role_id)
 
-            # Chunk once to ensure full member cache, then collect from role.members
             if not guild.chunked:
                 await guild.chunk()
 
@@ -2114,9 +2066,6 @@ class ConfigGMQuestRoleAssignView(LocaleLayoutView):
             await log_exception(e, interaction)
 
 
-# ------ PLAYERS ------
-
-
 class ConfigPlayersView(LocaleLayoutView):
     def __init__(self):
         super().__init__(timeout=None)
@@ -2166,7 +2115,6 @@ class ConfigPlayersView(LocaleLayoutView):
     async def setup(self, bot, guild):
         try:
             locale = self.locale
-            # XP section
             player_experience = await get_xp_config(bot, guild.id)
             if player_experience:
                 self.player_experience_info.content = (
@@ -2228,12 +2176,10 @@ class ConfigNewCharacterView(LocaleLayoutView):
         container.add_item(header_section)
         container.add_item(Separator())
 
-        # Inventory type section
         container.add_item(self.inventory_type_info)
         container.add_item(ActionRow(self.inventory_type_select))
         container.add_item(Separator())
 
-        # New Character wealth section
         new_character_wealth_row = ActionRow()
         new_character_wealth_row.add_item(self.new_character_shop_button)
         new_character_wealth_row.add_item(self.new_character_wealth_button)
@@ -2242,7 +2188,6 @@ class ConfigNewCharacterView(LocaleLayoutView):
         container.add_item(self.new_character_wealth_info)
         container.add_item(Separator())
 
-        # Approval queue section
         approval_section = Section(accessory=self.approval_queue_clear_button)
         approval_section.add_item(self.approval_queue_info)
         container.add_item(approval_section)
@@ -2254,7 +2199,6 @@ class ConfigNewCharacterView(LocaleLayoutView):
     async def setup(self, bot, guild):
         try:
             locale = self.locale
-            # Inventory section
             inventory_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -2284,7 +2228,6 @@ class ConfigNewCharacterView(LocaleLayoutView):
                 type_description.get(inventory_type, '')
             )
 
-            # New character Shop section
             currency_config = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -2346,7 +2289,6 @@ class ConfigNewCharacterView(LocaleLayoutView):
                     t(locale, 'config-label-new-char-wealth-disabled')
                 )
 
-            # Approval Queue section
             approval_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -2437,7 +2379,6 @@ class ConfigNewCharacterShopView(LocaleLayoutView):
 
         self.add_item(container)
 
-        # Pagination
         if self.total_pages > 1:
             nav_row = ActionRow()
 
@@ -2643,7 +2584,6 @@ class ConfigStaticKitsView(LocaleLayoutView):
 
         self.add_item(container)
 
-        # Pagination Controls
         if self.total_pages > 1:
             nav_row = ActionRow()
 
@@ -2721,7 +2661,6 @@ class EditStaticKitView(LocaleLayoutView):
         combined_list = []
 
         for encoded_currency_key, amount in currencies.items():
-            # Decode the key for display; original name is needed for lookups and formatting
             decoded_name = decode_mongo_key(encoded_currency_key)
             combined_list.append({'type': 'currency', 'name': decoded_name, 'amount': amount})
 
@@ -2801,7 +2740,6 @@ class EditStaticKitView(LocaleLayoutView):
                     container.add_item(TextDisplay(display))
                     container.add_item(item_actions)
 
-            # Pagination Controls
             if self.total_pages > 1:
                 nav_row = ActionRow()
                 prev_button = Button(
@@ -2854,9 +2792,6 @@ class EditStaticKitView(LocaleLayoutView):
             locale = getattr(self, 'locale', DEFAULT_LOCALE)
             logging.error(f'Failed to send PageJumpModal: {e}')
             await interaction.response.send_message(t(locale, 'common-error-page-selector'), ephemeral=True)
-
-
-# ------ CURRENCY ------
 
 
 class ConfigCurrencyView(LocaleLayoutView):
@@ -2936,7 +2871,6 @@ class ConfigCurrencyView(LocaleLayoutView):
 
         self.add_item(container)
 
-        # Pagination
         if self.total_pages > 1:
             nav_row = ActionRow()
             prev_button = Button(
@@ -3014,7 +2948,6 @@ class ConfigEditCurrencyView(LocaleLayoutView):
                                            if c[CommonFields.NAME] == self.currency_name), {})
 
             self.denominations = self.currency_data.get(CurrencyFields.DENOMINATIONS, [])
-            # Sort denominations by value descending
             self.denominations.sort(key=lambda x: x.get(CurrencyFields.VALUE, 0), reverse=True)
 
             self.total_pages = math.ceil(len(self.denominations) / self.items_per_page)
@@ -3132,9 +3065,6 @@ class ConfigEditCurrencyView(LocaleLayoutView):
             await interaction.response.send_modal(common_modals.PageJumpModal(self))
         except Exception as e:
             await log_exception(e, interaction)
-
-
-# ------ SHOPS ------
 
 
 class ConfigShopsView(LocaleLayoutView):
@@ -3322,7 +3252,7 @@ class ForumShopSetupView(LocaleLayoutView):
     def __init__(self):
         super().__init__(timeout=None)
         self.selected_forum = None
-        self.create_new_thread = True  # Default to creating new thread
+        self.create_new_thread = True
         self.selected_thread = None
         self.forum_threads = []
 
@@ -3340,7 +3270,6 @@ class ForumShopSetupView(LocaleLayoutView):
         container.add_item(header_section)
         container.add_item(Separator())
 
-        # Forum selection
         container.add_item(TextDisplay(t(locale, 'config-label-step1')))
         forum_select_row = ActionRow()
         forum_select_row.add_item(selects.ForumChannelSelect(self))
@@ -3348,7 +3277,6 @@ class ForumShopSetupView(LocaleLayoutView):
         container.add_item(Separator())
 
         if self.selected_forum:
-            # Thread creation mode selection
             container.add_item(TextDisplay(t(locale, 'config-label-step2')))
 
             new_thread_row = ActionRow()
@@ -3371,12 +3299,10 @@ class ForumShopSetupView(LocaleLayoutView):
             container.add_item(Separator())
 
             if self.create_new_thread:
-                # Show button to proceed with new thread creation
                 proceed_section = Section(accessory=buttons.CreateNewForumThreadButton(self))
                 proceed_section.add_item(TextDisplay(t(locale, 'config-desc-create-new-thread')))
                 container.add_item(proceed_section)
             else:
-                # Show thread select for existing threads
                 container.add_item(TextDisplay(t(locale, 'config-label-step3')))
                 thread_select_row = ActionRow()
                 thread_select_row.add_item(selects.ForumThreadSelect(self))
@@ -3659,7 +3585,6 @@ class ConfigStockLimitsView(LocaleLayoutView):
 
     async def setup(self, bot, guild):
         try:
-            # Refresh shop data from database
             shop_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -3670,7 +3595,6 @@ class ConfigStockLimitsView(LocaleLayoutView):
                 self.shop_data = shop_query.get(ShopFields.SHOP_CHANNELS, {}).get(self.channel_id, self.shop_data)
                 self.all_stock = self.shop_data.get(ShopFields.SHOP_STOCK, [])
 
-            # Get runtime stock info
             self.stock_info = await get_shop_stock(bot, guild.id, self.channel_id)
 
             self.total_pages = max(1, math.ceil(len(self.all_stock) / self.items_per_page))
@@ -3686,20 +3610,17 @@ class ConfigStockLimitsView(LocaleLayoutView):
         locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
 
-        # Header
         shop_name = self.shop_data.get(ShopFields.SHOP_NAME, 'Unknown Shop')
         header_section = Section(accessory=buttons.BackToEditShopButton(self.channel_id, self.shop_data, locale=locale))
         header_section.add_item(TextDisplay(t(locale, 'config-title-stock-config', shopName=shop_name)))
         container.add_item(header_section)
         container.add_item(Separator())
 
-        # Current UTC time display
         now = datetime.now(timezone.utc)
         utc_time_str = now.strftime('%Y-%m-%d %H:%M UTC')
         container.add_item(TextDisplay(t(locale, 'config-label-current-utc', time=utc_time_str)))
         container.add_item(Separator())
 
-        # Restock schedule section
         restock_config = self.shop_data.get(ShopFields.RESTOCK_CONFIG, {})
         if restock_config.get(RestockFields.ENABLED):
             schedule = restock_config.get(RestockFields.SCHEDULE, 'none')
@@ -3747,7 +3668,6 @@ class ConfigStockLimitsView(LocaleLayoutView):
         container.add_item(schedule_section)
         container.add_item(Separator())
 
-        # Item stock limits section
         container.add_item(TextDisplay(t(locale, 'config-label-item-stock-limits')))
 
         if not self.all_stock:
@@ -3762,7 +3682,6 @@ class ConfigStockLimitsView(LocaleLayoutView):
                 item_name_display = escape_markdown(item_name)
                 max_stock = item.get(ShopFields.MAX_STOCK)
 
-                # Get runtime stock info (only if data is valid with 'available' key)
                 runtime_stock = self.stock_info.get(encode_mongo_key(item_name))
                 current_available = None
                 reserved = 0
@@ -3777,7 +3696,6 @@ class ConfigStockLimitsView(LocaleLayoutView):
                             t(locale, 'config-label-stock-with-available',
                               max=str(max_stock), available=str(current_available))
                         )
-                        # Show per-item restock increment when mode is incremental
                         restock_mode = restock_config.get(RestockFields.MODE, RestockMode.FULL.value)
                         if restock_config.get(RestockFields.ENABLED) and restock_mode == RestockMode.INCREMENTAL.value:
                             increment = item.get(ShopFields.RESTOCK_INCREMENT, 1)
@@ -3797,7 +3715,6 @@ class ConfigStockLimitsView(LocaleLayoutView):
                               max=str(max_stock))
                         )
 
-                    # Create button row with edit and remove buttons
                     item_row = ActionRow()
                     item_row.add_item(buttons.SetItemStockButton(item, self, current_available))
                     item_row.add_item(buttons.RemoveItemStockLimitButton(item, self))
@@ -3812,7 +3729,6 @@ class ConfigStockLimitsView(LocaleLayoutView):
 
         self.add_item(container)
 
-        # Pagination
         if self.total_pages > 1:
             nav_row = ActionRow()
 
@@ -3907,7 +3823,6 @@ class ConfigRoleplayView(LocaleLayoutView):
         container.add_item(header_section)
         container.add_item(Separator())
 
-        # Status & Time
         enabled = self.config.get(RoleplayFields.ENABLED, False)
         mode = self.config.get(RoleplayFields.MODE, 'scheduled')
 
@@ -3933,13 +3848,11 @@ class ConfigRoleplayView(LocaleLayoutView):
         container.add_item(status_section)
         container.add_item(Separator())
 
-        # Mode Description
         if mode == 'scheduled':
             mode_description = t(locale, 'config-desc-rp-mode-scheduled')
         else:
             mode_description = t(locale, 'config-desc-rp-mode-accrued')
 
-        # Settings
         settings_config = self.config.get(RoleplayFields.CONFIG, {})
         min_length = settings_config.get(RoleplayFields.MIN_LENGTH, 20)
         cooldown = settings_config.get(RoleplayFields.COOLDOWN, 30)
@@ -4006,7 +3919,6 @@ class ConfigRoleplayView(LocaleLayoutView):
 
         container.add_item(Separator())
 
-        # Channels
         channels = self.config.get(RoleplayFields.CHANNELS, [])
         if not channels:
             channel_lines = t(locale, 'config-msg-rp-no-channels')
@@ -4028,7 +3940,6 @@ class ConfigRoleplayView(LocaleLayoutView):
         container.add_item(channel_select_row)
         container.add_item(Separator())
 
-        # Rewards
         rewards_text = t(locale, 'config-label-rp-rewards') + '\n'
         rewards_data = self.config.get(RoleplayFields.REWARDS, {})
         if not rewards_data:
@@ -4053,9 +3964,6 @@ class ConfigRoleplayView(LocaleLayoutView):
         container.add_item(reward_section)
 
         self.add_item(container)
-
-
-# ------ LANGUAGE ------
 
 
 class ConfigLanguageView(LocaleLayoutView):

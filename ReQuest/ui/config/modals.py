@@ -202,12 +202,10 @@ class RenameCurrencyModal(LocaleModal):
             new_name = self.text_input.value.strip()
 
             if new_name.lower() == self.old_currency_name.lower():
-                # No actual change, just refresh
                 await setup_view(self.calling_view, interaction)
                 await interaction.response.edit_message(view=self.calling_view)
                 return
 
-            # Check for duplicate names
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -229,7 +227,6 @@ class RenameCurrencyModal(LocaleModal):
                                 message_id='config-error-denomination-name-exists'
                             )
 
-            # Update the currency name
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -239,7 +236,6 @@ class RenameCurrencyModal(LocaleModal):
                 update_data={'$set': {f'{CurrencyFields.CURRENCIES}.$.{CommonFields.NAME}': new_name}}
             )
 
-            # Update the view with the new name and refresh
             self.calling_view.currency_name = new_name
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
@@ -277,12 +273,10 @@ class RenameDenominationModal(LocaleModal):
             new_name = self.text_input.value.strip()
 
             if new_name.lower() == self.old_denomination_name.lower():
-                # No actual change, just refresh
                 await setup_view(self.calling_view, interaction)
                 await interaction.response.edit_message(view=self.calling_view)
                 return
 
-            # Check for duplicate names
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -304,7 +298,6 @@ class RenameDenominationModal(LocaleModal):
                                 message_id='config-error-denomination-name-exists'
                             )
 
-            # Update the denomination name using arrayFilters
             collection = bot.gdb[DatabaseCollections.CURRENCY]
             await collection.update_one(
                 {CommonFields.ID: guild_id, f'{CurrencyFields.CURRENCIES}.{CommonFields.NAME}': self.currency_name},
@@ -315,7 +308,6 @@ class RenameDenominationModal(LocaleModal):
                 array_filters=[{f'denom.{CommonFields.NAME}': self.old_denomination_name}]
             )
 
-            # Invalidate cache
             from ReQuest.utilities.db_cache import build_cache_key
             cache_key = build_cache_key(bot.gdb.name, guild_id, DatabaseCollections.CURRENCY)
             await bot.rdb.delete(cache_key)
@@ -496,11 +488,9 @@ class PlayerBoardPurgeModal(LocaleModal):
             bot = interaction.client
             age = int(self.age_text_input.value)
 
-            # Get the current datetime and calculate the cutoff date
             current_datetime = datetime.now(timezone.utc)
             cutoff_date = current_datetime - timedelta(days=age)
 
-            # Delete all records in the db matching this guild that are older than the cutoff
             await delete_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -510,7 +500,6 @@ class PlayerBoardPurgeModal(LocaleModal):
                 cache_id=interaction.guild_id
             )
 
-            # Get the channel object and purge all messages older than the cutoff
             config_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -647,7 +636,6 @@ class ConfigShopDetailsModal(LocaleModal):
         description_default = existing_shop_data.get(ShopFields.SHOP_DESCRIPTION, '') if existing_shop_data else ''
         image_default = existing_shop_data.get(ShopFields.SHOP_IMAGE, '') if existing_shop_data else ''
 
-        # Only show channel select if no existing channel AND no preselected channel (forum thread)
         if not self.existing_channel_id and not self.preselected_channel:
             self.shop_channel_select = discord.ui.ChannelSelect(
                 channel_types=[discord.ChannelType.text],
@@ -737,7 +725,6 @@ class ConfigShopDetailsModal(LocaleModal):
             if self.existing_channel_id:
                 channel_id = self.existing_channel_id
             elif self.preselected_channel:
-                # Forum thread case - channel already selected
                 channel_id = str(self.preselected_channel.id)
             else:
                 if not self.shop_channel_select or not self.shop_channel_select.values:
@@ -769,7 +756,6 @@ class ConfigShopDetailsModal(LocaleModal):
                 ShopFields.CHANNEL_TYPE: self.channel_type
             }
 
-            # Add parent forum ID for forum thread shops
             if self.channel_type == ShopChannelType.FORUM_THREAD.value and self.parent_forum_id:
                 shop_data[ShopFields.PARENT_FORUM_ID] = self.parent_forum_id
 
@@ -934,7 +920,6 @@ class ForumThreadShopModal(LocaleModal):
             bot = interaction.client
             guild_id = interaction.guild_id
 
-            # Fetch the actual ForumChannel object (self.forum_channel is an AppCommandChannel)
             forum = interaction.guild.get_channel(self.forum_channel.id)
             if not forum:
                 raise UserFeedbackError(
@@ -942,7 +927,6 @@ class ForumThreadShopModal(LocaleModal):
                     message_id='config-error-forum-not-found'
                 )
 
-            # Build shop data first so we can create the header view
             thread_name = self.thread_name_input.value
             shop_data = {
                 ShopFields.SHOP_NAME: self.shop_name_input.value,
@@ -954,20 +938,16 @@ class ForumThreadShopModal(LocaleModal):
                 ShopFields.PARENT_FORUM_ID: str(self.forum_channel.id)
             }
 
-            # Create the shop header view for the initial post
             header_view = build_shop_header_view(shop_data, locale=locale)
 
-            # Create the forum thread with the shop header view
             thread_with_message = await forum.create_thread(
                 name=thread_name,
                 view=header_view
             )
 
-            # Get the thread ID (create_thread returns a ThreadWithMessage)
             thread = thread_with_message.thread
             channel_id = str(thread.id)
 
-            # Check if a shop already exists for this thread (shouldn't happen for new thread, but safety check)
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -988,7 +968,6 @@ class ForumThreadShopModal(LocaleModal):
                 update_data={'$set': {f'{ShopFields.SHOP_CHANNELS}.{channel_id}': shop_data}}
             )
 
-            # Navigate back to shop config view
             from ReQuest.ui.config.views import ConfigShopsView
             new_view = ConfigShopsView()
             await setup_view(new_view, interaction)
@@ -1089,13 +1068,11 @@ class ConfigShopJSONModal(LocaleModal):
                 update_data={'$set': {f'{ShopFields.SHOP_CHANNELS}.{channel_id}': shop_data}}
             )
 
-            # Initialize runtime stock for items with maxStock
             shop_stock = shop_data.get(ShopFields.SHOP_STOCK, [])
             for item in shop_stock:
                 max_stock = item.get(ShopFields.MAX_STOCK)
                 if max_stock is not None:
                     item_name = item.get(CommonFields.NAME)
-                    # Initialize with max stock as available
                     await initialize_item_stock(bot, guild_id, channel_id, item_name, max_stock, max_stock)
 
             await setup_view(self.calling_view, interaction)
@@ -1389,16 +1366,13 @@ class ConfigUpdateShopJSONModal(LocaleModal):
                 update_data={'$set': {f'{ShopFields.SHOP_CHANNELS}.{channel_id}': shop_data}}
             )
 
-            # Initialize runtime stock for items with maxStock that don't have stock entries yet
             shop_stock = shop_data.get(ShopFields.SHOP_STOCK, [])
             for item in shop_stock:
                 max_stock = item.get(ShopFields.MAX_STOCK)
                 if max_stock is not None:
                     item_name = item.get(CommonFields.NAME)
-                    # Check if stock already exists for this item
                     existing_stock = await get_item_stock(bot, guild_id, channel_id, item_name)
                     if existing_stock is None or ShopFields.AVAILABLE not in existing_stock:
-                        # Initialize with max stock as available
                         await initialize_item_stock(bot, guild_id, channel_id, item_name, max_stock, max_stock)
 
             if hasattr(self.calling_view, 'update_details'):
@@ -2172,7 +2146,6 @@ class RoleplaySettingsModal(LocaleModal):
             bot = interaction.client
             new_config = self.calling_view.config.get(RoleplayFields.CONFIG, {})
 
-            # Minimum Length
             try:
                 minimum_length = int(self.minimum_length_text_input.value)
                 if minimum_length < 0:
@@ -2185,7 +2158,6 @@ class RoleplaySettingsModal(LocaleModal):
 
             new_config[RoleplayFields.MIN_LENGTH] = minimum_length
 
-            # Cooldown
             try:
                 cooldown_seconds = int(self.cooldown_text_input.value)
                 if cooldown_seconds < 0:
@@ -2198,7 +2170,6 @@ class RoleplaySettingsModal(LocaleModal):
 
             new_config[RoleplayFields.COOLDOWN] = cooldown_seconds
 
-            # Validate and add scheduled settings
             if self.mode == 'scheduled':
                 try:
                     threshold = int(self.threshold_text_input.value)
@@ -2212,7 +2183,6 @@ class RoleplaySettingsModal(LocaleModal):
 
                 new_config[RoleplayFields.THRESHOLD] = threshold
 
-            # Validate and add accrued settings
             elif self.mode == 'accrued':
                 try:
                     frequency = int(self.frequency_text_input.value)
@@ -2226,7 +2196,6 @@ class RoleplaySettingsModal(LocaleModal):
 
                 new_config[RoleplayFields.FREQUENCY] = frequency
 
-            # Push updates to db
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -2393,7 +2362,6 @@ class SetItemStockModal(LocaleModal):
             component=self.max_stock_text_input
         )
 
-        # Default current stock to max if setting up for first time
         default_current = ''
         if current_stock is not None:
             default_current = str(current_stock)
@@ -2437,7 +2405,6 @@ class SetItemStockModal(LocaleModal):
             guild_id = interaction.guild_id
             channel_id = self.calling_view.channel_id
 
-            # Validate max stock
             max_stock_str = self.max_stock_text_input.value.strip()
             try:
                 max_stock = int(max_stock_str)
@@ -2449,7 +2416,6 @@ class SetItemStockModal(LocaleModal):
                     message_id='config-error-max-stock-positive'
                 )
 
-            # Validate current stock
             current_stock_str = self.current_stock_text_input.value.strip()
             try:
                 current_stock = int(current_stock_str)
@@ -2467,7 +2433,6 @@ class SetItemStockModal(LocaleModal):
                     message_id='config-error-current-exceeds-max'
                 )
 
-            # Validate restock increment
             increment_amount = 1
             increment_str = self.increment_text_input.value.strip()
             if increment_str:
@@ -2481,7 +2446,6 @@ class SetItemStockModal(LocaleModal):
                         message_id='config-error-increment-positive'
                     )
 
-            # Update the shop config with maxStock for this item
             shop_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -2491,7 +2455,6 @@ class SetItemStockModal(LocaleModal):
             shop_data = shop_query.get(ShopFields.SHOP_CHANNELS, {}).get(channel_id, {})
             shop_stock = shop_data.get(ShopFields.SHOP_STOCK, [])
 
-            # Find and update the item
             item_found = False
             for item in shop_stock:
                 if item.get(CommonFields.NAME) == self.item_name:
@@ -2506,7 +2469,6 @@ class SetItemStockModal(LocaleModal):
                     message_id='config-error-item-not-in-shop'
                 )
 
-            # Save shop config
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -2515,10 +2477,8 @@ class SetItemStockModal(LocaleModal):
                 update_data={'$set': {f'{ShopFields.SHOP_CHANNELS}.{channel_id}': shop_data}}
             )
 
-            # Initialize/update the runtime stock tracking
             await initialize_item_stock(bot, guild_id, channel_id, self.item_name, max_stock, current_stock)
 
-            # Refresh the view
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:
@@ -2535,7 +2495,6 @@ class RestockScheduleModal(LocaleModal):
         )
         self.calling_view = calling_view
 
-        # Get current UTC time for display
         now = datetime.now(timezone.utc)
         utc_time_str = now.strftime('%Y-%m-%d %H:%M UTC')
 
@@ -2692,7 +2651,6 @@ class RestockScheduleModal(LocaleModal):
 
             schedule = self.schedule_radio_group.value
 
-            # Parse time
             hour, minute = 0, 0
             time_str = self.time_text_input.value.strip()
             if time_str and schedule != 'none':
@@ -2708,13 +2666,10 @@ class RestockScheduleModal(LocaleModal):
                         message_id='config-error-time-format-invalid'
                     )
 
-            # Parse day of week
             day = int(self.day_radio_group.value)
 
-            # Parse mode
             mode = self.mode_radio_group.value
 
-            # Build restock config
             if schedule == 'none':
                 restock_config = {RestockFields.ENABLED: False}
             else:
@@ -2727,7 +2682,6 @@ class RestockScheduleModal(LocaleModal):
                     RestockFields.MODE: mode,
                 }
 
-            # Update shop config
             shop_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -2745,7 +2699,6 @@ class RestockScheduleModal(LocaleModal):
                 update_data={'$set': {f'{ShopFields.SHOP_CHANNELS}.{channel_id}': shop_data}}
             )
 
-            # Refresh the view
             await setup_view(self.calling_view, interaction)
             await interaction.response.edit_message(view=self.calling_view)
         except Exception as e:

@@ -49,7 +49,6 @@ class Tasks(Cog):
     async def before_cart_cleanup(self):
         """Wait for the bot to be ready and run initial cleanup."""
         await self.bot.wait_until_ready()
-        # Run immediate cleanup on startup for any orphaned carts
         try:
             await cleanup_expired_carts(self.bot)
             logger.info("Completed startup cart cleanup.")
@@ -111,9 +110,8 @@ class Tasks(Cog):
         """
         Determine if restocking should occur based on schedule.
 
-        Uses a "has the target time passed since the last restock?" approach
-        rather than exact minute matching, so the check is resilient to loop
-        drift and doesn't require the tick to land on the exact target minute.
+        Checks to see if the target time has passed since the last restock. This helps avoid loop
+        drift and doesn't require the tick to land on the exact minute.
 
         :param restock_config: The shop's restock configuration
         :param last_restock: The last restock datetime or None
@@ -127,7 +125,6 @@ class Tasks(Cog):
         target_day = restock_config.get(RestockFields.DAY_OF_WEEK, 0)  # 0 = Monday
 
         if schedule == ScheduleType.HOURLY.value:
-            # The target time this hour
             target_time = now.replace(minute=target_minute, second=0, microsecond=0)
 
             # Haven't reached target minute yet this hour
@@ -135,30 +132,22 @@ class Tasks(Cog):
                 return False
 
             if last_restock is None:
-                # First-ever restock: only fire if close to target to avoid an
-                # immediate catch-up restock on first bot start mid-hour.
                 return (now - target_time) <= timedelta(minutes=FIRST_RESTOCK_GRACE_HOURLY)
 
-            # Normal case: restock if we haven't restocked since this hour's target
             return last_restock < target_time
 
         elif schedule == ScheduleType.DAILY.value:
-            # Build today's target time
             target_time = now.replace(hour=target_hour, minute=target_minute, second=0, microsecond=0)
 
-            # Haven't reached target time yet today
             if now < target_time:
                 return False
 
             if last_restock is None:
-                # First-ever restock: only fire if close to target to avoid
-                # a catch-up restock on first bot start late in the day.
                 return (now - target_time) <= timedelta(minutes=FIRST_RESTOCK_GRACE_DAILY)
 
             return last_restock < target_time
 
         elif schedule == ScheduleType.WEEKLY.value:
-            # Calculate this week's target day (Mon=0 anchor)
             this_monday = now.date() - timedelta(days=now.weekday())
             target_date = this_monday + timedelta(days=target_day)
             target_time = datetime(
@@ -166,13 +155,10 @@ class Tasks(Cog):
                 target_hour, target_minute, 0, 0, timezone.utc
             )
 
-            # Haven't reached target time yet this week
             if now < target_time:
                 return False
 
             if last_restock is None:
-                # First-ever restock: only fire if close to target to avoid
-                # a catch-up restock on first bot start days after the target.
                 return (now - target_time) <= timedelta(minutes=FIRST_RESTOCK_GRACE_WEEKLY)
 
             return last_restock < target_time
@@ -205,14 +191,12 @@ class Tasks(Cog):
             current_available = current_stock[ShopFields.AVAILABLE] if current_stock else 0
 
             if current_available >= max_stock:
-                continue  # Already at or above max, skip
+                continue
 
             if mode == RestockMode.FULL.value:
-                # Set available to maxStock
                 await set_available_stock(self.bot, guild_id, channel_id, item_name, max_stock)
                 amount_added = max_stock - current_available
             else:
-                # Increment available up to maxStock, using per-item increment (default 1)
                 try:
                     increment_amount = max(1, int(item.get(ShopFields.RESTOCK_INCREMENT, 1)))
                 except (TypeError, ValueError):
@@ -237,14 +221,12 @@ class Tasks(Cog):
         :param restocked_items: List of (item_name, amount_added) tuples
         """
         try:
-            # Use helper to find channel (handles both text channels and forum threads)
             channel = await get_shop_channel(self.bot, guild_id, channel_id)
             if not channel:
                 return
 
             locale = await resolve_locale(bot=self.bot, guild_id=guild_id)
 
-            # Build the item list (cap at 20 items)
             max_display = 20
             item_lines = []
             for item_name, amount in restocked_items[:max_display]:

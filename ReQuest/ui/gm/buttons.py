@@ -121,7 +121,6 @@ class PublishQuestButton(Button):
             locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
             status = quest.get(QuestFields.STATUS, QuestStatus.PUBLISHED)
 
-            # Get quest channel
             quest_channel_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -144,7 +143,6 @@ class PublishQuestButton(Button):
                         message_id='gm-error-no-quest-channel'
                     )
 
-            # Get quest role mode from server config
             quest_role_mode_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -156,13 +154,11 @@ class PublishQuestButton(Button):
                 if quest_role_mode_query else 'temporary'
             )
 
-            # Handle party role for temporary mode
             new_role_id = quest.get(QuestFields.PARTY_ROLE_ID)
             role_name = quest.get(QuestFields.PARTY_ROLE_NAME)
             old_role_id = quest.get(QuestFields.PARTY_ROLE_ID)
 
             if quest_role_mode == 'temporary' and role_name:
-                # Check forbidden role names
                 forbidden_query = await get_cached_data(
                     bot=bot,
                     mongo_database=bot.gdb,
@@ -182,12 +178,10 @@ class PublishQuestButton(Button):
                         roleName=role_name
                     )
 
-                # Check if role name already exists in guild
                 existing_role = discord.utils.find(
                     lambda r: r.name.lower() == role_name.lower(), guild.roles
                 )
 
-                # If the existing role is the quest's own role, that's fine (no name change)
                 if existing_role and existing_role.id != old_role_id:
                     raise UserFeedbackError(
                         t(locale, 'gm-error-role-name-exists', roleName=role_name),
@@ -195,11 +189,9 @@ class PublishQuestButton(Button):
                         roleName=role_name
                     )
 
-                # Determine if we need to create/replace the role
                 if old_role_id:
                     old_role = guild.get_role(old_role_id)
                     if old_role and old_role.name.lower() != role_name.lower():
-                        # Name changed — delete old role, create new one
                         await old_role.delete(reason=f'Quest {quest_id}: party role name changed')
                         new_role = await guild.create_role(
                             name=role_name,
@@ -207,30 +199,25 @@ class PublishQuestButton(Button):
                         )
                         new_role_id = new_role.id
                     elif old_role:
-                        # Same name, keep existing role
                         new_role_id = old_role_id
                     else:
-                        # Old role was deleted externally, create fresh
                         new_role = await guild.create_role(
                             name=role_name,
                             reason=f'Party role for quest {quest_id}'
                         )
                         new_role_id = new_role.id
                 else:
-                    # No existing role, create new
                     new_role = await guild.create_role(
                         name=role_name,
                         reason=f'Party role for quest {quest_id}'
                     )
                     new_role_id = new_role.id
             elif quest_role_mode == 'temporary' and not role_name and old_role_id:
-                # Role name was cleared — delete old role
                 old_role = guild.get_role(old_role_id)
                 if old_role:
                     await old_role.delete(reason=f'Quest {quest_id}: party role removed')
                 new_role_id = None
 
-            # Get wait list config
             wait_list_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -242,7 +229,6 @@ class PublishQuestButton(Button):
                 if wait_list_query else 0
             )
 
-            # Update quest document
             updates = {
                 QuestFields.PARTY_ROLE_ID: new_role_id,
                 QuestFields.QUEST_ROLE_MODE: quest_role_mode,
@@ -252,18 +238,14 @@ class PublishQuestButton(Button):
             if status == QuestStatus.DRAFT:
                 updates[QuestFields.STATUS] = QuestStatus.PUBLISHED
 
-            # Build and send/update the quest post
             from ReQuest.ui.gm.views import QuestPostView
             quest_view = QuestPostView(quest)
             await quest_view.setup(bot=bot)
 
             if status == QuestStatus.DRAFT:
-                # New publish — send to channel
                 msg = await quest_channel.send(view=quest_view)
                 updates[QuestFields.MESSAGE_ID] = msg.id
             else:
-                # Update existing post — try edit, fall back to delete+resend
-                # (old embed messages can't be edited into V2 component messages)
                 message_id = quest.get(QuestFields.MESSAGE_ID)
                 if message_id and quest_channel:
                     message = quest_channel.get_partial_message(message_id)
@@ -284,7 +266,6 @@ class PublishQuestButton(Button):
             )
             quest.update(updates)
 
-            # Clear cached quest lists
             admin_key = build_cache_key(bot.gdb.name, f'guild_quests:{guild_id}', 'quests')
             await bot.rdb.delete(admin_key)
             gm_key = build_cache_key(
@@ -292,7 +273,6 @@ class PublishQuestButton(Button):
             )
             await bot.rdb.delete(gm_key)
 
-            # Refresh the edit view
             await setup_view(self.calling_view, interaction)
             await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
@@ -388,15 +368,12 @@ class CancelQuestButton(Button):
             guild_id = interaction.guild_id
             guild = interaction.guild
 
-            # If a party exists
             party = quest[QuestFields.PARTY]
             title = quest[QuestFields.TITLE]
             if party:
-                # Get party members and message them with results
                 guild_name = guild.name
                 for player in party:
                     for member_id in player:
-                        # Message the player that the quest was canceled.
                         member = await get_guild_member(guild, int(member_id))
                         if member:
                             try:
@@ -416,7 +393,6 @@ class CancelQuestButton(Button):
                         else:
                             logger.warning(f'Could not find member {member_id} in guild {guild_id}.')
 
-            # Remove the party role, if applicable
             party_role_id = quest[QuestFields.PARTY_ROLE_ID]
             if party_role_id:
                 party_role = guild.get_role(party_role_id)
@@ -475,7 +451,6 @@ class CancelQuestButton(Button):
                     except discord.errors.Forbidden:
                         logger.warning(f'Could not DM {interaction.user.id} about missing quest role.')
 
-            # Delete the quest from the database
             await delete_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -484,14 +459,12 @@ class CancelQuestButton(Button):
                 cache_id=f'{guild_id}:{quest[QuestFields.QUEST_ID]}'
             )
 
-            # Delete the quest from the redis cache
             admin_list_key = build_cache_key(bot.gdb.name, f'guild_quests:{guild_id}', 'quests')
             await bot.rdb.delete(admin_list_key)
 
             gm_list_key = build_cache_key(bot.gdb.name, f'gm_quests:{guild_id}:{quest[QuestFields.GM]}', 'quests')
             await bot.rdb.delete(gm_list_key)
 
-            # Delete the quest from the quest channel (skip for drafts — no message exists)
             status = quest.get(QuestFields.STATUS, QuestStatus.PUBLISHED)
             if status != QuestStatus.DRAFT:
                 channel_query = await get_cached_data(

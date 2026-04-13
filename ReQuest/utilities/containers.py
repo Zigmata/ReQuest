@@ -46,7 +46,6 @@ def get_containers_sorted(character_data: dict, locale: str | None = None) -> li
 
     result = []
 
-    # Loose items (root inventory) is always first
     loose_items = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
     result.append({
         'id': None,
@@ -55,7 +54,6 @@ def get_containers_sorted(character_data: dict, locale: str | None = None) -> li
         'count': len(loose_items)
     })
 
-    # Get containers sorted by order
     containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
     sorted_containers = sorted(
         containers.items(),
@@ -110,13 +108,11 @@ def get_total_item_quantity(character_data: dict, item_name: str) -> int:
     item_name_lower = item_name.lower()
     total = 0
 
-    # Check loose items
     inventory = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
     for name, qty in inventory.items():
         if name.lower() == item_name_lower:
             total += qty
 
-    # Check all containers
     containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
     for container_data in containers.values():
         items = container_data.get(ContainerFields.ITEMS, {})
@@ -140,13 +136,11 @@ def get_item_locations(character_data: dict, item_name: str, locale: str | None 
     item_name_lower = item_name.lower()
     locations = []
 
-    # Check loose items
     inventory = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
     for name, qty in inventory.items():
         if name.lower() == item_name_lower and qty > 0:
             locations.append({'id': None, 'name': t(locale, 'common-label-loose-items'), 'quantity': qty})
 
-    # Check all containers
     containers = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CONTAINERS, {})
     for container_id, container_data in containers.items():
         items = container_data.get(ContainerFields.ITEMS, {})
@@ -185,7 +179,6 @@ def container_name_exists(character_data: dict, name: str, exclude_id: str | Non
 
     name_lower = name.lower()
 
-    # Check against "Loose Items"
     if name_lower == t(locale, 'common-label-loose-items').lower():
         return True
 
@@ -346,10 +339,8 @@ async def delete_container(bot, player_id: int, character_id: str,
     items_to_move = container.get(ContainerFields.ITEMS, {})
     items_count = len(items_to_move)
 
-    # Move items to root inventory
     if items_to_move:
         current_inventory = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
-        # Normalize to lowercase for merging
         inventory_lower = {k.lower(): (k, v) for k, v in current_inventory.items()}
 
         for item_name, quantity in items_to_move.items():
@@ -360,7 +351,6 @@ async def delete_container(bot, player_id: int, character_id: str,
             else:
                 inventory_lower[item_lower] = (titlecase(item_name), quantity)
 
-        # Rebuild inventory with titlecase keys
         new_inventory = {name: qty for name, qty in inventory_lower.values()}
 
         await update_cached_data(
@@ -419,7 +409,6 @@ async def reorder_container(bot, player_id: int, character_id: str,
     if container_id not in containers:
         raise UserFeedbackError('Container not found.', message_id='error-container-not-found')
 
-    # Sort containers by order
     sorted_containers = sorted(containers.items(), key=lambda x: x[1].get(ContainerFields.ORDER, 0))
 
     current_index = None
@@ -434,10 +423,8 @@ async def reorder_container(bot, player_id: int, character_id: str,
     target_index = current_index + direction
 
     if target_index < 0 or target_index >= len(sorted_containers):
-        # Already at boundary, nothing to do
         return
 
-    # Swap order values
     current_container_id = sorted_containers[current_index][0]
     target_container_id = sorted_containers[target_index][0]
 
@@ -494,7 +481,6 @@ async def move_item_between_containers(
 
     item_name_lower = item_name.lower()
 
-    # Get source items
     if source_container_id is None:
         source_items = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
         source_path = (
@@ -513,7 +499,6 @@ async def move_item_between_containers(
             f'.{source_container_id}.{ContainerFields.ITEMS}'
         )
 
-    # Find item in source (case-insensitive)
     source_key = None
     source_qty = 0
     for key, qty in source_items.items():
@@ -531,7 +516,6 @@ async def move_item_between_containers(
                                 message_id='error-insufficient-quantity-in-container',
                                 available=str(source_qty))
 
-    # Get destination items
     if dest_container_id is None:
         dest_items = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
         dest_path = (
@@ -550,7 +534,6 @@ async def move_item_between_containers(
             f'.{dest_container_id}.{ContainerFields.ITEMS}'
         )
 
-    # Find existing item in destination (case-insensitive)
     dest_key = None
     dest_qty = 0
     for key, qty in dest_items.items():
@@ -559,24 +542,19 @@ async def move_item_between_containers(
             dest_qty = qty
             break
 
-    # Use titlecase for the item name
     display_name = titlecase(item_name)
 
-    # Modify source items dict (remove item)
     new_source_qty = source_qty - quantity
     if new_source_qty <= 0:
         del source_items[source_key]
     else:
         source_items[source_key] = new_source_qty
 
-    # Modify destination items dict (add item)
     if dest_key:
         dest_items[dest_key] = dest_qty + quantity
     else:
         dest_items[display_name] = quantity
 
-    # Update both containers at once using full path to items dict
-    # This avoids dot-notation issues with item names containing dots
     await update_cached_data(
         bot=bot,
         mongo_database=bot.mdb,
@@ -620,7 +598,6 @@ async def consume_item_from_container(
 
     item_name_lower = item_name.lower()
 
-    # Get container items
     if container_id is None:
         items = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.INVENTORY, {})
         path = (
@@ -638,7 +615,6 @@ async def consume_item_from_container(
             f'.{container_id}.{ContainerFields.ITEMS}'
         )
 
-    # Find item (case-insensitive)
     item_key = None
     current_qty = 0
     for key, qty in items.items():
@@ -658,8 +634,6 @@ async def consume_item_from_container(
 
     new_qty = current_qty - quantity
 
-    # Modify items dict in Python and set the entire container
-    # This avoids dot-notation issues with item names containing dots
     if new_qty <= 0:
         del items[item_key]
     else:
@@ -691,14 +665,13 @@ def format_inventory_by_container(character_data: dict, currency_config: dict | 
     for container in containers:
         items = container['items']
         if not items:
-            continue  # Skip empty containers in print output
+            continue
 
         lines.append(f'**{container["name"]}**')
         for item_name, quantity in sorted(items.items()):
             lines.append(f'• {item_name}: **{quantity}**')
-        lines.append('')  # Blank line between containers
+        lines.append('')
 
-    # Add currency section
     player_currency = character_data[CharacterFields.ATTRIBUTES].get(CharacterFields.CURRENCY, {})
     if player_currency and currency_config:
         currency_lines = format_currency_display(player_currency, currency_config)

@@ -36,7 +36,6 @@ __all__ = [
     'cleanup_expired_carts',
 ]
 
-# ----- Shop Cart Management -----
 
 CART_TTL_MINUTES = 10
 
@@ -57,24 +56,20 @@ async def get_shop_channel(bot, guild_id: int, channel_id: str) -> discord.abc.M
     if not guild:
         return None
 
-    # Try direct channel lookup first (works for text channels and cached threads)
     channel = guild.get_channel(int(channel_id))
     if channel:
         return channel
 
-    # Try to find as thread in text channels
     for text_channel in guild.text_channels:
         thread = text_channel.get_thread(int(channel_id))
         if thread:
             return thread
 
-    # Try to find as thread in forum channels
     for forum in guild.forums:
         thread = forum.get_thread(int(channel_id))
         if thread:
             return thread
 
-    # Fall back to fetch if not found in cache
     try:
         channel = await bot.fetch_channel(int(channel_id))
         return channel
@@ -253,7 +248,6 @@ async def release_stock(bot, guild_id: int, channel_id: str, item_name: str,
     encoded_name = encode_mongo_key(item_name)
     path = f'{ShopFields.SHOPS}.{channel_id}.{encoded_name}'
 
-    # Compute actual release as min(quantity, reserved) to prevent inflating available
     actual_release = {'$min': [quantity, {'$ifNull': [f'${path}.{ShopFields.RESERVED}', 0]}]}
 
     new_available = {'$add': [f'${path}.{ShopFields.AVAILABLE}', actual_release]}
@@ -446,18 +440,11 @@ async def get_cart(bot, guild_id: int, user_id: int, channel_id: str, session=No
     if not cart:
         return None
 
-    # Check if cart has expired
     expires_at = cart.get(CartFields.EXPIRES_AT)
     if expires_at:
         if isinstance(expires_at, str):
             expires_at = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
         if datetime.now(timezone.utc) > expires_at:
-            # Cleanup must happen atomically with any subsequent writes the caller makes.
-            # Without this, add_item_to_cart would overwrite the expired cart with a fresh
-            # empty one, orphaning the old stock reservations (the cleanup task can't find
-            # them without the cart doc). If the caller later aborts the transaction, the
-            # rollback reverts this cleanup too, and the background cleanup_expired_carts
-            # task will catch up on the next tick.
             await clear_cart_and_release_stock(bot, guild_id, user_id, channel_id, session=session)
             return None
 
@@ -480,7 +467,6 @@ async def get_or_create_cart(bot, guild_id: int, user_id: int, channel_id: str, 
     if cart:
         return cart
 
-    # Create new cart
     cart_id = build_cart_id(guild_id, user_id, channel_id)
     now = datetime.now(timezone.utc)
     expires_at = now + timedelta(minutes=CART_TTL_MINUTES)
@@ -526,7 +512,6 @@ async def add_item_to_cart(bot, guild_id: int, user_id: int, channel_id: str,
     item_name = item.get(CommonFields.NAME)
     cart_key = f"{encode_mongo_key(item_name)}::{option_index}"
 
-    # Check if item has stock limit and reserve if needed
     has_stock_limit = item.get(ShopFields.MAX_STOCK) is not None
     reserved_quantity = 0
     if has_stock_limit:
@@ -536,7 +521,6 @@ async def add_item_to_cart(bot, guild_id: int, user_id: int, channel_id: str,
             return False
         reserved_quantity = item_quantity
 
-    # Persist the cart entry; release stock if the write fails
     try:
         cart = await get_or_create_cart(bot, guild_id, user_id, channel_id, session=session)
         cart_id = cart[CommonFields.ID]
@@ -544,10 +528,8 @@ async def add_item_to_cart(bot, guild_id: int, user_id: int, channel_id: str,
         now = datetime.now(timezone.utc)
         expires_at = now + timedelta(minutes=CART_TTL_MINUTES)
 
-        # Check if item already in cart
         existing_items = cart.get(CartFields.ITEMS, {})
         if cart_key in existing_items:
-            # Increment quantity
             await update_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -564,7 +546,6 @@ async def add_item_to_cart(bot, guild_id: int, user_id: int, channel_id: str,
                 session=session
             )
         else:
-            # Add new item
             cart_item = {
                 CartFields.ITEM: item,
                 CartFields.QUANTITY: 1,
@@ -587,8 +568,6 @@ async def add_item_to_cart(bot, guild_id: int, user_id: int, channel_id: str,
                 session=session
             )
     except Exception:
-        # Inside a transaction the abort will roll back the reserve_stock automatically.
-        # Outside, we manually release to avoid leaking the reservation.
         if session is None and reserved_quantity > 0:
             max_stock = item.get(ShopFields.MAX_STOCK)
             await release_stock(bot, guild_id, channel_id, item_name, reserved_quantity, max_stock)
@@ -627,9 +606,7 @@ async def remove_item_from_cart(bot, guild_id: int, user_id: int, channel_id: st
     now = datetime.now(timezone.utc)
     expires_at = now + timedelta(minutes=CART_TTL_MINUTES)
 
-    # Update the cart first to prevent stock release without cart consistency
     if quantity >= current_quantity:
-        # Remove item entirely
         await update_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
@@ -646,7 +623,6 @@ async def remove_item_from_cart(bot, guild_id: int, user_id: int, channel_id: st
             session=session
         )
     else:
-        # Decrement quantity
         await update_cached_data(
             bot=bot,
             mongo_database=bot.gdb,
@@ -663,9 +639,6 @@ async def remove_item_from_cart(bot, guild_id: int, user_id: int, channel_id: st
             session=session
         )
 
-    # Release stock after successful cart update.
-    # In a transaction: re-raise on failure so the cart update aborts.
-    # Outside a transaction: log and continue (best-effort to surface leaked reservations).
     max_stock = item.get(ShopFields.MAX_STOCK)
     if max_stock is not None:
         item_quantity = item.get(CommonFields.QUANTITY, 1)
@@ -717,7 +690,6 @@ async def update_cart_item_quantity(bot, guild_id: int, user_id: int, channel_id
     item_name = item.get(CommonFields.NAME)
 
     if new_quantity <= 0:
-        # Remove item entirely
         await remove_item_from_cart(bot, guild_id, user_id, channel_id, cart_key, current_quantity,
                                     session=session)
         return True, t(locale, 'shop-msg-item-removed')
@@ -726,10 +698,8 @@ async def update_cart_item_quantity(bot, guild_id: int, user_id: int, channel_id
     has_stock_limit = item.get(ShopFields.MAX_STOCK) is not None
 
     if quantity_diff > 0:
-        # Trying to add more
         reserved_quantity = 0
         if has_stock_limit:
-            # Need to reserve additional stock
             item_quantity = item.get(CommonFields.QUANTITY, 1)
             reserved_quantity = quantity_diff * item_quantity
             success = await reserve_stock(
@@ -738,7 +708,6 @@ async def update_cart_item_quantity(bot, guild_id: int, user_id: int, channel_id
             if not success:
                 return False, t(locale, 'error-not-enough-stock')
 
-        # Update quantity; release stock if the write fails
         try:
             now = datetime.now(timezone.utc)
             expires_at = now + timedelta(minutes=CART_TTL_MINUTES)
@@ -760,14 +729,11 @@ async def update_cart_item_quantity(bot, guild_id: int, user_id: int, channel_id
                 session=session
             )
         except Exception:
-            # Inside a transaction the abort will roll back the reserve_stock automatically.
-            # Outside, we manually release to avoid leaking the reservation.
             if session is None and reserved_quantity > 0:
                 max_stock = item.get(ShopFields.MAX_STOCK)
                 await release_stock(bot, guild_id, channel_id, item_name, reserved_quantity, max_stock)
             raise
     elif quantity_diff < 0:
-        # Reducing quantity, release stock
         await remove_item_from_cart(bot, guild_id, user_id, channel_id, cart_key, abs(quantity_diff),
                                     session=session)
 
@@ -783,7 +749,6 @@ async def clear_cart_and_release_stock(bot, guild_id: int, user_id: int, channel
     :param user_id: The user ID
     :param channel_id: The shop channel ID
     """
-    # Fetch cart directly to avoid recursion with get_cart's expiry check
     cart_id = build_cart_id(guild_id, user_id, channel_id)
     cart = await get_cached_data(
         bot=bot,
@@ -797,7 +762,6 @@ async def clear_cart_and_release_stock(bot, guild_id: int, user_id: int, channel
         return
     items = cart.get(CartFields.ITEMS, {})
 
-    # Delete the cart first to prevent inconsistency if stock release fails
     await delete_cached_data(
         bot=bot,
         mongo_database=bot.gdb,
@@ -807,9 +771,6 @@ async def clear_cart_and_release_stock(bot, guild_id: int, user_id: int, channel
         session=session
     )
 
-    # Release all reserved stock.
-    # In a transaction: re-raise on failure so the cart deletion aborts.
-    # Outside a transaction: log and continue (leaked reservations stay visible in logs).
     for cart_key, cart_item in items.items():
         item = cart_item[CartFields.ITEM]
         quantity = cart_item[CartFields.QUANTITY]
@@ -852,7 +813,6 @@ async def finalize_cart_purchase(bot, guild_id: int, user_id: int, channel_id: s
     cart_id = cart[CommonFields.ID]
     items = cart.get(CartFields.ITEMS, {})
 
-    # Delete the cart first to prevent double-finalization on retry
     await delete_cached_data(
         bot=bot,
         mongo_database=bot.gdb,
@@ -862,9 +822,6 @@ async def finalize_cart_purchase(bot, guild_id: int, user_id: int, channel_id: s
         session=session
     )
 
-    # Finalize stock.
-    # In a transaction: re-raise on failure so the cart deletion aborts.
-    # Outside a transaction: log and continue (leaked reservations stay visible in logs).
     for cart_key, cart_item in items.items():
         item = cart_item[CartFields.ITEM]
         quantity = cart_item[CartFields.QUANTITY]
@@ -893,7 +850,6 @@ async def cleanup_expired_carts(bot):
     """
     now = datetime.now(timezone.utc)
 
-    # Query all expired carts directly from MongoDB (bypass cache for cleanup)
     collection = bot.gdb[DatabaseCollections.SHOP_CARTS]
     cursor = collection.find({
         CartFields.EXPIRES_AT: {'$lt': now.isoformat()}
@@ -906,7 +862,6 @@ async def cleanup_expired_carts(bot):
         channel_id = cart[CartFields.CHANNEL_ID]
         items = cart.get(CartFields.ITEMS, {})
 
-        # Release all reserved stock
         for cart_key, cart_item in items.items():
             item = cart_item[CartFields.ITEM]
             quantity = cart_item[CartFields.QUANTITY]
@@ -917,7 +872,6 @@ async def cleanup_expired_carts(bot):
                 item_quantity = item.get(CommonFields.QUANTITY, 1)
                 await release_stock(bot, guild_id, channel_id, item_name, quantity * item_quantity, max_stock)
 
-        # Delete the cart
         cart_id = cart[CommonFields.ID]
         await delete_cached_data(
             bot=bot,

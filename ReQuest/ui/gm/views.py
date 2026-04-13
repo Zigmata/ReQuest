@@ -86,7 +86,6 @@ class GMQuestMenuView(LocaleLayoutView):
 
     async def setup(self, bot, user, guild):
         try:
-            # Check to see if the user has guild admin privileges. This lets them view any quest in the guild.
             if user.guild_permissions.manage_guild:
                 query = {QuestFields.GUILD_ID: guild.id}
                 cache_id = f'guild_quests:{guild.id}'
@@ -223,7 +222,6 @@ class ManageQuestsView(LocaleLayoutView):
 
     async def setup(self, bot):
         try:
-            # Refresh the selected quest data
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -264,14 +262,12 @@ class ManageQuestsView(LocaleLayoutView):
         status = quest.get(QuestFields.STATUS, QuestStatus.PUBLISHED)
         is_locked = quest.get(QuestFields.LOCK_STATE, False)
 
-        # Edit Details — disabled if locked
         edit_button = buttons.EditQuestButton(self)
         edit_button.disabled = is_locked
         edit_section = Section(accessory=edit_button)
         edit_section.add_item(TextDisplay(t(locale, 'gm-desc-edit-quest')))
         container.add_item(edit_section)
 
-        # Published/locked quest controls — hidden for drafts
         if status in (QuestStatus.PUBLISHED, QuestStatus.LOCKED):
             ready_status = (
                 t(locale, 'gm-label-ready-locked')
@@ -313,7 +309,6 @@ class ManageQuestsView(LocaleLayoutView):
             guild_id = interaction.guild_id
             guild = interaction.guild
 
-            # Fetch the quest channel
             channel_id_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -328,11 +323,9 @@ class ManageQuestsView(LocaleLayoutView):
             channel_id = strip_id(channel_id_query[ConfigFields.QUEST_CHANNEL])
             channel = interaction.client.get_channel(channel_id)
 
-            # Retrieve the message object
             message_id = quest[QuestFields.MESSAGE_ID]
             message = channel.get_partial_message(message_id)
 
-            # Check to see if the quest has a party role configured
             role = None
             if quest[QuestFields.PARTY_ROLE_ID]:
                 role_id = quest[QuestFields.PARTY_ROLE_ID]
@@ -345,7 +338,6 @@ class ManageQuestsView(LocaleLayoutView):
             quest_id = quest[QuestFields.QUEST_ID]
             tasks = []
 
-            # Locks the quest roster and alerts party members that the quest is ready.
             if not quest[QuestFields.LOCK_STATE]:
                 await update_cached_data(
                     bot=bot,
@@ -357,7 +349,6 @@ class ManageQuestsView(LocaleLayoutView):
                 )
                 quest[QuestFields.LOCK_STATE] = True
 
-                # Notify each party member that the quest is ready
                 guild_name = guild.name
                 for player in party:
                     for key in player:
@@ -382,9 +373,7 @@ class ManageQuestsView(LocaleLayoutView):
                     quest, guild_name, color=discord.Color.green(), questTitle=title
                 )
                 await interaction.user.send(embed=gm_embed)
-            # Unlocks a quest if members are not ready
             else:
-                # Remove the role from the players
                 if role:
                     for player in party:
                         for key in player:
@@ -397,7 +386,6 @@ class ManageQuestsView(LocaleLayoutView):
                                     f'{guild_id} to remove quest role.'
                                 )
 
-                # Unlock the quest
                 await update_cached_data(
                     bot=bot,
                     mongo_database=bot.gdb,
@@ -425,7 +413,6 @@ class ManageQuestsView(LocaleLayoutView):
 
             self.selected_quest = quest
 
-            # Create a fresh quest view, and update the original post message
             quest_view = QuestPostView(quest)
             await quest_view.setup(bot=interaction.client)
             await message.edit(view=quest_view)
@@ -437,14 +424,12 @@ class ManageQuestsView(LocaleLayoutView):
 
     async def complete_quest(self, interaction: discord.Interaction, summary=None):
         try:
-            # Defer immediately to allow operations without timing out
             await interaction.response.defer()
 
             bot = interaction.client
             guild_id = interaction.guild_id
             guild = interaction.guild
 
-            # Refresh the quest state before attempting to complete it
             refreshed_quest = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -463,7 +448,6 @@ class ManageQuestsView(LocaleLayoutView):
             quest = self.selected_quest
             xp_enabled = await get_xp_config(interaction.client, guild_id)
 
-            # Setup quest variables
             quest_id = quest[QuestFields.QUEST_ID]
             message_id = quest[QuestFields.MESSAGE_ID]
             title = quest[QuestFields.TITLE]
@@ -488,7 +472,6 @@ class ManageQuestsView(LocaleLayoutView):
             if archive_query:
                 archive_channel = guild.get_channel(strip_id(archive_query[ConfigFields.ARCHIVE_CHANNEL]))
 
-            # Check if a party role was configured, and handle cleanup
             failed_members = []
             party_role_id = quest[QuestFields.PARTY_ROLE_ID]
             if party_role_id:
@@ -539,9 +522,6 @@ class ManageQuestsView(LocaleLayoutView):
                     except discord.errors.Forbidden:
                         logger.warning(f'Could not DM {interaction.user.id} about missing quest role.')
 
-            # Pre-fetch Discord members outside the transaction (Discord API calls are slow
-            # and can't be retried inside a transaction). The quest is locked at this point,
-            # so the party shouldn't change between this fetch and the transaction.
             discord_members = {}
             for entry in party:
                 for player_id in entry:
@@ -549,9 +529,7 @@ class ManageQuestsView(LocaleLayoutView):
                     if member:
                         discord_members[str(player_id)] = member
 
-            # Transaction: re-read quest from snapshot, compute rewards, update characters, delete quest
             async def _do_quest_completion(session):
-                # Re-read inside the transaction so all reads/writes see a consistent snapshot
                 tx_quest = await get_cached_data(
                     bot=bot,
                     mongo_database=bot.gdb,
@@ -581,7 +559,6 @@ class ManageQuestsView(LocaleLayoutView):
                 tx_xp_per_member = tx_party_xp // len(tx_party) if tx_party else 0
                 tx_party_items = tx_rewards.get(QuestFields.PARTY, {}).get(CommonFields.ITEMS, {})
 
-                # Read currency config inside the transaction so denomination math is consistent
                 tx_currency_config = await get_cached_data(
                     bot=bot,
                     mongo_database=bot.gdb,
@@ -590,8 +567,6 @@ class ManageQuestsView(LocaleLayoutView):
                     session=session
                 )
 
-                # Build reward data from the transactional snapshot. Skip any party members
-                # we couldn't pre-fetch (rare edge case if the party changed despite the lock).
                 tx_member_rewards = []
                 for entry in tx_party:
                     for player_id, character_info in entry.items():
@@ -623,7 +598,6 @@ class ManageQuestsView(LocaleLayoutView):
                             'items': combined_items
                         })
 
-                # Apply rewards inside the transaction
                 for reward_data in tx_member_rewards:
                     await batch_update_character(
                         bot, reward_data['player_id'], reward_data['character_id'],
@@ -633,8 +607,6 @@ class ManageQuestsView(LocaleLayoutView):
                         session=session
                     )
 
-                # GM rewards: read config and GM character inside the transaction so the
-                # snapshot of "active character" matches what we're awarding rewards to.
                 tx_gm_rewards_query = await get_cached_data(
                     bot=bot,
                     mongo_database=bot.gdb,
@@ -676,7 +648,6 @@ class ManageQuestsView(LocaleLayoutView):
                         session=session
                     )
 
-                # Delete the quest
                 await delete_cached_data(
                     bot=bot,
                     mongo_database=bot.gdb,
@@ -705,7 +676,6 @@ class ManageQuestsView(LocaleLayoutView):
             gm_items = tx_result['gm_items']
             gm_has_any_character = tx_result['gm_has_any_character']
 
-            # Build reward summary from the committed snapshot
             reward_summary = []
             for reward_data in member_rewards:
                 member_reward_lines = []
@@ -719,7 +689,6 @@ class ManageQuestsView(LocaleLayoutView):
                     )
                     reward_summary.extend(member_reward_lines)
 
-            # Transaction committed — invalidate quest list caches in a single round-trip
             admin_list_key = build_cache_key(bot.gdb.name, f'guild_quests:{guild_id}', 'quests')
             gm_list_key = build_cache_key(bot.gdb.name, f'gm_quests:{guild_id}:{gm}', 'quests')
             try:
@@ -727,7 +696,6 @@ class ManageQuestsView(LocaleLayoutView):
             except Exception as e:
                 logger.error(f"Redis delete failed (post-commit quest cache): {e}")
 
-            # Discord side effects — DM each member
             for reward_data in member_rewards:
                 reward_strings = self.build_reward_summary(
                     reward_data['xp'], reward_data['items'], xp_enabled
@@ -754,7 +722,6 @@ class ManageQuestsView(LocaleLayoutView):
                 except discord.errors.Forbidden as e:
                     logger.warning(f'Could not DM {reward_data["player_id"]} about quest completion rewards: {e}')
 
-            # Build feedback embed
             guild_locale = await resolve_locale(bot=bot, guild_id=guild_id)
 
             quest_embed = discord.Embed(
@@ -796,7 +763,6 @@ class ManageQuestsView(LocaleLayoutView):
                     inline=True
                 )
 
-            # Archive, delete original post, and notify GM
             if archive_channel:
                 await archive_channel.send(embed=quest_embed)
 
@@ -815,7 +781,6 @@ class ManageQuestsView(LocaleLayoutView):
 
             await interaction.user.send(embed=quest_embed)
 
-            # Warn GM about any failed role removals
             if failed_members:
                 gm_locale = await resolve_locale(bot=bot, user_id=interaction.user.id, guild_id=guild_id)
                 failed_list = ', '.join(f'{m.mention}' for m in failed_members)
@@ -823,7 +788,6 @@ class ManageQuestsView(LocaleLayoutView):
                     t(gm_locale, 'gm-dm-role-removal-failed', roleName=role.name, members=failed_list)
                 )
 
-            # GM rewards DM
             if gm_rewards_query:
                 gm_locale = await resolve_locale(bot=bot, user_id=interaction.user.id, guild_id=guild_id)
 
@@ -861,7 +825,6 @@ class ManageQuestsView(LocaleLayoutView):
                 except discord.errors.Forbidden as e:
                     logger.warning(f'Could not DM {interaction.user.id} about GM rewards: {e}')
 
-            # Reset the view and handle the interaction response
             view = GMQuestMenuView()
             await setup_view(view, interaction)
             await interaction.followup.edit_message(message_id=interaction.message.id, view=view)
@@ -1055,7 +1018,6 @@ class EditQuestView(LocaleLayoutView):
         try:
             guild_id = self.quest[QuestFields.GUILD_ID]
 
-            # Refresh quest data from DB
             query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -1066,7 +1028,6 @@ class EditQuestView(LocaleLayoutView):
             if query:
                 self.quest = query
 
-            # Fetch the server's quest role mode config and assigned roles for the select
             quest_role_mode_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -1110,19 +1071,15 @@ class EditQuestView(LocaleLayoutView):
         not_set = t(locale, 'gm-label-field-not-set')
         container = Container()
 
-        # === Post preview (mirrors QuestPostView layout) ===
 
-        # GM mention
         gm = quest.get(QuestFields.GM)
         gm_label = t(locale, 'common-embed-label-gm')
 
-        # Restrictions
         restrictions = quest.get(QuestFields.RESTRICTIONS, '')
         restrictions_label = ''
         if restrictions:
             restrictions_label = t(locale, 'common-embed-label-party-restrictions')
 
-        # Title (with thumbnail if set)
         title = quest.get(QuestFields.TITLE, '') or not_set
         image_url = quest.get(QuestFields.IMAGE_URL)
         if image_url:
@@ -1140,13 +1097,11 @@ class EditQuestView(LocaleLayoutView):
 
         container.add_item(Separator())
 
-        # Large image (if set)
         large_image_url = quest.get(QuestFields.LARGE_IMAGE_URL)
         if large_image_url:
             container.add_item(MediaGallery(MediaGalleryItem(media=large_image_url)))
             container.add_item(Separator())
 
-        # Description (truncated for preview)
         description = quest.get(QuestFields.DESCRIPTION, '')
         if description:
             container.add_item(TextDisplay(truncate_text(description, 2000)))
@@ -1155,13 +1110,11 @@ class EditQuestView(LocaleLayoutView):
 
         container.add_item(Separator())
 
-        # Party size
         max_party_size = quest.get(QuestFields.MAX_PARTY_SIZE, 1)
         container.add_item(TextDisplay(
             t(locale, 'gm-label-current-party-size', value=str(max_party_size))
         ))
 
-        # Party role (only if mode is temporary or static)
         if self.quest_role_mode in ('temporary', 'static'):
             party_role_id = quest.get(QuestFields.PARTY_ROLE_ID)
             party_role_name = quest.get(QuestFields.PARTY_ROLE_NAME)
@@ -1177,13 +1130,11 @@ class EditQuestView(LocaleLayoutView):
 
         container.add_item(Separator())
 
-        # === Action buttons ===
         action_row = ActionRow()
         action_row.add_item(buttons.EditQuestDetailsComboButton(self))
         action_row.add_item(buttons.EditQuestImagesComboButton(self))
         container.add_item(action_row)
 
-        # Back + Publish row
         nav_row = ActionRow()
         nav_row.add_item(buttons.BackToManageQuestButton(quest, locale=getattr(self, 'locale', DEFAULT_LOCALE)))
 
@@ -1307,7 +1258,6 @@ class RemovePlayerView(LocaleLayoutView):
             guild = interaction.guild
             member = await get_guild_member(guild, int(removed_member_id))
 
-            # Fetch the quest channel to retrieve the message object
             channel_id_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -1320,14 +1270,12 @@ class RemovePlayerView(LocaleLayoutView):
 
             party_role_id = quest[QuestFields.PARTY_ROLE_ID]
 
-            # If the quest list is locked and a party role exists, fetch the role.
             role = None
             if lock_state and party_role_id:
                 role = guild.get_role(party_role_id)
                 if role:
                     check_role_hierarchy(guild, role, locale=getattr(self, 'locale', DEFAULT_LOCALE))
 
-                # Remove the role from the member
                 if role and member:
                     await member.remove_roles(role)
                 elif not role:
@@ -1351,7 +1299,6 @@ class RemovePlayerView(LocaleLayoutView):
             removal_embed = None
             guild_name = guild.name
             player_found = False
-            # Check the wait list and remove the player if present
             for waiting_player in wait_list:
                 if removed_member_id in waiting_player:
                     wait_list.remove(waiting_player)
@@ -1363,7 +1310,6 @@ class RemovePlayerView(LocaleLayoutView):
                     )
                     break
 
-            # If they're not in the wait list, they must be in the party
             if not player_found:
                 for player in party:
                     if removed_member_id in player:
@@ -1376,7 +1322,6 @@ class RemovePlayerView(LocaleLayoutView):
                         )
                         party.remove(player)
 
-                        # If there is a wait list, promote the first entry into the party
                         if max_wait_list_size > 0 and wait_list:
                             new_player = wait_list.pop(0)
                             party.append(new_player)
@@ -1396,7 +1341,6 @@ class RemovePlayerView(LocaleLayoutView):
                                         )
                                         await new_member.send(embed=promo_embed)
 
-                                        # If a role is set, assign it to the player
                                         if role and lock_state:
                                             await new_member.add_roles(role)
                                     except discord.errors.Forbidden as e:
@@ -1421,7 +1365,6 @@ class RemovePlayerView(LocaleLayoutView):
                 cache_id=f'{guild_id}:{quest_id}'
             )
 
-            # Give the GM some feedback that the changes applied
             gm_member = await get_guild_member(guild, interaction.user.id)
             if gm_member:
                 gm_locale = await resolve_locale(bot=bot, user_id=interaction.user.id, guild_id=guild_id)
@@ -1434,16 +1377,13 @@ class RemovePlayerView(LocaleLayoutView):
                 logger.warning(f'Could not find GM member {interaction.user.id} in guild {guild_id} to notify about '
                                f'player removal from quest.')
 
-            # Refresh the views with the updated local quest object
             quest_view = QuestPostView(self.quest)
             await setup_view(quest_view, interaction)
 
-            # Update the menu view and the quest post
             await message.edit(view=quest_view)
             await setup_view(self, interaction)
             await interaction.response.edit_message(view=self)
 
-            # Notify the player they have been removed.
             if member and removal_embed:
                 try:
                     await member.send(embed=removal_embed)
@@ -1492,23 +1432,19 @@ class QuestPostView(LocaleLayoutView):
         quest = self.quest
         container = Container()
 
-        # Title
         title = quest.get(QuestFields.TITLE, '')
         lock_state = quest.get(QuestFields.LOCK_STATE, False)
         if lock_state:
             title = f'{title} {t(locale, "common-label-locked")}'
 
-        # GM mention
         gm = quest.get(QuestFields.GM)
         gm_label = t(locale, 'common-embed-label-gm')
 
-        # Restrictions
         restrictions_label = ''
         restrictions = quest.get(QuestFields.RESTRICTIONS, '')
         if restrictions:
             restrictions_label = t(locale, 'common-embed-label-party-restrictions')
 
-        # Construct header
         image_url = quest.get(QuestFields.IMAGE_URL)
         if image_url:
             title_section = Section(accessory=Thumbnail(media=image_url))
@@ -1525,20 +1461,17 @@ class QuestPostView(LocaleLayoutView):
 
         container.add_item(Separator())
 
-        # Large image (if set)
         large_image_url = quest.get(QuestFields.LARGE_IMAGE_URL)
         if large_image_url:
             container.add_item(MediaGallery(MediaGalleryItem(media=large_image_url)))
             container.add_item(Separator())
 
-        # Description (truncated to stay within 4000 char total text limit)
         description = quest.get(QuestFields.DESCRIPTION, '')
         if description:
             container.add_item(TextDisplay(truncate_text(description, 3000)))
 
         container.add_item(Separator())
 
-        # Party list
         party = quest.get(QuestFields.PARTY, [])
         max_party_size = quest.get(QuestFields.MAX_PARTY_SIZE, 0)
         formatted_party = self._format_player_list(party)
@@ -1547,7 +1480,6 @@ class QuestPostView(LocaleLayoutView):
         party_text += truncate_text(formatted_party, 500) or t(locale, 'common-label-none')
         container.add_item(TextDisplay(party_text))
 
-        # Wait list (if enabled)
         wait_list = quest.get(QuestFields.WAIT_LIST, [])
         max_wait_list_size = quest.get(QuestFields.MAX_WAIT_LIST_SIZE, 0)
         if max_wait_list_size > 0:
@@ -1559,7 +1491,6 @@ class QuestPostView(LocaleLayoutView):
 
         container.add_item(Separator())
 
-        # Join/Leave buttons (hidden when locked)
         if not lock_state:
             actions = ActionRow()
             join_button = Button(
@@ -1579,7 +1510,6 @@ class QuestPostView(LocaleLayoutView):
             container.add_item(actions)
             container.add_item(Separator())
 
-        # Footer — Announce role + Quest ID
         if self.announce_role and self.announce_role != 0:
             container.add_item(TextDisplay(f'{self.announce_role}'))
 
@@ -1655,9 +1585,7 @@ class QuestPostView(LocaleLayoutView):
                 )
             else:
                 new_player_entry = {f'{user_id}': {f'{active_character_id}': active_character}}
-                # If the wait list is enabled, this section formats the embed to include the wait list
                 if max_wait_list_size > 0:
-                    # If there is room in the party, add the user.
                     if len(current_party) < max_party_size:
                         await update_cached_data(
                             bot=bot,
@@ -1668,7 +1596,6 @@ class QuestPostView(LocaleLayoutView):
                             cache_id=f'{guild_id}:{quest_id}'
                         )
                         self.quest[QuestFields.PARTY].append(new_player_entry)
-                    # If the party is full but the wait list is not, add the user to wait list.
                     elif len(current_party) >= max_party_size and len(current_wait_list) < max_wait_list_size:
                         await update_cached_data(
                             bot=bot,
@@ -1680,16 +1607,13 @@ class QuestPostView(LocaleLayoutView):
                         )
                         self.quest[QuestFields.WAIT_LIST].append(new_player_entry)
 
-                    # Otherwise, inform the user that the party/wait list is full
                     else:
                         raise UserFeedbackError(
                             t(getattr(self, 'locale', DEFAULT_LOCALE), 'gm-error-quest-full',
                               questTitle=quest[QuestFields.TITLE]),
                             message_id='gm-error-quest-full'
                         )
-                # If there is no wait list, this section formats the embed without it
                 else:
-                    # If there is room in the party, add the user.
                     if len(current_party) < max_party_size:
                         await update_cached_data(
                             bot=bot,
@@ -1753,7 +1677,6 @@ class QuestPostView(LocaleLayoutView):
                         party.remove(player)
 
                 new_member = None
-                # If there is a wait list, move the first entry into the party automatically
                 if max_wait_list_size > 0 and wait_list:
                     new_player = wait_list.pop(0)
                     party.append(new_player)
@@ -1761,7 +1684,6 @@ class QuestPostView(LocaleLayoutView):
                     for key in new_player:
                         new_member = await get_guild_member(guild, int(key))
 
-                    # Notify the member they have been moved into the main party
                     if new_member:
                         try:
                             promoted_locale = await resolve_locale(bot=bot, user_id=int(key), guild_id=guild_id)
@@ -1779,7 +1701,6 @@ class QuestPostView(LocaleLayoutView):
                     else:
                         logger.warning(f'Could not find member ID {key} in guild {guild.id}.')
 
-            # Update the database
             await replace_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -1789,7 +1710,6 @@ class QuestPostView(LocaleLayoutView):
                 cache_id=f'{guild_id}:{quest_id}'
             )
 
-            # Refresh the view and edit the post
             await self.setup(bot=bot)
             await interaction.edit_original_response(view=self)
         except Exception as e:
@@ -1816,7 +1736,6 @@ class ViewCharacterView(LocaleLayoutView):
             container.add_item(TextDisplay(f'{t(locale, "gm-label-experience-points")}\n{xp}'))
             container.add_item(Separator())
 
-        # Display inventory grouped by container
         inventory_display = format_inventory_by_container(character_data, currency_config, locale=locale)
         container.add_item(TextDisplay(f'{t(locale, "gm-label-possessions")}\n\n{inventory_display}'))
 

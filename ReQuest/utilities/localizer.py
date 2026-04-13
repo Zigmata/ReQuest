@@ -205,7 +205,6 @@ async def resolve_locale(interaction=None, *, bot=None, guild_id=None, user_id=N
         user DB pref > guild DB pref > DEFAULT_LOCALE
         Used for DMs to a specific (non-interacting) user.
     """
-    # ── CALLER mode ──
     if interaction is not None:
         _bot = bot or interaction.client
         result = await _lookup_user_locale(_bot, interaction.user.id)
@@ -218,11 +217,9 @@ async def resolve_locale(interaction=None, *, bot=None, guild_id=None, user_id=N
 
         return DEFAULT_LOCALE
 
-    # ── keyword-only modes require bot ──
     if bot is None:
         raise TypeError('resolve_locale() requires either interaction or bot=')
 
-    # ── TARGET_USER mode ──
     if user_id is not None:
         result = await _lookup_user_locale(bot, user_id)
         if result:
@@ -235,7 +232,6 @@ async def resolve_locale(interaction=None, *, bot=None, guild_id=None, user_id=N
 
         return DEFAULT_LOCALE
 
-    # ── GUILD mode ──
     if guild_id is not None:
         result = await _lookup_guild_locale(bot, guild_id)
         if result:

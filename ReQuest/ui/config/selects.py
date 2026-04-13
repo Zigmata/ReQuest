@@ -255,7 +255,6 @@ class RoleplayChannelSelect(ChannelSelect):
             for selection in self.values:
                 if selection.type is discord.ChannelType.category:
                     category_channel = await selection.fetch()
-                    # Add both text and forum channels from category
                     for channel in category_channel.text_channels:
                         channel_ids.append(str(channel.id))
                     for channel in category_channel.forums:
@@ -498,7 +497,7 @@ class ForumChannelSelect(ChannelSelect):
     async def callback(self, interaction: discord.Interaction):
         try:
             self.calling_view.selected_forum = self.values[0]
-            self.calling_view.selected_thread = None  # Reset thread selection
+            self.calling_view.selected_thread = None
 
             forum = interaction.guild.get_channel(self.values[0].id)
             self.calling_view.forum_threads = [
@@ -534,7 +533,6 @@ class ForumThreadSelect(Select):
                         )[:_desc]
                     ))
             else:
-                # Provide a placeholder option if no threads found
                 options.append(discord.SelectOption(
                     label=t(
                         DEFAULT_LOCALE, 'config-select-option-no-threads'
@@ -577,13 +575,11 @@ class ForumThreadSelect(Select):
                 )
                 return
 
-            # Get the thread object
             thread_id = int(selected_value)
             guild = interaction.guild
             thread = guild.get_thread(thread_id)
 
             if not thread:
-                # Try to fetch from the forum
                 forum = self.calling_view.selected_forum
                 if forum:
                     thread = forum.get_thread(thread_id)
@@ -616,7 +612,6 @@ class ConfigLanguageSelect(Select):
         _label = DiscordLimits.STRING_SELECT_OPTION_LABEL
         _desc = DiscordLimits.STRING_SELECT_OPTION_DESCRIPTION
         self.options.clear()
-        # Page 0 reserves one slot for the "Default" option
         per_page_0 = LOCALES_PER_PAGE - 1
         if page == 0:
             self.options.append(discord.SelectOption(
@@ -789,7 +784,6 @@ class AddGMQuestRoleSelect(RoleSelect):
             new_assignments = []
             rejected_roles = []
             for role in self.values:
-                # Reject roles the bot cannot manage
                 if role.managed or role.is_default() or role >= bot_top_role:
                     rejected_roles.append(role)
                     continue

@@ -48,7 +48,6 @@ class EditCartItemModal(LocaleModal):
             user_id = interaction.user.id
             channel_id = prev_view.channel_id
 
-            # Use database-backed cart update with stock handling (transactional)
             success, message = await run_in_transaction(
                 bot, lambda s: update_cart_item_quantity(
                     bot, guild_id, user_id, channel_id, self.item_key, new_quantity,
@@ -59,14 +58,12 @@ class EditCartItemModal(LocaleModal):
             if not success:
                 raise UserFeedbackError(message)
 
-            # Refresh local cart cache from database
             db_cart = await get_cart(bot, guild_id, user_id, channel_id)
             if db_cart:
                 prev_view.cart = db_cart.get(CartFields.ITEMS, {})
             else:
                 prev_view.cart = {}
 
-            # Refresh stock info
             prev_view.stock_info = await get_shop_stock(bot, guild_id, channel_id)
 
             self.cart_view.build_view()
