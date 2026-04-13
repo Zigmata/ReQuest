@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 class SingleChannelConfigSelect(ChannelSelect):
     def __init__(self, calling_view, config_type, config_name):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         channel_types = [discord.ChannelType.text]
         if config_type == ConfigFields.APPROVAL_QUEUE_CHANNEL:
             channel_types = [discord.ChannelType.forum]
@@ -26,7 +27,7 @@ class SingleChannelConfigSelect(ChannelSelect):
         super().__init__(
             channel_types=channel_types,
             placeholder=t(
-                DEFAULT_LOCALE, 'config-select-placeholder-channel',
+                locale, 'config-select-placeholder-channel',
                 configName=config_name
             )[:DiscordLimits.SELECT_PLACEHOLDER],
             custom_id=f'config_{config_type}_channel_select'
@@ -53,9 +54,10 @@ class SingleChannelConfigSelect(ChannelSelect):
 
 class QuestAnnounceRoleSelect(RoleSelect):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
             placeholder=t(
-                DEFAULT_LOCALE, 'config-select-placeholder-announce-role'
+                locale, 'config-select-placeholder-announce-role'
             )[:DiscordLimits.SELECT_PLACEHOLDER],
             custom_id='quest_announce_role_select'
         )
@@ -80,9 +82,10 @@ class QuestAnnounceRoleSelect(RoleSelect):
 
 class AddGMRoleSelect(RoleSelect):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
             placeholder=t(
-                DEFAULT_LOCALE, 'config-select-placeholder-gm-roles'
+                locale, 'config-select-placeholder-gm-roles'
             )[:DiscordLimits.SELECT_PLACEHOLDER],
             custom_id='add_gm_role_select',
             max_values=25
@@ -139,8 +142,9 @@ class AddGMRoleSelect(RoleSelect):
 
 class ConfigWaitListSelect(Select):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         label_disabled = t(
-            DEFAULT_LOCALE, 'config-select-option-disabled'
+            locale, 'config-select-option-disabled'
         )[:DiscordLimits.STRING_SELECT_OPTION_LABEL]
         super().__init__(
             options=[
@@ -152,7 +156,7 @@ class ConfigWaitListSelect(Select):
                 discord.SelectOption(label='5', value='5')
             ],
             placeholder=t(
-                DEFAULT_LOCALE, 'config-select-placeholder-wait-list'
+                locale, 'config-select-placeholder-wait-list'
             )[:DiscordLimits.SELECT_PLACEHOLDER],
             custom_id='config_wait_list_select'
         )
@@ -233,6 +237,7 @@ class InventoryTypeSelect(Select):
 
 class RoleplayChannelSelect(ChannelSelect):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
             channel_types=[
                 discord.ChannelType.text,
@@ -240,7 +245,7 @@ class RoleplayChannelSelect(ChannelSelect):
                 discord.ChannelType.category
             ],
             placeholder=t(
-                DEFAULT_LOCALE, 'config-select-placeholder-rp-channels'
+                locale, 'config-select-placeholder-rp-channels'
             )[:DiscordLimits.SELECT_PLACEHOLDER],
             min_values=0,
             max_values=25,
@@ -279,29 +284,30 @@ class RoleplayChannelSelect(ChannelSelect):
 
 class RoleplayModeSelect(Select):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         _label = DiscordLimits.STRING_SELECT_OPTION_LABEL
         _desc = DiscordLimits.STRING_SELECT_OPTION_DESCRIPTION
         super().__init__(
             placeholder=t(
-                DEFAULT_LOCALE, 'config-select-placeholder-rp-mode'
+                locale, 'config-select-placeholder-rp-mode'
             )[:DiscordLimits.SELECT_PLACEHOLDER],
             options=[
                 discord.SelectOption(
                     label=t(
-                        DEFAULT_LOCALE, 'config-select-option-scheduled'
+                        locale, 'config-select-option-scheduled'
                     )[:_label],
                     value=RoleplayMode.SCHEDULED.value,
                     description=t(
-                        DEFAULT_LOCALE, 'config-select-desc-scheduled'
+                        locale, 'config-select-desc-scheduled'
                     )[:_desc]
                 ),
                 discord.SelectOption(
                     label=t(
-                        DEFAULT_LOCALE, 'config-select-option-accrued'
+                        locale, 'config-select-option-accrued'
                     )[:_label],
                     value=RoleplayMode.ACCRUED.value,
                     description=t(
-                        DEFAULT_LOCALE, 'config-select-desc-accrued'
+                        locale, 'config-select-desc-accrued'
                     )[:_desc]
                 )
             ],
@@ -441,12 +447,13 @@ class RoleplayResetDaySelect(Select):
 
 class RoleplayResetTimeSelect(Select):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         _label = DiscordLimits.STRING_SELECT_OPTION_LABEL
         options = []
         for hour in range(0, 24):
             options.append(discord.SelectOption(
                 label=t(
-                    DEFAULT_LOCALE, 'config-select-option-utc-time',
+                    locale, 'config-select-option-utc-time',
                     hour=f'{hour:02}'
                 )[:_label],
                 value=f'{hour}'
@@ -454,7 +461,7 @@ class RoleplayResetTimeSelect(Select):
 
         super().__init__(
             placeholder=t(
-                DEFAULT_LOCALE, 'config-select-placeholder-reset-time'
+                locale, 'config-select-placeholder-reset-time'
             )[:DiscordLimits.SELECT_PLACEHOLDER],
             options=options,
             custom_id='rp_reset_time_select'
@@ -485,10 +492,11 @@ class RoleplayResetTimeSelect(Select):
 class ForumChannelSelect(ChannelSelect):
     """Select for choosing a forum channel for shop setup."""
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
             channel_types=[discord.ChannelType.forum],
             placeholder=t(
-                DEFAULT_LOCALE, 'config-select-placeholder-forum-channel'
+                locale, 'config-select-placeholder-forum-channel'
             )[:DiscordLimits.SELECT_PLACEHOLDER],
             custom_id='forum_channel_select'
         )
@@ -514,6 +522,7 @@ class ForumChannelSelect(ChannelSelect):
 class ForumThreadSelect(Select):
     """Select for choosing an existing thread within a forum channel."""
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         _label = DiscordLimits.STRING_SELECT_OPTION_LABEL
         _desc = DiscordLimits.STRING_SELECT_OPTION_DESCRIPTION
         options = []
@@ -527,7 +536,7 @@ class ForumThreadSelect(Select):
                         label=thread.name[:_label],
                         value=str(thread.id),
                         description=t(
-                            DEFAULT_LOCALE,
+                            locale,
                             'config-select-desc-thread-id',
                             threadId=str(thread.id)
                         )[:_desc]
@@ -535,29 +544,29 @@ class ForumThreadSelect(Select):
             else:
                 options.append(discord.SelectOption(
                     label=t(
-                        DEFAULT_LOCALE, 'config-select-option-no-threads'
+                        locale, 'config-select-option-no-threads'
                     )[:_label],
                     value='none',
                     description=t(
-                        DEFAULT_LOCALE, 'config-select-desc-no-threads'
+                        locale, 'config-select-desc-no-threads'
                     )[:_desc]
                 ))
 
         if not options:
             options.append(discord.SelectOption(
                 label=t(
-                    DEFAULT_LOCALE, 'config-select-option-select-forum-first'
+                    locale, 'config-select-option-select-forum-first'
                 )[:_label],
                 value='none',
                 description=t(
-                    DEFAULT_LOCALE,
+                    locale,
                     'config-select-desc-select-forum-first'
                 )[:_desc]
             ))
 
         super().__init__(
             placeholder=t(
-                DEFAULT_LOCALE, 'config-select-placeholder-thread'
+                locale, 'config-select-placeholder-thread'
             )[:DiscordLimits.SELECT_PLACEHOLDER],
             options=options,
             custom_id='forum_thread_select'
@@ -599,9 +608,10 @@ class ForumThreadSelect(Select):
 
 class ConfigLanguageSelect(Select):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         super().__init__(
             placeholder=t(
-                DEFAULT_LOCALE, 'config-select-placeholder-server-language'
+                locale, 'config-select-placeholder-server-language'
             )[:DiscordLimits.SELECT_PLACEHOLDER],
             options=[],
             custom_id='config_language_select'
@@ -683,43 +693,44 @@ class ConfigLanguageSelect(Select):
 
 class QuestRoleModeSelect(Select):
     def __init__(self, calling_view):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         _label = DiscordLimits.STRING_SELECT_OPTION_LABEL
         _desc = DiscordLimits.STRING_SELECT_OPTION_DESCRIPTION
         super().__init__(
             placeholder=t(
-                DEFAULT_LOCALE, 'config-select-placeholder-quest-role-mode'
+                locale, 'config-select-placeholder-quest-role-mode'
             )[:DiscordLimits.SELECT_PLACEHOLDER],
             options=[
                 discord.SelectOption(
                     label=t(
-                        DEFAULT_LOCALE,
+                        locale,
                         'config-select-option-quest-role-disabled'
                     )[:_label],
                     value=QuestRoleMode.DISABLED.value,
                     description=t(
-                        DEFAULT_LOCALE,
+                        locale,
                         'config-select-desc-quest-role-disabled'
                     )[:_desc]
                 ),
                 discord.SelectOption(
                     label=t(
-                        DEFAULT_LOCALE,
+                        locale,
                         'config-select-option-quest-role-temporary'
                     )[:_label],
                     value=QuestRoleMode.TEMPORARY.value,
                     description=t(
-                        DEFAULT_LOCALE,
+                        locale,
                         'config-select-desc-quest-role-temporary'
                     )[:_desc]
                 ),
                 discord.SelectOption(
                     label=t(
-                        DEFAULT_LOCALE,
+                        locale,
                         'config-select-option-quest-role-static'
                     )[:_label],
                     value=QuestRoleMode.STATIC.value,
                     description=t(
-                        DEFAULT_LOCALE,
+                        locale,
                         'config-select-desc-quest-role-static'
                     )[:_desc]
                 ),
@@ -748,10 +759,11 @@ class QuestRoleModeSelect(Select):
 
 class AddGMQuestRoleSelect(RoleSelect):
     def __init__(self, calling_view, member_id):
+        locale = getattr(calling_view, 'locale', DEFAULT_LOCALE)
         import uuid
         super().__init__(
             placeholder=t(
-                DEFAULT_LOCALE, 'config-select-placeholder-add-quest-role'
+                locale, 'config-select-placeholder-add-quest-role'
             )[:DiscordLimits.SELECT_PLACEHOLDER],
             custom_id=f'add_gm_quest_role_select:{uuid.uuid4().hex[:8]}',
             max_values=MAX_QUEST_ROLES_PER_GM

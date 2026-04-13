@@ -102,8 +102,6 @@ class ConfigWizardView(LocaleLayoutView):
         self.pages = []
         self.current_page = 0
         self.total_pages = 5
-        locale = getattr(self, 'locale', DEFAULT_LOCALE)
-        self.intro_text = t(locale, 'config-wizard-intro')
 
         self.build_view()
 
@@ -119,7 +117,7 @@ class ConfigWizardView(LocaleLayoutView):
         container.add_item(Separator())
 
         if not self.pages:
-            container.add_item(TextDisplay(self.intro_text))
+            container.add_item(TextDisplay(t(locale, 'config-wizard-intro')))
             container.add_item(Separator())
 
             container.add_item(ActionRow(buttons.ScanServerButton(self)))
@@ -169,7 +167,7 @@ class ConfigWizardView(LocaleLayoutView):
 
             page_button = Button(
                 label=t(
-                    DEFAULT_LOCALE, 'common-page-display',
+                    locale, 'common-page-display',
                     current=str(self.current_page + 1), total=str(len(self.pages))
                 )[:DiscordLimits.BUTTON_LABEL],
                 style=ButtonStyle.secondary,
@@ -318,7 +316,7 @@ class ConfigWizardView(LocaleLayoutView):
         for permission, name in required_default_permissions.items():
             if not getattr(default_role.permissions, permission):
                 default_issues.append(t(
-                    DEFAULT_LOCALE, 'config-wizard-missing-permission',
+                    locale, 'config-wizard-missing-permission',
                     permissionName=name
                 ))
 
@@ -370,7 +368,7 @@ class ConfigWizardView(LocaleLayoutView):
                     if not role:
                         has_warnings = True
                         report_lines.append(t(
-                            DEFAULT_LOCALE, 'config-wizard-role-not-found',
+                            locale, 'config-wizard-role-not-found',
                             roleName=role_data[CommonFields.NAME]
                         ))
                         continue
@@ -382,7 +380,7 @@ class ConfigWizardView(LocaleLayoutView):
                         report_lines.extend(escalation_report.report_lines)
                     else:
                         report_lines.append(t(
-                            DEFAULT_LOCALE, 'config-wizard-role-ok',
+                            locale, 'config-wizard-role-ok',
                             roleMention=role.mention
                         ))
                 except Exception as e:
@@ -474,12 +472,12 @@ class ConfigWizardView(LocaleLayoutView):
 
                 if not bot_permissions.view_channel:
                     channel_issues.append(t(
-                        DEFAULT_LOCALE, 'config-wizard-bot-cannot-view',
+                        locale, 'config-wizard-bot-cannot-view',
                         botMention=bot_mention
                     ))
                 if not bot_permissions.send_messages:
                     channel_issues.append(t(
-                        DEFAULT_LOCALE, 'config-wizard-bot-cannot-send',
+                        locale, 'config-wizard-bot-cannot-send',
                         botMention=bot_mention
                     ))
 
@@ -527,12 +525,12 @@ class ConfigWizardView(LocaleLayoutView):
                 escalations_str = ', '.join(escalations[:3])
                 if len(escalations) > 3:
                     escalations_str += t(
-                        DEFAULT_LOCALE, 'config-wizard-escalation-more',
+                        locale, 'config-wizard-escalation-more',
                         count=str(len(escalations) - 3)
                     )
 
             report_lines.append(t(
-                DEFAULT_LOCALE, 'config-wizard-escalation-detected',
+                locale, 'config-wizard-escalation-detected',
                 roleMention=role.mention, escalations=escalations_str
             ))
             return result(True, report_lines)
@@ -1293,7 +1291,7 @@ class ConfigGMRoleRemoveView(LocaleLayoutView):
 
             page_display = Button(
                 label=t(
-                    DEFAULT_LOCALE, 'common-page-label',
+                    locale, 'common-page-label',
                     current=str(self.current_page + 1), total=str(self.total_pages)
                 )[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
@@ -1837,7 +1835,7 @@ class ConfigStaticQuestRolesView(LocaleLayoutView):
 
             page_display = Button(
                 label=t(
-                    DEFAULT_LOCALE, 'common-page-label',
+                    locale, 'common-page-label',
                     current=str(self.current_page + 1), total=str(self.total_pages)
                 )[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
@@ -1998,7 +1996,7 @@ class ConfigGMQuestRoleAssignView(LocaleLayoutView):
 
             page_display = Button(
                 label=t(
-                    DEFAULT_LOCALE, 'common-page-label',
+                    locale, 'common-page-label',
                     current=str(self.current_page + 1), total=str(self.total_pages)
                 )[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
@@ -2238,11 +2236,11 @@ class ConfigNewCharacterView(LocaleLayoutView):
 
             self.new_character_shop_button.disabled = True
             self.new_character_shop_button.label = t(
-                DEFAULT_LOCALE, 'config-btn-configure-new-character-shop'
+                locale, 'config-btn-configure-new-character-shop'
             )[:DiscordLimits.BUTTON_LABEL]
             self.new_character_wealth_button.disabled = True
             self.new_character_wealth_button.label = t(
-                DEFAULT_LOCALE, 'config-btn-configure-new-character-wealth'
+                locale, 'config-btn-configure-new-character-wealth'
             )[:DiscordLimits.BUTTON_LABEL]
             self.static_kits_button.disabled = True
 
@@ -2252,22 +2250,22 @@ class ConfigNewCharacterView(LocaleLayoutView):
                     self.new_character_wealth_button.disabled = False
                 else:
                     self.new_character_wealth_button.label = t(
-                        DEFAULT_LOCALE, 'config-btn-disabled-no-currency'
+                        locale, 'config-btn-disabled-no-currency'
                     )[:DiscordLimits.BUTTON_LABEL]
 
             if inventory_type == 'purchase':
                 if not currency_config:
                     self.new_character_shop_button.label = t(
-                        DEFAULT_LOCALE, 'config-btn-disabled-no-currency'
+                        locale, 'config-btn-disabled-no-currency'
                     )[:DiscordLimits.BUTTON_LABEL]
                     self.new_character_wealth_button.label = t(
-                        DEFAULT_LOCALE, 'config-btn-disabled-no-currency'
+                        locale, 'config-btn-disabled-no-currency'
                     )[:DiscordLimits.BUTTON_LABEL]
                 else:
                     self.new_character_wealth_button.disabled = False
                     if not new_character_wealth:
                         self.new_character_shop_button.label = t(
-                            DEFAULT_LOCALE, 'config-btn-disabled-no-wealth'
+                            locale, 'config-btn-disabled-no-wealth'
                         )[:DiscordLimits.BUTTON_LABEL]
                     else:
                         self.new_character_shop_button.disabled = False
@@ -2393,7 +2391,7 @@ class ConfigNewCharacterShopView(LocaleLayoutView):
 
             page_button = Button(
                 label=t(
-                    DEFAULT_LOCALE, 'common-page-label',
+                    locale, 'common-page-label',
                     current=str(self.current_page + 1), total=str(self.total_pages)
                 )[:DiscordLimits.BUTTON_LABEL],
                 style=ButtonStyle.secondary,
@@ -2598,7 +2596,7 @@ class ConfigStaticKitsView(LocaleLayoutView):
 
             page_display = Button(
                 label=t(
-                    DEFAULT_LOCALE, 'common-page-label',
+                    locale, 'common-page-label',
                     current=str(self.current_page + 1), total=str(self.total_pages)
                 )[:DiscordLimits.BUTTON_LABEL],
                 style=ButtonStyle.secondary,
@@ -2678,7 +2676,7 @@ class EditStaticKitView(LocaleLayoutView):
 
         header_section = Section(accessory=BackButton(ConfigStaticKitsView))
         header_section.add_item(TextDisplay(t(
-            DEFAULT_LOCALE, 'config-title-editing-kit',
+            locale, 'config-title-editing-kit',
             kitName=titlecase(self.kit_data[CommonFields.NAME])
         )))
         container.add_item(header_section)
@@ -2712,7 +2710,7 @@ class EditStaticKitView(LocaleLayoutView):
                     currency_section = Section(accessory=buttons.DeleteKitCurrencyButton(self, currency_name))
                     display = format_price_string(amount, currency_name, self.currency_config)
                     currency_section.add_item(TextDisplay(t(
-                        DEFAULT_LOCALE, 'config-label-kit-currency',
+                        locale, 'config-label-kit-currency',
                         display=display
                     )))
                     container.add_item(currency_section)
@@ -2728,7 +2726,7 @@ class EditStaticKitView(LocaleLayoutView):
                     item_actions.add_item(buttons.DeleteKitItemButton(self, index))
 
                     display = t(
-                        DEFAULT_LOCALE, 'config-label-kit-item',
+                        locale, 'config-label-kit-item',
                         name=escape_markdown(titlecase(item_data[CommonFields.NAME]))
                     )
                     if item_data[CommonFields.QUANTITY] > 1:
@@ -2753,7 +2751,7 @@ class EditStaticKitView(LocaleLayoutView):
 
                 page_button = Button(
                     label=t(
-                        DEFAULT_LOCALE, 'common-page-label',
+                        locale, 'common-page-label',
                         current=str(self.current_page + 1), total=str(self.total_pages)
                     )[:DiscordLimits.BUTTON_LABEL],
                     style=ButtonStyle.secondary
@@ -2884,7 +2882,7 @@ class ConfigCurrencyView(LocaleLayoutView):
 
             page_display = Button(
                 label=t(
-                    DEFAULT_LOCALE, 'common-page-label',
+                    locale, 'common-page-label',
                     current=str(self.current_page + 1), total=str(self.total_pages)
                 )[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
@@ -2972,7 +2970,7 @@ class ConfigEditCurrencyView(LocaleLayoutView):
 
         header_section = Section(accessory=BackButton(ConfigCurrencyView))
         header_section.add_item(TextDisplay(t(
-            DEFAULT_LOCALE, 'config-title-manage-currency',
+            locale, 'config-title-manage-currency',
             currencyName=titlecase(self.currency_name)
         )))
         container.add_item(header_section)
@@ -2985,7 +2983,7 @@ class ConfigEditCurrencyView(LocaleLayoutView):
         actions = ActionRow()
         toggle_double_button = buttons.ToggleDoubleButton(self)
         toggle_double_button.label = t(
-            DEFAULT_LOCALE, 'config-btn-toggle-display-current', type=display_type
+            locale, 'config-btn-toggle-display-current', type=display_type
         )[:DiscordLimits.BUTTON_LABEL]
         actions.add_item(toggle_double_button)
         actions.add_item(buttons.AddDenominationButton(self))
@@ -3028,7 +3026,7 @@ class ConfigEditCurrencyView(LocaleLayoutView):
 
             page_display = Button(
                 label=t(
-                    DEFAULT_LOCALE, 'common-page-label',
+                    locale, 'common-page-label',
                     current=str(self.current_page + 1), total=str(self.total_pages)
                 )[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
@@ -3173,7 +3171,7 @@ class ConfigShopsView(LocaleLayoutView):
 
             page_display = Button(
                 label=t(
-                    DEFAULT_LOCALE, 'common-page-label',
+                    locale, 'common-page-label',
                     current=str(self.current_page + 1), total=str(self.total_pages)
                 )[:DiscordLimits.BUTTON_LABEL],
                 style=discord.ButtonStyle.secondary,
@@ -3429,14 +3427,14 @@ class EditShopView(LocaleLayoutView):
         locale = getattr(self, 'locale', DEFAULT_LOCALE)
         container = Container()
         header_items = [TextDisplay(t(
-            DEFAULT_LOCALE, 'config-title-editing-shop',
+            locale, 'config-title-editing-shop',
             shopName=self.shop_data.get(ShopFields.SHOP_NAME)
         ))]
 
         if shop_keeper := self.shop_data.get(ShopFields.SHOP_KEEPER):
             keeper = truncate_text(shop_keeper, DisplayLimits.SHOPKEEPER_NAME)
             header_items.append(TextDisplay(t(
-                DEFAULT_LOCALE, 'config-label-shop-shopkeeper',
+                locale, 'config-label-shop-shopkeeper',
                 name=keeper
             )))
         if shop_description := self.shop_data.get(ShopFields.SHOP_DESCRIPTION):
@@ -3511,7 +3509,7 @@ class EditShopView(LocaleLayoutView):
 
             page_display = Button(
                 label=t(
-                    DEFAULT_LOCALE, 'common-page-display',
+                    locale, 'common-page-display',
                     current=str(self.current_page + 1), total=str(self.total_pages)
                 )[:DiscordLimits.BUTTON_LABEL],
                 style=ButtonStyle.secondary,
@@ -3645,12 +3643,12 @@ class ConfigStockLimitsView(LocaleLayoutView):
                 schedule_text += ' ' + t(locale, 'config-label-restock-hourly', minute=f'{minute:02d}')
             elif schedule == ScheduleType.DAILY.value:
                 schedule_text += ' ' + t(
-                    DEFAULT_LOCALE, 'config-label-restock-daily',
+                    locale, 'config-label-restock-daily',
                     time=f'{hour:02d}:{minute:02d}'
                 )
             elif schedule == ScheduleType.WEEKLY.value:
                 schedule_text += ' ' + t(
-                    DEFAULT_LOCALE, 'config-label-restock-weekly',
+                    locale, 'config-label-restock-weekly',
                     day=day_name, time=f'{hour:02d}:{minute:02d}'
                 )
 
@@ -3700,12 +3698,12 @@ class ConfigStockLimitsView(LocaleLayoutView):
                         if restock_config.get(RestockFields.ENABLED) and restock_mode == RestockMode.INCREMENTAL.value:
                             increment = item.get(ShopFields.RESTOCK_INCREMENT, 1)
                             stock_text += ' | ' + t(
-                                DEFAULT_LOCALE, 'config-label-stock-increment',
+                                locale, 'config-label-stock-increment',
                                 increment=str(increment)
                             )
                         if reserved > 0:
                             stock_text += ' | ' + t(
-                                DEFAULT_LOCALE, 'config-label-stock-reserved',
+                                locale, 'config-label-stock-reserved',
                                 reserved=str(reserved)
                             )
                     else:
@@ -3742,7 +3740,7 @@ class ConfigStockLimitsView(LocaleLayoutView):
 
             page_display = Button(
                 label=t(
-                    DEFAULT_LOCALE, 'common-page-display',
+                    locale, 'common-page-display',
                     current=str(self.current_page + 1), total=str(self.total_pages)
                 )[:DiscordLimits.BUTTON_LABEL],
                 style=ButtonStyle.secondary,
@@ -3883,7 +3881,7 @@ class ConfigRoleplayView(LocaleLayoutView):
                     formatted_day = f'{reset_day.capitalize()}s at '
 
                 setting_details += t(
-                    DEFAULT_LOCALE, 'config-label-rp-reset-time',
+                    locale, 'config-label-rp-reset-time',
                     dayAndTime=f'{formatted_day}{formatted_time}'
                 ) + '\n'
 
@@ -4047,7 +4045,7 @@ class ConfigLanguageView(LocaleLayoutView):
             if self._current_guild_locale:
                 from ReQuest.ui.info.selects import LOCALE_LABELS
                 language_name = t(
-                    DEFAULT_LOCALE,
+                    locale,
                     LOCALE_LABELS.get(self._current_guild_locale, self._current_guild_locale)
                 )
                 self.language_info.content = t(locale, 'config-label-server-language',
@@ -4057,22 +4055,24 @@ class ConfigLanguageView(LocaleLayoutView):
 
             from ReQuest.ui.info.selects import get_config_locale_page
             self.language_page = get_config_locale_page(self._current_guild_locale)
-            self.language_select.populate(DEFAULT_LOCALE, self._current_guild_locale, page=self.language_page)
+            self.language_select.populate(locale, self._current_guild_locale, page=self.language_page)
             self.build_view()
         except Exception as e:
             await log_exception(e)
 
     async def prev_page(self, interaction: discord.Interaction):
         if self.language_page > 0:
+            locale = self.locale
             self.language_page -= 1
-            self.language_select.populate(DEFAULT_LOCALE, self._current_guild_locale, page=self.language_page)
+            self.language_select.populate(locale, self._current_guild_locale, page=self.language_page)
             self.build_view()
             await interaction.response.edit_message(view=self)
 
     async def next_page(self, interaction: discord.Interaction):
         from ReQuest.ui.info.selects import get_config_locale_total_pages
         if self.language_page < get_config_locale_total_pages() - 1:
+            locale = self.locale
             self.language_page += 1
-            self.language_select.populate(DEFAULT_LOCALE, self._current_guild_locale, page=self.language_page)
+            self.language_select.populate(locale, self._current_guild_locale, page=self.language_page)
             self.build_view()
             await interaction.response.edit_message(view=self)
