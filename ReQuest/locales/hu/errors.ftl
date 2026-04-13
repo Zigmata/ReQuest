@@ -3,11 +3,14 @@
 # Error embed wrapper
 error-oops-title = ⚠️ Hoppá!
 error-report-description =
-    Kivétel történt:
-
-    ```{ $exception }```
+    { $exception }
 
     Ha ez a hiba váratlan, vagy úgy gondolod, hogy a bot nem működik megfelelően, kérjük, küldj hibajelentést a [Hivatalos ReQuest Discord szerveren](https://discord.gg/Zq37gj4).
+
+error-report-unexpected =
+    Váratlan hiba történt. Kérjük, próbáld újra.
+
+    Ha ez továbbra is előfordul, kérjük, küldj hibajelentést a [Hivatalos ReQuest Discord szerveren](https://discord.gg/Zq37gj4).
 
 # Check failures
 error-owner-only = Csak a bot tulajdonosa használhatja ezt a parancsot!

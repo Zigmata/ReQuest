@@ -3,11 +3,14 @@
 # Error embed wrapper
 error-oops-title = ⚠️ Oi!
 error-report-description =
-    Įvyko klaida:
-
-    ```{ $exception }```
+    { $exception }
 
     Jei ši klaida netikėta arba įtariate, kad botas veikia netinkamai, pateikite pranešimą apie klaidą [Oficialiame ReQuest palaikymo Discord](https://discord.gg/Zq37gj4).
+
+error-report-unexpected =
+    Įvyko netikėta klaida. Bandykite dar kartą.
+
+    Jei tai kartojasi, pateikite pranešimą apie klaidą [Oficialiame ReQuest palaikymo Discord](https://discord.gg/Zq37gj4).
 
 # Check failures
 error-owner-only = Tik boto savininkas gali naudoti šią komandą!

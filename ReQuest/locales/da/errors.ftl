@@ -3,11 +3,14 @@
 # Error embed wrapper
 error-oops-title = ⚠️ Ups!
 error-report-description =
-    Der opstod en fejl:
-
-    ```{ $exception }```
+    { $exception }
 
     Hvis denne fejl er uventet, eller du har mistanke om, at botten ikke fungerer korrekt, kan du indsende en fejlrapport i den [Officielle ReQuest Support Discord](https://discord.gg/Zq37gj4).
+
+error-report-unexpected =
+    Der opstod en uventet fejl. Prøv venligst igen.
+
+    Hvis dette fortsætter, kan du indsende en fejlrapport i den [Officielle ReQuest Support Discord](https://discord.gg/Zq37gj4).
 
 # Check failures
 error-owner-only = Kun bottens ejer kan bruge denne kommando!

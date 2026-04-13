@@ -3,11 +3,13 @@
 # Error embed wrapper
 error-oops-title = ⚠️ Oops!
 error-report-description =
-    An exception occurred:
-
-    ```{ $exception }```
+    { $exception }
 
     If this error is unexpected, or you suspect the bot is not functioning correctly, please submit a bug report in the [Official ReQuest Support Discord](https://discord.gg/Zq37gj4).
+error-report-unexpected =
+    An unexpected error occurred. Please try again.
+
+    If this keeps happening, please submit a bug report in the [Official ReQuest Support Discord](https://discord.gg/Zq37gj4).
 
 # Check failures
 error-owner-only = Only the bot owner can use this command!

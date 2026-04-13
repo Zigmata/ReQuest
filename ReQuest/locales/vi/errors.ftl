@@ -3,11 +3,14 @@
 # Error embed wrapper
 error-oops-title = ⚠️ Ối!
 error-report-description =
-    Đã xảy ra lỗi:
-
-    ```{ $exception }```
+    { $exception }
 
     Nếu lỗi này không mong đợi, hoặc bạn nghi ngờ bot hoạt động không đúng, vui lòng gửi báo cáo lỗi tại [Discord hỗ trợ chính thức của ReQuest](https://discord.gg/Zq37gj4).
+
+error-report-unexpected =
+    Đã xảy ra lỗi không mong đợi. Vui lòng thử lại.
+
+    Nếu lỗi này tiếp tục xảy ra, vui lòng gửi báo cáo lỗi tại [Discord hỗ trợ chính thức của ReQuest](https://discord.gg/Zq37gj4).
 
 # Check failures
 error-owner-only = Chỉ chủ sở hữu bot mới có thể sử dụng lệnh này!

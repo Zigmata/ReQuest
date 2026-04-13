@@ -3,11 +3,14 @@
 # 오류 임베드 래퍼
 error-oops-title = ⚠️ 오류 발생!
 error-report-description =
-    예외가 발생했습니다:
-
-    {"```"}{ $exception }{"```"}
+    { $exception }
 
     이 오류가 예상치 못한 것이거나, 봇이 정상적으로 작동하지 않는다고 판단되면 [공식 ReQuest 지원 Discord](https://discord.gg/Zq37gj4)에 버그 리포트를 제출해 주세요.
+
+error-report-unexpected =
+    예상치 못한 오류가 발생했습니다. 다시 시도해 주세요.
+
+    이 문제가 계속되면 [공식 ReQuest 지원 Discord](https://discord.gg/Zq37gj4)에 버그 리포트를 제출해 주세요.
 
 # 검사 실패
 error-owner-only = 봇 소유자만 이 명령어를 사용할 수 있습니다!

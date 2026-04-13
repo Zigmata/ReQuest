@@ -3,11 +3,14 @@
 # Error embed wrapper
 error-oops-title = ⚠️ Hay aksi!
 error-report-description =
-    Bir hata oluştu:
-
-    ```{ $exception }```
+    { $exception }
 
     Bu hata beklenmedikse veya botun düzgün çalışmadığını düşünüyorsanız, lütfen [Resmi ReQuest Destek Discord'unda](https://discord.gg/Zq37gj4) bir hata raporu gönderin.
+
+error-report-unexpected =
+    Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.
+
+    Bu durum devam ederse, lütfen [Resmi ReQuest Destek Discord'unda](https://discord.gg/Zq37gj4) bir hata raporu gönderin.
 
 # Check failures
 error-owner-only = Bu komutu yalnızca bot sahibi kullanabilir!

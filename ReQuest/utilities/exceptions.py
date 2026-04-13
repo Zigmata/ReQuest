@@ -42,20 +42,19 @@ async def log_exception(exception, interaction=None):
     if isinstance(exception, app_commands.CommandInvokeError):
         exception = exception.original
 
-    # Resolve the display message for UserFeedbackError
-    exception_text = str(exception)
-    if isinstance(exception, UserFeedbackError):
-        exception_text = exception.resolve(locale)
-
-    report_string = t(locale, 'error-report-description', exception=exception_text)
-    error_embed = discord.Embed(
-        title=t(locale, 'error-oops-title'),
-        description=report_string,
-        color=discord.Color.red(),
-        type='rich'
-    )
-
     if isinstance(exception, (UserFeedbackError, app_commands.CheckFailure)):
+        if isinstance(exception, UserFeedbackError):
+            exception_text = exception.resolve(locale)
+        else:
+            exception_text = str(exception)
+
+        error_embed = discord.Embed(
+            title=t(locale, 'error-oops-title'),
+            description=t(locale, 'error-report-description', exception=exception_text),
+            color=discord.Color.red(),
+            type='rich'
+        )
+
         logger.debug(f'User feedback triggered: {exception}\nUser: {interaction.user.id if interaction else "Unknown"}')
 
         if interaction:
@@ -73,8 +72,17 @@ async def log_exception(exception, interaction=None):
                 logger.error(f'Failed to handle user feedback in log_exception: {e}')
         return
 
+    # Unexpected errors — log full details, show generic message to user
     logger.error(f'{type(exception).__name__}: {exception}')
     logger.error(traceback.format_exc())
+
+    error_embed = discord.Embed(
+        title=t(locale, 'error-oops-title'),
+        description=t(locale, 'error-report-unexpected'),
+        color=discord.Color.red(),
+        type='rich'
+    )
+
     if interaction:
         logger.error(f'Logged from guild ID: {interaction.guild_id}, user ID: {interaction.user.id}')
         try:

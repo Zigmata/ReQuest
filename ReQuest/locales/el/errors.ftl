@@ -3,11 +3,14 @@
 # Error embed wrapper
 error-oops-title = ⚠️ Ουπς!
 error-report-description =
-    Παρουσιάστηκε εξαίρεση:
-
-    ```{ $exception }```
+    { $exception }
 
     Αν αυτό το σφάλμα είναι απροσδόκητο ή υποψιάζεστε ότι το bot δεν λειτουργεί σωστά, παρακαλούμε υποβάλετε αναφορά σφάλματος στο [Επίσημο Discord Υποστήριξης του ReQuest](https://discord.gg/Zq37gj4).
+
+error-report-unexpected =
+    Παρουσιάστηκε απροσδόκητο σφάλμα. Δοκιμάστε ξανά.
+
+    Αν αυτό συνεχίζεται, παρακαλούμε υποβάλετε αναφορά σφάλματος στο [Επίσημο Discord Υποστήριξης του ReQuest](https://discord.gg/Zq37gj4).
 
 # Check failures
 error-owner-only = Μόνο ο ιδιοκτήτης του bot μπορεί να χρησιμοποιήσει αυτή την εντολή!

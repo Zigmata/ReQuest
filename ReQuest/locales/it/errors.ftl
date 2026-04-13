@@ -3,11 +3,14 @@
 # Wrapper embed errore
 error-oops-title = ⚠️ Ops!
 error-report-description =
-    Si è verificata un'eccezione:
-
-    ```{ $exception }```
+    { $exception }
 
     Se questo errore è inaspettato, o sospetti che il bot non funzioni correttamente, invia una segnalazione nel [Discord ufficiale di supporto di ReQuest](https://discord.gg/Zq37gj4).
+
+error-report-unexpected =
+    Si è verificato un errore imprevisto. Riprova.
+
+    Se il problema persiste, invia una segnalazione nel [Discord ufficiale di supporto di ReQuest](https://discord.gg/Zq37gj4).
 
 # Fallimenti dei controlli
 error-owner-only = Solo il proprietario del bot può usare questo comando!

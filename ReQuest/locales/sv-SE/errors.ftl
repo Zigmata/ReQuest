@@ -3,11 +3,14 @@
 # Error embed wrapper
 error-oops-title = ⚠️ Hoppsan!
 error-report-description =
-    Ett undantag inträffade:
-
-    ```{ $exception }```
+    { $exception }
 
     Om detta fel är oväntat, eller om du misstänker att boten inte fungerar korrekt, skicka gärna en felrapport i [Officiella ReQuest Support Discord](https://discord.gg/Zq37gj4).
+
+error-report-unexpected =
+    Ett oväntat fel inträffade. Försök igen.
+
+    Om detta fortsätter, skicka gärna en felrapport i [Officiella ReQuest Support Discord](https://discord.gg/Zq37gj4).
 
 # Check failures
 error-owner-only = Bara botägaren kan använda detta kommando!

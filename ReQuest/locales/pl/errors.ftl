@@ -3,11 +3,14 @@
 # Error embed wrapper
 error-oops-title = ⚠️ Ups!
 error-report-description =
-    Wystąpił wyjątek:
-
-    ```{ $exception }```
+    { $exception }
 
     Jeśli ten błąd jest nieoczekiwany lub podejrzewasz, że bot nie działa prawidłowo, zgłoś błąd na [Oficjalnym Serwerze Discord ReQuest](https://discord.gg/Zq37gj4).
+
+error-report-unexpected =
+    Wystąpił nieoczekiwany błąd. Spróbuj ponownie.
+
+    Jeśli to się powtarza, zgłoś błąd na [Oficjalnym Serwerze Discord ReQuest](https://discord.gg/Zq37gj4).
 
 # Check failures
 error-owner-only = Tylko właściciel bota może używać tej komendy!

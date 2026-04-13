@@ -3,11 +3,14 @@
 # Error embed wrapper
 error-oops-title = ⚠️ ओह!
 error-report-description =
-    एक अपवाद आया:
-
-    ```{ $exception }```
+    { $exception }
 
     यदि यह त्रुटि अप्रत्याशित है, या आपको लगता है कि बॉट सही ढंग से काम नहीं कर रहा है, तो कृपया [आधिकारिक ReQuest सहायता Discord](https://discord.gg/Zq37gj4) में बग रिपोर्ट सबमिट करें।
+
+error-report-unexpected =
+    एक अप्रत्याशित त्रुटि आई। कृपया पुनः प्रयास करें।
+
+    यदि यह बार-बार हो रहा है, तो कृपया [आधिकारिक ReQuest सहायता Discord](https://discord.gg/Zq37gj4) में बग रिपोर्ट सबमिट करें।
 
 # Check failures
 error-owner-only = केवल बॉट मालिक ही इस कमांड का उपयोग कर सकता है!

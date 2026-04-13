@@ -3,11 +3,14 @@
 # Fehler-Einbettung
 error-oops-title = ⚠️ Hoppla!
 error-report-description =
-    Eine Ausnahme ist aufgetreten:
-
-    {"```"}{ $exception }{"```"}
+    { $exception }
 
     Wenn dieser Fehler unerwartet ist oder Sie vermuten, dass der Bot nicht korrekt funktioniert, reichen Sie bitte einen Fehlerbericht im [Offiziellen ReQuest Support Discord](https://discord.gg/Zq37gj4) ein.
+
+error-report-unexpected =
+    Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es erneut.
+
+    Wenn dies weiterhin passiert, reiche bitte einen Fehlerbericht im [Offiziellen ReQuest Support Discord](https://discord.gg/Zq37gj4) ein.
 
 # Prüfungsfehler
 error-owner-only = Nur der Bot-Eigentümer kann diesen Befehl verwenden!
