@@ -74,7 +74,7 @@ async def log_exception(exception, interaction=None):
 
     # Unexpected errors — log full details, show generic message to user
     logger.error(f'{type(exception).__name__}: {exception}')
-    logger.error(traceback.format_exc())
+    logger.error(''.join(traceback.format_exception(exception)))
 
     error_embed = discord.Embed(
         title=t(locale, 'error-oops-title'),
@@ -122,4 +122,4 @@ def log_task_exception(exception, context=''):
         logger.warning(f'Discord API error{ctx}: {exception}')
     else:
         logger.error(f'{type(exception).__name__}{ctx}: {exception}')
-        logger.error(traceback.format_exc())
+        logger.error(''.join(traceback.format_exception(exception)))
