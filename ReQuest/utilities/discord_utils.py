@@ -40,6 +40,22 @@ def is_valid_image_url(url: str) -> bool:
     return parsed.path.lower().endswith(IMAGE_URL_EXTENSIONS)
 
 
+def _redact_url_for_logging(value) -> str:
+    """Strip query/fragment (which may carry tokens or signed-URL params) and truncate for safe logging."""
+    if not isinstance(value, str):
+        return repr(value)[:120]
+    try:
+        parsed = urlparse(value.strip())
+    except ValueError:
+        return repr(value[:120])
+    if parsed.scheme and parsed.netloc:
+        redacted = f'{parsed.scheme}://{parsed.netloc}{parsed.path}'
+        if parsed.query or parsed.fragment:
+            redacted += '?<redacted>'
+        return redacted[:200]
+    return repr(value[:120])
+
+
 async def sanitize_quest_image_urls(bot, quest: dict) -> bool:
     """
     Blank out malformed image URLs on a quest so renders don't crash, and persist the
@@ -58,7 +74,7 @@ async def sanitize_quest_image_urls(bot, quest: dict) -> bool:
         if value and not is_valid_image_url(value):
             logger.warning(
                 f'Clearing malformed quest image URL guild={guild_id} quest={quest_id} '
-                f'field={field} value={value!r}'
+                f'field={field} value={_redact_url_for_logging(value)}'
             )
             quest[field] = None
             updates[field] = None
