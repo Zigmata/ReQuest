@@ -22,15 +22,22 @@ __all__ = [
 ]
 
 
+IMAGE_URL_EXTENSIONS = ('.png', '.jpg', '.jpeg', '.gif', '.webp')
+
+
 def is_valid_image_url(url: str) -> bool:
-    """Validate that a URL is well-formed and uses an http(s) scheme, as required by Discord media components."""
+    """
+    Validate a direct image URL: well-formed http(s) with a recognized image extension.
+    """
     if not url:
         return False
     try:
         parsed = urlparse(url.strip())
     except ValueError:
         return False
-    return parsed.scheme in ('http', 'https') and bool(parsed.netloc)
+    if parsed.scheme not in ('http', 'https') or not parsed.netloc:
+        return False
+    return parsed.path.lower().endswith(IMAGE_URL_EXTENSIONS)
 
 
 async def sanitize_quest_image_urls(bot, quest: dict) -> bool:
