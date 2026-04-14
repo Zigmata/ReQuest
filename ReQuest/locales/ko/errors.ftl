@@ -12,6 +12,14 @@ error-report-unexpected =
 
     이 문제가 계속되면 [공식 ReQuest 지원 Discord](https://discord.gg/Zq37gj4)에 버그 리포트를 제출해 주세요.
 
+error-invalid-image-url =
+    하나 이상의 이미지 URL이 올바르지 않습니다. Discord는 `http://` 또는 `https://`로 시작하고 이미지를 직접 가리키는 완전한 링크를 요구합니다 (예: `https://example.com/banner.png`).
+
+    퀘스트를 편집하여 올바른 이미지 URL을 입력하거나 필드를 비워 두세요.
+error-invalid-image-url-field = { $fieldName } URL이 올바르지 않습니다. `http://` 또는 `https://`로 시작하는 완전한 링크를 입력하거나 비워 두세요.
+error-field-thumbnail = 썸네일 이미지
+error-field-large-image = 큰 이미지
+
 # 검사 실패
 error-owner-only = 봇 소유자만 이 명령어를 사용할 수 있습니다!
 error-no-permission = 이 명령어를 실행할 권한이 없습니다!

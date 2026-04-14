@@ -12,6 +12,14 @@ error-report-unexpected =
 
     Jei tai kartojasi, pateikite pranešimą apie klaidą [Oficialiame ReQuest palaikymo Discord](https://discord.gg/Zq37gj4).
 
+error-invalid-image-url =
+    Vienas ar daugiau paveikslėlių URL nėra tinkami. Discord reikalauja pilno nuorodos, prasidedančios `http://` arba `https://` ir tiesiogiai nurodančios į paveikslėlį (pavyzdžiui, `https://example.com/banner.png`).
+
+    Redaguokite užduotį ir pateikite tinkamus paveikslėlių URL arba palikite laukus tuščius.
+error-invalid-image-url-field = { $fieldName } URL yra netinkamas. Pateikite pilną nuorodą, prasidedančią `http://` arba `https://`, arba palikite tuščią.
+error-field-thumbnail = miniatiūros paveikslėlis
+error-field-large-image = didelis paveikslėlis
+
 # Check failures
 error-owner-only = Tik boto savininkas gali naudoti šią komandą!
 error-no-permission = Jūs neturite leidimų vykdyti šios komandos!

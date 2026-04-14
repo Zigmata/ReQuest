@@ -12,6 +12,14 @@ error-report-unexpected =
 
     Jeśli to się powtarza, zgłoś błąd na [Oficjalnym Serwerze Discord ReQuest](https://discord.gg/Zq37gj4).
 
+error-invalid-image-url =
+    Co najmniej jeden adres URL obrazu jest nieprawidłowy. Discord wymaga pełnego linku zaczynającego się od `http://` lub `https://`, który wskazuje bezpośrednio na obraz (na przykład `https://example.com/banner.png`).
+
+    Edytuj zadanie i podaj prawidłowe adresy URL obrazów lub pozostaw pola puste.
+error-invalid-image-url-field = Adres URL pola { $fieldName } jest nieprawidłowy. Podaj pełny link zaczynający się od `http://` lub `https://`, albo pozostaw puste.
+error-field-thumbnail = miniatura obrazu
+error-field-large-image = duży obraz
+
 # Check failures
 error-owner-only = Tylko właściciel bota może używać tej komendy!
 error-no-permission = Nie masz uprawnień do uruchomienia tej komendy!

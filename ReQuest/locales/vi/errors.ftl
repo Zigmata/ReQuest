@@ -12,6 +12,14 @@ error-report-unexpected =
 
     Nếu lỗi này tiếp tục xảy ra, vui lòng gửi báo cáo lỗi tại [Discord hỗ trợ chính thức của ReQuest](https://discord.gg/Zq37gj4).
 
+error-invalid-image-url =
+    Một hoặc nhiều URL hình ảnh không hợp lệ. Discord yêu cầu một liên kết đầy đủ bắt đầu bằng `http://` hoặc `https://` và trỏ trực tiếp đến một hình ảnh (ví dụ: `https://example.com/banner.png`).
+
+    Vui lòng chỉnh sửa nhiệm vụ và cung cấp URL hình ảnh hợp lệ, hoặc để trống các trường.
+error-invalid-image-url-field = URL của { $fieldName } không hợp lệ. Vui lòng cung cấp một liên kết đầy đủ bắt đầu bằng `http://` hoặc `https://`, hoặc để trống.
+error-field-thumbnail = hình ảnh thu nhỏ
+error-field-large-image = hình ảnh lớn
+
 # Check failures
 error-owner-only = Chỉ chủ sở hữu bot mới có thể sử dụng lệnh này!
 error-no-permission = Bạn không có quyền để chạy lệnh này!

@@ -12,6 +12,14 @@ error-report-unexpected =
 
     Ако това продължава да се случва, моля подайте доклад за бъг в [Официалния Discord за поддръжка на ReQuest](https://discord.gg/Zq37gj4).
 
+error-invalid-image-url =
+    Един или повече URL адреси на изображения не са валидни. Discord изисква пълен адрес, започващ с `http://` или `https://`, който сочи директно към изображение (например `https://example.com/banner.png`).
+
+    Моля, редактирайте куеста и въведете валидни URL адреси на изображения или оставете полетата празни.
+error-invalid-image-url-field = URL адресът на { $fieldName } не е валиден. Моля, въведете пълен адрес, започващ с `http://` или `https://`, или го оставете празен.
+error-field-thumbnail = миниатюрно изображение
+error-field-large-image = голямо изображение
+
 # Check failures
 error-owner-only = Само собственикът на бота може да използва тази команда!
 error-no-permission = Нямате права да изпълните тази команда!

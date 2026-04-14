@@ -12,6 +12,14 @@ error-report-unexpected =
 
     Jika ini terus terjadi, silakan kirim laporan bug di [Discord Dukungan Resmi ReQuest](https://discord.gg/Zq37gj4).
 
+error-invalid-image-url =
+    Satu atau lebih URL gambar tidak valid. Discord memerlukan tautan lengkap yang diawali dengan `http://` atau `https://` dan mengarah langsung ke gambar (misalnya, `https://example.com/banner.png`).
+
+    Silakan edit quest dan berikan URL gambar yang valid, atau kosongkan kolomnya.
+error-invalid-image-url-field = URL { $fieldName } tidak valid. Berikan tautan lengkap yang diawali dengan `http://` atau `https://`, atau kosongkan.
+error-field-thumbnail = gambar thumbnail
+error-field-large-image = gambar besar
+
 # Check failures
 error-owner-only = Hanya pemilik bot yang dapat menggunakan perintah ini!
 error-no-permission = Anda tidak memiliki izin untuk menjalankan perintah ini!

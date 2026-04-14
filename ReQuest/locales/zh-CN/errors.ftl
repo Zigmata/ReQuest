@@ -12,6 +12,14 @@ error-report-unexpected =
 
     如果此问题持续出现，请在 [ReQuest 官方支持 Discord](https://discord.gg/Zq37gj4) 中提交错误报告。
 
+error-invalid-image-url =
+    一个或多个图片 URL 无效。Discord 要求提供以 `http://` 或 `https://` 开头并直接指向图片的完整链接（例如 `https://example.com/banner.png`）。
+
+    请编辑任务并提供有效的图片 URL，或将字段留空。
+error-invalid-image-url-field = { $fieldName } 的 URL 无效。请提供以 `http://` 或 `https://` 开头的完整链接，或将其留空。
+error-field-thumbnail = 缩略图
+error-field-large-image = 大图
+
 # Check failures
 error-owner-only = 只有机器人所有者才能使用此命令！
 error-no-permission = 您没有权限运行此命令！

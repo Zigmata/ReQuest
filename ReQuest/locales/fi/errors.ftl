@@ -12,6 +12,14 @@ error-report-unexpected =
 
     Jos tämä toistuu, lähetä vikailmoitus [virallisessa ReQuest-tuki-Discordissa](https://discord.gg/Zq37gj4).
 
+error-invalid-image-url =
+    Yksi tai useampi kuvan URL-osoite ei ole kelvollinen. Discord vaatii täydellisen linkin, joka alkaa merkeillä `http://` tai `https://` ja osoittaa suoraan kuvaan (esimerkiksi `https://example.com/banner.png`).
+
+    Muokkaa tehtävää ja anna kelvolliset kuvan URL-osoitteet tai jätä kentät tyhjiksi.
+error-invalid-image-url-field = Kentän { $fieldName } URL-osoite ei ole kelvollinen. Anna täydellinen linkki, joka alkaa merkeillä `http://` tai `https://`, tai jätä se tyhjäksi.
+error-field-thumbnail = pikkukuva
+error-field-large-image = suuri kuva
+
 # Check failures
 error-owner-only = Vain botin omistaja voi käyttää tätä komentoa!
 error-no-permission = Sinulla ei ole oikeuksia suorittaa tätä komentoa!

@@ -12,6 +12,14 @@ error-report-unexpected =
 
     Αν αυτό συνεχίζεται, παρακαλούμε υποβάλετε αναφορά σφάλματος στο [Επίσημο Discord Υποστήριξης του ReQuest](https://discord.gg/Zq37gj4).
 
+error-invalid-image-url =
+    Ένα ή περισσότερα URL εικόνων δεν είναι έγκυρα. Το Discord απαιτεί πλήρη σύνδεσμο που ξεκινά με `http://` ή `https://` και οδηγεί απευθείας σε εικόνα (για παράδειγμα, `https://example.com/banner.png`).
+
+    Επεξεργαστείτε την αποστολή και δώστε έγκυρα URL εικόνων, ή αφήστε τα πεδία κενά.
+error-invalid-image-url-field = Το URL του πεδίου { $fieldName } δεν είναι έγκυρο. Δώστε έναν πλήρη σύνδεσμο που ξεκινά με `http://` ή `https://`, ή αφήστε το κενό.
+error-field-thumbnail = εικόνα μικρογραφίας
+error-field-large-image = μεγάλη εικόνα
+
 # Check failures
 error-owner-only = Μόνο ο ιδιοκτήτης του bot μπορεί να χρησιμοποιήσει αυτή την εντολή!
 error-no-permission = Δεν έχετε δικαιώματα για να εκτελέσετε αυτή την εντολή!

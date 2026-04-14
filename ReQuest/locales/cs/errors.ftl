@@ -12,6 +12,14 @@ error-report-unexpected =
 
     Pokud se to opakuje, odešlete hlášení o chybě v [Oficiálním Discord serveru podpory ReQuest](https://discord.gg/Zq37gj4).
 
+error-invalid-image-url =
+    Jedna nebo více URL adres obrázků je neplatná. Discord vyžaduje úplný odkaz začínající na `http://` nebo `https://`, který směřuje přímo na obrázek (například `https://example.com/banner.png`).
+
+    Upravte prosím questu a zadejte platné URL adresy obrázků, nebo pole ponechte prázdná.
+error-invalid-image-url-field = URL adresa pole { $fieldName } je neplatná. Zadejte prosím úplný odkaz začínající na `http://` nebo `https://`, nebo jej ponechte prázdný.
+error-field-thumbnail = náhled obrázku
+error-field-large-image = velký obrázek
+
 # Check failures
 error-owner-only = Tento příkaz může použít pouze vlastník bota!
 error-no-permission = Nemáte oprávnění ke spuštění tohoto příkazu!
