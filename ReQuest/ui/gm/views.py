@@ -33,7 +33,8 @@ from ReQuest.utilities.db_cache import (
     run_in_transaction
 )
 from ReQuest.utilities.discord_utils import (
-    setup_view, strip_id, attempt_delete, escape_markdown, get_guild_member, truncate_text, check_role_hierarchy
+    setup_view, strip_id, attempt_delete, escape_markdown, get_guild_member, truncate_text, check_role_hierarchy,
+    sanitize_quest_image_urls,
 )
 from ReQuest.utilities.exceptions import log_exception, UserFeedbackError
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_locale
@@ -1028,6 +1029,8 @@ class EditQuestView(LocaleLayoutView):
             if query:
                 self.quest = query
 
+            await sanitize_quest_image_urls(bot, self.quest)
+
             quest_role_mode_query = await get_cached_data(
                 bot=bot,
                 mongo_database=bot.gdb,
@@ -1422,6 +1425,8 @@ class QuestPostView(LocaleLayoutView):
                     if announce_query:
                         self.announce_role = announce_query.get(ConfigFields.ANNOUNCE_ROLE)
                     self.setup_done = True
+            if bot:
+                await sanitize_quest_image_urls(bot, self.quest)
             self.build_view()
         except Exception as e:
             await log_exception(e)

@@ -13,7 +13,7 @@ from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_locale
 from ReQuest.utilities.character import update_character_inventory, update_character_experience
 from ReQuest.utilities.currency import find_currency_or_denomination, get_denomination_map
 from ReQuest.utilities.db_cache import update_cached_data, get_cached_data, build_cache_key
-from ReQuest.utilities.discord_utils import setup_view, strip_id, escape_markdown
+from ReQuest.utilities.discord_utils import setup_view, strip_id, escape_markdown, is_valid_image_url
 from ReQuest.utilities.exceptions import log_exception, UserFeedbackError
 
 logger = logging.getLogger(__name__)
@@ -295,6 +295,22 @@ class EditQuestImagesComboModal(LocaleModal):
 
             thumbnail = self.thumbnail_input.value.strip() or None
             large_image = self.image_input.value.strip() or None
+
+            locale = self._locale
+            if thumbnail and not is_valid_image_url(thumbnail):
+                raise UserFeedbackError(
+                    t(locale, 'error-invalid-image-url-field',
+                      fieldName=t(locale, 'error-field-thumbnail')),
+                    message_id='error-invalid-image-url-field',
+                    fieldName=t(locale, 'error-field-thumbnail')
+                )
+            if large_image and not is_valid_image_url(large_image):
+                raise UserFeedbackError(
+                    t(locale, 'error-invalid-image-url-field',
+                      fieldName=t(locale, 'error-field-large-image')),
+                    message_id='error-invalid-image-url-field',
+                    fieldName=t(locale, 'error-field-large-image')
+                )
 
             updates = {
                 QuestFields.IMAGE_URL: thumbnail,

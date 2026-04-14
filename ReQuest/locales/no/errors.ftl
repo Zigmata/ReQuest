@@ -12,6 +12,14 @@ error-report-unexpected =
 
     Hvis dette fortsetter, vennligst send en feilrapport i den [offisielle ReQuest Support Discord](https://discord.gg/Zq37gj4).
 
+error-invalid-image-url =
+    En eller flere bilde-URL-er er ikke gyldige. Discord krever en fullstendig lenke som starter med `http://` eller `https://` og peker direkte til et bilde (for eksempel `https://example.com/banner.png`).
+
+    Rediger oppdraget og oppgi gyldige bilde-URL-er, eller la feltene stå tomme.
+error-invalid-image-url-field = URL-en for { $fieldName } er ikke gyldig. Oppgi en fullstendig lenke som starter med `http://` eller `https://`, eller la feltet stå tomt.
+error-field-thumbnail = miniatyrbilde
+error-field-large-image = stort bilde
+
 # Check failures
 error-owner-only = Bare boteieren kan bruke denne kommandoen!
 error-no-permission = Du har ikke tillatelse til å kjøre denne kommandoen!

@@ -12,6 +12,14 @@ error-report-unexpected =
 
     Ako se to nastavi, molimo prijavite grešku u [Službenom ReQuest Discord poslužitelju](https://discord.gg/Zq37gj4).
 
+error-invalid-image-url =
+    Jedan ili više URL-ova slika nisu valjani. Discord zahtijeva potpuni link koji počinje s `http://` ili `https://` i vodi izravno na sliku (na primjer, `https://example.com/banner.png`).
+
+    Uredite zadatak i navedite valjane URL-ove slika ili ostavite polja prazna.
+error-invalid-image-url-field = URL polja { $fieldName } nije valjan. Navedite potpuni link koji počinje s `http://` ili `https://`, ili ga ostavite praznim.
+error-field-thumbnail = sličica
+error-field-large-image = velika slika
+
 # Check failures
 error-owner-only = Samo vlasnik bota može koristiti ovu naredbu!
 error-no-permission = Nemate dozvolu za pokretanje ove naredbe!

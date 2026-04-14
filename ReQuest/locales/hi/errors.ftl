@@ -12,6 +12,14 @@ error-report-unexpected =
 
     यदि यह बार-बार हो रहा है, तो कृपया [आधिकारिक ReQuest सहायता Discord](https://discord.gg/Zq37gj4) में बग रिपोर्ट सबमिट करें।
 
+error-invalid-image-url =
+    एक या अधिक छवि URL मान्य नहीं हैं। Discord को `http://` या `https://` से शुरू होने वाला पूर्ण लिंक चाहिए जो सीधे किसी छवि की ओर इशारा करे (उदाहरण के लिए, `https://example.com/banner.png`).
+
+    कृपया क्वेस्ट संपादित करें और मान्य छवि URL प्रदान करें, या फ़ील्ड खाली छोड़ दें।
+error-invalid-image-url-field = { $fieldName } का URL मान्य नहीं है। कृपया `http://` या `https://` से शुरू होने वाला पूर्ण लिंक प्रदान करें, या इसे खाली छोड़ दें।
+error-field-thumbnail = थंबनेल छवि
+error-field-large-image = बड़ी छवि
+
 # Check failures
 error-owner-only = केवल बॉट मालिक ही इस कमांड का उपयोग कर सकता है!
 error-no-permission = आपके पास इस कमांड को चलाने की अनुमति नहीं है!

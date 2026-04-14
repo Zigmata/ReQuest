@@ -12,6 +12,14 @@ error-report-unexpected =
 
     Ha ez továbbra is előfordul, kérjük, küldj hibajelentést a [Hivatalos ReQuest Discord szerveren](https://discord.gg/Zq37gj4).
 
+error-invalid-image-url =
+    Egy vagy több kép-URL érvénytelen. A Discord olyan teljes hivatkozást igényel, amely `http://` vagy `https://` előtaggal kezdődik, és közvetlenül egy képre mutat (például: `https://example.com/banner.png`).
+
+    Kérjük, szerkeszd a küldetést és adj meg érvényes kép-URL-eket, vagy hagyd üresen a mezőket.
+error-invalid-image-url-field = A { $fieldName } URL érvénytelen. Kérjük, adj meg egy teljes hivatkozást, amely `http://` vagy `https://` előtaggal kezdődik, vagy hagyd üresen.
+error-field-thumbnail = bélyegkép
+error-field-large-image = nagy kép
+
 # Check failures
 error-owner-only = Csak a bot tulajdonosa használhatja ezt a parancsot!
 error-no-permission = Nincs jogosultságod ennek a parancsnak a futtatásához!

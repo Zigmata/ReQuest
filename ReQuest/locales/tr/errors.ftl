@@ -12,6 +12,14 @@ error-report-unexpected =
 
     Bu durum devam ederse, lütfen [Resmi ReQuest Destek Discord'unda](https://discord.gg/Zq37gj4) bir hata raporu gönderin.
 
+error-invalid-image-url =
+    Bir veya daha fazla resim URL'si geçerli değil. Discord, `http://` veya `https://` ile başlayan ve doğrudan bir resme işaret eden tam bir bağlantı gerektirir (örneğin, `https://example.com/banner.png`).
+
+    Lütfen görevi düzenleyip geçerli resim URL'leri girin veya alanları boş bırakın.
+error-invalid-image-url-field = { $fieldName } URL'si geçerli değil. Lütfen `http://` veya `https://` ile başlayan tam bir bağlantı girin veya boş bırakın.
+error-field-thumbnail = küçük resim
+error-field-large-image = büyük resim
+
 # Check failures
 error-owner-only = Bu komutu yalnızca bot sahibi kullanabilir!
 error-no-permission = Bu komutu çalıştırma yetkiniz yok!

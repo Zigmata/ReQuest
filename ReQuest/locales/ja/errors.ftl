@@ -12,6 +12,14 @@ error-report-unexpected =
 
     この問題が続く場合は、[公式 ReQuest サポート Discord](https://discord.gg/Zq37gj4) でバグレポートを送信してください。
 
+error-invalid-image-url =
+    1つ以上の画像URLが無効です。Discordでは、`http://` または `https://` で始まり、画像を直接指す完全なリンクが必要です（例: `https://example.com/banner.png`）。
+
+    クエストを編集して有効な画像URLを入力するか、フィールドを空欄のままにしてください。
+error-invalid-image-url-field = { $fieldName } のURLが無効です。`http://` または `https://` で始まる完全なリンクを入力するか、空欄のままにしてください。
+error-field-thumbnail = サムネイル画像
+error-field-large-image = 大きな画像
+
 # Check failures
 error-owner-only = このコマンドはボットオーナーのみが使用できます！
 error-no-permission = このコマンドを実行する権限がありません！

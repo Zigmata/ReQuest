@@ -12,6 +12,14 @@ error-report-unexpected =
 
     หากปัญหานี้ยังคงเกิดขึ้น กรุณาส่งรายงานบั๊กใน [Discord สนับสนุนอย่างเป็นทางการของ ReQuest](https://discord.gg/Zq37gj4)
 
+error-invalid-image-url =
+    URL รูปภาพอย่างน้อยหนึ่งรายการไม่ถูกต้อง Discord ต้องการลิงก์แบบเต็มที่ขึ้นต้นด้วย `http://` หรือ `https://` และชี้ไปยังรูปภาพโดยตรง (ตัวอย่างเช่น `https://example.com/banner.png`)
+
+    กรุณาแก้ไขเควสและระบุ URL รูปภาพที่ถูกต้อง หรือเว้นช่องว่างไว้
+error-invalid-image-url-field = URL ของ { $fieldName } ไม่ถูกต้อง กรุณาระบุลิงก์แบบเต็มที่ขึ้นต้นด้วย `http://` หรือ `https://` หรือเว้นว่างไว้
+error-field-thumbnail = ภาพขนาดย่อ
+error-field-large-image = ภาพขนาดใหญ่
+
 # Check failures
 error-owner-only = เฉพาะเจ้าของบอทเท่านั้นที่สามารถใช้คำสั่งนี้ได้!
 error-no-permission = คุณไม่มีสิทธิ์ใช้คำสั่งนี้!

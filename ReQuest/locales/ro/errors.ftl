@@ -12,6 +12,14 @@ error-report-unexpected =
 
     Dacă acest lucru continuă, vă rugăm să trimiteți un raport de eroare în [Discordul Oficial de Suport ReQuest](https://discord.gg/Zq37gj4).
 
+error-invalid-image-url =
+    Una sau mai multe URL-uri de imagine nu sunt valide. Discord necesită un link complet care începe cu `http://` sau `https://` și duce direct la o imagine (de exemplu, `https://example.com/banner.png`).
+
+    Vă rugăm să editați quest-ul și să furnizați URL-uri de imagine valide, sau lăsați câmpurile goale.
+error-invalid-image-url-field = URL-ul pentru { $fieldName } nu este valid. Vă rugăm să furnizați un link complet care începe cu `http://` sau `https://`, sau lăsați-l gol.
+error-field-thumbnail = imagine miniatură
+error-field-large-image = imagine mare
+
 # Check failures
 error-owner-only = Doar proprietarul botului poate folosi această comandă!
 error-no-permission = Nu aveți permisiunea de a rula această comandă!
