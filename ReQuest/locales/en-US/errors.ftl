@@ -10,6 +10,13 @@ error-report-unexpected =
     An unexpected error occurred. Please try again.
 
     If this keeps happening, please submit a bug report in the [Official ReQuest Support Discord](https://discord.gg/Zq37gj4).
+error-invalid-image-url =
+    One or more image URLs are not valid. Discord requires a fully-qualified link starting with `http://` or `https://` that points directly to an image (for example, `https://example.com/banner.png`).
+
+    Please edit the quest and provide valid image URLs, or leave the fields blank.
+error-invalid-image-url-field = The { $fieldName } URL is not valid. Please provide a fully-qualified link starting with `http://` or `https://`, or leave it blank.
+error-field-thumbnail = thumbnail image
+error-field-large-image = large image
 
 # Check failures
 error-owner-only = Only the bot owner can use this command!

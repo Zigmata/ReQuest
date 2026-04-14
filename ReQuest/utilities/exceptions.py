@@ -26,6 +26,18 @@ class UserFeedbackError(Exception):
         return str(self)
 
 
+def _is_invalid_media_url_error(exception) -> bool:
+    """
+    Detect Discord's 50035 'Invalid Form Body' response caused by a malformed media URL.
+    """
+    if not isinstance(exception, discord.HTTPException):
+        return False
+    if getattr(exception, 'code', None) != 50035:
+        return False
+    text = str(getattr(exception, 'text', '') or exception)
+    return 'media.url' in text or 'Not a well formed URL' in text
+
+
 async def log_exception(exception, interaction=None):
     """
     Logs an exception and sends a user-friendly message if interaction is provided.
@@ -41,6 +53,14 @@ async def log_exception(exception, interaction=None):
 
     if isinstance(exception, app_commands.CommandInvokeError):
         exception = exception.original
+
+    if _is_invalid_media_url_error(exception):
+        logger.warning(f'Discord rejected a media URL for user {interaction.user.id if interaction else "Unknown"}: '
+                       f'{exception}')
+        exception = UserFeedbackError(
+            t(locale, 'error-invalid-image-url'),
+            message_id='error-invalid-image-url'
+        )
 
     if isinstance(exception, (UserFeedbackError, app_commands.CheckFailure)):
         if isinstance(exception, UserFeedbackError):
