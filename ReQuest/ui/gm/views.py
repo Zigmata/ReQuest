@@ -1424,8 +1424,8 @@ class QuestPostView(LocaleLayoutView):
                     )
                     if announce_query:
                         self.announce_role = announce_query.get(ConfigFields.ANNOUNCE_ROLE)
-                    sanitize_quest_image_urls(self.quest)
                     self.setup_done = True
+            sanitize_quest_image_urls(self.quest)
             self.build_view()
         except Exception as e:
             await log_exception(e)
