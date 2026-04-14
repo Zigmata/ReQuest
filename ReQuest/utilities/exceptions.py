@@ -55,7 +55,12 @@ async def log_exception(exception, interaction=None):
         exception = exception.original
 
     if interaction and _is_invalid_media_url_error(exception):
-        logger.warning(f'Discord rejected a media URL for user {interaction.user.id}: {exception}')
+        status = getattr(exception, 'status', 'unknown')
+        code = getattr(exception, 'code', 'unknown')
+        logger.warning(
+            f'Discord rejected a media URL for user {interaction.user.id} '
+            f'(status={status} code={code})'
+        )
         exception = UserFeedbackError(
             t(locale, 'error-invalid-image-url'),
             message_id='error-invalid-image-url'
