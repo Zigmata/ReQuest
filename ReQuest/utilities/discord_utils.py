@@ -96,8 +96,17 @@ async def sanitize_quest_image_urls(bot, quest: dict) -> bool:
         if result.matched_count == 0:
             logger.warning(f'Sanitize found no quest doc to clean guild={guild_id} quest={quest_id}')
         else:
-            cache_key = build_cache_key(bot.gdb.name, f'{guild_id}:{quest_id}', DatabaseCollections.QUESTS)
-            await invalidate_cache_key(bot, cache_key, session=None)
+            keys_to_invalidate = [
+                build_cache_key(bot.gdb.name, f'{guild_id}:{quest_id}', DatabaseCollections.QUESTS),
+                build_cache_key(bot.gdb.name, f'guild_quests:{guild_id}', DatabaseCollections.QUESTS),
+            ]
+            gm_id = quest.get(QuestFields.GM)
+            if gm_id:
+                keys_to_invalidate.append(
+                    build_cache_key(bot.gdb.name, f'gm_quests:{guild_id}:{gm_id}', DatabaseCollections.QUESTS)
+                )
+            for cache_key in keys_to_invalidate:
+                await invalidate_cache_key(bot, cache_key, session=None)
     except Exception:
         logger.exception(f'Failed to persist sanitized quest image URLs for {guild_id}:{quest_id}')
 
