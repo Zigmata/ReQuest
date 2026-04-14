@@ -54,9 +54,8 @@ async def log_exception(exception, interaction=None):
     if isinstance(exception, app_commands.CommandInvokeError):
         exception = exception.original
 
-    if _is_invalid_media_url_error(exception):
-        logger.warning(f'Discord rejected a media URL for user {interaction.user.id if interaction else "Unknown"}: '
-                       f'{exception}')
+    if interaction and _is_invalid_media_url_error(exception):
+        logger.warning(f'Discord rejected a media URL for user {interaction.user.id}: {exception}')
         exception = UserFeedbackError(
             t(locale, 'error-invalid-image-url'),
             message_id='error-invalid-image-url'

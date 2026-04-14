@@ -48,7 +48,7 @@ async def sanitize_quest_image_urls(bot, quest: dict) -> bool:
     Returns True if any field was blanked.
     """
     from ReQuest.utilities.constants import QuestFields, DatabaseCollections
-    from ReQuest.utilities.db_cache import update_cached_data
+    from ReQuest.utilities.db_cache import build_cache_key, invalidate_cache_key
 
     guild_id = quest.get(QuestFields.GUILD_ID)
     quest_id = quest.get(QuestFields.QUEST_ID)
@@ -66,17 +66,24 @@ async def sanitize_quest_image_urls(bot, quest: dict) -> bool:
     if not updates:
         return False
 
+    if not guild_id or not quest_id:
+        logger.warning(f'Skipping DB cleanup — missing identifiers guild={guild_id!r} quest={quest_id!r}')
+        return True
+
     try:
-        await update_cached_data(
-            bot=bot,
-            mongo_database=bot.gdb,
-            collection_name=DatabaseCollections.QUESTS,
-            query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
-            update_data={'$set': updates},
-            cache_id=f'{guild_id}:{quest_id}'
+        collection = bot.gdb[DatabaseCollections.QUESTS]
+        result = await collection.update_one(
+            {QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
+            {'$set': updates},
+            upsert=False,
         )
-    except Exception as e:
-        logger.error(f'Failed to persist sanitized quest image URLs for {guild_id}:{quest_id}: {e}')
+        if result.matched_count == 0:
+            logger.warning(f'Sanitize found no quest doc to clean guild={guild_id} quest={quest_id}')
+        else:
+            cache_key = build_cache_key(bot.gdb.name, f'{guild_id}:{quest_id}', DatabaseCollections.QUESTS)
+            await invalidate_cache_key(bot, cache_key, session=None)
+    except Exception:
+        logger.exception(f'Failed to persist sanitized quest image URLs for {guild_id}:{quest_id}')
 
     return True
 
