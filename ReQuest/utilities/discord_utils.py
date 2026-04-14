@@ -33,27 +33,45 @@ def is_valid_image_url(url: str) -> bool:
     return parsed.scheme in ('http', 'https') and bool(parsed.netloc)
 
 
-def sanitize_quest_image_urls(quest: dict) -> bool:
+async def sanitize_quest_image_urls(bot, quest: dict) -> bool:
     """
-    Blank out malformed image URLs on an in-memory quest dict so renders don't crash.
+    Blank out malformed image URLs on a quest so renders don't crash, and persist the
+    cleanup to the DB/cache so the bad value doesn't resurface on future loads.
 
     Returns True if any field was blanked.
     """
-    from ReQuest.utilities.constants import QuestFields
+    from ReQuest.utilities.constants import QuestFields, DatabaseCollections
+    from ReQuest.utilities.db_cache import update_cached_data
 
-    changed = False
     guild_id = quest.get(QuestFields.GUILD_ID)
     quest_id = quest.get(QuestFields.QUEST_ID)
+    updates = {}
     for field in (QuestFields.IMAGE_URL, QuestFields.LARGE_IMAGE_URL):
         value = quest.get(field)
         if value and not is_valid_image_url(value):
             logger.warning(
-                f'Skipping malformed quest image URL guild={guild_id} quest={quest_id} '
+                f'Clearing malformed quest image URL guild={guild_id} quest={quest_id} '
                 f'field={field} value={value!r}'
             )
             quest[field] = None
-            changed = True
-    return changed
+            updates[field] = None
+
+    if not updates:
+        return False
+
+    try:
+        await update_cached_data(
+            bot=bot,
+            mongo_database=bot.gdb,
+            collection_name=DatabaseCollections.QUESTS,
+            query={QuestFields.GUILD_ID: guild_id, QuestFields.QUEST_ID: quest_id},
+            update_data={'$set': updates},
+            cache_id=f'{guild_id}:{quest_id}'
+        )
+    except Exception as e:
+        logger.error(f'Failed to persist sanitized quest image URLs for {guild_id}:{quest_id}: {e}')
+
+    return True
 
 
 async def attempt_delete(message: discord.Message | discord.PartialMessage):
