@@ -216,7 +216,8 @@ class EditQuestDetailsComboModal(LocaleModal):
                 if max_party_size < current_party_size:
                     raise UserFeedbackError(
                         t(locale, 'gm-error-party-size-too-small', currentSize=current_party_size),
-                        message_id='gm-error-party-size-too-small'
+                        message_id='gm-error-party-size-too-small',
+                        currentSize=current_party_size
                     )
             else:
                 max_party_size = quest.get(QuestFields.MAX_PARTY_SIZE, 1)
@@ -415,7 +416,8 @@ class RewardsModal(LocaleModal):
                         except ValueError:
                             raise UserFeedbackError(
                                 t(locale, 'gm-error-invalid-item-format', item=item),
-                                message_id='gm-error-invalid-item-format'
+                                message_id='gm-error-invalid-item-format',
+                                item=item
                             )
 
             await self.caller.modal_callback(interaction, xp, items)

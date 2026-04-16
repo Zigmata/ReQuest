@@ -65,7 +65,8 @@ class ShopItemButton(Button):
                 locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
                 raise UserFeedbackError(
                     t(locale, 'shop-error-item-out-of-stock', itemName=self.item[CommonFields.NAME]),
-                    message_id='shop-error-item-out-of-stock'
+                    message_id='shop-error-item-out-of-stock',
+                    itemName=self.item[CommonFields.NAME]
                 )
 
             costs = self.item.get(ShopFields.COSTS, [])

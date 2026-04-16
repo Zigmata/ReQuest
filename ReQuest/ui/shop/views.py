@@ -232,7 +232,8 @@ class ShopBaseView(LocaleLayoutView):
                 locale = getattr(self, 'locale', DEFAULT_LOCALE)
                 raise UserFeedbackError(
                     t(locale, 'shop-error-item-out-of-stock', itemName=item_name),
-                    message_id='shop-error-item-out-of-stock'
+                    message_id='shop-error-item-out-of-stock',
+                    itemName=item_name
                 )
 
             db_cart = await get_cart(self.bot, self.guild_id, self.user_id, self.channel_id)

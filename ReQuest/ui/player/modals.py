@@ -976,7 +976,8 @@ class ConsumeFromContainerModal(LocaleModal):
             if quantity > self.max_quantity:
                 raise UserFeedbackError(
                     t(locale, 'player-error-qty-only-have', maxQuantity=self.max_quantity),
-                    message_id='player-error-qty-only-have'
+                    message_id='player-error-qty-only-have',
+                    maxQuantity=self.max_quantity
                 )
 
             await consume_item_from_container(
@@ -1107,7 +1108,8 @@ class MoveItemQuantityModal(LocaleModal):
             if quantity > self.max_quantity:
                 raise UserFeedbackError(
                     t(locale, 'player-error-qty-only-have', maxQuantity=self.max_quantity),
-                    message_id='player-error-qty-only-have'
+                    message_id='player-error-qty-only-have',
+                    maxQuantity=self.max_quantity
                 )
 
             await move_item_between_containers(

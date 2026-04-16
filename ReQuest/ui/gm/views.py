@@ -1554,16 +1554,18 @@ class QuestPostView(LocaleLayoutView):
 
             current_party = quest[QuestFields.PARTY]
             current_wait_list = quest[QuestFields.WAIT_LIST]
-            for player in current_party:
-                if str(user_id) in player:
-                    for character_id, character_data in player[str(user_id)].items():
-                        raise UserFeedbackError(
-                            t(
-                                getattr(self, 'locale', DEFAULT_LOCALE), 'gm-error-already-on-quest',
+            for player_list in (current_party, current_wait_list):
+                for player in player_list:
+                    if str(user_id) in player:
+                        for character_id, character_data in player[str(user_id)].items():
+                            raise UserFeedbackError(
+                                t(
+                                    getattr(self, 'locale', DEFAULT_LOCALE), 'gm-error-already-on-quest',
+                                    characterName=character_data[CommonFields.NAME]
+                                ),
+                                message_id='gm-error-already-on-quest',
                                 characterName=character_data[CommonFields.NAME]
-                            ),
-                            message_id='gm-error-already-on-quest'
-                        )
+                            )
             max_wait_list_size = quest[QuestFields.MAX_WAIT_LIST_SIZE]
             max_party_size = quest[QuestFields.MAX_PARTY_SIZE]
 
@@ -1587,7 +1589,8 @@ class QuestPostView(LocaleLayoutView):
                 raise UserFeedbackError(
                     t(getattr(self, 'locale', DEFAULT_LOCALE), 'gm-error-quest-locked',
                       questTitle=quest[QuestFields.TITLE]),
-                    message_id='gm-error-quest-locked'
+                    message_id='gm-error-quest-locked',
+                    questTitle=quest[QuestFields.TITLE]
                 )
             else:
                 new_player_entry = {f'{user_id}': {f'{active_character_id}': active_character}}
@@ -1617,7 +1620,8 @@ class QuestPostView(LocaleLayoutView):
                         raise UserFeedbackError(
                             t(getattr(self, 'locale', DEFAULT_LOCALE), 'gm-error-quest-full',
                               questTitle=quest[QuestFields.TITLE]),
-                            message_id='gm-error-quest-full'
+                            message_id='gm-error-quest-full',
+                            questTitle=quest[QuestFields.TITLE]
                         )
                 else:
                     if len(current_party) < max_party_size:
@@ -1634,7 +1638,8 @@ class QuestPostView(LocaleLayoutView):
                         raise UserFeedbackError(
                             t(getattr(self, 'locale', DEFAULT_LOCALE), 'gm-error-quest-full',
                               questTitle=quest[QuestFields.TITLE]),
-                            message_id='gm-error-quest-full'
+                            message_id='gm-error-quest-full',
+                            questTitle=quest[QuestFields.TITLE]
                         )
 
                 await self.setup(bot=bot)
