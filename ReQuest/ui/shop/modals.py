@@ -34,9 +34,10 @@ class EditCartItemModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             if not self.quantity_text_input.value.isdigit():
                 locale = getattr(self, 'locale', DEFAULT_LOCALE)
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     t(locale, 'shop-error-invalid-number'), ephemeral=True
                 )
                 return
@@ -67,6 +68,6 @@ class EditCartItemModal(LocaleModal):
             prev_view.stock_info = await get_shop_stock(bot, guild_id, channel_id)
 
             self.cart_view.build_view()
-            await interaction.response.edit_message(view=self.cart_view)
+            await interaction.edit_original_response(view=self.cart_view)
         except Exception as e:
             await log_exception(e, interaction)

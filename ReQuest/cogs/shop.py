@@ -22,6 +22,7 @@ class Shop(Cog):
     @app_commands.guild_only()
     async def shop(self, interaction):
         try:
+            await interaction.response.defer(ephemeral=True)
             locale = await resolve_locale(interaction)
 
             bot = interaction.client
@@ -44,7 +45,7 @@ class Shop(Cog):
 
             view = views.ShopBaseView(shop_data, channel_id=channel_id)
             await setup_view(view, interaction)
-            await interaction.response.send_message(view=view, ephemeral=True)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 

@@ -215,6 +215,8 @@ class ShopBaseView(LocaleLayoutView):
 
     async def add_to_cart_with_option(self, interaction: discord.Interaction, item, option_index=0):
         try:
+            if not interaction.response.is_done():
+                await interaction.response.defer()
             if not self.user_id:
                 await self.setup_for_user(interaction)
 
@@ -240,7 +242,7 @@ class ShopBaseView(LocaleLayoutView):
             self.stock_info = await get_shop_stock(self.bot, self.guild_id, self.channel_id)
 
             self.build_view()
-            await interaction.response.edit_message(view=self)
+            await interaction.edit_original_response(view=self)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -458,6 +460,8 @@ class ShopCartView(LocaleLayoutView):
 
     async def checkout(self, interaction: discord.Interaction):
         try:
+            if not interaction.response.is_done():
+                await interaction.response.defer()
             locale = getattr(self, 'locale', DEFAULT_LOCALE)
             bot = interaction.client
             guild_id = interaction.guild_id
@@ -643,7 +647,7 @@ class ShopCartView(LocaleLayoutView):
             self.prev_view.stock_info = await get_shop_stock(bot, guild_id, channel_id)
             self.prev_view.build_view()
 
-            await interaction.response.edit_message(view=self.prev_view)
+            await interaction.edit_original_response(view=self.prev_view)
             await interaction.followup.send(embed=receipt_embed, ephemeral=True)
         except Exception as e:
             await log_exception(e, interaction)

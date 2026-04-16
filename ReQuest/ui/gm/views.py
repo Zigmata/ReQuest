@@ -1245,6 +1245,7 @@ class RemovePlayerView(LocaleLayoutView):
 
     async def confirm_callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
 
             quest = self.quest
@@ -1385,7 +1386,7 @@ class RemovePlayerView(LocaleLayoutView):
 
             await message.edit(view=quest_view)
             await setup_view(self, interaction)
-            await interaction.response.edit_message(view=self)
+            await interaction.edit_original_response(view=self)
 
             if member and removal_embed:
                 try:

@@ -187,6 +187,7 @@ class LanguageSelect(Select):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             selected_locale = self.values[0]
             view = self.calling_view
 
@@ -199,6 +200,6 @@ class LanguageSelect(Select):
             )
 
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)

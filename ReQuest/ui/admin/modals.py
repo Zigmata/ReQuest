@@ -46,6 +46,7 @@ class AllowServerModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             input_name = self.allow_server_name_input.value
             guild_id = int(self.allow_server_id_input.value)
             bot = interaction.client
@@ -62,7 +63,7 @@ class AllowServerModal(LocaleModal):
             interaction.client.allow_list.append(guild_id)
 
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 

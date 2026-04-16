@@ -38,6 +38,7 @@ class QuestAnnounceRoleRemoveButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             await delete_cached_data(
                 bot=bot,
@@ -47,7 +48,7 @@ class QuestAnnounceRoleRemoveButton(Button):
             )
 
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -89,6 +90,7 @@ class RemoveGMRoleButton(Button):
 
     async def _confirm_delete(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             await update_cached_data(
                 bot=bot,
@@ -99,7 +101,7 @@ class RemoveGMRoleButton(Button):
             )
 
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -116,6 +118,7 @@ class QuestSummaryToggleButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             guild_id = interaction.guild_id
 
@@ -153,7 +156,7 @@ class QuestSummaryToggleButton(Button):
                     )
 
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -170,6 +173,7 @@ class PlayerExperienceToggleButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             guild_id = interaction.guild_id
             query = await get_cached_data(
@@ -197,7 +201,7 @@ class PlayerExperienceToggleButton(Button):
                 )
 
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -214,6 +218,7 @@ class ToggleDoubleButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             view = self.calling_view
             currency_name = view.currency_name
@@ -229,7 +234,7 @@ class ToggleDoubleButton(Button):
             )
 
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e)
 
@@ -282,6 +287,7 @@ class RemoveDenominationButton(Button):
 
     async def _confirm_delete(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             currency_name = self.calling_view.currency_name
             denomination_name = self.denomination_name
@@ -297,7 +303,7 @@ class RemoveDenominationButton(Button):
             )
 
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -355,10 +361,11 @@ class ManageCurrencyButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             from ReQuest.ui.config.views import ConfigEditCurrencyView
             view = ConfigEditCurrencyView(self.currency_name)
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -389,6 +396,7 @@ class RemoveCurrencyButton(Button):
 
     async def _confirm_delete(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             currency_name = self.currency_name
 
@@ -403,7 +411,7 @@ class RemoveCurrencyButton(Button):
             from ReQuest.ui.config.views import ConfigCurrencyView
             view = ConfigCurrencyView()
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -441,6 +449,7 @@ class ClearChannelButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             view = self.calling_view
             await delete_cached_data(
@@ -450,7 +459,7 @@ class ClearChannelButton(Button):
                 search_filter={'_id': interaction.guild_id}
             )
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -531,10 +540,11 @@ class AddShopWizardButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             from ReQuest.ui.config.views import ShopChannelTypeSelectionView
             view = ShopChannelTypeSelectionView()
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -572,10 +582,11 @@ class ForumThreadShopButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             from ReQuest.ui.config.views import ForumShopSetupView
             view = ForumShopSetupView()
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -671,10 +682,11 @@ class ManageShopNavButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             from ReQuest.ui.config.views import ManageShopView
             view = ManageShopView(self.channel_id, self.shop_data)
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -691,6 +703,7 @@ class EditShopButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
             bot = interaction.client
             query = await get_cached_data(
@@ -702,7 +715,7 @@ class EditShopButton(Button):
             shop_data = query.get(ShopFields.SHOP_CHANNELS, {}).get(self.calling_view.selected_channel_id)
 
             if not shop_data:
-                await interaction.response.send_message(
+                await interaction.followup.send(
                     t(locale, 'config-error-shop-data-not-found'), ephemeral=True)
                 return
 
@@ -710,7 +723,7 @@ class EditShopButton(Button):
 
             view = EditShopView(self.calling_view.selected_channel_id, shop_data)
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -740,6 +753,7 @@ class RemoveShopButton(Button):
 
     async def _confirm_delete(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             view = self.calling_view
 
             bot = interaction.client
@@ -781,7 +795,7 @@ class RemoveShopButton(Button):
             from ReQuest.ui.config.views import ConfigShopsView
             new_view = ConfigShopsView()
             await setup_view(new_view, interaction)
-            await interaction.response.edit_message(view=new_view)
+            await interaction.edit_original_response(view=new_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -821,6 +835,7 @@ class DeleteShopItemButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             guild_id = interaction.guild_id
             channel_id = self.calling_view.channel_id
@@ -840,7 +855,7 @@ class DeleteShopItemButton(Button):
             self.calling_view.update_stock(new_stock)
 
             self.calling_view.build_view()
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -967,6 +982,7 @@ class DownloadShopJSONButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer(ephemeral=True)
             locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
             bot = interaction.client
             guild_id = interaction.guild_id
@@ -991,7 +1007,7 @@ class DownloadShopJSONButton(Button):
 
             shop_file = discord.File(json_bytes, filename=file_name)
 
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 t(locale, 'config-msg-shop-json-download', shopName=shop_name),
                 file=shop_file,
                 ephemeral=True
@@ -1089,6 +1105,7 @@ class DeleteNewCharacterShopItemButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             guild_id = interaction.guild_id
             item_name = self.item[CommonFields.NAME]
@@ -1104,7 +1121,7 @@ class DeleteNewCharacterShopItemButton(Button):
             new_stock = [item for item in self.calling_view.all_stock if item[CommonFields.NAME] != item_name]
             self.calling_view.update_stock(new_stock)
             self.calling_view.build_view()
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -1140,6 +1157,7 @@ class DownloadNewCharacterShopJSONButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer(ephemeral=True)
             locale = getattr(self.view, 'locale', DEFAULT_LOCALE)
             bot = interaction.client
             guild_id = interaction.guild_id
@@ -1159,7 +1177,7 @@ class DownloadNewCharacterShopJSONButton(Button):
 
             shop_file = discord.File(json_bytes, filename=file_name)
 
-            await interaction.response.send_message(
+            await interaction.followup.send(
                 t(locale, 'config-msg-new-char-shop-json-download'),
                 file=shop_file,
                 ephemeral=True
@@ -1249,6 +1267,7 @@ class ClearNewCharacterShopButton(Button):
 
     async def _confirm_clear(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             guild_id = interaction.guild_id
 
@@ -1262,7 +1281,7 @@ class ClearNewCharacterShopButton(Button):
 
             self.calling_view.update_stock([])
             self.calling_view.build_view()
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -1328,6 +1347,7 @@ class EditStaticKitButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             from ReQuest.ui.config.views import EditStaticKitView
 
             currency_config = getattr(self.view, 'currency_config', None)
@@ -1341,7 +1361,7 @@ class EditStaticKitButton(Button):
                 )
 
             edit_view = EditStaticKitView(self.kit_id, self.kit_data, currency_config)
-            await interaction.response.edit_message(view=edit_view)
+            await interaction.edit_original_response(view=edit_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -1372,6 +1392,7 @@ class RemoveStaticKitButton(Button):
 
     async def _confirm_delete(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
 
             await update_cached_data(
@@ -1385,7 +1406,7 @@ class RemoveStaticKitButton(Button):
             from ReQuest.ui.config.views import ConfigStaticKitsView
             new_view = ConfigStaticKitsView()
             await setup_view(new_view, interaction)
-            await interaction.response.edit_message(view=new_view)
+            await interaction.edit_original_response(view=new_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -1441,6 +1462,7 @@ class DeleteKitItemButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             kit_id = self.calling_view.kit_id
 
@@ -1466,7 +1488,7 @@ class DeleteKitItemButton(Button):
             self.calling_view.kit_data[CommonFields.ITEMS] = items
             self.calling_view.items = items
             self.calling_view.build_view()
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -1501,6 +1523,7 @@ class DeleteKitCurrencyButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             kit_id = self.calling_view.kit_id
 
@@ -1517,7 +1540,7 @@ class DeleteKitCurrencyButton(Button):
                 del self.calling_view.kit_data['currency'][encoded_currency]
 
             self.calling_view.build_view()
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -1533,6 +1556,7 @@ class RoleplayToggleEnableButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             current_state = self.calling_view.config.get(RoleplayFields.ENABLED, False)
             await update_cached_data(
@@ -1543,7 +1567,7 @@ class RoleplayToggleEnableButton(Button):
                 update_data={'$set': {RoleplayFields.ENABLED: not current_state}}
             )
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -1560,6 +1584,7 @@ class RoleplayClearChannelsButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             await update_cached_data(
                 bot=bot,
@@ -1569,7 +1594,7 @@ class RoleplayClearChannelsButton(Button):
                 update_data={'$set': {RoleplayFields.CHANNELS: []}}
             )
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -1628,7 +1653,7 @@ class ConfigStockLimitsButton(Button):
                 self.calling_view.shop_data
             )
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -1689,6 +1714,7 @@ class RemoveItemStockLimitButton(Button):
 
     async def _confirm_callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             guild_id = interaction.guild_id
             channel_id = self.calling_view.channel_id
@@ -1720,7 +1746,7 @@ class RemoveItemStockLimitButton(Button):
             await remove_item_stock_limit(bot, guild_id, channel_id, item_name)
 
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -1760,11 +1786,12 @@ class BackToEditShopButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             from ReQuest.ui.config.views import EditShopView
 
             view = EditShopView(self.channel_id, self.shop_data)
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -1781,10 +1808,11 @@ class ManageGMQuestRolesButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             from ReQuest.ui.config.views import ConfigGMQuestRoleAssignView
             view = ConfigGMQuestRoleAssignView(self.member)
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -1820,6 +1848,7 @@ class RemoveGMQuestRoleButton(Button):
 
     async def confirm_callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             guild_id = interaction.guild_id
             await update_cached_data(
@@ -1836,6 +1865,6 @@ class RemoveGMQuestRoleButton(Button):
             )
             self.calling_view.error_message = None
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)

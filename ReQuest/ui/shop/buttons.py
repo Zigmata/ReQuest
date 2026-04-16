@@ -55,6 +55,7 @@ class ShopItemButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             item_name = self.item[CommonFields.NAME]
             channel_id = self.view.channel_id or str(interaction.channel_id)
             self.stock_info = await get_item_stock(interaction.client, interaction.guild_id, channel_id, item_name)
@@ -71,7 +72,7 @@ class ShopItemButton(Button):
             if len(costs) > 1:
                 from ReQuest.ui.shop.views import ComplexItemPurchaseView
                 view = ComplexItemPurchaseView(self.view, self.item)
-                await interaction.response.edit_message(view=view)
+                await interaction.edit_original_response(view=view)
             else:
                 await self.view.add_to_cart_with_option(interaction, self.item, 0)
         except Exception as e:
@@ -109,6 +110,7 @@ class ViewCartButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             from ReQuest.ui.shop.views import ShopCartView
 
             bot = interaction.client
@@ -142,7 +144,7 @@ class ViewCartButton(Button):
                 self.calling_view.cart = db_cart.get(CartFields.ITEMS, {})
 
             view = ShopCartView(self.calling_view, currency_config, active_character)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -177,6 +179,7 @@ class CartClearButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             guild_id = interaction.guild_id
             user_id = interaction.user.id
@@ -190,7 +193,7 @@ class CartClearButton(Button):
             prev_view.stock_info = await get_shop_stock(bot, guild_id, channel_id)
 
             self.calling_view.build_view()
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 

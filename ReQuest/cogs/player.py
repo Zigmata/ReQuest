@@ -30,12 +30,13 @@ class Player(Cog):
     @app_commands.guild_only()
     async def player(self, interaction):
         try:
+            await interaction.response.defer(ephemeral=True)
             locale = await resolve_locale(interaction)
 
             new_view = views.PlayerBaseView()
             new_view.locale = locale
             await setup_view(new_view, interaction)
-            await interaction.response.send_message(view=new_view, ephemeral=True)
+            await interaction.edit_original_response(view=new_view)
         except Exception as e:
             await log_exception(e, interaction)
 

@@ -38,10 +38,11 @@ class GameMaster(Cog):
     @app_commands.guild_only()
     async def gm(self, interaction):
         try:
+            await interaction.response.defer(ephemeral=True)
             locale = await resolve_locale(interaction)
 
             view = views.GMBaseView(locale=locale)
-            await interaction.response.send_message(view=view, ephemeral=True)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -86,6 +87,7 @@ class GameMaster(Cog):
         View a player's active character.
         """
         try:
+            await interaction.response.defer(ephemeral=True)
             locale = await resolve_locale(interaction)
 
             bot = interaction.client
@@ -116,7 +118,7 @@ class GameMaster(Cog):
             )
             xp_enabled = await get_xp_config(interaction.client, interaction.guild_id)
             view = views.ViewCharacterView(member.id, character_data, currency_config, xp_enabled)
-            await interaction.response.send_message(view=view, ephemeral=True)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 

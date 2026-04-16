@@ -19,51 +19,56 @@ class Info(Cog):
         description=app_commands.locale_str('Get a quick reply from the bot to see if it is online.')
     )
     async def ping(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
         locale = await resolve_locale(interaction)
         latency = round(self.bot.latency * 1000)
-        await interaction.response.send_message(t(locale, 'info-pong', latency=latency), ephemeral=True)
+        await interaction.edit_original_response(content=t(locale, 'info-pong', latency=latency))
 
     @app_commands.command(
         name='invite',
         description=app_commands.locale_str('Prints an invitation to add ReQuest to your server.')
     )
     async def invite(self, interaction: discord.Interaction):
+        await interaction.response.defer()
         locale = await resolve_locale(interaction)
         embed = discord.Embed(title=t(locale, 'info-invite-title'),
                               description='[Get ReQuest!](https://discord.com/api/oauth2/authorize?client_id=6014922017'
                                           '04521765&permissions=1497132133440&scope=applications.commands%20bot)',
                               type='rich')
-        await interaction.response.send_message(embed=embed)
+        await interaction.edit_original_response(embed=embed)
 
     @app_commands.command(
         name='support',
         description=app_commands.locale_str('Prints the bot version and a link to the development server.')
     )
     async def support(self, interaction: discord.Interaction):
+        await interaction.response.defer()
         locale = await resolve_locale(interaction)
-        await interaction.response.send_message(t(locale, 'info-support', version=interaction.client.version))
+        await interaction.edit_original_response(content=t(locale, 'info-support', version=interaction.client.version))
 
     @app_commands.command(
         name='language',
         description=app_commands.locale_str('Set your preferred language for bot responses.')
     )
     async def language(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
         view = LanguageView()
         await setup_view(view, interaction)
-        await interaction.response.send_message(view=view, ephemeral=True)
+        await interaction.edit_original_response(view=view)
 
     @app_commands.command(
         name='help',
         description=app_commands.locale_str('Displays a list of commands and their functions.')
     )
     async def help(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
         locale = await resolve_locale(interaction)
         embed = discord.Embed(
             title=t(locale, 'info-help-title'),
             description=t(locale, 'info-help-description'),
             type='rich'
         )
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await interaction.edit_original_response(embed=embed)
 
 
 async def setup(bot):

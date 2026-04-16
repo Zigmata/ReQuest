@@ -41,6 +41,7 @@ class CreateQuestModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             title = self.quest_title_text_input.value
             guild_id = interaction.guild_id
             quest_id = str(shortuuid.uuid()[:8])
@@ -80,7 +81,7 @@ class CreateQuestModal(LocaleModal):
             from ReQuest.ui.gm.views import ManageQuestsView
             view = ManageQuestsView(quest)
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -190,6 +191,7 @@ class EditQuestDetailsComboModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             quest = self.calling_view.quest
             guild_id = quest[QuestFields.GUILD_ID]
@@ -245,7 +247,7 @@ class EditQuestDetailsComboModal(LocaleModal):
             quest.update(updates)
 
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -288,6 +290,7 @@ class EditQuestImagesComboModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             quest = self.calling_view.quest
             guild_id = quest[QuestFields.GUILD_ID]
@@ -328,7 +331,7 @@ class EditQuestImagesComboModal(LocaleModal):
             quest.update(updates)
 
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -492,6 +495,7 @@ class ModPlayerModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer(ephemeral=True)
             bot = interaction.client
             xp = 0
             guild_id = interaction.guild_id
@@ -592,7 +596,7 @@ class ModPlayerModal(LocaleModal):
             guild_locale = await resolve_locale(bot=bot, guild_id=guild_id)
 
             caller_embed = build_mod_embed(caller_locale)
-            await interaction.response.send_message(embed=caller_embed, ephemeral=True)
+            await interaction.followup.send(embed=caller_embed, ephemeral=True)
 
             if log_channel:
                 if guild_locale != caller_locale:

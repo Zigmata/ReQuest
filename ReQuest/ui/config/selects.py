@@ -37,6 +37,7 @@ class SingleChannelConfigSelect(ChannelSelect):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             update_data = {'$set': {self.config_type: self.values[0].mention}}
             await update_cached_data(
@@ -47,7 +48,7 @@ class SingleChannelConfigSelect(ChannelSelect):
                 update_data=update_data
             )
             await setup_view(self.calling_view, interaction)
-            return await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -65,6 +66,7 @@ class QuestAnnounceRoleSelect(RoleSelect):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             update_data = {'$set': {ConfigFields.ANNOUNCE_ROLE: self.values[0].mention}}
             await update_cached_data(
@@ -75,7 +77,7 @@ class QuestAnnounceRoleSelect(RoleSelect):
                 update_data=update_data
             )
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -94,6 +96,7 @@ class AddGMRoleSelect(RoleSelect):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             query = await get_cached_data(
                 bot=bot,
@@ -135,7 +138,7 @@ class AddGMRoleSelect(RoleSelect):
                         )
 
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -164,6 +167,7 @@ class ConfigWaitListSelect(Select):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             update_data = {'$set': {ConfigFields.QUEST_WAIT_LIST: int(self.values[0])}}
             await update_cached_data(
@@ -174,7 +178,7 @@ class ConfigWaitListSelect(Select):
                 update_data=update_data
             )
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -221,6 +225,7 @@ class InventoryTypeSelect(Select):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             await update_cached_data(
                 bot=bot,
@@ -230,7 +235,7 @@ class InventoryTypeSelect(Select):
                 update_data={'$set': {ConfigFields.INVENTORY_TYPE: self.values[0]}}
             )
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -255,6 +260,7 @@ class RoleplayChannelSelect(ChannelSelect):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             channel_ids = []
             for selection in self.values:
@@ -277,7 +283,7 @@ class RoleplayChannelSelect(ChannelSelect):
                 }
             )
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -317,6 +323,7 @@ class RoleplayModeSelect(Select):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             await update_cached_data(
                 bot=bot,
@@ -326,7 +333,7 @@ class RoleplayModeSelect(Select):
                 update_data={'$set': {RoleplayFields.MODE: self.values[0]}}
             )
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -363,6 +370,7 @@ class RoleplayResetSelect(Select):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             await update_cached_data(
                 bot=bot,
@@ -377,7 +385,7 @@ class RoleplayResetSelect(Select):
                 }
             )
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -426,6 +434,7 @@ class RoleplayResetDaySelect(Select):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             await update_cached_data(
                 bot=bot,
@@ -440,7 +449,7 @@ class RoleplayResetDaySelect(Select):
                 }
             )
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -470,6 +479,7 @@ class RoleplayResetTimeSelect(Select):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             await update_cached_data(
                 bot=bot,
@@ -484,7 +494,7 @@ class RoleplayResetTimeSelect(Select):
                 }
             )
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -666,6 +676,7 @@ class ConfigLanguageSelect(Select):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             selected = self.values[0]
             bot = interaction.client
 
@@ -686,7 +697,7 @@ class ConfigLanguageSelect(Select):
                 )
 
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -741,6 +752,7 @@ class QuestRoleModeSelect(Select):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             await update_cached_data(
                 bot=bot,
@@ -752,7 +764,7 @@ class QuestRoleModeSelect(Select):
                 }
             )
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -773,6 +785,7 @@ class AddGMQuestRoleSelect(RoleSelect):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             guild_id = interaction.guild_id
 
@@ -852,6 +865,6 @@ class AddGMQuestRoleSelect(RoleSelect):
                 self.calling_view.error_message = None
 
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)

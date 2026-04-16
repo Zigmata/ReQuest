@@ -60,6 +60,7 @@ class TradeModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer(ephemeral=True)
             locale = self.locale
             bot = interaction.client
             transaction_id = shortuuid.uuid()[:12]
@@ -177,7 +178,7 @@ class TradeModal(LocaleModal):
 
             trade_embed.set_footer(text=t(locale, 'player-embed-footer-transaction-id', transactionId=transaction_id))
 
-            await interaction.response.send_message(embed=trade_embed, ephemeral=True)
+            await interaction.followup.send(embed=trade_embed, ephemeral=True)
             try:
                 target_locale = await resolve_locale(bot=bot, user_id=target_id, guild_id=guild_id)
                 if target_locale != locale:
@@ -332,6 +333,7 @@ class CharacterRegisterModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             character_id = str(shortuuid.uuid())
             member_id = interaction.user.id
@@ -373,7 +375,7 @@ class CharacterRegisterModal(LocaleModal):
                     }}
                 )
                 await setup_view(self.calling_view, interaction)
-                await interaction.response.edit_message(view=self.calling_view)
+                await interaction.edit_original_response(view=self.calling_view)
             else:
                 pending_character = {
                     'character_id': character_id,
@@ -404,7 +406,7 @@ class CharacterRegisterModal(LocaleModal):
                 from ReQuest.ui.player.views import NewCharacterWizardView
                 locale = getattr(self, '_locale', DEFAULT_LOCALE)
                 view = NewCharacterWizardView(pending_character, inventory_type, locale=locale)
-                await interaction.response.edit_message(view=view)
+                await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -537,6 +539,7 @@ class SpendCurrencyModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
             currency_name = self.currency_name_text_input.value.strip()
             try:
@@ -647,7 +650,7 @@ class SpendCurrencyModal(LocaleModal):
             ))
 
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
             receipt = await interaction.followup.send(embed=trade_embed, wait=True)
 
             log_channel_query = await get_cached_data(
@@ -871,6 +874,7 @@ class CreateContainerModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             name = self.name_input.value.strip()
             await create_container(
                 interaction.client,
@@ -880,7 +884,7 @@ class CreateContainerModal(LocaleModal):
             )
 
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -911,6 +915,7 @@ class RenameContainerModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             new_name = self.name_input.value.strip()
             await rename_container(
                 interaction.client,
@@ -921,7 +926,7 @@ class RenameContainerModal(LocaleModal):
             )
 
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -954,6 +959,7 @@ class ConsumeFromContainerModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
             if not self.quantity_input.value.isdigit():
                 raise UserFeedbackError(
@@ -984,7 +990,7 @@ class ConsumeFromContainerModal(LocaleModal):
 
             self.calling_view.selected_item = None
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
 
             bot = interaction.client
             guild_id = interaction.guild_id
@@ -1084,6 +1090,7 @@ class MoveItemQuantityModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             locale = getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
             if not self.quantity_input.value.isdigit():
                 raise UserFeedbackError(
@@ -1120,7 +1127,7 @@ class MoveItemQuantityModal(LocaleModal):
                 self.calling_view.source_container_id
             )
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
 
         except Exception as e:
             await log_exception(e, interaction)

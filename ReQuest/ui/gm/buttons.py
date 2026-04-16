@@ -50,10 +50,11 @@ class EditQuestButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             from ReQuest.ui.gm.views import EditQuestView
             view = EditQuestView(self.calling_view.selected_quest)
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -308,10 +309,11 @@ class RewardsMenuButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             from ReQuest.ui.gm.views import RewardsMenuView
             new_view = RewardsMenuView(self.calling_view)
             await setup_view(new_view, interaction)
-            await interaction.response.edit_message(view=new_view)
+            await interaction.edit_original_response(view=new_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -328,11 +330,12 @@ class RemovePlayerButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             quest = self.calling_view.selected_quest
             from ReQuest.ui.gm.views import RemovePlayerView
             new_view = RemovePlayerView(quest)
             await setup_view(new_view, interaction)
-            await interaction.response.edit_message(view=new_view)
+            await interaction.edit_original_response(view=new_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -509,6 +512,7 @@ class PartyRewardsButton(Button):
 
     async def modal_callback(self, interaction: discord.Interaction, xp, items):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             view = self.calling_view
             quest = view.quest
@@ -552,7 +556,7 @@ class PartyRewardsButton(Button):
             party_rewards[CommonFields.ITEMS] = items_val
 
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -577,6 +581,7 @@ class IndividualRewardsButton(Button):
 
     async def modal_callback(self, interaction: discord.Interaction, xp, items):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             view = self.calling_view
             quest = view.quest
@@ -621,7 +626,7 @@ class IndividualRewardsButton(Button):
             char_rewards[CommonFields.ITEMS] = items_val
 
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -667,10 +672,11 @@ class ManageQuestRowButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             from ReQuest.ui.gm.views import ManageQuestsView
             view = ManageQuestsView(self.quest)
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -686,9 +692,10 @@ class BackToManageQuestButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             from ReQuest.ui.gm.views import ManageQuestsView
             view = ManageQuestsView(self.quest)
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)

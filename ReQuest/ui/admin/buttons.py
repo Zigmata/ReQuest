@@ -172,6 +172,7 @@ class RemoveServerButton(Button):
 
     async def _confirm_delete(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             await update_cached_data(
                 bot=bot,
@@ -186,6 +187,6 @@ class RemoveServerButton(Button):
                 interaction.client.allow_list.remove(self.guild_id)
 
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)

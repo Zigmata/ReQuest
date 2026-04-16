@@ -84,6 +84,7 @@ class DiscardPendingCharacterButton(Button):
             pending_name = self.calling_view.pending_character.get('name', '')
 
             async def confirm_discard(confirm_interaction):
+                await confirm_interaction.response.defer()
                 pending_id = f'{confirm_interaction.user.id}_{confirm_interaction.guild_id}'
                 await delete_cached_data(
                     bot=confirm_interaction.client,
@@ -95,7 +96,7 @@ class DiscardPendingCharacterButton(Button):
                 from ReQuest.ui.player.views import CharacterBaseView
                 view = CharacterBaseView()
                 await setup_view(view, confirm_interaction)
-                await confirm_interaction.response.edit_message(view=view)
+                await confirm_interaction.edit_original_response(view=view)
 
             modal = common_modals.ConfirmModal(
                 title=t(locale, 'player-modal-title-discard-character'),
@@ -199,6 +200,7 @@ class RemoveCharacterButton(Button):
 
     async def _confirm_delete(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             member_id = interaction.user.id
 
@@ -232,7 +234,7 @@ class RemoveCharacterButton(Button):
                     )
 
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -251,6 +253,7 @@ class ActivateCharacterButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
 
             await update_cached_data(
@@ -266,7 +269,7 @@ class ActivateCharacterButton(Button):
             )
 
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -314,6 +317,7 @@ class RemovePlayerPostButton(Button):
 
     async def _confirm_delete(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             bot = interaction.client
             post_id = self.post.get('postId')
             message_id = self.post.get('messageId')
@@ -347,7 +351,7 @@ class RemovePlayerPostButton(Button):
             await interaction.client.rdb.delete(redis_key)
 
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -382,13 +386,14 @@ class OpenStartingShopButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             from ReQuest.ui.player.views import NewCharacterShopView
             view = NewCharacterShopView(
                 self.calling_view.pending_character,
                 self.calling_view.inventory_type
             )
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -405,12 +410,13 @@ class SelectStaticKitButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             from ReQuest.ui.player.views import StaticKitSelectView
             view = StaticKitSelectView(
                 self.calling_view.pending_character
             )
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -643,13 +649,14 @@ class KitBackButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             from ReQuest.ui.player.views import StaticKitSelectView
 
             view = StaticKitSelectView(
                 self.view.pending_character
             )
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -696,13 +703,14 @@ class ManageContainersButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             from ReQuest.ui.player.views import ContainerManagementView
             view = ContainerManagementView(
                 self.calling_view.active_character_id,
                 self.calling_view.active_character
             )
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -805,6 +813,7 @@ class DeleteContainerButton(Button):
 
     async def _confirm_delete(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             await delete_container(
                 interaction.client,
                 interaction.user.id,
@@ -814,7 +823,7 @@ class DeleteContainerButton(Button):
 
             self.calling_view.selected_container_id = None
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -832,6 +841,7 @@ class MoveContainerUpButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             await reorder_container(
                 interaction.client,
                 interaction.user.id,
@@ -841,7 +851,7 @@ class MoveContainerUpButton(Button):
             )
 
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -859,6 +869,7 @@ class MoveContainerDownButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             await reorder_container(
                 interaction.client,
                 interaction.user.id,
@@ -868,7 +879,7 @@ class MoveContainerDownButton(Button):
             )
 
             await setup_view(self.calling_view, interaction)
-            await interaction.response.edit_message(view=self.calling_view)
+            await interaction.edit_original_response(view=self.calling_view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -917,6 +928,7 @@ class MoveItemButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             from ReQuest.ui.player.views import MoveDestinationView
 
             item_name = self.calling_view.selected_item
@@ -937,7 +949,7 @@ class MoveItemButton(Button):
                 max_qty
             )
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -955,6 +967,7 @@ class MoveAllButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             from ReQuest.ui.player.views import ContainerItemsView
 
             await move_item_between_containers(
@@ -973,7 +986,7 @@ class MoveAllButton(Button):
                 self.calling_view.source_container_id
             )
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -1011,10 +1024,11 @@ class BackToInventoryOverviewButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             from ReQuest.ui.player.views import InventoryOverviewView
             view = InventoryOverviewView()
             await setup_view(view, interaction)
-            await interaction.response.edit_message(view=view)
+            await interaction.edit_original_response(view=view)
         except Exception as e:
             await log_exception(e, interaction)
 
@@ -1031,7 +1045,8 @@ class CancelMoveButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             await setup_view(self.source_view, interaction)
-            await interaction.response.edit_message(view=self.source_view)
+            await interaction.edit_original_response(view=self.source_view)
         except Exception as e:
             await log_exception(e, interaction)
