@@ -231,7 +231,6 @@ class ShopBaseView(LocaleLayoutView):
             if not success:
                 locale = getattr(self, 'locale', DEFAULT_LOCALE)
                 raise UserFeedbackError(
-                    t(locale, 'shop-error-item-out-of-stock', itemName=item_name),
                     message_id='shop-error-item-out-of-stock',
                     itemName=item_name
                 )
@@ -529,8 +528,6 @@ class ShopCartView(LocaleLayoutView):
                     )
                     if not is_ok:
                         raise UserFeedbackError(
-                            t(locale, 'shop-error-checkout-insufficient',
-                              currency=titlecase(base_currency)),
                             message_id='shop-error-checkout-insufficient',
                             currency=titlecase(base_currency)
                         )

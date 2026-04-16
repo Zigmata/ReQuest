@@ -1559,10 +1559,6 @@ class QuestPostView(LocaleLayoutView):
                     if str(user_id) in player:
                         for character_id, character_data in player[str(user_id)].items():
                             raise UserFeedbackError(
-                                t(
-                                    getattr(self, 'locale', DEFAULT_LOCALE), 'gm-error-already-on-quest',
-                                    characterName=character_data[CommonFields.NAME]
-                                ),
                                 message_id='gm-error-already-on-quest',
                                 characterName=character_data[CommonFields.NAME]
                             )
@@ -1587,8 +1583,6 @@ class QuestPostView(LocaleLayoutView):
 
             if quest[QuestFields.LOCK_STATE]:
                 raise UserFeedbackError(
-                    t(getattr(self, 'locale', DEFAULT_LOCALE), 'gm-error-quest-locked',
-                      questTitle=quest[QuestFields.TITLE]),
                     message_id='gm-error-quest-locked',
                     questTitle=quest[QuestFields.TITLE]
                 )
@@ -1618,8 +1612,6 @@ class QuestPostView(LocaleLayoutView):
 
                     else:
                         raise UserFeedbackError(
-                            t(getattr(self, 'locale', DEFAULT_LOCALE), 'gm-error-quest-full',
-                              questTitle=quest[QuestFields.TITLE]),
                             message_id='gm-error-quest-full',
                             questTitle=quest[QuestFields.TITLE]
                         )
@@ -1636,8 +1628,6 @@ class QuestPostView(LocaleLayoutView):
                         self.quest[QuestFields.PARTY].append(new_player_entry)
                     else:
                         raise UserFeedbackError(
-                            t(getattr(self, 'locale', DEFAULT_LOCALE), 'gm-error-quest-full',
-                              questTitle=quest[QuestFields.TITLE]),
                             message_id='gm-error-quest-full',
                             questTitle=quest[QuestFields.TITLE]
                         )

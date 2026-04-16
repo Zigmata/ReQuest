@@ -215,7 +215,6 @@ class EditQuestDetailsComboModal(LocaleModal):
                 current_party_size = len(quest.get(QuestFields.PARTY, []))
                 if max_party_size < current_party_size:
                     raise UserFeedbackError(
-                        t(locale, 'gm-error-party-size-too-small', currentSize=current_party_size),
                         message_id='gm-error-party-size-too-small',
                         currentSize=current_party_size
                     )
@@ -303,15 +302,11 @@ class EditQuestImagesComboModal(LocaleModal):
             locale = self._locale
             if thumbnail and not is_valid_image_url(thumbnail):
                 raise UserFeedbackError(
-                    t(locale, 'error-invalid-image-url-field',
-                      fieldName=t(locale, 'error-field-thumbnail')),
                     message_id='error-invalid-image-url-field',
                     fieldName=t(locale, 'error-field-thumbnail')
                 )
             if large_image and not is_valid_image_url(large_image):
                 raise UserFeedbackError(
-                    t(locale, 'error-invalid-image-url-field',
-                      fieldName=t(locale, 'error-field-large-image')),
                     message_id='error-invalid-image-url-field',
                     fieldName=t(locale, 'error-field-large-image')
                 )
@@ -415,7 +410,6 @@ class RewardsModal(LocaleModal):
                             items[titlecase(item_name.strip())] = int(quantity.strip())
                         except ValueError:
                             raise UserFeedbackError(
-                                t(locale, 'gm-error-invalid-item-format', item=item),
                                 message_id='gm-error-invalid-item-format',
                                 item=item
                             )

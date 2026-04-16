@@ -559,8 +559,6 @@ class SpendCurrencyModal(LocaleModal):
                 )
             if amount > DisplayLimits.MAX_CURRENCY_AMOUNT:
                 raise UserFeedbackError(
-                    t(locale, 'player-error-amount-exceeds-maximum',
-                      max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)),
                     message_id='player-error-amount-exceeds-maximum',
                     max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)
                 )
@@ -975,7 +973,6 @@ class ConsumeFromContainerModal(LocaleModal):
                 )
             if quantity > self.max_quantity:
                 raise UserFeedbackError(
-                    t(locale, 'player-error-qty-only-have', maxQuantity=self.max_quantity),
                     message_id='player-error-qty-only-have',
                     maxQuantity=self.max_quantity
                 )
@@ -1107,7 +1104,6 @@ class MoveItemQuantityModal(LocaleModal):
                 )
             if quantity > self.max_quantity:
                 raise UserFeedbackError(
-                    t(locale, 'player-error-qty-only-have', maxQuantity=self.max_quantity),
                     message_id='player-error-qty-only-have',
                     maxQuantity=self.max_quantity
                 )
