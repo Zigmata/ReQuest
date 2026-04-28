@@ -196,7 +196,6 @@ class RenameCurrencyModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            locale = self._locale
             bot = interaction.client
             guild_id = interaction.guild_id
             new_name = self.text_input.value.strip()
@@ -267,7 +266,6 @@ class RenameDenominationModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            locale = self._locale
             bot = interaction.client
             guild_id = interaction.guild_id
             new_name = self.text_input.value.strip()
@@ -357,7 +355,6 @@ class AddCurrencyDenominationModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            locale = self._locale
             bot = interaction.client
             guild_id = interaction.guild_id
             new_name = self.denomination_name_text_input.value
@@ -1799,7 +1796,6 @@ class CreateStaticKitModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            locale = self._locale
             bot = interaction.client
             guild_id = interaction.guild_id
             kit_id = str(shortuuid.uuid()[:8])
@@ -1902,7 +1898,6 @@ class StaticKitItemModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            locale = self._locale
             if not self.item_quantity_text_input.value.isdigit() or int(self.item_quantity_text_input.value) < 1:
                 raise ValueError("Quantity must be a positive integer.")
 
