@@ -332,7 +332,7 @@ class ManageQuestsView(LocaleLayoutView):
                 role_id = quest[QuestFields.PARTY_ROLE_ID]
                 role = guild.get_role(role_id)
                 if role:
-                    check_role_hierarchy(guild, role, locale=getattr(self, 'locale', DEFAULT_LOCALE))
+                    check_role_hierarchy(guild, role)
 
             party = quest[QuestFields.PARTY]
             title = quest[QuestFields.TITLE]
@@ -478,7 +478,7 @@ class ManageQuestsView(LocaleLayoutView):
             if party_role_id:
                 role = guild.get_role(party_role_id)
                 if role:
-                    check_role_hierarchy(guild, role, locale=getattr(self, 'locale', DEFAULT_LOCALE))
+                    check_role_hierarchy(guild, role)
                     role_mode = quest.get(QuestFields.QUEST_ROLE_MODE, 'temporary')
                     if role_mode == 'static':
                         if not guild.chunked:
@@ -1278,7 +1278,7 @@ class RemovePlayerView(LocaleLayoutView):
             if lock_state and party_role_id:
                 role = guild.get_role(party_role_id)
                 if role:
-                    check_role_hierarchy(guild, role, locale=getattr(self, 'locale', DEFAULT_LOCALE))
+                    check_role_hierarchy(guild, role)
 
                 if role and member:
                     await member.remove_roles(role)

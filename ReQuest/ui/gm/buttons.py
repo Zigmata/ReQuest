@@ -398,9 +398,7 @@ class CancelQuestButton(Button):
             if party_role_id:
                 party_role = guild.get_role(party_role_id)
                 if party_role:
-                    check_role_hierarchy(
-                        guild, party_role, locale=getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
-                    )
+                    check_role_hierarchy(guild, party_role)
                     role_mode = quest.get(QuestFields.QUEST_ROLE_MODE, 'temporary')
                     if role_mode == 'static':
                         if not guild.chunked:

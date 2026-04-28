@@ -229,7 +229,6 @@ class ShopBaseView(LocaleLayoutView):
             )
 
             if not success:
-                locale = getattr(self, 'locale', DEFAULT_LOCALE)
                 raise UserFeedbackError(
                     message_id='shop-error-item-out-of-stock',
                     itemName=item_name

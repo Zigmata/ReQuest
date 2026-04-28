@@ -27,10 +27,8 @@ class UserFeedbackError(Exception):
     def __init__(self, message=None, *, message_id=None, **variables):
         self.message_id = message_id
         self.variables = variables
-        if message is None and message_id is not None:
-            from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
-            message = t(DEFAULT_LOCALE, message_id, **variables)
-        super().__init__(message or '')
+        fallback_message = message if message is not None else (message_id or '')
+        super().__init__(fallback_message)
 
     def resolve(self, locale):
         if self.message_id:
