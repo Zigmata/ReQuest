@@ -1646,6 +1646,7 @@ class ConfigStockLimitsButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
+            await interaction.response.defer()
             from ReQuest.ui.config.views import ConfigStockLimitsView
 
             view = ConfigStockLimitsView(

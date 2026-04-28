@@ -11,13 +11,24 @@ __all__ = ['UserFeedbackError', 'log_exception', 'log_task_exception']
 
 class UserFeedbackError(Exception):
     """
-    This is used for errors that should be reported to the user directly but do not need to log a stack trace.
+    Error reported directly to the user (no stack trace logged).
+
+    Preferred form:
+        raise UserFeedbackError(message_id='foo-bar', variableName=value)
+
+    The Fluent message is looked up at render time via resolve(locale), so
+    variables are only declared once and always render in the user's locale.
+
+    Legacy positional-message form is still supported:
+        raise UserFeedbackError('literal message')
+        raise UserFeedbackError(t(locale, 'id'), message_id='id')
     """
 
-    def __init__(self, message, *, message_id=None, **variables):
+    def __init__(self, message=None, *, message_id=None, **variables):
         self.message_id = message_id
         self.variables = variables
-        super().__init__(message)
+        fallback_message = message if message is not None else (message_id or '')
+        super().__init__(fallback_message)
 
     def resolve(self, locale):
         if self.message_id:

@@ -332,7 +332,7 @@ class ManageQuestsView(LocaleLayoutView):
                 role_id = quest[QuestFields.PARTY_ROLE_ID]
                 role = guild.get_role(role_id)
                 if role:
-                    check_role_hierarchy(guild, role, locale=getattr(self, 'locale', DEFAULT_LOCALE))
+                    check_role_hierarchy(guild, role)
 
             party = quest[QuestFields.PARTY]
             title = quest[QuestFields.TITLE]
@@ -478,7 +478,7 @@ class ManageQuestsView(LocaleLayoutView):
             if party_role_id:
                 role = guild.get_role(party_role_id)
                 if role:
-                    check_role_hierarchy(guild, role, locale=getattr(self, 'locale', DEFAULT_LOCALE))
+                    check_role_hierarchy(guild, role)
                     role_mode = quest.get(QuestFields.QUEST_ROLE_MODE, 'temporary')
                     if role_mode == 'static':
                         if not guild.chunked:
@@ -1278,7 +1278,7 @@ class RemovePlayerView(LocaleLayoutView):
             if lock_state and party_role_id:
                 role = guild.get_role(party_role_id)
                 if role:
-                    check_role_hierarchy(guild, role, locale=getattr(self, 'locale', DEFAULT_LOCALE))
+                    check_role_hierarchy(guild, role)
 
                 if role and member:
                     await member.remove_roles(role)
@@ -1554,16 +1554,14 @@ class QuestPostView(LocaleLayoutView):
 
             current_party = quest[QuestFields.PARTY]
             current_wait_list = quest[QuestFields.WAIT_LIST]
-            for player in current_party:
-                if str(user_id) in player:
-                    for character_id, character_data in player[str(user_id)].items():
-                        raise UserFeedbackError(
-                            t(
-                                getattr(self, 'locale', DEFAULT_LOCALE), 'gm-error-already-on-quest',
+            for player_list in (current_party, current_wait_list):
+                for player in player_list:
+                    if str(user_id) in player:
+                        for character_id, character_data in player[str(user_id)].items():
+                            raise UserFeedbackError(
+                                message_id='gm-error-already-on-quest',
                                 characterName=character_data[CommonFields.NAME]
-                            ),
-                            message_id='gm-error-already-on-quest'
-                        )
+                            )
             max_wait_list_size = quest[QuestFields.MAX_WAIT_LIST_SIZE]
             max_party_size = quest[QuestFields.MAX_PARTY_SIZE]
 
@@ -1585,9 +1583,8 @@ class QuestPostView(LocaleLayoutView):
 
             if quest[QuestFields.LOCK_STATE]:
                 raise UserFeedbackError(
-                    t(getattr(self, 'locale', DEFAULT_LOCALE), 'gm-error-quest-locked',
-                      questTitle=quest[QuestFields.TITLE]),
-                    message_id='gm-error-quest-locked'
+                    message_id='gm-error-quest-locked',
+                    questTitle=quest[QuestFields.TITLE]
                 )
             else:
                 new_player_entry = {f'{user_id}': {f'{active_character_id}': active_character}}
@@ -1615,9 +1612,8 @@ class QuestPostView(LocaleLayoutView):
 
                     else:
                         raise UserFeedbackError(
-                            t(getattr(self, 'locale', DEFAULT_LOCALE), 'gm-error-quest-full',
-                              questTitle=quest[QuestFields.TITLE]),
-                            message_id='gm-error-quest-full'
+                            message_id='gm-error-quest-full',
+                            questTitle=quest[QuestFields.TITLE]
                         )
                 else:
                     if len(current_party) < max_party_size:
@@ -1632,9 +1628,8 @@ class QuestPostView(LocaleLayoutView):
                         self.quest[QuestFields.PARTY].append(new_player_entry)
                     else:
                         raise UserFeedbackError(
-                            t(getattr(self, 'locale', DEFAULT_LOCALE), 'gm-error-quest-full',
-                              questTitle=quest[QuestFields.TITLE]),
-                            message_id='gm-error-quest-full'
+                            message_id='gm-error-quest-full',
+                            questTitle=quest[QuestFields.TITLE]
                         )
 
                 await self.setup(bot=bot)

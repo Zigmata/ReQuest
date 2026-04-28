@@ -127,15 +127,11 @@ async def attempt_delete(message: discord.Message | discord.PartialMessage):
         logger.error(f'Unexpected error while deleting message: {e}')
 
 
-def check_role_hierarchy(guild: discord.Guild, role: discord.Role, locale: str | None = None):
+def check_role_hierarchy(guild: discord.Guild, role: discord.Role):
     """Raises UserFeedbackError if the bot cannot manage the given role due to hierarchy."""
-    from ReQuest.utilities.localizer import t, DEFAULT_LOCALE
-    if locale is None:
-        locale = DEFAULT_LOCALE
     bot_top_role = guild.me.top_role
     if role >= bot_top_role:
         raise UserFeedbackError(
-            t(locale, 'gm-error-role-hierarchy', roleName=role.name, roleId=str(role.id)),
             message_id='gm-error-role-hierarchy',
             roleName=role.name,
             roleId=str(role.id)

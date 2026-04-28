@@ -174,7 +174,6 @@ class PublishQuestButton(Button):
                     ]
                 if role_name.lower() in default_forbidden or role_name.lower() in custom_forbidden:
                     raise UserFeedbackError(
-                        t(locale, 'gm-error-role-name-forbidden', roleName=role_name),
                         message_id='gm-error-role-name-forbidden',
                         roleName=role_name
                     )
@@ -185,7 +184,6 @@ class PublishQuestButton(Button):
 
                 if existing_role and existing_role.id != old_role_id:
                     raise UserFeedbackError(
-                        t(locale, 'gm-error-role-name-exists', roleName=role_name),
                         message_id='gm-error-role-name-exists',
                         roleName=role_name
                     )
@@ -400,9 +398,7 @@ class CancelQuestButton(Button):
             if party_role_id:
                 party_role = guild.get_role(party_role_id)
                 if party_role:
-                    check_role_hierarchy(
-                        guild, party_role, locale=getattr(self.calling_view, 'locale', DEFAULT_LOCALE)
-                    )
+                    check_role_hierarchy(guild, party_role)
                     role_mode = quest.get(QuestFields.QUEST_ROLE_MODE, 'temporary')
                     if role_mode == 'static':
                         if not guild.chunked:

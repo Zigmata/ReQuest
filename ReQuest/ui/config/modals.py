@@ -196,7 +196,6 @@ class RenameCurrencyModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            locale = self._locale
             bot = interaction.client
             guild_id = interaction.guild_id
             new_name = self.text_input.value.strip()
@@ -217,14 +216,14 @@ class RenameCurrencyModal(LocaleModal):
                 for currency in query.get(CurrencyFields.CURRENCIES, []):
                     if currency[CommonFields.NAME].lower() == new_name.lower():
                         raise UserFeedbackError(
-                            t(locale, 'config-error-currency-name-exists', name=new_name),
-                            message_id='config-error-currency-name-exists'
+                            message_id='config-error-currency-name-exists',
+                            name=new_name
                         )
                     for denomination in currency.get(CurrencyFields.DENOMINATIONS, []):
                         if denomination[CommonFields.NAME].lower() == new_name.lower():
                             raise UserFeedbackError(
-                                t(locale, 'config-error-denomination-name-exists', name=new_name),
-                                message_id='config-error-denomination-name-exists'
+                                message_id='config-error-denomination-name-exists',
+                                name=new_name
                             )
 
             await update_cached_data(
@@ -267,7 +266,6 @@ class RenameDenominationModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            locale = self._locale
             bot = interaction.client
             guild_id = interaction.guild_id
             new_name = self.text_input.value.strip()
@@ -288,14 +286,14 @@ class RenameDenominationModal(LocaleModal):
                 for currency in query.get(CurrencyFields.CURRENCIES, []):
                     if currency[CommonFields.NAME].lower() == new_name.lower():
                         raise UserFeedbackError(
-                            t(locale, 'config-error-currency-name-exists', name=new_name),
-                            message_id='config-error-currency-name-exists'
+                            message_id='config-error-currency-name-exists',
+                            name=new_name
                         )
                     for denomination in currency.get(CurrencyFields.DENOMINATIONS, []):
                         if denomination[CommonFields.NAME].lower() == new_name.lower():
                             raise UserFeedbackError(
-                                t(locale, 'config-error-denomination-name-exists', name=new_name),
-                                message_id='config-error-denomination-name-exists'
+                                message_id='config-error-denomination-name-exists',
+                                name=new_name
                             )
 
             collection = bot.gdb[DatabaseCollections.CURRENCY]
@@ -357,7 +355,6 @@ class AddCurrencyDenominationModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            locale = self._locale
             bot = interaction.client
             guild_id = interaction.guild_id
             new_name = self.denomination_name_text_input.value
@@ -371,17 +368,15 @@ class AddCurrencyDenominationModal(LocaleModal):
             for currency in query[CurrencyFields.CURRENCIES]:
                 if new_name.lower() == currency[CommonFields.NAME].lower():
                     raise UserFeedbackError(
-                        t(locale, 'config-error-denomination-matches-currency',
-                          existingName=currency[CommonFields.NAME]),
-                        message_id='config-error-denomination-matches-currency'
+                        message_id='config-error-denomination-matches-currency',
+                        existingName=currency[CommonFields.NAME]
                     )
                 for denomination in currency[CurrencyFields.DENOMINATIONS]:
                     if new_name.lower() == denomination[CommonFields.NAME].lower():
                         raise UserFeedbackError(
-                            t(locale, 'config-error-denomination-matches-denomination',
-                              denominationName=denomination[CommonFields.NAME],
-                              currencyName=currency[CommonFields.NAME]),
-                            message_id='config-error-denomination-matches-denomination'
+                            message_id='config-error-denomination-matches-denomination',
+                            denominationName=denomination[CommonFields.NAME],
+                            currencyName=currency[CommonFields.NAME]
                         )
             base_currency = next(
                 (item for item in query[CurrencyFields.CURRENCIES]
@@ -392,9 +387,8 @@ class AddCurrencyDenominationModal(LocaleModal):
                     if float(self.denomination_value_text_input.value) == denomination[CurrencyFields.VALUE]:
                         using_name = denomination[CommonFields.NAME]
                         raise UserFeedbackError(
-                            t(locale, 'config-error-denomination-value-exists',
-                              denominationName=using_name),
-                            message_id='config-error-denomination-value-exists'
+                            message_id='config-error-denomination-value-exists',
+                            denominationName=using_name
                         )
 
                 await update_cached_data(
@@ -588,8 +582,8 @@ class GMRewardsModal(LocaleModal):
                         items[titlecase(item_name.strip())] = int(quantity.strip())
                     except ValueError:
                         raise UserFeedbackError(
-                            t(locale, 'config-error-item-format-invalid', item=item),
-                            message_id='config-error-item-format-invalid'
+                            message_id='config-error-item-format-invalid',
+                            item=item
                         )
 
             await update_cached_data(
@@ -1048,16 +1042,16 @@ class ConfigShopJSONModal(LocaleModal):
                 shop_data = json.loads(file_content)
             except json.JSONDecodeError as jde:
                 raise UserFeedbackError(
-                    t(locale, 'config-error-invalid-json', error=str(jde)),
-                    message_id='config-error-invalid-json'
+                    message_id='config-error-invalid-json',
+                    error=str(jde)
                 )
 
             try:
                 validate(instance=shop_data, schema=SHOP_SCHEMA)
             except jsonschema.exceptions.ValidationError as ve:
                 raise UserFeedbackError(
-                    t(locale, 'config-error-json-validation-failed', error=str(ve)),
-                    message_id='config-error-json-validation-failed'
+                    message_id='config-error-json-validation-failed',
+                    error=str(ve)
                 )
 
             await update_cached_data(
@@ -1200,8 +1194,8 @@ class ShopItemModal(LocaleModal):
                         parts = component.strip().split(' ', 1)
                         if len(parts) < 2:
                             raise UserFeedbackError(
-                                t(locale, 'config-error-cost-format-invalid', option=option),
-                                message_id='config-error-cost-format-invalid'
+                                message_id='config-error-cost-format-invalid',
+                                option=option
                             )
 
                         amount_string = parts[0]
@@ -1213,14 +1207,12 @@ class ShopItemModal(LocaleModal):
                                 raise ValueError
                         except ValueError:
                             raise UserFeedbackError(
-                                t(locale, 'config-error-cost-amount-invalid',
-                                  amount=amount_string, currency=currency_name),
-                                message_id='config-error-cost-amount-invalid'
+                                message_id='config-error-cost-amount-invalid',
+                                amount=amount_string,
+                                currency=currency_name
                             )
                         if amount > DisplayLimits.MAX_CURRENCY_AMOUNT:
                             raise UserFeedbackError(
-                                t(locale, 'config-error-amount-exceeds-maximum',
-                                  max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)),
                                 message_id='config-error-amount-exceeds-maximum',
                                 max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)
                             )
@@ -1236,8 +1228,8 @@ class ShopItemModal(LocaleModal):
 
                         if not currency_config_entry:
                             raise UserFeedbackError(
-                                t(locale, 'config-error-unknown-currency', currency=currency_name),
-                                message_id='config-error-unknown-currency'
+                                message_id='config-error-unknown-currency',
+                                currency=currency_name
                             )
 
                         current_options[currency_key] = amount
@@ -1277,9 +1269,8 @@ class ShopItemModal(LocaleModal):
                 for item in shop_stock:
                     if item.get(CommonFields.NAME).lower() == new_item[CommonFields.NAME].lower():
                         raise UserFeedbackError(
-                            t(locale, 'config-error-item-already-exists',
-                              itemName=new_item[CommonFields.NAME]),
-                            message_id='config-error-item-already-exists'
+                            message_id='config-error-item-already-exists',
+                            itemName=new_item[CommonFields.NAME]
                         )
                 shop_data[ShopFields.SHOP_STOCK].append(new_item)
 
@@ -1346,16 +1337,16 @@ class ConfigUpdateShopJSONModal(LocaleModal):
                 shop_data = json.loads(file_content)
             except json.JSONDecodeError as jde:
                 raise UserFeedbackError(
-                    t(locale, 'config-error-invalid-json', error=str(jde)),
-                    message_id='config-error-invalid-json'
+                    message_id='config-error-invalid-json',
+                    error=str(jde)
                 )
 
             try:
                 validate(instance=shop_data, schema=SHOP_SCHEMA)
             except jsonschema.exceptions.ValidationError as err:
                 raise UserFeedbackError(
-                    t(locale, 'config-error-json-validation-message', error=err.message),
-                    message_id='config-error-json-validation-message'
+                    message_id='config-error-json-validation-message',
+                    error=err.message
                 )
 
             await update_cached_data(
@@ -1502,9 +1493,8 @@ class NewCharacterShopItemModal(LocaleModal):
                             parts = component.strip().split(' ', 1)
                             if len(parts) < 2:
                                 raise UserFeedbackError(
-                                    t(locale, 'config-error-cost-format-short',
-                                      component=component.strip()),
-                                    message_id='config-error-cost-format-short'
+                                    message_id='config-error-cost-format-short',
+                                    component=component.strip()
                                 )
 
                             amount_str = parts[0]
@@ -1516,14 +1506,12 @@ class NewCharacterShopItemModal(LocaleModal):
                                     raise ValueError
                             except ValueError:
                                 raise UserFeedbackError(
-                                    t(locale, 'config-error-amount-invalid-short',
-                                      amount=amount_str, currency=currency_name),
-                                    message_id='config-error-amount-invalid-short'
+                                    message_id='config-error-amount-invalid-short',
+                                    amount=amount_str,
+                                    currency=currency_name
                                 )
                             if amount > DisplayLimits.MAX_CURRENCY_AMOUNT:
                                 raise UserFeedbackError(
-                                    t(locale, 'config-error-amount-exceeds-maximum',
-                                      max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)),
                                     message_id='config-error-amount-exceeds-maximum',
                                     max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)
                                 )
@@ -1539,8 +1527,8 @@ class NewCharacterShopItemModal(LocaleModal):
 
                             if not currency_config_entry:
                                 raise UserFeedbackError(
-                                    t(locale, 'config-error-unknown-currency', currency=currency_name),
-                                    message_id='config-error-unknown-currency'
+                                    message_id='config-error-unknown-currency',
+                                    currency=currency_name
                                 )
 
                             current_option_dict[currency_key] = amount
@@ -1579,9 +1567,8 @@ class NewCharacterShopItemModal(LocaleModal):
                 for item in shop_stock:
                     if item.get(CommonFields.NAME).lower() == new_item[CommonFields.NAME].lower():
                         raise UserFeedbackError(
-                            t(locale, 'config-error-item-exists-new-char',
-                              itemName=new_item[CommonFields.NAME]),
-                            message_id='config-error-item-exists-new-char'
+                            message_id='config-error-item-exists-new-char',
+                            itemName=new_item[CommonFields.NAME]
                         )
                 shop_stock.append(new_item)
 
@@ -1645,16 +1632,16 @@ class NewCharacterShopJSONModal(LocaleModal):
                 shop_data = json.loads(file_content)
             except json.JSONDecodeError as jde:
                 raise UserFeedbackError(
-                    t(locale, 'config-error-invalid-json', error=str(jde)),
-                    message_id='config-error-invalid-json'
+                    message_id='config-error-invalid-json',
+                    error=str(jde)
                 )
 
             try:
                 validate(instance=shop_data, schema=NEW_CHARACTER_SHOP_SCHEMA)
             except jsonschema.exceptions.ValidationError as ve:
                 raise UserFeedbackError(
-                    t(locale, 'config-error-json-validation-failed', error=str(ve)),
-                    message_id='config-error-json-validation-failed'
+                    message_id='config-error-json-validation-failed',
+                    error=str(ve)
                 )
 
             await update_cached_data(
@@ -1720,8 +1707,6 @@ class ConfigNewCharacterWealthModal(LocaleModal):
             amount = float(self.amount_text_input.value)
             if amount > DisplayLimits.MAX_CURRENCY_AMOUNT:
                 raise UserFeedbackError(
-                    t(locale, 'config-error-amount-exceeds-maximum',
-                      max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)),
                     message_id='config-error-amount-exceeds-maximum',
                     max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)
                 )
@@ -1753,8 +1738,8 @@ class ConfigNewCharacterWealthModal(LocaleModal):
 
                 if not found_name:
                     raise UserFeedbackError(
-                        t(locale, 'config-error-currency-not-found', name=currency_input),
-                        message_id='config-error-currency-not-found'
+                        message_id='config-error-currency-not-found',
+                        name=currency_input
                     )
 
                 await update_cached_data(
@@ -1811,7 +1796,6 @@ class CreateStaticKitModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            locale = self._locale
             bot = interaction.client
             guild_id = interaction.guild_id
             kit_id = str(shortuuid.uuid()[:8])
@@ -1828,8 +1812,8 @@ class CreateStaticKitModal(LocaleModal):
                 for kit_data in existing_kits.values():
                     if kit_name.lower() == kit_data[CommonFields.NAME].lower():
                         raise UserFeedbackError(
-                            t(locale, 'config-error-kit-name-exists', kitName=titlecase(kit_name)),
-                            message_id='config-error-kit-name-exists'
+                            message_id='config-error-kit-name-exists',
+                            kitName=titlecase(kit_name)
                         )
 
             kit_data = {
@@ -1914,7 +1898,6 @@ class StaticKitItemModal(LocaleModal):
 
     async def on_submit(self, interaction: discord.Interaction):
         try:
-            locale = self._locale
             if not self.item_quantity_text_input.value.isdigit() or int(self.item_quantity_text_input.value) < 1:
                 raise ValueError("Quantity must be a positive integer.")
 
@@ -2008,8 +1991,6 @@ class StaticKitCurrencyModal(LocaleModal):
             amount = float(self.amount_text_input.value)
             if amount > DisplayLimits.MAX_CURRENCY_AMOUNT:
                 raise UserFeedbackError(
-                    t(locale, 'config-error-amount-exceeds-maximum',
-                      max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)),
                     message_id='config-error-amount-exceeds-maximum',
                     max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)
                 )
@@ -2030,22 +2011,20 @@ class StaticKitCurrencyModal(LocaleModal):
 
             if not denomination_map:
                 raise UserFeedbackError(
-                    t(locale, 'config-error-currency-not-found-short', currency=currency_input),
-                    message_id='config-error-currency-not-found-short'
+                    message_id='config-error-currency-not-found-short',
+                    currency=currency_input
                 )
 
             multiplier = denomination_map.get(currency_input.lower())
             if multiplier is None:
                 raise UserFeedbackError(
-                    t(locale, 'config-error-denomination-not-found', denomination=currency_input),
-                    message_id='config-error-denomination-not-found'
+                    message_id='config-error-denomination-not-found',
+                    denomination=currency_input
                 )
 
             converted_amount = amount * multiplier
             if converted_amount > DisplayLimits.MAX_CURRENCY_AMOUNT:
                 raise UserFeedbackError(
-                    t(locale, 'config-error-amount-exceeds-maximum',
-                      max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)),
                     message_id='config-error-amount-exceeds-maximum',
                     max=str(DisplayLimits.MAX_CURRENCY_AMOUNT)
                 )
@@ -2295,9 +2274,8 @@ class RoleplayRewardsModal(LocaleModal):
                                 raise ValueError
                         except ValueError:
                             raise UserFeedbackError(
-                                t(locale, 'config-error-item-quantity-positive-named',
-                                  itemName=k.strip()),
-                                message_id='config-error-item-quantity-positive-named'
+                                message_id='config-error-item-quantity-positive-named',
+                                itemName=k.strip()
                             )
 
             currency = {}
@@ -2311,9 +2289,8 @@ class RoleplayRewardsModal(LocaleModal):
                                 raise ValueError
                         except ValueError:
                             raise UserFeedbackError(
-                                t(locale, 'config-error-currency-amount-positive',
-                                  currencyName=k.strip()),
-                                message_id='config-error-currency-amount-positive'
+                                message_id='config-error-currency-amount-positive',
+                                currencyName=k.strip()
                             )
 
             new_rewards = {
@@ -2465,8 +2442,8 @@ class SetItemStockModal(LocaleModal):
 
             if not item_found:
                 raise UserFeedbackError(
-                    t(locale, 'config-error-item-not-in-shop', itemName=self.item_name),
-                    message_id='config-error-item-not-in-shop'
+                    message_id='config-error-item-not-in-shop',
+                    itemName=self.item_name
                 )
 
             await update_cached_data(
