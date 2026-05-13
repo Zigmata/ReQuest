@@ -1263,7 +1263,7 @@ class ShopItemModal(LocaleModal):
                     else:
                         new_stock.append(item)
                 if not found:
-                    raise Exception('Existing item not found in shop stock.')
+                    raise UserFeedbackError(message_id='config-error-item-not-found-in-stock')
                 shop_data[ShopFields.SHOP_STOCK] = new_stock
             else:
                 for item in shop_stock:
@@ -1561,7 +1561,7 @@ class NewCharacterShopItemModal(LocaleModal):
                     else:
                         new_stock.append(item)
                 if not found:
-                    raise Exception('Existing item not found in shop stock.')
+                    raise UserFeedbackError(message_id='config-error-item-not-found-in-stock')
                 shop_stock = new_stock
             else:
                 for item in shop_stock:
@@ -1920,7 +1920,7 @@ class StaticKitItemModal(LocaleModal):
             current_kit = kits.get(kit_id)
 
             if not current_kit:
-                raise Exception("Kit not found.")
+                raise UserFeedbackError(message_id='config-error-kit-not-found')
 
             items = current_kit.get(CommonFields.ITEMS, [])
 

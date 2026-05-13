@@ -33,8 +33,8 @@ from ReQuest.utilities.db_cache import (
     run_in_transaction
 )
 from ReQuest.utilities.discord_utils import (
-    setup_view, strip_id, attempt_delete, escape_markdown, get_guild_member, truncate_text, check_role_hierarchy,
-    sanitize_quest_image_urls,
+    setup_view, strip_id, attempt_delete, edit_or_resend, escape_markdown, get_guild_member, truncate_text,
+    check_role_hierarchy, sanitize_quest_image_urls,
 )
 from ReQuest.utilities.exceptions import log_exception, UserFeedbackError
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_locale
@@ -306,9 +306,23 @@ class ManageQuestsView(LocaleLayoutView):
         try:
             await interaction.response.defer()
             bot = interaction.client
-            quest = self.selected_quest
             guild_id = interaction.guild_id
             guild = interaction.guild
+
+            refreshed_quest = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUESTS,
+                query={
+                    QuestFields.GUILD_ID: guild_id,
+                    QuestFields.QUEST_ID: self.selected_quest[QuestFields.QUEST_ID]
+                },
+                cache_id=f'{guild_id}:{self.selected_quest[QuestFields.QUEST_ID]}'
+            )
+            if not refreshed_quest:
+                raise UserFeedbackError(message_id='gm-error-quest-not-found')
+            self.selected_quest = refreshed_quest
+            quest = self.selected_quest
 
             channel_id_query = await get_cached_data(
                 bot=bot,
@@ -325,7 +339,6 @@ class ManageQuestsView(LocaleLayoutView):
             channel = interaction.client.get_channel(channel_id)
 
             message_id = quest[QuestFields.MESSAGE_ID]
-            message = channel.get_partial_message(message_id)
 
             role = None
             if quest[QuestFields.PARTY_ROLE_ID]:
@@ -416,7 +429,17 @@ class ManageQuestsView(LocaleLayoutView):
 
             quest_view = QuestPostView(quest)
             await quest_view.setup(bot=interaction.client)
-            await message.edit(view=quest_view)
+            new_message_id, was_resent = await edit_or_resend(channel, message_id, view=quest_view)
+            if was_resent:
+                await update_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.QUESTS,
+                    query={QuestFields.QUEST_ID: quest_id},
+                    update_data={'$set': {QuestFields.MESSAGE_ID: new_message_id}},
+                    cache_id=f'{guild_id}:{quest_id}'
+                )
+                quest[QuestFields.MESSAGE_ID] = new_message_id
 
             await setup_view(self, interaction)
             await interaction.followup.edit_message(message_id=interaction.message.id, view=self)
@@ -443,7 +466,7 @@ class ManageQuestsView(LocaleLayoutView):
             )
 
             if not refreshed_quest:
-                raise Exception('Could not find the specified quest in the database.')
+                raise UserFeedbackError(message_id='gm-error-quest-not-found')
 
             self.selected_quest = refreshed_quest
             quest = self.selected_quest
@@ -1247,7 +1270,22 @@ class RemovePlayerView(LocaleLayoutView):
         try:
             await interaction.response.defer()
             bot = interaction.client
+            guild_id = interaction.guild_id
+            guild = interaction.guild
 
+            refreshed_quest = await get_cached_data(
+                bot=bot,
+                mongo_database=bot.gdb,
+                collection_name=DatabaseCollections.QUESTS,
+                query={
+                    QuestFields.GUILD_ID: guild_id,
+                    QuestFields.QUEST_ID: self.quest[QuestFields.QUEST_ID]
+                },
+                cache_id=f'{guild_id}:{self.quest[QuestFields.QUEST_ID]}'
+            )
+            if not refreshed_quest:
+                raise UserFeedbackError(message_id='gm-error-quest-not-found')
+            self.quest = refreshed_quest
             quest = self.quest
             quest_id = quest[QuestFields.QUEST_ID]
             message_id = quest[QuestFields.MESSAGE_ID]
@@ -1258,8 +1296,6 @@ class RemovePlayerView(LocaleLayoutView):
             rewards = quest[QuestFields.REWARDS]
 
             removed_member_id = self.selected_member_id
-            guild_id = interaction.guild_id
-            guild = interaction.guild
             member = await get_guild_member(guild, int(removed_member_id))
 
             channel_id_query = await get_cached_data(
@@ -1270,7 +1306,6 @@ class RemovePlayerView(LocaleLayoutView):
             )
             channel_id = strip_id(channel_id_query[ConfigFields.QUEST_CHANNEL])
             channel = interaction.client.get_channel(channel_id)
-            message = channel.get_partial_message(message_id)
 
             party_role_id = quest[QuestFields.PARTY_ROLE_ID]
 
@@ -1384,7 +1419,18 @@ class RemovePlayerView(LocaleLayoutView):
             quest_view = QuestPostView(self.quest)
             await setup_view(quest_view, interaction)
 
-            await message.edit(view=quest_view)
+            new_message_id, was_resent = await edit_or_resend(channel, message_id, view=quest_view)
+            if was_resent:
+                await update_cached_data(
+                    bot=bot,
+                    mongo_database=bot.gdb,
+                    collection_name=DatabaseCollections.QUESTS,
+                    query={QuestFields.QUEST_ID: quest_id},
+                    update_data={'$set': {QuestFields.MESSAGE_ID: new_message_id}},
+                    cache_id=f'{guild_id}:{quest_id}'
+                )
+                self.quest[QuestFields.MESSAGE_ID] = new_message_id
+
             await setup_view(self, interaction)
             await interaction.edit_original_response(view=self)
 

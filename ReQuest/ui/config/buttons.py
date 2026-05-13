@@ -19,7 +19,7 @@ from ReQuest.utilities.currency import format_currency_amount
 from ReQuest.utilities.db_cache import (
     get_cached_data, delete_cached_data, update_cached_data, encode_mongo_key, get_xp_config
 )
-from ReQuest.utilities.exceptions import log_exception
+from ReQuest.utilities.exceptions import log_exception, UserFeedbackError
 from ReQuest.utilities.discord_utils import setup_view
 from ReQuest.utilities.shop import remove_item_stock_limit
 
@@ -997,7 +997,7 @@ class DownloadShopJSONButton(Button):
             shop_data = query.get(ShopFields.SHOP_CHANNELS, {}).get(channel_id)
 
             if not shop_data:
-                raise Exception('Shop data not found.')
+                raise UserFeedbackError(message_id='config-error-shop-data-not-found')
 
             shop_name = shop_data.get(ShopFields.SHOP_NAME, "shop")
             file_name = f"{shop_name.replace(' ', '_')}_{channel_id}.json"

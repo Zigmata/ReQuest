@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 __all__ = [
     'attempt_delete',
     'check_role_hierarchy',
+    'edit_or_resend',
     'strip_id',
     'truncate_text',
     'escape_markdown',
@@ -125,6 +126,29 @@ async def attempt_delete(message: discord.Message | discord.PartialMessage):
         logger.error(f'HTTPException while deleting message: {e}')
     except Exception as e:
         logger.error(f'Unexpected error while deleting message: {e}')
+
+
+async def edit_or_resend(channel, message_id: int, **send_kwargs) -> tuple[int, bool]:
+    """
+    Edit the message at message_id in channel with send_kwargs. If the message is
+    gone (HTTPException, typically 10008 Unknown Message), best-effort delete the
+    stale partial and send a fresh message with the same kwargs.
+
+    Returns (resulting_message_id, was_resent). Callers should persist the new ID
+    when was_resent is True.
+    """
+    message = channel.get_partial_message(message_id)
+    try:
+        await message.edit(**send_kwargs)
+        return message_id, False
+    except discord.HTTPException as e:
+        logger.warning(
+            f'edit_or_resend: message {message_id} in channel {getattr(channel, "id", "?")} '
+            f'could not be edited ({e}); resending.'
+        )
+        await attempt_delete(message)
+        new_message = await channel.send(**send_kwargs)
+        return new_message.id, True
 
 
 def check_role_hierarchy(guild: discord.Guild, role: discord.Role):

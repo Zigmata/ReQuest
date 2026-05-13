@@ -35,7 +35,7 @@ from ReQuest.utilities.db_cache import (
     get_cached_data, update_cached_data, build_cache_key, delete_cached_data, decode_mongo_key, get_xp_config,
     run_in_transaction
 )
-from ReQuest.utilities.discord_utils import setup_view, strip_id, escape_markdown, truncate_text
+from ReQuest.utilities.discord_utils import setup_view, strip_id, edit_or_resend, escape_markdown, truncate_text
 from ReQuest.utilities.exceptions import UserFeedbackError, log_exception
 
 logger = logging.getLogger(__name__)
@@ -2534,11 +2534,17 @@ async def _handle_submission(interaction, pending_character, items, currency):
                     thread_id = approval_doc.get(ApprovalFields.THREAD_ID)
                     thread = bot.get_channel(thread_id)
                     if thread:
-                        message = thread.get_partial_message(approval_doc[ApprovalFields.MESSAGE_ID])
                         approval_view = ApprovalPostView(submission_id)
                         approval_view.locale = guild_locale
                         await approval_view.setup(bot)
-                        await message.edit(view=approval_view)
+                        new_message_id, was_resent = await edit_or_resend(
+                            thread, approval_doc[ApprovalFields.MESSAGE_ID], view=approval_view
+                        )
+                        if was_resent:
+                            await bot.gdb[DatabaseCollections.APPROVALS].update_one(
+                                {ApprovalFields.SUBMISSION_ID: submission_id},
+                                {'$set': {ApprovalFields.MESSAGE_ID: new_message_id}}
+                            )
             else:
                 await interaction.response.defer()
 

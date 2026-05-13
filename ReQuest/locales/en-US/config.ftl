@@ -212,6 +212,7 @@ config-error-cost-format-invalid = Invalid cost format in option: "{ $option }".
 config-error-cost-amount-invalid = Invalid amount "{ $amount }" for currency: "{ $currency }". Amount must be a positive number.
 config-error-unknown-currency = Unknown currency `{ $currency }`. Please use a valid currency configured for this server.
 config-error-item-already-exists = An item named { $itemName } already exists in this shop.
+config-error-item-not-found-in-stock = The item being edited is no longer in this shop's stock.
 
 # ConfigUpdateShopJSONModal
 config-modal-title-update-shop-json = Update Shop via JSON
@@ -247,6 +248,7 @@ config-modal-placeholder-kit-name = e.g., Warrior Starter Kit
 config-modal-label-description = Description
 config-modal-placeholder-kit-description = Optional description for this kit
 config-error-kit-name-exists = A static kit named "{ $kitName }" already exists. Please choose a different name.
+config-error-kit-not-found = The kit being edited no longer exists.
 
 # StaticKitItemModal
 config-modal-title-kit-item = Add/Edit Kit Item
