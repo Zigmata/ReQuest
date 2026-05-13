@@ -1196,25 +1196,28 @@ class PlayerBoardView(LocaleLayoutView):
             if channel_id:
                 channel = interaction.client.get_channel(channel_id)
                 if channel:
-                    try:
-                        message = channel.get_partial_message(message_id)
+                    embed = discord.Embed(
+                        title=new_title,
+                        description=new_content,
+                        type='rich'
+                    )
+                    embed.add_field(
+                        name=t(guild_locale, 'player-embed-field-author'),
+                        value=interaction.user.mention
+                    )
+                    embed.set_footer(text=t(guild_locale, 'player-embed-footer-post-id', postId=post['postId']))
 
-                        embed = discord.Embed(
-                            title=new_title,
-                            description=new_content,
-                            type='rich'
+                    new_message_id, was_resent = await edit_or_resend(channel, message_id, embed=embed)
+                    if was_resent:
+                        await update_cached_data(
+                            bot=bot,
+                            mongo_database=bot.gdb,
+                            collection_name=DatabaseCollections.PLAYER_BOARD,
+                            query={'guildId': interaction.guild_id, 'postId': post['postId']},
+                            update_data={'$set': {'messageId': new_message_id}},
+                            cache_id=f'{interaction.guild_id}:{post["postId"]}'
                         )
-                        embed.add_field(
-                            name=t(guild_locale, 'player-embed-field-author'),
-                            value=interaction.user.mention
-                        )
-                        embed.set_footer(text=t(guild_locale, 'player-embed-footer-post-id', postId=post['postId']))
-
-                        await message.edit(embed=embed)
-                    except discord.NotFound:
-                        logger.error("Player Board message not found for editing.")
-                    except Exception as e:
-                        logger.error(f"Failed to edit Player Board message: {e}")
+                        post['messageId'] = new_message_id
 
             cache_id = f'{interaction.guild_id}:{interaction.user.id}'
             redis_key = build_cache_key(interaction.client.gdb.name, cache_id, DatabaseCollections.PLAYER_BOARD)

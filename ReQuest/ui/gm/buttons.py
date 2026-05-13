@@ -13,7 +13,7 @@ from ReQuest.utilities.constants import (QuestFields, QuestStatus, ConfigFields,
 from ReQuest.utilities.localizer import t, DEFAULT_LOCALE, resolve_locale
 from ReQuest.utilities.db_cache import get_cached_data, update_cached_data, delete_cached_data, build_cache_key
 from ReQuest.utilities.discord_utils import (
-    setup_view, strip_id, attempt_delete, get_guild_member, check_role_hierarchy
+    setup_view, strip_id, attempt_delete, edit_or_resend, get_guild_member, check_role_hierarchy
 )
 from ReQuest.utilities.exceptions import log_exception, UserFeedbackError
 
@@ -247,13 +247,11 @@ class PublishQuestButton(Button):
             else:
                 message_id = quest.get(QuestFields.MESSAGE_ID)
                 if message_id and quest_channel:
-                    message = quest_channel.get_partial_message(message_id)
-                    try:
-                        await message.edit(view=quest_view)
-                    except discord.HTTPException:
-                        await attempt_delete(message)
-                        msg = await quest_channel.send(view=quest_view)
-                        updates[QuestFields.MESSAGE_ID] = msg.id
+                    new_message_id, was_resent = await edit_or_resend(
+                        quest_channel, message_id, view=quest_view
+                    )
+                    if was_resent:
+                        updates[QuestFields.MESSAGE_ID] = new_message_id
 
             await update_cached_data(
                 bot=bot,
